@@ -33,6 +33,14 @@ CREATE POLICY "Users can insert own worksheets" ON worksheets
 CREATE POLICY "Users can delete own worksheets" ON worksheets
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Policy: Users can update their own worksheets
+CREATE POLICY "Users can update own worksheets" ON worksheets
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Add regeneration tracking column
+ALTER TABLE worksheets
+ADD COLUMN IF NOT EXISTS regeneration_count INT DEFAULT 0;
+
 -- Children table for multi-child profiles
 CREATE TABLE IF NOT EXISTS children (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -102,3 +110,72 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION create_user_subscription();
+
+-- CBSE Syllabus reference table
+CREATE TABLE IF NOT EXISTS cbse_syllabus (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  grade TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  chapters JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(grade, subject)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cbse_syllabus_grade_subject ON cbse_syllabus(grade, subject);
+
+-- CBSE syllabus is read-only for all authenticated users
+ALTER TABLE cbse_syllabus ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view CBSE syllabus" ON cbse_syllabus
+  FOR SELECT USING (true);
+
+-- Topic preferences table for storing child+subject selections
+CREATE TABLE IF NOT EXISTS topic_preferences (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
+  subject TEXT NOT NULL,
+  selected_topics JSONB NOT NULL DEFAULT '[]',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(child_id, subject)
+);
+
+CREATE INDEX IF NOT EXISTS idx_topic_preferences_child_subject ON topic_preferences(child_id, subject);
+
+ALTER TABLE topic_preferences ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own topic preferences" ON topic_preferences
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own topic preferences" ON topic_preferences
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own topic preferences" ON topic_preferences
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own topic preferences" ON topic_preferences
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Child engagement tracking table
+CREATE TABLE IF NOT EXISTS child_engagement (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE UNIQUE,
+  total_stars INT DEFAULT 0,
+  current_streak INT DEFAULT 0,
+  longest_streak INT DEFAULT 0,
+  last_activity_date DATE,
+  total_worksheets_completed INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_child_engagement_child_id ON child_engagement(child_id);
+
+ALTER TABLE child_engagement ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own child engagement" ON child_engagement
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own child engagement" ON child_engagement
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own child engagement" ON child_engagement
+  FOR UPDATE USING (auth.uid() = user_id);

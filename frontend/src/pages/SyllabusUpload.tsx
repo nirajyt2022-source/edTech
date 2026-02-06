@@ -7,7 +7,7 @@ import { api } from '@/lib/api'
 import { useSubscription } from '@/lib/subscription'
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
-const SUBJECTS = ['Maths', 'English', 'EVS', 'Science', 'Social Studies']
+const SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
 
 interface SyllabusTopic {
   name: string

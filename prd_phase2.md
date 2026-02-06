@@ -1,177 +1,106 @@
-Great questions — this is **exactly the right moment** to tighten scope and process.
-I’ll answer in **three parts**, then give you a **clean Phase 2–only PRD (Claude-ready)** with **UI changes explicitly included** and **multi-subject excluded**.
+Perfect 👍 — below is a **revised Phase 2 PRD**, **ONLY Phase 2**, with your requested changes **explicitly added**:
+
+* ✅ UI polish inspired by K5 Learning (principles, not copy)
+* ✅ Clear UI requirements (so Claude doesn’t “wing it”)
+* ❌ Multi-subject generation still excluded
+* ❌ No Phase 1 overlap
+* ❌ No Teacher / School (kept for later)
+
+This is **Claude-safe** and **scope-locked**.
 
 ---
 
-## 1️⃣ Did I include UI changes earlier?
+# 📘 PRACTICECRAFT AI
 
-**Partially, but not explicitly enough.**
-You’re right to call this out.
-
-Earlier:
-
-* UI wireframes were **illustrative**
-* But Phase 2 UI changes were **not clearly marked as “must implement”**
-
-👉 For Claude, that’s risky.
-
-**Fix:**
-In the PRD below, I will:
-
-* Explicitly list **UI changes as requirements**
-* Tie each UI change to a Phase 2 feature
-* Keep them minimal and incremental (no redesign)
+## **PHASE 2 PRD — PARENTS (TRUST, EFFORT REDUCTION & UI POLISH)**
 
 ---
 
-## 2️⃣ Should Phase 2 & Phase 3 be consolidated or separate?
+## CONTEXT FOR CLAUDE (IMPORTANT)
 
-**Strong recommendation:**
-👉 **Keep them separate. Do NOT consolidate.**
+* Phase 1 is **already implemented**
+* Do NOT refactor Phase 1 logic
+* Phase 2 focuses on:
 
-### Why (founder-level reasoning)
-
-* Phase 2 = **Parent value & retention**
-* Phase 3 = **Teacher + revenue expansion**
-* Different users, different UX, different risks
-
-If you consolidate:
-
-* Claude will overbuild
-* Scope creep will happen
-* You’ll slow down shipping
-
-**Correct approach (what you’re doing now):**
-
-* Lock Phase 2
-* Build it fully
-* Ship
-* Then define Phase 3 fresh (based on learnings)
-
-You’re doing this the *right* way.
-
----
-
-## 3️⃣ How to handle changes in Phase 2 later?
-
-You **don’t rewrite Phase 2 PRD**.
-
-You do this instead:
-
-### Change Management Rule (simple & effective)
-
-* Phase 2 PRD = **baseline**
-* Any change = **Phase 2.x Addendum**
-
-Example:
-
-* Phase 2.1 (original)
-* Phase 2.2 (minor enhancement)
-* Phase 2.3 (UX polish)
-
-This keeps Claude (and you) sane.
-
----
-
-# ✅ PRACTICECRAFT AI
-
-## **PHASE 2 PRD — PARENTS ONLY (CLAUDE-READY)**
-
-**(Explicit UI changes included | Multi-subject excluded)**
-
----
-
-## CONTEXT FOR CLAUDE (READ FIRST)
-
-* Phase 1 is **complete and should NOT be modified**
-* This document defines **only Phase 2**
-* Phase 2 is **parent-focused only**
+  * reducing parent effort
+  * increasing trust
+  * improving visual clarity
+* UI changes must be **incremental polish**, not redesign
 * Do NOT add Teacher, School, or Multi-Subject features
-* UI changes must be **incremental**, not redesigns
 
 ---
 
-## PHASE 2 GOAL
+## PHASE 2 OBJECTIVE
 
-> Reduce parent effort, increase trust, and increase daily/weekly usage
-> **without increasing cognitive load or complexity**
+> Make the product feel **as trustworthy and calm as K5 Learning**,
+> while remaining **task-driven and syllabus-aware**.
 
 ---
 
-## 2.1 Advanced Topic Selection (CORE PHASE 2 FEATURE)
+# 2.1 ADVANCED TOPIC SELECTION
 
 ### Problem
 
-Parents don’t want to manually select topics every time.
+Parents find repeated manual topic selection tiring.
 
 ### Functional Requirements
 
-* Add **“Select all topics”** checkbox (default ON)
-* Allow **chapter-level selection**
-* Allow individual topic deselection
-* Persist selection per:
-
-  * child
-  * subject
+* ☑ **Select all topics** (default ON)
+* ☑ **Chapter-level selection**
+* ☑ Individual topic toggles
+* Persist selection per child + subject
 
 ### Rules
 
-* Default state = all topics selected
-* Parent can deselect any topic
-* No auto-selection changes without parent action
+* Default = all topics selected
+* No auto-changes without parent action
 
 ---
 
-### UI Changes (MANDATORY)
-
-#### Topic Selector UI
+### UI REQUIREMENTS (MANDATORY)
 
 ```text
 Topics
 ☑ Select all topics
 
 Chapter 1: Addition
-☑ 2-digit addition
-☑ 3-digit addition
+  ☑ 2-digit addition
+  ☑ 3-digit addition
 
 Chapter 2: Subtraction
-☑ With borrowing
-☑ Without borrowing
+  ☑ With borrowing
+  ☑ Without borrowing
 ```
 
-* “Select all” toggles everything
-* Chapter checkbox toggles only that chapter
-* Clear visual nesting (indentation)
+**UI principles**
+
+* Clear indentation
+* Checkbox hierarchy
+* Calm spacing (no dense lists)
 
 ---
 
-## 2.2 CBSE Syllabus Viewer (READ-ONLY, TRUST FEATURE)
+# 2.2 CBSE SYLLABUS VIEWER (TRUST FEATURE)
 
 ### Goal
 
-Build confidence that the app understands **official CBSE syllabus**.
+Increase parent confidence that worksheets match **official CBSE syllabus**.
 
 ### Functional Requirements
 
-* Show CBSE syllabus based on:
-
-  * Selected Grade
-  * Selected Subject
+* Auto-load syllabus by Grade + Subject
 * Read-only
 * Expand / collapse chapters
-* Cannot be edited
+* “Generate from CBSE syllabus” CTA
 
 ### Rules
 
-* Used as baseline if no custom syllabus uploaded
 * Never overrides uploaded syllabus
-* Display only — no generation side effects
+* Display only (no editing)
 
 ---
 
-### UI Changes (MANDATORY)
-
-#### Syllabus Panel (Side or Expandable)
+### UI REQUIREMENTS (MANDATORY)
 
 ```text
 CBSE Syllabus – Class 3 Maths
@@ -180,22 +109,23 @@ CBSE Syllabus – Class 3 Maths
 ✔ Subtraction (borrowing)
 ✔ Multiplication (tables)
 ✔ Fractions (½, ¼)
-
-[ Generate worksheet from this syllabus ]
 ```
 
-* Calm, document-like styling
-* No checkboxes (read-only)
-* Reinforces trust, not control
+**Design guidance**
+
+* Document-like appearance
+* Light borders
+* No interactive controls
+* Looks “academic”, not “app-like”
 
 ---
 
-## 2.3 Expanded Subject Coverage (Parents)
+# 2.3 SUBJECT EXPANSION (PARENTS ONLY)
 
-### Add Subjects
+### Add Support For
 
 * Hindi
-* Science (Class 4–5 only)
+* Science (Class 4–5)
 * Computer (basic)
 
 ### Rules
@@ -203,36 +133,34 @@ CBSE Syllabus – Class 3 Maths
 * Same worksheet engine
 * Same difficulty controls
 * Same PDF pipeline
-* No subject mixing in a single worksheet
+* **One subject per worksheet only**
 
-⚠️ **Explicitly exclude multi-subject generation**
+❌ Multi-subject generation explicitly excluded
 
 ---
 
-## 2.4 Light Student Engagement (NO GAMIFICATION)
+# 2.4 LIGHT STUDENT ENGAGEMENT (NON-GAMIFIED)
 
 ### Goal
 
-Encourage completion, not addiction.
+Encourage completion without turning into a game.
 
 ### Functional Requirements
 
-* ⭐ Completion indicator after worksheet generation
+* ⭐ Completion indicator
 * 🏅 Simple badges (non-competitive)
-* 📅 Practice streak count (per child)
+* 📅 Practice streak count
 
-### Rules
+### Explicit Exclusions
 
-* No animations
-* No sounds
 * No avatars
+* No animations
 * No leaderboards
+* No sounds
 
 ---
 
-### UI Changes (MANDATORY)
-
-#### Completion Feedback
+### UI REQUIREMENTS (MANDATORY)
 
 ```text
 ✅ Worksheet completed
@@ -240,75 +168,130 @@ Encourage completion, not addiction.
 🔥 3-day practice streak
 ```
 
-* Text-first
-* Calm tone
+Tone:
+
+* Calm
+* Encouraging
 * Parent-approved
 
 ---
 
-## 2.5 Save & Reuse Improvements (Parent)
+# 2.5 SAVE & REUSE POLISH
 
 ### Enhancements
 
-* Saved worksheets grouped by:
+* Group saved worksheets by:
 
-  * subject
-  * date
-* Ability to regenerate with:
+  * Subject
+  * Date
+* Allow:
 
-  * same settings
-  * different difficulty
+  * Regenerate with same settings
+  * Regenerate with different difficulty
 
 ---
 
-## NON-GOALS (STRICT)
+# 2.6 UI POLISH (K5-INSPIRED, NOT COPIED)
+
+⚠️ **This section is new and mandatory**
+
+### Design Goals
+
+* Academic
+* Calm
+* Print-first
+* Trust-oriented
+
+---
+
+## UI PRINCIPLES TO APPLY
+
+### 1️⃣ Visual Hierarchy
+
+* Clear distinction between:
+
+  * Page title
+  * Section headers
+  * Form labels
+* Increase spacing, not borders
+
+---
+
+### 2️⃣ Typography
+
+* Larger headings
+* Neutral fonts
+* Avoid marketing language
+
+Example:
+
+> “Create a worksheet”
+> not
+> “Generate AI-powered content”
+
+---
+
+### 3️⃣ Color Usage
+
+* One accent color only
+* Soft gray / slate palette
+* No gradients
+* Buttons feel “utility”, not “CTA hype”
+
+---
+
+### 4️⃣ Trust Micro-copy (Mandatory)
+
+Add visible reassurance text:
+
+```text
+✔ CBSE-aligned
+✔ Printable worksheets
+✔ Built for parents
+```
+
+---
+
+### 5️⃣ Card & Layout Polish
+
+* Fewer cards
+* More vertical spacing
+* Rounded corners
+* Subtle shadows only
+
+---
+
+# NON-GOALS (LOCKED)
 
 Phase 2 must NOT include:
 
-* Multi-subject generation
-* Teacher view
+* Teacher View
 * School accounts
-* Payments logic changes
+* Multi-subject worksheets
+* Payments changes
 * LMS features
 * Heavy gamification
+* SEO content pages
 
 ---
 
-## METRICS TO TRACK (PHASE 2)
+# METRICS TO TRACK (PHASE 2)
 
-* Topic selector usage
-* “Select all” vs manual selection
+* “Select all topics” usage
 * CBSE syllabus viewer opens
-* Repeat worksheet generation per week
+* Repeat worksheet generation
+* Weekly active parents
 * Completion rate
 
 ---
 
-## BUILD ORDER FOR PHASE 2 (IMPORTANT)
+# BUILD ORDER (PHASE 2)
 
-1️⃣ Advanced topic selection (UI + logic)
+1️⃣ Advanced topic selection
 2️⃣ CBSE syllabus viewer
 3️⃣ Subject expansion
-4️⃣ Light engagement indicators
-5️⃣ Save & reuse polish
+4️⃣ UI polish pass
+5️⃣ Light engagement indicators
+6️⃣ Save & reuse polish
 
 ---
-
-## CHANGE MANAGEMENT RULE (IMPORTANT)
-
-* This document = **Phase 2 baseline**
-* Any new idea = **Phase 2.x Addendum**
-* Do NOT rewrite this PRD unless Phase 2 is complete
-
----
-
-## FINAL ADVICE (FOUNDER POV)
-
-You’re doing the **right thing by locking Phase 2**.
-
-* Phase 2 = **parents + trust + retention**
-* Phase 3 = **teachers + money**
-
-Keep them separate.
-Ship Phase 2 cleanly.
-Then we design Phase 3 with real usage data.

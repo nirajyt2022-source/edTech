@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { ChildrenProvider } from '@/lib/children'
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription'
+import { EngagementProvider } from '@/lib/engagement'
 import './index.css'
 
 type Page = 'generator' | 'syllabus' | 'saved' | 'children'
@@ -153,7 +154,9 @@ function App() {
     <AuthProvider>
       <SubscriptionProvider>
         <ChildrenProvider>
-          <AppContent />
+          <EngagementProvider>
+            <AppContent />
+          </EngagementProvider>
         </ChildrenProvider>
       </SubscriptionProvider>
     </AuthProvider>

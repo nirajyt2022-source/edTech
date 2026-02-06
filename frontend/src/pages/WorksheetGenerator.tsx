@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -7,10 +7,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { api } from '@/lib/api'
 import { useChildren } from '@/lib/children'
 import { useSubscription } from '@/lib/subscription'
+import TopicSelector from '@/components/TopicSelector'
+import CBSESyllabusViewer from '@/components/CBSESyllabusViewer'
+import { useEngagement } from '@/lib/engagement'
 
 const BOARDS = ['CBSE']
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
-const SUBJECTS = ['Maths', 'English', 'EVS']
+const SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
 const LANGUAGES = ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu', 'Kannada', 'Arabic', 'Urdu']
 const QUESTION_COUNTS = ['5', '10', '15', '20']
@@ -19,6 +22,9 @@ const DEFAULT_TOPICS: Record<string, string[]> = {
   Maths: ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Fractions', 'Word Problems'],
   English: ['Grammar', 'Vocabulary', 'Reading Comprehension', 'Sentence Formation'],
   EVS: ['Environment', 'Family & Community', 'Daily Life', 'Plants & Animals'],
+  Hindi: ['Varnamala', 'Matras', 'Shabd Rachna', 'Vakya Rachna', 'Kahani Lekhan'],
+  Science: ['Living Things', 'Matter', 'Force and Motion', 'Earth and Space', 'Human Body'],
+  Computer: ['Computer Basics', 'Parts of Computer', 'MS Paint', 'MS Word', 'Internet Safety'],
 }
 
 interface Question {
@@ -67,6 +73,7 @@ interface Props {
 export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props) {
   const { children } = useChildren()
   const { status: subscription, incrementUsage, upgrade } = useSubscription()
+  const { recordCompletion, lastCompletion, clearLastCompletion } = useEngagement()
   const [selectedChildId, setSelectedChildId] = useState('')
   const [board, setBoard] = useState('')
   const [grade, setGrade] = useState('')
@@ -84,6 +91,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [worksheet, setWorksheet] = useState<Worksheet | null>(null)
   const [error, setError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState(false)
+
+  // CBSE syllabus state
+  const [cbseSyllabus, setCbseSyllabus] = useState<SyllabusChapter[]>([])
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([])
+  const [loadingSyllabus, setLoadingSyllabus] = useState(false)
 
   // Handle child selection - pre-fill grade and board
   const handleChildSelect = (childId: string) => {
@@ -109,6 +121,36 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       setTopic('')
     }
   }, [syllabus])
+
+  // Fetch CBSE syllabus when grade and subject are selected
+  useEffect(() => {
+    const fetchCbseSyllabus = async () => {
+      if (syllabus || !grade || !subject) {
+        setCbseSyllabus([])
+        return
+      }
+
+      setLoadingSyllabus(true)
+      try {
+        const response = await api.get(`/api/cbse-syllabus/${grade}/${subject}`)
+        if (response.data && response.data.chapters) {
+          setCbseSyllabus(response.data.chapters)
+        }
+      } catch (err) {
+        console.error('Failed to load CBSE syllabus:', err)
+        setCbseSyllabus([])
+      } finally {
+        setLoadingSyllabus(false)
+      }
+    }
+
+    fetchCbseSyllabus()
+  }, [grade, subject, syllabus])
+
+  // Handle topic selection changes
+  const handleTopicSelectionChange = useCallback((topics: string[]) => {
+    setSelectedTopics(topics)
+  }, [])
 
   // Get available chapters from syllabus or use default subjects
   const availableChapters = syllabus ? syllabus.chapters : []
@@ -140,7 +182,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       return
     }
 
-    if (!board || !grade || !topic || !difficulty) {
+    // Determine which topic(s) to use
+    const useAdvancedSelection = !syllabus && cbseSyllabus.length > 0
+    const topicsToUse = useAdvancedSelection ? selectedTopics : [topic]
+
+    if (!board || !grade || !difficulty) {
       setError('Please fill in all required fields')
       return
     }
@@ -148,14 +194,24 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       setError('Please select a subject')
       return
     }
+    if (useAdvancedSelection && selectedTopics.length === 0) {
+      setError('Please select at least one topic')
+      return
+    }
+    if (!useAdvancedSelection && !topic) {
+      setError('Please select a topic')
+      return
+    }
 
     setLoading(true)
     setError('')
     setWorksheet(null)
 
-    // Use chapter name as context if from syllabus
+    // Use chapter name as context if from syllabus, or combine selected topics
     const topicWithContext = syllabus && chapter
       ? `${chapter} - ${topic}`
+      : useAdvancedSelection
+      ? topicsToUse.slice(0, 5).join(', ')  // Limit to 5 topics for better worksheet focus
       : topic
 
     try {
@@ -206,6 +262,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+
+      // Record completion for engagement tracking (if child selected)
+      if (selectedChildId) {
+        await recordCompletion(selectedChildId)
+      }
     } catch (err) {
       console.error('Failed to download PDF:', err)
       setError('Failed to download PDF')
@@ -238,8 +299,30 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-2">PracticeCraft AI</h1>
-        <p className="text-center text-gray-600 mb-8">Generate practice worksheets aligned to your child's syllabus</p>
+        <h1 className="text-3xl font-semibold text-center mb-2 text-slate-800">PracticeCraft AI</h1>
+        <p className="text-center text-slate-600 mb-4">Create practice worksheets aligned to your child's syllabus</p>
+
+        {/* Trust Micro-copy */}
+        <div className="flex justify-center gap-4 mb-8 text-xs print:hidden">
+          <span className="inline-flex items-center gap-1.5 text-green-700">
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            CBSE-aligned
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-blue-700">
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clipRule="evenodd" />
+            </svg>
+            Printable worksheets
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-purple-700">
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+            </svg>
+            Built for parents
+          </span>
+        </div>
 
         {/* Upgrade Banner */}
         {subscription && !subscription.can_generate && (
@@ -282,14 +365,26 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
           </div>
         )}
 
+        {/* CBSE Syllabus Viewer - show as reference when custom syllabus uploaded */}
+        {syllabus && grade && syllabus.subject && (
+          <div className="mb-6 print:hidden">
+            <details className="group">
+              <summary className="cursor-pointer text-sm text-slate-600 hover:text-slate-800 mb-2">
+                View official CBSE syllabus for comparison
+              </summary>
+              <CBSESyllabusViewer grade={grade} subject={syllabus.subject} />
+            </details>
+          </div>
+        )}
+
         {/* Generator Form */}
-        <Card className="mb-8 print:hidden">
-          <CardHeader>
-            <CardTitle>Create Worksheet</CardTitle>
-            <CardDescription>
+        <Card className="mb-8 print:hidden shadow-sm border-slate-200">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold text-slate-800">Create Worksheet</CardTitle>
+            <CardDescription className="text-slate-600">
               {syllabus
                 ? 'Select a chapter and topic from your syllabus'
-                : 'Select options to generate a customized practice worksheet'}
+                : 'Select options to create a practice worksheet'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -378,28 +473,46 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                 </div>
               )}
 
-              {/* Topic */}
-              <div className="space-y-2">
-                <Label htmlFor="topic">Topic *</Label>
-                <Select
-                  value={topic}
-                  onValueChange={setTopic}
-                  disabled={syllabus ? !chapter : !subject}
-                >
-                  <SelectTrigger id="topic">
-                    <SelectValue placeholder={
-                      syllabus
-                        ? (chapter ? "Select topic" : "Select chapter first")
-                        : (subject ? "Select topic" : "Select subject first")
-                    } />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableTopics.map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Topic - only show dropdown if using custom syllabus or no CBSE syllabus */}
+              {(syllabus || cbseSyllabus.length === 0) && (
+                <div className="space-y-2">
+                  <Label htmlFor="topic">Topic *</Label>
+                  <Select
+                    value={topic}
+                    onValueChange={setTopic}
+                    disabled={syllabus ? !chapter : !subject}
+                  >
+                    <SelectTrigger id="topic">
+                      <SelectValue placeholder={
+                        syllabus
+                          ? (chapter ? "Select topic" : "Select chapter first")
+                          : (subject ? "Select topic" : "Select subject first")
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableTopics.map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Advanced Topic Selector - show when CBSE syllabus available and no custom syllabus */}
+              {!syllabus && cbseSyllabus.length > 0 && (
+                <div className="md:col-span-2">
+                  {loadingSyllabus ? (
+                    <p className="text-sm text-gray-500">Loading CBSE syllabus...</p>
+                  ) : (
+                    <TopicSelector
+                      chapters={cbseSyllabus}
+                      childId={selectedChildId || undefined}
+                      subject={subject}
+                      onSelectionChange={handleTopicSelectionChange}
+                    />
+                  )}
+                </div>
+              )}
 
               {/* Difficulty */}
               <div className="space-y-2">
@@ -473,6 +586,29 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
             </Button>
           </CardContent>
         </Card>
+
+        {/* Completion Feedback */}
+        {lastCompletion && selectedChildId && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg print:hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-2xl">✅</span>
+                <div>
+                  <p className="font-medium text-green-800">Worksheet completed!</p>
+                  <p className="text-sm text-green-700">
+                    ⭐ {lastCompletion.stars_earned} star earned • 🔥 {lastCompletion.current_streak}-day streak
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={clearLastCompletion}
+                className="text-green-600 hover:text-green-800 text-sm"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Generated Worksheet */}
         {worksheet && (

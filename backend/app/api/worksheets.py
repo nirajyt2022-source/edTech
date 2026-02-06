@@ -220,6 +220,7 @@ class SavedWorksheet(BaseModel):
     language: str
     questions: list[Question]
     created_at: str
+    regeneration_count: int = 0
 
 
 def get_user_id_from_token(authorization: str) -> str:
@@ -315,6 +316,7 @@ async def list_saved_worksheets(
                 "created_at": row["created_at"],
                 "child_id": row.get("child_id"),
                 "child_name": child_data.get("name") if child_data else None,
+                "regeneration_count": row.get("regeneration_count", 0),
             })
 
         return {"worksheets": worksheets, "count": len(worksheets)}
@@ -359,6 +361,7 @@ async def get_saved_worksheet(
             language=row.get("language", "English"),
             questions=questions,
             created_at=row["created_at"],
+            regeneration_count=row.get("regeneration_count", 0),
         )
 
     except HTTPException:
@@ -386,3 +389,170 @@ async def delete_saved_worksheet(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete worksheet: {str(e)}")
+
+
+FREE_TIER_LIMIT = 3  # worksheets per month
+
+
+def check_can_generate(user_id: str) -> tuple[bool, str, dict]:
+    """Check if user can generate a worksheet. Returns (can_generate, tier, subscription_data)."""
+    result = supabase.table("user_subscriptions") \
+        .select("*") \
+        .eq("user_id", user_id) \
+        .execute()
+
+    if not result.data:
+        # Create subscription if doesn't exist
+        insert_result = supabase.table("user_subscriptions") \
+            .insert({"user_id": user_id, "tier": "free", "worksheets_generated_this_month": 0}) \
+            .execute()
+        sub = insert_result.data[0] if insert_result.data else {"tier": "free", "worksheets_generated_this_month": 0}
+    else:
+        sub = result.data[0]
+
+    if sub["tier"] == "paid":
+        return True, "paid", sub
+
+    remaining = FREE_TIER_LIMIT - sub.get("worksheets_generated_this_month", 0)
+    return remaining > 0, "free", sub
+
+
+def increment_usage(user_id: str, sub: dict) -> None:
+    """Increment usage for free tier users."""
+    if sub.get("tier") == "paid":
+        return
+
+    new_count = sub.get("worksheets_generated_this_month", 0) + 1
+    supabase.table("user_subscriptions") \
+        .update({
+            "worksheets_generated_this_month": new_count,
+            "updated_at": datetime.now().isoformat()
+        }) \
+        .eq("user_id", user_id) \
+        .execute()
+
+
+@router.post("/regenerate/{worksheet_id}", response_model=WorksheetGenerationResponse)
+async def regenerate_worksheet(
+    worksheet_id: str,
+    authorization: str = Header(None)
+):
+    """
+    Regenerate a worksheet with the same settings.
+    First regeneration is free, subsequent ones count against quota.
+    """
+    user_id = get_user_id_from_token(authorization)
+
+    # Get the original worksheet
+    try:
+        result = supabase.table("worksheets") \
+            .select("*") \
+            .eq("id", worksheet_id) \
+            .eq("user_id", user_id) \
+            .single() \
+            .execute()
+
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Worksheet not found")
+
+        original = result.data
+        regeneration_count = original.get("regeneration_count", 0)
+
+        # Check if this regeneration counts against quota
+        # First regeneration is free, subsequent ones count
+        if regeneration_count > 0:
+            can_generate, tier, sub = check_can_generate(user_id)
+            if not can_generate:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Free tier limit reached. Upgrade to Pro for unlimited worksheets."
+                )
+
+        # Generate new worksheet with same settings
+        start_time = datetime.now()
+
+        user_prompt = f"""Generate a {original['difficulty'].lower()} difficulty worksheet:
+- Board: {original.get('board', 'CBSE')}
+- Grade: {original['grade']}
+- Subject: {original['subject']}
+- Topic: {original['topic']}
+- Number of Questions: {len(original['questions'])}
+- Language for instructions: {original.get('language', 'English')}
+
+Generate exactly {len(original['questions'])} NEW questions (different from before). Return ONLY valid JSON, no markdown."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.8,  # Slightly higher for more variety
+            max_tokens=4096,
+        )
+
+        content = response.choices[0].message.content or ""
+
+        # Clean up response
+        content = content.strip()
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=500, detail=f"Failed to parse AI response: {str(e)}")
+
+        # Build questions
+        questions = []
+        for i, q in enumerate(data.get("questions", [])):
+            questions.append(Question(
+                id=q.get("id", f"q{i+1}"),
+                type=q.get("type", "short_answer"),
+                text=q.get("text", ""),
+                options=q.get("options"),
+                correct_answer=q.get("correct_answer"),
+                explanation=q.get("explanation"),
+            ))
+
+        worksheet = Worksheet(
+            title=data.get("title", f"{original['topic']} Practice Worksheet"),
+            grade=original["grade"],
+            subject=original["subject"],
+            topic=original["topic"],
+            difficulty=original["difficulty"],
+            language=original.get("language", "English"),
+            questions=questions,
+        )
+
+        # Increment regeneration count on original worksheet
+        supabase.table("worksheets") \
+            .update({
+                "regeneration_count": regeneration_count + 1,
+                "updated_at": datetime.now().isoformat()
+            }) \
+            .eq("id", worksheet_id) \
+            .execute()
+
+        # Increment usage if this wasn't free (regeneration_count > 0)
+        if regeneration_count > 0:
+            _, _, sub = check_can_generate(user_id)
+            increment_usage(user_id, sub)
+
+        end_time = datetime.now()
+        generation_time_ms = int((end_time - start_time).total_seconds() * 1000)
+
+        return WorksheetGenerationResponse(
+            worksheet=worksheet,
+            generation_time_ms=generation_time_ms,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to regenerate worksheet: {str(e)}")

@@ -19,6 +19,7 @@ interface SavedWorksheetSummary {
   created_at: string
   child_id: string | null
   child_name: string | null
+  regeneration_count?: number
 }
 
 interface Question {
@@ -41,6 +42,7 @@ interface FullWorksheet {
   language: string
   questions: Question[]
   created_at: string
+  regeneration_count?: number
 }
 
 export default function SavedWorksheets() {
@@ -48,6 +50,7 @@ export default function SavedWorksheets() {
   const [worksheets, setWorksheets] = useState<SavedWorksheetSummary[]>([])
   const [selectedWorksheet, setSelectedWorksheet] = useState<FullWorksheet | null>(null)
   const [loading, setLoading] = useState(true)
+  const [regenerating, setRegenerating] = useState(false)
   const [error, setError] = useState('')
   const [filterChildId, setFilterChildId] = useState('')
 
@@ -127,6 +130,38 @@ export default function SavedWorksheets() {
     }
   }
 
+  const regenerateWorksheet = async (worksheetId: string) => {
+    setRegenerating(true)
+    setError('')
+    try {
+      const response = await api.post(`/api/worksheets/regenerate/${worksheetId}`)
+      const newWorksheet = response.data.worksheet
+      // Update the selected worksheet with new questions
+      if (selectedWorksheet && selectedWorksheet.id === worksheetId) {
+        setSelectedWorksheet({
+          ...selectedWorksheet,
+          questions: newWorksheet.questions,
+          title: newWorksheet.title,
+          regeneration_count: (selectedWorksheet.regeneration_count || 0) + 1,
+        })
+      }
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } }
+        if (axiosErr.response?.status === 403) {
+          setError('Free tier limit reached. Upgrade to Pro for unlimited regenerations.')
+        } else {
+          setError(axiosErr.response?.data?.detail || 'Failed to regenerate worksheet')
+        }
+      } else {
+        setError('Failed to regenerate worksheet')
+      }
+      console.error(err)
+    } finally {
+      setRegenerating(false)
+    }
+  }
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-IN', {
       day: 'numeric',
@@ -134,6 +169,21 @@ export default function SavedWorksheets() {
       year: 'numeric',
     })
   }
+
+  // Group worksheets by date for better organization
+  const groupedWorksheets = worksheets.reduce((groups, worksheet) => {
+    const date = formatDate(worksheet.created_at)
+    if (!groups[date]) {
+      groups[date] = []
+    }
+    groups[date].push(worksheet)
+    return groups
+  }, {} as Record<string, SavedWorksheetSummary[]>)
+
+  const dateGroups = Object.keys(groupedWorksheets).sort((a, b) => {
+    // Sort newest first
+    return new Date(b).getTime() - new Date(a).getTime()
+  })
 
   if (loading) {
     return (
@@ -190,7 +240,19 @@ export default function SavedWorksheets() {
                     {selectedWorksheet.grade} | {selectedWorksheet.subject} | {selectedWorksheet.topic} | {selectedWorksheet.difficulty}
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant="secondary"
+                    onClick={() => regenerateWorksheet(selectedWorksheet.id)}
+                    disabled={regenerating}
+                  >
+                    {regenerating ? 'Regenerating...' : 'Regenerate'}
+                    {(selectedWorksheet.regeneration_count || 0) === 0 && (
+                      <span className="ml-1 text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+                        Free
+                      </span>
+                    )}
+                  </Button>
                   <Button onClick={() => downloadPdf(selectedWorksheet)}>
                     Download PDF
                   </Button>
@@ -251,42 +313,51 @@ export default function SavedWorksheets() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4">
-                {worksheets.map((worksheet) => (
-                  <Card key={worksheet.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="py-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg">{worksheet.title}</h3>
-                            {worksheet.child_name && (
-                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                {worksheet.child_name}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {worksheet.grade} | {worksheet.subject} | {worksheet.topic}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {worksheet.question_count} questions • {worksheet.difficulty} • {formatDate(worksheet.created_at)}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => viewWorksheet(worksheet.id)}>
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => deleteWorksheet(worksheet.id)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+              <div className="space-y-6">
+                {dateGroups.map((date) => (
+                  <div key={date}>
+                    <h2 className="text-sm font-medium text-gray-500 mb-3 sticky top-0 bg-gray-50 py-1">
+                      {date}
+                    </h2>
+                    <div className="grid gap-3">
+                      {groupedWorksheets[date].map((worksheet) => (
+                        <Card key={worksheet.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="py-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-lg">{worksheet.title}</h3>
+                                  {worksheet.child_name && (
+                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                      {worksheet.child_name}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {worksheet.grade} | {worksheet.subject} | {worksheet.topic}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {worksheet.question_count} questions • {worksheet.difficulty}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={() => viewWorksheet(worksheet.id)}>
+                                  View
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => deleteWorksheet(worksheet.id)}
+                                >
+                                  Delete
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
