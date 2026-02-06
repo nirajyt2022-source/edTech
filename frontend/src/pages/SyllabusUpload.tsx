@@ -68,7 +68,10 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
 
       setCbseLoading(true)
       try {
-        const response = await api.get(`/api/cbse-syllabus/${cbseGrade}/${cbseSubject}`)
+        const encodedGrade = encodeURIComponent(cbseGrade)
+        const encodedSubject = encodeURIComponent(cbseSubject)
+        const response = await api.get(`/api/cbse-syllabus/${encodedGrade}/${encodedSubject}`)
+        console.log('CBSE Syllabus response:', response.data)
         setCbseSyllabus(response.data)
       } catch (err) {
         console.error('Failed to load CBSE syllabus:', err)
