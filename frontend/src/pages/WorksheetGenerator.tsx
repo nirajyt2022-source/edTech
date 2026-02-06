@@ -6,12 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { api } from '@/lib/api'
 import { useChildren } from '@/lib/children'
+import { useSubscription } from '@/lib/subscription'
 
 const BOARDS = ['CBSE']
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const SUBJECTS = ['Maths', 'English', 'EVS']
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
-const LANGUAGES = ['English', 'Hindi']
+const LANGUAGES = ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu', 'Kannada', 'Arabic', 'Urdu']
 const QUESTION_COUNTS = ['5', '10', '15', '20']
 
 const DEFAULT_TOPICS: Record<string, string[]> = {
@@ -65,6 +66,7 @@ interface Props {
 
 export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props) {
   const { children } = useChildren()
+  const { status: subscription, incrementUsage, upgrade } = useSubscription()
   const [selectedChildId, setSelectedChildId] = useState('')
   const [board, setBoard] = useState('')
   const [grade, setGrade] = useState('')
@@ -126,6 +128,18 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const availableTopics = getAvailableTopics()
 
   const handleGenerate = async () => {
+    // Check subscription limits
+    if (subscription && !subscription.can_generate) {
+      setError('You have reached your free tier limit. Upgrade to continue generating worksheets.')
+      return
+    }
+
+    // Check language restrictions for free tier
+    if (subscription && !subscription.can_use_regional_languages && language !== 'English') {
+      setError('Regional languages are available on the paid plan. Please select English or upgrade.')
+      return
+    }
+
     if (!board || !grade || !topic || !difficulty) {
       setError('Please fill in all required fields')
       return
@@ -156,6 +170,9 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         custom_instructions: customInstructions || undefined,
       })
       setWorksheet(response.data.worksheet)
+
+      // Track usage for free tier
+      await incrementUsage()
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate worksheet'
       setError(errorMessage)
@@ -223,6 +240,32 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-2">PracticeCraft AI</h1>
         <p className="text-center text-gray-600 mb-8">Generate practice worksheets aligned to your child's syllabus</p>
+
+        {/* Upgrade Banner */}
+        {subscription && !subscription.can_generate && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg print:hidden">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-amber-900">Free tier limit reached</p>
+                <p className="text-sm text-amber-700">
+                  You've used all 3 free worksheets this month. Upgrade for unlimited access.
+                </p>
+              </div>
+              <Button onClick={() => upgrade()} variant="default" size="sm">
+                Upgrade to Pro
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Usage Info for Free Tier */}
+        {subscription && subscription.tier === 'free' && subscription.can_generate && (
+          <div className="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-lg print:hidden">
+            <p className="text-sm text-gray-600">
+              Free tier: {subscription.worksheets_remaining} of 3 worksheets remaining this month
+            </p>
+          </div>
+        )}
 
         {/* Syllabus Banner */}
         {syllabus && (

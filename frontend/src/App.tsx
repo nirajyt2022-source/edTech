@@ -7,6 +7,7 @@ import Auth from './pages/Auth'
 import { Button } from '@/components/ui/button'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { ChildrenProvider } from '@/lib/children'
+import { SubscriptionProvider, useSubscription } from '@/lib/subscription'
 import './index.css'
 
 type Page = 'generator' | 'syllabus' | 'saved' | 'children'
@@ -21,6 +22,32 @@ interface ParsedSyllabus {
     name: string
     topics: { name: string; subtopics?: string[] }[]
   }[]
+}
+
+function UsageBadge() {
+  const { status } = useSubscription()
+
+  if (!status) return null
+
+  if (status.tier === 'paid') {
+    return (
+      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+        Pro
+      </span>
+    )
+  }
+
+  return (
+    <span className={`text-xs px-2 py-1 rounded-full ${
+      status.worksheets_remaining === 0
+        ? 'bg-red-100 text-red-800'
+        : status.worksheets_remaining && status.worksheets_remaining <= 1
+        ? 'bg-yellow-100 text-yellow-800'
+        : 'bg-gray-100 text-gray-800'
+    }`}>
+      {status.worksheets_remaining}/{3} free
+    </span>
+  )
 }
 
 function AppContent() {
@@ -83,6 +110,7 @@ function AppContent() {
 
               {/* User Menu */}
               <div className="flex items-center gap-3 ml-4 pl-4 border-l">
+                <UsageBadge />
                 <span className="text-sm text-gray-600 hidden md:inline">
                   {user.user_metadata?.name || user.email}
                 </span>
@@ -123,9 +151,11 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <ChildrenProvider>
-        <AppContent />
-      </ChildrenProvider>
+      <SubscriptionProvider>
+        <ChildrenProvider>
+          <AppContent />
+        </ChildrenProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   )
 }

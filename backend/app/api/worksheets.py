@@ -62,7 +62,12 @@ RULES:
 3. Questions must be directly related to the topic
 4. Do NOT add concepts beyond the grade level
 5. For Maths: use Indian number system and contexts (rupees, local names)
-6. Instructions should be in the specified language, but math symbols stay the same
+6. Instructions and question text should be in the specified language
+7. Mathematical symbols, numbers, and formulas remain unchanged regardless of language
+8. For regional languages (Hindi, Marathi, Tamil, Telugu, Kannada, Arabic, Urdu):
+   - Use native script for that language
+   - Keep vocabulary grade-appropriate
+   - Use culturally relevant examples
 
 OUTPUT FORMAT (JSON only, no markdown):
 {

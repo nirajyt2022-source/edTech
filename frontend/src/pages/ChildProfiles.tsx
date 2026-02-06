@@ -6,12 +6,17 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useChildren, type Child } from '@/lib/children'
+import { useSubscription } from '@/lib/subscription'
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const BOARDS = ['CBSE', 'ICSE', 'State Board']
 
 export default function ChildProfiles() {
   const { children, loading, error, createChild, updateChild, deleteChild } = useChildren()
+  const { status: subscription, upgrade } = useSubscription()
+
+  // Free users can only have 1 child
+  const canAddChild = subscription?.can_use_multi_child || children.length === 0
   const [showForm, setShowForm] = useState(false)
   const [editingChild, setEditingChild] = useState<Child | null>(null)
   const [formError, setFormError] = useState('')
@@ -205,7 +210,19 @@ export default function ChildProfiles() {
         {/* Add Button (when form is hidden) */}
         {!showForm && (
           <div className="mb-6">
-            <Button onClick={openAddForm}>Add Child</Button>
+            {canAddChild ? (
+              <Button onClick={openAddForm}>Add Child</Button>
+            ) : (
+              <div className="flex items-center gap-4">
+                <Button disabled>Add Child</Button>
+                <span className="text-sm text-gray-500">
+                  Multiple children is a Pro feature.{' '}
+                  <button onClick={() => upgrade()} className="text-blue-600 hover:underline">
+                    Upgrade
+                  </button>
+                </span>
+              </div>
+            )}
           </div>
         )}
 

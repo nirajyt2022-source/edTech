@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import health, worksheets, syllabus, children
+from app.api import health, worksheets, syllabus, children, subscription
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -28,6 +28,7 @@ app.include_router(health.router)
 app.include_router(worksheets.router)
 app.include_router(syllabus.router)
 app.include_router(children.router)
+app.include_router(subscription.router)
 
 
 @app.get("/")

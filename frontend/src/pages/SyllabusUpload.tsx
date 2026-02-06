@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
+import { useSubscription } from '@/lib/subscription'
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const SUBJECTS = ['Maths', 'English', 'EVS', 'Science', 'Social Studies']
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export default function SyllabusUpload({ onSyllabusReady }: Props) {
+  const { status: subscription, upgrade } = useSubscription()
   const [file, setFile] = useState<File | null>(null)
   const [gradeHint, setGradeHint] = useState('')
   const [subjectHint, setSubjectHint] = useState('')
@@ -111,6 +113,25 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
         <p className="text-center text-gray-600 mb-8">
           Upload your child's school syllabus to generate aligned worksheets
         </p>
+
+        {/* Upgrade Banner for Free Users */}
+        {subscription && !subscription.can_upload_syllabus && (
+          <Card className="mb-8 border-amber-200 bg-amber-50">
+            <CardContent className="py-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-amber-900">Pro Feature</p>
+                  <p className="text-sm text-amber-700">
+                    Custom syllabus upload is available on the paid plan.
+                  </p>
+                </div>
+                <Button onClick={() => upgrade()} variant="default" size="sm">
+                  Upgrade to Pro
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Upload Form */}
         <Card className="mb-8">
@@ -210,7 +231,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
             <Button
               className="w-full mt-6"
               onClick={handleUpload}
-              disabled={!file || loading}
+              disabled={!file || loading || (subscription && !subscription.can_upload_syllabus)}
             >
               {loading ? 'Parsing Syllabus...' : 'Parse Syllabus'}
             </Button>
