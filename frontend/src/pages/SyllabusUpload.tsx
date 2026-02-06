@@ -234,7 +234,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
             </Card>
 
             {/* CBSE Syllabus Display */}
-            {cbseSyllabus && (
+            {cbseSyllabus && cbseSyllabus.chapters && (
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -255,7 +255,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                       <div key={chIdx} className="border rounded-lg p-4">
                         <h3 className="font-semibold text-lg mb-2">{chapter.name}</h3>
                         <ul className="space-y-2">
-                          {chapter.topics.map((topic, tIdx) => (
+                          {(chapter.topics || []).map((topic, tIdx) => (
                             <li key={tIdx} className="ml-4">
                               <span className="text-gray-700">{topic.name}</span>
                               {topic.subtopics && topic.subtopics.length > 0 && (
@@ -459,7 +459,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                       <div key={chIdx} className="border rounded-lg p-4">
                         <h3 className="font-semibold text-lg mb-2">{chapter.name}</h3>
                         <ul className="space-y-2">
-                          {chapter.topics.map((topic, tIdx) => (
+                          {(chapter.topics || []).map((topic, tIdx) => (
                             <li key={tIdx} className="ml-4">
                               <span className="text-gray-700">{topic.name}</span>
                               {topic.subtopics && topic.subtopics.length > 0 && (
