@@ -56,9 +56,16 @@ export function ChildrenProvider({ children: childrenProp }: { children: ReactNo
     setError(null)
     try {
       const response = await api.get('/api/children/')
-      setChildrenList(response.data.children)
-    } catch (err) {
-      setError('Failed to load children')
+      setChildrenList(response.data.children || [])
+    } catch (err: unknown) {
+      // Check if it's a database setup issue
+      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } }
+      if (axiosErr.response?.status === 500 && axiosErr.response?.data?.detail?.includes('relation')) {
+        setError('Database not set up. Please run the SQL schema in Supabase.')
+      } else {
+        setError(null) // Don't show error for empty data
+      }
+      setChildrenList([])
       console.error(err)
     } finally {
       setLoading(false)

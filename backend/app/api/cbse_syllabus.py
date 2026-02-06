@@ -6,7 +6,12 @@ from app.core.config import get_settings
 router = APIRouter(prefix="/api/cbse-syllabus", tags=["cbse-syllabus"])
 
 settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+
+def get_supabase():
+    """Create a fresh Supabase client to ensure schema is up to date."""
+    return create_client(settings.supabase_url, settings.supabase_service_key)
+
+supabase = get_supabase()
 
 
 class SyllabusTopic(BaseModel):
@@ -702,9 +707,12 @@ async def seed_cbse_syllabus():
     ]
 
     try:
+        # Create fresh client to ensure schema is up to date
+        fresh_client = get_supabase()
+
         for syllabus in syllabus_data:
             # Upsert - insert or update if exists
-            supabase.table("cbse_syllabus").upsert({
+            fresh_client.table("cbse_syllabus").upsert({
                 "grade": syllabus["grade"],
                 "subject": syllabus["subject"],
                 "chapters": syllabus["chapters"]

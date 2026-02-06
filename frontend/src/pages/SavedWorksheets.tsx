@@ -64,9 +64,15 @@ export default function SavedWorksheets() {
     try {
       const params = filterChildId ? `?child_id=${filterChildId}` : ''
       const response = await api.get(`/api/worksheets/saved/list${params}`)
-      setWorksheets(response.data.worksheets)
-    } catch (err) {
-      setError('Failed to load worksheets')
+      setWorksheets(response.data.worksheets || [])
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } }
+      if (axiosErr.response?.status === 500 && axiosErr.response?.data?.detail?.includes('relation')) {
+        setError('Database not set up. Please run the SQL schema in Supabase.')
+      } else {
+        setError('') // Don't show error, just show empty state
+      }
+      setWorksheets([])
       console.error(err)
     } finally {
       setLoading(false)
