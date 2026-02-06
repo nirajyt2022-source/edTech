@@ -17,6 +17,7 @@ app.add_middleware(
     allow_origins=[
         settings.frontend_url,
         "http://localhost:5173",  # Vite dev server
+        "https://ed-tech-drab.vercel.app",  # Production frontend
     ],
     allow_credentials=True,
     allow_methods=["*"],
