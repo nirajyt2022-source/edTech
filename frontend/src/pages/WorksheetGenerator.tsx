@@ -1,0 +1,511 @@
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { api } from '@/lib/api'
+import { useChildren } from '@/lib/children'
+
+const BOARDS = ['CBSE']
+const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
+const SUBJECTS = ['Maths', 'English', 'EVS']
+const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
+const LANGUAGES = ['English', 'Hindi']
+const QUESTION_COUNTS = ['5', '10', '15', '20']
+
+const DEFAULT_TOPICS: Record<string, string[]> = {
+  Maths: ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Fractions', 'Word Problems'],
+  English: ['Grammar', 'Vocabulary', 'Reading Comprehension', 'Sentence Formation'],
+  EVS: ['Environment', 'Family & Community', 'Daily Life', 'Plants & Animals'],
+}
+
+interface Question {
+  id: string
+  type: string
+  text: string
+  options?: string[]
+  correct_answer?: string
+  explanation?: string
+}
+
+interface Worksheet {
+  title: string
+  grade: string
+  subject: string
+  topic: string
+  difficulty: string
+  language: string
+  questions: Question[]
+}
+
+interface SyllabusTopic {
+  name: string
+  subtopics?: string[]
+}
+
+interface SyllabusChapter {
+  name: string
+  topics: SyllabusTopic[]
+}
+
+interface ParsedSyllabus {
+  id: string
+  name: string
+  board?: string
+  grade?: string
+  subject?: string
+  chapters: SyllabusChapter[]
+}
+
+interface Props {
+  syllabus?: ParsedSyllabus | null
+  onClearSyllabus?: () => void
+}
+
+export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props) {
+  const { children } = useChildren()
+  const [selectedChildId, setSelectedChildId] = useState('')
+  const [board, setBoard] = useState('')
+  const [grade, setGrade] = useState('')
+  const [subject, setSubject] = useState('')
+  const [chapter, setChapter] = useState('')
+  const [topic, setTopic] = useState('')
+  const [difficulty, setDifficulty] = useState('')
+  const [questionCount, setQuestionCount] = useState('10')
+  const [language, setLanguage] = useState('English')
+  const [customInstructions, setCustomInstructions] = useState('')
+
+  const [loading, setLoading] = useState(false)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [worksheet, setWorksheet] = useState<Worksheet | null>(null)
+  const [error, setError] = useState('')
+  const [saveSuccess, setSaveSuccess] = useState(false)
+
+  // Handle child selection - pre-fill grade and board
+  const handleChildSelect = (childId: string) => {
+    setSelectedChildId(childId)
+    if (childId) {
+      const child = children.find(c => c.id === childId)
+      if (child) {
+        setGrade(child.grade)
+        if (child.board) {
+          setBoard(child.board)
+        }
+      }
+    }
+  }
+
+  // Pre-fill form when syllabus is provided
+  useEffect(() => {
+    if (syllabus) {
+      if (syllabus.board) setBoard(syllabus.board)
+      if (syllabus.grade) setGrade(syllabus.grade)
+      if (syllabus.subject) setSubject(syllabus.subject)
+      setChapter('')
+      setTopic('')
+    }
+  }, [syllabus])
+
+  // Get available chapters from syllabus or use default subjects
+  const availableChapters = syllabus ? syllabus.chapters : []
+
+  // Get available topics based on selection
+  const getAvailableTopics = () => {
+    if (syllabus && chapter) {
+      const selectedChapter = syllabus.chapters.find(ch => ch.name === chapter)
+      return selectedChapter ? selectedChapter.topics.map(t => t.name) : []
+    }
+    if (!syllabus && subject) {
+      return DEFAULT_TOPICS[subject] || []
+    }
+    return []
+  }
+
+  const availableTopics = getAvailableTopics()
+
+  const handleGenerate = async () => {
+    if (!board || !grade || !topic || !difficulty) {
+      setError('Please fill in all required fields')
+      return
+    }
+    if (!syllabus && !subject) {
+      setError('Please select a subject')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+    setWorksheet(null)
+
+    // Use chapter name as context if from syllabus
+    const topicWithContext = syllabus && chapter
+      ? `${chapter} - ${topic}`
+      : topic
+
+    try {
+      const response = await api.post('/api/worksheets/generate', {
+        board,
+        grade_level: grade,
+        subject: syllabus?.subject || subject,
+        topic: topicWithContext,
+        difficulty: difficulty.toLowerCase(),
+        num_questions: parseInt(questionCount),
+        language,
+        custom_instructions: customInstructions || undefined,
+      })
+      setWorksheet(response.data.worksheet)
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate worksheet'
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const handleDownloadPdf = async () => {
+    if (!worksheet) return
+
+    setDownloadingPdf(true)
+    try {
+      const response = await api.post('/api/worksheets/export-pdf', {
+        worksheet,
+        include_answer_key: true,
+      }, {
+        responseType: 'blob',
+      })
+
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${worksheet.title.replace(/\s+/g, '_')}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to download PDF:', err)
+      setError('Failed to download PDF')
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!worksheet) return
+
+    setSaving(true)
+    setSaveSuccess(false)
+    try {
+      await api.post('/api/worksheets/save', {
+        worksheet,
+        board,
+        child_id: selectedChildId || undefined,
+      })
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+    } catch (err) {
+      console.error('Failed to save worksheet:', err)
+      setError('Failed to save worksheet')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-center mb-2">PracticeCraft AI</h1>
+        <p className="text-center text-gray-600 mb-8">Generate practice worksheets aligned to your child's syllabus</p>
+
+        {/* Syllabus Banner */}
+        {syllabus && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between print:hidden">
+            <div>
+              <p className="font-medium text-blue-900">Using syllabus: {syllabus.name}</p>
+              <p className="text-sm text-blue-700">
+                {syllabus.grade} {syllabus.subject && `• ${syllabus.subject}`} • {syllabus.chapters.length} chapters
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={onClearSyllabus}>
+              Clear Syllabus
+            </Button>
+          </div>
+        )}
+
+        {/* Generator Form */}
+        <Card className="mb-8 print:hidden">
+          <CardHeader>
+            <CardTitle>Create Worksheet</CardTitle>
+            <CardDescription>
+              {syllabus
+                ? 'Select a chapter and topic from your syllabus'
+                : 'Select options to generate a customized practice worksheet'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Child Selector */}
+              {children.length > 0 && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="child">Generate for</Label>
+                  <Select value={selectedChildId} onValueChange={handleChildSelect}>
+                    <SelectTrigger id="child">
+                      <SelectValue placeholder="Select a child (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No child selected</SelectItem>
+                      {children.map((child) => (
+                        <SelectItem key={child.id} value={child.id}>
+                          {child.name} ({child.grade})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Board */}
+              <div className="space-y-2">
+                <Label htmlFor="board">Board *</Label>
+                <Select value={board} onValueChange={setBoard}>
+                  <SelectTrigger id="board">
+                    <SelectValue placeholder="Select board" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BOARDS.map((b) => (
+                      <SelectItem key={b} value={b}>{b}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Grade */}
+              <div className="space-y-2">
+                <Label htmlFor="grade">Grade *</Label>
+                <Select value={grade} onValueChange={setGrade}>
+                  <SelectTrigger id="grade">
+                    <SelectValue placeholder="Select grade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GRADES.map((g) => (
+                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Subject (only show if no syllabus) */}
+              {!syllabus && (
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject *</Label>
+                  <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic('') }}>
+                    <SelectTrigger id="subject">
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUBJECTS.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Chapter (only show if syllabus) */}
+              {syllabus && (
+                <div className="space-y-2">
+                  <Label htmlFor="chapter">Chapter *</Label>
+                  <Select value={chapter} onValueChange={(val) => { setChapter(val); setTopic('') }}>
+                    <SelectTrigger id="chapter">
+                      <SelectValue placeholder="Select chapter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableChapters.map((ch) => (
+                        <SelectItem key={ch.name} value={ch.name}>{ch.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Topic */}
+              <div className="space-y-2">
+                <Label htmlFor="topic">Topic *</Label>
+                <Select
+                  value={topic}
+                  onValueChange={setTopic}
+                  disabled={syllabus ? !chapter : !subject}
+                >
+                  <SelectTrigger id="topic">
+                    <SelectValue placeholder={
+                      syllabus
+                        ? (chapter ? "Select topic" : "Select chapter first")
+                        : (subject ? "Select topic" : "Select subject first")
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableTopics.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Difficulty */}
+              <div className="space-y-2">
+                <Label htmlFor="difficulty">Difficulty *</Label>
+                <Select value={difficulty} onValueChange={setDifficulty}>
+                  <SelectTrigger id="difficulty">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DIFFICULTIES.map((d) => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Question Count */}
+              <div className="space-y-2">
+                <Label htmlFor="questionCount">Number of Questions</Label>
+                <Select value={questionCount} onValueChange={setQuestionCount}>
+                  <SelectTrigger id="questionCount">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {QUESTION_COUNTS.map((c) => (
+                      <SelectItem key={c} value={c}>{c} questions</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Language */}
+              <div className="space-y-2">
+                <Label htmlFor="language">Language</Label>
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger id="language">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LANGUAGES.map((l) => (
+                      <SelectItem key={l} value={l}>{l}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Custom Instructions */}
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="customInstructions">Custom Instructions (Optional)</Label>
+                <Textarea
+                  id="customInstructions"
+                  placeholder="E.g., Focus on 2-digit numbers, include word problems..."
+                  value={customInstructions}
+                  onChange={(e) => setCustomInstructions(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md">
+                {error}
+              </div>
+            )}
+
+            <Button
+              className="w-full mt-6"
+              onClick={handleGenerate}
+              disabled={loading}
+            >
+              {loading ? 'Generating...' : 'Generate Worksheet'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Generated Worksheet */}
+        {worksheet && (
+          <Card className="print:shadow-none print:border-none">
+            <CardHeader className="print:pb-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-2xl">{worksheet.title}</CardTitle>
+                  <CardDescription className="text-base mt-1">
+                    {worksheet.grade} | {worksheet.subject} | {worksheet.topic} | {worksheet.difficulty}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2 print:hidden">
+                  <Button onClick={handleSave} disabled={saving} variant={saveSuccess ? "outline" : "default"}>
+                    {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
+                  </Button>
+                  <Button onClick={handleDownloadPdf} disabled={downloadingPdf}>
+                    {downloadingPdf ? 'Downloading...' : 'Download PDF'}
+                  </Button>
+                  <Button onClick={handlePrint} variant="outline">
+                    Print
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4 p-3 bg-blue-50 rounded-md print:bg-gray-100">
+                <p className="font-medium">Instructions:</p>
+                <p className="text-sm text-gray-700">Answer all questions. Show your work where applicable.</p>
+              </div>
+
+              <div className="space-y-6">
+                {worksheet.questions.map((question, index) => (
+                  <div key={question.id} className="border-b pb-4 last:border-b-0">
+                    <p className="font-medium mb-2">
+                      Q{index + 1}. {question.text}
+                    </p>
+                    {question.options && (
+                      <div className="ml-4 space-y-1">
+                        {question.options.map((option, optIndex) => (
+                          <p key={optIndex} className="text-gray-700">
+                            {String.fromCharCode(65 + optIndex)}. {option}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {question.type === 'fill_blank' && (
+                      <div className="ml-4 mt-2">
+                        <p className="text-gray-500">Answer: _________________</p>
+                      </div>
+                    )}
+                    {question.type === 'short_answer' && (
+                      <div className="ml-4 mt-2">
+                        <div className="border-b border-gray-300 h-8"></div>
+                        <div className="border-b border-gray-300 h-8"></div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Answer Key Section */}
+              <div className="mt-8 pt-4 border-t-2 border-dashed print:break-before-page">
+                <h3 className="font-bold text-lg mb-4">Answer Key</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {worksheet.questions.map((question, index) => (
+                    <p key={question.id} className="text-sm">
+                      Q{index + 1}: {question.correct_answer}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  )
+}
