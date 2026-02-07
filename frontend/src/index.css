@@ -1,62 +1,302 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* K5-inspired calm, academic color palette */
-  --color-background: hsl(210 20% 98%);
-  --color-foreground: hsl(220 20% 20%);
+  /* Warm Scholar Color Palette */
+  --color-background: hsl(45 30% 97%);
+  --color-foreground: hsl(160 30% 15%);
   --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(220 20% 20%);
+  --color-card-foreground: hsl(160 30% 15%);
   --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(220 20% 20%);
-  /* Calm blue-gray primary - utility feel, not CTA hype */
-  --color-primary: hsl(215 25% 35%);
-  --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(210 15% 95%);
-  --color-secondary-foreground: hsl(220 20% 25%);
-  --color-muted: hsl(210 15% 95%);
-  --color-muted-foreground: hsl(215 15% 50%);
-  --color-accent: hsl(210 15% 93%);
-  --color-accent-foreground: hsl(220 20% 25%);
-  --color-destructive: hsl(0 65% 55%);
+  --color-popover-foreground: hsl(160 30% 15%);
+
+  /* Deep forest green primary - scholarly, trustworthy */
+  --color-primary: hsl(160 45% 22%);
+  --color-primary-foreground: hsl(45 30% 97%);
+
+  /* Soft sage secondary */
+  --color-secondary: hsl(150 15% 92%);
+  --color-secondary-foreground: hsl(160 30% 20%);
+
+  --color-muted: hsl(45 20% 94%);
+  --color-muted-foreground: hsl(160 10% 45%);
+
+  /* Warm amber accent */
+  --color-accent: hsl(42 75% 52%);
+  --color-accent-foreground: hsl(160 30% 15%);
+
+  --color-destructive: hsl(0 65% 50%);
   --color-destructive-foreground: hsl(0 0% 100%);
-  /* Softer borders */
-  --color-border: hsl(210 15% 88%);
-  --color-input: hsl(210 15% 88%);
-  --color-ring: hsl(215 25% 45%);
-  /* Slightly more rounded for friendly feel */
-  --radius: 0.625rem;
+
+  /* Warm, soft borders */
+  --color-border: hsl(45 15% 85%);
+  --color-input: hsl(45 15% 85%);
+  --color-ring: hsl(160 45% 30%);
+
+  /* Generous radius for friendly feel */
+  --radius: 0.75rem;
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  /* Clean, academic font stack */
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--color-background);
   color: var(--color-foreground);
-  line-height: 1.6;
+  line-height: 1.7;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Improved typography for academic feel */
+/* Elegant serif headings */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  line-height: 1.3;
-  color: hsl(220 20% 18%);
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  line-height: 1.25;
+  color: hsl(160 35% 18%);
+  letter-spacing: -0.02em;
 }
 
-/* Calm link styling */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 1.875rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+/* Warm link styling */
 a {
-  color: hsl(215 60% 40%);
+  color: hsl(160 45% 28%);
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 a:hover {
-  color: hsl(215 60% 30%);
+  color: hsl(160 50% 20%);
 }
 
-/* Softer focus states */
+/* Elegant focus states */
 *:focus-visible {
-  outline: 2px solid hsl(215 25% 55%);
-  outline-offset: 2px;
+  outline: 2px solid hsl(160 45% 35%);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(45 20% 94%);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(160 20% 70%);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(160 25% 55%);
+}
+
+/* Subtle paper texture overlay */
+.paper-texture {
+  position: relative;
+}
+
+.paper-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Animated gradient background */
+.gradient-bg {
+  background:
+    radial-gradient(ellipse at 20% 20%, hsla(45, 60%, 85%, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, hsla(160, 30%, 85%, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, hsla(42, 50%, 90%, 0.2) 0%, transparent 70%),
+    var(--color-background);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 40px -15px hsla(160, 30%, 20%, 0.12),
+    0 10px 20px -10px hsla(160, 30%, 20%, 0.08);
+}
+
+/* Button animations */
+.btn-animate {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-animate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, hsla(0, 0%, 100%, 0.2) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.btn-animate:hover::after {
+  transform: translateX(100%);
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-fade-in-delayed {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out 0.15s forwards;
+}
+
+.animate-fade-in-delayed-2 {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out 0.3s forwards;
+}
+
+/* Stagger children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+
+/* Decorative elements */
+.decorative-line {
+  height: 3px;
+  width: 60px;
+  background: linear-gradient(90deg, hsl(160 45% 30%), hsl(42 75% 52%));
+  border-radius: 2px;
+}
+
+.decorative-dots::before {
+  content: '• • •';
+  color: hsl(42 60% 60%);
+  letter-spacing: 0.5em;
+  font-size: 0.75rem;
+}
+
+/* Trust badge styling */
+.trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: linear-gradient(135deg, hsl(150 20% 95%) 0%, hsl(45 25% 95%) 100%);
+  border: 1px solid hsl(150 15% 88%);
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: hsl(160 35% 28%);
+}
+
+.trust-badge svg {
+  width: 14px;
+  height: 14px;
+  color: hsl(160 50% 35%);
+}
+
+/* Input styling enhancements */
+input, textarea, select {
+  font-family: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: hsl(160 10% 60%);
+}
+
+/* Selection styling */
+::selection {
+  background: hsla(160, 45%, 35%, 0.2);
+  color: hsl(160 35% 15%);
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid hsl(45 15% 85%);
+  border-top-color: hsl(160 45% 30%);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Pulse animation for engagement elements */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+.pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Star animation */
+@keyframes star-pop {
+  0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.star-animate {
+  animation: star-pop 0.4s ease-out forwards;
+}
+
+/* Print styles */
 @media print {
   .print\:hidden {
     display: none !important;
@@ -75,5 +315,9 @@ a:hover {
   }
   .print\:pb-2 {
     padding-bottom: 0.5rem !important;
+  }
+
+  body {
+    font-family: Georgia, serif;
   }
 }

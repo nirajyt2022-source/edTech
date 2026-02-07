@@ -42,13 +42,11 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
   const { status: subscription, upgrade } = useSubscription()
   const [mode, setMode] = useState<'cbse' | 'custom'>('cbse')
 
-  // CBSE mode state
   const [cbseGrade, setCbseGrade] = useState('')
   const [cbseSubject, setCbseSubject] = useState('')
   const [cbseSyllabus, setCbseSyllabus] = useState<CBSESyllabusData | null>(null)
   const [cbseLoading, setCbseLoading] = useState(false)
 
-  // Custom upload state
   const [file, setFile] = useState<File | null>(null)
   const [gradeHint, setGradeHint] = useState('')
   const [subjectHint, setSubjectHint] = useState('')
@@ -58,7 +56,6 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
   const [confidenceScore, setConfidenceScore] = useState<number | null>(null)
   const [dragActive, setDragActive] = useState(false)
 
-  // Load CBSE syllabus when grade and subject are selected
   useEffect(() => {
     const loadCBSESyllabus = async () => {
       if (!cbseGrade || !cbseSubject) {
@@ -71,7 +68,6 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
         const encodedGrade = encodeURIComponent(cbseGrade)
         const encodedSubject = encodeURIComponent(cbseSubject)
         const response = await api.get(`/api/cbse-syllabus/${encodedGrade}/${encodedSubject}`)
-        console.log('CBSE Syllabus response:', response.data)
         setCbseSyllabus(response.data)
       } catch (err) {
         console.error('Failed to load CBSE syllabus:', err)
@@ -161,48 +157,69 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-2">Syllabus</h1>
-        <p className="text-center text-gray-600 mb-8">
-          Browse official CBSE syllabus or upload your own
-        </p>
+        {/* Header */}
+        <div className="text-center mb-8 animate-fade-in">
+          <div className="decorative-dots mb-4" />
+          <h1 className="text-3xl md:text-4xl mb-3">Syllabus Library</h1>
+          <p className="text-muted-foreground text-lg">
+            Browse official CBSE curriculum or upload your school's syllabus
+          </p>
+        </div>
 
         {/* Mode Toggle */}
-        <div className="flex justify-center gap-2 mb-8">
-          <Button
-            variant={mode === 'cbse' ? 'default' : 'outline'}
-            onClick={() => setMode('cbse')}
-          >
-            CBSE Syllabus
-          </Button>
-          <Button
-            variant={mode === 'custom' ? 'default' : 'outline'}
-            onClick={() => setMode('custom')}
-          >
-            Upload Custom
-            {subscription && !subscription.can_upload_syllabus && (
-              <span className="ml-1 text-xs bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded">Pro</span>
-            )}
-          </Button>
+        <div className="flex justify-center gap-2 mb-8 animate-fade-in-delayed">
+          <div className="inline-flex p-1 bg-muted/50 rounded-xl">
+            <button
+              onClick={() => setMode('cbse')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                mode === 'cbse'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              CBSE Syllabus
+            </button>
+            <button
+              onClick={() => setMode('custom')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                mode === 'custom'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              Upload Custom
+              {subscription && !subscription.can_upload_syllabus && (
+                <span className="text-xs bg-accent/20 text-accent-foreground px-1.5 py-0.5 rounded">Pro</span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* CBSE Mode */}
         {mode === 'cbse' && (
           <>
-            <Card className="mb-8">
+            <Card className="mb-8 paper-texture animate-fade-in">
               <CardHeader>
+                <div className="decorative-line mb-3" />
                 <CardTitle>Browse CBSE Syllabus</CardTitle>
                 <CardDescription>
-                  Select grade and subject to view the official CBSE syllabus
+                  Select grade and subject to view the official CBSE curriculum
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="cbseGrade">Grade</Label>
+                    <Label htmlFor="cbseGrade" className="text-sm font-medium">Grade</Label>
                     <Select value={cbseGrade} onValueChange={setCbseGrade}>
-                      <SelectTrigger id="cbseGrade">
+                      <SelectTrigger id="cbseGrade" className="bg-background/50">
                         <SelectValue placeholder="Select grade" />
                       </SelectTrigger>
                       <SelectContent>
@@ -214,9 +231,9 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cbseSubject">Subject</Label>
+                    <Label htmlFor="cbseSubject" className="text-sm font-medium">Subject</Label>
                     <Select value={cbseSubject} onValueChange={setCbseSubject}>
-                      <SelectTrigger id="cbseSubject">
+                      <SelectTrigger id="cbseSubject" className="bg-background/50">
                         <SelectValue placeholder="Select subject" />
                       </SelectTrigger>
                       <SelectContent>
@@ -229,7 +246,8 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                 </div>
 
                 {cbseLoading && (
-                  <div className="mt-6 text-center text-gray-500">
+                  <div className="mt-6 flex items-center justify-center gap-3 text-muted-foreground">
+                    <div className="spinner" />
                     Loading syllabus...
                   </div>
                 )}
@@ -238,33 +256,45 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
 
             {/* CBSE Syllabus Display */}
             {cbseSyllabus && cbseSyllabus.chapters && (
-              <Card>
+              <Card className="paper-texture animate-fade-in">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
+                      <div className="decorative-line mb-3" />
                       <CardTitle>CBSE {cbseSyllabus.grade} - {cbseSyllabus.subject}</CardTitle>
                       <CardDescription className="mt-1">
                         Official CBSE curriculum syllabus
                       </CardDescription>
                     </div>
-                    <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+                    <span className="trust-badge">
+                      <svg viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                       Official
                     </span>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                  <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                     {cbseSyllabus.chapters.map((chapter, chIdx) => (
-                      <div key={chIdx} className="border rounded-lg p-4">
-                        <h3 className="font-semibold text-lg mb-2">{chapter.name}</h3>
+                      <div key={chIdx} className="border border-border/50 rounded-xl p-4 bg-card/50">
+                        <h3 className="font-semibold text-lg mb-3 text-foreground flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm text-primary font-medium">
+                            {chIdx + 1}
+                          </span>
+                          {chapter.name}
+                        </h3>
                         <ul className="space-y-2">
                           {(chapter.topics || []).map((topic, tIdx) => (
-                            <li key={tIdx} className="ml-4">
-                              <span className="text-gray-700">{topic.name}</span>
+                            <li key={tIdx} className="ml-8">
+                              <span className="text-muted-foreground">{topic.name}</span>
                               {topic.subtopics && topic.subtopics.length > 0 && (
-                                <ul className="ml-4 mt-1 text-sm text-gray-500">
+                                <ul className="ml-4 mt-1.5 space-y-1">
                                   {topic.subtopics.map((sub, sIdx) => (
-                                    <li key={sIdx}>• {sub}</li>
+                                    <li key={sIdx} className="text-sm text-muted-foreground/70 flex items-center gap-2">
+                                      <span className="w-1 h-1 rounded-full bg-border" />
+                                      {sub}
+                                    </li>
                                   ))}
                                 </ul>
                               )}
@@ -276,7 +306,10 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                   </div>
 
                   <div className="mt-6">
-                    <Button onClick={handleUseCBSESyllabus} className="w-full">
+                    <Button onClick={handleUseCBSESyllabus} className="w-full btn-animate py-6 text-base">
+                      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       Use This Syllabus for Worksheets
                     </Button>
                   </div>
@@ -285,13 +318,18 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
             )}
 
             {!cbseSyllabus && cbseGrade && cbseSubject && !cbseLoading && (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-gray-600">
-                    Syllabus not available for {cbseGrade} - {cbseSubject}.
+              <Card className="paper-texture animate-fade-in">
+                <CardContent className="py-16 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-secondary/50 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                    </svg>
+                  </div>
+                  <p className="text-foreground font-medium mb-2">
+                    Syllabus not available for {cbseGrade} - {cbseSubject}
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Try a different combination or seed the syllabus data.
+                  <p className="text-sm text-muted-foreground">
+                    Try a different combination or upload a custom syllabus
                   </p>
                 </CardContent>
               </Card>
@@ -304,17 +342,23 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
           <>
             {/* Upgrade Banner for Free Users */}
             {subscription && !subscription.can_upload_syllabus && (
-              <Card className="mb-8 border-amber-200 bg-amber-50">
+              <Card className="mb-8 border-accent/30 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent animate-fade-in">
                 <CardContent className="py-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-amber-900">Pro Feature</p>
-                      <p className="text-sm text-amber-700">
-                        Custom syllabus upload is available on the Pro plan.
-                        You can still use the official CBSE syllabus for free.
-                      </p>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                        <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">Pro Feature</p>
+                        <p className="text-sm text-muted-foreground">
+                          Custom syllabus upload is available on the Pro plan
+                        </p>
+                      </div>
                     </div>
-                    <Button onClick={() => upgrade()} variant="default" size="sm">
+                    <Button onClick={() => upgrade()} className="btn-animate bg-accent hover:bg-accent/90 text-accent-foreground">
                       Upgrade to Pro
                     </Button>
                   </div>
@@ -324,8 +368,9 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
 
             {/* Upload Form - Only show for Pro users */}
             {subscription?.can_upload_syllabus && (
-              <Card className="mb-8">
+              <Card className="mb-8 paper-texture animate-fade-in">
                 <CardHeader>
+                  <div className="decorative-line mb-3" />
                   <CardTitle>Upload Custom Syllabus</CardTitle>
                   <CardDescription>
                     Upload your school's specific syllabus document
@@ -334,12 +379,12 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                 <CardContent>
                   {/* Drag and Drop Zone */}
                   <div
-                    className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    className={`border-2 border-dashed rounded-xl p-10 text-center transition-all ${
                       dragActive
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-primary bg-primary/5'
                         : file
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-primary/50 bg-primary/5'
+                        : 'border-border hover:border-primary/50 hover:bg-secondary/30'
                     }`}
                     onDragEnter={handleDrag}
                     onDragLeave={handleDrag}
@@ -347,27 +392,37 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                     onDrop={handleDrop}
                   >
                     {file ? (
-                      <div>
-                        <p className="text-green-700 font-medium">{file.name}</p>
-                        <p className="text-sm text-gray-500 mt-1">
+                      <div className="animate-fade-in">
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <p className="text-foreground font-medium">{file.name}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
                           {(file.size / 1024).toFixed(1)} KB
                         </p>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="mt-2"
+                          className="mt-3"
                           onClick={() => setFile(null)}
                         >
-                          Remove
+                          Remove file
                         </Button>
                       </div>
                     ) : (
                       <div>
-                        <p className="text-gray-600 mb-2">
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-secondary flex items-center justify-center">
+                          <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                        </div>
+                        <p className="text-muted-foreground mb-2">
                           Drag and drop your syllabus file here, or
                         </p>
                         <label className="cursor-pointer">
-                          <span className="text-blue-600 hover:underline">
+                          <span className="text-primary hover:text-primary/80 font-medium transition-colors">
                             browse to upload
                           </span>
                           <input
@@ -377,7 +432,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                             onChange={handleFileChange}
                           />
                         </label>
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-muted-foreground mt-3">
                           Supported: PDF, Images (JPG, PNG), Text files
                         </p>
                       </div>
@@ -387,9 +442,9 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                   {/* Optional Hints */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                     <div className="space-y-2">
-                      <Label htmlFor="gradeHint">Grade (Optional)</Label>
+                      <Label htmlFor="gradeHint" className="text-sm font-medium">Grade (Optional)</Label>
                       <Select value={gradeHint} onValueChange={setGradeHint}>
-                        <SelectTrigger id="gradeHint">
+                        <SelectTrigger id="gradeHint" className="bg-background/50">
                           <SelectValue placeholder="Help identify grade" />
                         </SelectTrigger>
                         <SelectContent>
@@ -401,9 +456,9 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="subjectHint">Subject (Optional)</Label>
+                      <Label htmlFor="subjectHint" className="text-sm font-medium">Subject (Optional)</Label>
                       <Select value={subjectHint} onValueChange={setSubjectHint}>
-                        <SelectTrigger id="subjectHint">
+                        <SelectTrigger id="subjectHint" className="bg-background/50">
                           <SelectValue placeholder="Help identify subject" />
                         </SelectTrigger>
                         <SelectContent>
@@ -416,17 +471,32 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                   </div>
 
                   {error && (
-                    <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md">
+                    <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg flex items-center gap-3">
+                      <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
                       {error}
                     </div>
                   )}
 
                   <Button
-                    className="w-full mt-6"
+                    className="w-full mt-6 btn-animate py-6 text-base"
                     onClick={handleUpload}
                     disabled={!file || loading}
                   >
-                    {loading ? 'Parsing Syllabus...' : 'Parse Syllabus'}
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground" />
+                        Parsing Syllabus...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Parse Syllabus
+                      </span>
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -434,10 +504,11 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
 
             {/* Parsed Syllabus Display */}
             {syllabus && (
-              <Card>
+              <Card className="paper-texture animate-fade-in">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
+                      <div className="decorative-line mb-3" />
                       <CardTitle>{syllabus.name}</CardTitle>
                       <CardDescription className="mt-1">
                         {syllabus.board && `${syllabus.board} • `}
@@ -446,29 +517,37 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                       </CardDescription>
                     </div>
                     {confidenceScore !== null && (
-                      <div className={`px-3 py-1 rounded-full text-sm ${
-                        confidenceScore >= 0.8 ? 'bg-green-100 text-green-800' :
-                        confidenceScore >= 0.6 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        confidenceScore >= 0.8 ? 'bg-primary/10 text-primary' :
+                        confidenceScore >= 0.6 ? 'bg-accent/10 text-accent-foreground' :
+                        'bg-destructive/10 text-destructive'
                       }`}>
                         {Math.round(confidenceScore * 100)}% confident
-                      </div>
+                      </span>
                     )}
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                     {syllabus.chapters.map((chapter, chIdx) => (
-                      <div key={chIdx} className="border rounded-lg p-4">
-                        <h3 className="font-semibold text-lg mb-2">{chapter.name}</h3>
+                      <div key={chIdx} className="border border-border/50 rounded-xl p-4 bg-card/50">
+                        <h3 className="font-semibold text-lg mb-3 text-foreground flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-sm text-primary font-medium">
+                            {chIdx + 1}
+                          </span>
+                          {chapter.name}
+                        </h3>
                         <ul className="space-y-2">
                           {(chapter.topics || []).map((topic, tIdx) => (
-                            <li key={tIdx} className="ml-4">
-                              <span className="text-gray-700">{topic.name}</span>
+                            <li key={tIdx} className="ml-8">
+                              <span className="text-muted-foreground">{topic.name}</span>
                               {topic.subtopics && topic.subtopics.length > 0 && (
-                                <ul className="ml-4 mt-1 text-sm text-gray-500">
+                                <ul className="ml-4 mt-1.5 space-y-1">
                                   {topic.subtopics.map((sub, sIdx) => (
-                                    <li key={sIdx}>• {sub}</li>
+                                    <li key={sIdx} className="text-sm text-muted-foreground/70 flex items-center gap-2">
+                                      <span className="w-1 h-1 rounded-full bg-border" />
+                                      {sub}
+                                    </li>
                                   ))}
                                 </ul>
                               )}
@@ -479,12 +558,17 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                     ))}
                   </div>
 
-                  <div className="mt-6 flex gap-4">
-                    <Button onClick={handleUseSyllabus} className="flex-1">
-                      Use This Syllabus for Worksheets
+                  <div className="mt-6 flex gap-3">
+                    <Button onClick={handleUseSyllabus} className="flex-1 btn-animate py-6 text-base">
+                      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Use This Syllabus
                     </Button>
-                    <Button variant="outline" onClick={() => setSyllabus(null)}>
-                      Upload Different File
+                    <Button variant="outline" onClick={() => setSyllabus(null)} className="py-6">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
                     </Button>
                   </div>
                 </CardContent>

@@ -297,44 +297,57 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-semibold text-center mb-2 text-slate-800">PracticeCraft AI</h1>
-        <p className="text-center text-slate-600 mb-4">Create practice worksheets aligned to your child's syllabus</p>
+        {/* Hero Section */}
+        <div className="text-center mb-8 animate-fade-in">
+          <div className="decorative-dots mb-4" />
+          <h1 className="text-3xl md:text-4xl mb-3">Create Your Worksheet</h1>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            Thoughtfully designed practice materials aligned to your child's learning journey
+          </p>
+        </div>
 
         {/* Trust Micro-copy */}
-        <div className="flex justify-center gap-4 mb-8 text-xs print:hidden">
-          <span className="inline-flex items-center gap-1.5 text-green-700">
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+        <div className="flex flex-wrap justify-center gap-3 mb-8 print:hidden animate-fade-in-delayed">
+          <span className="trust-badge">
+            <svg viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
             CBSE-aligned
           </span>
-          <span className="inline-flex items-center gap-1.5 text-blue-700">
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+          <span className="trust-badge">
+            <svg viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clipRule="evenodd" />
             </svg>
-            Printable worksheets
+            Printable
           </span>
-          <span className="inline-flex items-center gap-1.5 text-purple-700">
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+          <span className="trust-badge">
+            <svg viewBox="0 0 20 20" fill="currentColor">
               <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
             </svg>
-            Built for parents
+            For parents
           </span>
         </div>
 
         {/* Upgrade Banner */}
         {subscription && !subscription.can_generate && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg print:hidden">
+          <div className="mb-6 p-5 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border border-accent/30 rounded-xl print:hidden animate-fade-in">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-amber-900">Free tier limit reached</p>
-                <p className="text-sm text-amber-700">
-                  You've used all 3 free worksheets this month. Upgrade for unlimited access.
-                </p>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Free tier limit reached</p>
+                  <p className="text-sm text-muted-foreground">
+                    You've used all 3 free worksheets. Upgrade for unlimited access.
+                  </p>
+                </div>
               </div>
-              <Button onClick={() => upgrade()} variant="default" size="sm">
+              <Button onClick={() => upgrade()} className="btn-animate bg-accent hover:bg-accent/90 text-accent-foreground">
                 Upgrade to Pro
               </Button>
             </div>
@@ -343,24 +356,45 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
 
         {/* Usage Info for Free Tier */}
         {subscription && subscription.tier === 'free' && subscription.can_generate && (
-          <div className="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-lg print:hidden">
-            <p className="text-sm text-gray-600">
-              Free tier: {subscription.worksheets_remaining} of 3 worksheets remaining this month
-            </p>
+          <div className="mb-6 p-4 bg-secondary/50 border border-border rounded-xl print:hidden">
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1">
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-2.5 h-2.5 rounded-full ${
+                      i <= (3 - (subscription.worksheets_remaining || 0))
+                        ? 'bg-primary'
+                        : 'bg-border'
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{subscription.worksheets_remaining}</span> of 3 free worksheets remaining this month
+              </p>
+            </div>
           </div>
         )}
 
         {/* Syllabus Banner */}
         {syllabus && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between print:hidden">
-            <div>
-              <p className="font-medium text-blue-900">Using syllabus: {syllabus.name}</p>
-              <p className="text-sm text-blue-700">
-                {syllabus.grade} {syllabus.subject && `• ${syllabus.subject}`} • {syllabus.chapters.length} chapters
-              </p>
+          <div className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between print:hidden">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Using syllabus: {syllabus.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {syllabus.grade} {syllabus.subject && `• ${syllabus.subject}`} • {syllabus.chapters.length} chapters
+                </p>
+              </div>
             </div>
-            <Button variant="outline" size="sm" onClick={onClearSyllabus}>
-              Clear Syllabus
+            <Button variant="outline" size="sm" onClick={onClearSyllabus} className="border-primary/30 text-primary hover:bg-primary/10">
+              Clear
             </Button>
           </div>
         )}
@@ -369,7 +403,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         {syllabus && grade && syllabus.subject && (
           <div className="mb-6 print:hidden">
             <details className="group">
-              <summary className="cursor-pointer text-sm text-slate-600 hover:text-slate-800 mb-2">
+              <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
                 View official CBSE syllabus for comparison
               </summary>
               <CBSESyllabusViewer grade={grade} subject={syllabus.subject} />
@@ -378,13 +415,16 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         )}
 
         {/* Generator Form */}
-        <Card className="mb-8 print:hidden shadow-sm border-slate-200">
+        <Card className="mb-8 print:hidden card-hover paper-texture border-border/50 shadow-lg">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-semibold text-slate-800">Create Worksheet</CardTitle>
-            <CardDescription className="text-slate-600">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="decorative-line" />
+            </div>
+            <CardTitle className="text-xl">Configure Your Worksheet</CardTitle>
+            <CardDescription>
               {syllabus
                 ? 'Select a chapter and topic from your syllabus'
-                : 'Select options to create a practice worksheet'}
+                : 'Choose options to create a personalized practice worksheet'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -572,39 +612,71 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
             </div>
 
             {error && (
-              <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md">
+              <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg flex items-center gap-3 animate-fade-in">
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 {error}
               </div>
             )}
 
             <Button
-              className="w-full mt-6"
+              className="w-full mt-6 btn-animate bg-primary hover:bg-primary/90 py-6 text-base font-medium"
               onClick={handleGenerate}
               disabled={loading}
             >
-              {loading ? 'Generating...' : 'Generate Worksheet'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground" />
+                  Crafting your worksheet...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                  </svg>
+                  Generate Worksheet
+                </span>
+              )}
             </Button>
           </CardContent>
         </Card>
 
         {/* Completion Feedback */}
         {lastCompletion && selectedChildId && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg print:hidden">
+          <div className="mb-6 p-5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-xl print:hidden animate-fade-in">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <span className="text-2xl">✅</span>
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center star-animate">
+                  <svg className="w-6 h-6 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </div>
                 <div>
-                  <p className="font-medium text-green-800">Worksheet completed!</p>
-                  <p className="text-sm text-green-700">
-                    ⭐ {lastCompletion.stars_earned} star earned • 🔥 {lastCompletion.current_streak}-day streak
+                  <p className="font-semibold text-foreground">Worksheet completed!</p>
+                  <p className="text-sm text-muted-foreground flex items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      {lastCompletion.stars_earned} star earned
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
+                      </svg>
+                      {lastCompletion.current_streak}-day streak
+                    </span>
                   </p>
                 </div>
               </div>
               <button
                 onClick={clearLastCompletion}
-                className="text-green-600 hover:text-green-800 text-sm"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                Dismiss
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
@@ -612,58 +684,112 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
 
         {/* Generated Worksheet */}
         {worksheet && (
-          <Card className="print:shadow-none print:border-none">
+          <Card className="print:shadow-none print:border-none paper-texture animate-fade-in">
             <CardHeader className="print:pb-2">
-              <div className="flex justify-between items-start">
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                 <div>
-                  <CardTitle className="text-2xl">{worksheet.title}</CardTitle>
-                  <CardDescription className="text-base mt-1">
-                    {worksheet.grade} | {worksheet.subject} | {worksheet.topic} | {worksheet.difficulty}
-                  </CardDescription>
+                  <div className="decorative-line mb-3 print:hidden" />
+                  <CardTitle className="text-2xl md:text-3xl">{worksheet.title}</CardTitle>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {[worksheet.grade, worksheet.subject, worksheet.topic, worksheet.difficulty].map((tag, i) => (
+                      <span key={i} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex gap-2 print:hidden">
-                  <Button onClick={handleSave} disabled={saving} variant={saveSuccess ? "outline" : "default"}>
-                    {saving ? 'Saving...' : saveSuccess ? 'Saved!' : 'Save'}
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    variant={saveSuccess ? "outline" : "default"}
+                    className={saveSuccess ? "border-primary text-primary" : ""}
+                  >
+                    {saving ? (
+                      <span className="flex items-center gap-2">
+                        <span className="spinner !w-4 !h-4" />
+                        Saving...
+                      </span>
+                    ) : saveSuccess ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Saved!
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        Save
+                      </span>
+                    )}
                   </Button>
-                  <Button onClick={handleDownloadPdf} disabled={downloadingPdf}>
-                    {downloadingPdf ? 'Downloading...' : 'Download PDF'}
+                  <Button onClick={handleDownloadPdf} disabled={downloadingPdf} className="btn-animate">
+                    {downloadingPdf ? (
+                      <span className="flex items-center gap-2">
+                        <span className="spinner !w-4 !h-4 !border-primary-foreground/30 !border-t-primary-foreground" />
+                        Downloading...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        PDF
+                      </span>
+                    )}
                   </Button>
                   <Button onClick={handlePrint} variant="outline">
-                    Print
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 p-3 bg-blue-50 rounded-md print:bg-gray-100">
-                <p className="font-medium">Instructions:</p>
-                <p className="text-sm text-gray-700">Answer all questions. Show your work where applicable.</p>
+              <div className="mb-6 p-4 bg-secondary/50 border border-border rounded-lg print:bg-gray-100">
+                <p className="font-semibold text-foreground flex items-center gap-2">
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Instructions
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">Answer all questions. Show your work where applicable.</p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-6 stagger-children">
                 {worksheet.questions.map((question, index) => (
-                  <div key={question.id} className="border-b pb-4 last:border-b-0">
-                    <p className="font-medium mb-2">
-                      Q{index + 1}. {question.text}
+                  <div key={question.id} className="border-b border-border pb-5 last:border-b-0">
+                    <p className="font-medium mb-3 text-foreground">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-sm font-semibold mr-2">
+                        {index + 1}
+                      </span>
+                      {question.text}
                     </p>
                     {question.options && (
-                      <div className="ml-4 space-y-1">
+                      <div className="ml-9 space-y-2">
                         {question.options.map((option, optIndex) => (
-                          <p key={optIndex} className="text-gray-700">
-                            {String.fromCharCode(65 + optIndex)}. {option}
+                          <p key={optIndex} className="text-muted-foreground flex items-center gap-2">
+                            <span className="w-6 h-6 rounded border border-border flex items-center justify-center text-xs font-medium">
+                              {String.fromCharCode(65 + optIndex)}
+                            </span>
+                            {option}
                           </p>
                         ))}
                       </div>
                     )}
                     {question.type === 'fill_blank' && (
-                      <div className="ml-4 mt-2">
-                        <p className="text-gray-500">Answer: _________________</p>
+                      <div className="ml-9 mt-3">
+                        <p className="text-muted-foreground">Answer: <span className="border-b-2 border-dashed border-border inline-block w-40"></span></p>
                       </div>
                     )}
                     {question.type === 'short_answer' && (
-                      <div className="ml-4 mt-2">
-                        <div className="border-b border-gray-300 h-8"></div>
-                        <div className="border-b border-gray-300 h-8"></div>
+                      <div className="ml-9 mt-3 space-y-3">
+                        <div className="border-b border-border/50 h-8"></div>
+                        <div className="border-b border-border/50 h-8"></div>
                       </div>
                     )}
                   </div>
@@ -671,13 +797,19 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
               </div>
 
               {/* Answer Key Section */}
-              <div className="mt-8 pt-4 border-t-2 border-dashed print:break-before-page">
-                <h3 className="font-bold text-lg mb-4">Answer Key</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="mt-10 pt-6 border-t-2 border-dashed border-border print:break-before-page">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                  Answer Key
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {worksheet.questions.map((question, index) => (
-                    <p key={question.id} className="text-sm">
-                      Q{index + 1}: {question.correct_answer}
-                    </p>
+                    <div key={question.id} className="flex items-center gap-2 p-2 bg-secondary/30 rounded-lg text-sm">
+                      <span className="font-medium text-primary">Q{index + 1}:</span>
+                      <span className="text-foreground">{question.correct_answer}</span>
+                    </div>
                   ))}
                 </div>
               </div>

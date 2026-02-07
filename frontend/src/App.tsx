@@ -32,20 +32,29 @@ function UsageBadge() {
 
   if (status.tier === 'paid') {
     return (
-      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+      <span className="trust-badge">
+        <svg viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+        </svg>
         Pro
       </span>
     )
   }
 
+  const isExhausted = status.worksheets_remaining === 0
+  const isLow = status.worksheets_remaining && status.worksheets_remaining <= 1
+
   return (
-    <span className={`text-xs px-2 py-1 rounded-full ${
-      status.worksheets_remaining === 0
-        ? 'bg-red-100 text-red-800'
-        : status.worksheets_remaining && status.worksheets_remaining <= 1
-        ? 'bg-yellow-100 text-yellow-800'
-        : 'bg-gray-100 text-gray-800'
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+      isExhausted
+        ? 'bg-red-50 text-red-700 border border-red-200'
+        : isLow
+        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+        : 'bg-secondary text-secondary-foreground border border-border'
     }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${
+        isExhausted ? 'bg-red-500' : isLow ? 'bg-amber-500' : 'bg-primary'
+      }`} />
       {status.worksheets_remaining}/{3} free
     </span>
   )
@@ -59,8 +68,9 @@ function AppContent() {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen gradient-bg flex flex-col items-center justify-center gap-4">
+        <div className="spinner" />
+        <p className="text-muted-foreground font-medium animate-pulse">Loading your workspace...</p>
       </div>
     )
   }
@@ -71,80 +81,110 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen gradient-bg">
       {/* Navigation */}
-      <nav className="bg-white shadow-sm print:hidden">
-        <div className="max-w-4xl mx-auto px-4 py-3">
+      <nav className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50 print:hidden">
+        <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900">PracticeCraft AI</h1>
-            <div className="flex items-center gap-4">
-              <div className="flex gap-2">
-                <Button
-                  variant={currentPage === 'generator' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage('generator')}
-                >
-                  Create
-                </Button>
-                <Button
-                  variant={currentPage === 'syllabus' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage('syllabus')}
-                >
-                  Syllabus
-                </Button>
-                <Button
-                  variant={currentPage === 'saved' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage('saved')}
-                >
-                  Saved
-                </Button>
-                <Button
-                  variant={currentPage === 'children' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setCurrentPage('children')}
-                >
-                  Children
-                </Button>
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-sm">
+                <svg className="w-5 h-5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
               </div>
+              <h1 className="text-xl font-semibold tracking-tight">
+                <span className="text-primary">Practice</span>
+                <span className="text-accent">Craft</span>
+              </h1>
+            </div>
 
-              {/* User Menu */}
-              <div className="flex items-center gap-3 ml-4 pl-4 border-l">
-                <UsageBadge />
-                <span className="text-sm text-gray-600 hidden md:inline">
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-xl">
+              {[
+                { id: 'generator' as Page, label: 'Create', icon: (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+                  </svg>
+                )},
+                { id: 'syllabus' as Page, label: 'Syllabus', icon: (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                  </svg>
+                )},
+                { id: 'saved' as Page, label: 'Saved', icon: (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                  </svg>
+                )},
+                { id: 'children' as Page, label: 'Children', icon: (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                  </svg>
+                )},
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setCurrentPage(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    currentPage === tab.id
+                      ? 'bg-card text-primary shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
+                  }`}
+                >
+                  {tab.icon}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* User Menu */}
+            <div className="flex items-center gap-3">
+              <UsageBadge />
+              <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <span className="text-xs font-semibold text-primary">
+                    {(user.user_metadata?.name || user.email || 'U')[0].toUpperCase()}
+                  </span>
+                </div>
+                <span className="max-w-[120px] truncate">
                   {user.user_metadata?.name || user.email}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => signOut()}
-                >
-                  Logout
-                </Button>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut()}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                </svg>
+              </Button>
             </div>
           </div>
         </div>
       </nav>
 
       {/* Page Content */}
-      {currentPage === 'generator' && (
-        <WorksheetGenerator
-          syllabus={syllabus}
-          onClearSyllabus={() => setSyllabus(null)}
-        />
-      )}
-      {currentPage === 'syllabus' && (
-        <SyllabusUpload
-          onSyllabusReady={(parsedSyllabus) => {
-            setSyllabus(parsedSyllabus)
-            setCurrentPage('generator')
-          }}
-        />
-      )}
-      {currentPage === 'saved' && <SavedWorksheets />}
-      {currentPage === 'children' && <ChildProfiles />}
+      <main className="animate-fade-in">
+        {currentPage === 'generator' && (
+          <WorksheetGenerator
+            syllabus={syllabus}
+            onClearSyllabus={() => setSyllabus(null)}
+          />
+        )}
+        {currentPage === 'syllabus' && (
+          <SyllabusUpload
+            onSyllabusReady={(parsedSyllabus) => {
+              setSyllabus(parsedSyllabus)
+              setCurrentPage('generator')
+            }}
+          />
+        )}
+        {currentPage === 'saved' && <SavedWorksheets />}
+        {currentPage === 'children' && <ChildProfiles />}
+      </main>
     </div>
   )
 }

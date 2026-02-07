@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
@@ -70,7 +70,7 @@ export default function SavedWorksheets() {
       if (axiosErr.response?.status === 500 && axiosErr.response?.data?.detail?.includes('relation')) {
         setError('Database not set up. Please run the SQL schema in Supabase.')
       } else {
-        setError('') // Don't show error, just show empty state
+        setError('')
       }
       setWorksheets([])
       console.error(err)
@@ -142,7 +142,6 @@ export default function SavedWorksheets() {
     try {
       const response = await api.post(`/api/worksheets/regenerate/${worksheetId}`)
       const newWorksheet = response.data.worksheet
-      // Update the selected worksheet with new questions
       if (selectedWorksheet && selectedWorksheet.id === worksheetId) {
         setSelectedWorksheet({
           ...selectedWorksheet,
@@ -176,7 +175,6 @@ export default function SavedWorksheets() {
     })
   }
 
-  // Group worksheets by date for better organization
   const groupedWorksheets = worksheets.reduce((groups, worksheet) => {
     const date = formatDate(worksheet.created_at)
     if (!groups[date]) {
@@ -187,39 +185,53 @@ export default function SavedWorksheets() {
   }, {} as Record<string, SavedWorksheetSummary[]>)
 
   const dateGroups = Object.keys(groupedWorksheets).sort((a, b) => {
-    // Sort newest first
     return new Date(b).getTime() - new Date(a).getTime()
   })
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-gray-600">Loading worksheets...</p>
+      <div className="py-8 px-4">
+        <div className="max-w-4xl mx-auto flex flex-col items-center justify-center py-16">
+          <div className="spinner mb-4" />
+          <p className="text-muted-foreground">Loading your worksheets...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-2">Saved Worksheets</h1>
-        <p className="text-center text-gray-600 mb-8">View and manage your saved worksheets</p>
+        {/* Header */}
+        <div className="text-center mb-8 animate-fade-in">
+          <div className="decorative-dots mb-4" />
+          <h1 className="text-3xl md:text-4xl mb-3">Saved Worksheets</h1>
+          <p className="text-muted-foreground text-lg">
+            Your collection of practice materials, ready when you are
+          </p>
+        </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg flex items-center gap-3 animate-fade-in">
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
             {error}
           </div>
         )}
 
         {/* Child Filter */}
         {children.length > 0 && !selectedWorksheet && (
-          <div className="mb-6">
-            <div className="flex items-center gap-4">
-              <Label htmlFor="filter-child" className="whitespace-nowrap">Filter by child:</Label>
+          <div className="mb-6 animate-fade-in">
+            <div className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
+              <Label htmlFor="filter-child" className="whitespace-nowrap text-muted-foreground flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filter by child:
+              </Label>
               <Select value={filterChildId} onValueChange={setFilterChildId}>
-                <SelectTrigger id="filter-child" className="w-[200px]">
+                <SelectTrigger id="filter-child" className="w-[200px] bg-background">
                   <SelectValue placeholder="All children" />
                 </SelectTrigger>
                 <SelectContent>
@@ -237,54 +249,89 @@ export default function SavedWorksheets() {
 
         {/* Worksheet Detail View */}
         {selectedWorksheet ? (
-          <Card className="mb-8">
+          <Card className="mb-8 paper-texture animate-fade-in">
             <CardHeader>
-              <div className="flex justify-between items-start">
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                 <div>
-                  <CardTitle className="text-2xl">{selectedWorksheet.title}</CardTitle>
-                  <CardDescription className="text-base mt-1">
-                    {selectedWorksheet.grade} | {selectedWorksheet.subject} | {selectedWorksheet.topic} | {selectedWorksheet.difficulty}
-                  </CardDescription>
+                  <div className="decorative-line mb-3" />
+                  <CardTitle className="text-2xl md:text-3xl">{selectedWorksheet.title}</CardTitle>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {[selectedWorksheet.grade, selectedWorksheet.subject, selectedWorksheet.topic, selectedWorksheet.difficulty].map((tag, i) => (
+                      <span key={i} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="secondary"
                     onClick={() => regenerateWorksheet(selectedWorksheet.id)}
                     disabled={regenerating}
+                    className="relative"
                   >
-                    {regenerating ? 'Regenerating...' : 'Regenerate'}
-                    {(selectedWorksheet.regeneration_count || 0) === 0 && (
-                      <span className="ml-1 text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
-                        Free
+                    {regenerating ? (
+                      <span className="flex items-center gap-2">
+                        <span className="spinner !w-4 !h-4" />
+                        Regenerating...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Regenerate
+                        {(selectedWorksheet.regeneration_count || 0) === 0 && (
+                          <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                            Free
+                          </span>
+                        )}
                       </span>
                     )}
                   </Button>
-                  <Button onClick={() => downloadPdf(selectedWorksheet)}>
-                    Download PDF
+                  <Button onClick={() => downloadPdf(selectedWorksheet)} className="btn-animate">
+                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    PDF
                   </Button>
                   <Button variant="outline" onClick={() => setSelectedWorksheet(null)}>
-                    Back to List
+                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 p-3 bg-blue-50 rounded-md">
-                <p className="font-medium">Instructions:</p>
-                <p className="text-sm text-gray-700">Answer all questions. Show your work where applicable.</p>
+              <div className="mb-6 p-4 bg-secondary/50 border border-border rounded-lg">
+                <p className="font-semibold text-foreground flex items-center gap-2">
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Instructions
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">Answer all questions. Show your work where applicable.</p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-6 stagger-children">
                 {selectedWorksheet.questions.map((question, index) => (
-                  <div key={question.id} className="border-b pb-4 last:border-b-0">
-                    <p className="font-medium mb-2">
-                      Q{index + 1}. {question.text}
+                  <div key={question.id} className="border-b border-border pb-5 last:border-b-0">
+                    <p className="font-medium mb-3 text-foreground">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary text-sm font-semibold mr-2">
+                        {index + 1}
+                      </span>
+                      {question.text}
                     </p>
                     {question.options && (
-                      <div className="ml-4 space-y-1">
+                      <div className="ml-9 space-y-2">
                         {question.options.map((option, optIndex) => (
-                          <p key={optIndex} className="text-gray-700">
-                            {String.fromCharCode(65 + optIndex)}. {option}
+                          <p key={optIndex} className="text-muted-foreground flex items-center gap-2">
+                            <span className="w-6 h-6 rounded border border-border flex items-center justify-center text-xs font-medium">
+                              {String.fromCharCode(65 + optIndex)}
+                            </span>
+                            {option}
                           </p>
                         ))}
                       </div>
@@ -294,13 +341,19 @@ export default function SavedWorksheets() {
               </div>
 
               {/* Answer Key */}
-              <div className="mt-8 pt-4 border-t-2 border-dashed">
-                <h3 className="font-bold text-lg mb-4">Answer Key</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="mt-10 pt-6 border-t-2 border-dashed border-border">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                  Answer Key
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {selectedWorksheet.questions.map((question, index) => (
-                    <p key={question.id} className="text-sm">
-                      Q{index + 1}: {question.correct_answer}
-                    </p>
+                    <div key={question.id} className="flex items-center gap-2 p-2 bg-secondary/30 rounded-lg text-sm">
+                      <span className="font-medium text-primary">Q{index + 1}:</span>
+                      <span className="text-foreground">{question.correct_answer}</span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -310,52 +363,77 @@ export default function SavedWorksheets() {
           /* Worksheet List */
           <>
             {worksheets.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-gray-600 mb-4">You haven't saved any worksheets yet.</p>
-                  <p className="text-sm text-gray-500">
-                    Generate a worksheet and click "Save" to store it here.
+              <Card className="paper-texture animate-fade-in">
+                <CardContent className="py-16 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-secondary/50 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                  </div>
+                  <p className="text-foreground font-medium mb-2">No worksheets saved yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    Generate a worksheet and click "Save" to build your collection
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-8 animate-fade-in">
                 {dateGroups.map((date) => (
                   <div key={date}>
-                    <h2 className="text-sm font-medium text-gray-500 mb-3 sticky top-0 bg-gray-50 py-1">
+                    <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2 sticky top-16 bg-background/80 backdrop-blur-sm py-2 z-10">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                       {date}
                     </h2>
                     <div className="grid gap-3">
                       {groupedWorksheets[date].map((worksheet) => (
-                        <Card key={worksheet.id} className="hover:shadow-md transition-shadow">
+                        <Card key={worksheet.id} className="card-hover border-border/50">
                           <CardContent className="py-4">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-semibold text-lg">{worksheet.title}</h3>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="font-semibold text-lg text-foreground">{worksheet.title}</h3>
                                   {worksheet.child_name && (
-                                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                      </svg>
                                       {worksheet.child_name}
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-600 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                   {worksheet.grade} | {worksheet.subject} | {worksheet.topic}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {worksheet.question_count} questions • {worksheet.difficulty}
+                                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                                  <span className="flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    {worksheet.question_count} questions
+                                  </span>
+                                  <span className="w-1 h-1 rounded-full bg-border" />
+                                  <span>{worksheet.difficulty}</span>
                                 </p>
                               </div>
                               <div className="flex gap-2">
-                                <Button size="sm" onClick={() => viewWorksheet(worksheet.id)}>
+                                <Button size="sm" onClick={() => viewWorksheet(worksheet.id)} className="btn-animate">
+                                  <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
                                   View
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => deleteWorksheet(worksheet.id)}
+                                  className="text-muted-foreground hover:text-destructive hover:border-destructive"
                                 >
-                                  Delete
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
                                 </Button>
                               </div>
                             </div>
