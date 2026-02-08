@@ -6,9 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { api } from '@/lib/api'
 import { useChildren } from '@/lib/children'
+import { useClasses } from '@/lib/classes'
+import { useProfile } from '@/lib/profile'
 import { useSubscription } from '@/lib/subscription'
 import TopicSelector from '@/components/TopicSelector'
 import CBSESyllabusViewer from '@/components/CBSESyllabusViewer'
+import TemplateSelector, { TEMPLATES, type WorksheetTemplate } from '@/components/TemplateSelector'
 import { useEngagement } from '@/lib/engagement'
 
 const BOARDS = ['CBSE']
@@ -72,9 +75,13 @@ interface Props {
 
 export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props) {
   const { children } = useChildren()
+  const { classes } = useClasses()
+  const { activeRole } = useProfile()
   const { status: subscription, incrementUsage, upgrade } = useSubscription()
   const { recordCompletion, lastCompletion, clearLastCompletion } = useEngagement()
   const [selectedChildId, setSelectedChildId] = useState('none')
+  const [selectedClassId, setSelectedClassId] = useState('none')
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [board, setBoard] = useState('')
   const [grade, setGrade] = useState('')
   const [subject, setSubject] = useState('')
@@ -110,6 +117,36 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       }
     }
   }
+
+  // Handle class selection - pre-fill grade, subject, and board (teacher mode)
+  const handleClassSelect = (classId: string) => {
+    setSelectedClassId(classId)
+    if (classId && classId !== 'none') {
+      const cls = classes.find(c => c.id === classId)
+      if (cls) {
+        setGrade(cls.grade)
+        setSubject(cls.subject)
+        setBoard(cls.board)
+      }
+    }
+  }
+
+  // Handle template selection - pre-fill difficulty, question count, and instructions
+  const handleTemplateSelect = (template: WorksheetTemplate | null) => {
+    if (template) {
+      setSelectedTemplate(template.id)
+      setDifficulty(template.difficulty)
+      setQuestionCount(String(template.questionCount))
+      setCustomInstructions(template.customInstructions)
+    } else {
+      setSelectedTemplate('custom')
+      setDifficulty('')
+      setQuestionCount('10')
+      setCustomInstructions('')
+    }
+  }
+
+  const isTeacher = activeRole === 'teacher'
 
   // Pre-fill form when syllabus is provided
   useEffect(() => {
@@ -304,7 +341,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
           <div className="decorative-dots mb-4" />
           <h1 className="text-3xl md:text-4xl mb-3">Create Your Worksheet</h1>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Thoughtfully designed practice materials aligned to your child's learning journey
+            {activeRole === 'teacher'
+              ? 'Generate AI-powered worksheets aligned to your class syllabus'
+              : 'Thoughtfully designed practice materials aligned to your child\'s learning journey'
+            }
           </p>
         </div>
 
@@ -428,9 +468,71 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Template Selector */}
+            <div className="mb-6">
+              <TemplateSelector
+                selectedTemplate={selectedTemplate}
+                onSelect={handleTemplateSelect}
+              />
+            </div>
+
+            {/* Difficulty Preview - shown when template is selected */}
+            {selectedTemplate && selectedTemplate !== 'custom' && (() => {
+              const tmpl = TEMPLATES.find(t => t.id === selectedTemplate)
+              if (!tmpl) return null
+              return (
+                <div className="mb-6 p-4 bg-secondary/30 border border-border/50 rounded-xl">
+                  <div className="flex items-center gap-3 mb-2">
+                    <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-sm font-medium text-foreground">Preview: {tmpl.name}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-primary" />
+                      {tmpl.questionCount} questions
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className={`w-2 h-2 rounded-full ${
+                        tmpl.difficulty === 'Easy' ? 'bg-emerald-500' :
+                        tmpl.difficulty === 'Medium' ? 'bg-amber-500' : 'bg-red-500'
+                      }`} />
+                      {tmpl.difficulty} difficulty
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-accent" />
+                      Mixed question types
+                    </span>
+                  </div>
+                </div>
+              )
+            })()}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Child Selector */}
-              {children.length > 0 && (
+              {/* Class Selector (teacher mode) */}
+              {isTeacher && classes.length > 0 && (
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="class">Generate for Class</Label>
+                  <Select value={selectedClassId} onValueChange={handleClassSelect}>
+                    <SelectTrigger id="class">
+                      <SelectValue placeholder="Select a class (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No class selected</SelectItem>
+                      {classes.map((cls) => (
+                        <SelectItem key={cls.id} value={cls.id}>
+                          {cls.name} ({cls.grade} — {cls.subject})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Child Selector (parent mode) */}
+              {!isTeacher && children.length > 0 && (
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="child">Generate for</Label>
                   <Select value={selectedChildId} onValueChange={handleChildSelect}>
