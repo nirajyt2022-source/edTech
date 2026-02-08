@@ -227,3 +227,9 @@ CREATE POLICY "Users can update own classes" ON teacher_classes
   FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete own classes" ON teacher_classes
   FOR DELETE USING (auth.uid() = user_id);
+
+-- Add class_id to worksheets table (Phase 3 - Step 3)
+ALTER TABLE worksheets
+ADD COLUMN IF NOT EXISTS class_id UUID REFERENCES teacher_classes(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_worksheets_class_id ON worksheets(class_id);

@@ -172,7 +172,7 @@ Generate exactly {request.num_questions} questions. Return ONLY valid JSON, no m
 
 class PDFExportRequest(BaseModel):
     worksheet: Worksheet
-    include_answer_key: bool = True
+    pdf_type: Literal["full", "student", "answer_key"] = "full"
 
 
 @router.post("/export-pdf")
@@ -185,11 +185,12 @@ async def export_worksheet_pdf(request: PDFExportRequest):
         # Generate PDF
         pdf_bytes = pdf_service.generate_worksheet_pdf(
             worksheet_dict,
-            include_answer_key=request.include_answer_key
+            pdf_type=request.pdf_type
         )
 
-        # Create filename
-        filename = f"{request.worksheet.title.replace(' ', '_')}.pdf"
+        # Create filename with type suffix
+        type_suffix = f"_{request.pdf_type}" if request.pdf_type != "full" else ""
+        filename = f"{request.worksheet.title.replace(' ', '_')}{type_suffix}.pdf"
 
         return Response(
             content=pdf_bytes,
@@ -206,6 +207,7 @@ class SaveWorksheetRequest(BaseModel):
     worksheet: Worksheet
     board: str | None = None
     child_id: str | None = None
+    class_id: str | None = None
 
 
 class SavedWorksheet(BaseModel):
@@ -263,6 +265,7 @@ async def save_worksheet(
             "language": request.worksheet.language,
             "questions": questions_data,
             "child_id": request.child_id,
+            "class_id": request.class_id,
         }).execute()
 
         if result.data:
@@ -281,19 +284,22 @@ async def list_saved_worksheets(
     authorization: str = Header(None),
     limit: int = 20,
     offset: int = 0,
-    child_id: str | None = None
+    child_id: str | None = None,
+    class_id: str | None = None
 ):
     """List user's saved worksheets."""
     user_id = get_user_id_from_token(authorization)
 
     try:
-        # Build query with optional child_id filter
+        # Build query with optional child_id/class_id filter
         query = supabase.table("worksheets") \
-            .select("*, children(id, name)") \
+            .select("*, children(id, name), teacher_classes(id, name)") \
             .eq("user_id", user_id)
 
         if child_id:
             query = query.eq("child_id", child_id)
+        if class_id:
+            query = query.eq("class_id", class_id)
 
         result = query \
             .order("created_at", desc=True) \
@@ -303,6 +309,7 @@ async def list_saved_worksheets(
         worksheets = []
         for row in result.data:
             child_data = row.get("children")
+            class_data = row.get("teacher_classes")
             worksheets.append({
                 "id": row["id"],
                 "title": row["title"],
@@ -316,6 +323,8 @@ async def list_saved_worksheets(
                 "created_at": row["created_at"],
                 "child_id": row.get("child_id"),
                 "child_name": child_data.get("name") if child_data else None,
+                "class_id": row.get("class_id"),
+                "class_name": class_data.get("name") if class_data else None,
                 "regeneration_count": row.get("regeneration_count", 0),
             })
 

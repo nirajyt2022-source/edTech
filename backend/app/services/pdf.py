@@ -70,12 +70,13 @@ class PDFService:
             leftIndent=10,
         ))
 
-    def generate_worksheet_pdf(self, worksheet: dict, include_answer_key: bool = True) -> bytes:
+    def generate_worksheet_pdf(self, worksheet: dict, pdf_type: str = "full") -> bytes:
         """Generate a PDF from a worksheet.
 
         Args:
             worksheet: Worksheet data with title, questions, etc.
-            include_answer_key: Whether to include answer key at the end
+            pdf_type: "full" (questions + answer key), "student" (questions only),
+                      "answer_key" (answer key only)
 
         Returns:
             PDF file as bytes
@@ -91,7 +92,23 @@ class PDFService:
         )
 
         story = []
+        questions = worksheet.get('questions', [])
 
+        if pdf_type == "answer_key":
+            self._build_answer_key(story, worksheet, questions)
+        else:
+            self._build_questions(story, worksheet, questions)
+            if pdf_type == "full" and questions:
+                story.append(PageBreak())
+                self._build_answer_key(story, worksheet, questions)
+
+        # Build PDF
+        doc.build(story)
+        buffer.seek(0)
+        return buffer.getvalue()
+
+    def _build_questions(self, story: list, worksheet: dict, questions: list) -> None:
+        """Build the questions section of the PDF."""
         # Title
         title = worksheet.get('title', 'Practice Worksheet')
         story.append(Paragraph(title, self.styles['WorksheetTitle']))
@@ -130,7 +147,6 @@ class PDFService:
         story.append(Spacer(1, 15))
 
         # Questions
-        questions = worksheet.get('questions', [])
         for i, question in enumerate(questions, 1):
             q_type = question.get('type', 'short_answer')
             q_text = question.get('text', '')
@@ -174,58 +190,54 @@ class PDFService:
 
             story.append(Spacer(1, 5))
 
-        # Answer Key (on new page)
-        if include_answer_key and questions:
-            story.append(PageBreak())
-            story.append(Paragraph("Answer Key", self.styles['AnswerKeyTitle']))
+    def _build_answer_key(self, story: list, worksheet: dict, questions: list) -> None:
+        """Build the answer key section of the PDF."""
+        # Title header for standalone answer key
+        title = worksheet.get('title', 'Practice Worksheet')
+        story.append(Paragraph(f"{title} — Answer Key", self.styles['AnswerKeyTitle']))
+        story.append(Spacer(1, 10))
+
+        # Create answer key table
+        answer_data = []
+        row = []
+        for i, question in enumerate(questions, 1):
+            answer = question.get('correct_answer', 'N/A')
+            if isinstance(answer, list):
+                answer = ', '.join(answer)
+            row.append(f"Q{i}: {answer}")
+            if len(row) == 3:  # 3 columns per row
+                answer_data.append(row)
+                row = []
+        if row:  # Add remaining items
+            while len(row) < 3:
+                row.append('')
+            answer_data.append(row)
+
+        if answer_data:
+            answer_table = Table(answer_data, colWidths=[5.5*cm, 5.5*cm, 5.5*cm])
+            answer_table.setStyle(TableStyle([
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ]))
+            story.append(answer_table)
+
+        # Add explanations if available
+        has_explanations = any(q.get('explanation') for q in questions)
+        if has_explanations:
+            story.append(Spacer(1, 20))
+            story.append(Paragraph("<b>Explanations:</b>", self.styles['Normal']))
             story.append(Spacer(1, 10))
 
-            # Create answer key table
-            answer_data = []
-            row = []
             for i, question in enumerate(questions, 1):
-                answer = question.get('correct_answer', 'N/A')
-                if isinstance(answer, list):
-                    answer = ', '.join(answer)
-                row.append(f"Q{i}: {answer}")
-                if len(row) == 3:  # 3 columns per row
-                    answer_data.append(row)
-                    row = []
-            if row:  # Add remaining items
-                while len(row) < 3:
-                    row.append('')
-                answer_data.append(row)
-
-            if answer_data:
-                answer_table = Table(answer_data, colWidths=[5.5*cm, 5.5*cm, 5.5*cm])
-                answer_table.setStyle(TableStyle([
-                    ('FONTSIZE', (0, 0), (-1, -1), 9),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-                    ('TOPPADDING', (0, 0), (-1, -1), 8),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                ]))
-                story.append(answer_table)
-
-            # Add explanations if available
-            has_explanations = any(q.get('explanation') for q in questions)
-            if has_explanations:
-                story.append(Spacer(1, 20))
-                story.append(Paragraph("<b>Explanations:</b>", self.styles['Normal']))
-                story.append(Spacer(1, 10))
-
-                for i, question in enumerate(questions, 1):
-                    explanation = question.get('explanation')
-                    if explanation:
-                        story.append(Paragraph(
-                            f"<b>Q{i}:</b> {explanation}",
-                            self.styles['AnswerText']
-                        ))
-                        story.append(Spacer(1, 5))
-
-        # Build PDF
-        doc.build(story)
-        buffer.seek(0)
-        return buffer.getvalue()
+                explanation = question.get('explanation')
+                if explanation:
+                    story.append(Paragraph(
+                        f"<b>Q{i}:</b> {explanation}",
+                        self.styles['AnswerText']
+                    ))
+                    story.append(Spacer(1, 5))
 
 
 def get_pdf_service() -> PDFService:

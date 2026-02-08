@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
 import { useChildren } from '@/lib/children'
+import { useClasses } from '@/lib/classes'
+import { useProfile } from '@/lib/profile'
 
 interface SavedWorksheetSummary {
   id: string
@@ -19,6 +21,8 @@ interface SavedWorksheetSummary {
   created_at: string
   child_id: string | null
   child_name: string | null
+  class_id: string | null
+  class_name: string | null
   regeneration_count?: number
 }
 
@@ -47,22 +51,34 @@ interface FullWorksheet {
 
 export default function SavedWorksheets() {
   const { children } = useChildren()
+  const { classes } = useClasses()
+  const { activeRole } = useProfile()
+  const isTeacher = activeRole === 'teacher'
   const [worksheets, setWorksheets] = useState<SavedWorksheetSummary[]>([])
   const [selectedWorksheet, setSelectedWorksheet] = useState<FullWorksheet | null>(null)
   const [loading, setLoading] = useState(true)
   const [regenerating, setRegenerating] = useState(false)
+  const [downloadingPdfType, setDownloadingPdfType] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [filterChildId, setFilterChildId] = useState('all')
+  const [filterClassId, setFilterClassId] = useState('all')
 
   useEffect(() => {
     loadWorksheets()
-  }, [filterChildId])
+  }, [filterChildId, filterClassId])
 
   const loadWorksheets = async () => {
     setLoading(true)
     setError('')
     try {
-      const params = filterChildId && filterChildId !== 'all' ? `?child_id=${filterChildId}` : ''
+      const queryParts: string[] = []
+      if (!isTeacher && filterChildId && filterChildId !== 'all') {
+        queryParts.push(`child_id=${filterChildId}`)
+      }
+      if (isTeacher && filterClassId && filterClassId !== 'all') {
+        queryParts.push(`class_id=${filterClassId}`)
+      }
+      const params = queryParts.length > 0 ? `?${queryParts.join('&')}` : ''
       const response = await api.get(`/api/worksheets/saved/list${params}`)
       setWorksheets(response.data.worksheets || [])
     } catch (err: unknown) {
@@ -104,7 +120,8 @@ export default function SavedWorksheets() {
     }
   }
 
-  const downloadPdf = async (worksheet: FullWorksheet) => {
+  const downloadPdf = async (worksheet: FullWorksheet, pdfType: string = 'full') => {
+    setDownloadingPdfType(pdfType)
     try {
       const response = await api.post('/api/worksheets/export-pdf', {
         worksheet: {
@@ -116,16 +133,17 @@ export default function SavedWorksheets() {
           language: worksheet.language,
           questions: worksheet.questions,
         },
-        include_answer_key: true,
+        pdf_type: pdfType,
       }, {
         responseType: 'blob',
       })
 
+      const typeSuffix = pdfType !== 'full' ? `_${pdfType}` : ''
       const blob = new Blob([response.data], { type: 'application/pdf' })
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `${worksheet.title.replace(/\s+/g, '_')}.pdf`
+      link.download = `${worksheet.title.replace(/\s+/g, '_')}${typeSuffix}.pdf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -133,6 +151,8 @@ export default function SavedWorksheets() {
     } catch (err) {
       setError('Failed to download PDF')
       console.error(err)
+    } finally {
+      setDownloadingPdfType(null)
     }
   }
 
@@ -220,29 +240,45 @@ export default function SavedWorksheets() {
           </div>
         )}
 
-        {/* Child Filter */}
-        {children.length > 0 && !selectedWorksheet && (
+        {/* Role-aware Filter */}
+        {!selectedWorksheet && (isTeacher ? classes.length > 0 : children.length > 0) && (
           <div className="mb-6 animate-fade-in">
             <div className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl">
-              <Label htmlFor="filter-child" className="whitespace-nowrap text-muted-foreground flex items-center gap-2">
+              <Label htmlFor="filter-entity" className="whitespace-nowrap text-muted-foreground flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
-                Filter by child:
+                {isTeacher ? 'Filter by class:' : 'Filter by child:'}
               </Label>
-              <Select value={filterChildId} onValueChange={setFilterChildId}>
-                <SelectTrigger id="filter-child" className="w-[200px] bg-background">
-                  <SelectValue placeholder="All children" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All children</SelectItem>
-                  {children.map((child) => (
-                    <SelectItem key={child.id} value={child.id}>
-                      {child.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isTeacher ? (
+                <Select value={filterClassId} onValueChange={setFilterClassId}>
+                  <SelectTrigger id="filter-entity" className="w-[200px] bg-background">
+                    <SelectValue placeholder="All classes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All classes</SelectItem>
+                    {classes.map((cls) => (
+                      <SelectItem key={cls.id} value={cls.id}>
+                        {cls.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select value={filterChildId} onValueChange={setFilterChildId}>
+                  <SelectTrigger id="filter-entity" className="w-[200px] bg-background">
+                    <SelectValue placeholder="All children" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All children</SelectItem>
+                    {children.map((child) => (
+                      <SelectItem key={child.id} value={child.id}>
+                        {child.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
         )}
@@ -289,12 +325,47 @@ export default function SavedWorksheets() {
                       </span>
                     )}
                   </Button>
-                  <Button onClick={() => downloadPdf(selectedWorksheet)} className="btn-animate">
-                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    PDF
-                  </Button>
+                  {isTeacher ? (
+                    <>
+                      <Button onClick={() => downloadPdf(selectedWorksheet, 'student')} disabled={!!downloadingPdfType} className="btn-animate">
+                        {downloadingPdfType === 'student' ? (
+                          <span className="flex items-center gap-2">
+                            <span className="spinner !w-4 !h-4 !border-primary-foreground/30 !border-t-primary-foreground" />
+                            Downloading...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Student PDF
+                          </span>
+                        )}
+                      </Button>
+                      <Button onClick={() => downloadPdf(selectedWorksheet, 'answer_key')} disabled={!!downloadingPdfType} variant="outline">
+                        {downloadingPdfType === 'answer_key' ? (
+                          <span className="flex items-center gap-2">
+                            <span className="spinner !w-4 !h-4" />
+                            Downloading...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                            Answer Key
+                          </span>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button onClick={() => downloadPdf(selectedWorksheet)} className="btn-animate">
+                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      PDF
+                    </Button>
+                  )}
                   <Button variant="outline" onClick={() => setSelectedWorksheet(null)}>
                     <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -340,23 +411,25 @@ export default function SavedWorksheets() {
                 ))}
               </div>
 
-              {/* Answer Key */}
-              <div className="mt-10 pt-6 border-t-2 border-dashed border-border">
-                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                  </svg>
-                  Answer Key
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {selectedWorksheet.questions.map((question, index) => (
-                    <div key={question.id} className="flex items-center gap-2 p-2 bg-secondary/30 rounded-lg text-sm">
-                      <span className="font-medium text-primary">Q{index + 1}:</span>
-                      <span className="text-foreground">{question.correct_answer}</span>
-                    </div>
-                  ))}
+              {/* Answer Key (hidden for teachers — they use Answer Key PDF) */}
+              {!isTeacher && (
+                <div className="mt-10 pt-6 border-t-2 border-dashed border-border">
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    Answer Key
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {selectedWorksheet.questions.map((question, index) => (
+                      <div key={question.id} className="flex items-center gap-2 p-2 bg-secondary/30 rounded-lg text-sm">
+                        <span className="font-medium text-primary">Q{index + 1}:</span>
+                        <span className="text-foreground">{question.correct_answer}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -400,6 +473,14 @@ export default function SavedWorksheets() {
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                       </svg>
                                       {worksheet.child_name}
+                                    </span>
+                                  )}
+                                  {worksheet.class_name && (
+                                    <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                      </svg>
+                                      {worksheet.class_name}
                                     </span>
                                   )}
                                 </div>
