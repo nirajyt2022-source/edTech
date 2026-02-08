@@ -200,3 +200,30 @@ CREATE POLICY "Users can insert own profile" ON user_profiles
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own profile" ON user_profiles
   FOR UPDATE USING (auth.uid() = user_id);
+
+-- Teacher classes table (Phase 3 - Step 2)
+CREATE TABLE IF NOT EXISTS teacher_classes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  grade TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  board TEXT NOT NULL DEFAULT 'CBSE',
+  syllabus_source TEXT NOT NULL DEFAULT 'cbse' CHECK (syllabus_source IN ('cbse', 'custom')),
+  custom_syllabus JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_teacher_classes_user_id ON teacher_classes(user_id);
+
+ALTER TABLE teacher_classes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own classes" ON teacher_classes
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own classes" ON teacher_classes
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own classes" ON teacher_classes
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own classes" ON teacher_classes
+  FOR DELETE USING (auth.uid() = user_id);
