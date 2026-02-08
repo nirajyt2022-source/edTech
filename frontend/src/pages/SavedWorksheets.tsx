@@ -52,7 +52,7 @@ export default function SavedWorksheets() {
   const [loading, setLoading] = useState(true)
   const [regenerating, setRegenerating] = useState(false)
   const [error, setError] = useState('')
-  const [filterChildId, setFilterChildId] = useState('')
+  const [filterChildId, setFilterChildId] = useState('all')
 
   useEffect(() => {
     loadWorksheets()
@@ -62,7 +62,7 @@ export default function SavedWorksheets() {
     setLoading(true)
     setError('')
     try {
-      const params = filterChildId ? `?child_id=${filterChildId}` : ''
+      const params = filterChildId && filterChildId !== 'all' ? `?child_id=${filterChildId}` : ''
       const response = await api.get(`/api/worksheets/saved/list${params}`)
       setWorksheets(response.data.worksheets || [])
     } catch (err: unknown) {
@@ -235,7 +235,7 @@ export default function SavedWorksheets() {
                   <SelectValue placeholder="All children" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All children</SelectItem>
+                  <SelectItem value="all">All children</SelectItem>
                   {children.map((child) => (
                     <SelectItem key={child.id} value={child.id}>
                       {child.name}

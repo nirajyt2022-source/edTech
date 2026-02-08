@@ -4,10 +4,21 @@ import SyllabusUpload from './pages/SyllabusUpload'
 import SavedWorksheets from './pages/SavedWorksheets'
 import ChildProfiles from './pages/ChildProfiles'
 import Auth from './pages/Auth'
+import RoleSelector from '@/components/RoleSelector'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { ChildrenProvider } from '@/lib/children'
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription'
+import { ProfileProvider, useProfile } from '@/lib/profile'
 import { EngagementProvider } from '@/lib/engagement'
 import './index.css'
 
@@ -64,6 +75,7 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('generator')
   const [syllabus, setSyllabus] = useState<ParsedSyllabus | null>(null)
   const { user, loading, signOut } = useAuth()
+  const { activeRole, profile, switchRole } = useProfile()
 
   // Show loading state
   if (loading) {
@@ -82,6 +94,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen gradient-bg">
+      <RoleSelector />
       {/* Navigation */}
       <nav className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50 print:hidden">
         <div className="max-w-5xl mx-auto px-4 py-3">
@@ -141,26 +154,64 @@ function AppContent() {
             {/* User Menu */}
             <div className="flex items-center gap-3">
               <UsageBadge />
-              <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                  <span className="text-xs font-semibold text-primary">
-                    {(user.user_metadata?.name || user.email || 'U')[0].toUpperCase()}
-                  </span>
-                </div>
-                <span className="max-w-[120px] truncate">
-                  {user.user_metadata?.name || user.email}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => signOut()}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                </svg>
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                      <span className="text-xs font-semibold text-primary">
+                        {(user.user_metadata?.name || user.email || 'U')[0].toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="hidden md:inline max-w-[120px] truncate text-sm">
+                      {user.user_metadata?.name || user.email}
+                    </span>
+                    {activeRole && (
+                      <Badge variant="secondary" className="hidden md:inline-flex text-xs capitalize">
+                        {activeRole}
+                      </Badge>
+                    )}
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{user.user_metadata?.name || user.email}</p>
+                      {activeRole && (
+                        <p className="text-xs text-muted-foreground capitalize">
+                          Active as {activeRole}
+                        </p>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {profile && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => switchRole(activeRole === 'parent' ? 'teacher' : 'parent')}
+                        className="cursor-pointer"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                        Switch to {activeRole === 'parent' ? 'Teacher' : 'Parent'} View
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem
+                    onClick={() => signOut()}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                    </svg>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -192,13 +243,15 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <SubscriptionProvider>
-        <ChildrenProvider>
-          <EngagementProvider>
-            <AppContent />
-          </EngagementProvider>
-        </ChildrenProvider>
-      </SubscriptionProvider>
+      <ProfileProvider>
+        <SubscriptionProvider>
+          <ChildrenProvider>
+            <EngagementProvider>
+              <AppContent />
+            </EngagementProvider>
+          </ChildrenProvider>
+        </SubscriptionProvider>
+      </ProfileProvider>
     </AuthProvider>
   )
 }

@@ -179,3 +179,24 @@ CREATE POLICY "Users can insert own child engagement" ON child_engagement
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own child engagement" ON child_engagement
   FOR UPDATE USING (auth.uid() = user_id);
+
+-- User profiles table for role system (Phase 3)
+CREATE TABLE IF NOT EXISTS user_profiles (
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  role TEXT CHECK (role IN ('parent', 'teacher')),
+  active_role TEXT CHECK (active_role IN ('parent', 'teacher')),
+  subjects TEXT[],
+  grades TEXT[],
+  school_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own profile" ON user_profiles
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own profile" ON user_profiles
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own profile" ON user_profiles
+  FOR UPDATE USING (auth.uid() = user_id);

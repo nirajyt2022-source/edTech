@@ -74,7 +74,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const { children } = useChildren()
   const { status: subscription, incrementUsage, upgrade } = useSubscription()
   const { recordCompletion, lastCompletion, clearLastCompletion } = useEngagement()
-  const [selectedChildId, setSelectedChildId] = useState('')
+  const [selectedChildId, setSelectedChildId] = useState('none')
   const [board, setBoard] = useState('')
   const [grade, setGrade] = useState('')
   const [subject, setSubject] = useState('')
@@ -100,7 +100,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   // Handle child selection - pre-fill grade and board
   const handleChildSelect = (childId: string) => {
     setSelectedChildId(childId)
-    if (childId) {
+    if (childId && childId !== 'none') {
       const child = children.find(c => c.id === childId)
       if (child) {
         setGrade(child.grade)
@@ -264,7 +264,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       window.URL.revokeObjectURL(url)
 
       // Record completion for engagement tracking (if child selected)
-      if (selectedChildId) {
+      if (selectedChildId && selectedChildId !== 'none') {
         await recordCompletion(selectedChildId)
       }
     } catch (err) {
@@ -284,7 +284,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       await api.post('/api/worksheets/save', {
         worksheet,
         board,
-        child_id: selectedChildId || undefined,
+        child_id: selectedChildId !== 'none' ? selectedChildId : undefined,
       })
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
@@ -438,7 +438,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                       <SelectValue placeholder="Select a child (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No child selected</SelectItem>
+                      <SelectItem value="none">No child selected</SelectItem>
                       {children.map((child) => (
                         <SelectItem key={child.id} value={child.id}>
                           {child.name} ({child.grade})
@@ -546,7 +546,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   ) : (
                     <TopicSelector
                       chapters={cbseSyllabus}
-                      childId={selectedChildId || undefined}
+                      childId={selectedChildId !== 'none' ? selectedChildId : undefined}
                       subject={subject}
                       onSelectionChange={handleTopicSelectionChange}
                     />
@@ -643,7 +643,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         </Card>
 
         {/* Completion Feedback */}
-        {lastCompletion && selectedChildId && (
+        {lastCompletion && selectedChildId && selectedChildId !== 'none' && (
           <div className="mb-6 p-5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-xl print:hidden animate-fade-in">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
