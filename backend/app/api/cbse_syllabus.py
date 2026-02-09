@@ -86,8 +86,10 @@ async def list_subjects_for_grade(grade: str):
 
 # Seed data endpoint (admin only - for initial setup)
 @router.post("/seed")
-async def seed_cbse_syllabus():
+async def seed_cbse_syllabus(admin_secret: str | None = Header(None)):
     """Seed the CBSE syllabus data. Run once during setup."""
+    if not admin_secret or admin_secret != settings.admin_secret:
+        raise HTTPException(status_code=401, detail="Invalid admin secret")
 
     syllabus_data = [
         # Class 1

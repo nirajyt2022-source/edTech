@@ -3,13 +3,12 @@ from pydantic import BaseModel
 from datetime import datetime
 from supabase import create_client
 from app.core.config import get_settings
+from app.services.subscription import ensure_subscription_exists, FREE_TIER_LIMIT
 
 router = APIRouter(prefix="/api/subscription", tags=["subscription"])
 
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
-
-FREE_TIER_LIMIT = 3  # worksheets per month
 
 
 class SubscriptionStatus(BaseModel):
@@ -37,44 +36,7 @@ def get_user_id_from_token(authorization: str) -> str:
         raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
 
 
-def ensure_subscription_exists(user_id: str) -> dict:
-    """Ensure user has a subscription record, create if not exists."""
-    result = supabase.table("user_subscriptions") \
-        .select("*") \
-        .eq("user_id", user_id) \
-        .execute()
-
-    if result.data and len(result.data) > 0:
-        sub = result.data[0]
-        # Check if we need to reset monthly count
-        month_reset_at = datetime.fromisoformat(sub["month_reset_at"].replace("Z", "+00:00"))
-        if datetime.now(month_reset_at.tzinfo) >= month_reset_at:
-            # Reset the monthly count
-            new_reset = (datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1)
-            update_result = supabase.table("user_subscriptions") \
-                .update({
-                    "worksheets_generated_this_month": 0,
-                    "month_reset_at": new_reset.isoformat(),
-                    "updated_at": datetime.now().isoformat()
-                }) \
-                .eq("user_id", user_id) \
-                .execute()
-            if update_result.data:
-                return update_result.data[0]
-        return sub
-    else:
-        # Create new subscription
-        insert_result = supabase.table("user_subscriptions") \
-            .insert({
-                "user_id": user_id,
-                "tier": "free",
-                "worksheets_generated_this_month": 0,
-            }) \
-            .execute()
-        if insert_result.data:
-            return insert_result.data[0]
-        raise HTTPException(status_code=500, detail="Failed to create subscription")
-
+# Function ensure_subscription_exists moved to app.services.subscription
 
 from datetime import timedelta
 
@@ -83,7 +45,7 @@ from datetime import timedelta
 async def get_subscription_status(authorization: str = Header(None)):
     """Get current user's subscription status."""
     user_id = get_user_id_from_token(authorization)
-    sub = ensure_subscription_exists(user_id)
+    sub = ensure_subscription_exists(supabase, user_id)
 
     is_paid = sub["tier"] == "paid"
     worksheets_used = sub["worksheets_generated_this_month"]
@@ -110,7 +72,7 @@ async def get_subscription_status(authorization: str = Header(None)):
 async def increment_usage(authorization: str = Header(None)):
     """Increment worksheet usage count. Called after successful generation."""
     user_id = get_user_id_from_token(authorization)
-    sub = ensure_subscription_exists(user_id)
+    sub = ensure_subscription_exists(supabase, user_id)
 
     # Don't track for paid users
     if sub["tier"] == "paid":
@@ -130,12 +92,21 @@ async def increment_usage(authorization: str = Header(None)):
 
 
 @router.post("/upgrade")
-async def upgrade_to_paid(authorization: str = Header(None)):
+async def upgrade_to_paid(
+    authorization: str = Header(None),
+    admin_secret: str | None = Header(None)
+):
     """Upgrade user to paid tier. (Placeholder - integrate with payment provider)"""
     user_id = get_user_id_from_token(authorization)
 
-    # TODO: Integrate with Stripe/Razorpay for actual payment
-    # For now, this is a placeholder that upgrades immediately
+    # SECURE: In production, this should only be called by a webhook from a payment provider
+    # or after verifying a payment receipt.
+    # For development/testing, we allow it with the admin secret.
+    if settings.debug is False and (not admin_secret or admin_secret != settings.admin_secret):
+        raise HTTPException(
+            status_code=403,
+            detail="Payment integration required for public upgrades."
+        )
 
     result = supabase.table("user_subscriptions") \
         .update({

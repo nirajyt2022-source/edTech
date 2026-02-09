@@ -9,6 +9,7 @@ from openai import OpenAI
 from supabase import create_client
 from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
+from app.services.subscription import check_can_generate, increment_usage
 
 router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
 pdf_service = get_pdf_service()
@@ -89,8 +90,28 @@ For English, include grammar and vocabulary. For EVS, include factual and applic
 
 
 @router.post("/generate", response_model=WorksheetGenerationResponse)
-async def generate_worksheet(request: WorksheetGenerationRequest):
+async def generate_worksheet(
+    request: WorksheetGenerationRequest,
+    authorization: str = Header(None)
+):
     """Generate a new worksheet based on provided parameters."""
+    user_id = get_user_id_from_token(authorization)
+
+    # Check subscription limits
+    can_generate, tier, sub = check_can_generate(supabase, user_id)
+    if not can_generate:
+        raise HTTPException(
+            status_code=403,
+            detail="Free tier limit reached. Upgrade to Pro for unlimited worksheets."
+        )
+
+    # Check language restrictions for free tier
+    if tier == "free" and request.language != "English":
+        raise HTTPException(
+            status_code=403,
+            detail="Regional languages are only available in the Pro tier."
+        )
+
     start_time = datetime.now()
 
     user_prompt = f"""Generate a {request.difficulty} difficulty worksheet:
@@ -155,6 +176,9 @@ Generate exactly {request.num_questions} questions. Return ONLY valid JSON, no m
             language=request.language,
             questions=questions,
         )
+
+        # Increment usage in backend
+        increment_usage(supabase, user_id, sub)
 
         end_time = datetime.now()
         generation_time_ms = int((end_time - start_time).total_seconds() * 1000)
@@ -400,45 +424,7 @@ async def delete_saved_worksheet(
         raise HTTPException(status_code=500, detail=f"Failed to delete worksheet: {str(e)}")
 
 
-FREE_TIER_LIMIT = 3  # worksheets per month
-
-
-def check_can_generate(user_id: str) -> tuple[bool, str, dict]:
-    """Check if user can generate a worksheet. Returns (can_generate, tier, subscription_data)."""
-    result = supabase.table("user_subscriptions") \
-        .select("*") \
-        .eq("user_id", user_id) \
-        .execute()
-
-    if not result.data:
-        # Create subscription if doesn't exist
-        insert_result = supabase.table("user_subscriptions") \
-            .insert({"user_id": user_id, "tier": "free", "worksheets_generated_this_month": 0}) \
-            .execute()
-        sub = insert_result.data[0] if insert_result.data else {"tier": "free", "worksheets_generated_this_month": 0}
-    else:
-        sub = result.data[0]
-
-    if sub["tier"] == "paid":
-        return True, "paid", sub
-
-    remaining = FREE_TIER_LIMIT - sub.get("worksheets_generated_this_month", 0)
-    return remaining > 0, "free", sub
-
-
-def increment_usage(user_id: str, sub: dict) -> None:
-    """Increment usage for free tier users."""
-    if sub.get("tier") == "paid":
-        return
-
-    new_count = sub.get("worksheets_generated_this_month", 0) + 1
-    supabase.table("user_subscriptions") \
-        .update({
-            "worksheets_generated_this_month": new_count,
-            "updated_at": datetime.now().isoformat()
-        }) \
-        .eq("user_id", user_id) \
-        .execute()
+# Functions check_can_generate and increment_usage moved to app.services.subscription
 
 
 @router.post("/regenerate/{worksheet_id}", response_model=WorksheetGenerationResponse)
@@ -470,7 +456,7 @@ async def regenerate_worksheet(
         # Check if this regeneration counts against quota
         # First regeneration is free, subsequent ones count
         if regeneration_count > 0:
-            can_generate, tier, sub = check_can_generate(user_id)
+            can_generate, tier, sub = check_can_generate(supabase, user_id)
             if not can_generate:
                 raise HTTPException(
                     status_code=403,
@@ -550,8 +536,8 @@ Generate exactly {len(original['questions'])} NEW questions (different from befo
 
         # Increment usage if this wasn't free (regeneration_count > 0)
         if regeneration_count > 0:
-            _, _, sub = check_can_generate(user_id)
-            increment_usage(user_id, sub)
+            _, _, sub = check_can_generate(supabase, user_id)
+            increment_usage(supabase, user_id, sub)
 
         end_time = datetime.now()
         generation_time_ms = int((end_time - start_time).total_seconds() * 1000)

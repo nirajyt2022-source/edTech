@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str
 
+    # Admin
+    admin_secret: str = "dev-secret-do-not-use-in-production"
+
     # CORS
     frontend_url: str = "http://localhost:5173"
 
