@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Topic {
   name: string
@@ -39,7 +40,7 @@ export default function CBSESyllabusViewer({ grade, subject, onGenerateFromSylla
         if (response.data && response.data.chapters) {
           setChapters(response.data.chapters)
         }
-      } catch (err) {
+      } catch {
         setError('Syllabus not available')
         setChapters([])
       } finally {
@@ -66,11 +67,12 @@ export default function CBSESyllabusViewer({ grade, subject, onGenerateFromSylla
 
   if (loading) {
     return (
-      <Card className="border-slate-200 bg-slate-50">
-        <CardContent className="py-6">
-          <p className="text-sm text-slate-500 text-center">Loading CBSE syllabus...</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4 pt-4">
+        <Skeleton className="h-6 w-48" />
+        <div className="grid gap-3">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
+        </div>
+      </div>
     )
   }
 
@@ -79,95 +81,109 @@ export default function CBSESyllabusViewer({ grade, subject, onGenerateFromSylla
   }
 
   return (
-    <Card className="border-slate-200 bg-slate-50/50">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-medium text-slate-700">
-            CBSE Syllabus - {grade} {subject}
-          </CardTitle>
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span className="inline-flex items-center gap-1">
-              <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Official CBSE
-            </span>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        {/* Trust Badges */}
-        <div className="flex flex-wrap gap-2 mb-4 text-xs">
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-            CBSE-aligned
-          </span>
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clipRule="evenodd" />
-            </svg>
-            Printable worksheets
-          </span>
-          <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
-            </svg>
-            Built for parents
-          </span>
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-border/40 pb-5">
+        <div className="space-y-1 text-center sm:text-left">
+          <h3 className="text-xl font-bold font-fraunces text-foreground">
+            {grade} {subject} Syllabus
+          </h3>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/5 px-2.5 py-1 rounded-full border border-primary/10 inline-block">
+            Official CBSE Alignment &middot; 2025-26 Standard
+          </p>
         </div>
 
-        {/* Chapters List */}
-        <div className="space-y-2 max-h-80 overflow-y-auto">
-          {chapters.map((chapter) => (
-            <div key={chapter.name} className="border border-slate-200 rounded bg-white">
-              <button
-                className="w-full flex items-center justify-between p-3 text-left hover:bg-slate-50 transition-colors"
-                onClick={() => toggleChapter(chapter.name)}
-              >
-                <span className="text-sm font-medium text-slate-700">{chapter.name}</span>
-                <span className="text-slate-400 text-xs">
-                  {expandedChapters.has(chapter.name) ? '▼' : '▶'}
-                </span>
-              </button>
-
-              {expandedChapters.has(chapter.name) && (
-                <div className="px-3 pb-3 border-t border-slate-100">
-                  <ul className="mt-2 space-y-1">
-                    {chapter.topics.map((topic) => (
-                      <li key={topic.name} className="flex items-start gap-2 text-sm text-slate-600">
-                        <span className="text-green-500 mt-0.5">✔</span>
-                        <div>
-                          <span>{topic.name}</span>
-                          {topic.subtopics && topic.subtopics.length > 0 && (
-                            <ul className="mt-1 ml-4 text-xs text-slate-500">
-                              {topic.subtopics.map((sub) => (
-                                <li key={sub}>• {sub}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Generate CTA */}
         {onGenerateFromSyllabus && (
           <Button
             onClick={onGenerateFromSyllabus}
-            className="w-full mt-4"
-            variant="outline"
+            className="bg-primary hover:shadow-lg hover:shadow-primary/20 rounded-xl px-6 py-5 h-auto font-black text-xs uppercase tracking-widest transition-all"
           >
-            Generate worksheet from this syllabus
+            Draft Material from Scope
           </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        {chapters.map((chapter, index) => (
+          <Card
+            key={chapter.name}
+            className={`group transition-all duration-300 border shadow-sm rounded-2xl overflow-hidden ${expandedChapters.has(chapter.name) ? 'border-primary/20 ring-1 ring-primary/5' : 'border-border/40 bg-card/40 hover:bg-card hover:border-border'
+              }`}
+            style={{ animationDelay: `${index * 0.05}s` }}
+          >
+            <button
+              className={`w-full flex items-center justify-between p-5 text-left transition-colors relative ${expandedChapters.has(chapter.name) ? 'bg-primary/5' : ''
+                }`}
+              onClick={() => toggleChapter(chapter.name)}
+            >
+              <div className="flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${expandedChapters.has(chapter.name) ? 'bg-primary text-primary-foreground scale-105' : 'bg-secondary/50 text-muted-foreground group-hover:bg-secondary group-hover:text-foreground'
+                  }`}>
+                  <span className="text-xs font-black">{index + 1}</span>
+                </div>
+                <div>
+                  <span className={`text-sm font-bold font-jakarta transition-colors ${expandedChapters.has(chapter.name) ? 'text-primary' : 'text-foreground/80'
+                    }`}>{chapter.name}</span>
+                  <p className="text-[10px] text-muted-foreground/50 font-medium">{chapter.topics.length} Topic Segments</p>
+                </div>
+              </div>
+
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${expandedChapters.has(chapter.name) ? 'bg-primary/10 text-primary rotate-180' : 'text-muted-foreground/30 hover:bg-secondary/60'
+                }`}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path d="M19.5 8.25l-7.5 7.5-7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </button>
+
+            {expandedChapters.has(chapter.name) && (
+              <CardContent className="p-5 pt-0 bg-background/40 animate-in slide-in-from-top-2 duration-300">
+                <div className="h-px w-full bg-border/40 mb-5" />
+                <ul className="space-y-4">
+                  {chapter.topics.map((topic) => (
+                    <li key={topic.name} className="flex items-start gap-4 group/topic">
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center mt-0.5 border border-emerald-500/20 shrink-0">
+                        <svg className="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                          <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-xs font-bold text-foreground/80 group-hover/topic:text-primary transition-colors">{topic.name}</span>
+                        {topic.subtopics && topic.subtopics.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pl-0.5">
+                            {topic.subtopics.map((sub) => (
+                              <span key={sub} className="px-2 py-0.5 bg-secondary/40 rounded-lg text-[9px] font-bold text-muted-foreground/70 border border-border/20">
+                                {sub}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            )}
+          </Card>
+        ))}
+      </div>
+
+      <div className="p-6 bg-primary/5 rounded-3xl border border-primary/10 flex flex-col md:flex-row items-center gap-6">
+        <div className="w-16 h-16 rounded-2xl bg-white shadow-xl shadow-primary/5 flex items-center justify-center shrink-0">
+          <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+        </div>
+        <div className="text-center md:text-left space-y-1 flex-1">
+          <h4 className="text-sm font-black uppercase tracking-widest text-primary">Pedagogical Guardrails</h4>
+          <p className="text-xs font-medium text-muted-foreground/80 leading-relaxed">
+            This module is pinned to the current CBSE framework. All generated practice materials will map strictly to these standardized learning outcomes.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm border border-border/40 shrink-0">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest">Compliant</span>
+        </div>
+      </div>
+    </div>
   )
 }
