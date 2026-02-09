@@ -39,7 +39,7 @@ export default function CBSESyllabusViewer({ grade, subject, onGenerateFromSylla
         if (response.data && response.data.chapters) {
           setChapters(response.data.chapters)
         }
-      } catch (err) {
+      } catch {
         setError('Syllabus not available')
         setChapters([])
       } finally {

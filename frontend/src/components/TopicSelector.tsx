@@ -64,7 +64,7 @@ export default function TopicSelector({ chapters, childId, subject, onSelectionC
           // No preferences saved, select all
           setSelectedTopics(new Set(getAllTopics()))
         }
-      } catch (err) {
+      } catch {
         // On error, select all
         setSelectedTopics(new Set(getAllTopics()))
       } finally {
