@@ -8,6 +8,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 import io
 from typing import Any
+from xml.sax.saxutils import escape as xml_escape
 
 
 class PDFService:
