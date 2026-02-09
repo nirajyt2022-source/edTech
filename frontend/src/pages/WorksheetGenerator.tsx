@@ -263,10 +263,25 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         language,
         custom_instructions: customInstructions || undefined,
       })
-      setWorksheet(response.data.worksheet)
+      const generatedWorksheet = response.data.worksheet
+      setWorksheet(generatedWorksheet)
 
-      // Track usage for free tier
-      await incrementUsage()
+      // Auto-save the worksheet
+      try {
+        await api.post('/api/worksheets/save', {
+          worksheet: generatedWorksheet,
+          board,
+          child_id: !isTeacher && selectedChildId !== 'none' ? selectedChildId : undefined,
+          class_id: isTeacher && selectedClassId !== 'none' ? selectedClassId : undefined,
+        })
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 3000)
+      } catch (saveErr) {
+        console.error('Failed to auto-save worksheet:', saveErr)
+        // Don't show error to user as the generation was successful
+      }
+
+      // Usage is now tracked in the backend for security
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate worksheet'
       setError(errorMessage)

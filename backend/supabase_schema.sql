@@ -89,10 +89,7 @@ ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own subscription" ON user_subscriptions
   FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own subscription" ON user_subscriptions
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own subscription" ON user_subscriptions
-  FOR UPDATE USING (auth.uid() = user_id);
+-- No INSERT or UPDATE policies: managed by backend service role for security
 
 -- Function to auto-create subscription for new users
 CREATE OR REPLACE FUNCTION create_user_subscription()
@@ -175,10 +172,7 @@ ALTER TABLE child_engagement ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own child engagement" ON child_engagement
   FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own child engagement" ON child_engagement
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own child engagement" ON child_engagement
-  FOR UPDATE USING (auth.uid() = user_id);
+-- No INSERT or UPDATE policies: managed by backend service role for security
 
 -- User profiles table for role system (Phase 3)
 CREATE TABLE IF NOT EXISTS user_profiles (
