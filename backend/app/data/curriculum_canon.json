@@ -11,7 +11,7 @@
       "stage": "Foundational",
       "subjects": [
         {
-          "name": "Mathematics",
+          "name": "Maths",
           "region": "Global",
           "source": "Joyful Mathematics",
           "skills": [
@@ -95,7 +95,7 @@
           "depth": "core"
         },
         {
-          "name": "Computer Science",
+          "name": "Computer",
           "region": "Global",
           "skills": [
             "Parts of computer",
@@ -143,7 +143,7 @@
       "stage": "Foundational",
       "subjects": [
         {
-          "name": "Mathematics",
+          "name": "Maths",
           "region": "Global",
           "source": "Joyful Mathematics",
           "skills": [
@@ -215,7 +215,7 @@
           "depth": "core"
         },
         {
-          "name": "Computer Science",
+          "name": "Computer",
           "region": "Global",
           "skills": [
             "Desktop and icons",
@@ -263,7 +263,7 @@
       "stage": "Preparatory",
       "subjects": [
         {
-          "name": "Mathematics",
+          "name": "Maths",
           "region": "Global",
           "source": "Math Magic",
           "skills": [
@@ -379,7 +379,7 @@
           "depth": "reinforcement"
         },
         {
-          "name": "Computer Science",
+          "name": "Computer",
           "region": "Global",
           "skills": [
             "MS Paint basics",
@@ -429,7 +429,7 @@
       "stage": "Preparatory",
       "subjects": [
         {
-          "name": "Mathematics",
+          "name": "Maths",
           "region": "Global",
           "source": "Math Magic",
           "skills": [
@@ -547,7 +547,7 @@
           "depth": "reinforcement"
         },
         {
-          "name": "Computer Science",
+          "name": "Computer",
           "region": "Global",
           "skills": [
             "MS Word basics",
@@ -597,7 +597,7 @@
       "stage": "Preparatory",
       "subjects": [
         {
-          "name": "Mathematics",
+          "name": "Maths",
           "region": "Global",
           "source": "Math Magic",
           "skills": [
@@ -716,7 +716,7 @@
           "depth": "reinforcement"
         },
         {
-          "name": "Computer Science",
+          "name": "Computer",
           "region": "Global",
           "skills": [
             "Scratch programming",
