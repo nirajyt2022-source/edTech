@@ -165,6 +165,20 @@ a:hover {
   border-radius: inherit;
 }
 
+/* Academic paper texture for large background areas */
+.bg-paper-texture {
+  position: relative;
+}
+
+.bg-paper-texture::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.018'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* Animated gradient background */
 .gradient-bg {
   background:
@@ -453,6 +467,11 @@ textarea::placeholder {
   /* Strip app chrome */
   nav, .gradient-bg {
     background: none !important;
+  }
+
+  /* Hide background texture in print */
+  .bg-paper-texture::after {
+    display: none !important;
   }
 
   /* Worksheet card — full-width, no box */

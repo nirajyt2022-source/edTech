@@ -27,7 +27,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       </header>
 
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-24">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-24 bg-paper-texture">
         <div className="max-w-xl text-center space-y-6">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-foreground leading-tight tracking-tight">
             Create calm, syllabus-aligned practice for Classes 1–5.

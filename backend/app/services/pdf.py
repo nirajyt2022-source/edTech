@@ -103,10 +103,20 @@ class PDFService:
                 story.append(PageBreak())
                 self._build_answer_key(story, worksheet, questions)
 
-        # Build PDF
-        doc.build(story)
+        # Build PDF with watermark on every page
+        doc.build(story, onFirstPage=self._draw_watermark, onLaterPages=self._draw_watermark)
         buffer.seek(0)
         return buffer.getvalue()
+
+    @staticmethod
+    def _draw_watermark(canvas, doc):
+        """Draw a subtle text watermark at the bottom of each page."""
+        canvas.saveState()
+        canvas.setFont('Helvetica', 7)
+        canvas.setFillColor(colors.Color(0.82, 0.82, 0.82))
+        page_width, _ = A4
+        canvas.drawCentredString(page_width / 2, 1.0 * cm, "Generated using PracticeCraft")
+        canvas.restoreState()
 
     def _build_questions(self, story: list, worksheet: dict, questions: list) -> None:
         """Build the questions section of the PDF."""

@@ -427,7 +427,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   }
 
   return (
-    <div className="py-10 px-4 max-w-7xl mx-auto print:p-0 print:max-w-none">
+    <div className="py-10 px-4 max-w-7xl mx-auto print:p-0 print:max-w-none bg-paper-texture">
       {/* Hero Section */}
       <PageHeader className="text-center md:text-left mb-12 print:hidden">
         <PageHeader.Title className="text-pretty">
@@ -1069,6 +1069,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                       <p className="mt-4 text-[10px] text-muted-foreground italic">Use this section for evaluation or guidance.</p>
                     </div>
                   )}
+
+                  {/* Watermark */}
+                  <p className="mt-14 text-center text-[10px] text-foreground/[0.04] select-none print:text-black/[0.05]">
+                    Generated using PracticeCraft
+                  </p>
                 </CardContent>
               </Card>
             ) : (
