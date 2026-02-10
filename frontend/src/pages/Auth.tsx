@@ -7,8 +7,13 @@ import { useAuth } from '@/lib/auth'
 
 type AuthMode = 'login' | 'signup'
 
-export default function Auth() {
-  const [mode, setMode] = useState<AuthMode>('login')
+interface Props {
+  defaultMode?: AuthMode
+  onBack?: () => void
+}
+
+export default function Auth({ defaultMode = 'login', onBack }: Props) {
+  const [mode, setMode] = useState<AuthMode>(defaultMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -50,6 +55,18 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md animate-fade-in">
+        {/* Back to landing */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+            Back
+          </button>
+        )}
         {/* Logo and branding */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary shadow-sm mb-4">
@@ -146,7 +163,7 @@ export default function Auth() {
                 {loading ? (
                   <span className="flex items-center gap-2">
                     <span className="spinner !w-4 !h-4 !border-primary-foreground/30 !border-t-primary-foreground" />
-                    Please wait...
+                    {mode === 'login' ? 'Signing in...' : 'Creating your account...'}
                   </span>
                 ) : (
                   mode === 'login' ? 'Sign in' : 'Create account'

@@ -104,6 +104,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [worksheet, setWorksheet] = useState<Worksheet | null>(null)
   const [error, setError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
 
   // Curriculum-based state
   const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([])
@@ -350,6 +351,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         region,
       })
       setWorksheet(response.data.worksheet)
+      setMobileView('preview')
 
       // Track usage for free tier
       await incrementUsage()
@@ -426,7 +428,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   }
 
   return (
-    <div className="py-10 px-4 max-w-5xl mx-auto">
+    <div className="py-10 px-4 max-w-7xl mx-auto">
       {/* Hero Section */}
       <PageHeader className="text-center md:text-left mb-12">
         <PageHeader.Title className="text-pretty">
@@ -557,8 +559,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         </div>
       )}
 
-      {/* Generator Form */}
-      <Card className="mb-12 print:hidden overflow-hidden border-border/50 shadow-xl bg-background/50 backdrop-blur-sm">
+      {/* Split-screen Workspace */}
+      <div className="lg:flex lg:gap-8 print:block">
+        {/* Left Panel — Controls */}
+        <div className={`lg:w-[40%] lg:min-w-0 lg:shrink-0 print:hidden ${mobileView === 'preview' && worksheet ? 'hidden lg:block' : ''}`}>
+          {/* Generator Form */}
+          <Card className="print:hidden overflow-hidden border-border/50 shadow-xl bg-background/50 backdrop-blur-sm">
         <CardContent className="p-0">
           <div className="divide-y divide-border/50">
             {/* Step 1: Student Context */}
@@ -662,7 +668,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                         <Label htmlFor="subject" className="text-sm font-semibold">Subject *</Label>
                         <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
                           <SelectTrigger id="subject" className="bg-background">
-                            <SelectValue placeholder={loadingCurriculum ? "Loading subjects..." : "Select subject"} />
+                            <SelectValue placeholder={loadingCurriculum ? "Preparing subjects..." : "Select subject"} />
                           </SelectTrigger>
                           <SelectContent>
                             {useCurriculumFlow
@@ -858,23 +864,252 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
               {loading ? (
                 <span className="flex items-center gap-3">
                   <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground" />
-                  Generating Worksheet...
+                  Preparing practice aligned to your syllabus...
                 </span>
               ) : (
                 <span className="flex items-center gap-3">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
                   </svg>
-                  Generate Practice Worksheet
+                  Create today's practice
                 </span>
               )}
             </Button>
             <p className="mt-4 text-center text-xs text-muted-foreground">
-              By clicking generate, you use one worksheet credit. Aligned to CBSE & School standards.
+              Uses one worksheet credit. Aligned to CBSE and school standards.
             </p>
           </div>
         </CardContent>
-      </Card>
+          </Card>
+        </div>
+
+        {/* Right Panel — Preview */}
+        <div className={`mt-8 lg:mt-0 lg:w-[60%] lg:min-w-0 ${mobileView === 'edit' ? 'hidden lg:block' : ''}`}>
+          <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto print:max-h-none print:overflow-visible print:static">
+            {loading ? (
+              <Card className="overflow-hidden border-border/40 shadow-2xl">
+                <CardHeader className="pt-10 px-8">
+                  <p className="text-sm text-muted-foreground font-medium mb-6">Preparing practice aligned to your syllabus...</p>
+                  <Skeleton className="h-10 w-3/4 mb-4" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-16 rounded-md" />
+                    <Skeleton className="h-6 w-20 rounded-md" />
+                    <Skeleton className="h-6 w-16 rounded-md" />
+                  </div>
+                </CardHeader>
+                <CardContent className="px-8 pb-12 space-y-8">
+                  <Skeleton className="h-20 w-full rounded-xl" />
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="flex gap-5">
+                      <Skeleton className="w-8 h-8 rounded flex-shrink-0" />
+                      <div className="flex-grow space-y-3">
+                        <Skeleton className="h-6 w-full" />
+                        <Skeleton className="h-4 w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ) : worksheet ? (
+              <Card className="print:shadow-none print:border-none paper-texture animate-fade-in border-border/40 shadow-2xl relative overflow-hidden">
+                {/* Subtle Academic Header Accent */}
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary/20 print:hidden" />
+
+                <CardHeader className="print:pb-6 pt-10 px-8">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                    <div className="space-y-4">
+                      <CardTitle className="text-3xl md:text-4xl font-serif text-foreground leading-tight">
+                        {worksheet.title}
+                      </CardTitle>
+                      <div className="flex flex-wrap gap-2 print:mt-4">
+                        {[worksheet.grade, worksheet.subject, worksheet.topic, worksheet.difficulty].map((tag, i) => (
+                          <span key={i} className="inline-flex items-center px-3 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold bg-secondary text-secondary-foreground border border-border/50">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 print:hidden shrink-0">
+                      <Button
+                        onClick={handleSave}
+                        disabled={saving}
+                        variant={saveSuccess ? "outline" : "secondary"}
+                        className={saveSuccess ? "border-primary text-primary bg-primary/5" : "bg-white"}
+                        size="sm"
+                      >
+                        {saving ? (
+                          <>
+                            <span className="spinner !w-3.5 !h-3.5 mr-2" />
+                            Saving
+                          </>
+                        ) : saveSuccess ? (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            Saved
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0113.186 0z" />
+                            </svg>
+                            Save
+                          </>
+                        )}
+                      </Button>
+
+                      <div className="h-8 w-px bg-border/50 mx-1 hidden sm:block" />
+
+                      {isTeacher ? (
+                        <>
+                          <Button onClick={() => handleDownloadPdf('student')} disabled={downloadingPdf} size="sm" className="bg-primary text-primary-foreground shadow-sm">
+                            {downloadingPdf && downloadingPdfType === 'student' ? (
+                              <>
+                                <span className="spinner !w-3.5 !h-3.5 mr-2 !border-primary-foreground/30 !border-t-primary-foreground" />
+                                Preparing...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75v6.75m0 0l-3-3m3 3l3-3m-8.25 6a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                                </svg>
+                                Student PDF
+                              </>
+                            )}
+                          </Button>
+                          <Button onClick={() => handleDownloadPdf('answer_key')} disabled={downloadingPdf} variant="outline" size="sm">
+                            {downloadingPdf && downloadingPdfType === 'answer_key' ? (
+                              <>
+                                <span className="spinner !w-3.5 !h-3.5 mr-2" />
+                                Preparing...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-4 h-4 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                                </svg>
+                                Answer Key
+                              </>
+                            )}
+                          </Button>
+                        </>
+                      ) : (
+                        <Button onClick={() => handleDownloadPdf('full')} disabled={downloadingPdf} size="sm" className="bg-primary text-primary-foreground shadow-sm">
+                          {downloadingPdf ? (
+                            <>
+                              <span className="spinner !w-3.5 !h-3.5 mr-2 !border-primary-foreground/30 !border-t-primary-foreground" />
+                              Preparing...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                              </svg>
+                              Print or save
+                            </>
+                          )}
+                        </Button>
+                      )}
+
+                      <Button onClick={handlePrint} variant="outline" size="sm" className="px-3">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.618 0-1.103-.508-1.12-1.227L6.34 18m11.318-8.22L16.5 3a.75.75 0 00-.75-.75h-7.5a.75.75 0 00-.75.75l-1.15 6.756M16.5 9.78h.008v.008H16.5V9.78zm-.45-2.88h.008v.008h-.008V6.9zm-2.25.45h.008v.008h-.008V7.35zm0 1.8h.008v.008h-.008V9.15zm-2.25-2.25h.008v.008h-.008V6.9zm0 1.8h.008v.008h-.008V8.7zm-2.25-1.8h.008V7h-.008V6.9zm0 1.8h.008v.008h-.008V8.7zm2.25 4.5h.008v.008h-.008v-.008zm0-1.8h.008v.008h-.008v-.008zm1.8 1.8h.008v.008h-.008v-.008zm0-1.8h.008v.008h-.008v-.008z" />
+                        </svg>
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="px-8 pb-12">
+                  <div className="mb-8 p-5 bg-primary/[0.03] border border-primary/10 rounded-xl print:border-border print:bg-transparent">
+                    <p className="font-bold text-foreground flex items-center gap-2 mb-1 uppercase tracking-tight text-xs">
+                      Instructions for Student
+                    </p>
+                    <p className="text-sm text-muted-foreground">Please read each question carefully and provide your best answer. Show all necessary workings in the space provided. Good luck!</p>
+                  </div>
+
+                  <div className="space-y-10 mt-8">
+                    {worksheet.questions.map((question, index) => (
+                      <div key={question.id} className="relative group stagger-item">
+                        <div className="flex gap-5">
+                          <span className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded bg-foreground text-background text-sm font-bold mt-0.5">
+                            {index + 1}
+                          </span>
+                          <div className="flex-grow space-y-4">
+                            <p className="text-lg font-medium text-foreground leading-snug">
+                              {question.text}
+                            </p>
+
+                            {question.options && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                                {question.options.map((option, optIndex) => (
+                                  <div key={optIndex} className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-white/50 print:bg-transparent print:border-border">
+                                    <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">
+                                      {String.fromCharCode(65 + optIndex)}
+                                    </span>
+                                    <span className="text-sm text-foreground">{option}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {question.type === 'fill_blank' && (
+                              <div className="mt-4 pt-4">
+                                <div className="border-b-2 border-dotted border-border w-2/3 h-6"></div>
+                              </div>
+                            )}
+
+                            {question.type === 'short_answer' && (
+                              <div className="mt-4 space-y-4">
+                                <div className="border-b border-border/40 h-8"></div>
+                                <div className="border-b border-border/40 h-8"></div>
+                                <div className="border-b border-border/40 h-8"></div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Answer Key Section (hidden for teachers — they use Answer Key PDF) */}
+                  {!isTeacher && (
+                    <div className="mt-16 pt-10 border-t-2 border-dashed border-border/50 print:break-before-page">
+                      <h3 className="font-serif text-2xl mb-6 flex items-center gap-2 text-foreground/80">
+                        <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                        </svg>
+                        Answer Key Reference
+                      </h3>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        {worksheet.questions.map((question, index) => (
+                          <div key={question.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg text-sm border border-border/50">
+                            <span className="font-bold text-primary">Q{index + 1}</span>
+                            <span className="text-foreground font-medium">{question.correct_answer}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="mt-4 text-[10px] text-muted-foreground italic">Use this section for evaluation or guidance.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="border-2 border-dashed border-border/50 rounded-2xl p-12 flex flex-col items-center justify-center text-center min-h-[400px] bg-secondary/10">
+                <div className="w-20 h-20 rounded-2xl bg-secondary/50 flex items-center justify-center mb-6">
+                  <svg className="w-10 h-10 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                </div>
+                <p className="text-lg font-semibold text-muted-foreground/70 mb-2">Your practice will appear here</p>
+                <p className="text-sm text-muted-foreground/50 max-w-xs">Choose a subject and topic, then click Create today's practice.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Completion Feedback */}
       {lastCompletion && selectedChildId && selectedChildId !== 'none' && (
@@ -916,193 +1151,31 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         </div>
       )}
 
-      {/* Generated Worksheet */}
-      {worksheet && (
-        <Card className="print:shadow-none print:border-none paper-texture animate-fade-in border-border/40 shadow-2xl relative overflow-hidden">
-          {/* Subtle Academic Header Accent */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary/20 print:hidden" />
-
-          <CardHeader className="print:pb-6 pt-10 px-8">
-            <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-              <div className="space-y-4">
-                <CardTitle className="text-3xl md:text-4xl font-serif text-foreground leading-tight">
-                  {worksheet.title}
-                </CardTitle>
-                <div className="flex flex-wrap gap-2 print:mt-4">
-                  {[worksheet.grade, worksheet.subject, worksheet.topic, worksheet.difficulty].map((tag, i) => (
-                    <span key={i} className="inline-flex items-center px-3 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold bg-secondary text-secondary-foreground border border-border/50">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 print:hidden shrink-0">
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  variant={saveSuccess ? "outline" : "secondary"}
-                  className={saveSuccess ? "border-primary text-primary bg-primary/5" : "bg-white"}
-                  size="sm"
-                >
-                  {saving ? (
-                    <>
-                      <span className="spinner !w-3.5 !h-3.5 mr-2" />
-                      Saving
-                    </>
-                  ) : saveSuccess ? (
-                    <>
-                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                      Saved
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0113.186 0z" />
-                      </svg>
-                      Save
-                    </>
-                  )}
-                </Button>
-
-                <div className="h-8 w-px bg-border/50 mx-1 hidden sm:block" />
-
-                {isTeacher ? (
-                  <>
-                    <Button onClick={() => handleDownloadPdf('student')} disabled={downloadingPdf} size="sm" className="bg-primary text-primary-foreground shadow-sm">
-                      {downloadingPdf && downloadingPdfType === 'student' ? (
-                        <>
-                          <span className="spinner !w-3.5 !h-3.5 mr-2 !border-primary-foreground/30 !border-t-primary-foreground" />
-                          Downloading
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75v6.75m0 0l-3-3m3 3l3-3m-8.25 6a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-                          </svg>
-                          Student PDF
-                        </>
-                      )}
-                    </Button>
-                    <Button onClick={() => handleDownloadPdf('answer_key')} disabled={downloadingPdf} variant="outline" size="sm">
-                      {downloadingPdf && downloadingPdfType === 'answer_key' ? (
-                        <>
-                          <span className="spinner !w-3.5 !h-3.5 mr-2" />
-                          Downloading
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-                          </svg>
-                          Answer Key
-                        </>
-                      )}
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={() => handleDownloadPdf('full')} disabled={downloadingPdf} size="sm" className="bg-primary text-primary-foreground shadow-sm">
-                    {downloadingPdf ? (
-                      <>
-                        <span className="spinner !w-3.5 !h-3.5 mr-2 !border-primary-foreground/30 !border-t-primary-foreground" />
-                        Downloading
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                        </svg>
-                        Download PDF
-                      </>
-                    )}
-                  </Button>
-                )}
-
-                <Button onClick={handlePrint} variant="outline" size="sm" className="px-3">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.618 0-1.103-.508-1.12-1.227L6.34 18m11.318-8.22L16.5 3a.75.75 0 00-.75-.75h-7.5a.75.75 0 00-.75.75l-1.15 6.756M16.5 9.78h.008v.008H16.5V9.78zm-.45-2.88h.008v.008h-.008V6.9zm-2.25.45h.008v.008h-.008V7.35zm0 1.8h.008v.008h-.008V9.15zm-2.25-2.25h.008v.008h-.008V6.9zm0 1.8h.008v.008h-.008V8.7zm-2.25-1.8h.008V7h-.008V6.9zm0 1.8h.008v.008h-.008V8.7zm2.25 4.5h.008v.008h-.008v-.008zm0-1.8h.008v.008h-.008v-.008zm1.8 1.8h.008v.008h-.008v-.008zm0-1.8h.008v.008h-.008v-.008z" />
-                  </svg>
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="px-8 pb-12">
-            <div className="mb-8 p-5 bg-primary/[0.03] border border-primary/10 rounded-xl print:border-border print:bg-transparent">
-              <p className="font-bold text-foreground flex items-center gap-2 mb-1 uppercase tracking-tight text-xs">
-                Instructions for Student
-              </p>
-              <p className="text-sm text-muted-foreground">Please read each question carefully and provide your best answer. Show all necessary workings in the space provided. Good luck!</p>
-            </div>
-
-            <div className="space-y-10 mt-8">
-              {worksheet.questions.map((question, index) => (
-                <div key={question.id} className="relative group stagger-item">
-                  <div className="flex gap-5">
-                    <span className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded bg-foreground text-background text-sm font-bold mt-0.5">
-                      {index + 1}
-                    </span>
-                    <div className="flex-grow space-y-4">
-                      <p className="text-lg font-medium text-foreground leading-snug">
-                        {question.text}
-                      </p>
-
-                      {question.options && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                          {question.options.map((option, optIndex) => (
-                            <div key={optIndex} className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-white/50 print:bg-transparent print:border-border">
-                              <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">
-                                {String.fromCharCode(65 + optIndex)}
-                              </span>
-                              <span className="text-sm text-foreground">{option}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {question.type === 'fill_blank' && (
-                        <div className="mt-4 pt-4">
-                          <div className="border-b-2 border-dotted border-border w-2/3 h-6"></div>
-                        </div>
-                      )}
-
-                      {question.type === 'short_answer' && (
-                        <div className="mt-4 space-y-4">
-                          <div className="border-b border-border/40 h-8"></div>
-                          <div className="border-b border-border/40 h-8"></div>
-                          <div className="border-b border-border/40 h-8"></div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Answer Key Section (hidden for teachers — they use Answer Key PDF) */}
-            {!isTeacher && (
-              <div className="mt-16 pt-10 border-t-2 border-dashed border-border/50 print:break-before-page">
-                <h3 className="font-serif text-2xl mb-6 flex items-center gap-2 text-foreground/80">
-                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-                  </svg>
-                  Answer Key Reference
-                </h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  {worksheet.questions.map((question, index) => (
-                    <div key={question.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg text-sm border border-border/50">
-                      <span className="font-bold text-primary">Q{index + 1}</span>
-                      <span className="text-foreground font-medium">{question.correct_answer}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-4 text-[10px] text-muted-foreground italic">Use this section for evaluation or guidance.</p>
-              </div>
+      {/* Mobile Toggle */}
+      {worksheet && !loading && (
+        <div className="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 print:hidden">
+          <button
+            onClick={() => setMobileView(mobileView === 'edit' ? 'preview' : 'edit')}
+            className="flex items-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full shadow-lg text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+          >
+            {mobileView === 'edit' ? (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Preview
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                </svg>
+                Edit
+              </>
             )}
-          </CardContent>
-        </Card>
+          </button>
+        </div>
       )}
     </div>
   )

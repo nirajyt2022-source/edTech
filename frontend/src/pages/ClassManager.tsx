@@ -146,9 +146,9 @@ export default function ClassManager() {
     <div className="max-w-4xl mx-auto px-4 py-12 pb-24 space-y-12">
       {/* Header */}
       <PageHeader className="animate-in fade-in slide-in-from-top-4 duration-500">
-        <PageHeader.Title className="text-pretty">Classroom Roster</PageHeader.Title>
+        <PageHeader.Title className="text-pretty">Your Classes</PageHeader.Title>
         <PageHeader.Subtitle className="text-pretty max-w-2xl">
-          Coordinate your teaching groups and map them to standard or custom curriculum requirements for precision worksheet generation.
+          Organize your classes to create worksheets aligned to their grade and subject.
         </PageHeader.Subtitle>
       </PageHeader>
 
@@ -165,32 +165,32 @@ export default function ClassManager() {
       {showForm && (
         <Section className="animate-in fade-in slide-in-from-top-4 duration-500">
           <Section.Header>
-            <Section.Title>{editingClass ? 'Update Parameters' : 'Register New Group'}</Section.Title>
+            <Section.Title>{editingClass ? 'Update Class' : 'Add a Class'}</Section.Title>
             <p className="text-sm text-muted-foreground mt-1.5">
               {editingClass
-                ? `Modify the configuration for ${editingClass.name} to align with curriculum updates.`
-                : 'Define a new classroom entity to begin generating tailored educational materials.'}
+                ? `Update details for ${editingClass.name}.`
+                : 'Set up grade, subject, and board for your class.'}
             </p>
           </Section.Header>
           <Section.Content className="pt-8">
-            <form onSubmit={handleSubmit} className="space-y-8 bg-card/40 p-8 rounded-3xl border border-border/40">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 bg-card/40 p-6 md:p-8 rounded-2xl border border-border/40">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="className" className="text-xs font-bold text-foreground/70 uppercase tracking-widest pl-1">Identification</Label>
+                  <Label htmlFor="className" className="text-sm font-bold text-foreground/80">Class Name *</Label>
                   <Input
                     id="className"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Grade 3-A Honours"
-                    className="h-12 bg-background border-border/60 focus:ring-primary/20 rounded-xl"
+                    placeholder="e.g. Grade 3-A"
+                    className="h-11 bg-background border-border/60 focus:ring-primary/20 rounded-xl"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="grade" className="text-xs font-bold text-foreground/70 uppercase tracking-widest pl-1">Grade Level</Label>
+                  <Label htmlFor="grade" className="text-sm font-bold text-foreground/80">Grade *</Label>
                   <Select value={grade} onValueChange={setGrade}>
-                    <SelectTrigger id="grade" className="h-12 bg-background border-border/60 rounded-xl">
-                      <SelectValue placeholder="Confirm grade" />
+                    <SelectTrigger id="grade" className="h-11 bg-background border-border/60 rounded-xl">
+                      <SelectValue placeholder="Select grade" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
                       {GRADES.map((g) => (
@@ -201,10 +201,10 @@ export default function ClassManager() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject" className="text-xs font-bold text-foreground/70 uppercase tracking-widest pl-1">Core Subject</Label>
+                  <Label htmlFor="subject" className="text-sm font-bold text-foreground/80">Subject *</Label>
                   <Select value={subject} onValueChange={setSubject}>
-                    <SelectTrigger id="subject" className="h-12 bg-background border-border/60 rounded-xl">
-                      <SelectValue placeholder="Area of study" />
+                    <SelectTrigger id="subject" className="h-11 bg-background border-border/60 rounded-xl">
+                      <SelectValue placeholder="Select subject" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
                       {curriculumSubjects.length > 0
@@ -220,10 +220,10 @@ export default function ClassManager() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="board" className="text-xs font-bold text-foreground/70 uppercase tracking-widest pl-1">Educational Board</Label>
+                  <Label htmlFor="board" className="text-sm font-bold text-foreground/80">Board</Label>
                   <Select value={board} onValueChange={setBoard}>
-                    <SelectTrigger id="board" className="h-12 bg-background border-border/60 rounded-xl">
-                      <SelectValue placeholder="Standard" />
+                    <SelectTrigger id="board" className="h-11 bg-background border-border/60 rounded-xl">
+                      <SelectValue placeholder="Select board" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
                       {BOARDS.map((b) => (
@@ -235,32 +235,32 @@ export default function ClassManager() {
               </div>
 
               {formError && (
-                <div role="alert" className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-xs font-bold flex items-center gap-3">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div role="alert" className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm flex items-center gap-3">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  {formError}
+                  <span className="font-medium">{formError}</span>
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button type="submit" disabled={saving} className="flex-1 bg-primary text-primary-foreground shadow-xl shadow-primary/20 py-7 rounded-2xl font-bold text-base h-auto hover:translate-y-[-2px] transition-all">
+              <div className="flex gap-3 pt-4 border-t border-border/40">
+                <Button type="submit" disabled={saving} className="bg-primary text-primary-foreground shadow-lg px-8 py-4 rounded-xl font-bold h-auto hover:shadow-primary/20 transition-all">
                   {saving ? (
                     <>
-                      <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground mr-3" />
-                      Commiting Changes...
+                      <span className="spinner !w-4 !h-4 !border-primary-foreground/30 !border-t-primary-foreground mr-2" />
+                      Saving...
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
-                      {editingClass ? 'Sync Configuration' : 'Establish Classroom Group'}
+                      {editingClass ? 'Save Changes' : 'Create Class'}
                     </>
                   )}
                 </Button>
-                <Button type="button" variant="outline" onClick={resetForm} className="py-7 rounded-2xl font-bold text-base h-auto border-border/60 hover:bg-secondary/50">
-                  Abandon
+                <Button type="button" variant="ghost" onClick={resetForm} className="px-8 py-4 rounded-xl font-bold h-auto text-muted-foreground hover:bg-secondary/50">
+                  Cancel
                 </Button>
               </div>
             </form>
@@ -271,7 +271,7 @@ export default function ClassManager() {
       {/* Classes List */}
       <Section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
         <Section.Header className="flex items-center justify-between border-none pb-0 mb-8">
-          <Section.Title as="h2" className="text-2xl font-bold font-jakarta">Active Roster</Section.Title>
+          <Section.Title as="h2" className="text-2xl font-bold font-jakarta">Your Classes</Section.Title>
           {!showForm && (
             <Button onClick={openAddForm} className="bg-primary hover:shadow-lg hover:shadow-primary/20 rounded-xl px-6 font-bold h-11 transition-all">
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -284,7 +284,7 @@ export default function ClassManager() {
         <Section.Content>
           {loading ? (
             <div className="grid gap-4">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full rounded-3xl" />)}
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full rounded-2xl" />)}
             </div>
           ) : classes.length === 0 ? (
             <div className="pt-4">
@@ -294,11 +294,11 @@ export default function ClassManager() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
                   </svg>
                 }
-                title="Roster is empty"
-                description="Initialize your pedagogical workspace by adding your first classroom group."
+                title="No classes yet"
+                description="Add a class to start creating worksheets for your students."
                 action={
-                  <Button onClick={openAddForm} className="bg-primary hover:shadow-lg hover:shadow-primary/20 rounded-xl px-10 py-6 h-auto font-black text-base transition-all">
-                    Register First Class
+                  <Button onClick={openAddForm} className="bg-primary hover:shadow-lg hover:shadow-primary/20 rounded-xl px-8 py-4 h-auto font-bold transition-all">
+                    Add your first class
                   </Button>
                 }
               />
@@ -306,27 +306,27 @@ export default function ClassManager() {
           ) : (
             <div className="grid gap-5 animate-in fade-in slide-in-from-bottom-6 duration-700">
               {classes.map((cls, index) => (
-                <Card key={cls.id} className="group card-hover border-border/50 bg-card/40 hover:bg-card overflow-hidden rounded-3xl transition-all duration-300" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <CardContent className="p-7">
+                <Card key={cls.id} className="group card-hover border-border/50 bg-card/40 hover:bg-card overflow-hidden rounded-2xl transition-all duration-300" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <CardContent className="p-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
                       <div className="flex gap-6 items-start">
                         {/* Subject-colored avatar */}
                         <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subjectColor(cls.subject)} flex items-center justify-center shrink-0 border group-hover:scale-105 transition-transform duration-300`}>
-                          <span className="text-xl font-black font-jakarta">
+                          <span className="text-xl font-bold font-jakarta">
                             {subjectInitial(cls.subject)}
                           </span>
                         </div>
                         <div className="space-y-2">
                           <h3 className="font-bold text-xl text-foreground font-jakarta leading-tight group-hover:text-primary transition-colors">{cls.name}</h3>
                           <div className="flex flex-wrap items-center gap-3">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/50 rounded-lg text-[10px] font-black uppercase tracking-widest text-foreground/70 border border-border/40">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/50 rounded-lg text-[10px] font-bold uppercase tracking-widest text-foreground/70 border border-border/40">
                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                               </svg>
                               {cls.grade}
                             </span>
                             <span className="w-1.5 h-1.5 rounded-full bg-border" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">{cls.subject}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">{cls.subject}</span>
                           </div>
                           <div className="flex items-center gap-2 pt-1">
                             <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-tighter px-2 py-0 border-border/60">

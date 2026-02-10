@@ -194,9 +194,9 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
     <div className="max-w-4xl mx-auto px-4 py-12 pb-24">
       {/* Header */}
       <PageHeader className="mb-8">
-        <PageHeader.Title className="text-pretty">Syllabus Library</PageHeader.Title>
+        <PageHeader.Title className="text-pretty">Syllabus</PageHeader.Title>
         <PageHeader.Subtitle className="text-pretty max-w-2xl">
-          Establish the foundation for your content. Choose from official CBSE curriculum maps or upload your specific institutional syllabus.
+          Browse the CBSE syllabus or upload your own to guide worksheet creation.
         </PageHeader.Subtitle>
       </PageHeader>
 
@@ -227,7 +227,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
             </svg>
             Custom Upload
             {subscription && !subscription.can_upload_syllabus && (
-              <span className="ml-1 text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-md font-black uppercase tracking-tighter">Pro</span>
+              <span className="ml-1 text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded-md font-bold uppercase tracking-tighter">Pro</span>
             )}
           </button>
         </div>
@@ -247,13 +247,13 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <Section>
             <Section.Header>
-              <Section.Title>Standardized Curriculum</Section.Title>
-              <p className="text-sm text-muted-foreground mt-1.5">Select a grade and subject to explore the mapping of topics and chapters.</p>
+              <Section.Title>CBSE Syllabus</Section.Title>
+              <p className="text-sm text-muted-foreground mt-1.5">Pick a grade and subject to see available chapters and topics.</p>
             </Section.Header>
             <Section.Content className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="cbseGrade" className="text-sm font-bold text-foreground/80">Grade Level</Label>
+                  <Label htmlFor="cbseGrade" className="text-sm font-bold text-foreground/80">Grade</Label>
                   <Select value={cbseGrade} onValueChange={setCbseGrade}>
                     <SelectTrigger id="cbseGrade" className="h-11 bg-background border-border/60 focus:ring-primary/20 rounded-xl">
                       <SelectValue placeholder="Select class" />
@@ -267,10 +267,10 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="cbseSubject" className="text-sm font-bold text-foreground/80">Academic Subject</Label>
+                  <Label htmlFor="cbseSubject" className="text-sm font-bold text-foreground/80">Subject</Label>
                   <Select value={cbseSubject} onValueChange={setCbseSubject}>
                     <SelectTrigger id="cbseSubject" className="h-11 bg-background border-border/60 focus:ring-primary/20 rounded-xl">
-                      <SelectValue placeholder={loadingSubjects ? "Loading..." : "Select subject"} />
+                      <SelectValue placeholder={loadingSubjects ? "Preparing subjects..." : "Select subject"} />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl shadow-xl border-border/40">
                       {curriculumSubjects.length > 0
@@ -289,8 +289,8 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
           </Section>
 
           {cbseLoading ? (
-            <div className="space-y-4 pt-4 border-t border-border/40">
-              <Skeleton className="h-8 w-64 mb-6" />
+            <div className="space-y-4 pt-8 border-t border-border/40">
+              <p className="text-sm text-muted-foreground font-medium">Loading syllabus for {cbseGrade} {cbseSubject}...</p>
               <div className="grid gap-4">
                 <Skeleton className="h-32 w-full rounded-2xl" />
                 <Skeleton className="h-32 w-full rounded-2xl" />
@@ -349,8 +349,8 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                 </div>
 
                 <div className="pt-6 sticky bottom-0 bg-background/80 backdrop-blur-sm pb-10">
-                  <Button onClick={handleUseCBSESyllabus} className="w-full bg-primary text-primary-foreground shadow-xl shadow-primary/20 py-7 rounded-2xl font-bold text-base h-auto hover:translate-y-[-2px] transition-all">
-                    Initiate Worksheet with this Syllabus
+                  <Button onClick={handleUseCBSESyllabus} className="w-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 py-4 rounded-xl font-bold h-auto transition-all">
+                    Use this syllabus
                   </Button>
                 </div>
               </div>
@@ -393,8 +393,8 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                       </svg>
                     </div>
                     <div className="space-y-1">
-                      <h4 className="font-bold text-xl text-foreground font-jakarta">Unlock Institutional Workflows</h4>
-                      <p className="text-muted-foreground leading-relaxed">Customize learning by uploading your unique school syllabus or textbooks. Exclusive to Pro members.</p>
+                      <h4 className="font-bold text-xl text-foreground font-jakarta">Custom Syllabus Upload</h4>
+                      <p className="text-muted-foreground leading-relaxed">Upload your school's specific syllabus for tailored worksheets. Available on the Pro plan.</p>
                     </div>
                   </div>
                   <Button onClick={() => upgrade()} className="bg-accent text-accent-foreground hover:shadow-lg hover:shadow-accent/20 px-8 py-6 h-auto rounded-xl font-bold text-base w-full md:w-auto transition-all">
@@ -407,13 +407,13 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
             <>
               <Section>
                 <Section.Header>
-                  <Section.Title>Upload Interface</Section.Title>
-                  <p className="text-sm text-muted-foreground mt-1.5">Provide a document to let our AI map out the required topics and subtopics.</p>
+                  <Section.Title>Upload Your Syllabus</Section.Title>
+                  <p className="text-sm text-muted-foreground mt-1.5">Upload a PDF or image of your syllabus. We'll identify the chapters and topics.</p>
                 </Section.Header>
                 <Section.Content className="pt-6">
                   {/* Drag and Drop Zone */}
                   <div
-                    className={`border-2 border-dashed rounded-3xl p-12 text-center group transition-all duration-300 ${dragActive
+                    className={`border-2 border-dashed rounded-2xl p-12 text-center group transition-all duration-300 ${dragActive
                         ? 'border-primary bg-primary/5 scale-[1.01]'
                         : file
                           ? 'border-primary/40 bg-primary/5 shadow-inner'
@@ -478,10 +478,10 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                   {/* Optional Hints */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
                     <div className="space-y-2">
-                      <Label htmlFor="gradeHint" className="text-sm font-bold text-foreground/80">Contextual Grade (Optional)</Label>
+                      <Label htmlFor="gradeHint" className="text-sm font-bold text-foreground/80">Grade (Optional)</Label>
                       <Select value={gradeHint} onValueChange={setGradeHint}>
                         <SelectTrigger id="gradeHint" className="h-11 bg-background border-border/60 rounded-xl">
-                          <SelectValue placeholder="Assists AI parsing" />
+                          <SelectValue placeholder="Select grade" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                           {GRADES.map((g) => (
@@ -492,10 +492,10 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="subjectHint" className="text-sm font-bold text-foreground/80">Expected Subject (Optional)</Label>
+                      <Label htmlFor="subjectHint" className="text-sm font-bold text-foreground/80">Subject (Optional)</Label>
                       <Select value={subjectHint} onValueChange={setSubjectHint}>
                         <SelectTrigger id="subjectHint" className="h-11 bg-background border-border/60 rounded-xl">
-                          <SelectValue placeholder="Assists AI parsing" />
+                          <SelectValue placeholder="Select subject" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                           {FALLBACK_SUBJECTS.map((s) => (
@@ -507,21 +507,21 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                   </div>
 
                   <Button
-                    className="w-full mt-10 bg-primary text-primary-foreground shadow-xl shadow-primary/20 py-7 rounded-2xl font-bold text-base h-auto hover:translate-y-[-2px] transition-all"
+                    className="w-full mt-10 bg-primary text-primary-foreground shadow-lg shadow-primary/20 py-4 rounded-xl font-bold h-auto transition-all"
                     onClick={handleUpload}
                     disabled={!file || loading}
                   >
                     {loading ? (
                       <>
                         <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground mr-3" />
-                        Deep Parsing in Progress...
+                        Reading your syllabus...
                       </>
                     ) : (
                       <>
                         <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                         </svg>
-                        Execute Syllabus Mapping
+                        Parse syllabus
                       </>
                     )}
                   </Button>
@@ -531,7 +531,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
               {/* Parsed Syllabus Display */}
               {loading && !syllabus && (
                 <div className="space-y-4 pt-10 border-t border-border/40">
-                  <Skeleton className="h-8 w-64 mb-6" />
+                  <p className="text-sm text-muted-foreground font-medium">Identifying chapters and topics from your document...</p>
                   <div className="grid gap-4">
                     <Skeleton className="h-32 w-full rounded-2xl" />
                     <Skeleton className="h-32 w-full rounded-2xl" />
@@ -553,7 +553,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                     {confidenceScore !== null && (
                       <div className="flex flex-col items-end gap-2">
                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">AI Confidence</span>
-                        <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-black border tracking-tight ${confidenceScore >= 0.8 ? 'bg-primary/10 text-primary border-primary/20' :
+                        <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold border tracking-tight ${confidenceScore >= 0.8 ? 'bg-primary/10 text-primary border-primary/20' :
                             confidenceScore >= 0.6 ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
                               'bg-destructive/10 text-destructive border-destructive/20'
                           }`}>
@@ -600,10 +600,10 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                   </div>
 
                   <div className="pt-6 sticky bottom-0 bg-background/80 backdrop-blur-sm pb-10 flex flex-col md:flex-row gap-4">
-                    <Button onClick={handleUseSyllabus} className="flex-1 bg-primary text-primary-foreground shadow-xl shadow-primary/20 py-7 rounded-2xl font-bold text-base h-auto hover:translate-y-[-2px] transition-all">
-                      Confirm & Use Mapping
+                    <Button onClick={handleUseSyllabus} className="flex-1 bg-primary text-primary-foreground shadow-lg shadow-primary/20 py-4 rounded-xl font-bold h-auto transition-all">
+                      Use this syllabus
                     </Button>
-                    <Button variant="outline" onClick={() => setSyllabus(null)} className="md:w-20 py-7 rounded-2xl font-bold h-auto border-border/60 hover:bg-secondary/50">
+                    <Button variant="outline" onClick={() => setSyllabus(null)} className="md:w-16 py-4 rounded-xl font-bold h-auto border-border/60 hover:bg-secondary/50">
                       <svg className="w-5 h-5 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>

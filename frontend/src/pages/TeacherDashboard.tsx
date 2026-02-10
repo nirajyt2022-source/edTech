@@ -88,8 +88,8 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         </PageHeader.Title>
         <PageHeader.Subtitle className="text-pretty max-w-2xl">
           {classes.length > 0
-            ? `Overseeing ${classes.length} distinct classroom groups. Your curriculum sets the pace for excellence.`
-            : 'Welcome to your pedagogical command center. Let\'s begin by organizing your first classroom group.'
+            ? `You have ${classes.length} class${classes.length === 1 ? '' : 'es'} set up. Create practice for any of them.`
+            : 'Start by adding a class to create worksheets for your students.'
           }
         </PageHeader.Subtitle>
       </PageHeader>
@@ -112,7 +112,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
               {classesLoading || analyticsLoading ? (
                 <Skeleton className="h-8 w-12 mx-auto mb-1" />
               ) : (
-                <p className="text-2xl font-black font-jakarta text-foreground leading-tight">{stat.value}</p>
+                <p className="text-2xl font-bold font-jakarta text-foreground leading-tight">{stat.value}</p>
               )}
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{stat.label}</p>
             </CardContent>
@@ -125,12 +125,12 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         <Card
           tabIndex={0}
           role="button"
-          aria-label="Draft Worksheets"
-          className="group card-hover border-primary/20 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent cursor-pointer rounded-3xl p-1"
+          aria-label="Create Practice"
+          className="group card-hover border-primary/20 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent cursor-pointer rounded-2xl p-1"
           onClick={() => onNavigate('generator')}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate('generator'); } }}
         >
-          <CardContent className="p-7">
+          <CardContent className="p-6">
             <div className="flex items-start gap-6">
               <div className="w-14 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
                 <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -138,9 +138,9 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                 </svg>
               </div>
               <div className="space-y-1.5 pr-8">
-                <h3 className="font-bold text-xl text-foreground font-fraunces">Draft Worksheets</h3>
+                <h3 className="font-bold text-xl text-foreground font-fraunces">Create Practice</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Leverage AI to craft high-quality academic worksheets aligned perfectly with your curriculum standards.
+                  Create worksheets aligned to your class syllabus, ready to print or save.
                 </p>
               </div>
               <div className="absolute top-8 right-8 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300">
@@ -155,12 +155,12 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         <Card
           tabIndex={0}
           role="button"
-          aria-label="Roster Management"
-          className="group card-hover border-accent/20 bg-gradient-to-br from-accent/5 via-accent/[0.02] to-transparent cursor-pointer rounded-3xl p-1"
+          aria-label="Manage Classes"
+          className="group card-hover border-accent/20 bg-gradient-to-br from-accent/5 via-accent/[0.02] to-transparent cursor-pointer rounded-2xl p-1"
           onClick={() => onNavigate('classes')}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate('classes'); } }}
         >
-          <CardContent className="p-7">
+          <CardContent className="p-6">
             <div className="flex items-start gap-6">
               <div className="w-14 h-14 rounded-2xl bg-accent text-accent-foreground flex items-center justify-center shrink-0 shadow-lg shadow-accent/20 group-hover:scale-110 transition-transform duration-300">
                 <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -168,9 +168,9 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                 </svg>
               </div>
               <div className="space-y-1.5 pr-8">
-                <h3 className="font-bold text-xl text-foreground font-fraunces">Roster Management</h3>
+                <h3 className="font-bold text-xl text-foreground font-fraunces">Manage Classes</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Configure your classroom groups, subjects, and specific syllabus requirements for streamlined content generation.
+                  Add or update your classes and their subjects.
                 </p>
               </div>
               <div className="absolute top-8 right-8 text-muted-foreground/30 group-hover:text-accent group-hover:translate-x-1 transition-all duration-300">
@@ -188,7 +188,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         <div className="lg:col-span-3 space-y-6">
           <Section>
             <Section.Header className="flex items-center justify-between border-none pb-0 mb-6">
-              <h2 className="text-2xl font-bold font-jakarta text-foreground">Classroom Roster</h2>
+              <h2 className="text-2xl font-bold font-jakarta text-foreground">Your Classes</h2>
               <Button variant="ghost" size="sm" onClick={() => onNavigate('classes')} className="text-primary font-bold hover:bg-primary/5 rounded-xl">
                 Manage All
               </Button>
@@ -199,9 +199,9 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                   {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
                 </div>
               ) : classes.length === 0 ? (
-                <div className="p-8 text-center bg-secondary/20 rounded-3xl border border-dashed border-border/60">
-                  <p className="text-sm text-muted-foreground font-medium mb-4">You haven't defined any classroom groups yet.</p>
-                  <Button onClick={() => onNavigate('classes')} variant="outline" className="rounded-xl font-bold">Initialize Class</Button>
+                <div className="p-8 text-center bg-secondary/20 rounded-2xl border border-dashed border-border/60">
+                  <p className="text-sm text-muted-foreground font-medium mb-4">No classes yet. Add one to get started.</p>
+                  <Button onClick={() => onNavigate('classes')} variant="outline" className="rounded-xl font-bold">Add a class</Button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -210,16 +210,16 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                       <CardContent className="p-5">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center shrink-0 border border-primary/10 group-hover:scale-105 transition-transform">
-                            <span className="text-lg font-black text-primary font-jakarta">
+                            <span className="text-lg font-bold text-primary font-jakarta">
                               {cls.subject[0]}
                             </span>
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-bold text-base text-foreground truncate font-jakarta leading-tight group-hover:text-primary transition-colors">{cls.name}</p>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">{cls.grade}</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">{cls.grade}</span>
                               <span className="w-1 h-1 rounded-full bg-border" />
-                              <span className="text-[10px] font-black uppercase tracking-widest text-primary/70">{cls.subject}</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">{cls.subject}</span>
                             </div>
                           </div>
                         </div>
@@ -236,7 +236,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         <div className="lg:col-span-2 space-y-6">
           <Section>
             <Section.Header className="flex items-center justify-between border-none pb-0 mb-6">
-              <h2 className="text-2xl font-bold font-jakarta text-foreground">Archived Worksheets</h2>
+              <h2 className="text-2xl font-bold font-jakarta text-foreground">Recent Worksheets</h2>
               <Button variant="ghost" size="sm" onClick={() => onNavigate('saved')} className="text-primary font-bold hover:bg-primary/5 rounded-xl">
                 Library
               </Button>
@@ -247,9 +247,9 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                   {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-2xl" />)}
                 </div>
               ) : recentWorksheets.length === 0 ? (
-                <div className="p-8 text-center bg-secondary/20 rounded-3xl border border-dashed border-border/60">
-                  <p className="text-sm text-muted-foreground font-medium mb-4">No content has been generated yet.</p>
-                  <Button onClick={() => onNavigate('generator')} variant="outline" className="rounded-xl font-bold">Generate Now</Button>
+                <div className="p-8 text-center bg-secondary/20 rounded-2xl border border-dashed border-border/60">
+                  <p className="text-sm text-muted-foreground font-medium mb-4">No worksheets yet — create one in under a minute.</p>
+                  <Button onClick={() => onNavigate('generator')} variant="outline" className="rounded-xl font-bold">Create today's practice</Button>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -268,7 +268,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{ws.subject} &middot; {ws.topic}</p>
                             </div>
                           </div>
-                          <Badge variant="secondary" className="bg-secondary/40 text-[9px] font-black uppercase tracking-tighter px-1.5 py-0 rounded-md border-none text-muted-foreground/60 shrink-0">
+                          <Badge variant="secondary" className="bg-secondary/40 text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0 rounded-md border-none text-muted-foreground/60 shrink-0">
                             {formatDate(ws.created_at)}
                           </Badge>
                         </div>

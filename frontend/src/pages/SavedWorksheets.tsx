@@ -215,8 +215,12 @@ export default function SavedWorksheets() {
     return (
       <div className="max-w-5xl mx-auto px-4 py-12">
         <PageHeader className="mb-12">
-          <Skeleton className="h-10 w-64 mb-4" />
-          <Skeleton className="h-6 w-96" />
+          <PageHeader.Title className="text-pretty">
+            {isTeacher ? 'Classroom Worksheets' : 'Past Worksheets'}
+          </PageHeader.Title>
+          <PageHeader.Subtitle className="text-pretty max-w-2xl">
+            Loading your saved worksheets...
+          </PageHeader.Subtitle>
         </PageHeader>
 
         <div className="space-y-8">
@@ -224,8 +228,8 @@ export default function SavedWorksheets() {
             <div key={i} className="space-y-4">
               <Skeleton className="h-5 w-32" />
               <div className="grid gap-4">
-                <Skeleton className="h-24 w-full rounded-xl" />
-                <Skeleton className="h-24 w-full rounded-xl" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
               </div>
             </div>
           ))}
@@ -355,7 +359,7 @@ export default function SavedWorksheets() {
                       {downloadingPdfType === 'student' ? (
                         <>
                           <span className="spinner !w-3.5 !h-3.5 mr-2 !border-primary-foreground/30 !border-t-primary-foreground" />
-                          Downloading
+                          Preparing...
                         </>
                       ) : (
                         <>
@@ -376,7 +380,7 @@ export default function SavedWorksheets() {
                       {downloadingPdfType === 'answer_key' ? (
                         <>
                           <span className="spinner !w-3.5 !h-3.5 mr-2" />
-                          Downloading
+                          Preparing...
                         </>
                       ) : (
                         <>
@@ -398,14 +402,14 @@ export default function SavedWorksheets() {
                     {downloadingPdfType ? (
                       <>
                         <span className="spinner !w-3.5 !h-3.5 mr-2 !border-primary-foreground/30 !border-t-primary-foreground" />
-                        Downloading
+                        Preparing...
                       </>
                     ) : (
                       <>
                         <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                         </svg>
-                        Download PDF
+                        Print or save
                       </>
                     )}
                   </Button>
@@ -499,12 +503,12 @@ export default function SavedWorksheets() {
               title="No worksheets yet"
               description={
                 filterChildId !== 'all' || filterClassId !== 'all'
-                  ? "We couldn't find any worksheets for the selected filter."
-                  : "Generate your first worksheet to start building your collection."
+                  ? "No worksheets found for the selected filter."
+                  : "No worksheets yet — create one in under a minute."
               }
               action={
                 <Button size="lg" onClick={() => window.location.href = '/generate'} className="bg-primary text-primary-foreground shadow-sm rounded-xl px-8">
-                  Generate Worksheet
+                  Create today's practice
                 </Button>
               }
             />
