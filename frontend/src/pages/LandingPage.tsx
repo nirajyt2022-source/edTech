@@ -43,6 +43,9 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               Sign in
             </Button>
           </div>
+          <p className="text-[11px] text-muted-foreground/40 tracking-wide pt-4">
+            CBSE &middot; Classes 1–5 &middot; Mathematics &middot; English &middot; EVS &middot; Print-ready
+          </p>
         </div>
       </main>
 

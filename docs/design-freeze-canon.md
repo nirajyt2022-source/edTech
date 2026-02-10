@@ -228,6 +228,19 @@ This document is the single canonical record of every completed UX, UI, and stat
 
 ---
 
+### Phase 17: Landing Page Orientation Strip
+
+**Problem:** The landing page hero communicated tone and intent but gave no concrete sense of what the product actually produces.
+
+**Key decisions:**
+- Added a single line of static, low-contrast text below the hero CTAs: "CBSE · Classes 1–5 · Mathematics · English · EVS · Print-ready."
+- Styled at `text-[11px] text-muted-foreground/40 tracking-wide` — informational, not promotional.
+- No icons, no animations, no feature grid.
+
+**Non-goals:** No dynamic content. No subject listing from API. No regional variants.
+
+---
+
 ## Canonical UX Rules (Must Not Be Broken)
 
 1. **Role never changes implicitly.** Only `switchRole()` or explicit user action in the dropdown may change `active_role`.
@@ -253,7 +266,7 @@ This document is the single canonical record of every completed UX, UI, and stat
 
 ## Design Freeze Declaration
 
-The UI/UX of PracticeCraft AI is frozen as of the completion of Phase 16. All phases documented above represent final, shipped decisions.
+The UI/UX of PracticeCraft AI is frozen as of the completion of Phase 17. All phases documented above represent final, shipped decisions.
 
 Any change to layout, copy, interaction patterns, state management rules, or visual design beyond this point requires an explicit product decision with a written rationale. Bug fixes to existing behavior are permitted; new behavior is not.
 
