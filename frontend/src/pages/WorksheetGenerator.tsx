@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -117,6 +117,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [cbseSyllabus, setCbseSyllabus] = useState<SyllabusChapter[]>([])
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [loadingSyllabus, setLoadingSyllabus] = useState(false)
+
+  // Selection version guard for async race prevention
+  const selectionVersionRef = useRef(0)
+  useEffect(() => {
+    selectionVersionRef.current += 1
+  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, customInstructions])
 
   // Reset subject and topic when region changes
   useEffect(() => {
@@ -342,6 +348,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
     setError('')
     setWorksheet(null)
 
+    const requestVersion = selectionVersionRef.current
+
     // Use chapter name as context if from syllabus, or combine selected topics/skills
     const topicWithContext = syllabus && chapter
       ? `${chapter} - ${topic}`
@@ -365,12 +373,15 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         logic_tags: useCurriculumFlow ? selectedLogicTags : undefined,
         region,
       })
+      // Discard stale result if selections changed during request
+      if (selectionVersionRef.current !== requestVersion) return
       setWorksheet(response.data.worksheet)
       setMobileView('preview')
 
       // Track usage for free tier
       await incrementUsage()
     } catch (err: unknown) {
+      if (selectionVersionRef.current !== requestVersion) return
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate worksheet'
       setError(errorMessage)
     } finally {
@@ -646,7 +657,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="grade" className="text-sm font-semibold">Grade *</Label>
-                    <Select value={grade} onValueChange={setGrade} disabled={isTeacher && selectedClassId !== 'none'}>
+                    <Select value={grade} onValueChange={(val) => { setGrade(val); setSubject(''); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]); setSelectedTopics([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
                       <SelectTrigger id="grade" className="bg-background">
                         <SelectValue placeholder="Select grade" />
                       </SelectTrigger>
@@ -661,7 +672,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   {!syllabus && (
                     <div className="space-y-2">
                       <Label htmlFor="subject" className="text-sm font-semibold">Subject *</Label>
-                      <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
+                      <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]); setSelectedTopics([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
                         <SelectTrigger id="subject" className="bg-background">
                           <SelectValue placeholder={loadingCurriculum ? "Preparing subjects..." : "Select subject"} />
                         </SelectTrigger>
