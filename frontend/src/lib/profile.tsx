@@ -87,6 +87,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if (!profile) return
     const payload = {
       role: profile.role,
+      active_role: profile.active_role,
       subjects: profile.subjects,
       grades: profile.grades,
       school_name: profile.school_name,
