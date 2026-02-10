@@ -27,6 +27,9 @@ class WorksheetGenerationRequest(BaseModel):
     num_questions: int = 10
     language: str = "English"
     custom_instructions: str | None = None
+    skills: list[str] | None = None
+    logic_tags: list[str] | None = None
+    region: str = "India"
 
 
 class Question(BaseModel):
@@ -88,18 +91,104 @@ Mix question types appropriately. For Maths, include calculation and word proble
 For English, include grammar and vocabulary. For EVS, include factual and application questions."""
 
 
+def build_system_prompt(region: str = "India", logic_tags: list[str] | None = None) -> str:
+    """Build a region-aware, skill-focused system prompt for worksheet generation."""
+    base = """You are a CBSE-aligned primary curriculum expert and experienced school teacher.
+You generate age-appropriate, skill-focused practice worksheets for school children (Classes 1-5).
+
+RULES:
+1. Generate age-appropriate questions for the specified grade
+2. Use simple, child-friendly language
+3. Questions must be directly related to the selected skills/topic
+4. Do NOT add concepts beyond the grade level
+5. Instructions and question text should be in the specified language
+6. Mathematical symbols, numbers, and formulas remain unchanged regardless of language
+7. For regional languages, use native script with grade-appropriate vocabulary"""
+
+    # Regional context
+    if region == "UAE":
+        regional = """
+
+REGIONAL CONTEXT (UAE):
+- Use Dirhams (AED) and Fils for money problems
+- Use UAE-relevant names (e.g., Ahmed, Fatima, Omar, Mariam)
+- Reference UAE landmarks (Burj Khalifa, Sheikh Zayed Mosque, Louvre Abu Dhabi)
+- Use local contexts (desert, oasis, date palms, pearl diving heritage)
+- Reference UAE festivals and events (National Day, Eid)"""
+    else:
+        regional = """
+
+REGIONAL CONTEXT (India):
+- Use Rupees and Paise for money problems
+- Use Indian names (e.g., Aarav, Priya, Rohan, Ananya)
+- Reference Indian contexts (festivals like Diwali/Holi, local markets, trains)
+- Use culturally relevant examples (mangoes, cricket, rickshaws)
+- Reference Indian landmarks when appropriate"""
+
+    # Logic tag guidance
+    tag_guidance = ""
+    if logic_tags:
+        tag_lines = []
+        tag_map = {
+            "numerical": "Include arithmetic, calculation, and number-based problems",
+            "vocabulary": "Include matching, fill-in-the-blank, and word-building exercises",
+            "reading_comprehension": "Include short passages with comprehension questions",
+            "observation": "Include scenario-based MCQs and reasoning questions",
+            "diagrammatic": "Include labeling, drawing, and diagram-based questions",
+        }
+        for tag in logic_tags:
+            if tag in tag_map:
+                tag_lines.append(f"- {tag}: {tag_map[tag]}")
+        if tag_lines:
+            tag_guidance = "\n\nQUESTION TYPE GUIDANCE:\n" + "\n".join(tag_lines)
+
+    output_format = """
+
+OUTPUT FORMAT (JSON only, no markdown):
+{
+  "title": "Practice Worksheet: [Topic/Skills]",
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple_choice|fill_blank|short_answer|true_false",
+      "text": "Question text",
+      "options": ["A", "B", "C", "D"],
+      "correct_answer": "correct answer",
+      "explanation": "Brief explanation"
+    }
+  ]
+}
+
+Mix question types appropriately based on the subject and skills."""
+
+    return base + regional + tag_guidance + output_format
+
+
 @router.post("/generate", response_model=WorksheetGenerationResponse)
 async def generate_worksheet(request: WorksheetGenerationRequest):
     """Generate a new worksheet based on provided parameters."""
     start_time = datetime.now()
 
+    # Use skills as topic context if provided
+    topic_context = request.topic
+    if request.skills:
+        topic_context = ", ".join(request.skills)
+
+    # Use region-aware prompt when skills/logic_tags are provided
+    system_prompt = (
+        build_system_prompt(request.region, request.logic_tags)
+        if request.skills or request.logic_tags
+        else SYSTEM_PROMPT
+    )
+
     user_prompt = f"""Generate a {request.difficulty} difficulty worksheet:
 - Board: {request.board}
 - Grade: {request.grade_level}
 - Subject: {request.subject}
-- Topic: {request.topic}
+- Skills/Topic: {topic_context}
 - Number of Questions: {request.num_questions}
 - Language for instructions: {request.language}
+- Region: {request.region}
 
 {f"Additional instructions: {request.custom_instructions}" if request.custom_instructions else ""}
 
@@ -109,7 +198,7 @@ Generate exactly {request.num_questions} questions. Return ONLY valid JSON, no m
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.7,
@@ -208,6 +297,7 @@ class SaveWorksheetRequest(BaseModel):
     board: str | None = None
     child_id: str | None = None
     class_id: str | None = None
+    region: str | None = None
 
 
 class SavedWorksheet(BaseModel):
@@ -266,6 +356,7 @@ async def save_worksheet(
             "questions": questions_data,
             "child_id": request.child_id,
             "class_id": request.class_id,
+            "region": request.region or "India",
         }).execute()
 
         if result.data:

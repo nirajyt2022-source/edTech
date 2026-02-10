@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useProfile } from '@/lib/profile'
+import { useProfile, type Region } from '@/lib/profile'
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ const GRADES = [
 export default function RoleSelector() {
   const { needsRoleSelection, setRole } = useProfile()
   const [step, setStep] = useState<1 | 2>(1)
+  const [selectedRegion, setSelectedRegion] = useState<Region>('India')
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([])
   const [selectedGrades, setSelectedGrades] = useState<string[]>([])
   const [schoolName, setSchoolName] = useState('')
@@ -48,7 +49,7 @@ export default function RoleSelector() {
   const handleParent = async () => {
     setSaving(true)
     try {
-      await setRole('parent')
+      await setRole('parent', undefined, selectedRegion)
     } finally {
       setSaving(false)
     }
@@ -62,7 +63,7 @@ export default function RoleSelector() {
         subjects: selectedSubjects,
         grades: selectedGrades,
         school_name: schoolName || undefined,
-      })
+      }, selectedRegion)
     } finally {
       setSaving(false)
     }
@@ -90,6 +91,27 @@ export default function RoleSelector() {
                     Select your primary objective. You can switch between roles effortlessly at any time.
                   </DialogDescription>
                 </DialogHeader>
+
+                {/* Region Toggle */}
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Where are you based?</span>
+                  <div className="inline-flex p-1 bg-secondary/30 border border-border/50 rounded-xl">
+                    {(['India', 'UAE'] as Region[]).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setSelectedRegion(r)}
+                        className={`px-5 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${
+                          selectedRegion === r
+                            ? 'bg-background text-primary shadow-sm border border-border/40'
+                            : 'text-muted-foreground/50 hover:text-foreground'
+                        }`}
+                      >
+                        {r === 'India' ? 'India' : 'UAE'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-6">
                   {/* Parent Card */}

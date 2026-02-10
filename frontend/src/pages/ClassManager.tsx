@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,13 +10,17 @@ import { Section } from '@/components/ui/section'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
 import { useClasses, type TeacherClass } from '@/lib/classes'
+import { useProfile } from '@/lib/profile'
+import { fetchSubjects, type CurriculumSubject } from '@/lib/curriculum'
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
-const SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
+const FALLBACK_SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
 const BOARDS = ['CBSE', 'ICSE', 'State Board']
 
 export default function ClassManager() {
   const { classes, loading, error, createClass, updateClass, deleteClass } = useClasses()
+  const { region } = useProfile()
+  const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([])
 
   const [showForm, setShowForm] = useState(false)
   const [editingClass, setEditingClass] = useState<TeacherClass | null>(null)
@@ -27,6 +31,24 @@ export default function ClassManager() {
   const [grade, setGrade] = useState('')
   const [subject, setSubject] = useState('')
   const [board, setBoard] = useState('CBSE')
+
+  // Fetch curriculum subjects for region-filtered dropdown
+  useEffect(() => {
+    if (!grade) {
+      setCurriculumSubjects([])
+      return
+    }
+    const gradeNum = parseInt(grade.replace('Class ', ''))
+    if (isNaN(gradeNum)) return
+
+    let cancelled = false
+    fetchSubjects(gradeNum, region, true).then(subjects => {
+      if (!cancelled) setCurriculumSubjects(subjects)
+    }).catch(() => {
+      if (!cancelled) setCurriculumSubjects([])
+    })
+    return () => { cancelled = true }
+  }, [grade, region])
 
   const resetForm = () => {
     setName('')
@@ -185,9 +207,14 @@ export default function ClassManager() {
                       <SelectValue placeholder="Area of study" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
-                      {SUBJECTS.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
+                      {curriculumSubjects.length > 0
+                        ? curriculumSubjects.map((s) => (
+                          <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>
+                        ))
+                        : FALLBACK_SUBJECTS.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))
+                      }
                     </SelectContent>
                   </Select>
                 </div>

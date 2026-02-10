@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import { api } from './api'
 import { useAuth } from './auth'
 
+export type Region = 'India' | 'UAE'
+
 export interface UserProfile {
   user_id: string
   role: 'parent' | 'teacher'
@@ -9,6 +11,7 @@ export interface UserProfile {
   subjects: string[]
   grades: string[]
   school_name: string | null
+  region: Region
   created_at: string
   updated_at: string
 }
@@ -24,8 +27,10 @@ interface ProfileContextType {
   loading: boolean
   needsRoleSelection: boolean
   activeRole: 'parent' | 'teacher' | null
-  setRole: (role: 'parent' | 'teacher', teacherFields?: TeacherFields) => Promise<void>
+  region: Region
+  setRole: (role: 'parent' | 'teacher', teacherFields?: TeacherFields, region?: Region) => Promise<void>
   switchRole: (role: 'parent' | 'teacher') => Promise<void>
+  setRegion: (region: Region) => Promise<void>
   updateTeacherProfile: (fields: TeacherFields) => Promise<void>
   refresh: () => Promise<void>
 }
@@ -63,17 +68,39 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const needsRoleSelection = !loading && user != null && profile == null
 
   const activeRole = profile?.active_role ?? null
+  const region: Region = profile?.region ?? 'India'
 
-  const setRole = async (role: 'parent' | 'teacher', teacherFields?: TeacherFields) => {
+  const setRole = async (role: 'parent' | 'teacher', teacherFields?: TeacherFields, regionOverride?: Region) => {
     const payload = {
       role,
       active_role: role,
       subjects: teacherFields?.subjects ?? [],
       grades: teacherFields?.grades ?? [],
       school_name: teacherFields?.school_name ?? null,
+      region: regionOverride ?? region,
     }
     const response = await api.put('/api/users/profile', payload)
     setProfile(response.data.profile)
+  }
+
+  const setRegion = async (newRegion: Region) => {
+    if (!profile) return
+    const payload = {
+      role: profile.role,
+      subjects: profile.subjects,
+      grades: profile.grades,
+      school_name: profile.school_name,
+      region: newRegion,
+    }
+    // Optimistic update
+    setProfile(prev => prev ? { ...prev, region: newRegion } : null)
+    try {
+      const response = await api.put('/api/users/profile', payload)
+      setProfile(response.data.profile)
+    } catch (err) {
+      await fetchProfile()
+      throw err
+    }
   }
 
   const switchRole = async (role: 'parent' | 'teacher') => {
@@ -107,8 +134,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       loading,
       needsRoleSelection,
       activeRole,
+      region,
       setRole,
       switchRole,
+      setRegion,
       updateTeacherProfile,
       refresh: fetchProfile,
     }}>

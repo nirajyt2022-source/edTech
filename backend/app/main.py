@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import health, worksheets, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes
+from app.api import health, worksheets, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -36,6 +36,7 @@ app.include_router(topic_preferences.router)
 app.include_router(engagement.router)
 app.include_router(users.router)
 app.include_router(classes.router)
+app.include_router(curriculum.router)
 
 
 @app.get("/")

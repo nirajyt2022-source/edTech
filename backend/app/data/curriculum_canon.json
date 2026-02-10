@@ -1,0 +1,767 @@
+{
+  "meta": {
+    "curriculum": "CBSE-aligned Primary (NCF 2023 / NEP 2020)",
+    "regions_supported": ["India", "UAE"],
+    "grades_supported": [1, 2, 3, 4, 5],
+    "design_principle": "Skills over chapters, daily practice over syllabus purity"
+  },
+  "grades": [
+    {
+      "grade": 1,
+      "stage": "Foundational",
+      "subjects": [
+        {
+          "name": "Mathematics",
+          "region": "Global",
+          "source": "Joyful Mathematics",
+          "skills": [
+            "Spatial sense (in/out, near/far)",
+            "Numbers 1–99",
+            "Addition and subtraction (up to 20)",
+            "Money (basic recognition)",
+            "Patterns",
+            "Time (day routines)"
+          ],
+          "logic_tags": ["numerical", "observation"],
+          "depth": "core"
+        },
+        {
+          "name": "English",
+          "region": "Global",
+          "source": "Mridang",
+          "skills": [
+            "Self and family vocabulary",
+            "Greetings and polite words",
+            "Animals and food vocabulary",
+            "Seasons",
+            "Phonics",
+            "Picture reading and oral expression"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Hindi",
+          "region": "India",
+          "source": "Sarangi",
+          "skills": [
+            "Varnamala",
+            "Family words",
+            "Food and festivals",
+            "Simple sentence recognition"
+          ],
+          "logic_tags": ["vocabulary"],
+          "depth": "core"
+        },
+        {
+          "name": "Arabic (Non-Arabs)",
+          "region": "UAE",
+          "source": "MoE",
+          "skills": [
+            "Greetings",
+            "Arabic alphabet",
+            "Numbers 1–10",
+            "Family members",
+            "Colors"
+          ],
+          "logic_tags": ["vocabulary"],
+          "depth": "core"
+        },
+        {
+          "name": "Islamic Studies",
+          "region": "UAE",
+          "source": "MoE",
+          "skills": [
+            "Surah An-Nas",
+            "Surah Al-Falaq",
+            "Pillars of Islam",
+            "Wudu",
+            "Prophet's birth"
+          ],
+          "logic_tags": ["reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Moral Social Cultural Studies",
+          "region": "UAE",
+          "source": "MoE MSC",
+          "skills": [
+            "UAE flag",
+            "Sheikh Zayed",
+            "Kindness",
+            "My community"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "core"
+        },
+        {
+          "name": "Computer Science",
+          "region": "Global",
+          "skills": [
+            "Parts of computer",
+            "Using mouse and keyboard"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Art Education",
+          "region": "Global",
+          "skills": [
+            "Primary colors",
+            "Basic shapes",
+            "Thumb painting"
+          ],
+          "logic_tags": ["diagrammatic"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Moral Science",
+          "region": "Global",
+          "skills": [
+            "Sharing",
+            "Honesty"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Health & Physical Education",
+          "region": "Global",
+          "skills": [
+            "Personal hygiene",
+            "Good posture",
+            "Basic physical activities"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        }
+      ]
+    },
+    {
+      "grade": 2,
+      "stage": "Foundational",
+      "subjects": [
+        {
+          "name": "Mathematics",
+          "region": "Global",
+          "source": "Joyful Mathematics",
+          "skills": [
+            "Numbers up to 1000",
+            "Lines and shapes",
+            "Weight and capacity",
+            "Measurement",
+            "Simple data handling"
+          ],
+          "logic_tags": ["numerical"],
+          "depth": "core"
+        },
+        {
+          "name": "English",
+          "region": "Global",
+          "source": "Mridang",
+          "skills": [
+            "Action words",
+            "Nouns",
+            "Storytelling",
+            "Environmental awareness"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Hindi",
+          "region": "India",
+          "skills": [
+            "Vocabulary building",
+            "Rhymes",
+            "Nature themes"
+          ],
+          "logic_tags": ["vocabulary"],
+          "depth": "core"
+        },
+        {
+          "name": "Arabic (Non-Arabs)",
+          "region": "UAE",
+          "skills": [
+            "My school",
+            "My home",
+            "Fruits and vegetables",
+            "Simple phrases"
+          ],
+          "logic_tags": ["vocabulary"],
+          "depth": "core"
+        },
+        {
+          "name": "Islamic Studies",
+          "region": "UAE",
+          "skills": [
+            "Surah Al-Ikhlas",
+            "Manners of eating",
+            "Basics of Salah"
+          ],
+          "logic_tags": ["reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Moral Social Cultural Studies",
+          "region": "UAE",
+          "skills": [
+            "Traditional games",
+            "Water conservation",
+            "Respecting differences"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "core"
+        },
+        {
+          "name": "Computer Science",
+          "region": "Global",
+          "skills": [
+            "Desktop and icons",
+            "Basic typing"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Art Education",
+          "region": "Global",
+          "skills": [
+            "Mixing colors",
+            "Drawing from nature",
+            "Paper folding"
+          ],
+          "logic_tags": ["diagrammatic"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Moral Science",
+          "region": "Global",
+          "skills": [
+            "Kindness",
+            "Respecting elders"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Health & Physical Education",
+          "region": "Global",
+          "skills": [
+            "Healthy eating habits",
+            "Outdoor play",
+            "Basic stretching"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        }
+      ]
+    },
+    {
+      "grade": 3,
+      "stage": "Preparatory",
+      "subjects": [
+        {
+          "name": "Mathematics",
+          "region": "Global",
+          "source": "Math Magic",
+          "skills": [
+            "Numbers up to 10000",
+            "Addition and subtraction (3-digit)",
+            "Multiplication tables (2–10)",
+            "Division basics",
+            "Fractions (halves, quarters)",
+            "Symmetry",
+            "Money (bills and change)",
+            "Time (reading clock, calendar)",
+            "Patterns and sequences"
+          ],
+          "logic_tags": ["numerical", "observation"],
+          "depth": "core"
+        },
+        {
+          "name": "English",
+          "region": "Global",
+          "source": "Marigold",
+          "skills": [
+            "Tenses (simple present and past)",
+            "Singular and plural",
+            "Adjectives and describing words",
+            "Comprehension passages",
+            "Letter writing basics",
+            "Story sequencing",
+            "Vocabulary expansion"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "EVS",
+          "region": "Global",
+          "source": "Looking Around",
+          "skills": [
+            "Plants and their parts",
+            "Animals and their homes",
+            "Food and nutrition",
+            "Water and its uses",
+            "Family and relationships",
+            "Shelter and housing",
+            "Transport and travel",
+            "Maps (basic directions)"
+          ],
+          "logic_tags": ["observation", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Hindi",
+          "region": "India",
+          "source": "Rimjhim",
+          "skills": [
+            "Matras and word formation",
+            "Simple paragraph reading",
+            "Story comprehension",
+            "Picture description in Hindi",
+            "Common Hindi idioms"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Arabic (Non-Arabs)",
+          "region": "UAE",
+          "source": "MoE",
+          "skills": [
+            "Days and months",
+            "Classroom objects",
+            "Simple conversations",
+            "Reading short sentences"
+          ],
+          "logic_tags": ["vocabulary"],
+          "depth": "core"
+        },
+        {
+          "name": "Islamic Studies",
+          "region": "UAE",
+          "source": "MoE",
+          "skills": [
+            "Surah Al-Fil",
+            "Five daily prayers",
+            "Honesty and trustworthiness",
+            "Stories of prophets"
+          ],
+          "logic_tags": ["reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Moral Social Cultural Studies",
+          "region": "UAE",
+          "source": "MoE MSC",
+          "skills": [
+            "UAE national symbols",
+            "Cultural heritage and traditions",
+            "Being a good citizen",
+            "My neighbourhood"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "core"
+        },
+        {
+          "name": "General Knowledge",
+          "region": "Global",
+          "skills": [
+            "Famous landmarks",
+            "National symbols",
+            "Solar system basics",
+            "Current awareness"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Computer Science",
+          "region": "Global",
+          "skills": [
+            "MS Paint basics",
+            "Keyboard shortcuts",
+            "File and folder concepts"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Art Education",
+          "region": "Global",
+          "skills": [
+            "Origami basics",
+            "Vegetable printing",
+            "Drawing landscapes"
+          ],
+          "logic_tags": ["diagrammatic"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Moral Science",
+          "region": "Global",
+          "skills": [
+            "Teamwork",
+            "Empathy",
+            "Environmental care"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Health & Physical Education",
+          "region": "Global",
+          "skills": [
+            "Balanced diet",
+            "Team sports rules",
+            "Safety at play"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        }
+      ]
+    },
+    {
+      "grade": 4,
+      "stage": "Preparatory",
+      "subjects": [
+        {
+          "name": "Mathematics",
+          "region": "Global",
+          "source": "Math Magic",
+          "skills": [
+            "Numbers up to 100000",
+            "Multiplication (2-digit by 2-digit)",
+            "Long division",
+            "Fractions (like and unlike)",
+            "Decimals introduction",
+            "Perimeter and area",
+            "Geometry (angles, triangles)",
+            "Data handling (bar graphs)",
+            "Money (word problems with bills)",
+            "Roman numerals"
+          ],
+          "logic_tags": ["numerical", "diagrammatic"],
+          "depth": "core"
+        },
+        {
+          "name": "English",
+          "region": "Global",
+          "source": "Marigold",
+          "skills": [
+            "Tenses (present, past, future)",
+            "Conjunctions",
+            "Prepositions",
+            "Comprehension with inference",
+            "Essay and paragraph writing",
+            "Dialogue completion",
+            "Vocabulary: prefixes and suffixes",
+            "Poetry appreciation"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "EVS",
+          "region": "Global",
+          "source": "Looking Around",
+          "skills": [
+            "States of matter",
+            "Digestive system basics",
+            "Teeth and hygiene",
+            "Plants: photosynthesis basics",
+            "Animals: adaptation",
+            "Rocks and soil",
+            "Water cycle",
+            "Community helpers"
+          ],
+          "logic_tags": ["observation", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Hindi",
+          "region": "India",
+          "source": "Rimjhim",
+          "skills": [
+            "Anusvaar and Visarg",
+            "Hindi grammar (vachan, ling, kaal)",
+            "Essay writing in Hindi",
+            "Comprehension passages",
+            "Patra lekhan (letter writing)"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Arabic (Non-Arabs)",
+          "region": "UAE",
+          "source": "MoE",
+          "skills": [
+            "Describing people and places",
+            "Asking questions in Arabic",
+            "Short paragraph reading",
+            "Connecting sentences"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Islamic Studies",
+          "region": "UAE",
+          "source": "MoE",
+          "skills": [
+            "Surah Al-Quraish",
+            "Fasting (Ramadan basics)",
+            "Charity and Zakat concept",
+            "Respect for parents"
+          ],
+          "logic_tags": ["reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Moral Social Cultural Studies",
+          "region": "UAE",
+          "source": "MoE MSC",
+          "skills": [
+            "UAE geography basics",
+            "Sustainability concepts",
+            "Cultural diversity",
+            "Community responsibility"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "core"
+        },
+        {
+          "name": "General Knowledge",
+          "region": "Global",
+          "skills": [
+            "World continents and oceans",
+            "Famous scientists",
+            "Indian/UAE festivals",
+            "Sports and games"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Computer Science",
+          "region": "Global",
+          "skills": [
+            "MS Word basics",
+            "Introduction to Scratch",
+            "Internet safety"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Art Education",
+          "region": "Global",
+          "skills": [
+            "Rangoli and patterns",
+            "Clay modeling",
+            "Folk art introduction"
+          ],
+          "logic_tags": ["diagrammatic"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Moral Science",
+          "region": "Global",
+          "skills": [
+            "Conflict resolution",
+            "Leadership",
+            "Respect for diversity"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Health & Physical Education",
+          "region": "Global",
+          "skills": [
+            "First aid basics",
+            "Yoga introduction",
+            "Importance of sleep"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        }
+      ]
+    },
+    {
+      "grade": 5,
+      "stage": "Preparatory",
+      "subjects": [
+        {
+          "name": "Mathematics",
+          "region": "Global",
+          "source": "Math Magic",
+          "skills": [
+            "Numbers up to 10 lakh",
+            "Factors and multiples",
+            "HCF and LCM",
+            "Fractions (addition and subtraction)",
+            "Decimals (operations)",
+            "Percentage introduction",
+            "Area and volume (cubes, cuboids)",
+            "Geometry (circles, symmetry lines)",
+            "Data handling (pie charts)",
+            "Speed, distance, and time basics"
+          ],
+          "logic_tags": ["numerical", "diagrammatic"],
+          "depth": "core"
+        },
+        {
+          "name": "English",
+          "region": "Global",
+          "source": "Marigold",
+          "skills": [
+            "Active and passive voice",
+            "Direct and indirect speech",
+            "Complex sentences",
+            "Summary writing",
+            "Comprehension with critical thinking",
+            "Vocabulary: synonyms and antonyms",
+            "Formal letter writing",
+            "Creative writing"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "EVS",
+          "region": "Global",
+          "source": "Looking Around",
+          "skills": [
+            "Ecosystem basics",
+            "Food chains and food webs",
+            "Human body systems",
+            "Natural resources and conservation",
+            "Weather and climate",
+            "Pollution and waste management",
+            "Maps and globe",
+            "Space exploration basics"
+          ],
+          "logic_tags": ["observation", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Hindi",
+          "region": "India",
+          "source": "Rimjhim",
+          "skills": [
+            "Anekarthi shabd (words with multiple meanings)",
+            "Muhavare (Hindi idioms)",
+            "Essay writing (descriptive)",
+            "Advanced comprehension",
+            "Grammar: samas and sandhi basics",
+            "Newspaper reading exercises"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Arabic (Non-Arabs)",
+          "region": "UAE",
+          "source": "MoE",
+          "skills": [
+            "Writing short paragraphs",
+            "Past and present tense in Arabic",
+            "Reading stories",
+            "Expressing opinions"
+          ],
+          "logic_tags": ["vocabulary", "reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Islamic Studies",
+          "region": "UAE",
+          "source": "MoE",
+          "skills": [
+            "Surah Al-Humazah",
+            "Hajj concept",
+            "Prophet's migration (Hijra)",
+            "Rights of neighbours"
+          ],
+          "logic_tags": ["reading_comprehension"],
+          "depth": "core"
+        },
+        {
+          "name": "Moral Social Cultural Studies",
+          "region": "UAE",
+          "source": "MoE MSC",
+          "skills": [
+            "UAE economy basics",
+            "Global citizenship",
+            "Environmental sustainability",
+            "Innovation and future thinking"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "core"
+        },
+        {
+          "name": "General Knowledge",
+          "region": "Global",
+          "skills": [
+            "Indian/UAE constitution basics",
+            "World heritage sites",
+            "Space missions",
+            "Environmental awareness campaigns"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Computer Science",
+          "region": "Global",
+          "skills": [
+            "Scratch programming",
+            "Internet basics and browsing",
+            "MS PowerPoint basics",
+            "Digital citizenship"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Art Education",
+          "region": "Global",
+          "skills": [
+            "Perspective drawing",
+            "Folk art of India/UAE",
+            "Collage and mixed media"
+          ],
+          "logic_tags": ["diagrammatic"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Moral Science",
+          "region": "Global",
+          "skills": [
+            "Global citizenship",
+            "Digital ethics",
+            "Critical thinking"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        },
+        {
+          "name": "Health & Physical Education",
+          "region": "Global",
+          "skills": [
+            "Fitness and stamina",
+            "Nutrition labels reading",
+            "Mental health awareness",
+            "Team sportsmanship"
+          ],
+          "logic_tags": ["observation"],
+          "depth": "reinforcement"
+        }
+      ]
+    }
+  ]
+}

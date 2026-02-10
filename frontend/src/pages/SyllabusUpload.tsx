@@ -9,9 +9,11 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useSubscription } from '@/lib/subscription'
+import { useProfile } from '@/lib/profile'
+import { fetchSubjects, type CurriculumSubject } from '@/lib/curriculum'
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
-const SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
+const FALLBACK_SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
 
 interface SyllabusTopic {
   name: string
@@ -44,12 +46,15 @@ interface Props {
 
 export default function SyllabusUpload({ onSyllabusReady }: Props) {
   const { status: subscription, upgrade } = useSubscription()
+  const { region } = useProfile()
   const [mode, setMode] = useState<'cbse' | 'custom'>('cbse')
 
   const [cbseGrade, setCbseGrade] = useState('')
   const [cbseSubject, setCbseSubject] = useState('')
   const [cbseSyllabus, setCbseSyllabus] = useState<CBSESyllabusData | null>(null)
   const [cbseLoading, setCbseLoading] = useState(false)
+  const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([])
+  const [loadingSubjects, setLoadingSubjects] = useState(false)
 
   const [file, setFile] = useState<File | null>(null)
   const [gradeHint, setGradeHint] = useState('')
@@ -59,6 +64,31 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
   const [syllabus, setSyllabus] = useState<ParsedSyllabus | null>(null)
   const [confidenceScore, setConfidenceScore] = useState<number | null>(null)
   const [dragActive, setDragActive] = useState(false)
+
+  // Fetch curriculum subjects for region-filtered dropdown
+  useEffect(() => {
+    if (!cbseGrade) {
+      setCurriculumSubjects([])
+      return
+    }
+    const gradeNum = parseInt(cbseGrade.replace('Class ', ''))
+    if (isNaN(gradeNum)) return
+
+    let cancelled = false
+    setLoadingSubjects(true)
+    fetchSubjects(gradeNum, region).then(subjects => {
+      if (!cancelled) {
+        setCurriculumSubjects(subjects)
+        setLoadingSubjects(false)
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setCurriculumSubjects([])
+        setLoadingSubjects(false)
+      }
+    })
+    return () => { cancelled = true }
+  }, [cbseGrade, region])
 
   useEffect(() => {
     const loadCBSESyllabus = async () => {
@@ -240,12 +270,17 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                   <Label htmlFor="cbseSubject" className="text-sm font-bold text-foreground/80">Academic Subject</Label>
                   <Select value={cbseSubject} onValueChange={setCbseSubject}>
                     <SelectTrigger id="cbseSubject" className="h-11 bg-background border-border/60 focus:ring-primary/20 rounded-xl">
-                      <SelectValue placeholder="Select subject" />
+                      <SelectValue placeholder={loadingSubjects ? "Loading..." : "Select subject"} />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl shadow-xl border-border/40">
-                      {SUBJECTS.map((s) => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
-                      ))}
+                      {curriculumSubjects.length > 0
+                        ? curriculumSubjects.map((s) => (
+                          <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>
+                        ))
+                        : FALLBACK_SUBJECTS.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))
+                      }
                     </SelectContent>
                   </Select>
                 </div>
@@ -266,7 +301,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
               <div className="space-y-8 pt-10 border-t border-border/40 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold font-jakarta text-foreground">Content Structure</h3>
+                    <h3 className="text-2xl font-bold font-jakarta text-foreground">Practice Skills</h3>
                     <p className="text-sm text-muted-foreground">CBSE {cbseSyllabus.grade} • {cbseSyllabus.subject}</p>
                   </div>
                   <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
@@ -463,7 +498,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                           <SelectValue placeholder="Assists AI parsing" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
-                          {SUBJECTS.map((s) => (
+                          {FALLBACK_SUBJECTS.map((s) => (
                             <SelectItem key={s} value={s}>{s}</SelectItem>
                           ))}
                         </SelectContent>

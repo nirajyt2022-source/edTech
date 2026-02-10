@@ -11,7 +11,9 @@ import { useChildren } from '@/lib/children'
 import { useClasses } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
 import { useSubscription } from '@/lib/subscription'
+import { fetchSubjects, fetchSkills, type CurriculumSubject } from '@/lib/curriculum'
 import TopicSelector from '@/components/TopicSelector'
+import SkillSelector from '@/components/SkillSelector'
 import CBSESyllabusViewer from '@/components/CBSESyllabusViewer'
 import { Skeleton } from '@/components/ui/skeleton'
 import TemplateSelector, { type WorksheetTemplate } from '@/components/TemplateSelector'
@@ -19,11 +21,11 @@ import { useEngagement } from '@/lib/engagement'
 
 const BOARDS = ['CBSE']
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
-const SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
 const LANGUAGES = ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu', 'Kannada', 'Arabic', 'Urdu']
 const QUESTION_COUNTS = ['5', '10', '15', '20']
 
+// Fallback topics for when curriculum API is unavailable
 const DEFAULT_TOPICS: Record<string, string[]> = {
   Maths: ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Fractions', 'Word Problems'],
   English: ['Grammar', 'Vocabulary', 'Reading Comprehension', 'Sentence Formation'],
@@ -79,7 +81,7 @@ interface Props {
 export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props) {
   const { children } = useChildren()
   const { classes } = useClasses()
-  const { activeRole } = useProfile()
+  const { activeRole, region } = useProfile()
   const { status: subscription, incrementUsage, upgrade } = useSubscription()
   const { recordCompletion, lastCompletion, clearLastCompletion } = useEngagement()
   const [selectedChildId, setSelectedChildId] = useState('none')
@@ -103,10 +105,81 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [error, setError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState(false)
 
+  // Curriculum-based state
+  const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([])
+  const [curriculumSkills, setCurriculumSkills] = useState<string[]>([])
+  const [curriculumLogicTags, setCurriculumLogicTags] = useState<string[]>([])
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
+  const [selectedLogicTags, setSelectedLogicTags] = useState<string[]>([])
+  const [loadingCurriculum, setLoadingCurriculum] = useState(false)
+
   // CBSE syllabus state
   const [cbseSyllabus, setCbseSyllabus] = useState<SyllabusChapter[]>([])
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [loadingSyllabus, setLoadingSyllabus] = useState(false)
+
+  // Fetch curriculum subjects when grade changes
+  useEffect(() => {
+    if (syllabus || !grade) {
+      setCurriculumSubjects([])
+      return
+    }
+    const gradeNum = parseInt(grade.replace('Class ', ''))
+    if (isNaN(gradeNum)) return
+
+    let cancelled = false
+    setLoadingCurriculum(true)
+    fetchSubjects(gradeNum, region, true).then(subjects => {
+      if (!cancelled) {
+        setCurriculumSubjects(subjects)
+        setLoadingCurriculum(false)
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setCurriculumSubjects([])
+        setLoadingCurriculum(false)
+      }
+    })
+    return () => { cancelled = true }
+  }, [grade, region, syllabus])
+
+  // Fetch skills when subject changes (curriculum-based)
+  useEffect(() => {
+    if (syllabus || !grade || !subject || curriculumSubjects.length === 0) {
+      setCurriculumSkills([])
+      setCurriculumLogicTags([])
+      setSelectedSkills([])
+      setSelectedLogicTags([])
+      return
+    }
+    const gradeNum = parseInt(grade.replace('Class ', ''))
+    if (isNaN(gradeNum)) return
+
+    let cancelled = false
+    fetchSkills(gradeNum, subject, region).then(detail => {
+      if (!cancelled) {
+        setCurriculumSkills(detail.skills)
+        setCurriculumLogicTags(detail.logic_tags)
+        setSelectedSkills(detail.skills)
+        setSelectedLogicTags(detail.logic_tags)
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setCurriculumSkills([])
+        setCurriculumLogicTags([])
+      }
+    })
+    return () => { cancelled = true }
+  }, [grade, subject, region, syllabus, curriculumSubjects.length])
+
+  // Handle skill selection changes from SkillSelector
+  const handleSkillSelectionChange = useCallback((skills: string[], logicTags: string[]) => {
+    setSelectedSkills(skills)
+    setSelectedLogicTags(logicTags)
+  }, [])
+
+  // Whether to use curriculum skill-based flow
+  const useCurriculumFlow = !syllabus && curriculumSubjects.length > 0
 
   // Handle child selection - pre-fill grade and board
   const handleChildSelect = (childId: string) => {
@@ -224,7 +297,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
     }
 
     // Determine which topic(s) to use
-    const useAdvancedSelection = !syllabus && cbseSyllabus.length > 0
+    const useAdvancedSelection = !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
     const topicsToUse = useAdvancedSelection ? selectedTopics : [topic]
 
     if (!board || !grade || !difficulty) {
@@ -235,11 +308,16 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       setError('Please select a subject')
       return
     }
-    if (useAdvancedSelection && selectedTopics.length === 0) {
+    // Validate skill/topic selection
+    if (useCurriculumFlow && selectedSkills.length === 0) {
+      setError('Please select at least one skill')
+      return
+    }
+    if (!useCurriculumFlow && useAdvancedSelection && selectedTopics.length === 0) {
       setError('Please select at least one topic')
       return
     }
-    if (!useAdvancedSelection && !topic) {
+    if (!useCurriculumFlow && !useAdvancedSelection && !topic) {
       setError('Please select a topic')
       return
     }
@@ -248,12 +326,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
     setError('')
     setWorksheet(null)
 
-    // Use chapter name as context if from syllabus, or combine selected topics
+    // Use chapter name as context if from syllabus, or combine selected topics/skills
     const topicWithContext = syllabus && chapter
       ? `${chapter} - ${topic}`
-      : useAdvancedSelection
-        ? topicsToUse.slice(0, 5).join(', ')  // Limit to 5 topics for better worksheet focus
-        : topic
+      : useCurriculumFlow
+        ? selectedSkills.slice(0, 5).join(', ')
+        : useAdvancedSelection
+          ? topicsToUse.slice(0, 5).join(', ')
+          : topic
 
     try {
       const response = await api.post('/api/worksheets/generate', {
@@ -265,6 +345,9 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         num_questions: parseInt(questionCount),
         language,
         custom_instructions: customInstructions || undefined,
+        skills: useCurriculumFlow ? selectedSkills : undefined,
+        logic_tags: useCurriculumFlow ? selectedLogicTags : undefined,
+        region,
       })
       setWorksheet(response.data.worksheet)
 
@@ -330,6 +413,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         board,
         child_id: !isTeacher && selectedChildId !== 'none' ? selectedChildId : undefined,
         class_id: isTeacher && selectedClassId !== 'none' ? selectedClassId : undefined,
+        region,
       })
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
@@ -361,7 +445,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
             <svg viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            CBSE + School Syllabus
+            CBSE-aligned Primary Curriculum
           </div>
           <div className="trust-badge">
             <svg viewBox="0 0 20 20" fill="currentColor">
@@ -535,7 +619,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
                     {(classes.length > 0 || children.length > 0) ? '2' : '1'}
                   </span>
-                  Syllabus & Topic
+                  Skills & Practice Focus
                 </Section.Title>
               </Section.Header>
 
@@ -576,14 +660,22 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                     {!syllabus && (
                       <div className="space-y-2">
                         <Label htmlFor="subject" className="text-sm font-semibold">Subject *</Label>
-                        <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic('') }} disabled={isTeacher && selectedClassId !== 'none'}>
+                        <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
                           <SelectTrigger id="subject" className="bg-background">
-                            <SelectValue placeholder="Select subject" />
+                            <SelectValue placeholder={loadingCurriculum ? "Loading subjects..." : "Select subject"} />
                           </SelectTrigger>
                           <SelectContent>
-                            {SUBJECTS.map((s) => (
-                              <SelectItem key={s} value={s}>{s}</SelectItem>
-                            ))}
+                            {useCurriculumFlow
+                              ? curriculumSubjects.map((s) => (
+                                <SelectItem key={s.name} value={s.name}>
+                                  {s.name}
+                                  {s.depth === 'reinforcement' && ' (Additional)'}
+                                </SelectItem>
+                              ))
+                              : DEFAULT_TOPICS && Object.keys(DEFAULT_TOPICS).map((s) => (
+                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                              ))
+                            }
                           </SelectContent>
                         </Select>
                       </div>
@@ -631,8 +723,19 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   </div>
                 </div>
 
-                {/* Advanced Topic Selector */}
-                {!syllabus && cbseSyllabus.length > 0 && (
+                {/* Skill Selector (curriculum-based flow) */}
+                {useCurriculumFlow && curriculumSkills.length > 0 && !syllabus && (
+                  <div className="pt-2">
+                    <SkillSelector
+                      skills={curriculumSkills}
+                      logicTags={curriculumLogicTags}
+                      onSelectionChange={handleSkillSelectionChange}
+                    />
+                  </div>
+                )}
+
+                {/* Advanced Topic Selector (fallback for CBSE syllabus DB) */}
+                {!useCurriculumFlow && !syllabus && cbseSyllabus.length > 0 && (
                   <div className="pt-2">
                     {loadingSyllabus ? (
                       <div className="space-y-4 p-4 rounded-xl border border-border/50 bg-secondary/20">

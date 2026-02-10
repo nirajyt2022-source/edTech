@@ -27,6 +27,7 @@ class UpdateProfileRequest(BaseModel):
     subjects: list[str] | None = None
     grades: list[str] | None = None
     school_name: str | None = None
+    region: str | None = None
 
 
 class SwitchRoleRequest(BaseModel):
@@ -88,6 +89,7 @@ async def upsert_profile(
             "subjects": request.subjects or [],
             "grades": request.grades or [],
             "school_name": request.school_name,
+            "region": request.region or "India",
             "updated_at": datetime.now().isoformat(),
         }
 
