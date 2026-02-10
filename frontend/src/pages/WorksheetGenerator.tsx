@@ -190,6 +190,9 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   // Whether to use curriculum skill-based flow
   const useCurriculumFlow = !syllabus && curriculumSubjects.length > 0
 
+  // Topic dropdown only needed for chapter-bounded worksheet types
+  const needsTopic = selectedTemplate === 'chapter-test'
+
   // Handle child selection - pre-fill grade and board
   const handleChildSelect = (childId: string) => {
     setSelectedChildId(childId)
@@ -219,6 +222,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
 
   // Handle template selection - pre-fill difficulty, question count, and instructions
   const handleTemplateSelect = (template: WorksheetTemplate | null) => {
+    const newId = template?.id ?? 'custom'
+    if (newId !== 'chapter-test') {
+      setTopic('')
+    }
     if (template) {
       setSelectedTemplate(template.id)
       setDifficulty(template.difficulty)
@@ -691,7 +698,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                     </div>
                   )}
 
-                  {(syllabus || cbseSyllabus.length === 0) && (
+                  {(syllabus || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
                     <div className="space-y-2">
                       <Label htmlFor="topic" className="text-sm font-semibold">Topic *</Label>
                       <Select
