@@ -409,6 +409,11 @@ textarea::placeholder {
 }
 
 /* Print styles */
+@page {
+  size: A4;
+  margin: 18mm 15mm 18mm 15mm;
+}
+
 @media print {
   .print\:hidden {
     display: none !important;
@@ -434,7 +439,62 @@ textarea::placeholder {
     padding-bottom: 0.5rem !important;
   }
 
-  body {
-    font-family: Georgia, serif;
+  /* Global print resets */
+  html, body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #000 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Strip app chrome */
+  nav, .gradient-bg {
+    background: none !important;
+  }
+
+  /* Worksheet card — full-width, no box */
+  .paper-texture {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  .paper-texture::before {
+    display: none !important;
+  }
+
+  /* Question page-break handling */
+  .stagger-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Options grid — keep together with question */
+  .stagger-item .grid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Answer key — always starts on new page */
+  .print\:break-before-page {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Remove animations and transitions */
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Tags / badges — print-friendly */
+  .bg-secondary {
+    background-color: #f3f4f6 !important;
+    border-color: #d1d5db !important;
   }
 }

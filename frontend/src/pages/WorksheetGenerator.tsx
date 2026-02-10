@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/ui/page-header'
-import { Section } from '@/components/ui/section'
 import { api } from '@/lib/api'
 import { useChildren } from '@/lib/children'
 import { useClasses } from '@/lib/classes'
@@ -428,9 +427,9 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   }
 
   return (
-    <div className="py-10 px-4 max-w-7xl mx-auto">
+    <div className="py-10 px-4 max-w-7xl mx-auto print:p-0 print:max-w-none">
       {/* Hero Section */}
-      <PageHeader className="text-center md:text-left mb-12">
+      <PageHeader className="text-center md:text-left mb-12 print:hidden">
         <PageHeader.Title className="text-pretty">
           {activeRole === 'teacher' ? 'Teacher Toolkit' : 'Personalized Practice'}
         </PageHeader.Title>
@@ -560,23 +559,16 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       )}
 
       {/* Split-screen Workspace */}
-      <div className="lg:flex lg:gap-8 print:block">
+      <div className="lg:flex lg:gap-10 print:block">
         {/* Left Panel — Controls */}
         <div className={`lg:w-[40%] lg:min-w-0 lg:shrink-0 print:hidden ${mobileView === 'preview' && worksheet ? 'hidden lg:block' : ''}`}>
-          {/* Generator Form */}
-          <Card className="print:hidden overflow-hidden border-border/50 shadow-xl bg-background/50 backdrop-blur-sm">
-        <CardContent className="p-0">
-          <div className="divide-y divide-border/50">
-            {/* Step 1: Student Context */}
+          {/* Generator Controls */}
+          <div className="print:hidden space-y-7">
+            {/* Student Profile — anchored starting context */}
             {(classes.length > 0 || children.length > 0) && (
-              <Section className="p-6 md:p-8">
-                <Section.Header>
-                  <Section.Title className="flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">1</span>
-                    Student Profile
-                  </Section.Title>
-                </Section.Header>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+              <div className="px-5 py-4 bg-secondary/25 border border-border/30 rounded-xl">
+                <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Student Profile</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {isTeacher && classes.length > 0 && (
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="class" className="text-sm font-semibold">Generate for Class</Label>
@@ -615,22 +607,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                     </div>
                   )}
                 </div>
-              </Section>
+              </div>
             )}
 
-            {/* Step 2: Syllabus & Topic */}
-            <Section className="p-6 md:p-8 bg-primary/[0.02]">
-              <Section.Header>
-                <Section.Title className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                    {(classes.length > 0 || children.length > 0) ? '2' : '1'}
-                  </span>
-                  Skills & Practice Focus
-                </Section.Title>
-              </Section.Header>
-
-              <div className="mt-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Skills & Practice Focus */}
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Skills & Practice Focus</p>
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Board & Grade */}
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -767,19 +751,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   </div>
                 )}
               </div>
-            </Section>
+            </div>
 
-            {/* Step 3: Practice Settings */}
-            <Section className="p-6 md:p-8">
-              <Section.Header>
-                <Section.Title className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                    {(classes.length > 0 || children.length > 0) ? '3' : '2'}
-                  </span>
-                  Practice Settings
-                </Section.Title>
-              </Section.Header>
-              <div className="mt-6 space-y-6">
+            {/* Practice Settings */}
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Practice Settings</p>
+              <div className="space-y-5">
                 <TemplateSelector
                   selectedTemplate={selectedTemplate}
                   onSelect={handleTemplateSelect}
@@ -840,11 +817,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   />
                 </div>
               </div>
-            </Section>
-          </div>
+            </div>
 
-          {/* Action Footer */}
-          <div className="p-6 md:p-8 bg-background border-t border-border/50">
+            {/* Action */}
+            <div className="pt-2">
             {error && (
               <div role="alert" className="mb-6 p-4 bg-destructive/5 border border-destructive/20 text-destructive text-sm rounded-xl flex items-center gap-3 animate-fade-in font-medium">
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -855,7 +831,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
             )}
 
             <Button
-              className="w-full py-4 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-2xl"
+              className="w-full py-4 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl"
               onClick={handleGenerate}
               disabled={loading}
               aria-busy={loading}
@@ -875,20 +851,19 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                 </span>
               )}
             </Button>
-            <p className="mt-4 text-center text-xs text-muted-foreground">
+            <p className="mt-3 text-center text-xs text-muted-foreground">
               Uses one worksheet credit. Aligned to CBSE and school standards.
             </p>
+            </div>
           </div>
-        </CardContent>
-          </Card>
         </div>
 
         {/* Right Panel — Preview */}
-        <div className={`mt-8 lg:mt-0 lg:w-[60%] lg:min-w-0 ${mobileView === 'edit' ? 'hidden lg:block' : ''}`}>
-          <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto print:max-h-none print:overflow-visible print:static">
+        <div className={`mt-8 lg:mt-0 lg:w-[60%] lg:min-w-0 print:w-full print:mt-0 ${mobileView === 'edit' ? 'hidden lg:block' : ''}`}>
+          <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto print:max-h-none print:overflow-visible print:static print:w-full">
             {loading ? (
-              <Card className="overflow-hidden border-border/40 shadow-2xl">
-                <CardHeader className="pt-10 px-8">
+              <Card className="overflow-hidden border-border/20 shadow-xl bg-white">
+                <CardHeader className="pt-12 px-10">
                   <p className="text-sm text-muted-foreground font-medium mb-6">Preparing practice aligned to your syllabus...</p>
                   <Skeleton className="h-10 w-3/4 mb-4" />
                   <div className="flex gap-2">
@@ -897,7 +872,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                     <Skeleton className="h-6 w-16 rounded-md" />
                   </div>
                 </CardHeader>
-                <CardContent className="px-8 pb-12 space-y-8">
+                <CardContent className="px-10 pb-14 space-y-8">
                   <Skeleton className="h-20 w-full rounded-xl" />
                   {[1, 2, 3].map(i => (
                     <div key={i} className="flex gap-5">
@@ -911,11 +886,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                 </CardContent>
               </Card>
             ) : worksheet ? (
-              <Card className="print:shadow-none print:border-none paper-texture animate-fade-in border-border/40 shadow-2xl relative overflow-hidden">
+              <Card className="print:shadow-none print:border-none paper-texture animate-fade-in border-border/20 shadow-xl bg-white relative overflow-hidden">
                 {/* Subtle Academic Header Accent */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary/20 print:hidden" />
+                <div className="absolute top-0 left-0 right-0 h-px bg-primary/15 print:hidden" />
 
-                <CardHeader className="print:pb-6 pt-10 px-8">
+                <CardHeader className="print:pb-4 print:px-0 print:pt-0 pt-12 px-10">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="space-y-4">
                       <CardTitle className="text-3xl md:text-4xl font-serif text-foreground leading-tight">
@@ -1022,19 +997,19 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   </div>
                 </CardHeader>
 
-                <CardContent className="px-8 pb-12">
-                  <div className="mb-8 p-5 bg-primary/[0.03] border border-primary/10 rounded-xl print:border-border print:bg-transparent">
-                    <p className="font-bold text-foreground flex items-center gap-2 mb-1 uppercase tracking-tight text-xs">
+                <CardContent className="px-10 pb-14 print:px-0 print:pb-0">
+                  <div className="mb-10 p-5 bg-secondary/30 border border-border/30 rounded-xl print:border-border print:bg-gray-100 print:rounded-none print:p-4">
+                    <p className="font-semibold text-foreground/80 flex items-center gap-2 mb-1 text-xs">
                       Instructions for Student
                     </p>
                     <p className="text-sm text-muted-foreground">Please read each question carefully and provide your best answer. Show all necessary workings in the space provided. Good luck!</p>
                   </div>
 
-                  <div className="space-y-10 mt-8">
+                  <div className="space-y-12 mt-10">
                     {worksheet.questions.map((question, index) => (
-                      <div key={question.id} className="relative group stagger-item">
+                      <div key={question.id} className="relative group stagger-item" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                         <div className="flex gap-5">
-                          <span className="flex-shrink-0 inline-flex items-center justify-center w-8 h-8 rounded bg-foreground text-background text-sm font-bold mt-0.5">
+                          <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold mt-0.5 print:border-black/30 print:text-black/60">
                             {index + 1}
                           </span>
                           <div className="flex-grow space-y-4">
@@ -1045,7 +1020,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                             {question.options && (
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                                 {question.options.map((option, optIndex) => (
-                                  <div key={optIndex} className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-white/50 print:bg-transparent print:border-border">
+                                  <div key={optIndex} className="flex items-center gap-3 p-3.5 rounded-lg border border-border/40 bg-white/50 print:bg-transparent print:border-black/20 print:rounded-none print:p-2.5">
                                     <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">
                                       {String.fromCharCode(65 + optIndex)}
                                     </span>
@@ -1076,7 +1051,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
 
                   {/* Answer Key Section (hidden for teachers — they use Answer Key PDF) */}
                   {!isTeacher && (
-                    <div className="mt-16 pt-10 border-t-2 border-dashed border-border/50 print:break-before-page">
+                    <div className="mt-16 pt-10 border-t border-border/30 print:break-before-page print:mt-0 print:pt-0 print:border-none">
                       <h3 className="font-serif text-2xl mb-6 flex items-center gap-2 text-foreground/80">
                         <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
@@ -1085,7 +1060,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                       </h3>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                         {worksheet.questions.map((question, index) => (
-                          <div key={question.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg text-sm border border-border/50">
+                          <div key={question.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg text-sm border border-border/50 print:bg-gray-100 print:border-black/15 print:rounded-none">
                             <span className="font-bold text-primary">Q{index + 1}</span>
                             <span className="text-foreground font-medium">{question.correct_answer}</span>
                           </div>
@@ -1097,7 +1072,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                 </CardContent>
               </Card>
             ) : (
-              <div className="border-2 border-dashed border-border/50 rounded-2xl p-12 flex flex-col items-center justify-center text-center min-h-[400px] bg-secondary/10">
+              <div className="border border-dashed border-border/40 rounded-2xl p-16 flex flex-col items-center justify-center text-center min-h-[400px] bg-secondary/10">
                 <div className="w-20 h-20 rounded-2xl bg-secondary/50 flex items-center justify-center mb-6">
                   <svg className="w-10 h-10 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
