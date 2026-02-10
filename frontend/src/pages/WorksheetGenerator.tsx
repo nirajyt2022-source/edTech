@@ -118,7 +118,16 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [loadingSyllabus, setLoadingSyllabus] = useState(false)
 
-  // Fetch curriculum subjects when grade changes
+  // Reset subject and topic when region changes
+  useEffect(() => {
+    setSubject('')
+    setTopic('')
+    setSelectedSkills([])
+    setSelectedLogicTags([])
+    setSelectedTopics([])
+  }, [region])
+
+  // Fetch curriculum subjects when grade or region changes
   useEffect(() => {
     if (syllabus || !grade) {
       setCurriculumSubjects([])
@@ -615,102 +624,96 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
               <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Skills & Practice Focus</p>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Board & Grade */}
-                  <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="board" className="text-sm font-semibold">Board *</Label>
+                    <Select value={board} onValueChange={setBoard}>
+                      <SelectTrigger id="board" className="bg-background">
+                        <SelectValue placeholder="Select board" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BOARDS.map((b) => (
+                          <SelectItem key={b} value={b}>{b}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="grade" className="text-sm font-semibold">Grade *</Label>
+                    <Select value={grade} onValueChange={setGrade} disabled={isTeacher && selectedClassId !== 'none'}>
+                      <SelectTrigger id="grade" className="bg-background">
+                        <SelectValue placeholder="Select grade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GRADES.map((g) => (
+                          <SelectItem key={g} value={g}>{g}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {!syllabus && (
                     <div className="space-y-2">
-                      <Label htmlFor="board" className="text-sm font-semibold">Board *</Label>
-                      <Select value={board} onValueChange={setBoard}>
-                        <SelectTrigger id="board" className="bg-background">
-                          <SelectValue placeholder="Select board" />
+                      <Label htmlFor="subject" className="text-sm font-semibold">Subject *</Label>
+                      <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
+                        <SelectTrigger id="subject" className="bg-background">
+                          <SelectValue placeholder={loadingCurriculum ? "Preparing subjects..." : "Select subject"} />
                         </SelectTrigger>
                         <SelectContent>
-                          {BOARDS.map((b) => (
-                            <SelectItem key={b} value={b}>{b}</SelectItem>
+                          {useCurriculumFlow
+                            ? curriculumSubjects.map((s) => (
+                              <SelectItem key={s.name} value={s.name}>
+                                {s.name}
+                                {s.depth === 'reinforcement' && ' (Additional)'}
+                              </SelectItem>
+                            ))
+                            : DEFAULT_TOPICS && Object.keys(DEFAULT_TOPICS).map((s) => (
+                              <SelectItem key={s} value={s}>{s}</SelectItem>
+                            ))
+                          }
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {syllabus && (
+                    <div className="space-y-2">
+                      <Label htmlFor="chapter" className="text-sm font-semibold">Chapter *</Label>
+                      <Select value={chapter} onValueChange={(val) => { setChapter(val); setTopic('') }}>
+                        <SelectTrigger id="chapter" className="bg-background">
+                          <SelectValue placeholder="Select chapter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableChapters.map((ch) => (
+                            <SelectItem key={ch.name} value={ch.name}>{ch.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
+                  )}
+
+                  {(syllabus || cbseSyllabus.length === 0) && (
                     <div className="space-y-2">
-                      <Label htmlFor="grade" className="text-sm font-semibold">Grade *</Label>
-                      <Select value={grade} onValueChange={setGrade} disabled={isTeacher && selectedClassId !== 'none'}>
-                        <SelectTrigger id="grade" className="bg-background">
-                          <SelectValue placeholder="Select grade" />
+                      <Label htmlFor="topic" className="text-sm font-semibold">Topic *</Label>
+                      <Select
+                        value={topic}
+                        onValueChange={setTopic}
+                        disabled={syllabus ? !chapter : !subject}
+                      >
+                        <SelectTrigger id="topic" className="bg-background">
+                          <SelectValue placeholder={
+                            syllabus
+                              ? (chapter ? "Select topic" : "Select chapter first")
+                              : (subject ? "Select topic" : "Select subject first")
+                          } />
                         </SelectTrigger>
                         <SelectContent>
-                          {GRADES.map((g) => (
-                            <SelectItem key={g} value={g}>{g}</SelectItem>
+                          {availableTopics.map((t) => (
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-
-                  {/* Subject & Chapter/Topic */}
-                  <div className="space-y-4">
-                    {!syllabus && (
-                      <div className="space-y-2">
-                        <Label htmlFor="subject" className="text-sm font-semibold">Subject *</Label>
-                        <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
-                          <SelectTrigger id="subject" className="bg-background">
-                            <SelectValue placeholder={loadingCurriculum ? "Preparing subjects..." : "Select subject"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {useCurriculumFlow
-                              ? curriculumSubjects.map((s) => (
-                                <SelectItem key={s.name} value={s.name}>
-                                  {s.name}
-                                  {s.depth === 'reinforcement' && ' (Additional)'}
-                                </SelectItem>
-                              ))
-                              : DEFAULT_TOPICS && Object.keys(DEFAULT_TOPICS).map((s) => (
-                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                              ))
-                            }
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {syllabus && (
-                      <div className="space-y-2">
-                        <Label htmlFor="chapter" className="text-sm font-semibold">Chapter *</Label>
-                        <Select value={chapter} onValueChange={(val) => { setChapter(val); setTopic('') }}>
-                          <SelectTrigger id="chapter" className="bg-background">
-                            <SelectValue placeholder="Select chapter" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableChapters.map((ch) => (
-                              <SelectItem key={ch.name} value={ch.name}>{ch.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-
-                    {(syllabus || cbseSyllabus.length === 0) && (
-                      <div className="space-y-2">
-                        <Label htmlFor="topic" className="text-sm font-semibold">Topic *</Label>
-                        <Select
-                          value={topic}
-                          onValueChange={setTopic}
-                          disabled={syllabus ? !chapter : !subject}
-                        >
-                          <SelectTrigger id="topic" className="bg-background">
-                            <SelectValue placeholder={
-                              syllabus
-                                ? (chapter ? "Select topic" : "Select chapter first")
-                                : (subject ? "Select topic" : "Select subject first")
-                            } />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableTopics.map((t) => (
-                              <SelectItem key={t} value={t}>{t}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
 
                 {/* Skill Selector (curriculum-based flow) */}

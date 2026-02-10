@@ -85,10 +85,10 @@ export default function TemplateSelector({ selectedTemplate, onSelect }: Templat
             tabIndex={0}
             role="radio"
             aria-checked={selectedTemplate === template.id}
-            className={`cursor-pointer transition-all border-2 ${
+            className={`cursor-pointer transition-all border ${
               selectedTemplate === template.id
-                ? 'border-primary bg-primary/5 shadow-sm'
-                : 'border-border/50 hover:border-primary/30 hover:bg-card'
+                ? 'border-primary/60 bg-primary/[0.03]'
+                : 'border-border/30 hover:border-primary/20 hover:bg-secondary/30'
             }`}
             onClick={() => onSelect(template)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(template); } }}
@@ -119,10 +119,10 @@ export default function TemplateSelector({ selectedTemplate, onSelect }: Templat
           tabIndex={0}
           role="radio"
           aria-checked={selectedTemplate === 'custom'}
-          className={`cursor-pointer transition-all border-2 ${
+          className={`cursor-pointer transition-all border ${
             selectedTemplate === 'custom'
-              ? 'border-primary bg-primary/5 shadow-sm'
-              : 'border-border/50 hover:border-primary/30 hover:bg-card'
+              ? 'border-primary/60 bg-primary/[0.03]'
+              : 'border-border/30 hover:border-primary/20 hover:bg-secondary/30'
           }`}
           onClick={() => onSelect(null)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(null); } }}
