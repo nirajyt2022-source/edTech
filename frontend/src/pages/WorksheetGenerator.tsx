@@ -346,12 +346,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       {/* Hero Section */}
       <PageHeader className="text-center md:text-left mb-12">
         <PageHeader.Title className="text-pretty">
-          {activeRole === 'teacher' ? 'Classroom Question Bank' : 'Targeted Practice for Your Child'}
+          {activeRole === 'teacher' ? 'Teacher Toolkit' : 'Personalized Practice'}
         </PageHeader.Title>
         <PageHeader.Subtitle className="max-w-2xl mx-auto md:mx-0 text-pretty">
           {activeRole === 'teacher'
-            ? 'Generate classroom-ready worksheets perfectly aligned to your school syllabus and difficulty requirements.'
-            : 'Personalized practice materials that follow your child’s actual school curriculum. No more generic worksheets—just what they need to learn today.'
+            ? 'Create worksheets aligned to your school syllabus and specific classroom needs.'
+            : 'Worksheets that follow your child’s actual school curriculum for effective learning.'
           }
         </PageHeader.Subtitle>
 
@@ -737,7 +737,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
           {/* Action Footer */}
           <div className="p-6 md:p-8 bg-background border-t border-border/50">
             {error && (
-              <div className="mb-6 p-4 bg-destructive/5 border border-destructive/20 text-destructive text-sm rounded-xl flex items-center gap-3 animate-fade-in font-medium">
+              <div role="alert" className="mb-6 p-4 bg-destructive/5 border border-destructive/20 text-destructive text-sm rounded-xl flex items-center gap-3 animate-fade-in font-medium">
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -746,9 +746,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
             )}
 
             <Button
-              className="w-full py-7 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-2xl"
+              className="w-full py-4 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-2xl"
               onClick={handleGenerate}
               disabled={loading}
+              aria-busy={loading}
               size="lg"
             >
               {loading ? (

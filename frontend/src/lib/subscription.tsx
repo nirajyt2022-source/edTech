@@ -104,6 +104,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSubscription() {
   const context = useContext(SubscriptionContext)
   if (context === undefined) {

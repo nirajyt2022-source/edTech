@@ -104,9 +104,9 @@ export default function RoleSelector() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl text-foreground font-jakarta">Individual Parent</h3>
+                      <h3 className="font-bold text-xl text-foreground font-jakarta">Parent</h3>
                       <p className="text-xs font-medium text-muted-foreground/60 mt-2 leading-relaxed">
-                        Design personal learning paths and practice material for your children at home.
+                        Create personal learning paths and practice material for your children at home.
                       </p>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-accent/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -124,9 +124,9 @@ export default function RoleSelector() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl text-foreground font-jakarta">Education Pro</h3>
+                      <h3 className="font-bold text-xl text-foreground font-jakarta">Teacher</h3>
                       <p className="text-xs font-medium text-muted-foreground/60 mt-2 leading-relaxed">
-                        Scale your teaching with bulk worksheet generation and classroom roster management.
+                        Generate bulk worksheets and manage classroom rosters for your students.
                       </p>
                     </div>
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-primary/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -137,18 +137,18 @@ export default function RoleSelector() {
               <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                 <DialogHeader className="space-y-2">
                   <DialogTitle className="text-2xl font-fraunces text-foreground">
-                    Teacher <span className="text-primary italic">Initialization</span>
+                    Quick <span className="text-primary italic">Profile Setup</span>
                   </DialogTitle>
                   <DialogDescription className="text-sm font-medium text-muted-foreground/70">
-                    Establish your academic parameters to allow PracticeCraft to curate the most relevant resources for you.
+                    Tell us about your teaching focus so we can curate the best materials for your students.
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-8 mt-2">
                   {/* Subjects */}
                   <div className="space-y-4">
-                    <Label className="text-xs font-black uppercase tracking-widest text-foreground/70 block pl-1">
-                      Disciplines <span className="text-destructive ml-1">*</span>
+                    <Label className="text-xs font-bold uppercase tracking-widest text-foreground/70 block pl-1">
+                      Subjects <span className="text-destructive ml-1">*</span>
                     </Label>
                     <div className="flex flex-wrap gap-2">
                       {SUBJECTS.map(subject => (
@@ -156,8 +156,8 @@ export default function RoleSelector() {
                           key={subject}
                           onClick={() => toggleSubject(subject)}
                           className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300 ${selectedSubjects.includes(subject)
-                              ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.05]'
-                              : 'bg-card/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:bg-card'
+                            ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.05]'
+                            : 'bg-card/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:bg-card'
                             }`}
                         >
                           {subject}
@@ -168,8 +168,8 @@ export default function RoleSelector() {
 
                   {/* Grades */}
                   <div className="space-y-4">
-                    <Label className="text-xs font-black uppercase tracking-widest text-foreground/70 block pl-1">
-                      Grade Levels <span className="text-destructive ml-1">*</span>
+                    <Label className="text-xs font-bold uppercase tracking-widest text-foreground/70 block pl-1">
+                      Grades <span className="text-destructive ml-1">*</span>
                     </Label>
                     <div className="flex flex-wrap gap-2">
                       {GRADES.map(grade => (
@@ -177,8 +177,8 @@ export default function RoleSelector() {
                           key={grade}
                           onClick={() => toggleGrade(grade)}
                           className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300 ${selectedGrades.includes(grade)
-                              ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.05]'
-                              : 'bg-card/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:bg-card'
+                            ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.05]'
+                            : 'bg-card/40 text-muted-foreground border-border/60 hover:border-primary/40 hover:bg-card'
                             }`}
                         >
                           {grade}
@@ -189,8 +189,8 @@ export default function RoleSelector() {
 
                   {/* School Name */}
                   <div className="space-y-3">
-                    <Label htmlFor="school-name" className="text-xs font-black uppercase tracking-widest text-foreground/70 block pl-1">
-                      Institutional Affiliation <span className="text-muted-foreground/50 lowercase italic ml-1">(Optional)</span>
+                    <Label htmlFor="school-name" className="text-xs font-bold uppercase tracking-widest text-foreground/70 block pl-1">
+                      School Name <span className="text-muted-foreground/50 lowercase italic ml-1">(Optional)</span>
                     </Label>
                     <Input
                       id="school-name"
@@ -207,21 +207,21 @@ export default function RoleSelector() {
                     variant="ghost"
                     onClick={() => setStep(1)}
                     disabled={saving}
-                    className="px-6 py-6 h-auto rounded-xl font-bold text-muted-foreground hover:bg-secondary/50"
+                    className="px-6 py-4 h-auto rounded-xl font-bold text-muted-foreground hover:bg-secondary/50"
                   >
                     Back
                   </Button>
                   <Button
                     onClick={handleTeacherSubmit}
                     disabled={saving || selectedSubjects.length === 0 || selectedGrades.length === 0}
-                    className="flex-1 bg-primary text-primary-foreground shadow-xl shadow-primary/20 py-6 rounded-2xl font-bold text-base h-auto hover:translate-y-[-2px] transition-all disabled:opacity-50 disabled:translate-y-0"
+                    className="flex-1 bg-primary text-primary-foreground shadow-xl shadow-primary/20 py-4 rounded-2xl font-bold text-base h-auto hover:translate-y-[-2px] transition-all disabled:opacity-50 disabled:translate-y-0"
                   >
                     {saving ? (
                       <>
                         <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-3" />
                         Initializing Profile...
                       </>
-                    ) : 'Complete Professional Setup'}
+                    ) : 'Finish Setup'}
                   </Button>
                 </div>
               </div>

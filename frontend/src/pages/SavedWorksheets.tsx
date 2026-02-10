@@ -240,12 +240,12 @@ export default function SavedWorksheets() {
       {!selectedWorksheet && (
         <PageHeader className="mb-12">
           <PageHeader.Title className="text-pretty">
-            {isTeacher ? 'Classroom Repository' : 'Practice History'}
+            {isTeacher ? 'Classroom Worksheets' : 'Past Worksheets'}
           </PageHeader.Title>
           <PageHeader.Subtitle className="text-pretty max-w-2xl">
             {isTeacher
-              ? 'Access and manage all worksheets generated for your classes. Reuse or regenerate materials to suit your curriculum.'
-              : 'Review your child’s past practice sessions. Track progress and revisit core concepts with ease.'
+              ? 'Manage all worksheets generated for your classes. Reuse or update materials for your curriculum.'
+              : 'Review past practice sessions and track progress with ease.'
             }
           </PageHeader.Subtitle>
         </PageHeader>
@@ -430,8 +430,8 @@ export default function SavedWorksheets() {
                   </svg>
                 </div>
                 <div>
-                  <h4 className="font-bold text-foreground mb-1 font-jakarta">Instructions for Student</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">Please read each question carefully and provide the best possible answer. For multiple-choice questions, select the option that most accurately completes the statement.</p>
+                  <h4 className="font-bold text-foreground mb-1 font-jakarta">Instructions</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">Please read each question carefully and provide the best possible answer.</p>
                 </div>
               </div>
 
@@ -561,7 +561,7 @@ export default function SavedWorksheets() {
                               <Button
                                 size="sm"
                                 onClick={() => viewWorksheet(worksheet.id)}
-                                className="w-full bg-background border-border shadow-sm text-foreground hover:bg-secondary/40 rounded-xl py-5 font-bold transition-all"
+                                className="w-full bg-background border-border shadow-sm text-foreground hover:bg-secondary/40 rounded-xl py-4 font-bold transition-all"
                                 variant="outline"
                               >
                                 View

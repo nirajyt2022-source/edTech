@@ -11,6 +11,7 @@ export interface WorksheetTemplate {
   tags: string[]
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const TEMPLATES: WorksheetTemplate[] = [
   {
     id: 'weekly-practice',
@@ -77,16 +78,20 @@ export default function TemplateSelector({ selectedTemplate, onSelect }: Templat
   return (
     <div>
       <label className="text-sm font-medium text-foreground mb-2 block">Worksheet Type</label>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div role="radiogroup" aria-label="Worksheet type" className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {TEMPLATES.map((template) => (
           <Card
             key={template.id}
+            tabIndex={0}
+            role="radio"
+            aria-checked={selectedTemplate === template.id}
             className={`cursor-pointer transition-all border-2 ${
               selectedTemplate === template.id
                 ? 'border-primary bg-primary/5 shadow-sm'
                 : 'border-border/50 hover:border-primary/30 hover:bg-card'
             }`}
             onClick={() => onSelect(template)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(template); } }}
           >
             <CardContent className="py-4 px-3 text-center">
               <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
@@ -111,12 +116,16 @@ export default function TemplateSelector({ selectedTemplate, onSelect }: Templat
 
         {/* Custom option */}
         <Card
+          tabIndex={0}
+          role="radio"
+          aria-checked={selectedTemplate === 'custom'}
           className={`cursor-pointer transition-all border-2 ${
             selectedTemplate === 'custom'
               ? 'border-primary bg-primary/5 shadow-sm'
               : 'border-border/50 hover:border-primary/30 hover:bg-card'
           }`}
           onClick={() => onSelect(null)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(null); } }}
         >
           <CardContent className="py-4 px-3 text-center">
             <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${

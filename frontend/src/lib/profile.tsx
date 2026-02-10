@@ -117,6 +117,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useProfile() {
   const context = useContext(ProfileContext)
   if (context === undefined) {

@@ -115,6 +115,7 @@ export function ClassesProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useClasses() {
   const context = useContext(ClassesContext)
   if (context === undefined) {

@@ -127,13 +127,13 @@ export default function ChildProfiles() {
         <PageHeader className="mb-12">
           <PageHeader.Title className="text-pretty">Child Profiles</PageHeader.Title>
           <PageHeader.Subtitle className="text-pretty max-w-2xl">
-            Manage your children's profiles to generate personalized practice material tailored to their specific grade level and learning needs.
+            Create profiles for each child to get personalized practice material tailored to their grade level.
           </PageHeader.Subtitle>
         </PageHeader>
       )}
 
       {error && (
-        <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+        <div role="alert" className="mb-6 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
           <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
@@ -148,8 +148,8 @@ export default function ChildProfiles() {
             <Section.Title>{editingChild ? 'Update Profile' : 'New Child Profile'}</Section.Title>
             <p className="text-sm text-muted-foreground mt-1.5">
               {editingChild
-                ? `Revise details for ${editingChild.name} to keep their learning path up to date.`
-                : 'Enter your child\'s details to begin creating tailored educational content.'}
+                ? `Update details for ${editingChild.name}'s profile.`
+                : 'Add your child\'s details to get started with tailored materials.'}
             </p>
           </Section.Header>
           <Section.Content className="pt-6">
@@ -195,19 +195,20 @@ export default function ChildProfiles() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="notes" className="text-sm font-bold text-foreground/80">Learning Context</Label>
+                  <Label htmlFor="notes" className="text-sm font-bold text-foreground/80">Additional Notes</Label>
+                  <span className="text-xs text-muted-foreground ml-1">(Optional)</span>
                   <Textarea
                     id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="E.g., Strengths, areas needing focus, or specific interest areas..."
+                    placeholder="E.g., Any specific topics they need help with or interest areas..."
                     className="min-h-[120px] bg-background border-border/60 focus:ring-primary/20 rounded-xl resize-none p-4"
                   />
                 </div>
               </div>
 
               {formError && (
-                <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm flex items-center gap-3 animate-in shake-1">
+                <div role="alert" className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-xl text-sm flex items-center gap-3 animate-in shake-1">
                   <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
@@ -216,7 +217,7 @@ export default function ChildProfiles() {
               )}
 
               <div className="flex gap-3 pt-4 border-t border-border/40">
-                <Button type="submit" disabled={saving} className="bg-primary text-primary-foreground shadow-lg px-8 py-6 rounded-xl font-bold h-auto hover:shadow-primary/20 transition-all">
+                <Button type="submit" disabled={saving} className="bg-primary text-primary-foreground shadow-lg px-8 py-4 rounded-xl font-bold h-auto hover:shadow-primary/20 transition-all">
                   {saving ? (
                     <>
                       <span className="spinner !w-4 !h-4 !border-primary-foreground/30 !border-t-primary-foreground mr-2" />
@@ -231,7 +232,7 @@ export default function ChildProfiles() {
                     </>
                   )}
                 </Button>
-                <Button type="button" variant="ghost" onClick={resetForm} className="px-8 py-6 rounded-xl font-bold h-auto text-muted-foreground hover:bg-secondary/50">
+                <Button type="button" variant="ghost" onClick={resetForm} className="px-8 py-4 rounded-xl font-bold h-auto text-muted-foreground hover:bg-secondary/50">
                   Cancel
                 </Button>
               </div>
@@ -276,8 +277,8 @@ export default function ChildProfiles() {
               title="Welcome aboard!"
               description="Start by adding your child's profile to unlock personalized worksheets tailored to their academic level."
               action={
-                <Button size="lg" onClick={openAddForm} className="bg-primary text-primary-foreground shadow-lg rounded-xl px-8 py-6 h-auto font-bold">
-                  Create First Profile
+                <Button size="lg" onClick={openAddForm} className="bg-primary text-primary-foreground shadow-lg rounded-xl px-8 py-4 h-auto font-bold">
+                  Add First Profile
                 </Button>
               }
             />
@@ -312,7 +313,7 @@ export default function ChildProfiles() {
                       </div>
 
                       <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity print:hidden">
-                        <Button size="sm" variant="ghost" onClick={() => openEditForm(child)} className="w-9 h-9 p-0 rounded-xl hover:bg-primary/5 hover:text-primary transition-colors">
+                        <Button size="sm" variant="ghost" aria-label={`Edit ${child.name}'s profile`} onClick={() => openEditForm(child)} className="w-9 h-9 p-0 rounded-xl hover:bg-primary/5 hover:text-primary transition-colors">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                           </svg>
@@ -320,6 +321,7 @@ export default function ChildProfiles() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          aria-label={`Delete ${child.name}'s profile`}
                           onClick={() => handleDelete(child)}
                           className="w-9 h-9 p-0 rounded-xl hover:bg-destructive/5 hover:text-destructive transition-colors"
                         >

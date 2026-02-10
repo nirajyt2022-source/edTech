@@ -565,3 +565,65 @@ Generate exactly {len(original['questions'])} NEW questions (different from befo
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to regenerate worksheet: {str(e)}")
+
+
+@router.get("/analytics")
+async def get_teacher_analytics(authorization: str = Header(None)):
+    """Get light analytics for a teacher: total worksheets, topic reuse, active weeks."""
+    user_id = get_user_id_from_token(authorization)
+
+    try:
+        result = supabase.table("worksheets") \
+            .select("topic, subject, created_at") \
+            .eq("user_id", user_id) \
+            .execute()
+
+        rows = result.data or []
+        total_worksheets = len(rows)
+
+        if total_worksheets == 0:
+            return {
+                "total_worksheets": 0,
+                "topic_reuse_rate": 0,
+                "active_weeks": 0,
+                "subjects_covered": 0,
+                "top_topics": [],
+            }
+
+        # Topic frequency
+        topic_counts: dict[str, int] = {}
+        for row in rows:
+            t = row.get("topic", "Unknown")
+            topic_counts[t] = topic_counts.get(t, 0) + 1
+
+        # Topic reuse rate = worksheets on repeated topics / total
+        repeated = sum(c for c in topic_counts.values() if c > 1)
+        topic_reuse_rate = round(repeated / total_worksheets, 2) if total_worksheets else 0
+
+        # Top 5 most-used topics
+        top_topics = sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        top_topics_list = [{"topic": t, "count": c} for t, c in top_topics]
+
+        # Active weeks (distinct ISO weeks)
+        weeks = set()
+        for row in rows:
+            created = row.get("created_at", "")
+            try:
+                dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+                weeks.add(dt.isocalendar()[:2])  # (year, week)
+            except (ValueError, AttributeError):
+                pass
+
+        # Distinct subjects
+        subjects = set(row.get("subject", "") for row in rows)
+
+        return {
+            "total_worksheets": total_worksheets,
+            "topic_reuse_rate": topic_reuse_rate,
+            "active_weeks": len(weeks),
+            "subjects_covered": len(subjects),
+            "top_topics": top_topics_list,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get analytics: {str(e)}")

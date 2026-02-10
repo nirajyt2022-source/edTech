@@ -100,6 +100,7 @@ export function EngagementProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useEngagement() {
   const context = useContext(EngagementContext)
   if (context === undefined) {

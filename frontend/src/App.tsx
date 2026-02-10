@@ -85,7 +85,6 @@ function AppContent() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPage('dashboard')
     } else if (activeRole === 'parent' && !isParentPage && currentPage !== 'saved') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPage('generator')
     }
   }, [activeRole, currentPage])
@@ -101,8 +100,8 @@ function AppContent() {
           </div>
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold font-fraunces text-foreground">Assembling Workspace</h2>
-          <p className="text-sm text-muted-foreground font-medium animate-pulse tracking-wide">Syncing your pedagogical data...</p>
+          <h2 className="text-xl font-bold font-fraunces text-foreground">Loading...</h2>
+          <p className="text-sm text-muted-foreground font-medium tracking-wide">Preparing your workspace...</p>
         </div>
       </div>
     )
@@ -118,28 +117,28 @@ function AppContent() {
 
   const teacherTabs: { id: Page; label: string; icon: React.ReactNode }[] = [
     {
-      id: 'dashboard', label: 'Monitor', icon: (
+      id: 'dashboard', label: 'Dashboard', icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
         </svg>
       )
     },
     {
-      id: 'classes', label: 'Roster', icon: (
+      id: 'classes', label: 'Classes', icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
       )
     },
     {
-      id: 'generator', label: 'Draft', icon: (
+      id: 'generator', label: 'Create', icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
         </svg>
       )
     },
     {
-      id: 'saved', label: 'Library', icon: (
+      id: 'saved', label: 'Saved', icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
         </svg>
@@ -149,21 +148,21 @@ function AppContent() {
 
   const parentTabs: { id: Page; label: string; icon: React.ReactNode }[] = [
     {
-      id: 'generator', label: 'Draft', icon: (
+      id: 'generator', label: 'Create', icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
         </svg>
       )
     },
     {
-      id: 'syllabus', label: 'Curriculum', icon: (
+      id: 'syllabus', label: 'Syllabus', icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
         </svg>
       )
     },
     {
-      id: 'saved', label: 'Library', icon: (
+      id: 'saved', label: 'Saved', icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
         </svg>
@@ -188,7 +187,7 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex items-center gap-3.5 group cursor-pointer" onClick={() => setCurrentPage(isTeacher ? 'dashboard' : 'generator')}>
+            <button className="flex items-center gap-3.5 group cursor-pointer bg-transparent border-none" onClick={() => setCurrentPage(isTeacher ? 'dashboard' : 'generator')} aria-label="Go to home page">
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/10 group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
                 <svg className="w-5.5 h-5.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -198,13 +197,15 @@ function AppContent() {
                 <span className="text-primary mr-px">Practice</span>
                 <span className="text-accent-foreground/80">Craft</span>
               </h1>
-            </div>
+            </button>
 
             {/* Navigation Tabs */}
-            <div className="hidden md:flex items-center gap-1.5 p-1 bg-secondary/30 border border-border/40 rounded-2xl">
+            <div role="tablist" aria-label="Main navigation" className="hidden md:flex items-center gap-1.5 p-1 bg-secondary/30 border border-border/40 rounded-2xl">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
+                  role="tab"
+                  aria-selected={currentPage === tab.id}
                   onClick={() => setCurrentPage(tab.id)}
                   className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${currentPage === tab.id
                     ? 'bg-background text-primary shadow-sm border border-border/40 scale-[1.02]'
@@ -279,7 +280,7 @@ function AppContent() {
                       <svg className="w-4 h-4 mr-3 opacity-50 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                       </svg>
-                      <span className="text-xs font-bold">Terminate Session</span>
+                      <span className="text-xs font-bold">Sign Out</span>
                     </DropdownMenuItem>
                   </div>
                 </DropdownMenuContent>
@@ -289,10 +290,12 @@ function AppContent() {
         </div>
 
         {/* Mobile Navigation (Subtle Bottom Bar) */}
-        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] bg-background/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl z-50 p-1.5 flex items-center justify-between">
+        <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] bg-background/80 backdrop-blur-2xl border border-border/60 rounded-3xl shadow-2xl z-50 p-1.5 flex items-center justify-between">
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={currentPage === tab.id}
               onClick={() => setCurrentPage(tab.id)}
               className={`flex flex-col items-center gap-1 flex-1 py-3 rounded-2xl transition-all ${currentPage === tab.id
                 ? 'bg-primary/10 text-primary'
@@ -303,7 +306,7 @@ function AppContent() {
               <span className="text-[10px] font-black uppercase tracking-tighter scale-90">{tab.label}</span>
             </button>
           ))}
-        </div>
+        </nav>
       </nav>
 
       {/* Page Content */}

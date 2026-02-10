@@ -70,12 +70,12 @@ export default function Auth() {
         <Card className="border-border shadow-sm">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl">
-              {mode === 'login' ? 'Welcome back' : 'Create account'}
+              {mode === 'login' ? 'Sign In' : 'Get Started'}
             </CardTitle>
             <CardDescription>
               {mode === 'login'
-                ? 'Sign in to access your worksheets'
-                : 'Sign up to start creating worksheets'}
+                ? 'Sign in to access your practice materials'
+                : 'Create an account to start generating worksheets'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -119,7 +119,7 @@ export default function Auth() {
               </div>
 
               {error && (
-                <div className="p-3.5 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-start gap-2.5 animate-fade-in">
+                <div role="alert" className="p-3.5 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-start gap-2.5 animate-fade-in">
                   <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
@@ -128,7 +128,7 @@ export default function Auth() {
               )}
 
               {message && (
-                <div className="p-3.5 bg-success/10 border border-success/20 text-success rounded-lg text-sm flex items-start gap-2.5 animate-fade-in">
+                <div role="status" className="p-3.5 bg-success/10 border border-success/20 text-success rounded-lg text-sm flex items-start gap-2.5 animate-fade-in">
                   <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -141,6 +141,7 @@ export default function Auth() {
                 className="w-full"
                 size="lg"
                 disabled={loading}
+                aria-busy={loading}
               >
                 {loading ? (
                   <span className="flex items-center gap-2">

@@ -110,6 +110,7 @@ export function ChildrenProvider({ children: childrenProp }: { children: ReactNo
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useChildren() {
   const context = useContext(ChildrenContext)
   if (context === undefined) {

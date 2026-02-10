@@ -7,7 +7,6 @@ import { Section } from '@/components/ui/section'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/lib/auth'
 import { useClasses } from '@/lib/classes'
-import { useProfile } from '@/lib/profile'
 import { api } from '@/lib/api'
 
 interface SavedWorksheet {
@@ -19,6 +18,14 @@ interface SavedWorksheet {
   created_at: string
 }
 
+interface TeacherAnalytics {
+  total_worksheets: number
+  topic_reuse_rate: number
+  active_weeks: number
+  subjects_covered: number
+  top_topics: { topic: string; count: number }[]
+}
+
 interface TeacherDashboardProps {
   onNavigate: (page: string) => void
 }
@@ -26,9 +33,10 @@ interface TeacherDashboardProps {
 export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) {
   const { user } = useAuth()
   const { classes, loading: classesLoading } = useClasses()
-  const { profile } = useProfile()
   const [recentWorksheets, setRecentWorksheets] = useState<SavedWorksheet[]>([])
   const [worksheetsLoading, setWorksheetsLoading] = useState(true)
+  const [analytics, setAnalytics] = useState<TeacherAnalytics | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
 
   const displayName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Teacher'
 
@@ -43,7 +51,20 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         setWorksheetsLoading(false)
       }
     }
+
+    const fetchAnalytics = async () => {
+      try {
+        const response = await api.get('/api/worksheets/analytics')
+        setAnalytics(response.data)
+      } catch (err) {
+        console.error('Failed to fetch analytics:', err)
+      } finally {
+        setAnalyticsLoading(false)
+      }
+    }
+
     fetchRecent()
+    fetchAnalytics()
   }, [])
 
   const formatDate = (dateStr: string) => {
@@ -57,9 +78,6 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
     if (hours < 17) return 'Good Afternoon'
     return 'Good Evening'
   }
-
-  // Unique subjects across all classes
-  const uniqueSubjects = [...new Set(classes.map(c => c.subject))]
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12 pb-24 space-y-12">
@@ -79,10 +97,10 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
       {/* Quick Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
         {[
-          { label: 'Classes', value: classes.length, icon: 'M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5', color: 'primary' },
-          { label: 'Subjects', value: uniqueSubjects.length, icon: 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25', color: 'accent' },
-          { label: 'Worksheets', value: recentWorksheets.length, icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z', color: 'emerald' },
-          { label: 'Institution', value: profile?.school_name || 'Personal', icon: 'M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z', color: 'rose' }
+          { label: 'Worksheets', value: analytics?.total_worksheets ?? 0, icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z', color: 'primary' },
+          { label: 'Active Weeks', value: analytics?.active_weeks ?? 0, icon: 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5', color: 'accent' },
+          { label: 'Reuse Rate', value: `${Math.round((analytics?.topic_reuse_rate ?? 0) * 100)}%`, icon: 'M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99', color: 'emerald' },
+          { label: 'Classes', value: classes.length, icon: 'M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5', color: 'rose' }
         ].map((stat, i) => (
           <Card key={i} className="border-border/50 bg-card/40 hover:bg-card/60 transition-colors rounded-2xl overflow-hidden shadow-sm">
             <CardContent className="p-6 text-center">
@@ -91,10 +109,10 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                   <path strokeLinecap="round" strokeLinejoin="round" d={stat.icon} />
                 </svg>
               </div>
-              {classesLoading || worksheetsLoading ? (
+              {classesLoading || analyticsLoading ? (
                 <Skeleton className="h-8 w-12 mx-auto mb-1" />
               ) : (
-                <p className={`text-2xl font-black font-jakarta text-foreground leading-tight ${stat.color === 'rose' ? 'text-sm truncate' : ''}`}>{stat.value}</p>
+                <p className="text-2xl font-black font-jakarta text-foreground leading-tight">{stat.value}</p>
               )}
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{stat.label}</p>
             </CardContent>
@@ -105,8 +123,12 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
       {/* Action Cards Row */}
       <div className="grid md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <Card
+          tabIndex={0}
+          role="button"
+          aria-label="Draft Worksheets"
           className="group card-hover border-primary/20 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent cursor-pointer rounded-3xl p-1"
           onClick={() => onNavigate('generator')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate('generator'); } }}
         >
           <CardContent className="p-7">
             <div className="flex items-start gap-6">
@@ -131,8 +153,12 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         </Card>
 
         <Card
+          tabIndex={0}
+          role="button"
+          aria-label="Roster Management"
           className="group card-hover border-accent/20 bg-gradient-to-br from-accent/5 via-accent/[0.02] to-transparent cursor-pointer rounded-3xl p-1"
           onClick={() => onNavigate('classes')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate('classes'); } }}
         >
           <CardContent className="p-7">
             <div className="flex items-start gap-6">
