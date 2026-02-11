@@ -259,6 +259,22 @@ This document is the single canonical record of every completed UX, UI, and stat
 
 ---
 
+### Phase 19: Visual Token Variety
+
+**Problem:** All pictorial/counting visuals in `object_group` rendered as identical circle tokens regardless of the object being counted. "5 mangoes + 3 birds" looked the same as "5 coins + 3 stars," reducing clarity and perceived quality.
+
+**Key decisions:**
+- Added `TokenIcon` component with 5 outline SVG variants: `fruit` (apple silhouette with stem), `bird` (side-profile with eye, beak, legs), `star` (5-point polygon), `coin` (double-circle with $ symbol), `generic` (plain circle fallback).
+- Added `TOKEN_KEYWORDS` map matching common primary-school nouns to icon types: fruit (mango, apple, orange, banana), bird (bird, parrot, sparrow, crow, pigeon), star (star, sticker), coin (coin, rupee, money, paise).
+- `resolveTokenType(label)` scans the group label against keywords; returns first match or `'generic'`.
+- `ObjectGroupVisual` calls `resolveTokenType` per group and renders `<TokenIcon>` instead of hardcoded circles.
+- All icons are monochrome outline style, same `w-4 h-4` sizing, `currentColor` for print compatibility.
+- No external assets — all icons are inline SVG paths.
+
+**Non-goals:** No filled/colored icon variants. No user-selectable icon overrides. No icon animation.
+
+---
+
 ## Canonical UX Rules (Must Not Be Broken)
 
 1. **Role never changes implicitly.** Only `switchRole()` or explicit user action in the dropdown may change `active_role`.
@@ -284,7 +300,7 @@ This document is the single canonical record of every completed UX, UI, and stat
 
 ## Design Freeze Declaration
 
-The UI/UX of PracticeCraft AI is frozen as of the completion of Phase 18. All phases documented above represent final, shipped decisions.
+The UI/UX of PracticeCraft AI is frozen as of the completion of Phase 19. All phases documented above represent final, shipped decisions.
 
 Any change to layout, copy, interaction patterns, state management rules, or visual design beyond this point requires an explicit product decision with a written rationale. Bug fixes to existing behavior are permitted; new behavior is not.
 
