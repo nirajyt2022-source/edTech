@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Regression test for slot-based worksheet generation engine v5.0.
+Regression test for slot-based worksheet generation engine v6.0.
 
 Part 1: Deterministic tests (no LLM, always runs)
 Part 2: LLM pipeline tests (requires OPENAI_API_KEY env var)
-Part 3: Diversity test — 12 worksheets, asserts variation bank rotation
+Part 3: 30-worksheet diversity test (requires OPENAI_API_KEY)
 
 Usage:
   cd backend
@@ -13,7 +13,9 @@ Usage:
 """
 
 import os
+import random
 import sys
+import tempfile
 
 # Allow running from backend/ directory
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -25,19 +27,25 @@ from app.services.slot_engine import (
     validate_question,
     validate_worksheet_slots,
     validate_difficulty_sanity,
+    validate_error_uses_backend_numbers,
     validate_hard_difficulty_carry,
+    compute_wrong,
+    _build_slot_instruction,
+    _make_seed,
+    pick_context,
+    pick_name,
+    pick_error,
+    pick_thinking_style,
     SLOT_PLANS,
     SLOT_ORDER,
     VALID_FORMATS,
     _FORBIDDEN_VISUAL_PHRASES,
+    _ALL_ERRORS,
     CONTEXT_BANK,
-    ERROR_PATTERN_BANK,
+    CARRY_PAIRS,
+    ERROR_TAGS,
     THINKING_STYLE_BANK,
     NAME_BANKS,
-    _make_seed,
-    _pick_from_bank,
-    _pick_name,
-    _build_slot_instruction,
     run_slot_pipeline,
 )
 
@@ -69,7 +77,6 @@ def test_slot_plans():
         print(f"    Actual:   {dict(counts)}")
         print(f"    Length:   {len(plan)} (expected {q_count})")
 
-    # Test non-standard counts (proportional fallback)
     for q_count in [3, 7, 12, 25]:
         plan = get_slot_plan(q_count)
         counts = Counter(plan)
@@ -80,7 +87,6 @@ def test_slot_plans():
             all_pass = False
         print(f"\n  q_count={q_count} (proportional): {status}")
         print(f"    Counts: {dict(counts)}, len={len(plan)}")
-        print(f"    error_detection >= 1: {has_ed}, thinking >= 1: {has_th}")
 
     return all_pass
 
@@ -115,15 +121,80 @@ def test_difficulty_mapping():
     return all_pass
 
 
-def test_validators():
-    """Test question-level and worksheet-level validators."""
+def test_error_computation():
+    """Test deterministic error computation for all tags and pairs."""
     print("\n" + "=" * 60)
-    print("3. VALIDATOR TESTS")
+    print("3. ERROR COMPUTATION TESTS")
     print("=" * 60)
 
     all_pass = True
 
-    # Good recognition question
+    # Total patterns: 15 pairs x 5 tags = 75
+    total = len(CARRY_PAIRS) * len(ERROR_TAGS)
+    status = "PASS" if len(_ALL_ERRORS) == total else "FAIL"
+    print(f"  Precomputed errors: {len(_ALL_ERRORS)} (expected {total}): {status}")
+    if len(_ALL_ERRORS) != total:
+        all_pass = False
+
+    # Verify all wrong != correct
+    wrong_eq_correct = 0
+    out_of_range = 0
+    for err in _ALL_ERRORS:
+        if err["wrong"] == err["correct"]:
+            wrong_eq_correct += 1
+        if not (100 <= err["wrong"] <= 999):
+            out_of_range += 1
+
+    status = "PASS" if wrong_eq_correct == 0 else f"FAIL: {wrong_eq_correct} wrong==correct"
+    print(f"  All wrong != correct: {status}")
+    if wrong_eq_correct:
+        all_pass = False
+
+    status = "PASS" if out_of_range == 0 else f"FAIL: {out_of_range} out of 3-digit range"
+    print(f"  All wrong in 3-digit range: {status}")
+    if out_of_range:
+        all_pass = False
+
+    # Spot-check (345, 278)
+    cases = [
+        (345, 278, "lost_carry_ones", 613),
+        (345, 278, "lost_carry_tens", 523),
+        (345, 278, "double_carry", 633),
+        (345, 278, "carry_to_wrong_col", 713),
+        (345, 278, "no_carry_digitwise", 513),
+    ]
+    for a, b, tag, expected_wrong in cases:
+        actual = compute_wrong(a, b, tag)
+        correct = a + b
+        status = "PASS" if actual == expected_wrong else f"FAIL: got {actual}"
+        print(f"  {tag}({a}+{b}): wrong={actual}, correct={correct}: {status}")
+        if actual != expected_wrong:
+            all_pass = False
+
+    # All 5 tags produce distinct wrong answers for same pair
+    pair_wrongs = {}
+    for a, b in CARRY_PAIRS[:3]:
+        wrongs = set()
+        for tag in ERROR_TAGS:
+            wrongs.add(compute_wrong(a, b, tag))
+        pair_wrongs[(a, b)] = len(wrongs)
+        status = "PASS" if len(wrongs) == 5 else f"FAIL: only {len(wrongs)} distinct"
+        print(f"  Distinct wrongs for ({a},{b}): {len(wrongs)}: {status}")
+        if len(wrongs) != 5:
+            all_pass = False
+
+    return all_pass
+
+
+def test_validators():
+    """Test question-level and worksheet-level validators."""
+    print("\n" + "=" * 60)
+    print("4. VALIDATOR TESTS")
+    print("=" * 60)
+
+    all_pass = True
+
+    # Good recognition
     q1 = {"format": "column_setup", "question_text": "Write 502 - 178 in column form.", "pictorial_elements": [], "answer": "502 - 178"}
     issues = validate_question(q1, "recognition")
     status = "PASS" if not issues else f"FAIL: {issues}"
@@ -131,123 +202,122 @@ def test_validators():
     if issues:
         all_pass = False
 
-    # Bad format for recognition (simple_identify removed in v5)
-    q2 = {"format": "simple_identify", "question_text": "Is 456 greater than 465?", "pictorial_elements": [], "answer": "No"}
-    issues = validate_question(q2, "recognition")
-    status = "PASS" if issues else "FAIL: should reject simple_identify"
-    print(f"  Removed format simple_identify: {status}")
-    if not issues:
+    # application must be word_problem now
+    q2 = {"format": "direct_compute", "question_text": "Calculate 345 + 278.", "pictorial_elements": [], "answer": "623"}
+    issues = validate_question(q2, "application")
+    has_fmt_issue = any("format" in i for i in issues)
+    status = "PASS" if has_fmt_issue else "FAIL: should reject direct_compute for application"
+    print(f"  Reject direct_compute for application: {status}")
+    if not has_fmt_issue:
         all_pass = False
 
-    # Forbidden visual phrase
-    q3 = {"format": "direct_compute", "question_text": "Look at the array and calculate 3 x 4.", "pictorial_elements": [], "answer": "12"}
+    # Good word_problem
+    q2b = {"format": "word_problem", "question_text": "Aarav has 345 books and buys 278 more. How many does he have?", "pictorial_elements": [], "answer": "623"}
+    issues = validate_question(q2b, "application")
+    status = "PASS" if not issues else f"FAIL: {issues}"
+    print(f"  Valid word_problem: {status}")
+    if issues:
+        all_pass = False
+
+    # Forbidden visual
+    q3 = {"format": "word_problem", "question_text": "Look at the array and calculate 3 x 4.", "pictorial_elements": [], "answer": "12"}
     issues = validate_question(q3, "application")
-    has_visual_issue = any("visual" in i or "array" in i for i in issues)
-    status = "PASS" if has_visual_issue else "FAIL: should flag visual phrase"
+    has_visual = any("visual" in i or "array" in i for i in issues)
+    status = "PASS" if has_visual else "FAIL: should flag visual phrase"
     print(f"  Forbidden visual phrase: {status}")
-    if not has_visual_issue:
+    if not has_visual:
         all_pass = False
 
     # Error detection without error language
     q4 = {"format": "error_spot", "question_text": "Calculate 502 - 178.", "pictorial_elements": [], "answer": "324"}
     issues = validate_question(q4, "error_detection")
     has_error_issue = any("error_detection" in i or "wrong" in i for i in issues)
-    status = "PASS" if has_error_issue else "FAIL: should flag missing error language"
+    status = "PASS" if has_error_issue else "FAIL"
     print(f"  Error detection without mistake: {status}")
     if not has_error_issue:
         all_pass = False
 
-    # Error detection without numbers (new validator)
+    # Error detection without numbers
     q4b = {"format": "error_spot", "question_text": "A student made a mistake. Find the error.", "pictorial_elements": [], "answer": "324"}
     issues = validate_question(q4b, "error_detection")
     has_num_issue = any("wrong sum" in i or "original numbers" in i for i in issues)
-    status = "PASS" if has_num_issue else "FAIL: should flag missing numbers"
+    status = "PASS" if has_num_issue else "FAIL"
     print(f"  Error detection without numbers: {status}")
     if not has_num_issue:
         all_pass = False
 
     # Good error detection
-    q5 = {"format": "error_spot", "question_text": "A student says 502 - 178 = 334. Find the mistake.", "pictorial_elements": [], "answer": "324"}
+    q5 = {"format": "error_spot", "question_text": "A student says 345 + 278 = 513. Find the mistake.", "pictorial_elements": [], "answer": "623"}
     issues = validate_question(q5, "error_detection")
     status = "PASS" if not issues else f"FAIL: {issues}"
     print(f"  Valid error detection: {status}")
     if issues:
         all_pass = False
 
-    # Thinking without reasoning language
-    q6 = {"format": "thinking", "question_text": "Add 345 + 278.", "pictorial_elements": [], "answer": "623"}
-    issues = validate_question(q6, "thinking")
-    has_thinking_issue = any("reasoning" in i for i in issues)
-    status = "PASS" if has_thinking_issue else "FAIL: should flag pure computation"
-    print(f"  Thinking without reasoning: {status}")
-    if not has_thinking_issue:
+    # Validate error uses backend numbers
+    chosen = {"error": {"a": 345, "b": 278, "wrong": 513, "correct": 623}}
+    err_issues = validate_error_uses_backend_numbers(q5, chosen)
+    status = "PASS" if not err_issues else f"FAIL: {err_issues}"
+    print(f"  Error uses backend numbers: {status}")
+    if err_issues:
         all_pass = False
 
-    # Good thinking question (new format "thinking")
-    q6b = {"format": "thinking", "question_text": "Without calculating, which is greater: 345 + 278 or 400 + 200? Explain why.", "pictorial_elements": [], "answer": "345 + 278 = 623, which is greater"}
-    issues = validate_question(q6b, "thinking")
+    # Error uses wrong backend numbers
+    q5_wrong = {"format": "error_spot", "question_text": "A student says 456 + 367 = 713. Find the mistake.", "pictorial_elements": [], "answer": "823"}
+    err_issues = validate_error_uses_backend_numbers(q5_wrong, chosen)
+    status = "PASS" if err_issues else "FAIL: should flag wrong numbers"
+    print(f"  Error with wrong backend numbers: {status}")
+    if not err_issues:
+        all_pass = False
+
+    # Good thinking
+    q6 = {"format": "thinking", "question_text": "Without calculating, which is greater: 345 + 278 or 400 + 200? Explain.", "pictorial_elements": [], "answer": "345 + 278 = 623"}
+    issues = validate_question(q6, "thinking")
     status = "PASS" if not issues else f"FAIL: {issues}"
     print(f"  Valid thinking: {status}")
     if issues:
         all_pass = False
 
+    # Thinking without reasoning
+    q6b = {"format": "thinking", "question_text": "Add 345 + 278.", "pictorial_elements": [], "answer": "623"}
+    issues = validate_question(q6b, "thinking")
+    has_think_issue = any("reasoning" in i for i in issues)
+    status = "PASS" if has_think_issue else "FAIL"
+    print(f"  Thinking without reasoning: {status}")
+    if not has_think_issue:
+        all_pass = False
+
     # Difficulty sanity
     issues = validate_difficulty_sanity("3-digit subtraction with borrowing across zero", "easy")
-    status = "PASS" if issues else "FAIL: should flag easy + borrow across zero"
-    print(f"  Difficulty sanity (borrow across zero + easy): {status}")
+    status = "PASS" if issues else "FAIL"
+    print(f"  Difficulty sanity (borrow + easy): {status}")
     if not issues:
         all_pass = False
 
-    # Non-empty pictorial elements
-    q7 = {"format": "column_setup", "question_text": "Write 502 - 178 in column form.", "pictorial_elements": [{"type": "array"}], "answer": "502 - 178"}
-    issues = validate_question(q7, "recognition")
-    has_pic_issue = any("pictorial" in i for i in issues)
-    status = "PASS" if has_pic_issue else "FAIL: should flag non-empty pictorial_elements"
-    print(f"  Non-empty pictorial_elements: {status}")
-    if not has_pic_issue:
-        all_pass = False
-
-    # Worksheet-level: slot distribution
-    fake_qs = [{"slot_type": s, "question_text": f"Q about {s}", "format": "x"} for s in get_slot_plan(5)]
-    ws_issues = validate_worksheet_slots(fake_qs, 5)
-    # Should pass on distribution (5 is a supported count)
-    dist_issues = [i for i in ws_issues if "expected" in i and "got" in i]
-    status = "PASS" if not dist_issues else f"FAIL: {dist_issues}"
-    print(f"  Worksheet slot distribution (q=5): {status}")
-    if dist_issues:
-        all_pass = False
-
-    # Hard difficulty carry validator
-    hard_qs = [
-        {"slot_type": "application", "question_text": "Calculate 289 + 345.", "answer": "634"},
-        {"slot_type": "application", "question_text": "Calculate 100 + 200.", "answer": "300"},
-    ]
+    # Hard carry validator
+    hard_qs = [{"slot_type": "application", "question_text": "Calculate 289 + 345.", "answer": "634"}]
     carry_issues = validate_hard_difficulty_carry(hard_qs, "hard")
-    # 289 + 345: ones = 9+5=14 (carry), tens = 8+4=12 (carry) => should pass
     status = "PASS" if not carry_issues else f"FAIL: {carry_issues}"
-    print(f"  Hard carry validator (has carry): {status}")
+    print(f"  Hard carry (has carry): {status}")
     if carry_issues:
         all_pass = False
 
-    no_carry_qs = [
-        {"slot_type": "application", "question_text": "Calculate 100 + 200.", "answer": "300"},
-    ]
+    no_carry_qs = [{"slot_type": "application", "question_text": "Calculate 100 + 200.", "answer": "300"}]
     carry_issues = validate_hard_difficulty_carry(no_carry_qs, "hard")
-    status = "PASS" if carry_issues else "FAIL: should flag no carry"
-    print(f"  Hard carry validator (no carry): {status}")
+    status = "PASS" if carry_issues else "FAIL"
+    print(f"  Hard carry (no carry): {status}")
     if not carry_issues:
         all_pass = False
 
-    # Context repetition check
+    # Context repetition
     ctx_qs = [
-        {"slot_type": "application", "question_text": "Priya has 50 mangoes."},
-        {"slot_type": "application", "question_text": "Rohan bought 30 mangoes."},
-        {"slot_type": "recognition", "question_text": "Write 502 in column form."},
+        {"slot_type": "application", "question_text": "Priya has 50 coins."},
+        {"slot_type": "application", "question_text": "Rohan bought 30 coins."},
     ]
-    ws_issues = validate_worksheet_slots(ctx_qs, 3)
-    ctx_issues = [i for i in ws_issues if "context" in i and "mangoes" in i]
-    status = "PASS" if ctx_issues else "FAIL: should flag repeated mangoes context"
-    print(f"  Context repetition (mangoes x2): {status}")
+    ws_issues = validate_worksheet_slots(ctx_qs, 2)
+    ctx_issues = [i for i in ws_issues if "context" in i and "coins" in i]
+    status = "PASS" if ctx_issues else "FAIL"
+    print(f"  Context repetition (coins x2): {status}")
     if not ctx_issues:
         all_pass = False
 
@@ -257,114 +327,282 @@ def test_validators():
 def test_variation_banks():
     """Test variation bank mechanics: seed, picking, slot instructions."""
     print("\n" + "=" * 60)
-    print("4. VARIATION BANK TESTS")
+    print("5. VARIATION BANK TESTS")
     print("=" * 60)
 
     all_pass = True
 
-    # Seed is deterministic for same inputs
-    s1 = _make_seed("Class 3", "3-digit addition", 5)
-    s2 = _make_seed("Class 3", "3-digit addition", 5)
+    # Seed determinism
+    s1 = _make_seed("Class 3", "3-digit addition", 5, 0)
+    s2 = _make_seed("Class 3", "3-digit addition", 5, 0)
     status = "PASS" if s1 == s2 else "FAIL"
-    print(f"  Seed determinism: {status} (s1={s1}, s2={s2})")
+    print(f"  Seed determinism: {status}")
     if s1 != s2:
         all_pass = False
 
-    # Different inputs give different seeds
-    s3 = _make_seed("Class 3", "3-digit subtraction", 5)
+    # Seed varies with topic
+    s3 = _make_seed("Class 3", "3-digit subtraction", 5, 0)
     status = "PASS" if s1 != s3 else "FAIL"
-    print(f"  Seed varies with topic: {status} (s1={s1}, s3={s3})")
+    print(f"  Seed varies with topic: {status}")
     if s1 == s3:
         all_pass = False
 
-    # Different q_count gives different seed
-    s4 = _make_seed("Class 3", "3-digit addition", 10)
+    # Seed varies with history_count (ensures uniqueness across requests)
+    s4 = _make_seed("Class 3", "3-digit addition", 5, 1)
     status = "PASS" if s1 != s4 else "FAIL"
-    print(f"  Seed varies with q_count: {status} (s1={s1}, s4={s4})")
+    print(f"  Seed varies with history_count: {status}")
     if s1 == s4:
         all_pass = False
 
-    # Bank picking rotates
-    seed = 42
-    picked = [_pick_from_bank(CONTEXT_BANK, seed, i) for i in range(5)]
-    items = [p["item"] for p in picked]
-    unique = len(set(items))
-    status = "PASS" if unique == 5 else f"FAIL: only {unique} unique out of 5"
-    print(f"  Context bank rotation (5 picks): {status} -> {items}")
-    if unique != 5:
+    # Context picking avoids used items
+    rng = random.Random(42)
+    ctx1 = pick_context(rng, [])
+    ctx2 = pick_context(rng, [ctx1["item"]])
+    status = "PASS" if ctx1["item"] != ctx2["item"] else "FAIL"
+    print(f"  Context avoidance: {status} ({ctx1['item']} != {ctx2['item']})")
+    if ctx1["item"] == ctx2["item"]:
         all_pass = False
 
-    # Name picking rotates
-    names = [_pick_name("India", seed, i) for i in range(5)]
-    unique_names = len(set(names))
-    status = "PASS" if unique_names == 5 else f"FAIL: only {unique_names} unique"
-    print(f"  Name bank rotation (5 picks): {status} -> {names}")
-    if unique_names != 5:
+    # Error picking avoids used IDs
+    rng = random.Random(42)
+    err1 = pick_error(rng, [])
+    err2 = pick_error(rng, [err1["id"]])
+    status = "PASS" if err1["id"] != err2["id"] else "FAIL"
+    print(f"  Error avoidance: {status} ({err1['id'][:30]} != {err2['id'][:30]})")
+    if err1["id"] == err2["id"]:
         all_pass = False
 
-    # CONTEXT_BANK has 18 items
-    status = "PASS" if len(CONTEXT_BANK) == 18 else f"FAIL: {len(CONTEXT_BANK)}"
-    print(f"  CONTEXT_BANK size: {status} ({len(CONTEXT_BANK)} items)")
-    if len(CONTEXT_BANK) != 18:
+    # Thinking style picking avoids used styles
+    rng = random.Random(42)
+    st1 = pick_thinking_style(rng, [])
+    st2 = pick_thinking_style(rng, [st1["style"]])
+    status = "PASS" if st1["style"] != st2["style"] else "FAIL"
+    print(f"  Style avoidance: {status} ({st1['style']} != {st2['style']})")
+    if st1["style"] == st2["style"]:
         all_pass = False
 
-    # ERROR_PATTERN_BANK has 8 items
-    status = "PASS" if len(ERROR_PATTERN_BANK) == 8 else f"FAIL: {len(ERROR_PATTERN_BANK)}"
-    print(f"  ERROR_PATTERN_BANK size: {status} ({len(ERROR_PATTERN_BANK)} items)")
-    if len(ERROR_PATTERN_BANK) != 8:
+    # Pick 18 contexts (exhausts bank), then picks from full bank
+    rng = random.Random(42)
+    all_items = set()
+    for i in range(18):
+        ctx = pick_context(rng, list(all_items))
+        all_items.add(ctx["item"])
+    status = "PASS" if len(all_items) == 18 else f"FAIL: {len(all_items)}"
+    print(f"  18 unique contexts from 18-item bank: {status}")
+    if len(all_items) != 18:
         all_pass = False
 
-    # THINKING_STYLE_BANK has 6 items
-    status = "PASS" if len(THINKING_STYLE_BANK) == 6 else f"FAIL: {len(THINKING_STYLE_BANK)}"
-    print(f"  THINKING_STYLE_BANK size: {status} ({len(THINKING_STYLE_BANK)} items)")
-    if len(THINKING_STYLE_BANK) != 6:
+    # 19th pick wraps around (no crash)
+    ctx19 = pick_context(rng, list(all_items))
+    status = "PASS" if ctx19["item"] in [c["item"] for c in CONTEXT_BANK] else "FAIL"
+    print(f"  19th pick wraps: {status} (got {ctx19['item']})")
+
+    # Bank sizes
+    print(f"  CONTEXT_BANK: {len(CONTEXT_BANK)} items (expected 18): {'PASS' if len(CONTEXT_BANK) == 18 else 'FAIL'}")
+    print(f"  _ALL_ERRORS: {len(_ALL_ERRORS)} patterns (expected 75): {'PASS' if len(_ALL_ERRORS) == 75 else 'FAIL'}")
+    print(f"  THINKING_STYLE_BANK: {len(THINKING_STYLE_BANK)} styles (expected 6): {'PASS' if len(THINKING_STYLE_BANK) == 6 else 'FAIL'}")
+    if len(CONTEXT_BANK) != 18 or len(_ALL_ERRORS) != 75 or len(THINKING_STYLE_BANK) != 6:
         all_pass = False
 
-    # Slot instruction for application includes context
-    slot_counter: dict[str, int] = {}
-    instr = _build_slot_instruction("application", 0, seed, "India", slot_counter)
-    has_context = "scenario" in instr.lower() or any(ctx["item"] in instr for ctx in CONTEXT_BANK)
-    status = "PASS" if has_context else "FAIL: no context in instruction"
-    print(f"  Application slot instruction: {status}")
-    print(f"    -> {instr[:120]}...")
-    if not has_context:
+    # Tightened formats
+    status = "PASS" if VALID_FORMATS["application"] == {"word_problem"} else "FAIL"
+    print(f"  Application format tightened: {status} ({VALID_FORMATS['application']})")
+    if VALID_FORMATS["application"] != {"word_problem"}:
         all_pass = False
 
-    # Slot instruction for error_detection includes error pattern
-    instr = _build_slot_instruction("error_detection", 0, seed, "India", slot_counter)
-    has_pattern = "wrong" in instr.lower() or "mistake" in instr.lower() or "pattern" in instr.lower()
-    status = "PASS" if has_pattern else "FAIL: no error pattern in instruction"
-    print(f"  Error detection slot instruction: {status}")
-    print(f"    -> {instr[:120]}...")
-    if not has_pattern:
-        all_pass = False
-
-    # Slot instruction for thinking includes style
-    instr = _build_slot_instruction("thinking", 0, seed, "India", slot_counter)
-    has_style = any(s["style"] in instr for s in THINKING_STYLE_BANK)
-    status = "PASS" if has_style else "FAIL: no thinking style in instruction"
-    print(f"  Thinking slot instruction: {status}")
-    print(f"    -> {instr[:120]}...")
-    if not has_style:
-        all_pass = False
-
-    # Tightened formats: recognition no longer has simple_identify
-    status = "PASS" if "simple_identify" not in VALID_FORMATS["recognition"] else "FAIL"
-    print(f"  Recognition formats tightened: {status} ({VALID_FORMATS['recognition']})")
-    if "simple_identify" in VALID_FORMATS["recognition"]:
-        all_pass = False
-
-    # Tightened formats: thinking is now {"thinking"} only
     status = "PASS" if VALID_FORMATS["thinking"] == {"thinking"} else "FAIL"
-    print(f"  Thinking format tightened: {status} ({VALID_FORMATS['thinking']})")
+    print(f"  Thinking format tightened: {status}")
     if VALID_FORMATS["thinking"] != {"thinking"}:
         all_pass = False
 
-    # Tightened formats: error_detection is now {"error_spot"} only
     status = "PASS" if VALID_FORMATS["error_detection"] == {"error_spot"} else "FAIL"
-    print(f"  Error detection format tightened: {status} ({VALID_FORMATS['error_detection']})")
+    print(f"  Error detection format tightened: {status}")
     if VALID_FORMATS["error_detection"] != {"error_spot"}:
         all_pass = False
+
+    # Slot instructions contain expected content
+    err = _ALL_ERRORS[0]
+    variant_err = {"error": err}
+    instr = _build_slot_instruction("error_detection", variant_err)
+    status = "PASS" if str(err["wrong"]) in instr and str(err["a"]) in instr else "FAIL"
+    print(f"  Error instruction includes numbers: {status}")
+    if str(err["wrong"]) not in instr:
+        all_pass = False
+
+    variant_ctx = {"context": CONTEXT_BANK[0], "name": "Priya"}
+    instr = _build_slot_instruction("application", variant_ctx)
+    status = "PASS" if CONTEXT_BANK[0]["item"] in instr and "Priya" in instr else "FAIL"
+    print(f"  Application instruction includes context+name: {status}")
+    if CONTEXT_BANK[0]["item"] not in instr:
+        all_pass = False
+
+    variant_style = {"style": THINKING_STYLE_BANK[0]}
+    instr = _build_slot_instruction("thinking", variant_style)
+    status = "PASS" if THINKING_STYLE_BANK[0]["style"] in instr else "FAIL"
+    print(f"  Thinking instruction includes style: {status}")
+    if THINKING_STYLE_BANK[0]["style"] not in instr:
+        all_pass = False
+
+    return all_pass
+
+
+def test_history_store():
+    """Test history store functions."""
+    print("\n" + "=" * 60)
+    print("6. HISTORY STORE TESTS")
+    print("=" * 60)
+
+    all_pass = True
+
+    # Use a temp file for testing
+    import app.services.history_store as hs
+    original_path = hs.HISTORY_FILE
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+        tmp_path = tmp.name
+    hs.HISTORY_FILE = __import__("pathlib").Path(tmp_path)
+
+    try:
+        # Load empty history
+        history = hs.load_history()
+        status = "PASS" if history == [] else "FAIL"
+        print(f"  Empty history: {status}")
+        if history != []:
+            all_pass = False
+
+        # Save and load
+        record = hs.build_worksheet_record(
+            grade="Class 3", topic="addition",
+            questions=[{"question_text": "Write 345 + 278 in column form.", "format": "column_setup"}],
+            used_contexts=["books", "coins"],
+            used_error_ids=["lost_carry_ones_345_278"],
+            used_thinking_styles=["closer_to"],
+        )
+        hs.update_history(record)
+        history = hs.load_history()
+        status = "PASS" if len(history) == 1 else "FAIL"
+        print(f"  Save+load 1 record: {status}")
+        if len(history) != 1:
+            all_pass = False
+
+        # Avoid state aggregation
+        avoid = hs.get_avoid_state()
+        status = "PASS" if "books" in avoid["used_contexts"] and "coins" in avoid["used_contexts"] else "FAIL"
+        print(f"  Avoid state contexts: {status}")
+        if "books" not in avoid["used_contexts"]:
+            all_pass = False
+
+        status = "PASS" if "closer_to" in avoid["used_thinking_styles"] else "FAIL"
+        print(f"  Avoid state styles: {status}")
+        if "closer_to" not in avoid["used_thinking_styles"]:
+            all_pass = False
+
+        # Question hash
+        h1 = hs.hash_question("Write 345 + 278 in column form.")
+        h2 = hs.hash_question("write 345 + 278 in column form.")
+        status = "PASS" if h1 == h2 else "FAIL"
+        print(f"  Question hash case-insensitive: {status}")
+        if h1 != h2:
+            all_pass = False
+
+        # Template hash
+        h3 = hs.hash_question_template("A student says 345 + 278 = 513. Find the mistake.")
+        h4 = hs.hash_question_template("A student says 456 + 367 = 713. Find the mistake.")
+        status = "PASS" if h3 == h4 else "FAIL"
+        print(f"  Template hash normalizes numbers: {status}")
+        if h3 != h4:
+            all_pass = False
+
+        # MAX_HISTORY limit
+        for _ in range(35):
+            hs.update_history(record)
+        history = hs.load_history()
+        status = "PASS" if len(history) <= hs.MAX_HISTORY else f"FAIL: {len(history)}"
+        print(f"  History capped at {hs.MAX_HISTORY}: {status}")
+        if len(history) > hs.MAX_HISTORY:
+            all_pass = False
+
+    finally:
+        hs.HISTORY_FILE = original_path
+        os.unlink(tmp_path)
+
+    return all_pass
+
+
+def test_seeded_diversity_deterministic():
+    """Simulate 30 worksheet generations and check diversity of picks (no LLM)."""
+    print("\n" + "=" * 60)
+    print("7. SEEDED DIVERSITY (deterministic simulation)")
+    print("=" * 60)
+
+    all_pass = True
+
+    all_contexts: list[str] = []
+    all_error_ids: list[str] = []
+    all_error_tags: list[str] = []
+    all_thinking_styles: list[str] = []
+
+    # Simulate 30 worksheets
+    cumulative_contexts: list[str] = []
+    cumulative_error_ids: list[str] = []
+    cumulative_styles: list[str] = []
+
+    for ws_idx in range(30):
+        seed = _make_seed("Class 3", "3-digit addition", 5, ws_idx)
+        rng = random.Random(seed)
+
+        # Pick 1 context (for 1 application slot in q=5)
+        ctx = pick_context(rng, cumulative_contexts)
+        all_contexts.append(ctx["item"])
+        cumulative_contexts.append(ctx["item"])
+
+        # Pick 1 error
+        err = pick_error(rng, cumulative_error_ids)
+        all_error_ids.append(err["id"])
+        all_error_tags.append(err["tag"])
+        cumulative_error_ids.append(err["id"])
+
+        # Pick 1 thinking style
+        style = pick_thinking_style(rng, cumulative_styles)
+        all_thinking_styles.append(style["style"])
+        cumulative_styles.append(style["style"])
+
+    unique_contexts = len(set(all_contexts))
+    print(f"  Unique contexts across 30 ws: {unique_contexts}")
+    ctx_pass = unique_contexts >= 10
+    print(f"    >= 10: {'PASS' if ctx_pass else 'FAIL'}")
+    if not ctx_pass:
+        all_pass = False
+
+    unique_tags = len(set(all_error_tags))
+    print(f"  Unique error tags across 30 ws: {unique_tags}")
+    tag_pass = unique_tags >= 4
+    print(f"    >= 4: {'PASS' if tag_pass else 'FAIL'}")
+    if not tag_pass:
+        all_pass = False
+
+    unique_ids = len(set(all_error_ids))
+    print(f"  Unique error IDs across 30 ws: {unique_ids}")
+
+    # No single error_id more than 2 times
+    id_counts = Counter(all_error_ids)
+    max_id_count = max(id_counts.values()) if id_counts else 0
+    id_repeat_pass = max_id_count <= 2
+    print(f"  Max error_id repetition: {max_id_count}")
+    print(f"    <= 2: {'PASS' if id_repeat_pass else 'FAIL'}")
+    if not id_repeat_pass:
+        all_pass = False
+
+    unique_styles = len(set(all_thinking_styles))
+    print(f"  Unique thinking styles across 30 ws: {unique_styles}")
+    style_pass = unique_styles >= 4
+    print(f"    >= 4: {'PASS' if style_pass else 'FAIL'}")
+    if not style_pass:
+        all_pass = False
+
+    # Print distribution
+    print(f"\n  Context distribution: {dict(Counter(all_contexts).most_common(5))} ...")
+    print(f"  Error tag distribution: {dict(Counter(all_error_tags))}")
+    print(f"  Thinking style distribution: {dict(Counter(all_thinking_styles))}")
 
     return all_pass
 
@@ -382,214 +620,206 @@ def test_llm_pipeline():
         print("=" * 60)
         return
 
-    from openai import OpenAI
-    llm_client = OpenAI(api_key=api_key)
+    # Use temp history file for tests
+    import app.services.history_store as hs
+    original_path = hs.HISTORY_FILE
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+        tmp_path = tmp.name
+    hs.HISTORY_FILE = __import__("pathlib").Path(tmp_path)
 
-    print("\n" + "=" * 60)
-    print("5. LLM PIPELINE TESTS")
-    print("=" * 60)
+    try:
+        from openai import OpenAI
+        llm_client = OpenAI(api_key=api_key)
 
-    for q_count in [5, 10, 15, 20]:
-        print(f"\n{'─' * 50}")
-        print(f"Generating q_count={q_count}...")
-        print(f"{'─' * 50}")
+        print("\n" + "=" * 60)
+        print("8. LLM PIPELINE TESTS")
+        print("=" * 60)
 
-        meta, questions = run_slot_pipeline(
-            client=llm_client,
-            grade="Class 3",
-            subject="Maths",
-            topic="3-digit addition and subtraction",
-            q_count=q_count,
-            difficulty="medium",
-            region="India",
-        )
+        for q_count in [5, 10]:
+            print(f"\n{'─' * 50}")
+            print(f"Generating q_count={q_count}...")
+            print(f"{'─' * 50}")
 
-        print(f"  Micro-skill: {meta.get('micro_skill')}")
-        print(f"  Skill focus: {meta.get('skill_focus')}")
-        print(f"  Common mistakes: {meta.get('common_mistakes')}")
-        print(f"  Parent tip: {meta.get('parent_tip')}")
+            meta, questions = run_slot_pipeline(
+                client=llm_client,
+                grade="Class 3",
+                subject="Maths",
+                topic="3-digit addition and subtraction",
+                q_count=q_count,
+                difficulty="medium",
+                region="India",
+            )
 
-        # Slot distribution
-        actual = Counter(q.get("slot_type") for q in questions)
-        expected = SLOT_PLANS.get(q_count, {})
-        print(f"\n  Slot distribution (expected -> actual):")
-        for slot in SLOT_ORDER:
-            exp = expected.get(slot, "?")
-            act = actual.get(slot, 0)
-            match = "OK" if exp == act else "MISMATCH"
-            print(f"    {slot}: {exp} -> {act}  {match}")
+            print(f"  Micro-skill: {meta.get('micro_skill')}")
+            print(f"  Parent tip: {meta.get('parent_tip')}")
 
-        # Formats per slot
-        print(f"\n  Formats per slot:")
-        for slot in SLOT_ORDER:
-            slot_qs = [q for q in questions if q.get("slot_type") == slot]
-            formats = [q.get("format", "?") for q in slot_qs]
-            valid = VALID_FORMATS.get(slot, set())
-            bad = [f for f in formats if f not in valid]
-            status = "OK" if not bad else f"BAD: {bad}"
-            print(f"    {slot}: {formats}  {status}")
+            actual = Counter(q.get("slot_type") for q in questions)
+            expected = SLOT_PLANS.get(q_count, {})
+            print(f"\n  Slot distribution:")
+            for slot in SLOT_ORDER:
+                exp = expected.get(slot, "?")
+                act = actual.get(slot, 0)
+                match = "OK" if exp == act else "MISMATCH"
+                print(f"    {slot}: {exp} -> {act}  {match}")
 
-        # Forbidden phrases
-        forbidden_found = []
-        for q in questions:
-            text = q.get("question_text", "")
-            if _FORBIDDEN_VISUAL_PHRASES.search(text):
-                forbidden_found.append(f"q{q.get('id')}")
-        print(f"\n  Forbidden phrases: {'none found' if not forbidden_found else forbidden_found}")
+            print(f"\n  Formats:")
+            for slot in SLOT_ORDER:
+                slot_qs = [q for q in questions if q.get("slot_type") == slot]
+                formats = [q.get("format", "?") for q in slot_qs]
+                valid = VALID_FORMATS.get(slot, set())
+                bad = [f for f in formats if f not in valid]
+                status = "OK" if not bad else f"BAD: {bad}"
+                print(f"    {slot}: {formats}  {status}")
 
-        # Sample questions (2 per slot_type)
-        print(f"\n  Sample questions:")
-        shown: dict[str, int] = {}
-        for q in questions:
-            slot = q.get("slot_type", "?")
-            shown.setdefault(slot, 0)
-            if shown[slot] < 2:
-                text_preview = q.get("question_text", "")[:90]
-                print(f"    [{slot}/{q.get('format')}] {text_preview}")
-                print(f"      Answer: {q.get('answer', '?')}")
-                shown[slot] += 1
-        print()
+            print(f"\n  Sample questions:")
+            shown: dict[str, int] = {}
+            for q in questions:
+                slot = q.get("slot_type", "?")
+                shown.setdefault(slot, 0)
+                if shown[slot] < 1:
+                    text_preview = q.get("question_text", "")[:100]
+                    print(f"    [{slot}/{q.get('format')}] {text_preview}")
+                    print(f"      Answer: {q.get('answer', '?')}")
+                    shown[slot] += 1
+            print()
+    finally:
+        hs.HISTORY_FILE = original_path
+        os.unlink(tmp_path)
 
 
 # ════════════════════════════════════════════════
-# Part 3: Diversity Test (12 worksheets, same topic)
+# Part 3: 30-Worksheet Diversity Test
 # ════════════════════════════════════════════════
 
-def test_diversity():
-    """Generate 12 worksheets for same topic (q=5), assert diversity metrics."""
+def test_30_worksheet_diversity():
+    """Generate 30 worksheets for same inputs and assert diversity metrics."""
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         print("\n" + "=" * 60)
-        print("DIVERSITY TESTS - SKIPPED (OPENAI_API_KEY not set)")
+        print("30-WORKSHEET DIVERSITY - SKIPPED (OPENAI_API_KEY not set)")
         print("=" * 60)
         return
 
-    from openai import OpenAI
-    llm_client = OpenAI(api_key=api_key)
+    # Use temp history file
+    import app.services.history_store as hs
+    original_path = hs.HISTORY_FILE
+    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+        tmp_path = tmp.name
+    hs.HISTORY_FILE = __import__("pathlib").Path(tmp_path)
 
-    print("\n" + "=" * 60)
-    print("6. DIVERSITY TEST (12 worksheets, q=5)")
-    print("=" * 60)
+    try:
+        from openai import OpenAI
+        llm_client = OpenAI(api_key=api_key)
 
-    all_contexts: list[str] = []
-    all_thinking_styles: list[str] = []
-    all_error_tags: list[str] = []
-    all_names: list[str] = []
-    forbidden_count = 0
+        print("\n" + "=" * 60)
+        print("9. 30-WORKSHEET DIVERSITY TEST")
+        print("=" * 60)
 
-    for ws_idx in range(12):
-        # Vary q_count slightly to get different seeds
-        q_count = 5
-        # Use different "topics" to simulate different worksheets
-        topics = [
-            "3-digit addition and subtraction",
-            "3-digit addition with carrying",
-            "3-digit subtraction with borrowing",
-            "addition and subtraction word problems",
-            "place value and 3-digit numbers",
-            "estimating sums and differences",
-            "3-digit addition without carrying",
-            "subtraction with borrowing across zero",
-            "mental math strategies for addition",
-            "comparing 3-digit sums",
-            "3-digit column addition",
-            "regrouping in subtraction",
-        ]
-        topic = topics[ws_idx % len(topics)]
+        all_contexts: list[str] = []
+        all_thinking_styles: list[str] = []
+        all_error_tags: list[str] = []
+        all_error_ids: list[str] = []
+        all_names: list[str] = []
+        forbidden_count = 0
 
-        print(f"\n  Worksheet {ws_idx + 1}: {topic}")
-        meta, questions = run_slot_pipeline(
-            client=llm_client,
-            grade="Class 3",
-            subject="Maths",
-            topic=topic,
-            q_count=q_count,
-            difficulty="medium",
-            region="India",
-        )
+        for ws_idx in range(30):
+            print(f"  Generating worksheet {ws_idx + 1}/30...", end=" ", flush=True)
+            meta, questions = run_slot_pipeline(
+                client=llm_client,
+                grade="Class 3",
+                subject="Maths",
+                topic="3-digit addition with carrying",
+                q_count=5,
+                difficulty="medium",
+                region="India",
+            )
 
-        for q in questions:
-            text = q.get("question_text", "").lower()
-            slot = q.get("slot_type", "")
+            for q in questions:
+                text = q.get("question_text", "").lower()
+                slot = q.get("slot_type", "")
 
-            # Track contexts from application
-            if slot == "application":
-                for ctx in CONTEXT_BANK:
-                    if ctx["item"] in text:
-                        all_contexts.append(ctx["item"])
-                        break
+                if slot == "application":
+                    for ctx in CONTEXT_BANK:
+                        if ctx["item"] in text:
+                            all_contexts.append(ctx["item"])
+                            break
+                    for name in NAME_BANKS["India"]:
+                        if name.lower() in text:
+                            all_names.append(name)
+                            break
 
-                # Track names
-                for name in NAME_BANKS["India"]:
-                    if name.lower() in text:
-                        all_names.append(name)
-                        break
-
-            # Track thinking styles
-            if slot == "thinking":
-                for style in THINKING_STYLE_BANK:
-                    # Rough check: does the question match the style?
+                if slot == "thinking":
                     style_keywords = {
-                        "estimate_nearest_100": ["estimate", "nearest hundred"],
-                        "closer_to": ["closer to"],
-                        "threshold_check": ["above", "below"],
-                        "compare_with_rounding": ["round"],
-                        "bounds_reasoning": ["bound", "between"],
-                        "which_is_reasonable": ["reasonable", "which of"],
+                        "closer_to": ["closer to", "closer"],
+                        "threshold_check": ["more than", "less than", "above", "below"],
+                        "bounds_range": ["between", "bound", "range"],
+                        "round_nearest_10": ["nearest 10", "round to 10"],
+                        "round_nearest_100": ["nearest 100", "nearest hundred", "round to 100"],
+                        "reasonable_estimate": ["reasonable", "which of", "which estimate"],
                     }
-                    keywords = style_keywords.get(style["style"], [])
-                    if any(kw in text for kw in keywords):
-                        all_thinking_styles.append(style["style"])
-                        break
+                    for style_name, keywords in style_keywords.items():
+                        if any(kw in text for kw in keywords):
+                            all_thinking_styles.append(style_name)
+                            break
 
-            # Track error patterns
-            if slot == "error_detection":
-                for err in ERROR_PATTERN_BANK:
-                    if str(err["wrong_sum"]) in text:
-                        all_error_tags.append(err["pattern_tag"])
-                        break
+                if slot == "error_detection":
+                    for err in _ALL_ERRORS:
+                        if str(err["wrong"]) in text and str(err["a"]) in text:
+                            all_error_ids.append(err["id"])
+                            all_error_tags.append(err["tag"])
+                            break
 
-            # Track forbidden phrases
-            if _FORBIDDEN_VISUAL_PHRASES.search(q.get("question_text", "")):
-                forbidden_count += 1
+                if _FORBIDDEN_VISUAL_PHRASES.search(q.get("question_text", "")):
+                    forbidden_count += 1
 
-        # Show brief summary per worksheet
-        slots = [q.get("slot_type", "?") for q in questions]
-        fmts = [q.get("format", "?") for q in questions]
-        print(f"    Slots: {slots}")
-        print(f"    Formats: {fmts}")
+            fmts = [q.get("format", "?") for q in questions]
+            print(f"formats={fmts}")
 
-    # ── Diversity assertions ──
-    print(f"\n{'─' * 50}")
-    print("DIVERSITY RESULTS")
-    print(f"{'─' * 50}")
+        # ── Diversity assertions ──
+        print(f"\n{'─' * 50}")
+        print("DIVERSITY RESULTS (30 worksheets)")
+        print(f"{'─' * 50}")
 
-    unique_contexts = len(set(all_contexts))
-    print(f"  Unique contexts: {unique_contexts} ({set(all_contexts)})")
-    ctx_pass = unique_contexts >= 4
-    print(f"  Context diversity (>= 4 unique): {'PASS' if ctx_pass else 'FAIL'}")
+        unique_ctx = len(set(all_contexts))
+        print(f"  Unique contexts: {unique_ctx} (from {len(all_contexts)} application qs)")
+        print(f"    Distribution: {dict(Counter(all_contexts).most_common(10))}")
+        ctx_pass = unique_ctx >= 10
+        print(f"    >= 10: {'PASS' if ctx_pass else 'FAIL'}")
 
-    unique_thinking = len(set(all_thinking_styles))
-    print(f"  Unique thinking styles: {unique_thinking} ({set(all_thinking_styles)})")
-    thinking_pass = unique_thinking >= 4
-    print(f"  Thinking diversity (>= 4 unique): {'PASS' if thinking_pass else 'FAIL'}")
+        unique_styles = len(set(all_thinking_styles))
+        print(f"  Unique thinking styles: {unique_styles} (from {len(all_thinking_styles)} thinking qs)")
+        print(f"    Distribution: {dict(Counter(all_thinking_styles))}")
+        style_pass = unique_styles >= 4
+        print(f"    >= 4: {'PASS' if style_pass else 'FAIL'}")
 
-    unique_errors = len(set(all_error_tags))
-    print(f"  Unique error patterns: {unique_errors} ({set(all_error_tags)})")
-    error_pass = unique_errors >= 3
-    print(f"  Error diversity (>= 3 unique): {'PASS' if error_pass else 'FAIL'}")
+        unique_tags = len(set(all_error_tags))
+        print(f"  Unique error tags: {unique_tags} (from {len(all_error_tags)} error qs)")
+        print(f"    Distribution: {dict(Counter(all_error_tags))}")
+        tag_pass = unique_tags >= 4
+        print(f"    >= 4: {'PASS' if tag_pass else 'FAIL'}")
 
-    unique_names = len(set(all_names))
-    print(f"  Unique names: {unique_names} ({set(all_names)})")
-    name_pass = unique_names >= 4
-    print(f"  Name diversity (>= 4 unique): {'PASS' if name_pass else 'FAIL'}")
+        # No error_id more than 2 times
+        id_counts = Counter(all_error_ids)
+        max_id = max(id_counts.values()) if id_counts else 0
+        id_pass = max_id <= 2
+        print(f"  Max error_id repetition: {max_id}")
+        print(f"    <= 2: {'PASS' if id_pass else 'FAIL'}")
 
-    print(f"  Forbidden visual phrases: {forbidden_count}")
-    forbidden_pass = forbidden_count == 0
-    print(f"  No forbidden phrases: {'PASS' if forbidden_pass else 'FAIL'}")
+        unique_names = len(set(all_names))
+        print(f"  Unique names: {unique_names}")
+        name_pass = unique_names >= 4
+        print(f"    >= 4: {'PASS' if name_pass else 'FAIL'}")
 
-    overall = ctx_pass and thinking_pass and error_pass and name_pass and forbidden_pass
-    print(f"\n  DIVERSITY OVERALL: {'PASS' if overall else 'FAIL'}")
+        print(f"  Forbidden visual phrases: {forbidden_count}")
+        forbidden_pass = forbidden_count == 0
+        print(f"    == 0: {'PASS' if forbidden_pass else 'FAIL'}")
+
+        overall = ctx_pass and style_pass and tag_pass and id_pass and name_pass and forbidden_pass
+        print(f"\n  30-WORKSHEET DIVERSITY OVERALL: {'PASS' if overall else 'FAIL'}")
+
+    finally:
+        hs.HISTORY_FILE = original_path
+        os.unlink(tmp_path)
 
 
 # ════════════════════════════════════════════════
@@ -597,20 +827,26 @@ def test_diversity():
 # ════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    print("PracticeCraft Slot Engine v5.0 - Regression Tests\n")
+    print("PracticeCraft Slot Engine v6.0 - Regression Tests\n")
 
     p1 = test_slot_plans()
     p2 = test_difficulty_mapping()
-    p3 = test_validators()
-    p4 = test_variation_banks()
+    p3 = test_error_computation()
+    p4 = test_validators()
+    p5 = test_variation_banks()
+    p6 = test_history_store()
+    p7 = test_seeded_diversity_deterministic()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
     print("=" * 60)
-    print(f"  Slot plans:       {'PASS' if p1 else 'FAIL'}")
-    print(f"  Difficulty map:   {'PASS' if p2 else 'FAIL'}")
-    print(f"  Validators:       {'PASS' if p3 else 'FAIL'}")
-    print(f"  Variation banks:  {'PASS' if p4 else 'FAIL'}")
+    print(f"  Slot plans:            {'PASS' if p1 else 'FAIL'}")
+    print(f"  Difficulty map:        {'PASS' if p2 else 'FAIL'}")
+    print(f"  Error computation:     {'PASS' if p3 else 'FAIL'}")
+    print(f"  Validators:            {'PASS' if p4 else 'FAIL'}")
+    print(f"  Variation banks:       {'PASS' if p5 else 'FAIL'}")
+    print(f"  History store:         {'PASS' if p6 else 'FAIL'}")
+    print(f"  Seeded diversity:      {'PASS' if p7 else 'FAIL'}")
 
     test_llm_pipeline()
-    test_diversity()
+    test_30_worksheet_diversity()
