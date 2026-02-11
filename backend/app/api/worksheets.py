@@ -12,6 +12,7 @@ from openai import OpenAI
 from supabase import create_client
 from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
+from app.services.slot_engine import run_slot_pipeline
 
 router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
 pdf_service = get_pdf_service()
@@ -105,15 +106,14 @@ CORE QUALITY RULES (NON-NEGOTIABLE):
 6. Avoid repetition of identical structures.
 7. Exactly the requested number of questions.
 
-PEDAGOGICAL STRUCTURE (MANDATORY):
-Follow this cognitive progression (roles will be assigned post-generation):
-1. warmup — direct computation, single-step, easy. No visuals.
-2. concept_visual — include visual_type + visual_data when visual mode is active.
-3. word_problem — real-world scenario with names/context. Exact answer required.
-4. reasoning — compare, missing number, pattern, true/false reasoning. NOT pure arithmetic.
-5. challenge — multi-step (2+ operations) or advanced reasoning.
+CONTENT DOCTRINE (MANDATORY — follow this cognitive taxonomy):
+1. Recognition (20%) — direct recall, identify, single-step. Easy difficulty.
+2. Application (40%) — word problems, use skills in real-world context. Names, scenarios, exact answers.
+3. Representation (20%) — show/model with visuals, diagrams, or alternate representations.
+4. Error Detection (10%) — "find the mistake", misconception spotting, true/false with common errors.
+5. Thinking (10%) — reasoning, explain why, compare, pattern, multi-step.
 
-For 5 questions, use exactly this order. For more, cycle the pattern.
+At least ONE question must be Error Detection (misconception). This is mandatory.
 
 For Maths:
 - Include at least one word problem.
@@ -228,7 +228,7 @@ PARENT SUPPORT (include at top level of JSON):
 These must be practical and clear.
 
 Each question MUST include:
-- "role": one of warmup, concept_visual, word_problem, reasoning, challenge
+- "role": one of recognition, application, representation, error_detection, thinking
 - "skill_tag": short skill descriptor (e.g. "2-digit addition with carry", "place value", "skip counting by 5s")
 
 OUTPUT FORMAT (JSON only, no markdown):
@@ -240,7 +240,7 @@ OUTPUT FORMAT (JSON only, no markdown):
   "questions": [
     {
       "id": "q1",
-      "role": "warmup" | "concept_visual" | "word_problem" | "reasoning" | "challenge",
+      "role": "recognition" | "application" | "representation" | "error_detection" | "thinking",
       "skill_tag": "...",
       "type": "multiple_choice" | "fill_blank" | "short_answer" | "true_false",
       "text": "...",
@@ -535,22 +535,22 @@ def _validate_difficulty_engine(
     issues: list[str] = []
     questions = data.get("questions", [])
 
-    has_multi_step = any(q.get("role") == "challenge" for q in questions)
-    has_reasoning = any(q.get("role") == "reasoning" for q in questions)
-    has_word_problem = any(q.get("role") == "word_problem" for q in questions)
-    has_concept_visual = any(
-        q.get("role") == "concept_visual" and q.get("visual_type")
+    has_thinking = any(q.get("role") == "thinking" for q in questions)
+    has_error_detection = any(q.get("role") == "error_detection" for q in questions)
+    has_application = any(q.get("role") == "application" for q in questions)
+    has_representation = any(
+        q.get("role") == "representation" and q.get("visual_type")
         for q in questions
     )
 
-    if not has_multi_step:
-        issues.append("hard difficulty requires at least one multi-step (challenge) problem")
-    if not has_reasoning:
-        issues.append("hard difficulty requires at least one reasoning problem")
-    if not has_word_problem:
-        issues.append("hard difficulty requires at least one word problem")
-    if is_visual_applicable and not has_concept_visual:
-        issues.append("hard difficulty requires at least one conceptual visual")
+    if not has_thinking:
+        issues.append("hard difficulty requires at least one thinking (multi-step/reasoning) problem")
+    if not has_error_detection:
+        issues.append("hard difficulty requires at least one error_detection (misconception) problem")
+    if not has_application:
+        issues.append("hard difficulty requires at least one application (word problem) problem")
+    if is_visual_applicable and not has_representation:
+        issues.append("hard difficulty requires at least one representation with visual")
 
     return issues
 
@@ -559,8 +559,9 @@ def _validate_difficulty_engine(
 # Phase 4: Pedagogical Role Engine
 # ──────────────────────────────────────────────
 
-_ROLE_CYCLE = ["warmup", "concept_visual", "word_problem", "reasoning", "challenge"]
-_VALID_ROLES = set(_ROLE_CYCLE)
+_DOCTRINE_TYPES = ["recognition", "application", "representation", "error_detection", "thinking"]
+_DOCTRINE_WEIGHTS = {"recognition": 0.20, "application": 0.40, "representation": 0.20, "error_detection": 0.10, "thinking": 0.10}
+_VALID_ROLES = set(_DOCTRINE_TYPES)
 
 _WORD_PROBLEM_PATTERN = re.compile(
     r"(has|have|gives?|buys?|sells?|eats?|left|remaining|costs?|pays?|earns?"
@@ -585,39 +586,77 @@ _MULTI_OP_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+_ERROR_DETECTION_PATTERN = re.compile(
+    r"(find the (mistake|error)|which is (wrong|incorrect)|correct the|spot the error"
+    r"|true or false|is this correct|what is wrong)",
+    re.IGNORECASE,
+)
+
 
 def _build_role_sequence(n: int) -> list[str]:
-    """Build a role sequence for n questions by cycling through the 5-role pattern."""
+    """Build a role sequence for n questions using Content Doctrine weights.
+
+    Uses largest-remainder proportional allocation to distribute n slots
+    across the 5 doctrine types. Guarantees at least 1 error_detection
+    (mandatory misconception question).
+
+    Output order: recognition → application → representation →
+    error_detection → thinking (progressive cognitive demand).
+    """
     if n <= 0:
         return []
-    if n <= 5:
-        # For small counts, pick evenly from the pattern
-        indices = [round(i * 4 / (n - 1)) if n > 1 else 0 for i in range(n)]
-        return [_ROLE_CYCLE[idx] for idx in indices]
-    # For larger counts, cycle the full pattern
+
+    # Compute ideal (fractional) counts, then floor
+    ideal = {t: _DOCTRINE_WEIGHTS[t] * n for t in _DOCTRINE_TYPES}
+    floored = {t: int(ideal[t]) for t in _DOCTRINE_TYPES}
+    remainders = {t: ideal[t] - floored[t] for t in _DOCTRINE_TYPES}
+
+    # Distribute leftover seats by largest fractional remainder
+    leftover = n - sum(floored.values())
+    for t in sorted(remainders, key=remainders.get, reverse=True):
+        if leftover <= 0:
+            break
+        floored[t] += 1
+        leftover -= 1
+
+    # Enforce mandatory misconception: error_detection >= 1
+    if floored["error_detection"] < 1 and n >= 1:
+        # Steal one seat from the largest bucket (skip error_detection)
+        donor = max(
+            (t for t in _DOCTRINE_TYPES if t != "error_detection"),
+            key=lambda t: floored[t],
+        )
+        floored[donor] -= 1
+        floored["error_detection"] = 1
+
+    # Build flat sequence in progressive-difficulty order
     seq: list[str] = []
-    for i in range(n):
-        seq.append(_ROLE_CYCLE[i % 5])
-    return seq
+    for t in _DOCTRINE_TYPES:
+        seq.extend([t] * floored[t])
+
+    return seq[:n]
 
 
 def _assign_roles(data: dict, difficulty: str) -> None:
-    """Deterministically assign pedagogical roles to questions in-place."""
+    """Deterministically assign Content Doctrine roles to questions in-place."""
     questions = data.get("questions", [])
     n = len(questions)
     roles = _build_role_sequence(n)
 
     for q, role in zip(questions, roles):
         q["role"] = role
-        # Enforce difficulty alignment
-        if role == "warmup":
+        # Enforce difficulty alignment per doctrine type
+        if role == "recognition":
             q["difficulty"] = "easy"
-        elif role == "challenge":
+        elif role == "error_detection":
+            if q.get("difficulty") == "easy":
+                q["difficulty"] = "medium"
+        elif role == "thinking":
             q["difficulty"] = "hard" if difficulty == "hard" else "medium"
 
 
 def _validate_roles(data: dict, is_visual_applicable: bool) -> list[str]:
-    """Validate that each question satisfies its assigned role constraints."""
+    """Validate that each question satisfies its Content Doctrine role constraints."""
     issues: list[str] = []
     questions = data.get("questions", [])
 
@@ -631,44 +670,46 @@ def _validate_roles(data: dict, is_visual_applicable: bool) -> list[str]:
         correct = q.get("correct_answer")
         has_visual = bool(q.get("visual_type") and q.get("visual_data"))
 
-        if role == "warmup":
-            if not _is_computational(text) and correct is None:
+        if role == "recognition":
+            # Direct recall / single-step, must have correct_answer
+            if correct is None:
                 issues.append(
-                    f"{qid} (warmup): should be computational with exact answer"
-                )
-            if has_visual:
-                issues.append(f"{qid} (warmup): visual_type must be null")
-
-        elif role == "concept_visual":
-            if is_visual_applicable and not has_visual:
-                issues.append(
-                    f"{qid} (concept_visual): must include visual_type + visual_data"
+                    f"{qid} (recognition): must have correct_answer"
                 )
 
-        elif role == "word_problem":
-            if not _WORD_PROBLEM_PATTERN.search(text):
+        elif role == "application":
+            # Real-world context or skill application, must have correct_answer
+            if not _WORD_PROBLEM_PATTERN.search(text) and not _is_computational(text):
                 issues.append(
-                    f"{qid} (word_problem): must include real-world context "
-                    f"(names, buying, giving, etc.)"
+                    f"{qid} (application): must include real-world context "
+                    f"(names, buying, giving, etc.) or skill application"
                 )
             if correct is None:
                 issues.append(
-                    f"{qid} (word_problem): must have exact correct_answer"
+                    f"{qid} (application): must have exact correct_answer"
                 )
 
-        elif role == "reasoning":
-            # Should not be pure arithmetic
+        elif role == "representation":
+            # When visual mode is active, must include visual_type + visual_data
+            if is_visual_applicable and not has_visual:
+                issues.append(
+                    f"{qid} (representation): must include visual_type + visual_data"
+                )
+
+        elif role == "error_detection":
+            # Must contain error-finding / misconception language
+            if not _ERROR_DETECTION_PATTERN.search(text):
+                issues.append(
+                    f"{qid} (error_detection): must contain error-finding language "
+                    f"(find the mistake, which is wrong, true or false, etc.)"
+                )
+
+        elif role == "thinking":
+            # Should not be pure arithmetic — must involve reasoning
             if _is_computational(text) and not _REASONING_PATTERN.search(text):
                 issues.append(
-                    f"{qid} (reasoning): should not be pure arithmetic — "
-                    f"use compare, pattern, missing number, or true/false reasoning"
-                )
-
-        elif role == "challenge":
-            if not _MULTI_OP_PATTERN.search(text) and not _REASONING_PATTERN.search(text):
-                issues.append(
-                    f"{qid} (challenge): should be multi-step (2+ operations) "
-                    f"or advanced reasoning"
+                    f"{qid} (thinking): should not be pure arithmetic — "
+                    f"use reasoning, comparison, pattern, or multi-step"
                 )
 
     return issues
@@ -1146,141 +1187,87 @@ def attempt_repair(
 
 
 # ──────────────────────────────────────────────
+# Slot-engine → API response mapper
+# ──────────────────────────────────────────────
+
+# Map slot-engine format → API question type
+_FORMAT_TO_QTYPE: dict[str, str] = {
+    "column_setup": "short_answer",
+    "place_value": "fill_blank",
+    "simple_identify": "fill_blank",
+    "direct_compute": "fill_blank",
+    "word_problem": "short_answer",
+    "missing_number": "fill_blank",
+    "estimation": "short_answer",
+    "error_spot": "short_answer",
+    "compare_solutions": "short_answer",
+    "create_example": "short_answer",
+}
+
+
+def _slot_to_question(q: dict, idx: int) -> Question:
+    """Convert a slot-engine question dict to the API Question model."""
+    fmt = q.get("format", "")
+    text = q.get("question_text", "")
+    answer = q.get("answer")
+    answer_str = str(answer).strip() if answer is not None and str(answer).strip() else None
+
+    q_type = _FORMAT_TO_QTYPE.get(fmt, "short_answer")
+
+    return Question(
+        id=f"q{idx + 1}",
+        type=q_type,
+        text=text,
+        options=None,
+        correct_answer=answer_str,
+        explanation=None,
+        difficulty=q.get("difficulty"),
+        answer_type="exact" if answer_str else "example",
+        sample_answer=None,
+        grading_notes=None,
+        visual_type=None,
+        visual_data=None,
+        role=q.get("slot_type"),
+        skill_tag=fmt,
+    )
+
+
+# ──────────────────────────────────────────────
 # Generation endpoints
 # ──────────────────────────────────────────────
 
 @router.post("/generate", response_model=WorksheetGenerationResponse)
 async def generate_worksheet(request: WorksheetGenerationRequest):
-    """Generate a new worksheet based on provided parameters."""
+    """Generate a new worksheet using slot-based pipeline."""
     start_time = datetime.now()
 
-    # Determine visual applicability (Math, Grades 1-3)
-    grade_num = 0
     try:
-        grade_num = int(request.grade_level.replace("Class ", ""))
-    except ValueError:
-        pass
-    is_visual = (
-        request.problem_style in ("visual", "mixed")
-        and request.subject.lower() in ("maths", "mathematics", "math")
-        and 1 <= grade_num <= 3
-    )
-
-    # Build v3.8 system prompt
-    system_prompt = build_system_prompt(
-        region=request.region,
-        problem_style=request.problem_style,
-        is_visual_applicable=is_visual,
-        logic_tags=request.logic_tags,
-    )
-
-    # Use skills as topic context if provided
-    topic_context = request.topic
-    if request.skills:
-        topic_context = ", ".join(request.skills)
-
-    # Short user prompt (all rules are in system prompt)
-    user_prompt = (
-        f"Grade: {request.grade_level} | Subject: {request.subject} | Board: {request.board}\n"
-        f"Topic/Skills: {topic_context}\n"
-        f"Difficulty: {request.difficulty} | Questions: {request.num_questions} | Language: {request.language}"
-    )
-    if request.custom_instructions:
-        user_prompt += f"\nAdditional: {request.custom_instructions}"
-
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.7,
-            max_tokens=8192,
-        )
-
-        content = clean_json_response(response.choices[0].message.content or "")
-
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to parse AI response: {str(e)}"
-            )
-
-        logger.info(
-            "Generated %d raw questions for %s / %s",
-            len(data.get("questions", [])), request.subject, request.topic,
-        )
-
-        # ── Deterministic post-processing (no LLM calls) ──
-        _fixup_question_types(data)
-        _trim_to_count(data, request.num_questions, request.problem_style, is_visual)
-        _assign_roles(data, request.difficulty)
-        _fix_computational_answers(data)
-        _fix_carry_borrow_difficulty(data)
-        _fix_inconsistent_visuals(data)
-        _fix_number_line_step(data)
-
-        if is_visual:
-            data, _ = enforce_visual_rules(
-                data, request.problem_style, True
-            )
-
-        # ── Validate after deterministic fixes ──
-        all_issues = validate_worksheet_data(
-            data,
-            problem_style=request.problem_style,
-            is_visual_applicable=is_visual,
-        )
-        all_issues += _validate_roles(data, is_visual)
-        all_issues += _validate_difficulty_engine(data, request.difficulty, is_visual)
-        all_issues += validate_visual_integrity(
-            data, request.problem_style, is_visual
-        )
-        all_issues += validate_cognitive_depth(data, request.difficulty)
-        all_issues += validate_multi_representation(
-            data, request.topic, request.skills
-        )
-
-        logger.info("Validation complete: %d issues found", len(all_issues))
-
-        # ── Repair (one attempt) only if validation still fails ──
-        if all_issues:
-            repaired = attempt_repair(system_prompt, data, all_issues)
-            if repaired:
-                _fixup_question_types(repaired)
-                _trim_to_count(repaired, request.num_questions, request.problem_style, is_visual)
-                _assign_roles(repaired, request.difficulty)
-                _fix_computational_answers(repaired)
-                _fix_carry_borrow_difficulty(repaired)
-                _fix_inconsistent_visuals(repaired)
-                _fix_number_line_step(repaired)
-                if is_visual:
-                    repaired, _ = enforce_visual_rules(
-                        repaired, request.problem_style, True
-                    )
-                data = repaired
-            else:
-                logger.warning("Repair failed — returning best-effort worksheet")
-
-        # ── Build response models with backward-compatible defaults ──
-        questions = [
-            parse_question(q, i, request.difficulty)
-            for i, q in enumerate(data.get("questions", []))
-        ]
-
-        worksheet = Worksheet(
-            title=data.get("title", f"{request.topic} Practice Worksheet"),
+        meta, slot_questions = run_slot_pipeline(
+            client=client,
             grade=request.grade_level,
             subject=request.subject,
             topic=request.topic,
-            difficulty=request.difficulty.capitalize(),
+            q_count=request.num_questions,
+            difficulty=request.difficulty,
+            region=request.region,
+            language=request.language,
+        )
+
+        # Map slot-engine output → API Question models
+        questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+
+        common_mistakes = meta.get("common_mistakes") or []
+        worksheet = Worksheet(
+            title=f"{meta.get('micro_skill', request.topic)} — Practice",
+            grade=request.grade_level,
+            subject=request.subject,
+            topic=request.topic,
+            difficulty=meta.get("difficulty", request.difficulty).capitalize(),
             language=request.language,
             questions=questions,
-            skill_focus=data.get("skill_focus", ""),
-            common_mistake=data.get("common_mistake", ""),
-            parent_tip=data.get("parent_tip", ""),
+            skill_focus=meta.get("skill_focus", ""),
+            common_mistake=common_mistakes[0] if common_mistakes else "",
+            parent_tip=meta.get("parent_tip", ""),
         )
 
         end_time = datetime.now()
@@ -1624,93 +1611,39 @@ async def regenerate_worksheet(
                     detail="Free tier limit reached. Upgrade to Pro for unlimited worksheets."
                 )
 
-        # Generate new worksheet with same settings
+        # Generate new worksheet via slot pipeline
         start_time = datetime.now()
 
         region = original.get("region", "India")
-        system_prompt = build_system_prompt(region=region)
-
         num_questions = len(original["questions"])
         difficulty = original["difficulty"].lower()
 
-        user_prompt = (
-            f"Grade: {original['grade']} | Subject: {original['subject']} "
-            f"| Board: {original.get('board', 'CBSE')}\n"
-            f"Topic: {original['topic']}\n"
-            f"Difficulty: {difficulty} | Questions: {num_questions} "
-            f"| Language: {original.get('language', 'English')}\n"
-            f"Generate completely NEW questions (different from before)."
-        )
-
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
-            temperature=0.8,  # Slightly higher for more variety
-            max_tokens=8192,
-        )
-
-        content = clean_json_response(response.choices[0].message.content or "")
-
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to parse AI response: {str(e)}"
-            )
-
-        # Deterministic post-processing
-        _fixup_question_types(data)
-        _trim_to_count(data, num_questions, "standard", False)
-        _assign_roles(data, difficulty)
-        _fix_computational_answers(data)
-        _fix_carry_borrow_difficulty(data)
-        _fix_inconsistent_visuals(data)
-        _fix_number_line_step(data)
-
-        # Validate after deterministic fixes
-        validation_issues = validate_worksheet_data(data)
-        validation_issues += _validate_roles(data, False)
-        validation_issues += _validate_difficulty_engine(data, difficulty, False)
-        validation_issues += validate_visual_integrity(data)
-        validation_issues += validate_cognitive_depth(data, difficulty)
-        validation_issues += validate_multi_representation(data, original["topic"])
-
-        logger.info("Regenerate validation: %d issues", len(validation_issues))
-
-        if validation_issues:
-            repaired = attempt_repair(system_prompt, data, validation_issues)
-            if repaired:
-                _fixup_question_types(repaired)
-                _trim_to_count(repaired, num_questions, "standard", False)
-                _assign_roles(repaired, difficulty)
-                _fix_computational_answers(repaired)
-                _fix_carry_borrow_difficulty(repaired)
-                _fix_inconsistent_visuals(repaired)
-                _fix_number_line_step(repaired)
-                data = repaired
-            else:
-                logger.warning("Regenerate repair failed — returning best-effort")
-
-        # Build questions with backward-compatible defaults
-        questions = [
-            parse_question(q, i, difficulty)
-            for i, q in enumerate(data.get("questions", []))
-        ]
-
-        worksheet = Worksheet(
-            title=data.get("title", f"{original['topic']} Practice Worksheet"),
+        meta, slot_questions = run_slot_pipeline(
+            client=client,
             grade=original["grade"],
             subject=original["subject"],
             topic=original["topic"],
-            difficulty=original["difficulty"],
+            q_count=num_questions,
+            difficulty=difficulty,
+            region=region,
+            language=original.get("language", "English"),
+        )
+
+        # Map slot-engine output → API Question models
+        questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+
+        common_mistakes = meta.get("common_mistakes") or []
+        worksheet = Worksheet(
+            title=f"{meta.get('micro_skill', original['topic'])} — Practice",
+            grade=original["grade"],
+            subject=original["subject"],
+            topic=original["topic"],
+            difficulty=meta.get("difficulty", original["difficulty"]).capitalize(),
             language=original.get("language", "English"),
             questions=questions,
-            skill_focus=data.get("skill_focus", ""),
-            common_mistake=data.get("common_mistake", ""),
-            parent_tip=data.get("parent_tip", ""),
+            skill_focus=meta.get("skill_focus", ""),
+            common_mistake=common_mistakes[0] if common_mistakes else "",
+            parent_tip=meta.get("parent_tip", ""),
         )
 
         # Increment regeneration count on original worksheet
