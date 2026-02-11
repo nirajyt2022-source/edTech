@@ -3,6 +3,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Literal
 import json
+import logging
 import re
 import uuid
 from math import ceil
@@ -18,6 +19,8 @@ pdf_service = get_pdf_service()
 settings = get_settings()
 client = OpenAI(api_key=settings.openai_api_key)
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+
+logger = logging.getLogger("practicecraft.worksheets")
 
 
 class WorksheetGenerationRequest(BaseModel):
@@ -820,12 +823,223 @@ def enforce_visual_rules(
     return data, issues
 
 
+# ──────────────────────────────────────────────
+# Phase 5.3: Quality Moat Validators
+# ──────────────────────────────────────────────
+
+# -- Visual integrity patterns (defined before functions to prevent NameError) --
+_ARRAY_TEXT_PATTERN = re.compile(
+    r"\b(array|rows?\s+and\s+columns?|columns?\s+and\s+rows?|grid)\b", re.IGNORECASE
+)
+_NUMBER_LINE_TEXT_PATTERN = re.compile(
+    r"\b(number\s+line|jump|hop)\b", re.IGNORECASE
+)
+_MULTIPLICATION_VISUAL_TEXT = re.compile(
+    r"\b(times|groups?\s+of|multiply|×)\b|\d\s*x\s*\d", re.IGNORECASE
+)
+
+# -- Cognitive depth patterns --
+_COGNITIVE_DEPTH_PATTERNS = {
+    "error_analysis": re.compile(
+        r"\b(find the (mistake|error)|what is wrong|correct the|spot the)\b",
+        re.IGNORECASE,
+    ),
+    "strategy_compare": re.compile(
+        r"\b(which method|compare|better way|which is (easier|faster)|two ways)\b",
+        re.IGNORECASE,
+    ),
+    "estimate_calculate": re.compile(
+        r"\b(estimate|approximately|round off|about how many|close to)\b",
+        re.IGNORECASE,
+    ),
+    "missing_number": re.compile(
+        r"\b(missing number|find the number|what number|unknown)\b|[_?□▢]{2,}",
+        re.IGNORECASE,
+    ),
+}
+
+# -- Multi-representation patterns --
+_MULTIPLICATION_TOPIC = re.compile(
+    r"\b(multipl|times\s*table|groups?\s+of|product)\b", re.IGNORECASE
+)
+_3DIGIT_ADDSUB_TOPIC = re.compile(
+    r"\b(3[\s-]?digit|three[\s-]?digit).*(add|subtract)"
+    r"|\b(add|subtract).*(3[\s-]?digit|three[\s-]?digit)",
+    re.IGNORECASE,
+)
+_MISSING_NUMBER_PATTERN = re.compile(
+    r"[_?□▢]{2,}|\b(missing|find the number|what number|blank)\b", re.IGNORECASE
+)
+_INVERSE_ERROR_PATTERN = re.compile(
+    r"\b(check|verify|find the (mistake|error)|inverse|reverse|undo)\b", re.IGNORECASE
+)
+_MULT_EQUATION_PATTERN = re.compile(
+    r"×|\d\s*x\s*\d|\btimes\b|\*", re.IGNORECASE
+)
+
+
+def validate_visual_integrity(
+    data: dict,
+    problem_style: str = "standard",
+    is_visual_applicable: bool = False,
+) -> list[str]:
+    """Validate text↔visual alignment and visual data consistency.
+
+    Visual density (ratio) is already checked in validate_worksheet_data().
+    """
+    issues: list[str] = []
+    questions = data.get("questions", [])
+
+    for q in questions:
+        qid = q.get("id", "?")
+        text = q.get("text", "")
+        vtype = q.get("visual_type")
+        vdata = q.get("visual_data")
+        has_visual = bool(vtype and vdata)
+
+        # 1. Text mentions array/grid → visual_type must be multiplication_array
+        if _ARRAY_TEXT_PATTERN.search(text) and has_visual:
+            if vtype != "multiplication_array":
+                issues.append(
+                    f"{qid}: text mentions array/grid but visual_type='{vtype}' "
+                    f"— use 'multiplication_array'"
+                )
+
+        # 2. Text mentions number line/jump/hop → must be number_line or number_line_jumps
+        if _NUMBER_LINE_TEXT_PATTERN.search(text) and has_visual:
+            if vtype not in ("number_line", "number_line_jumps"):
+                issues.append(
+                    f"{qid}: text mentions number line/jumps but visual_type='{vtype}' "
+                    f"— use 'number_line' or 'number_line_jumps'"
+                )
+
+        # 3. Multiplication text + visual: prefer multiplication_array over highlight-only
+        if (
+            _MULTIPLICATION_VISUAL_TEXT.search(text)
+            and vtype == "number_line"
+            and isinstance(vdata, dict)
+            and vdata.get("highlight")
+            and not vdata.get("jump_size")
+        ):
+            issues.append(
+                f"{qid}: multiplication uses number_line highlight-only "
+                f"— prefer multiplication_array"
+            )
+
+        # 4. number_line_jumps: internal consistency
+        if vtype == "number_line_jumps" and isinstance(vdata, dict):
+            start = vdata.get("start", 0)
+            jump_size = vdata.get("jump_size", 0)
+            num_jumps = vdata.get("num_jumps", 0)
+            result = vdata.get("result")
+            if jump_size and num_jumps and result is not None:
+                expected_fwd = start + jump_size * num_jumps
+                expected_bwd = start - jump_size * num_jumps
+                if result != expected_fwd and result != expected_bwd:
+                    issues.append(
+                        f"{qid}: number_line_jumps result={result} inconsistent — "
+                        f"expected {expected_fwd} or {expected_bwd}"
+                    )
+
+        # 5. multiplication_array: rows*cols must match correct_answer for count questions
+        if vtype == "multiplication_array" and isinstance(vdata, dict):
+            rows = vdata.get("rows", 0)
+            cols = vdata.get("columns", 0)
+            correct = q.get("correct_answer")
+            if correct is not None and rows and cols:
+                try:
+                    if int(str(correct).strip()) != rows * cols:
+                        issues.append(
+                            f"{qid}: multiplication_array {rows}x{cols}={rows * cols} "
+                            f"but correct_answer='{correct}'"
+                        )
+                except (ValueError, TypeError):
+                    pass  # non-numeric answer, skip
+
+    return issues
+
+
+def validate_cognitive_depth(
+    data: dict, requested_difficulty: str
+) -> list[str]:
+    """For hard worksheets, ensure at least one cognitive depth question."""
+    if requested_difficulty != "hard":
+        return []
+
+    questions = data.get("questions", [])
+    for q in questions:
+        text = q.get("text", "")
+        for pattern in _COGNITIVE_DEPTH_PATTERNS.values():
+            if pattern.search(text):
+                return []  # Found at least one — pass
+
+    return [
+        "hard difficulty requires at least one cognitive depth question "
+        "(error analysis, strategy compare, estimate-then-calculate, "
+        "or missing number reasoning)"
+    ]
+
+
+def validate_multi_representation(
+    data: dict, topic: str, skills: list[str] | None = None
+) -> list[str]:
+    """Ensure topic-appropriate variety of question representations."""
+    issues: list[str] = []
+    questions = data.get("questions", [])
+    context = f"{topic} {' '.join(skills or [])}"
+
+    # ── Multiplication topic ──
+    if _MULTIPLICATION_TOPIC.search(context):
+        forms: set[str] = set()
+        for q in questions:
+            text = q.get("text", "")
+            vtype = q.get("visual_type")
+            if vtype == "multiplication_array":
+                forms.add("array_visual")
+            if _is_computational(text) and _MULT_EQUATION_PATTERN.search(text):
+                forms.add("direct_equation")
+            if _WORD_PROBLEM_PATTERN.search(text):
+                forms.add("word_problem")
+            if _MISSING_NUMBER_PATTERN.search(text):
+                forms.add("missing_number")
+        if len(forms) < 2:
+            issues.append(
+                f"multiplication topic needs >=2 representation forms "
+                f"(array_visual, direct_equation, word_problem, missing_number) "
+                f"— found: {sorted(forms) or 'none'}"
+            )
+
+    # ── 3-digit addition/subtraction topic ──
+    if _3DIGIT_ADDSUB_TOPIC.search(context):
+        forms_3d: set[str] = set()
+        for q in questions:
+            text = q.get("text", "")
+            vtype = q.get("visual_type")
+            if _is_computational(text):
+                forms_3d.add("direct_computation")
+            if _WORD_PROBLEM_PATTERN.search(text):
+                forms_3d.add("word_problem")
+            if vtype == "number_line_jumps":
+                forms_3d.add("number_line_jumps_visual")
+            if _INVERSE_ERROR_PATTERN.search(text):
+                forms_3d.add("inverse_or_error")
+        if len(forms_3d) < 2:
+            issues.append(
+                f"3-digit add/sub topic needs >=2 representation forms "
+                f"(direct_computation, word_problem, number_line_jumps_visual, "
+                f"inverse_or_error) — found: {sorted(forms_3d) or 'none'}"
+            )
+
+    return issues
+
+
 def attempt_repair(
     system_prompt: str,
     original_data: dict,
     issues: list[str],
 ) -> dict | None:
     """Make ONE repair call to fix validation/visual issues. Returns fixed data or None."""
+    logger.warning("Attempting repair for %d issues", len(issues))
     issue_text = "\n".join(f"- {iss}" for iss in issues)
     repair_prompt = (
         f"The following worksheet JSON has issues. Fix ONLY the listed issues and "
@@ -845,8 +1059,11 @@ def attempt_repair(
             max_tokens=8192,
         )
         content = clean_json_response(response.choices[0].message.content or "")
-        return json.loads(content)
-    except (json.JSONDecodeError, Exception):
+        repaired = json.loads(content)
+        logger.info("Repair succeeded, got %d questions", len(repaired.get("questions", [])))
+        return repaired
+    except (json.JSONDecodeError, Exception) as exc:
+        logger.error("Repair failed: %s", exc)
         return None
 
 
@@ -913,6 +1130,11 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                 status_code=500, detail=f"Failed to parse AI response: {str(e)}"
             )
 
+        logger.info(
+            "Generated %d raw questions for %s / %s",
+            len(data.get("questions", [])), request.subject, request.topic,
+        )
+
         # ── Deterministic post-processing (no LLM calls) ──
         _fixup_question_types(data)
         _trim_to_count(data, request.num_questions, request.problem_style, is_visual)
@@ -934,6 +1156,15 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         )
         all_issues += _validate_roles(data, is_visual)
         all_issues += _validate_difficulty_engine(data, request.difficulty, is_visual)
+        all_issues += validate_visual_integrity(
+            data, request.problem_style, is_visual
+        )
+        all_issues += validate_cognitive_depth(data, request.difficulty)
+        all_issues += validate_multi_representation(
+            data, request.topic, request.skills
+        )
+
+        logger.info("Validation complete: %d issues found", len(all_issues))
 
         # ── Repair (one attempt) only if validation still fails ──
         if all_issues:
@@ -950,6 +1181,8 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                         repaired, request.problem_style, True
                     )
                 data = repaired
+            else:
+                logger.warning("Repair failed — returning best-effort worksheet")
 
         # ── Build response models with backward-compatible defaults ──
         questions = [
@@ -1360,6 +1593,12 @@ async def regenerate_worksheet(
         validation_issues = validate_worksheet_data(data)
         validation_issues += _validate_roles(data, False)
         validation_issues += _validate_difficulty_engine(data, difficulty, False)
+        validation_issues += validate_visual_integrity(data)
+        validation_issues += validate_cognitive_depth(data, difficulty)
+        validation_issues += validate_multi_representation(data, original["topic"])
+
+        logger.info("Regenerate validation: %d issues", len(validation_issues))
+
         if validation_issues:
             repaired = attempt_repair(system_prompt, data, validation_issues)
             if repaired:
@@ -1370,6 +1609,8 @@ async def regenerate_worksheet(
                 _fix_carry_borrow_difficulty(repaired)
                 _fix_number_line_step(repaired)
                 data = repaired
+            else:
+                logger.warning("Regenerate repair failed — returning best-effort")
 
         # Build questions with backward-compatible defaults
         questions = [
