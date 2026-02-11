@@ -53,6 +53,7 @@ class Question(BaseModel):
     visual_type: str | None = None
     visual_data: dict | None = None
     role: str | None = None  # Phase 4: pedagogical role
+    skill_tag: str | None = None  # Phase 5: skill diagnostic tag
 
 
 class Worksheet(BaseModel):
@@ -151,19 +152,26 @@ VISUAL MODE RULES:
 {coverage}
 
 IMPORTANT: "type" must ALWAYS be one of: multiple_choice, fill_blank, short_answer, true_false.
-Do NOT use visual type names (number_line, object_group, clock, shapes) as the question "type".
+Do NOT use visual type names as the question "type".
 Visuals go in "visual_type" and "visual_data" fields only.
 
-Visual types allowed: clock, number_line, object_group, shapes.
+Visual types allowed: multiplication_array, number_line_jumps, number_line, object_group, shapes, clock.
+
+MULTIPLICATION RULE: Use multiplication_array for "groups of" or "times" problems.
+ADDITION RULE: Prefer number_line_jumps for conceptual addition understanding.
+
 Drawable constraints:
 - object_group counts MUST NOT exceed 20 per group. For larger numbers use number_line instead.
 - object_group labels must be simple, drawable nouns (e.g. "apples", "stars", "balls"). Avoid compound phrases like "boxes of chocolates".
+- multiplication_array: rows × columns must not exceed 20. For larger products use number_line.
 
 Formats:
 - clock: {{ "hour": 1-12, "minute": 0|5|10|...|55 }}
 - number_line: {{ "start": int, "end": int, "step": int, "highlight": int }}
+- number_line_jumps: {{ "start": int, "end": int, "jump_size": int, "num_jumps": int, "result": int }}
+- multiplication_array: {{ "rows": int, "columns": int, "label": "dots" }}
 - object_group: {{ "groups": [{{"count": 1-20, "label": "apples"}}], "operation": "+"|"-"|"x" }}
-  For multiplication ("x"), prefer number_line unless both factors are <= 10 and the product <= 20.
+  For multiplication ("x"), prefer multiplication_array when both factors <= 10 and product <= 20, else use number_line.
 - shapes: {{ "shape": "triangle"|"circle"|"rectangle"|"square", "sides": [numbers] }}
 
 Keep the "text" field as a readable question even for visual questions."""
@@ -181,11 +189,23 @@ Keep the "text" field as a readable question even for visual questions."""
         if tag_lines:
             prompt += "\n\nQUESTION TYPE GUIDANCE:\n" + "\n".join(tag_lines)
 
+    # ── Difficulty engine ──
+    prompt += """
+
+DIFFICULTY ENGINE:
+- If difficulty = hard:
+  - Include at least one multi-step problem.
+  - Include one reasoning problem.
+  - Include one conceptual visual (when visual mode is active).
+  - Include one word problem.
+- If carrying or borrowing is required → difficulty must be >= medium (never easy).
+- Easy = direct recall, single-step. Medium = 1-2 step. Hard = multi-step or reasoning."""
+
     # ── Answer rules + parent support + output format ──
     prompt += """
 
 ANSWER RULES:
-- Objective questions: provide exact correct_answer, set answer_type="exact", sample_answer=null, grading_notes=null.
+- Computational math questions: answer_type="exact", correct_answer must be present, sample_answer=null.
 - True/False: correct_answer must be "true" or "false" (lowercase string).
 - Open-ended questions (write/explain/describe): set correct_answer=null, answer_type="example", provide sample_answer and grading_notes.
 
@@ -196,6 +216,10 @@ PARENT SUPPORT (include at top level of JSON):
 
 These must be practical and clear.
 
+Each question MUST include:
+- "role": one of warmup, concept_visual, word_problem, reasoning, challenge
+- "skill_tag": short skill descriptor (e.g. "2-digit addition with carry", "place value", "skip counting by 5s")
+
 OUTPUT FORMAT (JSON only, no markdown):
 {
   "title": "...",
@@ -205,6 +229,8 @@ OUTPUT FORMAT (JSON only, no markdown):
   "questions": [
     {
       "id": "q1",
+      "role": "warmup" | "concept_visual" | "word_problem" | "reasoning" | "challenge",
+      "skill_tag": "...",
       "type": "multiple_choice" | "fill_blank" | "short_answer" | "true_false",
       "text": "...",
       "options": ["..."] | null,
@@ -214,7 +240,7 @@ OUTPUT FORMAT (JSON only, no markdown):
       "grading_notes": "..." | null,
       "difficulty": "easy" | "medium" | "hard",
       "explanation": "Brief explanation",
-      "visual_type": "clock" | "number_line" | "object_group" | "shapes" | null,
+      "visual_type": "multiplication_array" | "number_line_jumps" | "number_line" | "object_group" | "shapes" | "clock" | null,
       "visual_data": { ... } | null
     }
   ]
@@ -222,9 +248,10 @@ OUTPUT FORMAT (JSON only, no markdown):
 
 FINAL CHECK BEFORE OUTPUT:
 - Valid JSON only. No markdown.
-- All required fields present.
+- All required fields present (including role and skill_tag on every question).
 - Exactly requested question count.
-- No personal data prompts."""
+- No personal data prompts.
+- Carry/borrow questions are never marked easy."""
 
     return prompt
 
@@ -246,7 +273,10 @@ def clean_json_response(content: str) -> str:
 
 
 _VALID_QUESTION_TYPES = {"multiple_choice", "fill_blank", "short_answer", "true_false"}
-_VISUAL_TYPE_NAMES = {"number_line", "object_group", "clock", "shapes"}
+_VISUAL_TYPE_NAMES = {
+    "number_line", "number_line_jumps", "object_group",
+    "multiplication_array", "clock", "shapes",
+}
 
 
 def parse_question(q: dict, index: int, fallback_difficulty: str) -> Question:
@@ -287,6 +317,7 @@ def parse_question(q: dict, index: int, fallback_difficulty: str) -> Question:
         visual_type=visual_type,
         visual_data=q.get("visual_data"),
         role=q.get("role"),
+        skill_tag=q.get("skill_tag"),
     )
 
 
@@ -375,6 +406,74 @@ def _fix_number_line_step(data: dict) -> None:
             span = end - start
             if span > 40 and step < 2:
                 vd["step"] = 5 if span > 80 else 10 if span > 60 else 2
+
+
+# ──────────────────────────────────────────────
+# Carry / Borrow detection + difficulty enforcement
+# ──────────────────────────────────────────────
+
+_ADDITION_PATTERN = re.compile(r"\+|\badd\b|\bsum\b|\btotal\b|\bplus\b|\bjod\b", re.IGNORECASE)
+_SUBTRACTION_PATTERN = re.compile(
+    r"-|\bsubtract\b|\bminus\b|\bdifference\b|\btake\s+away\b|\bghata\b", re.IGNORECASE
+)
+
+
+def _needs_carry_or_borrow(text: str) -> bool:
+    """Heuristic: detect if a question likely requires carrying or borrowing."""
+    numbers = [int(m) for m in re.findall(r"\d+", text) if int(m) >= 10]
+    if len(numbers) < 2:
+        return False
+    a, b = numbers[0], numbers[1]
+    if _ADDITION_PATTERN.search(text):
+        if (a % 10) + (b % 10) >= 10:
+            return True
+    if _SUBTRACTION_PATTERN.search(text):
+        hi, lo = max(a, b), min(a, b)
+        if (hi % 10) < (lo % 10):
+            return True
+    return False
+
+
+def _fix_carry_borrow_difficulty(data: dict) -> None:
+    """If a question requires carrying/borrowing, bump difficulty to at least medium."""
+    for q in data.get("questions", []):
+        text = q.get("text", "")
+        if _needs_carry_or_borrow(text) and q.get("difficulty") == "easy":
+            q["difficulty"] = "medium"
+
+
+# ──────────────────────────────────────────────
+# Hard difficulty engine validation
+# ──────────────────────────────────────────────
+
+def _validate_difficulty_engine(
+    data: dict, requested_difficulty: str, is_visual_applicable: bool
+) -> list[str]:
+    """For hard worksheets, ensure required question types are present."""
+    if requested_difficulty != "hard":
+        return []
+
+    issues: list[str] = []
+    questions = data.get("questions", [])
+
+    has_multi_step = any(q.get("role") == "challenge" for q in questions)
+    has_reasoning = any(q.get("role") == "reasoning" for q in questions)
+    has_word_problem = any(q.get("role") == "word_problem" for q in questions)
+    has_concept_visual = any(
+        q.get("role") == "concept_visual" and q.get("visual_type")
+        for q in questions
+    )
+
+    if not has_multi_step:
+        issues.append("hard difficulty requires at least one multi-step (challenge) problem")
+    if not has_reasoning:
+        issues.append("hard difficulty requires at least one reasoning problem")
+    if not has_word_problem:
+        issues.append("hard difficulty requires at least one word problem")
+    if is_visual_applicable and not has_concept_visual:
+        issues.append("hard difficulty requires at least one conceptual visual")
+
+    return issues
 
 
 # ──────────────────────────────────────────────
@@ -578,6 +677,13 @@ def validate_worksheet_data(
                 f"{qid}: computational question must have correct_answer (not null)"
             )
 
+        # Carry/borrow → difficulty >= medium
+        if _needs_carry_or_borrow(text) and q.get("difficulty") == "easy":
+            issues.append(
+                f"{qid}: question requires carrying/borrowing, "
+                f"difficulty must be >= medium"
+            )
+
         # Visual field validation
         vtype = q.get("visual_type")
         vdata = q.get("visual_data")
@@ -606,6 +712,15 @@ def validate_worksheet_data(
                 issues.append(
                     f"{qid}: object_group operation '{op}' invalid — "
                     f"must be one of {sorted(_ALLOWED_OPERATIONS)}"
+                )
+
+        if vtype == "multiplication_array" and isinstance(vdata, dict):
+            rows = vdata.get("rows", 0)
+            cols = vdata.get("columns", 0)
+            if rows * cols > 20:
+                issues.append(
+                    f"{qid}: multiplication_array {rows}x{cols}={rows * cols} exceeds "
+                    f"20 drawable tokens — use number_line instead"
                 )
 
     # Visual ratio checks (aggregated)
@@ -665,6 +780,23 @@ def enforce_visual_rules(
                     "end": total + step,
                     "step": step,
                     "highlight": total,
+                }
+
+        # multiplication_array: product > 20 → convert to number_line
+        if q.get("visual_type") == "multiplication_array" and isinstance(
+            q.get("visual_data"), dict
+        ):
+            rows = q["visual_data"].get("rows", 0)
+            cols = q["visual_data"].get("columns", 0)
+            product = rows * cols
+            if product > 20:
+                step = 1 if product <= 20 else 2 if product <= 50 else 5
+                q["visual_type"] = "number_line"
+                q["visual_data"] = {
+                    "start": 0,
+                    "end": product + step,
+                    "step": step,
+                    "highlight": product,
                 }
 
     # Check coverage requirements
@@ -786,6 +918,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         _trim_to_count(data, request.num_questions, request.problem_style, is_visual)
         _assign_roles(data, request.difficulty)
         _fix_computational_answers(data)
+        _fix_carry_borrow_difficulty(data)
         _fix_number_line_step(data)
 
         if is_visual:
@@ -800,6 +933,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
             is_visual_applicable=is_visual,
         )
         all_issues += _validate_roles(data, is_visual)
+        all_issues += _validate_difficulty_engine(data, request.difficulty, is_visual)
 
         # ── Repair (one attempt) only if validation still fails ──
         if all_issues:
@@ -809,6 +943,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                 _trim_to_count(repaired, request.num_questions, request.problem_style, is_visual)
                 _assign_roles(repaired, request.difficulty)
                 _fix_computational_answers(repaired)
+                _fix_carry_borrow_difficulty(repaired)
                 _fix_number_line_step(repaired)
                 if is_visual:
                     repaired, _ = enforce_visual_rules(
@@ -1218,11 +1353,13 @@ async def regenerate_worksheet(
         _trim_to_count(data, num_questions, "standard", False)
         _assign_roles(data, difficulty)
         _fix_computational_answers(data)
+        _fix_carry_borrow_difficulty(data)
         _fix_number_line_step(data)
 
         # Validate after deterministic fixes
         validation_issues = validate_worksheet_data(data)
         validation_issues += _validate_roles(data, False)
+        validation_issues += _validate_difficulty_engine(data, difficulty, False)
         if validation_issues:
             repaired = attempt_repair(system_prompt, data, validation_issues)
             if repaired:
@@ -1230,6 +1367,7 @@ async def regenerate_worksheet(
                 _trim_to_count(repaired, num_questions, "standard", False)
                 _assign_roles(repaired, difficulty)
                 _fix_computational_answers(repaired)
+                _fix_carry_borrow_difficulty(repaired)
                 _fix_number_line_step(repaired)
                 data = repaired
 
