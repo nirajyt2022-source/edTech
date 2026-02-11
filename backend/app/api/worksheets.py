@@ -449,7 +449,7 @@ def validate_worksheet_data(
             issues.append(f"{qid}: question asks for personal data — remove it")
 
         # Maths computational rule: must have exact answer
-        if _COMPUTATIONAL_PATTERN.search(text) and correct is None:
+        if _is_computational(text) and correct is None:
             issues.append(
                 f"{qid}: computational question must have correct_answer (not null)"
             )
