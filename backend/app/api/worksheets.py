@@ -3,6 +3,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Literal
 import json
+import re
 import uuid
 from datetime import datetime
 from openai import OpenAI
@@ -33,6 +34,10 @@ class WorksheetGenerationRequest(BaseModel):
     problem_style: Literal["standard", "visual", "mixed"] = "standard"
 
 
+# ──────────────────────────────────────────────
+# Models (extended for v3.8 — all new fields optional for backward compat)
+# ──────────────────────────────────────────────
+
 class Question(BaseModel):
     id: str
     type: str
@@ -40,6 +45,10 @@ class Question(BaseModel):
     options: list[str] | None = None
     correct_answer: str | None = None
     explanation: str | None = None
+    difficulty: str | None = None
+    answer_type: str | None = None
+    sample_answer: str | None = None
+    grading_notes: str | None = None
     visual_type: str | None = None
     visual_data: dict | None = None
 
@@ -52,6 +61,9 @@ class Worksheet(BaseModel):
     difficulty: str
     language: str
     questions: list[Question]
+    skill_focus: str = ""
+    common_mistake: str = ""
+    parent_tip: str = ""
 
 
 class WorksheetGenerationResponse(BaseModel):
@@ -59,79 +71,93 @@ class WorksheetGenerationResponse(BaseModel):
     generation_time_ms: int
 
 
-SYSTEM_PROMPT = """You are a CBSE curriculum expert and Indian primary school teacher.
-You generate practice worksheets for school children.
+# ──────────────────────────────────────────────
+# v3.8 System Prompt Builder
+# ──────────────────────────────────────────────
 
-RULES:
-1. Generate age-appropriate questions for the specified grade
-2. Use simple, child-friendly language
-3. Questions must be directly related to the topic
-4. Do NOT add concepts beyond the grade level
-5. For Maths: use Indian number system and contexts (rupees, local names)
-6. Instructions and question text should be in the specified language
-7. Mathematical symbols, numbers, and formulas remain unchanged regardless of language
-8. For regional languages (Hindi, Marathi, Tamil, Telugu, Kannada, Arabic, Urdu):
-   - Use native script for that language
-   - Keep vocabulary grade-appropriate
-   - Use culturally relevant examples
+def build_system_prompt(
+    region: str = "India",
+    problem_style: str = "standard",
+    is_visual_applicable: bool = False,
+    logic_tags: list[str] | None = None,
+) -> str:
+    """Build the PracticeCraft v3.8 world-class system prompt."""
 
-OUTPUT FORMAT (JSON only, no markdown):
-{
-  "title": "Practice Worksheet: [Topic]",
-  "questions": [
-    {
-      "id": "q1",
-      "type": "multiple_choice|fill_blank|short_answer|true_false",
-      "text": "Question text",
-      "options": ["A", "B", "C", "D"],
-      "correct_answer": "correct answer",
-      "explanation": "Brief explanation"
-    }
-  ]
-}
+    prompt = """You are PracticeCraft Worksheet Engine v3.8 — an expert primary-school teacher, curriculum designer, and assessment architect.
 
-Mix question types appropriately. For Maths, include calculation and word problems.
-For English, include grammar and vocabulary. For EVS, include factual and application questions."""
+Your job is to generate world-class, grade-appropriate worksheets that improve conceptual understanding, build structured skill progression, and maintain strict curriculum alignment.
 
+CORE QUALITY RULES (NON-NEGOTIABLE):
+1. Grade-Safe: Do NOT introduce concepts beyond the specified grade.
+2. No Personal Data: Never ask for real names, addresses, phone numbers, or personal family details.
+3. Clarity: Every question must be solvable with the given information.
+4. No Ambiguity: Avoid vague wording.
+5. Difficulty Accuracy:
+   - Easy = direct recall or single-step
+   - Medium = 1-2 step skill application
+   - Hard = reasoning, multi-step, or scenario-based (but grade-safe)
+6. Avoid repetition of identical structures.
+7. Exactly the requested number of questions.
 
-def build_system_prompt(region: str = "India", logic_tags: list[str] | None = None) -> str:
-    """Build a region-aware, skill-focused system prompt for worksheet generation."""
-    base = """You are a CBSE-aligned primary curriculum expert and experienced school teacher.
-You generate age-appropriate, skill-focused practice worksheets for school children (Classes 1-5).
+PEDAGOGICAL STRUCTURE (MANDATORY):
+1. Warm-Up (1-2 easy questions)
+2. Core Practice (majority medium difficulty)
+3. Challenge (1-2 application/reasoning questions if difficulty=hard)
 
-RULES:
-1. Generate age-appropriate questions for the specified grade
-2. Use simple, child-friendly language
-3. Questions must be directly related to the selected skills/topic
-4. Do NOT add concepts beyond the grade level
-5. Instructions and question text should be in the specified language
-6. Mathematical symbols, numbers, and formulas remain unchanged regardless of language
-7. For regional languages, use native script with grade-appropriate vocabulary"""
+Ensure coverage of key sub-skills within the topic.
 
-    # Regional context
+For Maths:
+- Include at least one word problem.
+- Encourage estimation or reasoning when appropriate.
+- Do not rely only on raw calculations.
+
+For Language subjects:
+- Include contextual or usage-based questions.
+- Include at least one comprehension or applied question."""
+
+    # ── Regional context ──
     if region == "UAE":
-        regional = """
+        prompt += """
 
-REGIONAL CONTEXT (UAE):
-- Use Dirhams (AED) and Fils for money problems
-- Use UAE-relevant names (e.g., Ahmed, Fatima, Omar, Mariam)
-- Reference UAE landmarks (Burj Khalifa, Sheikh Zayed Mosque, Louvre Abu Dhabi)
-- Use local contexts (desert, oasis, date palms, pearl diving heritage)
-- Reference UAE festivals and events (National Day, Eid)"""
+REGIONAL CONTEXT:
+- Use AED for money problems.
+- Use UAE names (Ahmed, Fatima, Omar, Mariam).
+- Use UAE-relevant contexts (desert, oasis, date palms, Burj Khalifa, National Day, Eid).
+- Keep examples culturally appropriate but simple."""
     else:
-        regional = """
+        prompt += """
 
-REGIONAL CONTEXT (India):
-- Use Rupees and Paise for money problems
-- Use Indian names (e.g., Aarav, Priya, Rohan, Ananya)
-- Reference Indian contexts (festivals like Diwali/Holi, local markets, trains)
-- Use culturally relevant examples (mangoes, cricket, rickshaws)
-- Reference Indian landmarks when appropriate"""
+REGIONAL CONTEXT:
+- Use Rupees for money problems.
+- Use culturally familiar names (Aarav, Priya, Rohan, Ananya).
+- Use relatable Indian examples (mangoes, cricket, Diwali, Holi, local markets).
+- Keep examples culturally appropriate but simple."""
 
-    # Logic tag guidance
-    tag_guidance = ""
+    # ── Visual mode rules (conditional) ──
+    if is_visual_applicable:
+        if problem_style == "visual":
+            coverage = "ALL questions MUST include visual_type and visual_data."
+        else:
+            coverage = "At least HALF of the questions must include visual_type and visual_data. The rest should be standard text-only."
+
+        prompt += f"""
+
+VISUAL MODE RULES:
+{coverage}
+
+Visual types allowed: clock, number_line, object_group, shapes.
+Drawable constraints: object_group counts MUST NOT exceed 20. For larger numbers use number_line.
+
+Formats:
+- clock: {{ "hour": 1-12, "minute": 0|5|10|...|55 }}
+- number_line: {{ "start": int, "end": int, "step": int, "highlight": int }}
+- object_group: {{ "groups": [{{"count": 1-20, "label": "apples"}}], "operation": "+"|"-" }}
+- shapes: {{ "shape": "triangle"|"circle"|"rectangle"|"square", "sides": [numbers] }}
+
+Keep the "text" field as a readable question even for visual questions."""
+
+    # ── Logic tag guidance ──
     if logic_tags:
-        tag_lines = []
         tag_map = {
             "numerical": "Include arithmetic, calculation, and number-based problems",
             "vocabulary": "Include matching, fill-in-the-blank, and word-building exercises",
@@ -139,78 +165,248 @@ REGIONAL CONTEXT (India):
             "observation": "Include scenario-based MCQs and reasoning questions",
             "diagrammatic": "Include labeling, drawing, and diagram-based questions",
         }
-        for tag in logic_tags:
-            if tag in tag_map:
-                tag_lines.append(f"- {tag}: {tag_map[tag]}")
+        tag_lines = [f"- {tag}: {tag_map[tag]}" for tag in logic_tags if tag in tag_map]
         if tag_lines:
-            tag_guidance = "\n\nQUESTION TYPE GUIDANCE:\n" + "\n".join(tag_lines)
+            prompt += "\n\nQUESTION TYPE GUIDANCE:\n" + "\n".join(tag_lines)
 
-    output_format = """
+    # ── Answer rules + parent support + output format ──
+    prompt += """
+
+ANSWER RULES:
+- Objective questions: provide exact correct_answer, set answer_type="exact", sample_answer=null, grading_notes=null.
+- True/False: correct_answer must be "true" or "false" (lowercase string).
+- Open-ended questions (write/explain/describe): set correct_answer=null, answer_type="example", provide sample_answer and grading_notes.
+
+PARENT SUPPORT (include at top level of JSON):
+- "skill_focus": brief statement of the core skill being practiced
+- "common_mistake": typical mistake children make on this topic
+- "parent_tip": short actionable guidance (1 sentence)
+
+These must be practical and clear.
 
 OUTPUT FORMAT (JSON only, no markdown):
 {
-  "title": "Practice Worksheet: [Topic/Skills]",
+  "title": "...",
+  "skill_focus": "...",
+  "common_mistake": "...",
+  "parent_tip": "...",
   "questions": [
     {
       "id": "q1",
-      "type": "multiple_choice|fill_blank|short_answer|true_false",
-      "text": "Question text",
-      "options": ["A", "B", "C", "D"],
-      "correct_answer": "correct answer",
-      "explanation": "Brief explanation"
+      "type": "multiple_choice" | "fill_blank" | "short_answer" | "true_false",
+      "text": "...",
+      "options": ["..."] | null,
+      "correct_answer": "..." | null,
+      "answer_type": "exact" | "example",
+      "sample_answer": "..." | null,
+      "grading_notes": "..." | null,
+      "difficulty": "easy" | "medium" | "hard",
+      "explanation": "Brief explanation",
+      "visual_type": "clock" | "number_line" | "object_group" | "shapes" | null,
+      "visual_data": { ... } | null
     }
   ]
 }
 
-Mix question types appropriately based on the subject and skills."""
+FINAL CHECK BEFORE OUTPUT:
+- Valid JSON only. No markdown.
+- All required fields present.
+- Exactly requested question count.
+- No personal data prompts."""
 
-    return base + regional + tag_guidance + output_format
+    return prompt
 
 
-def build_visual_instructions(problem_style: str) -> str:
-    """Build additional prompt instructions for visual problem mode."""
-    coverage = (
-        "ALL questions MUST include visual_type and visual_data."
-        if problem_style == "visual"
-        else "Approximately HALF of the questions should include visual_type and visual_data. The rest should be standard text-only questions."
+# ──────────────────────────────────────────────
+# Helpers: JSON cleanup, parsing, validation
+# ──────────────────────────────────────────────
+
+def clean_json_response(content: str) -> str:
+    """Strip markdown fences from model output."""
+    content = content.strip()
+    if content.startswith("```json"):
+        content = content[7:]
+    if content.startswith("```"):
+        content = content[3:]
+    if content.endswith("```"):
+        content = content[:-3]
+    return content.strip()
+
+
+def parse_question(q: dict, index: int, fallback_difficulty: str) -> Question:
+    """Parse a question dict into a Question model with backward-compatible defaults."""
+    correct_answer = q.get("correct_answer")
+    answer_type = q.get("answer_type")
+    if not answer_type:
+        answer_type = "exact" if correct_answer is not None else "example"
+
+    return Question(
+        id=q.get("id", f"q{index + 1}"),
+        type=q.get("type", "short_answer"),
+        text=q.get("text", ""),
+        options=q.get("options"),
+        correct_answer=correct_answer,
+        explanation=q.get("explanation"),
+        difficulty=q.get("difficulty", fallback_difficulty),
+        answer_type=answer_type,
+        sample_answer=q.get("sample_answer"),
+        grading_notes=q.get("grading_notes"),
+        visual_type=q.get("visual_type"),
+        visual_data=q.get("visual_data"),
     )
-    return f"""
 
-VISUAL PROBLEM MODE ({problem_style.upper()}):
-{coverage}
 
-For visual questions, add TWO extra fields to the question JSON:
-  "visual_type": one of "clock", "object_group", "shapes", "number_line"
-  "visual_data": a structured object (see formats below)
+_PERSONAL_DATA_PATTERNS = re.compile(
+    r"("
+    r"your\s+(father|mother|parent)'?s?\s+name"
+    r"|my\s+(father|mother|parent)'?s?\s+name"
+    r"|मेरे\s+पिता\s+का\s+नाम"
+    r"|अपने\s+पिता\s+का\s+नाम"
+    r"|phone\s*number"
+    r"|your\s+address"
+    r"|फ़ोन\s*नंबर"
+    r"|पता\s+लिखि"
+    r")",
+    re.IGNORECASE,
+)
 
-Visual data formats:
-- clock (time-telling): {{ "hour": 3, "minute": 30 }}
-- object_group (counting/addition/subtraction): {{ "groups": [{{"count": 5, "label": "apples"}}, {{"count": 3, "label": "oranges"}}], "operation": "+" }}
-- shapes (geometry): {{ "shape": "triangle", "sides": [3, 4, 5] }}  (shape: triangle|circle|rectangle|square)
-- number_line (number placement): {{ "start": 0, "end": 20, "step": 2, "highlight": 14 }}
+_OPEN_ENDED_PATTERNS = re.compile(
+    r"\b(write|describe|explain|लिखिए|बताइए)\b",
+    re.IGNORECASE,
+)
 
-Keep the "text" field as a readable question even for visual questions (e.g. "What time does this clock show?").
-visual_data values must be valid JSON objects with the exact keys shown above."""
 
+def validate_worksheet_data(data: dict) -> list[str]:
+    """Validate parsed worksheet JSON. Returns list of issue descriptions (empty = valid)."""
+    issues: list[str] = []
+    questions = data.get("questions", [])
+
+    for i, q in enumerate(questions):
+        qid = q.get("id", f"q{i + 1}")
+
+        # Required keys
+        if not q.get("text"):
+            issues.append(f"{qid}: missing question text")
+
+        q_type = q.get("type", "")
+        correct = q.get("correct_answer")
+
+        # MCQ: correct_answer must be in options
+        if q_type == "multiple_choice":
+            options = q.get("options") or []
+            if correct is not None and correct not in options:
+                issues.append(
+                    f"{qid}: correct_answer '{correct}' not in options {options}"
+                )
+
+        # True/False: must be lowercase "true" or "false"
+        if q_type == "true_false":
+            if correct not in ("true", "false"):
+                issues.append(
+                    f"{qid}: true_false correct_answer must be 'true' or 'false', got '{correct}'"
+                )
+
+        # Open-ended detection
+        text = q.get("text", "")
+        if _OPEN_ENDED_PATTERNS.search(text):
+            if correct is not None:
+                issues.append(f"{qid}: open-ended question should have correct_answer=null")
+            if q.get("answer_type") != "example":
+                issues.append(f"{qid}: open-ended question should have answer_type='example'")
+
+        # Personal data ban
+        if _PERSONAL_DATA_PATTERNS.search(text):
+            issues.append(f"{qid}: question asks for personal data — remove it")
+
+    return issues
+
+
+def enforce_visual_rules(
+    data: dict, problem_style: str, is_visual_applicable: bool
+) -> tuple[dict, list[str]]:
+    """Enforce visual mode constraints. Returns (modified data, list of unfixable issues)."""
+    if not is_visual_applicable:
+        return data, []
+
+    questions = data.get("questions", [])
+    issues: list[str] = []
+
+    # Fix object_group counts > 20 → convert to number_line
+    for q in questions:
+        if q.get("visual_type") == "object_group" and q.get("visual_data"):
+            groups = q["visual_data"].get("groups", [])
+            over = any(g.get("count", 0) > 20 for g in groups)
+            if over:
+                total = sum(g.get("count", 0) for g in groups)
+                step = 1 if total <= 20 else 2 if total <= 50 else 5
+                q["visual_type"] = "number_line"
+                q["visual_data"] = {
+                    "start": 0,
+                    "end": total + step,
+                    "step": step,
+                    "highlight": total,
+                }
+
+    # Check coverage requirements
+    visual_count = sum(
+        1 for q in questions if q.get("visual_type") and q.get("visual_data")
+    )
+    total = len(questions)
+
+    if problem_style == "visual" and visual_count < total:
+        issues.append(
+            f"visual mode requires ALL {total} questions to have visual_type+visual_data, "
+            f"but only {visual_count} do"
+        )
+    elif problem_style == "mixed" and total > 0 and visual_count < (total // 2):
+        issues.append(
+            f"mixed mode requires at least {total // 2} visual questions, "
+            f"but only {visual_count} found"
+        )
+
+    return data, issues
+
+
+def attempt_repair(
+    system_prompt: str,
+    original_data: dict,
+    issues: list[str],
+) -> dict | None:
+    """Make ONE repair call to fix validation/visual issues. Returns fixed data or None."""
+    issue_text = "\n".join(f"- {iss}" for iss in issues)
+    repair_prompt = (
+        f"The following worksheet JSON has issues. Fix ONLY the listed issues and "
+        f"return the complete corrected JSON. No markdown.\n\n"
+        f"Issues:\n{issue_text}\n\n"
+        f"Original JSON:\n{json.dumps(original_data, ensure_ascii=False)}"
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": repair_prompt},
+            ],
+            temperature=0.3,
+            max_tokens=8192,
+        )
+        content = clean_json_response(response.choices[0].message.content or "")
+        return json.loads(content)
+    except (json.JSONDecodeError, Exception):
+        return None
+
+
+# ──────────────────────────────────────────────
+# Generation endpoints
+# ──────────────────────────────────────────────
 
 @router.post("/generate", response_model=WorksheetGenerationResponse)
 async def generate_worksheet(request: WorksheetGenerationRequest):
     """Generate a new worksheet based on provided parameters."""
     start_time = datetime.now()
 
-    # Use skills as topic context if provided
-    topic_context = request.topic
-    if request.skills:
-        topic_context = ", ".join(request.skills)
-
-    # Use region-aware prompt when skills/logic_tags are provided
-    system_prompt = (
-        build_system_prompt(request.region, request.logic_tags)
-        if request.skills or request.logic_tags
-        else SYSTEM_PROMPT
-    )
-
-    # Determine if visual mode is applicable (Math, Grades 1-3)
+    # Determine visual applicability (Math, Grades 1-3)
     grade_num = 0
     try:
         grade_num = int(request.grade_level.replace("Class ", ""))
@@ -221,63 +417,76 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         and request.subject.lower() in ("maths", "mathematics", "math")
         and 1 <= grade_num <= 3
     )
-    visual_block = build_visual_instructions(request.problem_style) if is_visual else ""
 
-    user_prompt = f"""Generate a {request.difficulty} difficulty worksheet:
-- Board: {request.board}
-- Grade: {request.grade_level}
-- Subject: {request.subject}
-- Skills/Topic: {topic_context}
-- Number of Questions: {request.num_questions}
-- Language for instructions: {request.language}
-- Region: {request.region}
+    # Build v3.8 system prompt
+    system_prompt = build_system_prompt(
+        region=request.region,
+        problem_style=request.problem_style,
+        is_visual_applicable=is_visual,
+        logic_tags=request.logic_tags,
+    )
 
-{f"Additional instructions: {request.custom_instructions}" if request.custom_instructions else ""}
-{visual_block}
-Generate exactly {request.num_questions} questions. Return ONLY valid JSON, no markdown."""
+    # Use skills as topic context if provided
+    topic_context = request.topic
+    if request.skills:
+        topic_context = ", ".join(request.skills)
+
+    # Short user prompt (all rules are in system prompt)
+    user_prompt = (
+        f"Grade: {request.grade_level} | Subject: {request.subject} | Board: {request.board}\n"
+        f"Topic/Skills: {topic_context}\n"
+        f"Difficulty: {request.difficulty} | Questions: {request.num_questions} | Language: {request.language}"
+    )
+    if request.custom_instructions:
+        user_prompt += f"\nAdditional: {request.custom_instructions}"
 
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.7,
-            max_tokens=4096,
+            max_tokens=8192,
         )
 
-        content = response.choices[0].message.content or ""
+        content = clean_json_response(response.choices[0].message.content or "")
 
-        # Clean up response - remove markdown code blocks if present
-        content = content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
-
-        # Parse JSON response
         try:
             data = json.loads(content)
         except json.JSONDecodeError as e:
-            raise HTTPException(status_code=500, detail=f"Failed to parse AI response: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to parse AI response: {str(e)}"
+            )
 
-        # Build questions with IDs
-        questions = []
-        for i, q in enumerate(data.get("questions", [])):
-            questions.append(Question(
-                id=q.get("id", f"q{i+1}"),
-                type=q.get("type", "short_answer"),
-                text=q.get("text", ""),
-                options=q.get("options"),
-                correct_answer=q.get("correct_answer"),
-                explanation=q.get("explanation"),
-                visual_type=q.get("visual_type"),
-                visual_data=q.get("visual_data"),
-            ))
+        # ── Post-processing: visual enforcement ──
+        if is_visual:
+            data, visual_issues = enforce_visual_rules(
+                data, request.problem_style, True
+            )
+        else:
+            visual_issues = []
+
+        # ── Validation ──
+        validation_issues = validate_worksheet_data(data)
+        all_issues = validation_issues + visual_issues
+
+        # ── Repair (one attempt) if issues found ──
+        if all_issues:
+            repaired = attempt_repair(system_prompt, data, all_issues)
+            if repaired:
+                data = repaired
+                if is_visual:
+                    data, _ = enforce_visual_rules(
+                        data, request.problem_style, True
+                    )
+
+        # ── Build response models with backward-compatible defaults ──
+        questions = [
+            parse_question(q, i, request.difficulty)
+            for i, q in enumerate(data.get("questions", []))
+        ]
 
         worksheet = Worksheet(
             title=data.get("title", f"{request.topic} Practice Worksheet"),
@@ -287,6 +496,9 @@ Generate exactly {request.num_questions} questions. Return ONLY valid JSON, no m
             difficulty=request.difficulty.capitalize(),
             language=request.language,
             questions=questions,
+            skill_focus=data.get("skill_focus", ""),
+            common_mistake=data.get("common_mistake", ""),
+            parent_tip=data.get("parent_tip", ""),
         )
 
         end_time = datetime.now()
@@ -300,8 +512,14 @@ Generate exactly {request.num_questions} questions. Return ONLY valid JSON, no m
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate worksheet: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate worksheet: {str(e)}"
+        )
 
+
+# ──────────────────────────────────────────────
+# PDF export
+# ──────────────────────────────────────────────
 
 class PDFExportRequest(BaseModel):
     worksheet: Worksheet
@@ -335,6 +553,10 @@ async def export_worksheet_pdf(request: PDFExportRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
 
+
+# ──────────────────────────────────────────────
+# Save / List / Get / Delete
+# ──────────────────────────────────────────────
 
 class SaveWorksheetRequest(BaseModel):
     worksheet: Worksheet
@@ -535,6 +757,10 @@ async def delete_saved_worksheet(
         raise HTTPException(status_code=500, detail=f"Failed to delete worksheet: {str(e)}")
 
 
+# ──────────────────────────────────────────────
+# Subscription helpers
+# ──────────────────────────────────────────────
+
 FREE_TIER_LIMIT = 3  # worksheets per month
 
 
@@ -576,6 +802,10 @@ def increment_usage(user_id: str, sub: dict) -> None:
         .execute()
 
 
+# ──────────────────────────────────────────────
+# Regenerate
+# ──────────────────────────────────────────────
+
 @router.post("/regenerate/{worksheet_id}", response_model=WorksheetGenerationResponse)
 async def regenerate_worksheet(
     worksheet_id: str,
@@ -615,56 +845,52 @@ async def regenerate_worksheet(
         # Generate new worksheet with same settings
         start_time = datetime.now()
 
-        user_prompt = f"""Generate a {original['difficulty'].lower()} difficulty worksheet:
-- Board: {original.get('board', 'CBSE')}
-- Grade: {original['grade']}
-- Subject: {original['subject']}
-- Topic: {original['topic']}
-- Number of Questions: {len(original['questions'])}
-- Language for instructions: {original.get('language', 'English')}
+        region = original.get("region", "India")
+        system_prompt = build_system_prompt(region=region)
 
-Generate exactly {len(original['questions'])} NEW questions (different from before). Return ONLY valid JSON, no markdown."""
+        num_questions = len(original["questions"])
+        difficulty = original["difficulty"].lower()
+
+        user_prompt = (
+            f"Grade: {original['grade']} | Subject: {original['subject']} "
+            f"| Board: {original.get('board', 'CBSE')}\n"
+            f"Topic: {original['topic']}\n"
+            f"Difficulty: {difficulty} | Questions: {num_questions} "
+            f"| Language: {original.get('language', 'English')}\n"
+            f"Generate completely NEW questions (different from before)."
+        )
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
             temperature=0.8,  # Slightly higher for more variety
-            max_tokens=4096,
+            max_tokens=8192,
         )
 
-        content = response.choices[0].message.content or ""
-
-        # Clean up response
-        content = content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
+        content = clean_json_response(response.choices[0].message.content or "")
 
         try:
             data = json.loads(content)
         except json.JSONDecodeError as e:
-            raise HTTPException(status_code=500, detail=f"Failed to parse AI response: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to parse AI response: {str(e)}"
+            )
 
-        # Build questions
-        questions = []
-        for i, q in enumerate(data.get("questions", [])):
-            questions.append(Question(
-                id=q.get("id", f"q{i+1}"),
-                type=q.get("type", "short_answer"),
-                text=q.get("text", ""),
-                options=q.get("options"),
-                correct_answer=q.get("correct_answer"),
-                explanation=q.get("explanation"),
-                visual_type=q.get("visual_type"),
-                visual_data=q.get("visual_data"),
-            ))
+        # Validation + optional repair
+        validation_issues = validate_worksheet_data(data)
+        if validation_issues:
+            repaired = attempt_repair(system_prompt, data, validation_issues)
+            if repaired:
+                data = repaired
+
+        # Build questions with backward-compatible defaults
+        questions = [
+            parse_question(q, i, difficulty)
+            for i, q in enumerate(data.get("questions", []))
+        ]
 
         worksheet = Worksheet(
             title=data.get("title", f"{original['topic']} Practice Worksheet"),
@@ -674,6 +900,9 @@ Generate exactly {len(original['questions'])} NEW questions (different from befo
             difficulty=original["difficulty"],
             language=original.get("language", "English"),
             questions=questions,
+            skill_focus=data.get("skill_focus", ""),
+            common_mistake=data.get("common_mistake", ""),
+            parent_tip=data.get("parent_tip", ""),
         )
 
         # Increment regeneration count on original worksheet
@@ -701,8 +930,14 @@ Generate exactly {len(original['questions'])} NEW questions (different from befo
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to regenerate worksheet: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to regenerate worksheet: {str(e)}"
+        )
 
+
+# ──────────────────────────────────────────────
+# Analytics
+# ──────────────────────────────────────────────
 
 @router.get("/analytics")
 async def get_teacher_analytics(authorization: str = Header(None)):
