@@ -160,21 +160,27 @@ Visuals go in "visual_type" and "visual_data" fields only.
 
 Visual types allowed: multiplication_array, number_line_jumps, number_line, object_group, shapes, clock.
 
-MULTIPLICATION RULE: Use multiplication_array for "groups of" or "times" problems.
-ADDITION RULE: Prefer number_line_jumps for conceptual addition understanding.
+VISUAL ALIGNMENT (STRICT — follow exactly):
+1. If question text mentions "array", "rows", "columns", or "grid" → visual_type MUST be "multiplication_array".
+2. If the question involves multiplication AND is visual → use multiplication_array (or object_group if factors ≤ 10 and product ≤ 20). Do NOT use number_line for multiplication visuals.
+3. For addition/subtraction visuals → prefer number_line_jumps. The math must be consistent: result = start + (jump_size × num_jumps) for addition, result = start - (jump_size × num_jumps) for subtraction.
+4. NEVER use a highlight-only number_line (just start/end/highlight with no jumps) as a visual for multi-step or multiplication problems. It provides no conceptual value.
+5. multiplication_array: rows × columns MUST equal the correct_answer for total-count questions.
 
 Drawable constraints:
 - object_group counts MUST NOT exceed 20 per group. For larger numbers use number_line instead.
-- object_group labels must be simple, drawable nouns (e.g. "apples", "stars", "balls"). Avoid compound phrases like "boxes of chocolates".
+- object_group labels must be simple, drawable nouns (e.g. "apples", "stars", "balls"). Avoid compound phrases.
 - multiplication_array: rows × columns must not exceed 20. For larger products use number_line.
 
 Formats:
 - clock: {{ "hour": 1-12, "minute": 0|5|10|...|55 }}
 - number_line: {{ "start": int, "end": int, "step": int, "highlight": int }}
 - number_line_jumps: {{ "start": int, "end": int, "jump_size": int, "num_jumps": int, "result": int }}
+  RULE: result must equal start + jump_size*num_jumps (addition) or start - jump_size*num_jumps (subtraction).
 - multiplication_array: {{ "rows": int, "columns": int, "label": "dots" }}
+  RULE: rows*columns must match the correct_answer.
 - object_group: {{ "groups": [{{"count": 1-20, "label": "apples"}}], "operation": "+"|"-"|"x" }}
-  For multiplication ("x"), prefer multiplication_array when both factors <= 10 and product <= 20, else use number_line.
+  For multiplication ("x"), prefer multiplication_array when both factors ≤ 10 and product ≤ 20.
 - shapes: {{ "shape": "triangle"|"circle"|"rectangle"|"square", "sides": [numbers] }}
 
 Keep the "text" field as a readable question even for visual questions."""
@@ -396,6 +402,52 @@ def _fix_computational_answers(data: dict) -> None:
                 q["sample_answer"] = None
             # If correct_answer is null but it's clearly computational,
             # flag it — validator will catch and send to repair
+
+
+def _fix_inconsistent_visuals(data: dict) -> None:
+    """Fail-safe: null out visual fields when visual_data is structurally broken."""
+    for q in data.get("questions", []):
+        vtype = q.get("visual_type")
+        vdata = q.get("visual_data")
+
+        # visual_type set but visual_data missing/not-dict → null both
+        if vtype and not isinstance(vdata, dict):
+            q["visual_type"] = None
+            q["visual_data"] = None
+            continue
+
+        if not vtype or not isinstance(vdata, dict):
+            continue
+
+        # number_line_jumps: must have jump_size, num_jumps, result
+        if vtype == "number_line_jumps":
+            if not (vdata.get("jump_size") and vdata.get("num_jumps")):
+                q["visual_type"] = None
+                q["visual_data"] = None
+
+        # multiplication_array: must have rows > 0 and columns > 0
+        elif vtype == "multiplication_array":
+            if not (vdata.get("rows") and vdata.get("columns")):
+                q["visual_type"] = None
+                q["visual_data"] = None
+
+        # number_line: must have start, end, step
+        elif vtype == "number_line":
+            if vdata.get("end", 0) <= vdata.get("start", 0):
+                q["visual_type"] = None
+                q["visual_data"] = None
+
+        # object_group: must have groups list
+        elif vtype == "object_group":
+            if not isinstance(vdata.get("groups"), list) or not vdata["groups"]:
+                q["visual_type"] = None
+                q["visual_data"] = None
+
+        # clock: must have hour
+        elif vtype == "clock":
+            if not vdata.get("hour"):
+                q["visual_type"] = None
+                q["visual_data"] = None
 
 
 def _fix_number_line_step(data: dict) -> None:
@@ -1141,6 +1193,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         _assign_roles(data, request.difficulty)
         _fix_computational_answers(data)
         _fix_carry_borrow_difficulty(data)
+        _fix_inconsistent_visuals(data)
         _fix_number_line_step(data)
 
         if is_visual:
@@ -1175,6 +1228,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                 _assign_roles(repaired, request.difficulty)
                 _fix_computational_answers(repaired)
                 _fix_carry_borrow_difficulty(repaired)
+                _fix_inconsistent_visuals(repaired)
                 _fix_number_line_step(repaired)
                 if is_visual:
                     repaired, _ = enforce_visual_rules(
@@ -1587,6 +1641,7 @@ async def regenerate_worksheet(
         _assign_roles(data, difficulty)
         _fix_computational_answers(data)
         _fix_carry_borrow_difficulty(data)
+        _fix_inconsistent_visuals(data)
         _fix_number_line_step(data)
 
         # Validate after deterministic fixes
@@ -1607,6 +1662,7 @@ async def regenerate_worksheet(
                 _assign_roles(repaired, difficulty)
                 _fix_computational_answers(repaired)
                 _fix_carry_borrow_difficulty(repaired)
+                _fix_inconsistent_visuals(repaired)
                 _fix_number_line_step(repaired)
                 data = repaired
             else:
