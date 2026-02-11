@@ -163,22 +163,24 @@ Visual types allowed: multiplication_array, number_line_jumps, number_line, obje
 VISUAL ALIGNMENT (STRICT — follow exactly):
 1. If question text mentions "array", "rows", "columns", or "grid" → visual_type MUST be "multiplication_array".
 2. If the question involves multiplication AND is visual → use multiplication_array (or object_group if factors ≤ 10 and product ≤ 20). Do NOT use number_line for multiplication visuals.
-3. For addition/subtraction visuals → prefer number_line_jumps. The math must be consistent: result = start + (jump_size × num_jumps) for addition, result = start - (jump_size × num_jumps) for subtraction.
+3. For addition/subtraction visuals → prefer number_line_jumps. Jumps array must be consistent: start + sum(jumps) == end. Use negative jumps for subtraction.
 4. NEVER use a highlight-only number_line (just start/end/highlight with no jumps) as a visual for multi-step or multiplication problems. It provides no conceptual value.
-5. multiplication_array: rows × columns MUST equal the correct_answer for total-count questions.
+5. multiplication_array: rows × cols MUST equal the correct_answer for total-count questions.
 
 Drawable constraints:
 - object_group counts MUST NOT exceed 20 per group. For larger numbers use number_line instead.
 - object_group labels must be simple, drawable nouns (e.g. "apples", "stars", "balls"). Avoid compound phrases.
-- multiplication_array: rows × columns must not exceed 20. For larger products use number_line.
+- multiplication_array: rows × cols must not exceed 20. For larger products use number_line.
 
 Formats:
 - clock: {{ "hour": 1-12, "minute": 0|5|10|...|55 }}
 - number_line: {{ "start": int, "end": int, "step": int, "highlight": int }}
-- number_line_jumps: {{ "start": int, "end": int, "jump_size": int, "num_jumps": int, "result": int }}
-  RULE: result must equal start + jump_size*num_jumps (addition) or start - jump_size*num_jumps (subtraction).
-- multiplication_array: {{ "rows": int, "columns": int, "label": "dots" }}
-  RULE: rows*columns must match the correct_answer.
+- number_line_jumps: {{ "start": int, "jumps": [int, int, ...], "end": int }}
+  RULE: start + sum(jumps) == end. Use negative integers in jumps for subtraction.
+  Example addition: {{ "start": 123, "jumps": [200, 30, 4], "end": 357 }}
+  Example subtraction: {{ "start": 512, "jumps": [-200, -70, -9], "end": 233 }}
+- multiplication_array: {{ "rows": int, "cols": int, "label": "dots" }}
+  RULE: rows * cols must match the correct_answer. Use "cols" NOT "columns".
 - object_group: {{ "groups": [{{"count": 1-20, "label": "apples"}}], "operation": "+"|"-"|"x" }}
   For multiplication ("x"), prefer multiplication_array when both factors ≤ 10 and product ≤ 20.
 - shapes: {{ "shape": "triangle"|"circle"|"rectangle"|"square", "sides": [numbers] }}
@@ -405,7 +407,7 @@ def _fix_computational_answers(data: dict) -> None:
 
 
 def _fix_inconsistent_visuals(data: dict) -> None:
-    """Fail-safe: null out visual fields when visual_data is structurally broken."""
+    """Fail-safe: null out broken visuals; migrate old schemas to current format."""
     for q in data.get("questions", []):
         vtype = q.get("visual_type")
         vdata = q.get("visual_data")
@@ -419,15 +421,37 @@ def _fix_inconsistent_visuals(data: dict) -> None:
         if not vtype or not isinstance(vdata, dict):
             continue
 
-        # number_line_jumps: must have jump_size, num_jumps, result
+        # number_line_jumps: must have "jumps" array (migrate old schema if needed)
         if vtype == "number_line_jumps":
-            if not (vdata.get("jump_size") and vdata.get("num_jumps")):
+            if isinstance(vdata.get("jumps"), list) and len(vdata["jumps"]) > 0:
+                pass  # already correct schema
+            elif vdata.get("jump_size") and vdata.get("num_jumps"):
+                # Migrate old {jump_size, num_jumps, result} → {jumps[], end}
+                js = vdata["jump_size"]
+                nj = vdata["num_jumps"]
+                start = vdata.get("start", 0)
+                result = vdata.get("result")
+                # Determine if subtraction (result < start)
+                if result is not None and result < start:
+                    jumps_list = [-abs(js)] * nj
+                else:
+                    jumps_list = [abs(js)] * nj
+                end = start + sum(jumps_list)
+                q["visual_data"] = {
+                    "start": start,
+                    "jumps": jumps_list,
+                    "end": end,
+                }
+            else:
                 q["visual_type"] = None
                 q["visual_data"] = None
 
-        # multiplication_array: must have rows > 0 and columns > 0
+        # multiplication_array: must have rows > 0 and cols > 0 (migrate "columns" → "cols")
         elif vtype == "multiplication_array":
-            if not (vdata.get("rows") and vdata.get("columns")):
+            # Migrate "columns" → "cols" if needed
+            if "columns" in vdata and "cols" not in vdata:
+                vdata["cols"] = vdata.pop("columns")
+            if not (vdata.get("rows") and vdata.get("cols")):
                 q["visual_type"] = None
                 q["visual_data"] = None
 
@@ -771,7 +795,7 @@ def validate_worksheet_data(
 
         if vtype == "multiplication_array" and isinstance(vdata, dict):
             rows = vdata.get("rows", 0)
-            cols = vdata.get("columns", 0)
+            cols = vdata.get("cols", 0)
             if rows * cols > 20:
                 issues.append(
                     f"{qid}: multiplication_array {rows}x{cols}={rows * cols} exceeds "
@@ -842,7 +866,7 @@ def enforce_visual_rules(
             q.get("visual_data"), dict
         ):
             rows = q["visual_data"].get("rows", 0)
-            cols = q["visual_data"].get("columns", 0)
+            cols = q["visual_data"].get("cols", 0)
             product = rows * cols
             if product > 20:
                 step = 1 if product <= 20 else 2 if product <= 50 else 5
@@ -971,32 +995,34 @@ def validate_visual_integrity(
             and vtype == "number_line"
             and isinstance(vdata, dict)
             and vdata.get("highlight")
-            and not vdata.get("jump_size")
+            and not isinstance(vdata.get("jumps"), list)
         ):
             issues.append(
                 f"{qid}: multiplication uses number_line highlight-only "
                 f"— prefer multiplication_array"
             )
 
-        # 4. number_line_jumps: internal consistency
+        # 4. number_line_jumps: internal consistency (start + sum(jumps) == end)
         if vtype == "number_line_jumps" and isinstance(vdata, dict):
-            start = vdata.get("start", 0)
-            jump_size = vdata.get("jump_size", 0)
-            num_jumps = vdata.get("num_jumps", 0)
-            result = vdata.get("result")
-            if jump_size and num_jumps and result is not None:
-                expected_fwd = start + jump_size * num_jumps
-                expected_bwd = start - jump_size * num_jumps
-                if result != expected_fwd and result != expected_bwd:
+            jumps = vdata.get("jumps")
+            if isinstance(jumps, list) and len(jumps) > 0:
+                start = vdata.get("start", 0)
+                end = vdata.get("end")
+                expected_end = start + sum(jumps)
+                if end is not None and end != expected_end:
                     issues.append(
-                        f"{qid}: number_line_jumps result={result} inconsistent — "
-                        f"expected {expected_fwd} or {expected_bwd}"
+                        f"{qid}: number_line_jumps start({start}) + sum({jumps})"
+                        f"={expected_end} but end={end}"
                     )
+            else:
+                issues.append(
+                    f"{qid}: number_line_jumps missing 'jumps' array"
+                )
 
         # 5. multiplication_array: rows*cols must match correct_answer for count questions
         if vtype == "multiplication_array" and isinstance(vdata, dict):
             rows = vdata.get("rows", 0)
-            cols = vdata.get("columns", 0)
+            cols = vdata.get("cols", 0)
             correct = q.get("correct_answer")
             if correct is not None and rows and cols:
                 try:
