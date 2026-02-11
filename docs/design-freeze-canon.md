@@ -241,6 +241,24 @@ This document is the single canonical record of every completed UX, UI, and stat
 
 ---
 
+### Phase 18: Visual Problem Mode
+
+**Problem:** Early-grade Math worksheets were text-only. Young learners (Classes 1-3) benefit from visual representations — clocks, object groups, shapes, number lines — but the generation pipeline had no way to produce or render them.
+
+**Key decisions:**
+- Added "Problem Style" selector in Practice Settings: Standard (default), Visual, Mixed.
+- Backend injects visual prompt instructions only when subject is Math, grade is 1-3, and style is visual or mixed.
+- AI returns `visual_type` and `visual_data` fields per question when visual mode is active.
+- Four SVG visual types implemented: `clock` (analog clock face), `object_group` (countable circle groups with operation), `shapes` (triangle/rectangle/square/circle with labeled sides), `number_line` (horizontal line with ticks and optional highlight).
+- All visuals rendered inline in worksheet preview via `VisualProblem` component.
+- SVGs use `currentColor` for automatic print compatibility (screen: theme color, print: black).
+- Each visual has `role="img"` and descriptive `aria-label` for accessibility.
+- `problemStyle` included in selection version guard to prevent stale async results.
+
+**Non-goals:** No PDF-side SVG rendering (visuals appear in browser preview and print only). No drag-and-drop or interactive visuals. No visual types beyond the initial four.
+
+---
+
 ## Canonical UX Rules (Must Not Be Broken)
 
 1. **Role never changes implicitly.** Only `switchRole()` or explicit user action in the dropdown may change `active_role`.
@@ -266,7 +284,7 @@ This document is the single canonical record of every completed UX, UI, and stat
 
 ## Design Freeze Declaration
 
-The UI/UX of PracticeCraft AI is frozen as of the completion of Phase 17. All phases documented above represent final, shipped decisions.
+The UI/UX of PracticeCraft AI is frozen as of the completion of Phase 18. All phases documented above represent final, shipped decisions.
 
 Any change to layout, copy, interaction patterns, state management rules, or visual design beyond this point requires an explicit product decision with a written rationale. Bug fixes to existing behavior are permitted; new behavior is not.
 
@@ -286,6 +304,8 @@ Any change to layout, copy, interaction patterns, state management rules, or vis
 | **Region** | India or UAE. Determines curriculum source for subjects and skills. |
 | **Curriculum Flow** | The skill-first generation path, active when curriculum subjects are available for the selected grade and region. |
 | **Selection Version** | A ref-based counter incremented on any form change, used to detect and discard stale async results. |
+| **Problem Style** | Standard, Visual, or Mixed. Controls whether the AI generates visual problem data (SVG templates) alongside question text. Only effective for Math, Classes 1-3. |
+| **Visual Type** | One of `clock`, `object_group`, `shapes`, `number_line`. Determines which SVG renderer is used for a visual question. |
 
 ### Guidance for Future Contributors
 
