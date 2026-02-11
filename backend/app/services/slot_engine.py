@@ -1,20 +1,29 @@
 """
-Slot-based worksheet generation engine v4.0
+Slot-based worksheet generation engine v5.0 — Standout Factor
 
 Backend controls structure; LLM fills content only.
 Two-phase: meta generation → per-question generation with dedup + repair.
 
+v5.0 additions:
+- Variation banks (CONTEXT_BANK, ERROR_PATTERN_BANK, THINKING_STYLE_BANK)
+- Deterministic seed-based rotation for diversity across worksheets
+- Tightened slot definitions
+- Backend-chosen context/error/style passed to prompts
+
 Pipeline:
   1. generate_meta()       → micro_skill, common_mistakes, parent_tip, etc.
   2. get_slot_plan()       → deterministic slot sequence
-  3. generate_question()   → one LLM call per slot, validated inline
-  4. validate_worksheet()  → distribution, uniqueness, forbidden phrases
+  3. _pick_variations()    → seed-based bank selection
+  4. generate_question()   → one LLM call per slot, validated inline
+  5. validate_worksheet()  → distribution, uniqueness, diversity checks
 """
 
+import hashlib
 import json
 import logging
 import re
 from collections import Counter
+from datetime import date
 
 logger = logging.getLogger("practicecraft.slot_engine")
 
@@ -33,11 +42,11 @@ SLOT_PLANS: dict[int, dict[str, int]] = {
 SLOT_ORDER = ["recognition", "application", "representation", "error_detection", "thinking"]
 
 VALID_FORMATS: dict[str, set[str]] = {
-    "recognition":    {"column_setup", "place_value", "simple_identify"},
-    "application":    {"direct_compute", "word_problem"},
-    "representation": {"missing_number", "estimation", "place_value", "compare_solutions"},
-    "error_detection": {"error_spot", "compare_solutions"},
-    "thinking":       {"estimation", "compare_solutions", "create_example"},
+    "recognition":     {"column_setup", "place_value"},
+    "application":     {"direct_compute", "word_problem"},
+    "representation":  {"missing_number", "estimation", "place_value", "compare_solutions"},
+    "error_detection": {"error_spot"},
+    "thinking":        {"thinking"},
 }
 
 # Weights for proportional fallback (non-standard q_counts)
@@ -46,6 +55,96 @@ _DOCTRINE_WEIGHTS = {
     "error_detection": 0.10, "thinking": 0.10,
 }
 
+
+# ════════════════════════════════════════════════════════════
+# B) Variation Banks — backend-controlled, deterministic rotation
+# ════════════════════════════════════════════════════════════
+
+CONTEXT_BANK: list[dict[str, str]] = [
+    {"item": "marbles", "scenario": "playing marbles in the park"},
+    {"item": "stickers", "scenario": "collecting stickers at school"},
+    {"item": "mangoes", "scenario": "buying mangoes at the market"},
+    {"item": "books", "scenario": "reading books in the library"},
+    {"item": "crayons", "scenario": "sharing crayons in art class"},
+    {"item": "beads", "scenario": "making a bead necklace"},
+    {"item": "stamps", "scenario": "collecting stamps from letters"},
+    {"item": "coins", "scenario": "saving coins in a piggy bank"},
+    {"item": "tickets", "scenario": "buying tickets for a school fair"},
+    {"item": "flowers", "scenario": "planting flowers in the garden"},
+    {"item": "biscuits", "scenario": "packing biscuits for a picnic"},
+    {"item": "shells", "scenario": "picking shells at the beach"},
+    {"item": "stars", "scenario": "earning stars for good work"},
+    {"item": "apples", "scenario": "picking apples from the orchard"},
+    {"item": "pencils", "scenario": "organising pencils in the classroom"},
+    {"item": "balloons", "scenario": "decorating for a birthday party"},
+    {"item": "pages", "scenario": "counting pages in notebooks"},
+    {"item": "sweets", "scenario": "distributing sweets on a festival"},
+]
+
+ERROR_PATTERN_BANK: list[dict] = [
+    {"a": 345, "b": 278, "wrong_sum": 513, "correct": 623, "pattern_tag": "forgot_carry_tens",
+     "explanation": "The student forgot to carry 1 from the tens place."},
+    {"a": 456, "b": 367, "wrong_sum": 713, "correct": 823, "pattern_tag": "forgot_carry_hundreds",
+     "explanation": "The student forgot to carry 1 from the hundreds place."},
+    {"a": 502, "b": 178, "wrong_sum": 334, "correct": 324, "pattern_tag": "borrow_across_zero",
+     "explanation": "The student didn't borrow correctly across the zero in the tens place."},
+    {"a": 600, "b": 247, "wrong_sum": 453, "correct": 353, "pattern_tag": "subtracted_smaller_from_larger",
+     "explanation": "The student subtracted smaller digit from larger in each column instead of borrowing."},
+    {"a": 289, "b": 145, "wrong_sum": 434, "correct": 434, "pattern_tag": "double_carry_missed",
+     "explanation": "The student missed the carry from the ones to the tens."},
+    {"a": 703, "b": 465, "wrong_sum": 348, "correct": 238, "pattern_tag": "borrow_chain_error",
+     "explanation": "The student made an error borrowing through two consecutive places."},
+    {"a": 415, "b": 268, "wrong_sum": 257, "correct": 147, "pattern_tag": "forgot_to_reduce_after_borrow",
+     "explanation": "The student forgot to reduce the digit after borrowing."},
+    {"a": 563, "b": 289, "wrong_sum": 742, "correct": 852, "pattern_tag": "tens_carry_dropped",
+     "explanation": "The student forgot to carry 1 when adding the tens column."},
+]
+
+THINKING_STYLE_BANK: list[dict[str, str]] = [
+    {"style": "estimate_nearest_100",
+     "instruction": "Without calculating exactly, estimate the answer to the nearest hundred and explain your reasoning."},
+    {"style": "closer_to",
+     "instruction": "Without calculating, decide which of two given values the answer is closer to and explain why."},
+    {"style": "threshold_check",
+     "instruction": "Without calculating, decide whether the answer is above or below a given threshold and explain."},
+    {"style": "compare_with_rounding",
+     "instruction": "Round each number to the nearest hundred first, then compare with the actual calculation."},
+    {"style": "bounds_reasoning",
+     "instruction": "Find a lower bound and upper bound for the answer without calculating exactly."},
+    {"style": "which_is_reasonable",
+     "instruction": "Given three possible answers, pick the most reasonable one and explain why the others are wrong."},
+]
+
+NAME_BANKS: dict[str, list[str]] = {
+    "India": ["Aarav", "Priya", "Rohan", "Ananya", "Meera", "Kabir", "Diya", "Arjun",
+              "Ishaan", "Saanvi", "Vivaan", "Anika", "Advait", "Zara", "Reyansh", "Tara"],
+    "UAE": ["Ahmed", "Fatima", "Omar", "Mariam", "Sara", "Yusuf", "Layla", "Ali",
+            "Hassan", "Amira", "Khalid", "Noor", "Zain", "Hana", "Rayan", "Lina"],
+}
+
+
+def _make_seed(grade: str, topic: str, q_count: int) -> int:
+    """Deterministic seed from (grade, topic, date, q_count). Changes daily."""
+    key = f"{grade}|{topic}|{date.today().isoformat()}|{q_count}"
+    return int(hashlib.sha256(key.encode()).hexdigest()[:8], 16)
+
+
+def _pick_from_bank(bank: list, seed: int, index: int) -> dict:
+    """Pick item from bank using seed + index for rotation."""
+    pos = (seed + index) % len(bank)
+    return bank[pos]
+
+
+def _pick_name(region: str, seed: int, index: int) -> str:
+    """Pick a name from the name bank, rotating to avoid repeats."""
+    names = NAME_BANKS.get(region, NAME_BANKS["India"])
+    pos = (seed + index) % len(names)
+    return names[pos]
+
+
+# ════════════════════════════════════════════════════════════
+# C) Slot Plan Generation
+# ════════════════════════════════════════════════════════════
 
 def _compute_proportional_plan(n: int) -> dict[str, int]:
     """Proportional allocation for non-standard q_counts."""
@@ -68,12 +167,7 @@ def _compute_proportional_plan(n: int) -> dict[str, int]:
 
 
 def get_slot_plan(q_count: int) -> list[str]:
-    """Return ordered list of slot_types for q_count questions.
-
-    Supported: 5, 10, 15, 20 (exact plans). Other counts use proportional
-    fallback with mandatory error_detection + thinking.
-    Output follows cognitive progression: recognition → … → thinking.
-    """
+    """Return ordered list of slot_types for q_count questions."""
     if q_count <= 0:
         return []
     plan = SLOT_PLANS.get(q_count) or _compute_proportional_plan(q_count)
@@ -95,7 +189,73 @@ def get_question_difficulty(slot_type: str, worksheet_difficulty: str) -> str:
 
 
 # ════════════════════════════════════════════════════════════
-# D) Token-Efficient Prompts (embedded constants)
+# D) Slot Instructions — backend builds specific instructions per question
+# ════════════════════════════════════════════════════════════
+
+def _build_slot_instruction(
+    slot_type: str,
+    index: int,
+    seed: int,
+    region: str,
+    slot_counter: dict[str, int],
+) -> str:
+    """Build backend-chosen specific instructions for a slot question.
+
+    Returns a string injected into the prompt that tells the LLM
+    exactly what context/error/style to use.
+    """
+    slot_idx = slot_counter.get(slot_type, 0)
+
+    if slot_type == "application":
+        ctx = _pick_from_bank(CONTEXT_BANK, seed, slot_idx)
+        name = _pick_name(region, seed, index)
+        return (
+            f"format: direct_compute OR word_problem. "
+            f"If word_problem, use this context: {name} is {ctx['scenario']}. "
+            f"Item: {ctx['item']}. Exact numerical answer required."
+        )
+
+    if slot_type == "error_detection":
+        err = _pick_from_bank(ERROR_PATTERN_BANK, seed, slot_idx)
+        return (
+            f"format: error_spot. "
+            f"MUST present this SPECIFIC wrong answer for the student to find: "
+            f"A student solved {err['a']} + {err['b']} (or {err['a']} - {err['b']}) "
+            f"and got {err['wrong_sum']}. The correct answer is {err['correct']}. "
+            f"Pattern: {err['pattern_tag']}. "
+            f"Student must find the mistake and write the correct answer."
+        )
+
+    if slot_type == "thinking":
+        style = _pick_from_bank(THINKING_STYLE_BANK, seed, slot_idx)
+        return (
+            f"format: thinking. "
+            f"Style: {style['style']}. "
+            f"{style['instruction']}"
+        )
+
+    if slot_type == "recognition":
+        return (
+            "format: column_setup OR place_value. "
+            "Direct recall or single-step. Easy.\n"
+            'Examples: "Write 502 - 178 in column form." / '
+            '"What is the hundreds digit in 507?"'
+        )
+
+    if slot_type == "representation":
+        return (
+            "format: missing_number OR estimation OR place_value OR compare_solutions. "
+            'NEVER "visualize" or "draw" or "use array/number line".\n'
+            'Examples: "___ + 178 = 502" / '
+            '"Estimate 478 + 256 to the nearest hundred." / '
+            '"Show 345 as 3 hundreds + ___ tens + 5 ones."'
+        )
+
+    return ""
+
+
+# ════════════════════════════════════════════════════════════
+# E) Token-Efficient Prompts
 # ════════════════════════════════════════════════════════════
 
 META_SYSTEM = (
@@ -111,7 +271,7 @@ META_USER_TEMPLATE = (
     "common_mistakes: 2-5 specific errors students make on this micro_skill.\n"
     "parent_tip: <=2 sentences of actionable guidance.\n"
     "teaching_script: 1 sentence.\n"
-    'JSON: {{"micro_skill":"","skill_focus":"","learning_objective":"",'
+    '{{"micro_skill":"","skill_focus":"","learning_objective":"",'
     '"difficulty":"","parent_tip":"","teaching_script":"","common_mistakes":[]}}'
 )
 
@@ -126,70 +286,27 @@ QUESTION_SYSTEM = (
     "- pictorial_elements must be empty list []."
 )
 
-SLOT_RULES: dict[str, str] = {
-    "recognition": (
-        "format: column_setup OR place_value OR simple_identify. "
-        "Direct recall or single-step. Easy.\n"
-        'Examples: "Write 502 - 178 in column form." / '
-        '"What is the hundreds digit in 507?" / "Is 456 > 465?"'
-    ),
-    "application": (
-        "format: direct_compute OR word_problem. "
-        "For word_problem use regional names and real-world scenarios. "
-        "Exact numerical answer required.\n"
-        'Examples: "Calculate 345 + 278." / '
-        '"{name} had 502 marbles and gave away 178. How many are left?"'
-    ),
-    "representation": (
-        "format: missing_number OR estimation OR place_value OR compare_solutions. "
-        'NEVER "visualize" or "draw" or "use array/number line".\n'
-        'Examples: "___ + 178 = 502" / '
-        '"Estimate 478 + 256 to the nearest hundred." / '
-        '"Show 345 as 3 hundreds + ___ tens + 5 ones."'
-    ),
-    "error_detection": (
-        "format: error_spot OR compare_solutions. "
-        "MUST show a specific WRONG worked answer or two student claims. "
-        "Student finds the mistake.\n"
-        'Examples: "A student solved 502 - 178 and got 334. '
-        'Find the mistake and write the correct answer." / '
-        '"{name} says 400 - 168 = 242. Is he correct? If not, correct it."'
-    ),
-    "thinking": (
-        "format: estimation OR compare_solutions OR create_example. "
-        "Reasoning, not pure computation.\n"
-        'Examples: "Without calculating, which is greater: 345 + 278 or '
-        '400 + 200? Explain." / "Create a subtraction problem where you '
-        'need to borrow from the hundreds place."'
-    ),
-}
-
-REGION_CONTEXT: dict[str, dict[str, str]] = {
-    "India": {
-        "names": "Aarav, Priya, Rohan, Ananya, Meera, Kabir, Diya, Arjun",
-        "contexts": "mangoes, cricket, Diwali, market, school, park, library, train",
-        "currency": "rupees",
-    },
-    "UAE": {
-        "names": "Ahmed, Fatima, Omar, Mariam, Sara, Yusuf, Layla, Ali",
-        "contexts": "dates, football, Eid, souq, school, park, library, desert",
-        "currency": "AED",
-    },
-}
-
 QUESTION_USER_TEMPLATE = (
     "Grade {grade} {subject} | Micro-skill: {micro_skill} | "
     "Slot: {slot_type} | Difficulty: {difficulty}\n"
     "Avoid reusing: {avoid}\n"
-    "Names: {names}. Contexts: {contexts}. Currency: {currency}.\n"
-    "{slot_rules}\n"
+    "{slot_instruction}\n"
     "{language_instruction}"
-    'JSON: {{"format":"","question_text":"","pictorial_elements":[],"answer":""}}'
+    '{{"format":"","question_text":"","pictorial_elements":[],"answer":""}}'
 )
+
+REGION_CONTEXT: dict[str, dict[str, str]] = {
+    "India": {
+        "currency": "rupees",
+    },
+    "UAE": {
+        "currency": "AED",
+    },
+}
 
 
 # ════════════════════════════════════════════════════════════
-# E) Validators
+# F) Validators
 # ════════════════════════════════════════════════════════════
 
 _FORBIDDEN_VISUAL_PHRASES = re.compile(
@@ -213,7 +330,8 @@ _ERROR_LANGUAGE = re.compile(
 _REASONING_LANGUAGE = re.compile(
     r"(explain|why|which.*(greater|more|better|easier|faster)"
     r"|compare|create|without calculating|estimate"
-    r"|how do you know|in your own words|what would happen)",
+    r"|how do you know|in your own words|what would happen"
+    r"|reasonable|closer to|above or below|round|bound|upper|lower)",
     re.IGNORECASE,
 )
 
@@ -253,6 +371,12 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
             issues.append(
                 "error_detection must present a wrong answer for student to find/correct"
             )
+        # Must include a wrong numerical answer
+        nums_in_text = re.findall(r"\d{2,}", text)
+        if len(nums_in_text) < 2:
+            issues.append(
+                "error_detection must include the wrong sum and the original numbers"
+            )
 
     if slot_type == "representation" and fmt == "missing_number":
         if not _BLANK_MARKER.search(text):
@@ -270,7 +394,7 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
 
 
 def validate_worksheet_slots(questions: list[dict], q_count: int) -> list[str]:
-    """Validate the full worksheet: slot distribution, uniqueness, forbidden phrases."""
+    """Validate the full worksheet: slot distribution, uniqueness, diversity."""
     issues: list[str] = []
     plan = SLOT_PLANS.get(q_count) or _compute_proportional_plan(q_count)
     actual_counts = Counter(q.get("slot_type", "") for q in questions)
@@ -305,6 +429,20 @@ def validate_worksheet_slots(questions: list[dict], q_count: int) -> list[str]:
         if _FORBIDDEN_VISUAL_PHRASES.search(text):
             issues.append(f"q{i+1}: references visuals that aren't rendered")
 
+    # 5. Context repetition check (application questions)
+    app_contexts: list[str] = []
+    for q in questions:
+        if q.get("slot_type") == "application":
+            text_lower = q.get("question_text", "").lower()
+            for ctx in CONTEXT_BANK:
+                if ctx["item"] in text_lower:
+                    app_contexts.append(ctx["item"])
+                    break
+    context_counts = Counter(app_contexts)
+    for ctx_item, count in context_counts.items():
+        if count > 1:
+            issues.append(f"context '{ctx_item}' used {count} times in application questions")
+
     return issues
 
 
@@ -322,14 +460,39 @@ def validate_difficulty_sanity(micro_skill: str, difficulty: str) -> list[str]:
     if any(hard_indicators) and difficulty.lower() == "easy":
         issues.append(
             f"micro_skill '{micro_skill}' involves complex operations "
-            f"— difficulty should be Medium or Hard, not Easy"
+            f"- difficulty should be Medium or Hard, not Easy"
         )
 
     return issues
 
 
+def validate_hard_difficulty_carry(questions: list[dict], difficulty: str) -> list[str]:
+    """For hard difficulty, at least one application question should involve carry in both ones and tens."""
+    if difficulty.lower() != "hard":
+        return []
+    issues: list[str] = []
+    app_qs = [q for q in questions if q.get("slot_type") == "application"]
+    if not app_qs:
+        return issues
+    # Check if any application question has numbers that require carries
+    has_carry_question = False
+    for q in app_qs:
+        text = q.get("question_text", "")
+        nums = re.findall(r"\d{3}", text)
+        if len(nums) >= 2:
+            a, b = int(nums[0]), int(nums[1])
+            ones_carry = (a % 10) + (b % 10) >= 10
+            tens_carry = ((a // 10) % 10) + ((b // 10) % 10) >= 10
+            if ones_carry and tens_carry:
+                has_carry_question = True
+                break
+    if not has_carry_question:
+        issues.append("hard difficulty should have at least one addition with carry in both ones and tens")
+    return issues
+
+
 # ════════════════════════════════════════════════════════════
-# B) Generation Pipeline
+# G) Generation Pipeline
 # ════════════════════════════════════════════════════════════
 
 def _clean_json(content: str) -> str:
@@ -384,15 +547,10 @@ def generate_question(
     avoid_state: list[str],
     region: str,
     language: str = "English",
+    slot_instruction: str = "",
 ) -> dict:
     """Generate a single question via LLM. Returns question dict."""
     region_ctx = REGION_CONTEXT.get(region, REGION_CONTEXT["India"])
-    slot_rules_text = SLOT_RULES.get(slot_type, "")
-
-    # Inject a sample name into slot rules for application examples
-    first_name = region_ctx["names"].split(",")[0].strip()
-    slot_rules_text = slot_rules_text.replace("{name}", first_name)
-
     avoid_str = ", ".join(avoid_state[-20:]) if avoid_state else "none"
 
     lang_instruction = ""
@@ -406,10 +564,7 @@ def generate_question(
         slot_type=slot_type,
         difficulty=difficulty,
         avoid=avoid_str,
-        names=region_ctx["names"],
-        contexts=region_ctx["contexts"],
-        currency=region_ctx["currency"],
-        slot_rules=slot_rules_text,
+        slot_instruction=slot_instruction,
         language_instruction=lang_instruction,
     )
 
@@ -447,17 +602,11 @@ def _extract_avoid_items(q: dict) -> list[str]:
     if len(nums) >= 2:
         items.append(f"{nums[0]}-{nums[1]}")
 
-    # Extract context nouns
-    context_words = [
-        "marbles", "stickers", "mangoes", "books", "apples", "pencils",
-        "balls", "sweets", "chocolates", "biscuits", "pages", "stamps",
-        "dates", "dirhams", "rupees", "tickets", "flowers", "stars",
-        "cricket", "football", "crayons", "beads", "coins", "shells",
-    ]
+    # Extract context nouns from CONTEXT_BANK
     text_lower = text.lower()
-    for word in context_words:
-        if word in text_lower:
-            items.append(word)
+    for ctx in CONTEXT_BANK:
+        if ctx["item"] in text_lower:
+            items.append(ctx["item"])
 
     # Extract format to avoid repeating same structure consecutively
     fmt = q.get("format", "")
@@ -483,7 +632,7 @@ def run_slot_pipeline(
     id, slot_type, format, question_text, pictorial_elements, answer, difficulty
     """
     logger.info(
-        "Slot pipeline: grade=%s topic=%s q=%d diff=%s",
+        "Slot pipeline v5: grade=%s topic=%s q=%d diff=%s",
         grade, topic, q_count, difficulty,
     )
 
@@ -495,7 +644,7 @@ def run_slot_pipeline(
     # Difficulty sanity check — auto-bump if easy is inappropriate
     diff_issues = validate_difficulty_sanity(micro_skill, difficulty)
     if diff_issues and difficulty.lower() == "easy":
-        logger.warning("Bumping difficulty easy→medium: %s", diff_issues)
+        logger.warning("Bumping difficulty easy->medium: %s", diff_issues)
         difficulty = "medium"
         meta["difficulty"] = "Medium"
 
@@ -503,13 +652,23 @@ def run_slot_pipeline(
     slot_plan = get_slot_plan(q_count)
     logger.info("Slot plan (%d): %s", len(slot_plan), dict(Counter(slot_plan)))
 
-    # 3. Generate each question
+    # 3. Create deterministic seed for variation banks
+    seed = _make_seed(grade, topic, q_count)
+    logger.info("Variation seed: %d", seed)
+
+    # 4. Generate each question with bank-driven instructions
     questions: list[dict] = []
     avoid_state: list[str] = []
     max_attempts = 3
+    slot_counter: dict[str, int] = {}  # tracks per-slot index for bank rotation
 
     for i, slot_type in enumerate(slot_plan):
         q_difficulty = get_question_difficulty(slot_type, difficulty)
+
+        # Build slot-specific instruction from banks
+        slot_instruction = _build_slot_instruction(
+            slot_type, i, seed, region, slot_counter,
+        )
 
         generated = False
         for attempt in range(max_attempts):
@@ -517,22 +676,22 @@ def run_slot_pipeline(
                 q = generate_question(
                     client, grade, subject, micro_skill,
                     slot_type, q_difficulty, avoid_state, region, language,
+                    slot_instruction=slot_instruction,
                 )
 
                 issues = validate_question(q, slot_type)
 
                 if issues and attempt < max_attempts - 1:
                     logger.warning(
-                        "Q%d/%d attempt %d issues: %s — retrying",
+                        "Q%d/%d attempt %d issues: %s - retrying",
                         i + 1, len(slot_plan), attempt + 1, issues,
                     )
-                    # Add issue hints to avoid_state so next attempt varies
                     avoid_state.append(f"rejected:{q.get('format','')}")
                     continue
 
                 if issues:
                     logger.warning(
-                        "Q%d/%d still has issues after %d attempts: %s — using best effort",
+                        "Q%d/%d still has issues after %d attempts: %s - using best effort",
                         i + 1, len(slot_plan), max_attempts, issues,
                     )
 
@@ -545,6 +704,10 @@ def run_slot_pipeline(
                 # Update avoid state
                 avoid_state.extend(_extract_avoid_items(q))
                 generated = True
+
+                # Increment slot counter for bank rotation
+                slot_counter[slot_type] = slot_counter.get(slot_type, 0) + 1
+
                 break
 
             except (json.JSONDecodeError, Exception) as exc:
@@ -561,16 +724,21 @@ def run_slot_pipeline(
                 "answer": "",
                 "difficulty": q_difficulty,
             })
+            slot_counter[slot_type] = slot_counter.get(slot_type, 0) + 1
 
         logger.info(
             "Q%d/%d: %s / %s",
             i + 1, len(slot_plan), slot_type, questions[-1].get("format", "?"),
         )
 
-    # 4. Validate whole worksheet
+    # 5. Validate whole worksheet
     ws_issues = validate_worksheet_slots(questions, q_count)
     if ws_issues:
         logger.warning("Worksheet-level issues: %s", ws_issues)
+
+    carry_issues = validate_hard_difficulty_carry(questions, difficulty)
+    if carry_issues:
+        logger.warning("Hard-difficulty carry issues: %s", carry_issues)
 
     # Attach context to meta
     meta["grade"] = grade

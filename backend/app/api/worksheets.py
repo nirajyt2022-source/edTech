@@ -1202,6 +1202,7 @@ _FORMAT_TO_QTYPE: dict[str, str] = {
     "error_spot": "short_answer",
     "compare_solutions": "short_answer",
     "create_example": "short_answer",
+    "thinking": "short_answer",
 }
 
 
