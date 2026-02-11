@@ -298,6 +298,80 @@ def _fixup_question_types(data: dict) -> None:
             q["type"] = "short_answer"
 
 
+# Two-part check: text has digits AND operation keywords → computational
+_HAS_DIGIT = re.compile(r"\d")
+_HAS_OPERATION = re.compile(
+    r"(\+|-|×|÷|/|\*"
+    r"|\badd\b|\bsubtract\b|\bmultiply\b|\bdivide\b"
+    r"|\bsum\b|\bdifference\b|\bproduct\b|\btotal\b"
+    r"|\bhow many\b|\bkitne\b|\bjod\b|\bghata\b"
+    r"|\d\s*x\s*\d)",  # "3 x 4" but not "example"
+    re.IGNORECASE,
+)
+
+
+def _is_computational(text: str) -> bool:
+    """Return True if text looks like a maths computation question."""
+    return bool(_HAS_DIGIT.search(text) and _HAS_OPERATION.search(text))
+
+
+def _trim_to_count(data: dict, n: int, problem_style: str, is_visual: bool) -> None:
+    """Trim questions to exactly N, preserving visual quota for mixed/visual modes."""
+    questions = data.get("questions", [])
+    if len(questions) <= n:
+        return
+
+    if is_visual and problem_style == "mixed":
+        required_visual = ceil(n / 2)
+        visual_qs = [q for q in questions if q.get("visual_type") and q.get("visual_data")]
+        text_qs = [q for q in questions if not (q.get("visual_type") and q.get("visual_data"))]
+        # Take as many visual as needed, fill rest with text
+        picked = visual_qs[:required_visual]
+        remaining = n - len(picked)
+        picked += text_qs[:remaining]
+        # If still short (not enough text-only), backfill with more visual
+        if len(picked) < n:
+            extra = [q for q in visual_qs[required_visual:] if q not in picked]
+            picked += extra[: n - len(picked)]
+        data["questions"] = picked[:n]
+    elif is_visual and problem_style == "visual":
+        # Keep only visual ones, trim to N
+        visual_qs = [q for q in questions if q.get("visual_type") and q.get("visual_data")]
+        data["questions"] = visual_qs[:n] if len(visual_qs) >= n else questions[:n]
+    else:
+        data["questions"] = questions[:n]
+
+    # Re-number IDs
+    for i, q in enumerate(data["questions"]):
+        q["id"] = f"q{i + 1}"
+
+
+def _fix_computational_answers(data: dict) -> None:
+    """Force answer_type='exact' and flag missing correct_answer on computational questions."""
+    for q in data.get("questions", []):
+        text = q.get("text", "")
+        if _is_computational(text):
+            # This is arithmetic/computational — must be exact
+            if q.get("correct_answer") is not None:
+                q["answer_type"] = "exact"
+                q["sample_answer"] = None
+            # If correct_answer is null but it's clearly computational,
+            # flag it — validator will catch and send to repair
+
+
+def _fix_number_line_step(data: dict) -> None:
+    """Ensure number_line step is sane: if range > 40, step >= 2 (prefer 5 or 10)."""
+    for q in data.get("questions", []):
+        if q.get("visual_type") == "number_line" and isinstance(q.get("visual_data"), dict):
+            vd = q["visual_data"]
+            start = vd.get("start", 0)
+            end = vd.get("end", 0)
+            step = vd.get("step", 1)
+            span = end - start
+            if span > 40 and step < 2:
+                vd["step"] = 5 if span > 80 else 10 if span > 60 else 2
+
+
 _PERSONAL_DATA_PATTERNS = re.compile(
     r"("
     r"your\s+(father|mother|parent)'?s?\s+name"
@@ -374,9 +448,25 @@ def validate_worksheet_data(
         if _PERSONAL_DATA_PATTERNS.search(text):
             issues.append(f"{qid}: question asks for personal data — remove it")
 
+        # Maths computational rule: must have exact answer
+        if _COMPUTATIONAL_PATTERN.search(text) and correct is None:
+            issues.append(
+                f"{qid}: computational question must have correct_answer (not null)"
+            )
+
         # Visual field validation
         vtype = q.get("visual_type")
         vdata = q.get("visual_data")
+
+        if vtype == "number_line" and isinstance(vdata, dict):
+            nl_start = vdata.get("start", 0)
+            nl_end = vdata.get("end", 0)
+            nl_step = vdata.get("step", 1)
+            if (nl_end - nl_start) > 40 and nl_step < 2:
+                issues.append(
+                    f"{qid}: number_line range {nl_end - nl_start} with step={nl_step} "
+                    f"is too dense — step must be >= 2"
+                )
 
         if vtype == "object_group" and isinstance(vdata, dict):
             # object_group count <= 20
@@ -567,34 +657,37 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                 status_code=500, detail=f"Failed to parse AI response: {str(e)}"
             )
 
-        # ── Post-processing: schema fixups (before validation) ──
+        # ── Deterministic post-processing (no LLM calls) ──
         _fixup_question_types(data)
+        _trim_to_count(data, request.num_questions, request.problem_style, is_visual)
+        _fix_computational_answers(data)
+        _fix_number_line_step(data)
 
-        # ── Post-processing: visual enforcement ──
         if is_visual:
-            data, visual_issues = enforce_visual_rules(
+            data, _ = enforce_visual_rules(
                 data, request.problem_style, True
             )
-        else:
-            visual_issues = []
 
-        # ── Validation (includes visual ratio + operation checks) ──
-        validation_issues = validate_worksheet_data(
+        # ── Validate after deterministic fixes ──
+        all_issues = validate_worksheet_data(
             data,
             problem_style=request.problem_style,
             is_visual_applicable=is_visual,
         )
-        all_issues = validation_issues + visual_issues
 
-        # ── Repair (one attempt) if issues found ──
+        # ── Repair (one attempt) only if validation still fails ──
         if all_issues:
             repaired = attempt_repair(system_prompt, data, all_issues)
             if repaired:
-                data = repaired
+                _fixup_question_types(repaired)
+                _trim_to_count(repaired, request.num_questions, request.problem_style, is_visual)
+                _fix_computational_answers(repaired)
+                _fix_number_line_step(repaired)
                 if is_visual:
-                    data, _ = enforce_visual_rules(
-                        data, request.problem_style, True
+                    repaired, _ = enforce_visual_rules(
+                        repaired, request.problem_style, True
                     )
+                data = repaired
 
         # ── Build response models with backward-compatible defaults ──
         questions = [
@@ -993,13 +1086,21 @@ async def regenerate_worksheet(
                 status_code=500, detail=f"Failed to parse AI response: {str(e)}"
             )
 
-        # Schema fixups + validation + optional repair
+        # Deterministic post-processing
         _fixup_question_types(data)
+        _trim_to_count(data, num_questions, "standard", False)
+        _fix_computational_answers(data)
+        _fix_number_line_step(data)
+
+        # Validate after deterministic fixes
         validation_issues = validate_worksheet_data(data)
         if validation_issues:
             repaired = attempt_repair(system_prompt, data, validation_issues)
             if repaired:
                 _fixup_question_types(repaired)
+                _trim_to_count(repaired, num_questions, "standard", False)
+                _fix_computational_answers(repaired)
+                _fix_number_line_step(repaired)
                 data = repaired
 
         # Build questions with backward-compatible defaults
