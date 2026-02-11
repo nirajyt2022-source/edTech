@@ -16,6 +16,7 @@ import SkillSelector from '@/components/SkillSelector'
 import CBSESyllabusViewer from '@/components/CBSESyllabusViewer'
 import { Skeleton } from '@/components/ui/skeleton'
 import TemplateSelector, { type WorksheetTemplate } from '@/components/TemplateSelector'
+import VisualProblem from '@/components/VisualProblem'
 import { useEngagement } from '@/lib/engagement'
 
 const BOARDS = ['CBSE']
@@ -23,6 +24,11 @@ const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
 const LANGUAGES = ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu', 'Kannada', 'Arabic', 'Urdu']
 const QUESTION_COUNTS = ['5', '10', '15', '20']
+const PROBLEM_STYLES = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'visual', label: 'Visual' },
+  { value: 'mixed', label: 'Mixed' },
+]
 
 // Fallback topics for when curriculum API is unavailable
 const DEFAULT_TOPICS: Record<string, string[]> = {
@@ -41,6 +47,8 @@ interface Question {
   options?: string[]
   correct_answer?: string
   explanation?: string
+  visual_type?: string
+  visual_data?: Record<string, unknown>
 }
 
 interface Worksheet {
@@ -94,6 +102,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [difficulty, setDifficulty] = useState('')
   const [questionCount, setQuestionCount] = useState('10')
   const [language, setLanguage] = useState('English')
+  const [problemStyle, setProblemStyle] = useState('standard')
   const [customInstructions, setCustomInstructions] = useState('')
 
   const [loading, setLoading] = useState(false)
@@ -122,7 +131,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const selectionVersionRef = useRef(0)
   useEffect(() => {
     selectionVersionRef.current += 1
-  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, customInstructions])
+  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, problemStyle, customInstructions])
 
   // Reset subject and topic when region changes
   useEffect(() => {
@@ -368,6 +377,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         difficulty: difficulty.toLowerCase(),
         num_questions: parseInt(questionCount),
         language,
+        problem_style: problemStyle,
         custom_instructions: customInstructions || undefined,
         skills: useCurriculumFlow ? selectedSkills : undefined,
         logic_tags: useCurriculumFlow ? selectedLogicTags : undefined,
@@ -825,6 +835,20 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="problemStyle" className="text-sm font-semibold">Problem Style</Label>
+                    <Select value={problemStyle} onValueChange={setProblemStyle}>
+                      <SelectTrigger id="problemStyle" className="bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROBLEM_STYLES.map((s) => (
+                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1037,6 +1061,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                             <p className="text-lg font-medium text-foreground leading-snug">
                               {question.text}
                             </p>
+
+                            {question.visual_type && question.visual_data && (
+                              <div className="mt-3">
+                                <VisualProblem visualType={question.visual_type} visualData={question.visual_data} />
+                              </div>
+                            )}
 
                             {question.options && (
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">

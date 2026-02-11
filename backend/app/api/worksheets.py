@@ -30,6 +30,7 @@ class WorksheetGenerationRequest(BaseModel):
     skills: list[str] | None = None
     logic_tags: list[str] | None = None
     region: str = "India"
+    problem_style: Literal["standard", "visual", "mixed"] = "standard"
 
 
 class Question(BaseModel):
@@ -39,6 +40,8 @@ class Question(BaseModel):
     options: list[str] | None = None
     correct_answer: str | None = None
     explanation: str | None = None
+    visual_type: str | None = None
+    visual_data: dict | None = None
 
 
 class Worksheet(BaseModel):
@@ -164,6 +167,32 @@ Mix question types appropriately based on the subject and skills."""
     return base + regional + tag_guidance + output_format
 
 
+def build_visual_instructions(problem_style: str) -> str:
+    """Build additional prompt instructions for visual problem mode."""
+    coverage = (
+        "ALL questions MUST include visual_type and visual_data."
+        if problem_style == "visual"
+        else "Approximately HALF of the questions should include visual_type and visual_data. The rest should be standard text-only questions."
+    )
+    return f"""
+
+VISUAL PROBLEM MODE ({problem_style.upper()}):
+{coverage}
+
+For visual questions, add TWO extra fields to the question JSON:
+  "visual_type": one of "clock", "object_group", "shapes", "number_line"
+  "visual_data": a structured object (see formats below)
+
+Visual data formats:
+- clock (time-telling): {{ "hour": 3, "minute": 30 }}
+- object_group (counting/addition/subtraction): {{ "groups": [{{"count": 5, "label": "apples"}}, {{"count": 3, "label": "oranges"}}], "operation": "+" }}
+- shapes (geometry): {{ "shape": "triangle", "sides": [3, 4, 5] }}  (shape: triangle|circle|rectangle|square)
+- number_line (number placement): {{ "start": 0, "end": 20, "step": 2, "highlight": 14 }}
+
+Keep the "text" field as a readable question even for visual questions (e.g. "What time does this clock show?").
+visual_data values must be valid JSON objects with the exact keys shown above."""
+
+
 @router.post("/generate", response_model=WorksheetGenerationResponse)
 async def generate_worksheet(request: WorksheetGenerationRequest):
     """Generate a new worksheet based on provided parameters."""
@@ -181,6 +210,19 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         else SYSTEM_PROMPT
     )
 
+    # Determine if visual mode is applicable (Math, Grades 1-3)
+    grade_num = 0
+    try:
+        grade_num = int(request.grade_level.replace("Class ", ""))
+    except ValueError:
+        pass
+    is_visual = (
+        request.problem_style in ("visual", "mixed")
+        and request.subject.lower() in ("maths", "mathematics", "math")
+        and 1 <= grade_num <= 3
+    )
+    visual_block = build_visual_instructions(request.problem_style) if is_visual else ""
+
     user_prompt = f"""Generate a {request.difficulty} difficulty worksheet:
 - Board: {request.board}
 - Grade: {request.grade_level}
@@ -191,7 +233,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
 - Region: {request.region}
 
 {f"Additional instructions: {request.custom_instructions}" if request.custom_instructions else ""}
-
+{visual_block}
 Generate exactly {request.num_questions} questions. Return ONLY valid JSON, no markdown."""
 
     try:
@@ -233,6 +275,8 @@ Generate exactly {request.num_questions} questions. Return ONLY valid JSON, no m
                 options=q.get("options"),
                 correct_answer=q.get("correct_answer"),
                 explanation=q.get("explanation"),
+                visual_type=q.get("visual_type"),
+                visual_data=q.get("visual_data"),
             ))
 
         worksheet = Worksheet(
@@ -618,6 +662,8 @@ Generate exactly {len(original['questions'])} NEW questions (different from befo
                 options=q.get("options"),
                 correct_answer=q.get("correct_answer"),
                 explanation=q.get("explanation"),
+                visual_type=q.get("visual_type"),
+                visual_data=q.get("visual_data"),
             ))
 
         worksheet = Worksheet(
