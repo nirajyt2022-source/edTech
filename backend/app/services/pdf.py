@@ -11,6 +11,35 @@ from typing import Any
 from xml.sax.saxutils import escape as xml_escape
 
 
+# Unicode → latin-1 safe replacements for Helvetica font
+_UNICODE_REPLACEMENTS = {
+    "\u2014": "-",   # em dash
+    "\u2013": "-",   # en dash
+    "\u2018": "'",   # left single quote
+    "\u2019": "'",   # right single quote
+    "\u201c": '"',   # left double quote
+    "\u201d": '"',   # right double quote
+    "\u2026": "...", # ellipsis
+    "\u00d7": "x",   # multiplication sign
+    "\u00f7": "/",   # division sign
+    "\u2264": "<=",  # less than or equal
+    "\u2265": ">=",  # greater than or equal
+    "\u2260": "!=",  # not equal
+    "\u25a1": "[]",  # white square (blank marker)
+    "\u25a2": "[]",  # white square with rounded corners
+    "\u2610": "[]",  # ballot box
+    "\u2192": "->",  # right arrow
+}
+
+
+def _sanitize_text(text: str) -> str:
+    """Replace Unicode characters that Helvetica/latin-1 cannot encode."""
+    for char, replacement in _UNICODE_REPLACEMENTS.items():
+        text = text.replace(char, replacement)
+    # Fallback: strip any remaining non-latin-1 characters
+    return text.encode("latin-1", errors="replace").decode("latin-1")
+
+
 class PDFService:
     """Service for generating PDF versions of worksheets."""
 
@@ -121,7 +150,7 @@ class PDFService:
     def _build_questions(self, story: list, worksheet: dict, questions: list) -> None:
         """Build the questions section of the PDF."""
         # Title
-        title = worksheet.get('title', 'Practice Worksheet')
+        title = _sanitize_text(worksheet.get('title', 'Practice Worksheet'))
         story.append(Paragraph(title, self.styles['WorksheetTitle']))
 
         # Subtitle with metadata
@@ -136,7 +165,7 @@ class PDFService:
             subtitle_parts.append(f"Difficulty: {worksheet['difficulty']}")
 
         if subtitle_parts:
-            subtitle = " | ".join(subtitle_parts)
+            subtitle = _sanitize_text(" | ".join(subtitle_parts))
             story.append(Paragraph(subtitle, self.styles['WorksheetSubtitle']))
 
         # Instructions box
@@ -160,7 +189,7 @@ class PDFService:
         # Questions
         for i, question in enumerate(questions, 1):
             q_type = question.get('type', 'short_answer')
-            q_text = question.get('text', '')
+            q_text = _sanitize_text(question.get('text', ''))
 
             # Question number and text
             story.append(Paragraph(
@@ -174,7 +203,7 @@ class PDFService:
                 for j, option in enumerate(options):
                     letter = chr(65 + j)  # A, B, C, D
                     story.append(Paragraph(
-                        f"({letter}) {option}",
+                        f"({letter}) {_sanitize_text(str(option))}",
                         self.styles['OptionText']
                     ))
                 story.append(Spacer(1, 8))
@@ -204,8 +233,8 @@ class PDFService:
     def _build_answer_key(self, story: list, worksheet: dict, questions: list) -> None:
         """Build the answer key section of the PDF."""
         # Title header for standalone answer key
-        title = worksheet.get('title', 'Practice Worksheet')
-        story.append(Paragraph(f"{title} — Answer Key", self.styles['AnswerKeyTitle']))
+        title = _sanitize_text(worksheet.get('title', 'Practice Worksheet'))
+        story.append(Paragraph(f"{title} - Answer Key", self.styles['AnswerKeyTitle']))
         story.append(Spacer(1, 10))
 
         # Create answer key table
@@ -214,8 +243,8 @@ class PDFService:
         for i, question in enumerate(questions, 1):
             answer = question.get('correct_answer', 'N/A')
             if isinstance(answer, list):
-                answer = ', '.join(answer)
-            row.append(f"Q{i}: {answer}")
+                answer = ', '.join(str(a) for a in answer)
+            row.append(f"Q{i}: {_sanitize_text(str(answer))}")
             if len(row) == 3:  # 3 columns per row
                 answer_data.append(row)
                 row = []
@@ -245,7 +274,7 @@ class PDFService:
                 explanation = question.get('explanation')
                 if explanation:
                     story.append(Paragraph(
-                        f"<b>Q{i}:</b> {explanation}",
+                        f"<b>Q{i}:</b> {_sanitize_text(explanation)}",
                         self.styles['AnswerText']
                     ))
                     story.append(Spacer(1, 5))

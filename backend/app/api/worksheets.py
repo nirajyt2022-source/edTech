@@ -1258,7 +1258,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
 
         common_mistakes = meta.get("common_mistakes") or []
         worksheet = Worksheet(
-            title=f"{meta.get('micro_skill', request.topic)} — Practice",
+            title=f"{meta.get('micro_skill', request.topic)} - Practice",
             grade=request.grade_level,
             subject=request.subject,
             topic=request.topic,
@@ -1634,7 +1634,7 @@ async def regenerate_worksheet(
 
         common_mistakes = meta.get("common_mistakes") or []
         worksheet = Worksheet(
-            title=f"{meta.get('micro_skill', original['topic'])} — Practice",
+            title=f"{meta.get('micro_skill', original['topic'])} - Practice",
             grade=original["grade"],
             subject=original["subject"],
             topic=original["topic"],
