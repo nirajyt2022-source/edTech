@@ -52,6 +52,7 @@ class Question(BaseModel):
     grading_notes: str | None = None
     visual_type: str | None = None
     visual_data: dict | None = None
+    role: str | None = None  # Phase 4: pedagogical role
 
 
 class Worksheet(BaseModel):
@@ -101,11 +102,14 @@ CORE QUALITY RULES (NON-NEGOTIABLE):
 7. Exactly the requested number of questions.
 
 PEDAGOGICAL STRUCTURE (MANDATORY):
-1. Warm-Up (1-2 easy questions)
-2. Core Practice (majority medium difficulty)
-3. Challenge (1-2 application/reasoning questions if difficulty=hard)
+Follow this cognitive progression (roles will be assigned post-generation):
+1. warmup — direct computation, single-step, easy. No visuals.
+2. concept_visual — include visual_type + visual_data when visual mode is active.
+3. word_problem — real-world scenario with names/context. Exact answer required.
+4. reasoning — compare, missing number, pattern, true/false reasoning. NOT pure arithmetic.
+5. challenge — multi-step (2+ operations) or advanced reasoning.
 
-Ensure coverage of key sub-skills within the topic.
+For 5 questions, use exactly this order. For more, cycle the pattern.
 
 For Maths:
 - Include at least one word problem.
@@ -282,6 +286,7 @@ def parse_question(q: dict, index: int, fallback_difficulty: str) -> Question:
         grading_notes=q.get("grading_notes"),
         visual_type=visual_type,
         visual_data=q.get("visual_data"),
+        role=q.get("role"),
     )
 
 
@@ -370,6 +375,125 @@ def _fix_number_line_step(data: dict) -> None:
             span = end - start
             if span > 40 and step < 2:
                 vd["step"] = 5 if span > 80 else 10 if span > 60 else 2
+
+
+# ──────────────────────────────────────────────
+# Phase 4: Pedagogical Role Engine
+# ──────────────────────────────────────────────
+
+_ROLE_CYCLE = ["warmup", "concept_visual", "word_problem", "reasoning", "challenge"]
+_VALID_ROLES = set(_ROLE_CYCLE)
+
+_WORD_PROBLEM_PATTERN = re.compile(
+    r"(has|have|gives?|buys?|sells?|eats?|left|remaining|costs?|pays?|earns?"
+    r"|shares?|distribut|collect|picks?|plant|bake|cook|travel|walk|run"
+    r"|पास|देता|खरीद|बेच|खाता|बचा|कीमत)",
+    re.IGNORECASE,
+)
+
+_REASONING_PATTERN = re.compile(
+    r"(\bcompare\b|\bwhich is (more|less|greater|smaller)\b"
+    r"|\bmissing number\b|\bfind the (mistake|error)\b"
+    r"|\btrue or false\b|\bwhat comes next\b|\bpattern\b"
+    r"|\bwhat is wrong\b|\brule\b|\brelationship\b)",
+    re.IGNORECASE,
+)
+
+_MULTI_OP_PATTERN = re.compile(
+    r"(\d\s*[\+\-\*/×÷]\s*\d.*[\+\-\*/×÷]\s*\d"  # two operators with digits
+    r"|\bthen\b.*\bthen\b"  # two "then" steps
+    r"|\bfirst\b.*\bthen\b"  # first...then
+    r"|\band\s+then\b)",
+    re.IGNORECASE,
+)
+
+
+def _build_role_sequence(n: int) -> list[str]:
+    """Build a role sequence for n questions by cycling through the 5-role pattern."""
+    if n <= 0:
+        return []
+    if n <= 5:
+        # For small counts, pick evenly from the pattern
+        indices = [round(i * 4 / (n - 1)) if n > 1 else 0 for i in range(n)]
+        return [_ROLE_CYCLE[idx] for idx in indices]
+    # For larger counts, cycle the full pattern
+    seq: list[str] = []
+    for i in range(n):
+        seq.append(_ROLE_CYCLE[i % 5])
+    return seq
+
+
+def _assign_roles(data: dict, difficulty: str) -> None:
+    """Deterministically assign pedagogical roles to questions in-place."""
+    questions = data.get("questions", [])
+    n = len(questions)
+    roles = _build_role_sequence(n)
+
+    for q, role in zip(questions, roles):
+        q["role"] = role
+        # Enforce difficulty alignment
+        if role == "warmup":
+            q["difficulty"] = "easy"
+        elif role == "challenge":
+            q["difficulty"] = "hard" if difficulty == "hard" else "medium"
+
+
+def _validate_roles(data: dict, is_visual_applicable: bool) -> list[str]:
+    """Validate that each question satisfies its assigned role constraints."""
+    issues: list[str] = []
+    questions = data.get("questions", [])
+
+    for q in questions:
+        qid = q.get("id", "?")
+        role = q.get("role")
+        if not role or role not in _VALID_ROLES:
+            continue  # skip validation for unrecognized roles
+
+        text = q.get("text", "")
+        correct = q.get("correct_answer")
+        has_visual = bool(q.get("visual_type") and q.get("visual_data"))
+
+        if role == "warmup":
+            if not _is_computational(text) and correct is None:
+                issues.append(
+                    f"{qid} (warmup): should be computational with exact answer"
+                )
+            if has_visual:
+                issues.append(f"{qid} (warmup): visual_type must be null")
+
+        elif role == "concept_visual":
+            if is_visual_applicable and not has_visual:
+                issues.append(
+                    f"{qid} (concept_visual): must include visual_type + visual_data"
+                )
+
+        elif role == "word_problem":
+            if not _WORD_PROBLEM_PATTERN.search(text):
+                issues.append(
+                    f"{qid} (word_problem): must include real-world context "
+                    f"(names, buying, giving, etc.)"
+                )
+            if correct is None:
+                issues.append(
+                    f"{qid} (word_problem): must have exact correct_answer"
+                )
+
+        elif role == "reasoning":
+            # Should not be pure arithmetic
+            if _is_computational(text) and not _REASONING_PATTERN.search(text):
+                issues.append(
+                    f"{qid} (reasoning): should not be pure arithmetic — "
+                    f"use compare, pattern, missing number, or true/false reasoning"
+                )
+
+        elif role == "challenge":
+            if not _MULTI_OP_PATTERN.search(text) and not _REASONING_PATTERN.search(text):
+                issues.append(
+                    f"{qid} (challenge): should be multi-step (2+ operations) "
+                    f"or advanced reasoning"
+                )
+
+    return issues
 
 
 _PERSONAL_DATA_PATTERNS = re.compile(
@@ -660,6 +784,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         # ── Deterministic post-processing (no LLM calls) ──
         _fixup_question_types(data)
         _trim_to_count(data, request.num_questions, request.problem_style, is_visual)
+        _assign_roles(data, request.difficulty)
         _fix_computational_answers(data)
         _fix_number_line_step(data)
 
@@ -674,6 +799,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
             problem_style=request.problem_style,
             is_visual_applicable=is_visual,
         )
+        all_issues += _validate_roles(data, is_visual)
 
         # ── Repair (one attempt) only if validation still fails ──
         if all_issues:
@@ -681,6 +807,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
             if repaired:
                 _fixup_question_types(repaired)
                 _trim_to_count(repaired, request.num_questions, request.problem_style, is_visual)
+                _assign_roles(repaired, request.difficulty)
                 _fix_computational_answers(repaired)
                 _fix_number_line_step(repaired)
                 if is_visual:
@@ -1089,16 +1216,19 @@ async def regenerate_worksheet(
         # Deterministic post-processing
         _fixup_question_types(data)
         _trim_to_count(data, num_questions, "standard", False)
+        _assign_roles(data, difficulty)
         _fix_computational_answers(data)
         _fix_number_line_step(data)
 
         # Validate after deterministic fixes
         validation_issues = validate_worksheet_data(data)
+        validation_issues += _validate_roles(data, False)
         if validation_issues:
             repaired = attempt_repair(system_prompt, data, validation_issues)
             if repaired:
                 _fixup_question_types(repaired)
                 _trim_to_count(repaired, num_questions, "standard", False)
+                _assign_roles(repaired, difficulty)
                 _fix_computational_answers(repaired)
                 _fix_number_line_step(repaired)
                 data = repaired
