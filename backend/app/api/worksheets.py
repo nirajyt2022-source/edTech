@@ -5,6 +5,7 @@ from typing import Literal
 import json
 import re
 import uuid
+from math import ceil
 from datetime import datetime
 from openai import OpenAI
 from supabase import create_client
@@ -145,13 +146,20 @@ REGIONAL CONTEXT:
 VISUAL MODE RULES:
 {coverage}
 
+IMPORTANT: "type" must ALWAYS be one of: multiple_choice, fill_blank, short_answer, true_false.
+Do NOT use visual type names (number_line, object_group, clock, shapes) as the question "type".
+Visuals go in "visual_type" and "visual_data" fields only.
+
 Visual types allowed: clock, number_line, object_group, shapes.
-Drawable constraints: object_group counts MUST NOT exceed 20. For larger numbers use number_line.
+Drawable constraints:
+- object_group counts MUST NOT exceed 20 per group. For larger numbers use number_line instead.
+- object_group labels must be simple, drawable nouns (e.g. "apples", "stars", "balls"). Avoid compound phrases like "boxes of chocolates".
 
 Formats:
 - clock: {{ "hour": 1-12, "minute": 0|5|10|...|55 }}
 - number_line: {{ "start": int, "end": int, "step": int, "highlight": int }}
-- object_group: {{ "groups": [{{"count": 1-20, "label": "apples"}}], "operation": "+"|"-" }}
+- object_group: {{ "groups": [{{"count": 1-20, "label": "apples"}}], "operation": "+"|"-"|"x" }}
+  For multiplication ("x"), prefer number_line unless both factors are <= 10 and the product <= 20.
 - shapes: {{ "shape": "triangle"|"circle"|"rectangle"|"square", "sides": [numbers] }}
 
 Keep the "text" field as a readable question even for visual questions."""
@@ -233,6 +241,10 @@ def clean_json_response(content: str) -> str:
     return content.strip()
 
 
+_VALID_QUESTION_TYPES = {"multiple_choice", "fill_blank", "short_answer", "true_false"}
+_VISUAL_TYPE_NAMES = {"number_line", "object_group", "clock", "shapes"}
+
+
 def parse_question(q: dict, index: int, fallback_difficulty: str) -> Question:
     """Parse a question dict into a Question model with backward-compatible defaults."""
     correct_answer = q.get("correct_answer")
@@ -240,20 +252,50 @@ def parse_question(q: dict, index: int, fallback_difficulty: str) -> Question:
     if not answer_type:
         answer_type = "exact" if correct_answer is not None else "example"
 
+    # Token efficiency: exact answers don't need sample_answer
+    sample_answer = q.get("sample_answer")
+    if answer_type == "exact":
+        sample_answer = None
+
+    q_type = q.get("type", "short_answer")
+    visual_type = q.get("visual_type")
+
+    # Fix #2: Remap visual type names used as question type
+    if q_type in _VISUAL_TYPE_NAMES:
+        visual_type = visual_type or q_type
+        q_type = "fill_blank" if correct_answer is not None else "short_answer"
+
+    # Clamp to valid enum
+    if q_type not in _VALID_QUESTION_TYPES:
+        q_type = "short_answer"
+
     return Question(
         id=q.get("id", f"q{index + 1}"),
-        type=q.get("type", "short_answer"),
+        type=q_type,
         text=q.get("text", ""),
         options=q.get("options"),
         correct_answer=correct_answer,
         explanation=q.get("explanation"),
         difficulty=q.get("difficulty", fallback_difficulty),
         answer_type=answer_type,
-        sample_answer=q.get("sample_answer"),
+        sample_answer=sample_answer,
         grading_notes=q.get("grading_notes"),
-        visual_type=q.get("visual_type"),
+        visual_type=visual_type,
         visual_data=q.get("visual_data"),
     )
+
+
+def _fixup_question_types(data: dict) -> None:
+    """Mutate data in-place: remap visual type names used as question type."""
+    for q in data.get("questions", []):
+        q_type = q.get("type", "")
+        if q_type in _VISUAL_TYPE_NAMES:
+            q["visual_type"] = q.get("visual_type") or q_type
+            q["type"] = (
+                "fill_blank" if q.get("correct_answer") is not None else "short_answer"
+            )
+        elif q_type not in _VALID_QUESTION_TYPES:
+            q["type"] = "short_answer"
 
 
 _PERSONAL_DATA_PATTERNS = re.compile(
@@ -276,7 +318,14 @@ _OPEN_ENDED_PATTERNS = re.compile(
 )
 
 
-def validate_worksheet_data(data: dict) -> list[str]:
+_ALLOWED_OPERATIONS = {"+", "-", "x"}
+
+
+def validate_worksheet_data(
+    data: dict,
+    problem_style: str = "standard",
+    is_visual_applicable: bool = False,
+) -> list[str]:
     """Validate parsed worksheet JSON. Returns list of issue descriptions (empty = valid)."""
     issues: list[str] = []
     questions = data.get("questions", [])
@@ -290,6 +339,13 @@ def validate_worksheet_data(data: dict) -> list[str]:
 
         q_type = q.get("type", "")
         correct = q.get("correct_answer")
+
+        # Type enum correctness
+        if q_type not in _VALID_QUESTION_TYPES:
+            issues.append(
+                f"{qid}: type '{q_type}' is invalid — must be one of "
+                f"{sorted(_VALID_QUESTION_TYPES)}"
+            )
 
         # MCQ: correct_answer must be in options
         if q_type == "multiple_choice":
@@ -318,6 +374,43 @@ def validate_worksheet_data(data: dict) -> list[str]:
         if _PERSONAL_DATA_PATTERNS.search(text):
             issues.append(f"{qid}: question asks for personal data — remove it")
 
+        # Visual field validation
+        vtype = q.get("visual_type")
+        vdata = q.get("visual_data")
+
+        if vtype == "object_group" and isinstance(vdata, dict):
+            # object_group count <= 20
+            for g in vdata.get("groups", []):
+                if g.get("count", 0) > 20:
+                    issues.append(
+                        f"{qid}: object_group count {g['count']} exceeds 20 — "
+                        f"use number_line instead"
+                    )
+            # operation allowed values
+            op = vdata.get("operation")
+            if op and op not in _ALLOWED_OPERATIONS:
+                issues.append(
+                    f"{qid}: object_group operation '{op}' invalid — "
+                    f"must be one of {sorted(_ALLOWED_OPERATIONS)}"
+                )
+
+    # Visual ratio checks (aggregated)
+    if is_visual_applicable:
+        visual_count = sum(
+            1 for q in questions if q.get("visual_type") and q.get("visual_data")
+        )
+        total = len(questions)
+        if problem_style == "visual" and visual_count < total:
+            issues.append(
+                f"visual mode requires ALL {total} questions to have visual fields, "
+                f"but only {visual_count} do"
+            )
+        elif problem_style == "mixed" and total > 0 and visual_count < ceil(total / 2):
+            issues.append(
+                f"mixed mode requires at least {ceil(total / 2)} visual questions, "
+                f"but only {visual_count} found"
+            )
+
     return issues
 
 
@@ -331,13 +424,26 @@ def enforce_visual_rules(
     questions = data.get("questions", [])
     issues: list[str] = []
 
-    # Fix object_group counts > 20 → convert to number_line
     for q in questions:
-        if q.get("visual_type") == "object_group" and q.get("visual_data"):
+        if q.get("visual_type") == "object_group" and isinstance(q.get("visual_data"), dict):
             groups = q["visual_data"].get("groups", [])
+            op = q["visual_data"].get("operation", "+")
+
+            # object_group counts > 20 → convert to number_line
             over = any(g.get("count", 0) > 20 for g in groups)
-            if over:
-                total = sum(g.get("count", 0) for g in groups)
+
+            # Multiplication with large product → prefer number_line
+            mult_too_large = (
+                op == "x"
+                and len(groups) >= 2
+                and (groups[0].get("count", 0) * groups[1].get("count", 0)) > 20
+            )
+
+            if over or mult_too_large:
+                if op == "x" and len(groups) >= 2:
+                    total = groups[0].get("count", 0) * groups[1].get("count", 0)
+                else:
+                    total = sum(g.get("count", 0) for g in groups)
                 step = 1 if total <= 20 else 2 if total <= 50 else 5
                 q["visual_type"] = "number_line"
                 q["visual_data"] = {
@@ -352,16 +458,17 @@ def enforce_visual_rules(
         1 for q in questions if q.get("visual_type") and q.get("visual_data")
     )
     total = len(questions)
+    required = ceil(total / 2) if problem_style == "mixed" else total
 
     if problem_style == "visual" and visual_count < total:
         issues.append(
             f"visual mode requires ALL {total} questions to have visual_type+visual_data, "
             f"but only {visual_count} do"
         )
-    elif problem_style == "mixed" and total > 0 and visual_count < (total // 2):
+    elif problem_style == "mixed" and total > 0 and visual_count < required:
         issues.append(
-            f"mixed mode requires at least {total // 2} visual questions, "
-            f"but only {visual_count} found"
+            f"mixed mode requires at least {required} visual questions "
+            f"(ceil({total}/2)), but only {visual_count} found"
         )
 
     return data, issues
@@ -460,6 +567,9 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                 status_code=500, detail=f"Failed to parse AI response: {str(e)}"
             )
 
+        # ── Post-processing: schema fixups (before validation) ──
+        _fixup_question_types(data)
+
         # ── Post-processing: visual enforcement ──
         if is_visual:
             data, visual_issues = enforce_visual_rules(
@@ -468,8 +578,12 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         else:
             visual_issues = []
 
-        # ── Validation ──
-        validation_issues = validate_worksheet_data(data)
+        # ── Validation (includes visual ratio + operation checks) ──
+        validation_issues = validate_worksheet_data(
+            data,
+            problem_style=request.problem_style,
+            is_visual_applicable=is_visual,
+        )
         all_issues = validation_issues + visual_issues
 
         # ── Repair (one attempt) if issues found ──
@@ -879,11 +993,13 @@ async def regenerate_worksheet(
                 status_code=500, detail=f"Failed to parse AI response: {str(e)}"
             )
 
-        # Validation + optional repair
+        # Schema fixups + validation + optional repair
+        _fixup_question_types(data)
         validation_issues = validate_worksheet_data(data)
         if validation_issues:
             repaired = attempt_repair(system_prompt, data, validation_issues)
             if repaired:
+                _fixup_question_types(repaired)
                 data = repaired
 
         # Build questions with backward-compatible defaults
