@@ -487,6 +487,11 @@ textarea::placeholder {
     display: none !important;
   }
 
+  /* Strip color fills from visual tokens in print */
+  .token-cf {
+    fill: none !important;
+  }
+
   /* Question page-break handling */
   .stagger-item {
     break-inside: avoid;

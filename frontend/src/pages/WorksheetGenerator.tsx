@@ -29,6 +29,10 @@ const PROBLEM_STYLES = [
   { value: 'visual', label: 'Visual' },
   { value: 'mixed', label: 'Mixed' },
 ]
+const VISUAL_THEMES = [
+  { value: 'mono', label: 'Print-safe (Monochrome)' },
+  { value: 'color', label: 'Color on screen' },
+]
 
 // Fallback topics for when curriculum API is unavailable
 const DEFAULT_TOPICS: Record<string, string[]> = {
@@ -103,6 +107,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [questionCount, setQuestionCount] = useState('10')
   const [language, setLanguage] = useState('English')
   const [problemStyle, setProblemStyle] = useState('standard')
+  const [visualTheme, setVisualTheme] = useState<'mono' | 'color'>('mono')
   const [customInstructions, setCustomInstructions] = useState('')
 
   const [loading, setLoading] = useState(false)
@@ -131,7 +136,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const selectionVersionRef = useRef(0)
   useEffect(() => {
     selectionVersionRef.current += 1
-  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, problemStyle, customInstructions])
+  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, problemStyle, visualTheme, customInstructions])
 
   // Reset subject and topic when region changes
   useEffect(() => {
@@ -849,6 +854,20 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="visualTheme" className="text-sm font-semibold">Visual Theme</Label>
+                    <Select value={visualTheme} onValueChange={(v) => setVisualTheme(v as 'mono' | 'color')}>
+                      <SelectTrigger id="visualTheme" className="bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VISUAL_THEMES.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1064,7 +1083,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
 
                             {question.visual_type && question.visual_data && (
                               <div className="mt-3">
-                                <VisualProblem visualType={question.visual_type} visualData={question.visual_data} />
+                                <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} />
                               </div>
                             )}
 
