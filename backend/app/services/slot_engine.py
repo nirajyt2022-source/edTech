@@ -58,6 +58,14 @@ VALID_FORMATS: dict[str, set[str]] = {
     "thinking":        {"thinking"},
 }
 
+DEFAULT_FORMAT_BY_SLOT_TYPE: dict[str, str] = {
+    "recognition": "column_setup",
+    "application": "word_problem",
+    "representation": "missing_number",
+    "error_detection": "error_spot",
+    "thinking": "thinking",
+}
+
 _DOCTRINE_WEIGHTS = {
     "recognition": 0.20, "application": 0.40, "representation": 0.20,
     "error_detection": 0.10, "thinking": 0.10,
@@ -508,6 +516,11 @@ def build_worksheet_plan(
                 "format_hint": "simple_identify",
                 "carry_required": False,
             }
+
+    # Backfill: guarantee every directive has a non-empty format_hint
+    for d in plan:
+        if not d.get("format_hint"):
+            d["format_hint"] = DEFAULT_FORMAT_BY_SLOT_TYPE.get(d["slot_type"], "")
 
     return plan
 
@@ -1525,7 +1538,9 @@ def _regen_question_for_topic(
 
         q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or directive.get("slot_type", "")
         q["slot_type"] = directive.get("slot_type", q.get("slot_type", ""))
+        q["role"] = directive.get("role") or directive.get("slot_type", q.get("slot_type", ""))
         q["difficulty"] = directive.get("difficulty", difficulty)
+        backfill_format(q, directive)
 
         hydrate_visuals([q])
 
@@ -1540,6 +1555,14 @@ def _regen_question_for_topic(
 
         return q
     return None
+
+
+def backfill_format(q: dict, directive: dict | None = None) -> None:
+    """Ensure q['format'] is never missing or blank. Mutates q in place."""
+    fmt = q.get("format") or ""
+    if not fmt.strip():
+        fmt = (directive or {}).get("format_hint") or DEFAULT_FORMAT_BY_SLOT_TYPE.get(q.get("slot_type", ""), "")
+    q["format"] = fmt
 
 
 def run_slot_pipeline(
@@ -1665,6 +1688,7 @@ def run_slot_pipeline(
     questions: list[dict] = []
     avoid_state: list[str] = []
     max_attempts = 3
+    _question_warnings: list[str] = []
 
     for i, slot_type in enumerate(slot_plan):
         directive = plan_directives[i]
@@ -1701,11 +1725,14 @@ def run_slot_pipeline(
                         "Q%d/%d still has issues after %d attempts: %s - using best effort",
                         i + 1, len(slot_plan), max_attempts, issues,
                     )
+                    _question_warnings.extend(f"q{i+1}: {iss}" for iss in issues)
 
                 q["id"] = i + 1
                 q["slot_type"] = slot_type
+                q["role"] = directive.get("role") or slot_type
                 q["difficulty"] = q_difficulty
                 q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or slot_type
+                backfill_format(q, directive)
 
                 # Preserve student_wrong_answer for error_spot enrichment
                 if slot_type == "error_detection" and variant and variant.get("error"):
@@ -1724,6 +1751,7 @@ def run_slot_pipeline(
             questions.append({
                 "id": i + 1,
                 "slot_type": slot_type,
+                "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
                 "format": sorted(VALID_FORMATS[slot_type])[0],
                 "question_text": f"[Generation failed for {slot_type} question]",
@@ -1806,6 +1834,9 @@ def run_slot_pipeline(
                     )
                     if newq:
                         newq["id"] = i + 1
+                        newq["slot_type"] = d.get("slot_type", newq.get("slot_type", ""))
+                        newq["role"] = d.get("role") or d.get("slot_type", newq.get("slot_type", ""))
+                        newq["skill_tag"] = d.get("skill_tag") or newq.get("skill_tag") or d.get("slot_type", "")
                         q = newq
                 questions[i] = q
 
@@ -1827,6 +1858,9 @@ def run_slot_pipeline(
             )
             if new_q:
                 new_q["id"] = idx2 + 1
+                new_q["slot_type"] = d.get("slot_type", new_q.get("slot_type", ""))
+                new_q["role"] = d.get("role") or d.get("slot_type", new_q.get("slot_type", ""))
+                new_q["skill_tag"] = d.get("skill_tag") or new_q.get("skill_tag") or d.get("slot_type", "")
                 questions[idx2] = new_q
                 seen_texts.add(normalize_q_text(new_q))
             else:
@@ -1849,6 +1883,13 @@ def run_slot_pipeline(
     meta["grade"] = grade
     meta["subject"] = subject
     meta["topic"] = topic
+
+    # Collect all validation warnings for best-effort response
+    _ws_warnings = (ws_issues or []) + (carry_issues or [])
+    meta["_warnings"] = {
+        "question_level": _question_warnings,
+        "worksheet_level": _ws_warnings,
+    }
 
     logger.info("Slot pipeline complete: %d questions", len(questions))
     return meta, questions

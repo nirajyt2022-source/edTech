@@ -103,6 +103,8 @@ class Worksheet(BaseModel):
 class WorksheetGenerationResponse(BaseModel):
     worksheet: Worksheet
     generation_time_ms: int
+    warnings: dict | None = None
+    verdict: str = "ok"
 
 
 class GradeRequest(BaseModel):
@@ -1435,9 +1437,17 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         end_time = datetime.now()
         generation_time_ms = int((end_time - start_time).total_seconds() * 1000)
 
+        # Surface validation warnings as best-effort verdict
+        raw_warnings = meta.pop("_warnings", None) or {}
+        q_warns = raw_warnings.get("question_level") or []
+        ws_warns = raw_warnings.get("worksheet_level") or []
+        has_warnings = bool(q_warns or ws_warns)
+
         return WorksheetGenerationResponse(
             worksheet=worksheet,
             generation_time_ms=generation_time_ms,
+            warnings={"question_level": q_warns, "worksheet_level": ws_warns} if has_warnings else None,
+            verdict="best_effort" if has_warnings else "ok",
         )
 
     except HTTPException:

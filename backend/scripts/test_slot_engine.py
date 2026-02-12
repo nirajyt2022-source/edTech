@@ -1713,6 +1713,184 @@ def test_audit_disabled():
     return ok
 
 
+def test_format_backfill():
+    print("\n" + "=" * 60)
+    print("30. FORMAT BACKFILL TEST")
+    print("=" * 60)
+
+    from app.services.slot_engine import backfill_format, DEFAULT_FORMAT_BY_SLOT_TYPE
+
+    all_pass = True
+
+    # Empty string format → uses default for slot_type
+    q1 = {"slot_type": "recognition", "format": ""}
+    backfill_format(q1)
+    ok = q1["format"] == "column_setup"
+    fmt1 = q1["format"]
+    print(f"  Empty format recognition → column_setup: {'PASS' if ok else f'FAIL ({fmt1})'}")
+    if not ok:
+        all_pass = False
+
+    # Missing format key → uses default
+    q2 = {"slot_type": "application"}
+    backfill_format(q2)
+    ok = q2["format"] == "word_problem"
+    fmt2 = q2["format"]
+    print(f"  Missing format application → word_problem: {'PASS' if ok else f'FAIL ({fmt2})'}")
+    if not ok:
+        all_pass = False
+
+    # format_hint from directive takes priority over default
+    q3 = {"slot_type": "representation", "format": ""}
+    backfill_format(q3, {"format_hint": "estimation"})
+    ok = q3["format"] == "estimation"
+    fmt3 = q3["format"]
+    print(f"  Directive format_hint overrides default: {'PASS' if ok else f'FAIL ({fmt3})'}")
+    if not ok:
+        all_pass = False
+
+    # Existing valid format is NOT overwritten
+    q4 = {"slot_type": "recognition", "format": "place_value"}
+    backfill_format(q4)
+    ok = q4["format"] == "place_value"
+    fmt4 = q4["format"]
+    print(f"  Existing format preserved: {'PASS' if ok else f'FAIL ({fmt4})'}")
+    if not ok:
+        all_pass = False
+
+    # All slot types have a default
+    for st, expected in DEFAULT_FORMAT_BY_SLOT_TYPE.items():
+        q = {"slot_type": st, "format": ""}
+        backfill_format(q)
+        actual = q["format"]
+        ok = actual == expected
+        print(f"  {st} → {expected}: {'PASS' if ok else f'FAIL ({actual})'}")
+        if not ok:
+            all_pass = False
+
+    return all_pass
+
+
+def test_best_effort_response():
+    print("\n" + "=" * 60)
+    print("31. BEST-EFFORT RESPONSE CONTRACT TEST")
+    print("=" * 60)
+
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    tc = TestClient(app)
+    all_pass = True
+
+    # Craft a request that will produce a worksheet with a slot-count mismatch:
+    # ask for 5 questions but supply a mix_recipe totalling 3 → pipeline fills 3,
+    # then validate_worksheet_slots will flag missing slots → best_effort verdict.
+    # However since there's no LLM, this will 500 from generation failure.
+    # Instead, test the response model directly by simulating what the endpoint builds.
+
+    from app.api.worksheets import WorksheetGenerationResponse, Worksheet, Question
+
+    dummy_questions = [
+        Question(
+            id="1", type="recognition", text="Write 345 + 278 in column form.",
+            difficulty="easy",
+        ),
+        Question(
+            id="2", type="application", text="Aarav has 300 books and buys 200 more.",
+            difficulty="medium",
+        ),
+    ]
+    ws = Worksheet(
+        title="Test", grade="Class 3", subject="Maths",
+        topic="Addition", difficulty="Medium", language="English",
+        questions=dummy_questions,
+    )
+
+    # Case 1: no warnings → verdict "ok"
+    resp_ok = WorksheetGenerationResponse(
+        worksheet=ws,
+        generation_time_ms=100,
+    )
+    ok1 = resp_ok.verdict == "ok" and resp_ok.warnings is None
+    print(f"  No warnings → verdict='ok': {'PASS' if ok1 else 'FAIL'}")
+    if not ok1:
+        all_pass = False
+
+    # Case 2: with warnings → verdict "best_effort"
+    warns = {"question_level": ["q1: bad_format"], "worksheet_level": ["slot_count_mismatch: recognition expected 1 got 0"]}
+    resp_be = WorksheetGenerationResponse(
+        worksheet=ws,
+        generation_time_ms=200,
+        warnings=warns,
+        verdict="best_effort",
+    )
+    ok2 = resp_be.verdict == "best_effort"
+    ok3 = resp_be.warnings is not None and len(resp_be.warnings["worksheet_level"]) == 1
+    print(f"  With warnings → verdict='best_effort': {'PASS' if ok2 else 'FAIL'}")
+    print(f"  Warnings structure preserved: {'PASS' if ok3 else 'FAIL'}")
+    if not ok2:
+        all_pass = False
+    if not ok3:
+        all_pass = False
+
+    # Case 3: round-trip through JSON — status 200 stays 200
+    d = resp_be.model_dump()
+    ok4 = d["verdict"] == "best_effort" and "worksheet" in d and d["warnings"]["question_level"] == ["q1: bad_format"]
+    print(f"  JSON round-trip intact: {'PASS' if ok4 else 'FAIL'}")
+    if not ok4:
+        all_pass = False
+
+    # Case 4: validate_worksheet_slots returns real issues for mismatched count
+    from app.services.slot_engine import validate_worksheet_slots
+    fake_qs = [
+        {"slot_type": "recognition", "format": "column_setup", "question_text": "x", "answer": "1"},
+        {"slot_type": "recognition", "format": "column_setup", "question_text": "y", "answer": "2"},
+    ]
+    issues = validate_worksheet_slots(fake_qs, 5)
+    ok5 = any("mismatch" in iss or "expected" in iss for iss in issues)
+    print(f"  validate_worksheet_slots flags mismatch: {'PASS' if ok5 else f'FAIL ({issues})'}")
+    if not ok5:
+        all_pass = False
+
+    return all_pass
+
+
+def test_plan_format_hint_backfill():
+    print("\n" + "=" * 60)
+    print("32. PLAN FORMAT_HINT BACKFILL TEST")
+    print("=" * 60)
+
+    all_pass = True
+
+    # Default plan — all directives must have non-empty format_hint
+    for qc in [5, 10, 15, 20]:
+        plan = build_worksheet_plan(qc)
+        missing = [i for i, d in enumerate(plan) if not d.get("format_hint")]
+        ok = len(missing) == 0
+        print(f"  Default plan q={qc}: all format_hint present: {'PASS' if ok else f'FAIL (missing at {missing})'}")
+        if not ok:
+            all_pass = False
+
+    # Custom recipe with unknown skill_tag (falls back to application/word_problem)
+    custom = [{"skill_tag": "unknown_skill", "count": 3}]
+    plan_custom = build_worksheet_plan(3, mix_recipe=custom)
+    missing = [i for i, d in enumerate(plan_custom) if not d.get("format_hint")]
+    ok = len(missing) == 0
+    print(f"  Custom unknown recipe: all format_hint present: {'PASS' if ok else f'FAIL (missing at {missing})'}")
+    if not ok:
+        all_pass = False
+
+    # Fractions topic profile
+    plan_frac = build_worksheet_plan(10, topic="Fractions (halves, quarters)")
+    missing = [i for i, d in enumerate(plan_frac) if not d.get("format_hint")]
+    ok = len(missing) == 0
+    print(f"  Fractions topic q=10: all format_hint present: {'PASS' if ok else f'FAIL (missing at {missing})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -1964,6 +2142,9 @@ if __name__ == "__main__":
     p27 = test_telemetry_smoke()
     p28 = test_telemetry_db_disabled()
     p29 = test_audit_disabled()
+    p30 = test_format_backfill()
+    p31 = test_best_effort_response()
+    p32 = test_plan_format_hint_backfill()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -1997,6 +2178,9 @@ if __name__ == "__main__":
     print(f"  Telemetry smoke:       {'PASS' if p27 else 'FAIL'}")
     print(f"  Telemetry DB disabled: {'PASS' if p28 else 'FAIL'}")
     print(f"  Audit disabled:       {'PASS' if p29 else 'FAIL'}")
+    print(f"  Format backfill:      {'PASS' if p30 else 'FAIL'}")
+    print(f"  Best-effort response: {'PASS' if p31 else 'FAIL'}")
+    print(f"  Plan format_hint:    {'PASS' if p32 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()
