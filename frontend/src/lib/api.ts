@@ -54,8 +54,9 @@ export async function apiV1WithFallback<T = unknown>(
     return await api.post(v1Path, data, config)
   } catch (err: unknown) {
     const axErr = err as { response?: { status?: number } }
-    if (axErr.response?.status === 404) {
-      // Fallback to legacy
+    const status = axErr.response?.status
+    if (status === 404 || status === 500) {
+      // Fallback to legacy on 404 (not yet migrated) or 500 (v1 crash)
       if (method === 'get') return await api.get(legacyPath, config)
       if (method === 'delete') return await api.delete(legacyPath, config)
       return await api.post(legacyPath, data, config)

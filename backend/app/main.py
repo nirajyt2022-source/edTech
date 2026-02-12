@@ -17,6 +17,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         settings.frontend_url,
+        "http://localhost:3000",
         "http://localhost:5173",  # Vite dev server
         "http://localhost:5174",  # Vite dev server (alternate port)
         "https://ed-tech-drab.vercel.app",  # Production frontend

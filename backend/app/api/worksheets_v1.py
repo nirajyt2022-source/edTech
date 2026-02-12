@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Response
+import logging
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 from typing import Literal, Optional
 
@@ -25,6 +26,7 @@ from app.services.slot_engine import (
 from app.services.mastery_dashboard import get_mastery, topic_summary, reset_skill
 from app.services.telemetry import instrument, emit_event
 
+logger = logging.getLogger("practicecraft.v1")
 router = APIRouter(prefix="/api/v1/worksheets", tags=["worksheets-v1"])
 
 
@@ -150,11 +152,14 @@ class MasteryResetRequestV1(BaseModel):
 @router.post("/generate", response_model=GenerateResponse)
 @instrument(route="/api/v1/worksheets/generate", version="v1")
 async def generate_v1(request: GenerateRequestV1):
-    # Re-use legacy generate logic via import to avoid duplication
     from app.api.worksheets import generate_worksheet as _legacy_generate
     from app.api.worksheets import WorksheetGenerationRequest
-    legacy_req = WorksheetGenerationRequest(**request.model_dump())
-    return await _legacy_generate(legacy_req)
+    try:
+        legacy_req = WorksheetGenerationRequest(**request.model_dump())
+        return await _legacy_generate(legacy_req)
+    except Exception as e:
+        logger.exception("v1 /generate failed for topic=%s", request.topic)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/export-pdf")
