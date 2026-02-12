@@ -1318,6 +1318,47 @@ def _map_visual_fields(q: dict) -> tuple:
     return vtype, {k: v for k, v in spec.items() if k != "model_id"}
 
 
+def _fill_role_explanations(questions: list[Question]) -> None:
+    """Add short deterministic explanations for thinking and error_detection roles only."""
+    for q in questions:
+        if q.role not in ("thinking", "error_detection"):
+            continue
+        if q.explanation and q.explanation.strip():
+            # Already has one (e.g. from normalize_error_spot_answers)
+            q.explanation = q.explanation[:160]
+            continue
+
+        text = (q.text or "").lower()
+        answer = q.correct_answer or ""
+
+        if q.role == "thinking":
+            # Estimation explanations
+            if "nearest 100" in text or "nearest hundred" in text:
+                q.explanation = f"Round each number to the nearest 100, then add the rounded values. The estimated answer is {answer}."
+            elif "nearest 10" in text or "nearest ten" in text:
+                q.explanation = f"Round each number to the nearest 10, then add the rounded values. The estimated answer is {answer}."
+            elif "closer" in text:
+                q.explanation = f"Add the numbers and check which reference value is nearest. The answer is {answer}."
+            elif "compar" in text:
+                q.explanation = "Compare both methods step by step and check which gives the correct result."
+            else:
+                q.explanation = f"Think through each step carefully. The answer is {answer}."
+
+        elif q.role == "error_detection":
+            if "+" in text or "add" in text:
+                q.explanation = f"Re-add column by column with correct carrying. The correct answer is {answer}."
+            elif "-" in text or "subtract" in text:
+                q.explanation = f"Re-subtract column by column with correct borrowing. The correct answer is {answer}."
+            elif "\u00d7" in text or "x " in text or "times" in text:
+                q.explanation = f"Recalculate the product. The correct answer is {answer}."
+            else:
+                q.explanation = f"Redo the calculation carefully. The correct answer is {answer}."
+
+        # Hard cap
+        if q.explanation and len(q.explanation) > 160:
+            q.explanation = q.explanation[:157] + "..."
+
+
 def _slot_to_question(q: dict, idx: int) -> Question:
     """Convert a slot-engine question dict to the API Question model."""
     fmt = q.get("format", "")
@@ -1446,6 +1487,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                     enforce_visuals_only(slot_questions, min_ratio=min_visual_ratio or 0.8)
 
                 questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+                _fill_role_explanations(questions)
                 common_mistakes = meta.get("common_mistakes") or []
 
                 ws = Worksheet(
@@ -1546,6 +1588,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
 
         # Map slot-engine output → API Question models
         questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+        _fill_role_explanations(questions)
 
         # Dev assertion: detect visual propagation failures
         _RE_3DIGIT = re.compile(r"\b\d{3}\b")
@@ -2033,6 +2076,7 @@ async def regenerate_worksheet(
 
         # Map slot-engine output → API Question models
         questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+        _fill_role_explanations(questions)
 
         common_mistakes = meta.get("common_mistakes") or []
         worksheet = Worksheet(

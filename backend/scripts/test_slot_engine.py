@@ -2645,6 +2645,112 @@ def test_add_sub_expansion():
     return all_pass
 
 
+def test_role_explanations():
+    """Test that thinking and error_detection roles get explanations, others don't."""
+    print("\n" + "=" * 60)
+    print("40. ROLE EXPLANATIONS TEST")
+    print("=" * 60)
+
+    from app.api.worksheets import Question, _fill_role_explanations
+
+    all_pass = True
+
+    # Build a mixed set of questions with different roles
+    questions = [
+        Question(id="q1", type="short_answer", text="Write 456 + 279 in column form.",
+                 correct_answer="735", role="recognition"),
+        Question(id="q2", type="short_answer", text="A shop has 456 pencils and gets 279 more. How many total?",
+                 correct_answer="735", role="application"),
+        Question(id="q3", type="short_answer", text="Fill in: 456 + ___ = 735",
+                 correct_answer="279", role="representation"),
+        Question(id="q4", type="short_answer", text="Ravi says 456 + 279 = 725. Spot the error.",
+                 correct_answer="735", role="error_detection"),
+        Question(id="q5", type="short_answer", text="Estimate: Round 456 and 279 to the nearest 100, then add.",
+                 correct_answer="700", role="thinking"),
+        Question(id="q6", type="short_answer", text="Is 47 + 36 closer to 80 or 90?",
+                 correct_answer="80", role="thinking"),
+        Question(id="q7", type="short_answer", text="756 - 238 = 528. Find the mistake.",
+                 correct_answer="518", role="error_detection"),
+        Question(id="q8", type="short_answer", text="Compare: 456 + 279 vs 460 + 280. Which is exact?",
+                 correct_answer="456 + 279", role="thinking"),
+    ]
+
+    _fill_role_explanations(questions)
+
+    # ── Case 1: recognition has no explanation
+    ok = questions[0].explanation is None
+    print(f"  recognition: no explanation: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 2: application has no explanation
+    ok = questions[1].explanation is None
+    print(f"  application: no explanation: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 3: representation has no explanation
+    ok = questions[2].explanation is None
+    print(f"  representation: no explanation: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 4: error_detection (addition) has explanation
+    expl4 = questions[3].explanation
+    ok = expl4 is not None and len(expl4) > 0 and len(expl4) <= 160 and "735" in expl4
+    print(f"  error_detection (add): has explanation <= 160: {'PASS' if ok else f'FAIL ({expl4})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 5: thinking (round to nearest 100) has explanation
+    expl5 = questions[4].explanation
+    ok = expl5 is not None and "nearest 100" in expl5.lower() and len(expl5) <= 160
+    print(f"  thinking (round 100): has explanation: {'PASS' if ok else f'FAIL ({expl5})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 6: thinking (closer to) has explanation
+    expl6 = questions[5].explanation
+    ok = expl6 is not None and len(expl6) > 0 and len(expl6) <= 160
+    print(f"  thinking (closer to): has explanation: {'PASS' if ok else f'FAIL ({expl6})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 7: error_detection (subtraction) mentions borrowing
+    expl7 = questions[6].explanation
+    ok = expl7 is not None and "borrow" in expl7.lower() and len(expl7) <= 160
+    print(f"  error_detection (sub): mentions borrowing: {'PASS' if ok else f'FAIL ({expl7})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 8: thinking (compare) has explanation
+    expl8 = questions[7].explanation
+    ok = expl8 is not None and len(expl8) > 0 and len(expl8) <= 160
+    print(f"  thinking (compare): has explanation: {'PASS' if ok else f'FAIL ({expl8})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 9: Pre-existing explanation is preserved (truncated to 160)
+    q_pre = Question(id="q9", type="short_answer", text="Spot: 47 + 36 = 73",
+                     correct_answer="83", role="error_detection",
+                     explanation="The student forgot to carry the 1 from the ones column.")
+    _fill_role_explanations([q_pre])
+    ok = q_pre.explanation == "The student forgot to carry the 1 from the ones column."
+    print(f"  Pre-existing explanation preserved: {'PASS' if ok else f'FAIL ({q_pre.explanation})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 10: correct_answer never modified
+    answers_before = ["735", "735", "279", "735", "700", "80", "518", "456 + 279"]
+    answers_after = [q.correct_answer for q in questions]
+    ok = answers_before == answers_after
+    print(f"  correct_answer unchanged: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -2906,6 +3012,7 @@ if __name__ == "__main__":
     p37 = test_multi_skill_bundle()
     p38 = test_skill_purity_enforcement()
     p39 = test_add_sub_expansion()
+    p40 = test_role_explanations()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -2949,6 +3056,7 @@ if __name__ == "__main__":
     print(f"  Multi-skill bundle: {'PASS' if p37 else 'FAIL'}")
     print(f"  Skill purity:      {'PASS' if p38 else 'FAIL'}")
     print(f"  Add/sub expansion: {'PASS' if p39 else 'FAIL'}")
+    print(f"  Role explanations: {'PASS' if p40 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()
