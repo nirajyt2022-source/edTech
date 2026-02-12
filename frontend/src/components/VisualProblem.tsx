@@ -15,6 +15,8 @@ export default function VisualProblem({ visualType, visualData, colorMode = 'mon
       return <ShapeVisual shape={String(visualData.shape || 'circle')} sides={(visualData.sides as number[]) || []} />
     case 'number_line':
       return <NumberLineVisual start={Number(visualData.start) || 0} end={Number(visualData.end) || 20} step={Number(visualData.step) || 2} highlight={visualData.highlight != null ? Number(visualData.highlight) : undefined} useColor={useColor} />
+    case 'base_ten_regrouping':
+      return <BaseTenRegroupingVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'addition')} />
     default:
       return null
   }
@@ -263,6 +265,51 @@ function ShapeVisual({ shape, sides }: { shape: string; sides: number[] }) {
   return (
     <svg viewBox={`0 0 ${size} ${size}`} className="w-20 h-20 text-foreground print:text-black" role="img" aria-label={`${shape}${sides.length ? ` with sides ${sides.join(', ')}` : ''}`}>
       {shapeElement}
+    </svg>
+  )
+}
+
+/* ── Base Ten Regrouping (column form) ── */
+
+function BaseTenRegroupingVisual({ numbers, operation }: { numbers: number[]; operation: string }) {
+  if (numbers.length < 2) return null
+  const [a, b] = numbers
+  const opSymbol = operation === 'addition' ? '+' : '\u2212'
+
+  const digits = (n: number) => {
+    const s = String(Math.abs(n)).padStart(3, '0')
+    return s.split('').map(Number)
+  }
+
+  const dA = digits(a)
+  const dB = digits(b)
+
+  const w = 160, h = 90
+  const cols = [52, 84, 116] // H, T, O x-positions
+  const headerY = 16, rowA = 36, rowB = 56, lineY = 66, labels = ['H', 'T', 'O']
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-40 h-[90px] text-foreground print:text-black font-mono" role="img" aria-label={`Column form: ${a} ${opSymbol} ${b}`}>
+      {/* Column headers */}
+      {labels.map((l, i) => (
+        <text key={l} x={cols[i]} y={headerY} textAnchor="middle" fontSize="10" fill="currentColor" fontWeight="600">{l}</text>
+      ))}
+      {/* First number */}
+      {dA.map((d, i) => (
+        <text key={`a${i}`} x={cols[i]} y={rowA} textAnchor="middle" fontSize="13" fill="currentColor">{d}</text>
+      ))}
+      {/* Operation symbol */}
+      <text x={28} y={rowB} textAnchor="middle" fontSize="13" fill="currentColor" fontWeight="600">{opSymbol}</text>
+      {/* Second number */}
+      {dB.map((d, i) => (
+        <text key={`b${i}`} x={cols[i]} y={rowB} textAnchor="middle" fontSize="13" fill="currentColor">{d}</text>
+      ))}
+      {/* Horizontal rule */}
+      <line x1={20} y1={lineY} x2={140} y2={lineY} stroke="currentColor" strokeWidth="1.5" />
+      {/* Answer blanks */}
+      {cols.map(cx => (
+        <line key={cx} x1={cx - 6} y1={h - 6} x2={cx + 6} y2={h - 6} stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
+      ))}
     </svg>
   )
 }

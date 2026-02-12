@@ -1206,6 +1206,40 @@ _FORMAT_TO_QTYPE: dict[str, str] = {
 }
 
 
+# Shim: map hydrated model_ids → frontend visual_type keys
+_MODEL_TO_VTYPE: dict[str, str] = {
+    "NUMBER_LINE": "number_line",
+    "BASE_TEN_REGROUPING": "base_ten_regrouping",
+}
+
+
+def _map_visual_fields(q: dict) -> tuple:
+    """Map hydrated visual fields (representation/visual_spec) → frontend visual_type + visual_data."""
+    if q.get("representation") != "PICTORIAL_MODEL":
+        return None, None
+    spec = q.get("visual_spec")
+    if not spec or not spec.get("model_id"):
+        return None, None
+
+    model_id = spec["model_id"]
+    vtype = _MODEL_TO_VTYPE.get(model_id)
+    if not vtype:
+        return None, None
+
+    # Translate field names for frontend compatibility
+    if model_id == "NUMBER_LINE":
+        markers = spec.get("markers", [])
+        return vtype, {
+            "start": spec.get("start", 0),
+            "end": spec.get("end", 100),
+            "step": spec.get("tick_interval", 10),
+            "highlight": markers[1] if len(markers) >= 2 else None,
+        }
+
+    # Default: pass through (strip model_id)
+    return vtype, {k: v for k, v in spec.items() if k != "model_id"}
+
+
 def _slot_to_question(q: dict, idx: int) -> Question:
     """Convert a slot-engine question dict to the API Question model."""
     fmt = q.get("format", "")
@@ -1214,6 +1248,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
     answer_str = str(answer).strip() if answer is not None and str(answer).strip() else None
 
     q_type = _FORMAT_TO_QTYPE.get(fmt, "short_answer")
+    vtype, vdata = _map_visual_fields(q)
 
     return Question(
         id=f"q{idx + 1}",
@@ -1226,8 +1261,8 @@ def _slot_to_question(q: dict, idx: int) -> Question:
         answer_type="exact" if answer_str else "example",
         sample_answer=None,
         grading_notes=None,
-        visual_type=None,
-        visual_data=None,
+        visual_type=vtype,
+        visual_data=vdata,
         role=q.get("slot_type"),
         skill_tag=fmt,
     )

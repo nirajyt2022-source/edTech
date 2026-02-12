@@ -29,6 +29,8 @@ from app.services.slot_engine import (
     validate_difficulty_sanity,
     validate_error_uses_backend_numbers,
     validate_hard_difficulty_carry,
+    hydrate_visuals,
+    verify_visual_contract,
     compute_wrong,
     _build_slot_instruction,
     _make_seed,
@@ -607,6 +609,96 @@ def test_seeded_diversity_deterministic():
     return all_pass
 
 
+def test_visual_hydration():
+    """Test visual hydration infers correct visual specs from question text."""
+    print("\n" + "=" * 60)
+    print("8. VISUAL HYDRATION TESTS")
+    print("=" * 60)
+
+    all_pass = True
+
+    # Fixture: 5 questions with ALL visual fields missing (matches user-reported bug)
+    questions = [
+        {
+            "id": 1, "slot_type": "recognition", "format": "column_setup",
+            "question_text": "Write 462 + 359 in column form.",
+            "pictorial_elements": [], "answer": "821", "difficulty": "easy",
+        },
+        {
+            "id": 2, "slot_type": "application", "format": "word_problem",
+            "question_text": "Aarav has 284 crayons. He finds 578 more crayons in the art supply cupboard. How many crayons does Aarav have in total now?",
+            "pictorial_elements": [], "answer": "862", "difficulty": "hard",
+        },
+        {
+            "id": 3, "slot_type": "representation", "format": "missing_number",
+            "question_text": "___ + 247 = 578",
+            "pictorial_elements": [], "answer": "331", "difficulty": "hard",
+        },
+        {
+            "id": 4, "slot_type": "error_detection", "format": "error_spot",
+            "question_text": "A student calculated 386 + 247 and found the sum to be 523. What mistake did the student make? What is the correct answer?",
+            "pictorial_elements": [], "answer": "The student forgot to regroup. Correct answer is 633.", "difficulty": "hard",
+        },
+        {
+            "id": 5, "slot_type": "thinking", "format": "thinking",
+            "question_text": "Consider the addition of 578 and 367. Without calculating, is the answer closer to 900 or 1000? Explain your reasoning.",
+            "pictorial_elements": [], "answer": "closer to 900", "difficulty": "hard",
+        },
+    ]
+
+    hydrated = hydrate_visuals(questions)
+
+    # ── q1: BASE_TEN_REGROUPING ──
+    q1 = hydrated[0]
+    checks_q1 = [
+        ("q1.representation", q1.get("representation"), "PICTORIAL_MODEL"),
+        ("q1.visual_spec.model_id", (q1.get("visual_spec") or {}).get("model_id"), "BASE_TEN_REGROUPING"),
+        ("q1.visual_spec.numbers", (q1.get("visual_spec") or {}).get("numbers"), [462, 359]),
+        ("q1.visual_spec.operation", (q1.get("visual_spec") or {}).get("operation"), "addition"),
+        ("q1.visual_model_ref", q1.get("visual_model_ref"), "BASE_TEN_REGROUPING"),
+    ]
+    for label, actual, expected in checks_q1:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} = {expected}" + ("" if ok else f" (got {actual})"))
+        if not ok:
+            all_pass = False
+
+    # ── q2, q3, q4: TEXT_ONLY (no visual_spec / visual_model_ref) ──
+    for idx in [1, 2, 3]:
+        q = hydrated[idx]
+        ok_rep = q.get("representation") == "TEXT_ONLY"
+        print(f"  {'PASS' if ok_rep else 'FAIL'}: q{idx+1}.representation = TEXT_ONLY" + ("" if ok_rep else f" (got {q.get('representation')})"))
+        if not ok_rep:
+            all_pass = False
+        no_extras = q.get("visual_spec") is None and q.get("visual_model_ref") is None
+        print(f"  {'PASS' if no_extras else 'FAIL'}: q{idx+1} has no visual_spec/visual_model_ref")
+        if not no_extras:
+            all_pass = False
+
+    # ── q5: NUMBER_LINE ──
+    q5 = hydrated[4]
+    checks_q5 = [
+        ("q5.representation", q5.get("representation"), "PICTORIAL_MODEL"),
+        ("q5.visual_spec.model_id", (q5.get("visual_spec") or {}).get("model_id"), "NUMBER_LINE"),
+        ("q5.visual_spec.start", (q5.get("visual_spec") or {}).get("start"), 800),
+        ("q5.visual_spec.end", (q5.get("visual_spec") or {}).get("end"), 1100),
+        ("q5.visual_spec.tick_interval", (q5.get("visual_spec") or {}).get("tick_interval"), 50),
+        ("q5.visual_spec.markers", (q5.get("visual_spec") or {}).get("markers"), [900, 945, 1000]),
+        ("q5.visual_model_ref", q5.get("visual_model_ref"), "NUMBER_LINE"),
+    ]
+    for label, actual, expected in checks_q5:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} = {expected}" + ("" if ok else f" (got {actual})"))
+        if not ok:
+            all_pass = False
+
+    # ── Verification table ──
+    table = verify_visual_contract(hydrated)
+    print(f"\n  Verification table:\n{table}")
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -836,6 +928,7 @@ if __name__ == "__main__":
     p5 = test_variation_banks()
     p6 = test_history_store()
     p7 = test_seeded_diversity_deterministic()
+    p8 = test_visual_hydration()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -847,6 +940,7 @@ if __name__ == "__main__":
     print(f"  Variation banks:       {'PASS' if p5 else 'FAIL'}")
     print(f"  History store:         {'PASS' if p6 else 'FAIL'}")
     print(f"  Seeded diversity:      {'PASS' if p7 else 'FAIL'}")
+    print(f"  Visual hydration:      {'PASS' if p8 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

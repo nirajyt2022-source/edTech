@@ -487,6 +487,106 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
     return issues
 
 
+# ════════════════════════════════════════════════════════════
+# H-bis) Visual Hydration & Verification
+# ════════════════════════════════════════════════════════════
+
+_HYDRATE_COLUMN = re.compile(r"column", re.IGNORECASE)
+_HYDRATE_ESTIMATION = re.compile(r"closer\s+to|estimat", re.IGNORECASE)
+_HYDRATE_NUMS = re.compile(r"\b(\d{3,4})\b")
+
+
+def hydrate_visuals(questions: list[dict]) -> list[dict]:
+    """Deterministic visual hydration: infer representation + visual_spec + visual_model_ref.
+
+    Rules:
+      A) Column setup + addition with two 3-digit numbers → BASE_TEN_REGROUPING
+      B) 'closer to' / 'estimate' with 2 reference hundreds  → NUMBER_LINE
+      Otherwise → TEXT_ONLY (no visual_spec/ref set).
+    """
+    for q in questions:
+        rep = q.get("representation")
+        if rep == "TEXT_ONLY":
+            continue
+        spec_id = (q.get("visual_spec") or {}).get("model_id")
+        ref = q.get("visual_model_ref")
+        if rep and spec_id and ref:
+            continue  # already hydrated
+
+        text = q.get("question_text") or q.get("text") or ""
+        text_lower = text.lower()
+        nums = [int(n) for n in _HYDRATE_NUMS.findall(text)]
+        three_digit = [n for n in nums if 100 <= n <= 999]
+
+        # Rule A: column setup + addition
+        fmt = q.get("format") or q.get("skill_tag") or ""
+        is_column = bool(_HYDRATE_COLUMN.search(text)) or fmt == "column_setup"
+        is_addition = "+" in text or "add" in text_lower
+
+        if is_column and is_addition and len(three_digit) >= 2:
+            q["representation"] = "PICTORIAL_MODEL"
+            q["visual_spec"] = {
+                "model_id": "BASE_TEN_REGROUPING",
+                "numbers": [three_digit[0], three_digit[1]],
+                "operation": "addition",
+            }
+            q["visual_model_ref"] = "BASE_TEN_REGROUPING"
+            continue
+
+        # Rule B: estimation / closer-to with reference hundreds
+        if _HYDRATE_ESTIMATION.search(text):
+            ref_hundreds = sorted(set(n for n in nums if n % 100 == 0))
+            non_round = [n for n in three_digit if n % 100 != 0]
+
+            if len(ref_hundreds) >= 2:
+                lower_ref = ref_hundreds[0]
+                upper_ref = ref_hundreds[-1]
+
+                markers = [lower_ref]
+                if len(non_round) >= 2:
+                    markers.append(non_round[0] + non_round[1])
+                markers.append(upper_ref)
+
+                q["representation"] = "PICTORIAL_MODEL"
+                q["visual_spec"] = {
+                    "model_id": "NUMBER_LINE",
+                    "start": lower_ref - 100,
+                    "end": upper_ref + 100,
+                    "tick_interval": 50,
+                    "markers": markers,
+                }
+                q["visual_model_ref"] = "NUMBER_LINE"
+                continue
+
+        # Default: text-only (no spec/ref needed)
+        q["representation"] = "TEXT_ONLY"
+
+    return questions
+
+
+def verify_visual_contract(questions: list[dict]) -> str:
+    """Return a table verifying the visual rendering contract for each question."""
+    header = (
+        f"{'question_id':<12} | {'representation':<18} | "
+        f"{'visual_spec.model_id':<22} | {'visual_model_ref':<22} | renders?"
+    )
+    sep = "-" * len(header)
+    lines = [sep, header, sep]
+    for q in questions:
+        qid = f"q{q.get('id', '?')}"
+        rep = q.get("representation", "MISSING")
+        model_id = (q.get("visual_spec") or {}).get("model_id", "MISSING")
+        vref = q.get("visual_model_ref", "MISSING")
+        renders = (
+            "YES"
+            if rep == "PICTORIAL_MODEL" and model_id != "MISSING" and vref != "MISSING"
+            else "NO"
+        )
+        lines.append(f"{qid:<12} | {rep:<18} | {model_id:<22} | {vref:<22} | {renders}")
+    lines.append(sep)
+    return "\n".join(lines)
+
+
 def validate_worksheet_slots(questions: list[dict], q_count: int) -> list[str]:
     """Validate the full worksheet: slot distribution, uniqueness, diversity."""
     issues: list[str] = []
@@ -866,6 +966,20 @@ def run_slot_pipeline(
     carry_issues = validate_hard_difficulty_carry(questions, difficulty)
     if carry_issues:
         logger.warning("Hard-difficulty carry issues: %s", carry_issues)
+
+    # 8b. Hydrate visuals (deterministic, no LLM)
+    questions = hydrate_visuals(questions)
+    logger.info("Visual contract:\n%s", verify_visual_contract(questions))
+
+    # DEBUG: prove hydrated fields survive to final payload (remove after verification)
+    for _q in questions:
+        if _q.get("representation") == "PICTORIAL_MODEL":
+            logger.info(
+                "VISUAL_DEBUG q%s: representation=%s model_id=%s visual_model_ref=%s",
+                _q.get("id"), _q.get("representation"),
+                (_q.get("visual_spec") or {}).get("model_id"),
+                _q.get("visual_model_ref"),
+            )
 
     # 9. Update history
     record = build_worksheet_record(
