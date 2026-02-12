@@ -1551,11 +1551,18 @@ def test_mastery_dashboard():
     attempt_and_next({"student_id": student_id, "question": q, "student_answer": "125", "mode": "single"})
     attempt_and_next({"student_id": student_id, "question": q, "student_answer": "125", "mode": "single"})
 
-    # get_mastery check
-    states = get_mastery(student_id)
-    matched = [s for s in states if s["skill_tag"] == "column_add_with_carry" and s["mastery_level"] == "mastered"]
+    # get_mastery check — new shape: {skill_tag, accuracy, attempts, status}
+    skills = get_mastery(student_id)
+    matched = [s for s in skills if s["skill_tag"] == "column_add_with_carry" and s["status"] == "mastered"]
     ok1 = len(matched) >= 1
-    print(f"  get_mastery has mastered column_add_with_carry: {'PASS' if ok1 else f'FAIL ({states})'}")
+    print(f"  get_mastery has mastered column_add_with_carry: {'PASS' if ok1 else f'FAIL ({skills})'}")
+
+    # accuracy: 3 correct / 4 attempts = 75.0%
+    if matched:
+        acc = matched[0]["accuracy"]
+        ok_acc = acc == 75.0
+        print(f"  accuracy == 75.0: {'PASS' if ok_acc else f'FAIL ({acc})'}")
+        ok1 = ok1 and ok_acc
 
     # topic_summary check
     ts = topic_summary(student_id, "Addition and subtraction (3-digit)")
@@ -1662,6 +1669,47 @@ def test_telemetry_db_disabled():
             os.environ["ENABLE_TELEMETRY_DB"] = prev
 
     print(f"  DB disabled, no exception: {'PASS' if ok else 'FAIL'}")
+    return ok
+
+
+def test_audit_disabled():
+    print("\n" + "=" * 60)
+    print("29. AUDIT DISABLED SMOKE TEST")
+    print("=" * 60)
+
+    import os
+    from app.services.slot_engine import audit_attempt
+
+    prev = os.environ.get("ENABLE_ATTEMPT_AUDIT_DB")
+    try:
+        os.environ["ENABLE_ATTEMPT_AUDIT_DB"] = "0"
+        audit_attempt(
+            student_id="test_s1",
+            worksheet_id=None,
+            attempt_id=None,
+            grade=None,
+            subject=None,
+            topic=None,
+            question={"id": "q1", "skill_tag": "column_add_with_carry"},
+            student_answer="125",
+            grade_result={"is_correct": True, "error_type": None, "place_errors": {}},
+            explanation=None,
+            recommendation=None,
+            drill=None,
+            mastery_before=None,
+            mastery_after=None,
+        )
+        ok = True
+    except Exception as e:
+        ok = False
+        print(f"  audit_attempt with DB disabled FAILED: {e}")
+    finally:
+        if prev is None:
+            os.environ.pop("ENABLE_ATTEMPT_AUDIT_DB", None)
+        else:
+            os.environ["ENABLE_ATTEMPT_AUDIT_DB"] = prev
+
+    print(f"  Audit disabled, no exception: {'PASS' if ok else 'FAIL'}")
     return ok
 
 
@@ -1915,6 +1963,7 @@ if __name__ == "__main__":
     p26 = test_v1_router_smoke()
     p27 = test_telemetry_smoke()
     p28 = test_telemetry_db_disabled()
+    p29 = test_audit_disabled()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -1947,6 +1996,7 @@ if __name__ == "__main__":
     print(f"  V1 router smoke:      {'PASS' if p26 else 'FAIL'}")
     print(f"  Telemetry smoke:       {'PASS' if p27 else 'FAIL'}")
     print(f"  Telemetry DB disabled: {'PASS' if p28 else 'FAIL'}")
+    print(f"  Audit disabled:       {'PASS' if p29 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

@@ -49,9 +49,16 @@ class AttemptResponse(BaseModel):
     mastery_state: Optional[dict] = None
 
 
+class SkillSummary(BaseModel):
+    skill_tag: str
+    accuracy: float = 0.0
+    attempts: int = 0
+    status: str = "unknown"
+
+
 class MasteryGetResponse(BaseModel):
     student_id: str
-    states: list[dict]
+    skills: list[SkillSummary]
 
 
 class TopicSummaryResponse(BaseModel):

@@ -132,6 +132,10 @@ class AttemptPayloadV1(BaseModel):
     student_answer: str
     mode: str = "single"
     seed: Optional[int] = None
+    worksheet_id: Optional[str] = None
+    grade: Optional[str] = None
+    subject: Optional[str] = None
+    topic: Optional[str] = None
 
 
 class MasteryResetRequestV1(BaseModel):
@@ -199,22 +203,73 @@ def chain_v1(req: ChainRequestV1):
 @router.post("/attempt", response_model=AttemptResponse)
 @instrument(route="/api/v1/worksheets/attempt", version="v1")
 def attempt_v1(payload: AttemptPayloadV1):
+    # Capture mastery_before for audit
+    mastery_before = None
+    skill_tag = (payload.question.get("skill_tag") if isinstance(payload.question, dict) else None)
+    if payload.student_id and skill_tag:
+        try:
+            from app.services.mastery_store import get_mastery_store
+            store = get_mastery_store()
+            ms = store.get(payload.student_id, skill_tag)
+            if ms:
+                mastery_before = {
+                    "streak": ms.streak,
+                    "total_attempts": ms.total_attempts,
+                    "correct_attempts": ms.correct_attempts,
+                    "mastery_level": ms.mastery_level,
+                }
+        except Exception:
+            pass
+
     out = attempt_and_next(payload.model_dump())
+
     emit_event(
         "attempt",
         route="/api/v1/worksheets/attempt",
         version="v1",
         student_id=payload.student_id,
-        skill_tag=(payload.question.get("skill_tag") if isinstance(payload.question, dict) else None),
+        skill_tag=skill_tag,
         error_type=(out.get("grade_result") or {}).get("error_type"),
     )
+
+    # Best-effort audit — never breaks the response
+    try:
+        from app.services.slot_engine import audit_attempt
+        mastery_after_raw = out.get("mastery_state")
+        mastery_after = None
+        if mastery_after_raw and isinstance(mastery_after_raw, dict):
+            mastery_after = {
+                "streak": mastery_after_raw.get("streak"),
+                "total_attempts": mastery_after_raw.get("total_attempts"),
+                "correct_attempts": mastery_after_raw.get("correct_attempts"),
+                "mastery_level": mastery_after_raw.get("mastery_level"),
+            }
+        audit_attempt(
+            student_id=payload.student_id,
+            worksheet_id=payload.worksheet_id,
+            attempt_id=None,
+            grade=payload.grade,
+            subject=payload.subject,
+            topic=payload.topic,
+            question=payload.question,
+            student_answer=payload.student_answer,
+            grade_result=out.get("grade_result"),
+            explanation=out.get("explanation"),
+            recommendation=out.get("recommendation"),
+            drill=(out.get("next") or {}).get("drill"),
+            mastery_before=mastery_before,
+            mastery_after=mastery_after,
+        )
+    except Exception:
+        pass
+
     return out
 
 
 @router.get("/mastery/get", response_model=MasteryGetResponse)
 @instrument(route="/api/v1/worksheets/mastery/get", version="v1")
 def mastery_get_v1(student_id: str):
-    return {"student_id": student_id, "states": get_mastery(student_id)}
+    return {"student_id": student_id, "skills": get_mastery(student_id)}
 
 
 @router.get("/mastery/topic_summary", response_model=TopicSummaryResponse)
@@ -227,3 +282,23 @@ def mastery_topic_summary_v1(student_id: str, topic: str):
 @instrument(route="/api/v1/worksheets/mastery/reset", version="v1")
 def mastery_reset_v1(req: MasteryResetRequestV1):
     return reset_skill(req.student_id, req.skill_tag)
+
+
+@router.get("/mastery/recent_attempts")
+@instrument(route="/api/v1/worksheets/mastery/recent_attempts", version="v1")
+def mastery_recent_attempts_v1(student_id: str, limit: int = 50):
+    import os
+    if os.getenv("ENABLE_ATTEMPT_AUDIT_DB", "0") != "1":
+        return {"error": "audit_disabled"}
+
+    from app.services.supabase_client import get_supabase_client
+    sb = get_supabase_client()
+    result = (
+        sb.table("attempt_events")
+        .select("*")
+        .eq("student_id", student_id)
+        .order("ts", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return result.data

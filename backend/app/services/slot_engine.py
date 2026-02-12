@@ -1151,6 +1151,45 @@ def attempt_and_next(payload: dict) -> dict:
     }
 
 
+def audit_attempt(*, student_id: str | None, worksheet_id: str | None, attempt_id: str | None,
+                  grade: str | None, subject: str | None, topic: str | None,
+                  question: dict, student_answer: str | None,
+                  grade_result: dict | None, explanation: str | None,
+                  recommendation: dict | None, drill: dict | None,
+                  mastery_before: dict | None, mastery_after: dict | None) -> None:
+    from app.services.audit import write_attempt_event
+
+    spec = question.get("visual_spec") or {}
+    op = spec.get("operation")
+
+    expected = question.get("correct_answer") or question.get("answer")
+
+    payload = {
+        "student_id": student_id,
+        "worksheet_id": worksheet_id,
+        "attempt_id": attempt_id,
+        "question_id": str(question.get("id") or ""),
+        "grade": grade,
+        "subject": subject,
+        "topic": topic,
+        "skill_tag": question.get("skill_tag"),
+        "operation": op,
+        "question": question,
+        "student_answer": student_answer,
+        "expected_answer": str(expected) if expected is not None else None,
+        "is_correct": (grade_result or {}).get("is_correct"),
+        "error_type": (grade_result or {}).get("error_type"),
+        "place_errors": (grade_result or {}).get("place_errors") or {},
+        "recommendation": recommendation,
+        "drill": drill,
+        "explanation": explanation,
+        "mastery_before": mastery_before,
+        "mastery_after": mastery_after,
+    }
+
+    write_attempt_event(payload)
+
+
 def chain_drill_session(root_question: dict, attempts: list[dict], target_streak: int = 3, rng=None) -> dict:
     """
     Stateless drill chaining:

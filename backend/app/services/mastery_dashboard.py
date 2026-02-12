@@ -7,9 +7,18 @@ def get_mastery(student_id: str):
     states = store.list_student(student_id)
     out = []
     for s in states:
-        d = s.to_dict()
-        d["topic"] = topic_for_skill(s.skill_tag)
-        out.append(d)
+        accuracy = round(
+            (s.correct_attempts / s.total_attempts * 100) if s.total_attempts else 0.0,
+            1,
+        )
+        # Map mastery_level → status for the API surface
+        status_map = {"mastered": "mastered", "improving": "developing", "learning": "developing", "unknown": "unknown"}
+        out.append({
+            "skill_tag": s.skill_tag,
+            "accuracy": accuracy,
+            "attempts": s.total_attempts,
+            "status": status_map.get(s.mastery_level, s.mastery_level),
+        })
     return out
 
 

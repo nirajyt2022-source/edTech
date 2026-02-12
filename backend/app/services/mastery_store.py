@@ -3,6 +3,16 @@ from typing import Optional
 import time
 
 
+def classify_mastery(accuracy: float, attempts: int) -> str:
+    if attempts < 5:
+        return "insufficient_data"
+    if accuracy >= 90:
+        return "mastered"
+    if accuracy >= 70:
+        return "developing"
+    return "needs_support"
+
+
 @dataclass
 class MasteryState:
     student_id: str
