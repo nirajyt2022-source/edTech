@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "worksheet_request.schema.json",
+  "title": "WorksheetRequest",
+  "description": "Contract for requesting a worksheet from the PracticeCraft engine.",
+  "type": "object",
+  "required": [
+    "grade",
+    "subject",
+    "skill_id",
+    "difficulty",
+    "question_count",
+    "representation_preference"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "grade": {
+      "const": 3,
+      "description": "Grade level. Currently only Grade 3 is supported."
+    },
+    "subject": {
+      "const": "Math",
+      "description": "Subject. Currently only Math is supported."
+    },
+    "skill_id": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,4}-\\d{2}$",
+      "description": "Skill identifier from the curriculum graph (e.g. 'PV-01', 'MUL-03')."
+    },
+    "difficulty": {
+      "enum": ["L1", "L2", "L3"],
+      "description": "Difficulty level: L1 (easy), L2 (medium), L3 (hard)."
+    },
+    "question_count": {
+      "type": "integer",
+      "minimum": 5,
+      "maximum": 30,
+      "description": "Number of questions to generate."
+    },
+    "representation_preference": {
+      "type": "object",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "AUTO",
+            "NUMERIC_ONLY",
+            "MODEL_HEAVY",
+            "OBJECT_ALLOWED",
+            "WORD_HEAVY",
+            "MIXED"
+          ],
+          "description": "High-level representation distribution strategy."
+        },
+        "mix_override": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "NUMERIC",
+              "WORD_PROBLEM",
+              "PICTORIAL_MODEL",
+              "PICTORIAL_OBJECT"
+            ]
+          },
+          "description": "Explicit per-question representation override. Length must equal question_count if provided."
+        }
+      }
+    },
+    "theme": {
+      "type": "string",
+      "description": "Optional thematic context for word problems (e.g. 'space', 'animals', 'sports')."
+    },
+    "locale": {
+      "enum": ["CBSE", "UAE", "GENERIC"],
+      "default": "CBSE",
+      "description": "Curriculum locale for context and currency."
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "avoid_decimals": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, all numbers must be whole numbers."
+        },
+        "max_number": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 100000,
+          "description": "Upper bound on numbers used in questions."
+        },
+        "time_limit_minutes": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 120,
+          "description": "Suggested time limit for the worksheet."
+        }
+      }
+    }
+  }
+}

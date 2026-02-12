@@ -1,0 +1,377 @@
+{
+  "version": "1.0.0",
+  "models": [
+    {
+      "model_id": "BASE_TEN_BLOCKS",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "text", "line"]
+      },
+      "parameters": {
+        "unit_size": { "min": 18, "max": 32, "unit": "px" },
+        "padding": { "min": 6, "max": 16, "unit": "px" },
+        "max_items": 10
+      },
+      "validation_rules": {
+        "unit_size_range": "18-32px",
+        "max_items_enforced": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "BASE_TEN_REGROUPING",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "text", "line", "arc"]
+      },
+      "parameters": {
+        "unit_size": { "min": 18, "max": 32, "unit": "px" },
+        "show_arrow": true,
+        "regroup_highlight_color": "#FFD700"
+      },
+      "validation_rules": {
+        "unit_size_range": "18-32px",
+        "arrow_required": true,
+        "highlight_color_must_be_set": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "NUMBER_LINE",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["line", "text", "circle"]
+      },
+      "parameters": {
+        "tick_spacing": { "min": 20, "max": 40, "unit": "px" },
+        "label_interval": 1,
+        "range_min": 0,
+        "range_max": 100,
+        "highlight_color": "#4A90D9"
+      },
+      "validation_rules": {
+        "tick_spacing_range": "20-40px",
+        "range_must_be_set": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "ARRAYS",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "text"]
+      },
+      "parameters": {
+        "cell_size": { "min": 20, "max": 36, "unit": "px" },
+        "max_rows": 10,
+        "max_cols": 10,
+        "fill_color": "#4A90D9"
+      },
+      "validation_rules": {
+        "cell_size_range": "20-36px",
+        "max_rows_enforced": true,
+        "max_cols_enforced": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "AREA_ARRAY_PARTIALS",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "text", "line"]
+      },
+      "parameters": {
+        "cell_size": { "min": 20, "max": 36, "unit": "px" },
+        "partition_line_style": "dashed",
+        "label_parts": true
+      },
+      "validation_rules": {
+        "cell_size_range": "20-36px",
+        "partition_style_must_be_dashed": true,
+        "labels_required": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "FRACTION_STRIPS",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "text"]
+      },
+      "parameters": {
+        "strip_width": { "min": 200, "max": 300, "unit": "px" },
+        "strip_height": { "min": 30, "max": 40, "unit": "px" },
+        "max_parts": 12,
+        "shaded_color": "#4A90D9"
+      },
+      "validation_rules": {
+        "strip_width_range": "200-300px",
+        "strip_height_range": "30-40px",
+        "max_parts_enforced": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "FRACTION_SHAPES",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["circle", "rect", "line", "text"]
+      },
+      "parameters": {
+        "shape_size": { "min": 80, "max": 120, "unit": "px" },
+        "allowed_shapes": ["circle", "rectangle", "square"],
+        "max_parts": 12
+      },
+      "validation_rules": {
+        "shape_size_range": "80-120px",
+        "shapes_must_be_from_allowed_list": true,
+        "max_parts_enforced": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "ANALOG_CLOCK",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["circle", "line", "text"]
+      },
+      "parameters": {
+        "clock_radius": { "min": 60, "max": 100, "unit": "px" },
+        "show_minute_ticks": true,
+        "hour_hand_color": "#333333",
+        "minute_hand_color": "#666666"
+      },
+      "validation_rules": {
+        "clock_radius_range": "60-100px",
+        "minute_ticks_required": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "TIMELINE",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["line", "text", "circle"]
+      },
+      "parameters": {
+        "length": { "min": 300, "max": 500, "unit": "px" },
+        "tick_spacing": { "min": 40, "max": 60, "unit": "px" },
+        "event_marker_radius": { "min": 4, "max": 6, "unit": "px" }
+      },
+      "validation_rules": {
+        "length_range": "300-500px",
+        "tick_spacing_range": "40-60px"
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "SHAPE_DIAGRAMS",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["polygon", "line", "text"]
+      },
+      "parameters": {
+        "max_sides": 8,
+        "show_labels": true,
+        "min_size": { "value": 60, "unit": "px" }
+      },
+      "validation_rules": {
+        "max_sides_enforced": true,
+        "labels_required": true,
+        "min_size_enforced": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "POLYGON_WITH_LABELS",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["polygon", "line", "text", "arc"]
+      },
+      "parameters": {
+        "max_sides": 8,
+        "show_side_lengths": true,
+        "show_angles": false
+      },
+      "validation_rules": {
+        "max_sides_enforced": true,
+        "side_lengths_required": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "ANGLE_DIAGRAMS",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["line", "arc", "text"]
+      },
+      "parameters": {
+        "ray_length": { "min": 60, "max": 100, "unit": "px" },
+        "arc_radius": { "min": 20, "max": 30, "unit": "px" },
+        "label_degrees": true
+      },
+      "validation_rules": {
+        "ray_length_range": "60-100px",
+        "arc_radius_range": "20-30px",
+        "degree_labels_required": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "BAR_GRAPH",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "line", "text"]
+      },
+      "parameters": {
+        "bar_width": { "min": 30, "max": 50, "unit": "px" },
+        "gap": { "min": 10, "max": 20, "unit": "px" },
+        "max_bars": 8,
+        "axis_labels": true
+      },
+      "validation_rules": {
+        "bar_width_range": "30-50px",
+        "gap_range": "10-20px",
+        "max_bars_enforced": true,
+        "axis_labels_required": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "PICTOGRAPH",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["text", "rect", "line"]
+      },
+      "parameters": {
+        "icon_size": { "min": 20, "max": 30, "unit": "px" },
+        "max_icons_per_row": 10,
+        "key_value": "required"
+      },
+      "validation_rules": {
+        "icon_size_range": "20-30px",
+        "max_icons_enforced": true,
+        "key_value_required": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "TABLE",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "text", "line"]
+      },
+      "parameters": {
+        "cell_width": { "min": 60, "max": 100, "unit": "px" },
+        "cell_height": { "min": 30, "max": 40, "unit": "px" },
+        "max_rows": 8,
+        "max_cols": 6
+      },
+      "validation_rules": {
+        "cell_width_range": "60-100px",
+        "cell_height_range": "30-40px",
+        "max_rows_enforced": true,
+        "max_cols_enforced": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "BAR_GRAPH_TEMPLATE",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "line", "text"]
+      },
+      "parameters": {
+        "bar_width": { "min": 30, "max": 50, "unit": "px" },
+        "gap": { "min": 10, "max": 20, "unit": "px" },
+        "max_bars": 8,
+        "axis_labels": true,
+        "bars_empty": true
+      },
+      "validation_rules": {
+        "bar_width_range": "30-50px",
+        "gap_range": "10-20px",
+        "max_bars_enforced": true,
+        "axis_labels_required": true,
+        "bars_must_be_empty": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "BAR_MODEL",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "text", "line"]
+      },
+      "parameters": {
+        "bar_height": { "min": 30, "max": 40, "unit": "px" },
+        "min_segments": 2,
+        "max_segments": 5,
+        "label_parts": true
+      },
+      "validation_rules": {
+        "bar_height_range": "30-40px",
+        "segment_count_range": "2-5",
+        "labels_required": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "BAR_MODEL_OPTIONAL",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["rect", "text", "line"]
+      },
+      "parameters": {
+        "bar_height": { "min": 30, "max": 40, "unit": "px" },
+        "min_segments": 2,
+        "max_segments": 5,
+        "label_parts": true
+      },
+      "validation_rules": {
+        "bar_height_range": "30-40px",
+        "segment_count_range": "2-5",
+        "labels_required": true
+      },
+      "fallback": "USE_TEXT_ONLY"
+    },
+    {
+      "model_id": "RULER_DIAGRAM",
+      "type": "PICTORIAL_MODEL",
+      "rendering": {
+        "primitives": ["line", "text", "rect"]
+      },
+      "parameters": {
+        "ruler_length": { "min": 200, "max": 400, "unit": "px" },
+        "unit": ["cm", "mm"],
+        "tick_spacing": { "min": 10, "max": 20, "unit": "px" },
+        "label_interval": 1
+      },
+      "validation_rules": {
+        "ruler_length_range": "200-400px",
+        "unit_must_be_cm_or_mm": true,
+        "tick_spacing_range": "10-20px"
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    },
+    {
+      "model_id": "OBJECT_ASSET_PACK_BASIC",
+      "type": "PICTORIAL_OBJECT",
+      "rendering": {
+        "primitives": ["rounded_rect", "simple_circle", "triangle", "star"]
+      },
+      "parameters": {
+        "allowed_shapes": ["rounded_rect", "simple_circle", "triangle", "star"],
+        "default_shape": "rounded_rect",
+        "allowed_colors": ["red", "blue", "green", "yellow", "orange", "purple", "brown", "black"]
+      },
+      "validation_rules": {
+        "shape_must_be_explicitly_set": true,
+        "never_infer_circle": true,
+        "default_shape_is_rounded_rect_not_circle": true,
+        "colors_must_be_from_allowed_list": true
+      },
+      "fallback": "REJECT_AND_REGENERATE"
+    }
+  ]
+}

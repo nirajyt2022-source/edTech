@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "worksheet_plan.schema.json",
+  "title": "WorksheetPlan",
+  "description": "Deterministic generation plan produced by the planner from a WorksheetRequest.",
+  "type": "object",
+  "required": ["request", "node", "questions", "warnings"],
+  "additionalProperties": false,
+  "properties": {
+    "request": {
+      "type": "object",
+      "description": "Echo of the original WorksheetRequest for traceability."
+    },
+    "node": {
+      "type": "object",
+      "description": "Resolved curriculum node from math.graph.json.",
+      "required": [
+        "skill_id",
+        "skill_name",
+        "category",
+        "default_representation",
+        "allowed_representation_mix",
+        "visual_model_ref"
+      ],
+      "properties": {
+        "skill_id": { "type": "string" },
+        "skill_name": { "type": "string" },
+        "category": { "type": "string" },
+        "default_representation": { "type": "string" },
+        "allowed_representation_mix": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "visual_model_ref": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "required": [
+          "q_id",
+          "representation",
+          "visual_model_ref",
+          "difficulty",
+          "rules"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "q_id": {
+            "type": "string",
+            "pattern": "^Q\\d{2}$",
+            "description": "Sequential question identifier: Q01, Q02, etc."
+          },
+          "representation": {
+            "enum": [
+              "NUMERIC",
+              "WORD_PROBLEM",
+              "PICTORIAL_MODEL",
+              "PICTORIAL_OBJECT"
+            ],
+            "description": "Representation type for this question."
+          },
+          "visual_model_ref": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Visual model IDs from visual_model_specs.json. Empty for non-pictorial."
+          },
+          "difficulty": {
+            "enum": ["L1", "L2", "L3"],
+            "description": "Difficulty level for this question."
+          },
+          "rules": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Generation rules the LLM must follow for this question."
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Planner warnings (e.g. representation downgrade, clamping)."
+    }
+  }
+}
