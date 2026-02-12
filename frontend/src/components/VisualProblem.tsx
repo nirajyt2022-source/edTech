@@ -1,10 +1,14 @@
+import { useState, useRef, useEffect, useCallback } from 'react'
+
 interface VisualProblemProps {
   visualType: string
   visualData: Record<string, unknown>
   colorMode?: 'mono' | 'color'
+  studentAnswer?: string
+  onStudentAnswerChange?: (val: string) => void
 }
 
-export default function VisualProblem({ visualType, visualData, colorMode = 'mono' }: VisualProblemProps) {
+export default function VisualProblem({ visualType, visualData, colorMode = 'mono', studentAnswer, onStudentAnswerChange }: VisualProblemProps) {
   const useColor = colorMode === 'color'
   switch (visualType) {
     case 'clock':
@@ -16,7 +20,7 @@ export default function VisualProblem({ visualType, visualData, colorMode = 'mon
     case 'number_line':
       return <NumberLineVisual start={Number(visualData.start) || 0} end={Number(visualData.end) || 20} step={Number(visualData.step) || 2} highlight={visualData.highlight != null ? Number(visualData.highlight) : undefined} useColor={useColor} />
     case 'base_ten_regrouping':
-      return <BaseTenRegroupingVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'addition')} />
+      return <BaseTenRegroupingVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'addition')} studentAnswer={studentAnswer} onStudentAnswerChange={onStudentAnswerChange} />
     default:
       return null
   }
@@ -271,7 +275,14 @@ function ShapeVisual({ shape, sides }: { shape: string; sides: number[] }) {
 
 /* ── Base Ten Regrouping (column form) ── */
 
-function BaseTenRegroupingVisual({ numbers, operation }: { numbers: number[]; operation: string }) {
+interface BaseTenRegroupingProps {
+  numbers: number[]
+  operation: string
+  studentAnswer?: string
+  onStudentAnswerChange?: (val: string) => void
+}
+
+function BaseTenRegroupingVisual({ numbers, operation, studentAnswer, onStudentAnswerChange }: BaseTenRegroupingProps) {
   if (numbers.length < 2) return null
   const [a, b] = numbers
   const opSymbol = operation === 'addition' ? '+' : '\u2212'
@@ -284,33 +295,90 @@ function BaseTenRegroupingVisual({ numbers, operation }: { numbers: number[]; op
   const dA = digits(a)
   const dB = digits(b)
 
-  const w = 160, h = 90
+  // Interactive answer digit state
+  const [answerDigits, setAnswerDigits] = useState<string[]>(['', '', ''])
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null])
+
+  // Sync from prop
+  useEffect(() => {
+    if (studentAnswer != null) {
+      const padded = studentAnswer.padStart(3, ' ')
+      setAnswerDigits([
+        padded[padded.length - 3] === ' ' ? '' : padded[padded.length - 3],
+        padded[padded.length - 2] === ' ' ? '' : padded[padded.length - 2],
+        padded[padded.length - 1] === ' ' ? '' : padded[padded.length - 1],
+      ])
+    }
+  }, [studentAnswer])
+
+  const emitChange = useCallback((newDigits: string[]) => {
+    if (!onStudentAnswerChange) return
+    const composed = newDigits.join('')
+    onStudentAnswerChange(composed)
+  }, [onStudentAnswerChange])
+
+  const handleDigitChange = useCallback((idx: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1)
+    setAnswerDigits(prev => {
+      const next = [...prev]
+      next[idx] = digit
+      emitChange(next)
+      return next
+    })
+    if (digit && idx < 2) {
+      inputRefs.current[idx + 1]?.focus()
+    }
+  }, [emitChange])
+
+  const handleKeyDown = useCallback((idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !answerDigits[idx] && idx > 0) {
+      inputRefs.current[idx - 1]?.focus()
+    }
+  }, [answerDigits])
+
+  const w = 160, svgH = 72
   const cols = [52, 84, 116] // H, T, O x-positions
   const headerY = 16, rowA = 36, rowB = 56, lineY = 66, labels = ['H', 'T', 'O']
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-40 h-[90px] text-foreground print:text-black font-mono" role="img" aria-label={`Column form: ${a} ${opSymbol} ${b}`}>
-      {/* Column headers */}
-      {labels.map((l, i) => (
-        <text key={l} x={cols[i]} y={headerY} textAnchor="middle" fontSize="10" fill="currentColor" fontWeight="600">{l}</text>
-      ))}
-      {/* First number */}
-      {dA.map((d, i) => (
-        <text key={`a${i}`} x={cols[i]} y={rowA} textAnchor="middle" fontSize="13" fill="currentColor">{d}</text>
-      ))}
-      {/* Operation symbol */}
-      <text x={28} y={rowB} textAnchor="middle" fontSize="13" fill="currentColor" fontWeight="600">{opSymbol}</text>
-      {/* Second number */}
-      {dB.map((d, i) => (
-        <text key={`b${i}`} x={cols[i]} y={rowB} textAnchor="middle" fontSize="13" fill="currentColor">{d}</text>
-      ))}
-      {/* Horizontal rule */}
-      <line x1={20} y1={lineY} x2={140} y2={lineY} stroke="currentColor" strokeWidth="1.5" />
-      {/* Answer blanks */}
-      {cols.map(cx => (
-        <line key={cx} x1={cx - 6} y1={h - 6} x2={cx + 6} y2={h - 6} stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" />
-      ))}
-    </svg>
+    <div className="relative inline-block">
+      <svg viewBox={`0 0 ${w} ${svgH}`} className="w-40 h-[72px] text-foreground print:text-black font-mono block" role="img" aria-label={`Column form: ${a} ${opSymbol} ${b}`}>
+        {/* Column headers */}
+        {labels.map((l, i) => (
+          <text key={l} x={cols[i]} y={headerY} textAnchor="middle" fontSize="10" fill="currentColor" fontWeight="600">{l}</text>
+        ))}
+        {/* First number */}
+        {dA.map((d, i) => (
+          <text key={`a${i}`} x={cols[i]} y={rowA} textAnchor="middle" fontSize="13" fill="currentColor">{d}</text>
+        ))}
+        {/* Operation symbol */}
+        <text x={28} y={rowB} textAnchor="middle" fontSize="13" fill="currentColor" fontWeight="600">{opSymbol}</text>
+        {/* Second number */}
+        {dB.map((d, i) => (
+          <text key={`b${i}`} x={cols[i]} y={rowB} textAnchor="middle" fontSize="13" fill="currentColor">{d}</text>
+        ))}
+        {/* Horizontal rule */}
+        <line x1={20} y1={lineY} x2={140} y2={lineY} stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+      {/* Answer input boxes aligned under H/T/O columns */}
+      <div className="flex mt-1" style={{ width: '160px', paddingLeft: '30px', paddingRight: '22px' }}>
+        {labels.map((l, i) => (
+          <div key={l} className="flex-1 flex justify-center">
+            <input
+              ref={el => { inputRefs.current[i] = el }}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={answerDigits[i]}
+              onChange={e => handleDigitChange(i, e.target.value)}
+              onKeyDown={e => handleKeyDown(i, e)}
+              aria-label={`${l} digit`}
+              className="w-6 h-7 text-center text-sm font-mono border border-border rounded bg-white/80 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary print:border-b print:border-black print:border-t-0 print:border-l-0 print:border-r-0 print:bg-transparent print:shadow-none print:outline-none print:rounded-none"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 

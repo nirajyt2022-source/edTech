@@ -130,6 +130,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   // CBSE syllabus state
   const [cbseSyllabus, setCbseSyllabus] = useState<SyllabusChapter[]>([])
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
+  const [studentAnswers, setStudentAnswers] = useState<Record<string, string>>({})
+
+  const handleStudentAnswer = useCallback((questionId: string, value: string) => {
+    setStudentAnswers(prev => ({ ...prev, [questionId]: value }))
+  }, [])
   const [loadingSyllabus, setLoadingSyllabus] = useState(false)
 
   // Selection version guard for async race prevention
@@ -1083,7 +1088,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
 
                             {question.visual_type && question.visual_data && (
                               <div className="mt-3">
-                                <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} />
+                                <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
                               </div>
                             )}
 
