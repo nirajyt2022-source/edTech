@@ -405,15 +405,21 @@ def build_worksheet_plan(
         slot_type, format_hint = mapping if mapping else ("application", "word_problem")
 
         for _ in range(item.get("count", 1)):
-            plan.append({
+            directive = {
                 "slot_type": slot_type,
                 "format_hint": format_hint,
+                "skill_tag": skill_tag,
                 "carry_required": carry_required,
                 "require_student_answer": item.get("require_student_answer", False),
                 "allow_operations": allow_operations,
                 "visual_type": item.get("visual_type"),
                 "unique_contexts": item.get("unique_contexts", False),
-            })
+            }
+            if slot_type == "thinking":
+                directive["estimation_rule"] = item.get(
+                    "estimation_rule", "round_to_nearest_hundred"
+                )
+            plan.append(directive)
 
     return plan
 
@@ -459,12 +465,24 @@ def _build_slot_instruction(
         else:
             name = chosen_variant.get("name", "Aarav")
             ctx = chosen_variant.get("context", {})
-            base = (
-                f"format: word_problem. "
-                f"MUST use this context: {name} is {ctx.get('scenario', 'at school')}. "
-                f"Item: {ctx.get('item', 'things')}. "
-                f"Numbers must require carrying. Exact numerical answer required."
-            )
+            if chosen_variant.get("carry_pair"):
+                a, b = chosen_variant["carry_pair"]
+                op = chosen_variant.get("operation", "addition")
+                sym = "+" if op == "addition" else "-"
+                base = (
+                    f"format: word_problem. "
+                    f"MUST use this context: {name} is {ctx.get('scenario', 'at school')}. "
+                    f"Item: {ctx.get('item', 'things')}. "
+                    f"MUST use EXACTLY these numbers: {a} {sym} {b}. "
+                    f"Exact numerical answer required."
+                )
+            else:
+                base = (
+                    f"format: word_problem. "
+                    f"MUST use this context: {name} is {ctx.get('scenario', 'at school')}. "
+                    f"Item: {ctx.get('item', 'things')}. "
+                    f"Numbers must require carrying. Exact numerical answer required."
+                )
 
     elif slot_type == "representation":
         base = (
@@ -512,6 +530,10 @@ def _build_slot_instruction(
         ops = directive.get("allow_operations")
         if ops and len(ops) == 1:
             extras.append(f"Use {ops[0]} only.")
+        if directive.get("estimation_rule"):
+            extras.append(
+                "Round each number to the nearest hundred before estimating."
+            )
         if extras:
             base += "\n" + " ".join(extras)
 
@@ -1164,7 +1186,14 @@ def run_slot_pipeline(
             ctx = pick_context(rng, avoid_ctx)
             name = pick_name(rng, region)
             used_contexts_this_ws.append(ctx["item"])
-            chosen_variants.append({"context": ctx, "name": name})
+            variant = {"context": ctx, "name": name}
+            if directive.get("carry_required"):
+                ops = directive.get("allow_operations", ["addition", "subtraction"])
+                op = rng.choice(ops)
+                a, b = make_carry_pair(rng, op)
+                variant["carry_pair"] = (a, b)
+                variant["operation"] = op
+            chosen_variants.append(variant)
 
         elif slot_type == "error_detection":
             avoid_err = history_avoid["used_error_ids"] + used_error_ids_this_ws
@@ -1232,6 +1261,7 @@ def run_slot_pipeline(
                 q["id"] = i + 1
                 q["slot_type"] = slot_type
                 q["difficulty"] = q_difficulty
+                q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or slot_type
 
                 # Preserve student_wrong_answer for error_spot enrichment
                 if slot_type == "error_detection" and variant and variant.get("error"):
@@ -1250,6 +1280,7 @@ def run_slot_pipeline(
             questions.append({
                 "id": i + 1,
                 "slot_type": slot_type,
+                "skill_tag": directive.get("skill_tag") or slot_type,
                 "format": sorted(VALID_FORMATS[slot_type])[0],
                 "question_text": f"[Generation failed for {slot_type} question]",
                 "pictorial_elements": [],
@@ -1284,6 +1315,28 @@ def run_slot_pipeline(
     # 8c. Carry enforcement in visuals (when constraints require it)
     if constraints.get("carry_required"):
         enforce_carry_in_visuals(questions, rng)
+
+    # 8c-bis. Per-directive carry verification & silent repair
+    for idx, q in enumerate(questions):
+        d = plan_directives[idx] if idx < len(plan_directives) else {}
+        if not d.get("carry_required"):
+            continue
+        spec = q.get("visual_spec")
+        if not spec or spec.get("model_id") != "BASE_TEN_REGROUPING":
+            continue
+        nums = spec.get("numbers", [])
+        if len(nums) < 2:
+            continue
+        a, b = nums[0], nums[1]
+        op = spec.get("operation", "addition")
+        if op == "addition" and not has_carry(a, b):
+            a, b = make_carry_pair(rng, "addition")
+            spec["numbers"] = [a, b]
+            logger.info("Directive carry repair q%d: replaced with %d+%d", idx + 1, a, b)
+        elif op == "subtraction" and not has_borrow(a, b):
+            a, b = make_carry_pair(rng, "subtraction")
+            spec["numbers"] = [a, b]
+            logger.info("Directive carry repair q%d: replaced with %d-%d", idx + 1, a, b)
 
     # 8d. Enrich error_spot questions with student_answer
     enrich_error_spots(questions)

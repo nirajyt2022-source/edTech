@@ -13,6 +13,7 @@ Usage:
 
 import os
 import random
+import re
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -82,6 +83,7 @@ def _make_synthetic_questions(
         q: dict = {
             "id": i + 1,
             "slot_type": slot_type,
+            "skill_tag": directive.get("skill_tag", slot_type),
             "difficulty": "medium",
             "pictorial_elements": [],
         }
@@ -200,6 +202,21 @@ def _analyze(questions: list[dict], label: str) -> bool:
         and (q.get("visual_spec") or {}).get("student_answer") is not None
     )
 
+    # Skill tag completeness
+    empty_skill_tags = sum(1 for q in questions if not q.get("skill_tag"))
+
+    # Thinking estimation phrase check
+    thinking_total = sum(1 for q in questions if q.get("slot_type") == "thinking")
+    thinking_explicit = sum(
+        1 for q in questions
+        if q.get("slot_type") == "thinking"
+        and re.search(
+            r"nearest hundred|closer to|estimat",
+            q.get("question_text", ""),
+            re.IGNORECASE,
+        )
+    )
+
     # Print
     print(f"\n{'=' * 60}")
     print(f"  {label}")
@@ -214,6 +231,9 @@ def _analyze(questions: list[dict], label: str) -> bool:
     print(f"  Carry/borrow verified: {carry_actual}/{carry_total}{carry_pct}")
     err_pct = f" ({error_with_sa/error_total:.0%})" if error_total else ""
     print(f"  Error spot w/ answer:  {error_with_sa}/{error_total}{err_pct}")
+    print(f"  Empty skill_tags:      {empty_skill_tags}/{total}")
+    t_pct = f" ({thinking_explicit/thinking_total:.0%})" if thinking_total else ""
+    print(f"  Thinking w/ rounding:  {thinking_explicit}/{thinking_total}{t_pct}")
 
     # Verdict
     issues = []
@@ -223,6 +243,10 @@ def _analyze(questions: list[dict], label: str) -> bool:
         issues.append(f"carry gap {carry_actual}/{carry_total}")
     if error_total > 0 and error_with_sa < error_total:
         issues.append(f"missing student_answer {error_with_sa}/{error_total}")
+    if empty_skill_tags > 0:
+        issues.append(f"empty skill_tag on {empty_skill_tags} questions")
+    if thinking_total > 0 and thinking_explicit < thinking_total:
+        issues.append(f"thinking without rounding {thinking_explicit}/{thinking_total}")
 
     verdict = "PASS" if not issues else f"WARN: {', '.join(issues)}"
     print(f"  Verdict:               {verdict}")
