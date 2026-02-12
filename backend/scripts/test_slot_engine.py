@@ -1891,6 +1891,132 @@ def test_plan_format_hint_backfill():
     return all_pass
 
 
+def test_skill_registry_scoping():
+    """Regression: SKILL_REGISTRY must resolve without UnboundLocalError.
+
+    Before the fix, function-level `from app.skills.registry import SKILL_REGISTRY`
+    could shadow the name and raise UnboundLocalError.  This test exercises every
+    helper that touches SKILL_REGISTRY via the module-import pattern.
+    """
+    print("\n" + "=" * 60)
+    print("33. SKILL_REGISTRY SCOPING REGRESSION TEST")
+    print("=" * 60)
+
+    from app.services.slot_engine import (
+        grade_student_answer,
+        recommend_next_step,
+        generate_isolation_drill,
+        attempt_question,
+        attempt_and_next,
+        chain_drill_session,
+        explain_question,
+    )
+    import random
+
+    all_pass = True
+
+    add_q = {
+        "skill_tag": "column_add_with_carry",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [47, 86], "operation": "addition"},
+    }
+    sub_q = {
+        "skill_tag": "column_sub_with_borrow",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [63, 28], "operation": "subtraction"},
+    }
+
+    # 1) grade_student_answer — addition
+    try:
+        r = grade_student_answer(add_q, "133")
+        ok = r["is_correct"] is True
+        print(f"  grade_student_answer (add 47+86=133): {'PASS' if ok else f'FAIL ({r})'}")
+        if not ok:
+            all_pass = False
+    except UnboundLocalError as e:
+        print(f"  FAIL: grade_student_answer raised UnboundLocalError: {e}")
+        all_pass = False
+
+    # 2) grade_student_answer — subtraction
+    try:
+        r = grade_student_answer(sub_q, "35")
+        ok = r["is_correct"] is True
+        print(f"  grade_student_answer (sub 63-28=35): {'PASS' if ok else f'FAIL ({r})'}")
+        if not ok:
+            all_pass = False
+    except UnboundLocalError as e:
+        print(f"  FAIL: grade_student_answer raised UnboundLocalError: {e}")
+        all_pass = False
+
+    # 3) recommend_next_step (needs grade_result dict, not raw answer)
+    try:
+        wrong_grade = grade_student_answer(add_q, "123")  # wrong answer
+        step = recommend_next_step(add_q, wrong_grade)
+        ok = step is not None and isinstance(step, dict)
+        print(f"  recommend_next_step: {'PASS' if ok else f'FAIL ({step})'}")
+        if not ok:
+            all_pass = False
+    except UnboundLocalError as e:
+        print(f"  FAIL: recommend_next_step raised UnboundLocalError: {e}")
+        all_pass = False
+
+    # 4) generate_isolation_drill (may return None if no drill applies — that's ok)
+    try:
+        rng = random.Random(42)
+        drill = generate_isolation_drill(add_q, wrong_grade, rng=rng)
+        # No UnboundLocalError is the goal; None return is acceptable
+        print(f"  generate_isolation_drill (no exception): PASS")
+    except UnboundLocalError as e:
+        print(f"  FAIL: generate_isolation_drill raised UnboundLocalError: {e}")
+        all_pass = False
+
+    # 5) attempt_question (returns {grade_result, explanation, recommendation})
+    try:
+        res = attempt_question(add_q, "133")
+        ok = res.get("grade_result", {}).get("is_correct") is True
+        print(f"  attempt_question: {'PASS' if ok else f'FAIL ({res})'}")
+        if not ok:
+            all_pass = False
+    except UnboundLocalError as e:
+        print(f"  FAIL: attempt_question raised UnboundLocalError: {e}")
+        all_pass = False
+
+    # 6) attempt_and_next (returns {grade_result, ..., next})
+    try:
+        payload = {"question": add_q, "student_answer": "133", "drill_history": []}
+        res = attempt_and_next(payload)
+        ok = res.get("grade_result", {}).get("is_correct") is True
+        print(f"  attempt_and_next: {'PASS' if ok else f'FAIL ({res})'}")
+        if not ok:
+            all_pass = False
+    except UnboundLocalError as e:
+        print(f"  FAIL: attempt_and_next raised UnboundLocalError: {e}")
+        all_pass = False
+
+    # 7) chain_drill_session
+    try:
+        rng2 = random.Random(7)
+        res = chain_drill_session(add_q, [], target_streak=3, rng=rng2)
+        ok = res["action"] == "continue_drill"
+        print(f"  chain_drill_session: {'PASS' if ok else f'FAIL ({res})'}")
+        if not ok:
+            all_pass = False
+    except UnboundLocalError as e:
+        print(f"  FAIL: chain_drill_session raised UnboundLocalError: {e}")
+        all_pass = False
+
+    # 8) explain_question
+    try:
+        exp = explain_question(sub_q)
+        ok = exp is not None and isinstance(exp, dict)
+        print(f"  explain_question: {'PASS' if ok else f'FAIL ({exp})'}")
+        if not ok:
+            all_pass = False
+    except UnboundLocalError as e:
+        print(f"  FAIL: explain_question raised UnboundLocalError: {e}")
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -2145,6 +2271,7 @@ if __name__ == "__main__":
     p30 = test_format_backfill()
     p31 = test_best_effort_response()
     p32 = test_plan_format_hint_backfill()
+    p33 = test_skill_registry_scoping()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -2181,6 +2308,7 @@ if __name__ == "__main__":
     print(f"  Format backfill:      {'PASS' if p30 else 'FAIL'}")
     print(f"  Best-effort response: {'PASS' if p31 else 'FAIL'}")
     print(f"  Plan format_hint:    {'PASS' if p32 else 'FAIL'}")
+    print(f"  Registry scoping:    {'PASS' if p33 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

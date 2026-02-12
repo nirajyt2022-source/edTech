@@ -35,17 +35,6 @@ from app.services.history_store import (
 )
 logger = logging.getLogger("practicecraft.slot_engine")
 
-_SKILL_REGISTRY_CACHE = None
-
-
-def _get_skill_registry():
-    """Lazy accessor to avoid circular import (slot_engine ↔ skills.registry)."""
-    global _SKILL_REGISTRY_CACHE
-    if _SKILL_REGISTRY_CACHE is None:
-        from app.skills.registry import SKILL_REGISTRY
-        _SKILL_REGISTRY_CACHE = SKILL_REGISTRY
-    return _SKILL_REGISTRY_CACHE
-
 
 # ════════════════════════════════════════════════════════════
 # A) Deterministic Slot Plans
@@ -1015,9 +1004,9 @@ def grade_student_answer(question: dict, student_answer: str) -> dict:
     - call contract.grade()
     - return structured feedback
     """
+    import app.skills.registry as skills_registry
 
-
-    contract = _get_skill_registry().get(question.get("skill_tag"))
+    contract = skills_registry.SKILL_REGISTRY.get(question.get("skill_tag"))
     if not contract:
         return {
             "is_correct": None,
@@ -1041,9 +1030,9 @@ def explain_question(question: dict) -> dict:
     """
     Deterministic explanation dispatcher.
     """
+    import app.skills.registry as skills_registry
 
-
-    contract = _get_skill_registry().get(question.get("skill_tag"))
+    contract = skills_registry.SKILL_REGISTRY.get(question.get("skill_tag"))
     if not contract:
         return {"steps": [], "final_answer": None}
 
@@ -1060,9 +1049,9 @@ def recommend_next_step(question: dict, grade_result: dict) -> dict:
     """
     Dispatch adaptive recommendation to contract.
     """
+    import app.skills.registry as skills_registry
 
-
-    contract = _get_skill_registry().get(question.get("skill_tag"))
+    contract = skills_registry.SKILL_REGISTRY.get(question.get("skill_tag"))
     if not contract:
         return {
             "next_skill_tag": None,
@@ -1074,12 +1063,12 @@ def recommend_next_step(question: dict, grade_result: dict) -> dict:
 
 
 def generate_isolation_drill(question: dict, student_answer: str, rng=None):
-
     import random
+    import app.skills.registry as skills_registry
 
     rng = rng or random.Random()
 
-    contract = _get_skill_registry().get(question.get("skill_tag"))
+    contract = skills_registry.SKILL_REGISTRY.get(question.get("skill_tag"))
     if not contract:
         return None
 
@@ -1094,12 +1083,12 @@ def generate_isolation_drill(question: dict, student_answer: str, rng=None):
 
 
 def attempt_question(question: dict, student_answer: str) -> dict:
-
+    import app.skills.registry as skills_registry
 
     grade = grade_student_answer(question, student_answer)
     explanation = explain_question(question)
 
-    contract = _get_skill_registry().get(question.get("skill_tag"))
+    contract = skills_registry.SKILL_REGISTRY.get(question.get("skill_tag"))
     if not contract:
         recommendation = {"next_skill_tag": None, "reason": "no_contract", "drill_focus": None}
         return {
@@ -1125,6 +1114,7 @@ def attempt_and_next(payload: dict) -> dict:
     - root_question, attempts, target_streak (for chain)
     """
     import random
+    import app.skills.registry as skills_registry
 
     question = payload.get("question") or {}
     student_answer = str(payload.get("student_answer", ""))
@@ -1153,7 +1143,7 @@ def attempt_and_next(payload: dict) -> dict:
     if mode == "single":
         # If recommendation has drill_focus, generate 1 drill
     
-        c = _get_skill_registry().get(question.get("skill_tag"))
+        c = skills_registry.SKILL_REGISTRY.get(question.get("skill_tag"))
         rec = base.get("recommendation") or {}
         focus = rec.get("drill_focus")
         if c and focus:
@@ -1220,11 +1210,11 @@ def chain_drill_session(root_question: dict, attempts: list[dict], target_streak
     Returns action + next_question if needed.
     """
     import random
-
+    import app.skills.registry as skills_registry
 
     rng = rng or random.Random()
 
-    contract = _get_skill_registry().get(root_question.get("skill_tag"))
+    contract = skills_registry.SKILL_REGISTRY.get(root_question.get("skill_tag"))
     if not contract:
         return {"action": "stop", "streak": 0, "target": target_streak, "next_question": None, "reason": "no_contract"}
 
@@ -1238,7 +1228,7 @@ def chain_drill_session(root_question: dict, attempts: list[dict], target_streak
     # If root recommendation doesn't produce drill_focus, infer from last attempt:
     if not drill_focus and attempts:
         last_q = attempts[-1].get("question") or {}
-        last_contract = _get_skill_registry().get(last_q.get("skill_tag")) or contract
+        last_contract = skills_registry.SKILL_REGISTRY.get(last_q.get("skill_tag")) or contract
         last_grade = grade_student_answer(last_q, str(attempts[-1].get("student_answer", "")))
         rec2 = last_contract.recommend_next(last_grade)
         drill_focus = rec2.get("drill_focus")
@@ -1595,6 +1585,8 @@ def run_slot_pipeline(
     Optional worksheet_plan overrides get_slot_plan() with directive-rich slots.
     Optional constraints dict carries carry_required, allow_operations, etc.
     """
+    import app.skills.registry as skills_registry
+
     constraints = constraints or {}
     logger.info(
         "Slot pipeline v7: grade=%s topic=%s q=%d diff=%s plan=%s",
@@ -1649,7 +1641,7 @@ def run_slot_pipeline(
         _skill_tag = directive.get("skill_tag", "")
 
         # Contract-owned variant injection (generic)
-        _contract = _get_skill_registry().get(_skill_tag)
+        _contract = skills_registry.SKILL_REGISTRY.get(_skill_tag)
         if _contract:
             variant = _contract.build_variant(rng, directive)
             if variant:
@@ -1810,7 +1802,7 @@ def run_slot_pipeline(
 
     # 8d-post. Contract slot materialization
     for i, q in enumerate(questions):
-        _c = _get_skill_registry().get(q.get("skill_tag"))
+        _c = skills_registry.SKILL_REGISTRY.get(q.get("skill_tag"))
         if _c:
             q = _c.build_slots(q)
             questions[i] = q
@@ -1818,7 +1810,7 @@ def run_slot_pipeline(
     # 8e-pre. Skill contract validation hook (repair → revalidate → regen)
 
     for i, q in enumerate(questions):
-        contract = _get_skill_registry().get(q.get("skill_tag"))
+        contract = skills_registry.SKILL_REGISTRY.get(q.get("skill_tag"))
         if contract:
             c_issues = contract.validate(q)
             if c_issues:
