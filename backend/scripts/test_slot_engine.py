@@ -14,6 +14,7 @@ Usage:
 
 import os
 import random
+import re
 import sys
 import tempfile
 
@@ -30,6 +31,7 @@ from app.services.slot_engine import (
     validate_error_uses_backend_numbers,
     validate_hard_difficulty_carry,
     hydrate_visuals,
+    enforce_visuals_only,
     verify_visual_contract,
     compute_wrong,
     _build_slot_instruction,
@@ -777,6 +779,118 @@ def test_endpoint_visual_propagation():
     return all_pass
 
 
+def test_visuals_only_mode():
+    """Test visuals_only mode guarantees >=80% visual coverage."""
+    print("\n" + "=" * 60)
+    print("10. VISUALS_ONLY MODE TESTS")
+    print("=" * 60)
+
+    all_pass = True
+
+    # Fixture: 10 questions (mix of formats), all missing visual fields
+    questions = [
+        {
+            "id": 1, "slot_type": "recognition", "format": "column_setup",
+            "question_text": "Write 462 + 359 in column form.",
+            "pictorial_elements": [], "answer": "821", "difficulty": "easy",
+        },
+        {
+            "id": 2, "slot_type": "recognition", "format": "place_value",
+            "question_text": "What is the hundreds digit in 507?",
+            "pictorial_elements": [], "answer": "5", "difficulty": "easy",
+        },
+        {
+            "id": 3, "slot_type": "application", "format": "word_problem",
+            "question_text": "Aarav has 284 stickers. He finds 178 more. How many in total?",
+            "pictorial_elements": [], "answer": "462", "difficulty": "medium",
+        },
+        {
+            "id": 4, "slot_type": "application", "format": "word_problem",
+            "question_text": "Priya collected 356 coins and Rohan gave her 267 more coins altogether.",
+            "pictorial_elements": [], "answer": "623", "difficulty": "medium",
+        },
+        {
+            "id": 5, "slot_type": "application", "format": "word_problem",
+            "question_text": "Meera bought 145 pencils and 289 erasers. How many items in total?",
+            "pictorial_elements": [], "answer": "434", "difficulty": "medium",
+        },
+        {
+            "id": 6, "slot_type": "application", "format": "word_problem",
+            "question_text": "Kabir scored 478 points. Diya scored 256 points. What is the sum?",
+            "pictorial_elements": [], "answer": "734", "difficulty": "medium",
+        },
+        {
+            "id": 7, "slot_type": "representation", "format": "missing_number",
+            "question_text": "___ + 247 = 578",
+            "pictorial_elements": [], "answer": "331", "difficulty": "medium",
+        },
+        {
+            "id": 8, "slot_type": "representation", "format": "estimation",
+            "question_text": "Round 478 to the nearest hundred.",
+            "pictorial_elements": [], "answer": "500", "difficulty": "medium",
+        },
+        {
+            "id": 9, "slot_type": "error_detection", "format": "error_spot",
+            "question_text": "A student says 386 + 247 = 523. Find the mistake and correct it.",
+            "pictorial_elements": [], "answer": "633", "difficulty": "medium",
+        },
+        {
+            "id": 10, "slot_type": "thinking", "format": "thinking",
+            "question_text": "Without calculating, explain why 399 + 250 must be less than 700.",
+            "pictorial_elements": [], "answer": "649 < 700", "difficulty": "hard",
+        },
+    ]
+
+    # Run hydrate_visuals with visuals_only=True, then enforce
+    hydrate_visuals(questions, visuals_only=True)
+    enforce_visuals_only(questions)
+
+    # Count visual questions
+    visual_count = sum(1 for q in questions if q.get("representation") == "PICTORIAL_MODEL")
+    total = len(questions)
+    ratio = visual_count / total
+
+    print(f"  Visual coverage: {visual_count}/{total} = {ratio:.0%}")
+    coverage_pass = visual_count >= 8
+    print(f"  >= 80%: {'PASS' if coverage_pass else 'FAIL'}")
+    if not coverage_pass:
+        all_pass = False
+
+    # No topic drift: no multiplication keywords in question text
+    drift_keywords = re.compile(r"\*|times|multiply", re.IGNORECASE)
+    drift_count = 0
+    for q in questions:
+        if drift_keywords.search(q.get("question_text", "")):
+            drift_count += 1
+            print(f"  DRIFT: q{q['id']} contains multiplication keyword: {q['question_text'][:60]}")
+    drift_pass = drift_count == 0
+    print(f"  No topic drift (no multiply/times/*): {'PASS' if drift_pass else 'FAIL'}")
+    if not drift_pass:
+        all_pass = False
+
+    # Every visual question has valid model_id
+    valid_models = {"BASE_TEN_REGROUPING", "NUMBER_LINE"}
+    model_pass = True
+    for q in questions:
+        if q.get("representation") == "PICTORIAL_MODEL":
+            model_id = (q.get("visual_spec") or {}).get("model_id")
+            if model_id not in valid_models:
+                print(f"  FAIL: q{q['id']} has invalid model_id={model_id}")
+                model_pass = False
+                all_pass = False
+    print(f"  All visual model_ids valid: {'PASS' if model_pass else 'FAIL'}")
+
+    # Print detail
+    print(f"\n  Detail:")
+    for q in questions:
+        rep = q.get("representation", "?")
+        mid = (q.get("visual_spec") or {}).get("model_id", "-")
+        text_preview = q.get("question_text", "")[:60]
+        print(f"    q{q['id']:>2} [{rep:<16}] [{mid:<22}] {text_preview}")
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -1008,6 +1122,7 @@ if __name__ == "__main__":
     p7 = test_seeded_diversity_deterministic()
     p8 = test_visual_hydration()
     p9 = test_endpoint_visual_propagation()
+    p10 = test_visuals_only_mode()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -1021,6 +1136,7 @@ if __name__ == "__main__":
     print(f"  Seeded diversity:      {'PASS' if p7 else 'FAIL'}")
     print(f"  Visual hydration:      {'PASS' if p8 else 'FAIL'}")
     print(f"  Endpoint propagation:  {'PASS' if p9 else 'FAIL'}")
+    print(f"  Visuals-only mode:     {'PASS' if p10 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

@@ -12,7 +12,7 @@ from openai import OpenAI
 from supabase import create_client
 from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
-from app.services.slot_engine import run_slot_pipeline, hydrate_visuals
+from app.services.slot_engine import run_slot_pipeline, hydrate_visuals, enforce_visuals_only
 
 router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
 pdf_service = get_pdf_service()
@@ -1290,7 +1290,10 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
         )
 
         # Safety net: ensure visual hydration ran (idempotent if already done)
-        hydrate_visuals(slot_questions)
+        visuals_only = request.problem_style == "visual"
+        hydrate_visuals(slot_questions, visuals_only=visuals_only)
+        if visuals_only:
+            enforce_visuals_only(slot_questions)
 
         # Map slot-engine output → API Question models
         questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
