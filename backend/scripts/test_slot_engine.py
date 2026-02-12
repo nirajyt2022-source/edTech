@@ -2018,11 +2018,13 @@ def test_skill_registry_scoping():
 
 
 def test_v1_generate_response_shape():
-    """Regression: v1 GenerateResponse.worksheet must be a plain dict."""
+    """Regression: v1 GenerateResponse.worksheet must be a JSON-safe plain dict."""
     print("\n" + "=" * 60)
     print("34. V1 GENERATE RESPONSE SHAPE TEST")
     print("=" * 60)
 
+    import json
+    from fastapi.encoders import jsonable_encoder
     from app.api.worksheets import Worksheet, Question, WorksheetGenerationResponse
     from app.api.models_practice import GenerateResponse
 
@@ -2032,30 +2034,54 @@ def test_v1_generate_response_shape():
     q = Question(
         id="q1", type="short_answer", text="Write 456 + 279 in column form.",
         correct_answer="735", difficulty="easy", answer_type="exact",
+        visual_type="base_ten_regrouping", visual_data={"numbers": [456, 279], "operation": "addition"},
     )
     ws = Worksheet(
         title="Test", grade="Class 3", subject="Maths", topic="Addition",
         difficulty="Medium", language="English", questions=[q],
+        skill_focus="3-digit addition", common_mistake="forgot carry", parent_tip="practice daily",
     )
     legacy_result = WorksheetGenerationResponse(worksheet=ws, generation_time_ms=100)
 
-    # Build v1 response the same way the endpoint does
-    payload = GenerateResponse(
-        worksheet=legacy_result.worksheet.model_dump(),
-        generation_time_ms=legacy_result.generation_time_ms,
-    )
+    # Build v1 response exactly as the endpoint does
+    ws_dict = jsonable_encoder(legacy_result.worksheet.model_dump())
+    payload = GenerateResponse(worksheet=ws_dict, generation_time_ms=legacy_result.generation_time_ms)
     d = payload.model_dump()
 
-    # worksheet is a plain dict
-    ok1 = isinstance(d["worksheet"], dict)
-    print(f"  worksheet is dict: {'PASS' if ok1 else 'FAIL'}")
-    if not ok1:
+    # 1. worksheet is a plain dict
+    ok = isinstance(d["worksheet"], dict)
+    print(f"  worksheet is dict: {'PASS' if ok else 'FAIL'}")
+    if not ok:
         all_pass = False
 
-    # questions[0].id exists
-    ok2 = d["worksheet"]["questions"][0]["id"] == "q1"
-    print(f"  questions[0].id == 'q1': {'PASS' if ok2 else 'FAIL'}")
-    if not ok2:
+    # 2. Top-level worksheet keys present
+    for key in ("title", "grade", "subject", "topic", "difficulty", "questions"):
+        ok = key in d["worksheet"]
+        print(f"  worksheet has '{key}': {'PASS' if ok else 'FAIL'}")
+        if not ok:
+            all_pass = False
+
+    # 3. questions[0] is a dict with id
+    q0 = d["worksheet"]["questions"][0]
+    ok = isinstance(q0, dict) and q0.get("id") == "q1"
+    print(f"  questions[0] is dict with id='q1': {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # 4. Nested visual_data survived serialization
+    ok = q0.get("visual_data", {}).get("numbers") == [456, 279]
+    print(f"  nested visual_data intact: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # 5. Full payload is JSON-serializable (no Pydantic objects hiding inside)
+    try:
+        json.dumps(d)
+        ok = True
+    except (TypeError, ValueError):
+        ok = False
+    print(f"  json.dumps round-trip: {'PASS' if ok else 'FAIL'}")
+    if not ok:
         all_pass = False
 
     return all_pass

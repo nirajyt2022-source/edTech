@@ -1,5 +1,6 @@
 import logging
 from fastapi import APIRouter, HTTPException, Response
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, field_validator
 from typing import Literal, Optional
 
@@ -162,8 +163,14 @@ async def generate_v1(request: GenerateRequestV1):
     try:
         legacy_req = WorksheetGenerationRequest(**request.model_dump())
         result = await _legacy_generate(legacy_req)
+        ws = result.worksheet
+        logger.debug(
+            "v1 /generate serializing worksheet type=%s questions=%d",
+            type(ws).__name__, len(getattr(ws, "questions", [])),
+        )
+        ws_dict = jsonable_encoder(ws.model_dump() if hasattr(ws, "model_dump") else ws)
         return GenerateResponse(
-            worksheet=result.worksheet.model_dump(),
+            worksheet=ws_dict,
             generation_time_ms=result.generation_time_ms,
         )
     except Exception as e:
