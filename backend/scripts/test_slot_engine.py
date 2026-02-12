@@ -2017,6 +2017,50 @@ def test_skill_registry_scoping():
     return all_pass
 
 
+def test_v1_generate_response_shape():
+    """Regression: v1 GenerateResponse.worksheet must be a plain dict."""
+    print("\n" + "=" * 60)
+    print("34. V1 GENERATE RESPONSE SHAPE TEST")
+    print("=" * 60)
+
+    from app.api.worksheets import Worksheet, Question, WorksheetGenerationResponse
+    from app.api.models_practice import GenerateResponse
+
+    all_pass = True
+
+    # Simulate what the legacy generate endpoint returns
+    q = Question(
+        id="q1", type="short_answer", text="Write 456 + 279 in column form.",
+        correct_answer="735", difficulty="easy", answer_type="exact",
+    )
+    ws = Worksheet(
+        title="Test", grade="Class 3", subject="Maths", topic="Addition",
+        difficulty="Medium", language="English", questions=[q],
+    )
+    legacy_result = WorksheetGenerationResponse(worksheet=ws, generation_time_ms=100)
+
+    # Build v1 response the same way the endpoint does
+    payload = GenerateResponse(
+        worksheet=legacy_result.worksheet.model_dump(),
+        generation_time_ms=legacy_result.generation_time_ms,
+    )
+    d = payload.model_dump()
+
+    # worksheet is a plain dict
+    ok1 = isinstance(d["worksheet"], dict)
+    print(f"  worksheet is dict: {'PASS' if ok1 else 'FAIL'}")
+    if not ok1:
+        all_pass = False
+
+    # questions[0].id exists
+    ok2 = d["worksheet"]["questions"][0]["id"] == "q1"
+    print(f"  questions[0].id == 'q1': {'PASS' if ok2 else 'FAIL'}")
+    if not ok2:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -2272,6 +2316,7 @@ if __name__ == "__main__":
     p31 = test_best_effort_response()
     p32 = test_plan_format_hint_backfill()
     p33 = test_skill_registry_scoping()
+    p34 = test_v1_generate_response_shape()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -2309,6 +2354,7 @@ if __name__ == "__main__":
     print(f"  Best-effort response: {'PASS' if p31 else 'FAIL'}")
     print(f"  Plan format_hint:    {'PASS' if p32 else 'FAIL'}")
     print(f"  Registry scoping:    {'PASS' if p33 else 'FAIL'}")
+    print(f"  V1 response shape:   {'PASS' if p34 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

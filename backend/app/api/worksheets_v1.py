@@ -1,6 +1,6 @@
 import logging
 from fastapi import APIRouter, HTTPException, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Literal, Optional
 
 from app.api.models_practice import (
@@ -54,6 +54,11 @@ class GenerateRequestV1(BaseModel):
     topic: str
     difficulty: Literal["easy", "medium", "hard"]
     num_questions: int = 10
+
+    @field_validator("difficulty", mode="before")
+    @classmethod
+    def _lowercase_difficulty(cls, v: str) -> str:
+        return v.lower() if isinstance(v, str) else v
     language: str = "English"
     custom_instructions: str | None = None
     skills: list[str] | None = None
@@ -156,7 +161,11 @@ async def generate_v1(request: GenerateRequestV1):
     from app.api.worksheets import WorksheetGenerationRequest
     try:
         legacy_req = WorksheetGenerationRequest(**request.model_dump())
-        return await _legacy_generate(legacy_req)
+        result = await _legacy_generate(legacy_req)
+        return GenerateResponse(
+            worksheet=result.worksheet.model_dump(),
+            generation_time_ms=result.generation_time_ms,
+        )
     except Exception as e:
         logger.exception("v1 /generate failed for topic=%s", request.topic)
         raise HTTPException(status_code=500, detail=str(e))
