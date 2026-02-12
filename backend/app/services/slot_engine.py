@@ -978,6 +978,111 @@ def enforce_visuals_only(questions: list[dict], min_ratio: float = 0.8) -> list[
     return questions
 
 
+_NUMERIC_ANSWER_RE = re.compile(r"^-?\d+$")
+
+
+def normalize_estimation_answers(questions: list[dict]) -> None:
+    """Recompute estimation correct_answer from question numbers.
+
+    For 'closer to' / 'round to nearest' thinking questions, the answer must
+    match a deterministic computation. Fixes LLM hallucinations.
+    """
+    for q in questions:
+        if q.get("slot_type") != "thinking":
+            continue
+        text = q.get("question_text", "")
+        if not _HYDRATE_ESTIMATION.search(text) and "nearest" not in text.lower() and "round" not in text.lower():
+            continue
+
+        nums = [int(n) for n in re.findall(r"\b\d{2,}\b", text)]
+        non_round = [n for n in nums if n % 10 != 0]
+        round_refs = sorted(set(n for n in nums if n % 10 == 0 and n not in non_round))
+
+        if len(non_round) < 2:
+            continue
+        computed = non_round[0] + non_round[1]
+
+        # "closer to X or Y" pattern
+        if round_refs and len(round_refs) >= 2:
+            lo, hi = round_refs[0], round_refs[-1]
+            closer = lo if abs(computed - lo) <= abs(computed - hi) else hi
+            # Fix answer if it's a "closer to" question
+            if "closer" in text.lower():
+                old = q.get("answer", "")
+                q["answer"] = str(closer)
+                if str(closer) not in str(old):
+                    logger.info("normalize_estimation: fixed answer %r → %s (computed=%d)", old[:60], closer, computed)
+
+        # "round to nearest 100/10" pattern
+        if "nearest 100" in text.lower() or "nearest hundred" in text.lower():
+            rounded_a = round(non_round[0], -2)
+            rounded_b = round(non_round[1], -2)
+            estimated_sum = rounded_a + rounded_b
+            q["answer"] = str(estimated_sum)
+
+        elif "nearest 10" in text.lower() or "nearest ten" in text.lower():
+            rounded_a = round(non_round[0], -1)
+            rounded_b = round(non_round[1], -1)
+            estimated_sum = rounded_a + rounded_b
+            q["answer"] = str(estimated_sum)
+
+        # Fix visual highlight to match computed sum
+        spec = q.get("visual_spec")
+        if spec and spec.get("model_id") == "NUMBER_LINE":
+            markers = spec.get("markers", [])
+            if len(markers) >= 2 and computed not in markers:
+                spec["markers"] = [markers[0], computed, markers[-1]]
+                logger.info("normalize_estimation: fixed highlight to %d", computed)
+
+
+def normalize_error_spot_answers(questions: list[dict]) -> None:
+    """Ensure error_spot correct_answer is the numeric correct result.
+
+    LLM often returns explanatory text in 'answer'. This extracts the numeric
+    value and moves the explanation to 'explanation'.
+    """
+    for q in questions:
+        if q.get("slot_type") != "error_detection":
+            continue
+        answer = str(q.get("answer", "")).strip()
+        if not answer:
+            continue
+
+        # Already purely numeric — nothing to do
+        if _NUMERIC_ANSWER_RE.match(answer):
+            continue
+
+        # Extract numeric correct answer from text
+        nums_in_answer = re.findall(r"\b\d{2,}\b", answer)
+
+        # Also try to compute from the question text numbers
+        text = q.get("question_text", "")
+        text_nums = [int(n) for n in re.findall(r"\b\d{2,}\b", text)]
+
+        numeric_answer = None
+
+        # If the answer text contains a number, use the last one (typically the correct answer)
+        if nums_in_answer:
+            numeric_answer = nums_in_answer[-1]
+
+        # Fallback: compute from question text (first two numbers are operands,
+        # third is typically the wrong answer shown after '=')
+        if not numeric_answer and len(text_nums) >= 2:
+            a, b = text_nums[0], text_nums[1]
+            is_sub = any(kw in text.lower() for kw in ("subtract", "minus", "take away", "difference"))
+            if is_sub:
+                numeric_answer = str(max(a, b) - min(a, b))
+            else:
+                numeric_answer = str(a + b)
+
+        if numeric_answer:
+            q["explanation"] = answer  # preserve original LLM text as explanation
+            q["answer"] = numeric_answer
+            logger.info("normalize_error_spot: moved explanation, answer=%s", numeric_answer)
+        else:
+            logger.warning("normalize_error_spot: could not extract numeric answer from %r", answer[:80])
+
+
 def enrich_error_spots(questions: list[dict]) -> None:
     """Add student_answer to error_spot visual specs for frontend display."""
     for q in questions:
@@ -1292,10 +1397,65 @@ def verify_visual_contract(questions: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def validate_worksheet_slots(questions: list[dict], q_count: int) -> list[str]:
-    """Validate the full worksheet: slot distribution, uniqueness, diversity."""
+def enforce_slot_counts(questions: list[dict], slot_plan: list[str]) -> list[dict]:
+    """Deterministically trim extras / fill gaps so output matches slot_plan exactly.
+
+    - If a slot_type has too many questions: keep only the first N (by position).
+    - If a slot_type has too few: synthesize minimal fallback placeholders.
+    Mutates nothing; returns a new list.
+    """
+    expected_counts = Counter(slot_plan)
+    by_slot: dict[str, list[dict]] = {st: [] for st in SLOT_ORDER}
+    for q in questions:
+        st = q.get("slot_type", "")
+        if st in by_slot:
+            by_slot[st].append(q)
+
+    result: list[dict] = []
+    next_id = max((q.get("id", 0) for q in questions), default=0) + 1
+
+    for st in slot_plan:
+        bucket = by_slot[st]
+        if bucket:
+            result.append(bucket.pop(0))
+        else:
+            # Synthesize minimal fallback
+            result.append({
+                "id": next_id,
+                "slot_type": st,
+                "role": st,
+                "skill_tag": st,
+                "format": sorted(VALID_FORMATS[st])[0],
+                "question_text": f"[Slot fill for {st} question]",
+                "pictorial_elements": [],
+                "answer": "",
+                "difficulty": "medium",
+            })
+            next_id += 1
+            logger.warning("enforce_slot_counts: synthesized fallback for missing %s slot", st)
+
+    # Re-number ids sequentially
+    for i, q in enumerate(result):
+        q["id"] = i + 1
+
+    trimmed = sum(len(v) for v in by_slot.values())
+    if trimmed:
+        logger.info("enforce_slot_counts: trimmed %d excess question(s)", trimmed)
+
+    return result
+
+
+def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan: list[str] | None = None) -> list[str]:
+    """Validate the full worksheet: slot distribution, uniqueness, diversity.
+
+    If expected_plan is provided, validate against that (the actual plan used).
+    Otherwise fall back to SLOT_PLANS / proportional computation.
+    """
     issues: list[str] = []
-    plan = SLOT_PLANS.get(q_count) or _compute_proportional_plan(q_count)
+    if expected_plan is not None:
+        plan = dict(Counter(expected_plan))
+    else:
+        plan = SLOT_PLANS.get(q_count) or _compute_proportional_plan(q_count)
     actual_counts = Counter(q.get("slot_type", "") for q in questions)
 
     for slot_type in SLOT_ORDER:
@@ -1558,10 +1718,22 @@ def _regen_question_for_topic(
 
 
 def backfill_format(q: dict, directive: dict | None = None) -> None:
-    """Ensure q['format'] is never missing or blank. Mutates q in place."""
-    fmt = q.get("format") or ""
-    if not fmt.strip():
-        fmt = (directive or {}).get("format_hint") or DEFAULT_FORMAT_BY_SLOT_TYPE.get(q.get("slot_type", ""), "")
+    """Ensure q['format'] is never missing or blank. Mutates q in place.
+
+    Resolution order:
+    1. Existing q['format'] (trimmed)
+    2. directive['format_hint']
+    3. DEFAULT_FORMAT_BY_SLOT_TYPE[slot_type]
+    Raises ValueError if slot_type is unknown and format is still empty.
+    """
+    fmt = (q.get("format") or "").strip()
+    if not fmt:
+        fmt = ((directive or {}).get("format_hint") or "").strip()
+    if not fmt:
+        slot_type = q.get("slot_type") or (directive or {}).get("slot_type") or ""
+        fmt = DEFAULT_FORMAT_BY_SLOT_TYPE.get(slot_type, "")
+        if not fmt:
+            raise ValueError(f"backfill_format: unknown slot_type '{slot_type}', cannot assign default format")
     q["format"] = fmt
 
 
@@ -1706,6 +1878,9 @@ def run_slot_pipeline(
                     slot_instruction=slot_instruction,
                 )
 
+                # Backfill format BEFORE validation so validators never see ""
+                backfill_format(q, {"slot_type": slot_type, **directive})
+
                 issues = validate_question(q, slot_type)
 
                 # Extra check: error_detection must use backend-provided numbers
@@ -1733,7 +1908,6 @@ def run_slot_pipeline(
                 q["role"] = directive.get("role") or slot_type
                 q["difficulty"] = q_difficulty
                 q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or slot_type
-                backfill_format(q, directive)
 
                 # Preserve student_wrong_answer for error_spot enrichment
                 if slot_type == "error_detection" and variant and variant.get("error"):
@@ -1773,8 +1947,15 @@ def run_slot_pipeline(
         used_contexts_this_ws, used_error_ids_this_ws, used_thinking_styles_this_ws,
     )
 
-    # 8. Validate whole worksheet
-    ws_issues = validate_worksheet_slots(questions, q_count)
+    # 7a. Normalize answers (deterministic, no LLM)
+    normalize_estimation_answers(questions)
+    normalize_error_spot_answers(questions)
+
+    # 7b. Enforce slot counts — trim extras, fill gaps
+    questions = enforce_slot_counts(questions, slot_plan)
+
+    # 8. Validate whole worksheet (against the actual plan, not SLOT_PLANS)
+    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
     if ws_issues:
         logger.warning("Worksheet-level issues: %s", ws_issues)
 

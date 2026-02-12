@@ -1320,7 +1320,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
         text=text,
         options=None,
         correct_answer=answer_str,
-        explanation=None,
+        explanation=q.get("explanation"),
         difficulty=q.get("difficulty"),
         answer_type="exact" if answer_str else "example",
         sample_answer=None,

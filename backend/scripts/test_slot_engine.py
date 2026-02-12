@@ -60,6 +60,9 @@ from app.services.slot_engine import (
     THINKING_STYLE_BANK,
     NAME_BANKS,
     run_slot_pipeline,
+    enforce_slot_counts,
+    normalize_estimation_answers,
+    normalize_error_spot_answers,
 )
 
 
@@ -1768,6 +1771,35 @@ def test_format_backfill():
         if not ok:
             all_pass = False
 
+    # Whitespace-only format is treated as empty
+    q5 = {"slot_type": "thinking", "format": "   \t  "}
+    backfill_format(q5)
+    q5_fmt = q5["format"]
+    ok = q5_fmt == "thinking"
+    print(f"  Whitespace-only → default: {'PASS' if ok else f'FAIL ({q5_fmt})'}")
+    if not ok:
+        all_pass = False
+
+    # slot_type from directive when missing from q
+    q6 = {"format": ""}
+    backfill_format(q6, {"slot_type": "error_detection"})
+    q6_fmt = q6["format"]
+    ok = q6_fmt == "error_spot"
+    print(f"  slot_type from directive: {'PASS' if ok else f'FAIL ({q6_fmt})'}")
+    if not ok:
+        all_pass = False
+
+    # Unknown slot_type with empty format raises ValueError
+    try:
+        backfill_format({"format": ""}, {"slot_type": "nonexistent_type"})
+        ok = False
+        print("  Unknown slot_type raises ValueError: FAIL (no exception)")
+    except ValueError:
+        ok = True
+        print("  Unknown slot_type raises ValueError: PASS")
+    if not ok:
+        all_pass = False
+
     return all_pass
 
 
@@ -2087,6 +2119,220 @@ def test_v1_generate_response_shape():
     return all_pass
 
 
+def test_enforce_slot_counts():
+    """Test that enforce_slot_counts trims extras and fills gaps."""
+    print("\n" + "=" * 60)
+    print("35. ENFORCE SLOT COUNTS TEST")
+    print("=" * 60)
+
+    all_pass = True
+
+    # Helper to make a minimal question dict
+    def mkq(qid, slot_type):
+        return {"id": qid, "slot_type": slot_type, "format": "test", "question_text": f"Q{qid}", "answer": "x"}
+
+    # ── Case 1: Perfect match — no changes
+    plan1 = ["recognition", "application", "application", "error_detection", "thinking"]
+    qs1 = [mkq(i+1, st) for i, st in enumerate(plan1)]
+    result1 = enforce_slot_counts(qs1, plan1)
+    counts1 = Counter(q["slot_type"] for q in result1)
+    expected1 = Counter(plan1)
+    ok = counts1 == expected1 and len(result1) == 5
+    print(f"  Perfect match (5 slots): {'PASS' if ok else f'FAIL (got {dict(counts1)})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 2: Extra recognition (3 vs expected 2), missing application (1 vs expected 2)
+    plan2 = ["recognition", "recognition", "application", "application", "thinking"]
+    qs2 = [
+        mkq(1, "recognition"), mkq(2, "recognition"), mkq(3, "recognition"),  # 3 recog, need 2
+        mkq(4, "application"),  # 1 app, need 2
+        mkq(5, "thinking"),
+    ]
+    result2 = enforce_slot_counts(qs2, plan2)
+    counts2 = Counter(q["slot_type"] for q in result2)
+    expected2 = Counter(plan2)
+    ok = counts2 == expected2 and len(result2) == 5
+    print(f"  Trim excess + fill gap: {'PASS' if ok else f'FAIL (got {dict(counts2)})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 3: All questions missing — all synthesized
+    plan3 = ["recognition", "error_detection", "thinking"]
+    result3 = enforce_slot_counts([], plan3)
+    counts3 = Counter(q["slot_type"] for q in result3)
+    ok = counts3 == Counter(plan3) and len(result3) == 3
+    print(f"  All synthesized (empty input): {'PASS' if ok else f'FAIL (got {dict(counts3)})'}")
+    if not ok:
+        all_pass = False
+
+    # Synthesized questions have valid format from VALID_FORMATS
+    for q in result3:
+        st = q["slot_type"]
+        ok_fmt = q["format"] in VALID_FORMATS[st]
+        if not ok_fmt:
+            print(f"  FAIL: synthesized {st} has invalid format {q['format']}")
+            all_pass = False
+
+    # ── Case 4: IDs are sequential after enforcement
+    ids = [q["id"] for q in result2]
+    ok = ids == list(range(1, len(result2) + 1))
+    print(f"  Sequential IDs after trim: {'PASS' if ok else f'FAIL ({ids})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 5: validate_worksheet_slots with expected_plan shows no slot mismatches
+    plan5 = ["recognition", "recognition", "application", "application",
+             "application", "application", "representation", "representation",
+             "error_detection", "thinking"]
+    qs5 = [mkq(i+1, st) for i, st in enumerate(plan5)]
+    issues = validate_worksheet_slots(qs5, 10, expected_plan=plan5)
+    slot_issues = [i for i in issues if i.startswith("slot ")]
+    ok = len(slot_issues) == 0
+    print(f"  validate with expected_plan — no slot mismatches: {'PASS' if ok else f'FAIL ({slot_issues})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 6: validate_worksheet_slots WITHOUT expected_plan would mismatch on recipe-based plan
+    # Recipe-based 10q plan: recognition=3, application=2, representation=2, error_detection=2, thinking=1
+    recipe_plan = ["recognition"] * 3 + ["application"] * 2 + ["representation"] * 2 + ["error_detection"] * 2 + ["thinking"]
+    qs6 = [mkq(i+1, st) for i, st in enumerate(recipe_plan)]
+    issues_old = validate_worksheet_slots(qs6, 10)  # old behavior — uses SLOT_PLANS
+    issues_new = validate_worksheet_slots(qs6, 10, expected_plan=recipe_plan)
+    slot_issues_old = [i for i in issues_old if i.startswith("slot ")]
+    slot_issues_new = [i for i in issues_new if i.startswith("slot ")]
+    ok = len(slot_issues_old) > 0 and len(slot_issues_new) == 0
+    print(f"  Recipe plan: old validator flags, new passes: {'PASS' if ok else f'FAIL (old={slot_issues_old}, new={slot_issues_new})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
+def test_answer_normalizers():
+    """Test normalize_estimation_answers and normalize_error_spot_answers."""
+    print("\n" + "=" * 60)
+    print("36. ANSWER NORMALIZER TESTS")
+    print("=" * 60)
+
+    all_pass = True
+
+    # ── Case 1: estimation "closer to" — fixes wrong answer
+    q1 = {
+        "slot_type": "thinking",
+        "format": "estimation",
+        "question_text": "Estimate: 47 + 36 is closer to 80 or 90?",
+        "answer": "90",  # wrong — 47+36=83, closer to 80
+    }
+    normalize_estimation_answers([q1])
+    ok = q1["answer"] == "80"
+    q1_ans = q1["answer"]
+    print(f"  Estimation closer-to fix: {'PASS' if ok else f'FAIL (got {q1_ans})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 2: estimation "round to nearest 100"
+    q2 = {
+        "slot_type": "thinking",
+        "format": "estimation",
+        "question_text": "Round 245 and 312 to the nearest 100, then add.",
+        "answer": "500",  # round(245,-2)=200, round(312,-2)=300, sum=500
+    }
+    normalize_estimation_answers([q2])
+    ok = q2["answer"] == "500"
+    q2_ans = q2["answer"]
+    print(f"  Estimation round-100 correct: {'PASS' if ok else f'FAIL (got {q2_ans})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 3: estimation "round to nearest 10"
+    q3 = {
+        "slot_type": "thinking",
+        "format": "estimation",
+        "question_text": "Round 47 and 36 to the nearest 10, then add.",
+        "answer": "wrong",  # should become 50+40=90
+    }
+    normalize_estimation_answers([q3])
+    ok = q3["answer"] == "90"
+    q3_ans = q3["answer"]
+    print(f"  Estimation round-10 fix: {'PASS' if ok else f'FAIL (got {q3_ans})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 4: non-estimation question left untouched
+    q4 = {
+        "slot_type": "application",
+        "format": "direct_compute",
+        "question_text": "47 + 36 = ?",
+        "answer": "83",
+    }
+    normalize_estimation_answers([q4])
+    ok = q4["answer"] == "83"
+    q4_ans = q4["answer"]
+    print(f"  Non-estimation untouched: {'PASS' if ok else f'FAIL (got {q4_ans})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 5: error_spot with explanatory text → extract numeric answer
+    q5 = {
+        "slot_type": "error_detection",
+        "format": "error_spot",
+        "question_text": "Ravi says 47 + 36 = 73. Spot the error.",
+        "answer": "The correct answer is 83 because you need to carry the 1 from the ones column",
+    }
+    normalize_error_spot_answers([q5])
+    q5_ans = q5["answer"]
+    q5_expl = q5.get("explanation", "MISSING")
+    ok = q5_ans == "83" and q5.get("explanation") is not None
+    print(f"  Error-spot numeric extraction: {'PASS' if ok else f'FAIL (answer={q5_ans}, explanation={q5_expl})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 6: error_spot already numeric — no change
+    q6 = {
+        "slot_type": "error_detection",
+        "format": "error_spot",
+        "question_text": "Spot the error: 25 + 18 = 33",
+        "answer": "43",
+    }
+    normalize_error_spot_answers([q6])
+    q6_ans = q6["answer"]
+    ok = q6_ans == "43" and q6.get("explanation") is None
+    print(f"  Error-spot already numeric: {'PASS' if ok else f'FAIL (answer={q6_ans})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 7: error_spot fallback — compute from question text
+    q7 = {
+        "slot_type": "error_detection",
+        "format": "error_spot",
+        "question_text": "Find the mistake: 56 + 27 = 73",
+        "answer": "The student made a carrying error",  # no number in answer text
+    }
+    normalize_error_spot_answers([q7])
+    q7_ans = q7["answer"]
+    ok = q7_ans == "83"  # 56 + 27 = 83
+    print(f"  Error-spot fallback compute: {'PASS' if ok else f'FAIL (got {q7_ans})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 8: error_spot subtraction detection
+    q8 = {
+        "slot_type": "error_detection",
+        "format": "error_spot",
+        "question_text": "Find the mistake: subtract 23 from 56 = 43",
+        "answer": "The student did not borrow correctly",
+    }
+    normalize_error_spot_answers([q8])
+    q8_ans = q8["answer"]
+    ok = q8_ans == "33"  # 56 - 23 = 33
+    print(f"  Error-spot subtraction: {'PASS' if ok else f'FAIL (got {q8_ans})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -2343,6 +2589,8 @@ if __name__ == "__main__":
     p32 = test_plan_format_hint_backfill()
     p33 = test_skill_registry_scoping()
     p34 = test_v1_generate_response_shape()
+    p35 = test_enforce_slot_counts()
+    p36 = test_answer_normalizers()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -2381,6 +2629,8 @@ if __name__ == "__main__":
     print(f"  Plan format_hint:    {'PASS' if p32 else 'FAIL'}")
     print(f"  Registry scoping:    {'PASS' if p33 else 'FAIL'}")
     print(f"  V1 response shape:   {'PASS' if p34 else 'FAIL'}")
+    print(f"  Enforce slot counts: {'PASS' if p35 else 'FAIL'}")
+    print(f"  Answer normalizers:  {'PASS' if p36 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()
