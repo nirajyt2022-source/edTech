@@ -66,3 +66,37 @@ class TopicSummaryResponse(BaseModel):
 
 class ResetResponse(BaseModel):
     ok: bool = True
+
+
+# ──────────────────────────────────────────────
+# Endpoint-level response schemas
+# ──────────────────────────────────────────────
+
+class GenerateResponse(BaseModel):
+    worksheet: dict
+    generation_time_ms: int
+
+
+class GradeResponse(BaseModel):
+    is_correct: Optional[bool] = None
+    expected: Optional[Any] = None
+    student: Optional[Any] = None
+    place_errors: dict[str, bool] = {}
+    error_type: Optional[str] = None
+
+
+class ExplainResponse(BaseModel):
+    steps: list[str] = []
+    final_answer: Optional[str] = None
+
+
+class RecommendResponse(BaseModel):
+    next_skill_tag: Optional[str] = None
+    reason: Optional[str] = None
+    drill_focus: Optional[str] = None
+
+
+class DrillResponse(BaseModel):
+    skill_tag: Optional[str] = None
+    numbers: Optional[Any] = None
+    operation: Optional[str] = None

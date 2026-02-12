@@ -1574,14 +1574,20 @@ def test_v1_router_smoke():
     from app.services.mastery_store import MASTERY_STORE
     from app.api.models_practice import AttemptResponse
 
-    # Import-only smoke for v1 router
+    # Import-only smoke for v1 router + all request models
     try:
-        from app.api.worksheets_v1 import router as v1_router  # noqa: F841
+        from app.api.worksheets_v1 import (  # noqa: F841
+            router as v1_router,
+            GenerateRequestV1, PDFExportRequestV1,
+            GradeRequestV1, ExplainRequestV1, RecommendRequestV1,
+            DrillRequestV1, ChainRequestV1, AttemptPayloadV1,
+            MasteryResetRequestV1,
+        )
         ok1 = True
     except Exception as e:
         ok1 = False
-        print(f"  v1 router import FAILED: {e}")
-    print(f"  v1 router import: {'PASS' if ok1 else 'FAIL'}")
+        print(f"  v1 router + models import FAILED: {e}")
+    print(f"  v1 router + models import: {'PASS' if ok1 else 'FAIL'}")
 
     # Schema validation smoke
     MASTERY_STORE._data.clear()
@@ -1599,6 +1605,64 @@ def test_v1_router_smoke():
     print(f"  AttemptResponse schema validates: {'PASS' if ok2 else 'FAIL'}")
 
     return ok1 and ok2
+
+
+def test_telemetry_smoke():
+    print("\n" + "=" * 60)
+    print("27. TELEMETRY SMOKE TEST")
+    print("=" * 60)
+
+    from app.services.telemetry import emit_event, instrument
+
+    # emit_event smoke
+    try:
+        emit_event("test", route="/test", version="test", ok=True)
+        ok1 = True
+    except Exception as e:
+        ok1 = False
+        print(f"  emit_event FAILED: {e}")
+    print(f"  emit_event callable: {'PASS' if ok1 else 'FAIL'}")
+
+    # instrument smoke — wrap a dummy sync function
+    try:
+        @instrument(route="/test/dummy", version="test")
+        def dummy(x):
+            return x + 1
+
+        result = dummy(5)
+        ok2 = result == 6
+    except Exception as e:
+        ok2 = False
+        print(f"  instrument FAILED: {e}")
+    print(f"  instrument wraps sync fn: {'PASS' if ok2 else f'FAIL (result={result})'}")
+
+    return ok1 and ok2
+
+
+def test_telemetry_db_disabled():
+    print("\n" + "=" * 60)
+    print("28. TELEMETRY DB DISABLED TEST")
+    print("=" * 60)
+
+    import os
+    from app.services.telemetry import emit_event
+
+    prev = os.environ.get("ENABLE_TELEMETRY_DB")
+    try:
+        os.environ["ENABLE_TELEMETRY_DB"] = "0"
+        emit_event("test_disabled", route="/test", version="test", ok=True, student_id="s1")
+        ok = True
+    except Exception as e:
+        ok = False
+        print(f"  emit_event with DB disabled FAILED: {e}")
+    finally:
+        if prev is None:
+            os.environ.pop("ENABLE_TELEMETRY_DB", None)
+        else:
+            os.environ["ENABLE_TELEMETRY_DB"] = prev
+
+    print(f"  DB disabled, no exception: {'PASS' if ok else 'FAIL'}")
+    return ok
 
 
 # ════════════════════════════════════════════════
@@ -1849,6 +1913,8 @@ if __name__ == "__main__":
     p24 = test_mastery_store_fallback()
     p25 = test_mastery_dashboard()
     p26 = test_v1_router_smoke()
+    p27 = test_telemetry_smoke()
+    p28 = test_telemetry_db_disabled()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -1879,6 +1945,8 @@ if __name__ == "__main__":
     print(f"  Mastery fallback:      {'PASS' if p24 else 'FAIL'}")
     print(f"  Mastery dashboard:     {'PASS' if p25 else 'FAIL'}")
     print(f"  V1 router smoke:      {'PASS' if p26 else 'FAIL'}")
+    print(f"  Telemetry smoke:       {'PASS' if p27 else 'FAIL'}")
+    print(f"  Telemetry DB disabled: {'PASS' if p28 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

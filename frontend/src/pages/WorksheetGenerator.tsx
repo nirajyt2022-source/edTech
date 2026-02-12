@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/ui/page-header'
-import { api } from '@/lib/api'
+import { api, apiV1WithFallback } from '@/lib/api'
 import { useChildren } from '@/lib/children'
 import { useClasses } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
@@ -379,7 +379,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
           : topic
 
     try {
-      const response = await api.post('/api/worksheets/generate', {
+      const response = await apiV1WithFallback('post', '/api/worksheets/generate', {
         board,
         grade_level: grade,
         subject: syllabus?.subject || subject,
@@ -419,7 +419,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
     setDownloadingPdf(true)
     setDownloadingPdfType(pdfType)
     try {
-      const response = await api.post('/api/worksheets/export-pdf', {
+      const response = await apiV1WithFallback('post', '/api/worksheets/export-pdf', {
         worksheet,
         pdf_type: pdfType,
       }, {

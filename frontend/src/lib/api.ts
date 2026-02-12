@@ -36,3 +36,30 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+/**
+ * Call v1 endpoint first; if it returns 404, retry on legacy path once.
+ * Use for endpoints that have been migrated to /api/v1/worksheets/*.
+ */
+export async function apiV1WithFallback<T = unknown>(
+  method: 'get' | 'post' | 'delete',
+  legacyPath: string,
+  data?: unknown,
+  config?: Record<string, unknown>,
+): Promise<{ data: T }> {
+  const v1Path = legacyPath.replace('/api/worksheets/', '/api/v1/worksheets/')
+  try {
+    if (method === 'get') return await api.get(v1Path, config)
+    if (method === 'delete') return await api.delete(v1Path, config)
+    return await api.post(v1Path, data, config)
+  } catch (err: unknown) {
+    const axErr = err as { response?: { status?: number } }
+    if (axErr.response?.status === 404) {
+      // Fallback to legacy
+      if (method === 'get') return await api.get(legacyPath, config)
+      if (method === 'delete') return await api.delete(legacyPath, config)
+      return await api.post(legacyPath, data, config)
+    }
+    throw err
+  }
+}

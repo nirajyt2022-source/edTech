@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Section } from '@/components/ui/section'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
-import { api } from '@/lib/api'
+import { api, apiV1WithFallback } from '@/lib/api'
 import { useChildren } from '@/lib/children'
 import { useClasses } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
@@ -126,7 +126,7 @@ export default function SavedWorksheets() {
   const downloadPdf = async (worksheet: FullWorksheet, pdfType: string = 'full') => {
     setDownloadingPdfType(pdfType)
     try {
-      const response = await api.post('/api/worksheets/export-pdf', {
+      const response = await apiV1WithFallback('post', '/api/worksheets/export-pdf', {
         worksheet: {
           title: worksheet.title,
           grade: worksheet.grade,

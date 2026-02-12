@@ -19,6 +19,7 @@ from app.services.slot_engine import (
 )
 from app.services.mastery_dashboard import get_mastery, topic_summary, reset_skill
 from app.api.models_practice import AttemptResponse, MasteryGetResponse, TopicSummaryResponse, ResetResponse
+from app.services.telemetry import instrument
 
 router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
 pdf_service = get_pdf_service()
@@ -1334,6 +1335,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
 # ──────────────────────────────────────────────
 
 @router.post("/generate", response_model=WorksheetGenerationResponse)
+@instrument(route="/api/worksheets/generate", version="legacy")
 async def generate_worksheet(request: WorksheetGenerationRequest):
     """Generate a new worksheet using slot-based pipeline."""
     start_time = datetime.now()
@@ -1451,32 +1453,53 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
 # ──────────────────────────────────────────────
 
 @router.post("/grade")
-def grade(req: GradeRequest):
+@instrument(route="/api/worksheets/grade", version="legacy")
+def grade(req: GradeRequest, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/grade>; rel="successor-version"'
     return grade_student_answer(req.question, req.student_answer)
 
 
 @router.post("/explain")
-def explain(req: ExplainRequest):
+@instrument(route="/api/worksheets/explain", version="legacy")
+def explain(req: ExplainRequest, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/explain>; rel="successor-version"'
     return explain_question(req.question)
 
 
 @router.post("/recommend")
-def recommend(req: RecommendRequest):
+@instrument(route="/api/worksheets/recommend", version="legacy")
+def recommend(req: RecommendRequest, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/recommend>; rel="successor-version"'
     return recommend_next_step(req.question, req.grade_result)
 
 
 @router.post("/drill")
-def drill(req: DrillRequest):
+@instrument(route="/api/worksheets/drill", version="legacy")
+def drill(req: DrillRequest, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/drill>; rel="successor-version"'
     from app.services.slot_engine import generate_isolation_drill
     return generate_isolation_drill(req.question, req.student_answer)
 
 
 @router.post("/chain")
-def chain(req: ChainRequest):
+@instrument(route="/api/worksheets/chain", version="legacy")
+def chain(req: ChainRequest, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/chain>; rel="successor-version"'
     return chain_drill_session(req.root_question, req.attempts, req.target_streak)
 
 
 @router.post("/attempt", response_model=AttemptResponse)
+@instrument(route="/api/worksheets/attempt", version="legacy")
 def attempt(req: AttemptPayload, response: Response):
     response.headers["Deprecation"] = "true"
     response.headers["Sunset"] = "2026-06-01"
@@ -1485,6 +1508,7 @@ def attempt(req: AttemptPayload, response: Response):
 
 
 @router.get("/mastery/get", response_model=MasteryGetResponse)
+@instrument(route="/api/worksheets/mastery/get", version="legacy")
 def mastery_get(student_id: str, response: Response):
     response.headers["Deprecation"] = "true"
     response.headers["Sunset"] = "2026-06-01"
@@ -1493,6 +1517,7 @@ def mastery_get(student_id: str, response: Response):
 
 
 @router.get("/mastery/topic_summary", response_model=TopicSummaryResponse)
+@instrument(route="/api/worksheets/mastery/topic_summary", version="legacy")
 def mastery_topic_summary(student_id: str, topic: str, response: Response):
     response.headers["Deprecation"] = "true"
     response.headers["Sunset"] = "2026-06-01"
@@ -1506,6 +1531,7 @@ class MasteryResetRequest(BaseModel):
 
 
 @router.post("/mastery/reset", response_model=ResetResponse)
+@instrument(route="/api/worksheets/mastery/reset", version="legacy")
 def mastery_reset(req: MasteryResetRequest, response: Response):
     response.headers["Deprecation"] = "true"
     response.headers["Sunset"] = "2026-06-01"
@@ -1519,6 +1545,7 @@ class PDFExportRequest(BaseModel):
 
 
 @router.post("/export-pdf")
+@instrument(route="/api/worksheets/export-pdf", version="legacy")
 async def export_worksheet_pdf(request: PDFExportRequest):
     """Export a worksheet as a PDF file."""
     try:
@@ -1590,6 +1617,7 @@ def get_user_id_from_token(authorization: str) -> str:
 
 
 @router.post("/save")
+@instrument(route="/api/worksheets/save", version="legacy")
 async def save_worksheet(
     request: SaveWorksheetRequest,
     authorization: str = Header(None)
@@ -1629,6 +1657,7 @@ async def save_worksheet(
 
 
 @router.get("/saved/list")
+@instrument(route="/api/worksheets/saved/list", version="legacy")
 async def list_saved_worksheets(
     authorization: str = Header(None),
     limit: int = 20,
@@ -1686,6 +1715,7 @@ async def list_saved_worksheets(
 
 
 @router.get("/saved/{worksheet_id}")
+@instrument(route="/api/worksheets/saved/{id}", version="legacy")
 async def get_saved_worksheet(
     worksheet_id: str,
     authorization: str = Header(None)
@@ -1729,6 +1759,7 @@ async def get_saved_worksheet(
 
 
 @router.delete("/saved/{worksheet_id}")
+@instrument(route="/api/worksheets/saved/{id}", version="legacy")
 async def delete_saved_worksheet(
     worksheet_id: str,
     authorization: str = Header(None)
@@ -1799,6 +1830,7 @@ def increment_usage(user_id: str, sub: dict) -> None:
 # ──────────────────────────────────────────────
 
 @router.post("/regenerate/{worksheet_id}", response_model=WorksheetGenerationResponse)
+@instrument(route="/api/worksheets/regenerate/{id}", version="legacy")
 async def regenerate_worksheet(
     worksheet_id: str,
     authorization: str = Header(None)
@@ -1904,6 +1936,7 @@ async def regenerate_worksheet(
 # ──────────────────────────────────────────────
 
 @router.get("/analytics")
+@instrument(route="/api/worksheets/analytics", version="legacy")
 async def get_teacher_analytics(authorization: str = Header(None)):
     """Get light analytics for a teacher: total worksheets, topic reuse, active weeks."""
     user_id = get_user_id_from_token(authorization)
