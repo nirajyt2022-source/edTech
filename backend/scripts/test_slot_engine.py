@@ -1166,6 +1166,441 @@ def test_visuals_only_with_ratio():
     return all_pass
 
 
+def test_multiplication_contract():
+    """Test MultiplicationTableRecallContract validate + repair."""
+    print("\n" + "=" * 60)
+    print("15. MULTIPLICATION CONTRACT TESTS")
+    print("=" * 60)
+
+    from app.skills.registry import SKILL_REGISTRY
+    contract = SKILL_REGISTRY["multiplication_table_recall"]
+    all_pass = True
+
+    # Correct answer → no issues
+    q_ok = {"question_text": "What is 6 × 7?", "answer": "42", "skill_tag": "multiplication_table_recall"}
+    issues = contract.validate(q_ok)
+    status = "PASS" if issues == [] else "FAIL"
+    print(f"  Correct 6×7=42 validates clean: {status}")
+    if issues:
+        all_pass = False
+
+    # Wrong answer → incorrect_product
+    q_bad = {"question_text": "What is 6 × 7?", "answer": "40", "skill_tag": "multiplication_table_recall"}
+    issues = contract.validate(q_bad)
+    status = "PASS" if "incorrect_product" in issues else "FAIL"
+    print(f"  Wrong 6×7=40 flags incorrect_product: {status}")
+    if "incorrect_product" not in issues:
+        all_pass = False
+
+    # Repair produces valid question
+    import random
+    rng = random.Random(42)
+    repaired = contract.repair(dict(q_bad), rng)
+    issues_after = contract.validate(repaired)
+    status = "PASS" if issues_after == [] else "FAIL"
+    print(f"  Repair produces valid question: {status}")
+    if issues_after:
+        all_pass = False
+
+    return all_pass
+
+
+def test_slot_materialization():
+    """Test ColumnAdditionContract.build_slots() digit decomposition."""
+    print("\n" + "=" * 60)
+    print("16. SLOT MATERIALIZATION TESTS")
+    print("=" * 60)
+
+    from app.skills.registry import SKILL_REGISTRY
+    contract = SKILL_REGISTRY["column_add_with_carry"]
+    all_pass = True
+
+    q = {
+        "skill_tag": "column_add_with_carry",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+    }
+    q = contract.build_slots(q)
+    slots = q.get("_slots", {})
+    carry = slots.get("carry_out", {})
+
+    checks = [
+        ("ones_sum", slots.get("ones_sum"), 5),
+        ("tens_sum", slots.get("tens_sum"), 2),
+        ("carry_out.ones", carry.get("ones"), 1),
+        ("carry_out.tens", carry.get("tens"), 1),
+    ]
+    for label, actual, expected in checks:
+        ok = actual == expected
+        print(f"  {label} == {expected}: {'PASS' if ok else f'FAIL (got {actual})'}")
+        if not ok:
+            all_pass = False
+
+    return all_pass
+
+
+def test_slot_grounded_validation():
+    """Test slot-grounded validate: correct answer clean, wrong answer flagged."""
+    print("\n" + "=" * 60)
+    print("17. SLOT-GROUNDED VALIDATION TESTS")
+    print("=" * 60)
+
+    from app.skills.registry import SKILL_REGISTRY
+    contract = SKILL_REGISTRY["column_add_with_carry"]
+    all_pass = True
+
+    q = {
+        "skill_tag": "column_add_with_carry",
+        "answer": "125",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+    }
+    q = contract.build_slots(q)
+    issues = contract.validate(q)
+    ok = issues == []
+    print(f"  Correct 58+67=125 validates clean: {'PASS' if ok else f'FAIL ({issues})'}")
+    if not ok:
+        all_pass = False
+
+    q["answer"] = "120"
+    issues = contract.validate(q)
+    ok = "answer_slot_mismatch" in issues
+    print(f"  Wrong 58+67=120 flags answer_slot_mismatch: {'PASS' if ok else f'FAIL ({issues})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
+def test_subtraction_slots():
+    """Test ColumnSubtractionWithBorrowContract build_slots + validate."""
+    print("\n" + "=" * 60)
+    print("18. SUBTRACTION SLOT TESTS")
+    print("=" * 60)
+
+    from app.skills.registry import SKILL_REGISTRY
+    contract = SKILL_REGISTRY["column_sub_with_borrow"]
+    all_pass = True
+
+    q = {
+        "skill_tag": "column_sub_with_borrow",
+        "answer": "14",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [52, 38], "operation": "subtraction"},
+    }
+    q = contract.build_slots(q)
+    issues = contract.validate(q)
+    ok = issues == []
+    print(f"  Correct 52-38=14 validates clean: {'PASS' if ok else f'FAIL ({issues})'}")
+    if not ok:
+        all_pass = False
+
+    q["answer"] = "15"
+    issues = contract.validate(q)
+    ok = "answer_slot_mismatch" in issues
+    print(f"  Wrong 52-38=15 flags answer_slot_mismatch: {'PASS' if ok else f'FAIL ({issues})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
+def test_addition_grading():
+    """Test grade_student_answer() helper — addition with missed carry."""
+    print("\n" + "=" * 60)
+    print("19. ADDITION GRADING TESTS")
+    print("=" * 60)
+
+    from app.services.slot_engine import grade_student_answer
+    all_pass = True
+
+    q = {
+        "skill_tag": "column_add_with_carry",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+    }
+
+    # Correct answer (no _slots — helper should materialize)
+    r = grade_student_answer(q, "125")
+    ok = r["is_correct"] is True
+    print(f"  58+67=125 is_correct=True: {'PASS' if ok else f'FAIL ({r})'}")
+    if not ok:
+        all_pass = False
+
+    # Missed carry via helper
+    out = grade_student_answer(q, "115")
+    ok1 = out["place_errors"].get("tens") is True
+    ok2 = out["error_type"] == "missed_carry"
+    ok = ok1 and ok2
+    print(f"  58+67=115 missed_carry + tens error: {'PASS' if ok else f'FAIL ({out})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
+def test_subtraction_grading():
+    """Test grade_student_answer() helper — subtraction with missed borrow."""
+    print("\n" + "=" * 60)
+    print("20. SUBTRACTION GRADING TESTS")
+    print("=" * 60)
+
+    from app.services.slot_engine import grade_student_answer
+    all_pass = True
+
+    q = {
+        "skill_tag": "column_sub_with_borrow",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [52, 38], "operation": "subtraction"},
+    }
+
+    # Correct answer (no _slots — helper should materialize)
+    r = grade_student_answer(q, "14")
+    ok = r["is_correct"] is True
+    print(f"  52-38=14 is_correct=True: {'PASS' if ok else f'FAIL ({r})'}")
+    if not ok:
+        all_pass = False
+
+    # Missed borrow via helper
+    out = grade_student_answer(q, "24")
+    ok1 = out["place_errors"].get("tens") is True
+    ok2 = out["error_type"] == "missed_borrow"
+    ok = ok1 and ok2
+    print(f"  52-38=24 missed_borrow + tens error: {'PASS' if ok else f'FAIL ({out})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
+def test_drill_chaining():
+    """Test chain_drill_session — continue_drill + escalate."""
+    print("\n" + "=" * 60)
+    print("21. DRILL CHAINING TESTS")
+    print("=" * 60)
+
+    from app.services.slot_engine import chain_drill_session
+    import random
+    all_pass = True
+    rng = random.Random(42)
+
+    root = {
+        "skill_tag": "column_add_with_carry",
+        "answer": "115",  # wrong — triggers missed_carry recommendation
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+    }
+
+    # Case A: no attempts → continue_drill
+    res = chain_drill_session(root, [], target_streak=3, rng=rng)
+    ok = res["action"] == "continue_drill" and res["next_question"] is not None
+    print(f"  Empty attempts → continue_drill: {'PASS' if ok else f'FAIL ({res})'}")
+    if not ok:
+        all_pass = False
+
+    # Case B: 3 correct attempts → escalate
+    attempt_q = {
+        "skill_tag": "column_add_with_carry",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+    }
+    attempts = [{"question": attempt_q, "student_answer": "125"}] * 3
+    rng2 = random.Random(99)
+    res = chain_drill_session(root, attempts, target_streak=3, rng=rng2)
+    ok = res["action"] == "escalate" and res["streak"] >= 3 and res["reason"] == "streak_complete" and res["next_question"] is not None
+    print(f"  3 correct → escalate: {'PASS' if ok else f'FAIL ({res})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
+def test_attempt_and_next():
+    """Test attempt_and_next single mode — missed carry triggers drill."""
+    print("\n" + "=" * 60)
+    print("22. ATTEMPT_AND_NEXT TESTS")
+    print("=" * 60)
+
+    from app.services.slot_engine import attempt_and_next
+    all_pass = True
+
+    payload = {
+        "question": {
+            "skill_tag": "column_add_with_carry",
+            "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+        },
+        "student_answer": "115",
+        "mode": "single",
+    }
+    res = attempt_and_next(payload)
+
+    ok1 = res["grade_result"]["error_type"] == "missed_carry"
+    print(f"  grade_result.error_type == missed_carry: {'PASS' if ok1 else 'FAIL'}")
+    if not ok1:
+        all_pass = False
+
+    ok2 = res["recommendation"]["drill_focus"] == "isolated_ones_carry"
+    print(f"  recommendation.drill_focus == isolated_ones_carry: {'PASS' if ok2 else 'FAIL'}")
+    if not ok2:
+        all_pass = False
+
+    ok3 = res["next"]["action"] == "continue_drill"
+    print(f"  next.action == continue_drill: {'PASS' if ok3 else 'FAIL'}")
+    if not ok3:
+        all_pass = False
+
+    ok4 = res["next"]["next_question"] is not None
+    print(f"  next.next_question not None: {'PASS' if ok4 else 'FAIL'}")
+    if not ok4:
+        all_pass = False
+
+    return all_pass
+
+
+def test_mastery_state_progression():
+    print("\n" + "=" * 60)
+    print("23. MASTERY STATE TESTS")
+    print("=" * 60)
+
+    from app.services.slot_engine import attempt_and_next
+    from app.services.mastery_store import MASTERY_STORE
+
+    # Reset store to avoid cross-test contamination
+    MASTERY_STORE._data.clear()
+
+    student_id = "s1"
+    q = {
+        "skill_tag": "column_add_with_carry",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+    }
+
+    # 1) wrong -> streak 0, learning
+    out1 = attempt_and_next({"student_id": student_id, "question": q, "student_answer": "115", "mode": "single"})
+    m1 = out1.get("mastery_state") or {}
+    ok1 = (m1.get("streak") == 0 and m1.get("mastery_level") == "learning")
+    print(f"  Wrong answer → streak=0, learning: {'PASS' if ok1 else f'FAIL ({m1})'}")
+
+    # 2) correct -> streak 1
+    out2 = attempt_and_next({"student_id": student_id, "question": q, "student_answer": "125", "mode": "single"})
+    m2 = out2.get("mastery_state") or {}
+    ok2 = (m2.get("streak") == 1)
+    print(f"  Correct → streak=1: {'PASS' if ok2 else f'FAIL ({m2})'}")
+
+    # 3) correct -> streak 2
+    out3 = attempt_and_next({"student_id": student_id, "question": q, "student_answer": "125", "mode": "single"})
+    m3 = out3.get("mastery_state") or {}
+    ok3 = (m3.get("streak") == 2)
+    print(f"  Correct → streak=2: {'PASS' if ok3 else f'FAIL ({m3})'}")
+
+    # 4) correct -> streak 3 -> mastered
+    out4 = attempt_and_next({"student_id": student_id, "question": q, "student_answer": "125", "mode": "single"})
+    m4 = out4.get("mastery_state") or {}
+    ok4 = (m4.get("streak") == 3 and m4.get("mastery_level") == "mastered")
+    print(f"  Correct → streak=3, mastered: {'PASS' if ok4 else f'FAIL ({m4})'}")
+
+    return ok1 and ok2 and ok3 and ok4
+
+
+def test_mastery_store_fallback():
+    print("\n" + "=" * 60)
+    print("24. MASTERY STORE FALLBACK TESTS")
+    print("=" * 60)
+
+    import os
+    from app.services.slot_engine import attempt_and_next
+    from app.services.mastery_store import MASTERY_STORE
+
+    # Reset store to avoid cross-test contamination
+    MASTERY_STORE._data.clear()
+
+    prev = os.environ.get("PRACTICECRAFT_MASTERY_STORE")
+    try:
+        os.environ["PRACTICECRAFT_MASTERY_STORE"] = "supabase"
+
+        q = {
+            "skill_tag": "column_add_with_carry",
+            "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+        }
+        out = attempt_and_next({"student_id": "fallback_test", "question": q, "student_answer": "125", "mode": "single"})
+        m = out.get("mastery_state") or {}
+        ok = m.get("streak") == 1 and m.get("mastery_level") == "learning"
+        print(f"  Supabase env set, no creds → fallback to memory: {'PASS' if ok else f'FAIL ({m})'}")
+    finally:
+        if prev is None:
+            os.environ.pop("PRACTICECRAFT_MASTERY_STORE", None)
+        else:
+            os.environ["PRACTICECRAFT_MASTERY_STORE"] = prev
+
+    return ok
+
+
+def test_mastery_dashboard():
+    print("\n" + "=" * 60)
+    print("25. MASTERY DASHBOARD TESTS")
+    print("=" * 60)
+
+    from app.services.slot_engine import attempt_and_next
+    from app.services.mastery_store import MASTERY_STORE
+    from app.services.mastery_dashboard import get_mastery, topic_summary
+
+    # Reset store to avoid cross-test contamination
+    MASTERY_STORE._data.clear()
+
+    student_id = "dash1"
+    q = {
+        "skill_tag": "column_add_with_carry",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+    }
+
+    # 1 wrong + 3 correct → mastered
+    attempt_and_next({"student_id": student_id, "question": q, "student_answer": "115", "mode": "single"})
+    attempt_and_next({"student_id": student_id, "question": q, "student_answer": "125", "mode": "single"})
+    attempt_and_next({"student_id": student_id, "question": q, "student_answer": "125", "mode": "single"})
+    attempt_and_next({"student_id": student_id, "question": q, "student_answer": "125", "mode": "single"})
+
+    # get_mastery check
+    states = get_mastery(student_id)
+    matched = [s for s in states if s["skill_tag"] == "column_add_with_carry" and s["mastery_level"] == "mastered"]
+    ok1 = len(matched) >= 1
+    print(f"  get_mastery has mastered column_add_with_carry: {'PASS' if ok1 else f'FAIL ({states})'}")
+
+    # topic_summary check
+    ts = topic_summary(student_id, "Addition and subtraction (3-digit)")
+    ok2 = ts.get("mastered", 0) >= 1
+    print(f"  topic_summary mastered >= 1: {'PASS' if ok2 else f'FAIL ({ts})'}")
+
+    return ok1 and ok2
+
+
+def test_v1_router_smoke():
+    print("\n" + "=" * 60)
+    print("26. V1 ROUTER SMOKE TEST")
+    print("=" * 60)
+
+    from app.services.slot_engine import attempt_and_next
+    from app.services.mastery_store import MASTERY_STORE
+    from app.api.models_practice import AttemptResponse
+
+    # Import-only smoke for v1 router
+    try:
+        from app.api.worksheets_v1 import router as v1_router  # noqa: F841
+        ok1 = True
+    except Exception as e:
+        ok1 = False
+        print(f"  v1 router import FAILED: {e}")
+    print(f"  v1 router import: {'PASS' if ok1 else 'FAIL'}")
+
+    # Schema validation smoke
+    MASTERY_STORE._data.clear()
+    q = {
+        "skill_tag": "column_add_with_carry",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [58, 67], "operation": "addition"},
+    }
+    out = attempt_and_next({"student_id": "v1smoke", "question": q, "student_answer": "125", "mode": "single"})
+    try:
+        AttemptResponse.model_validate(out)
+        ok2 = True
+    except Exception as e:
+        ok2 = False
+        print(f"  Schema validation FAILED: {e}")
+    print(f"  AttemptResponse schema validates: {'PASS' if ok2 else 'FAIL'}")
+
+    return ok1 and ok2
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -1402,6 +1837,18 @@ if __name__ == "__main__":
     p12 = test_carry_enforcement()
     p13 = test_error_spot_enrichment()
     p14 = test_visuals_only_with_ratio()
+    p15 = test_multiplication_contract()
+    p16 = test_slot_materialization()
+    p17 = test_slot_grounded_validation()
+    p18 = test_subtraction_slots()
+    p19 = test_addition_grading()
+    p20 = test_subtraction_grading()
+    p21 = test_drill_chaining()
+    p22 = test_attempt_and_next()
+    p23 = test_mastery_state_progression()
+    p24 = test_mastery_store_fallback()
+    p25 = test_mastery_dashboard()
+    p26 = test_v1_router_smoke()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -1420,6 +1867,18 @@ if __name__ == "__main__":
     print(f"  Carry enforcement:     {'PASS' if p12 else 'FAIL'}")
     print(f"  Error spot enrichment: {'PASS' if p13 else 'FAIL'}")
     print(f"  Visuals ratio:         {'PASS' if p14 else 'FAIL'}")
+    print(f"  Multiplication:        {'PASS' if p15 else 'FAIL'}")
+    print(f"  Slot materialization:  {'PASS' if p16 else 'FAIL'}")
+    print(f"  Slot validation:       {'PASS' if p17 else 'FAIL'}")
+    print(f"  Subtraction slots:     {'PASS' if p18 else 'FAIL'}")
+    print(f"  Addition grading:      {'PASS' if p19 else 'FAIL'}")
+    print(f"  Subtraction grading:   {'PASS' if p20 else 'FAIL'}")
+    print(f"  Drill chaining:        {'PASS' if p21 else 'FAIL'}")
+    print(f"  Attempt & next:        {'PASS' if p22 else 'FAIL'}")
+    print(f"  Mastery progression:   {'PASS' if p23 else 'FAIL'}")
+    print(f"  Mastery fallback:      {'PASS' if p24 else 'FAIL'}")
+    print(f"  Mastery dashboard:     {'PASS' if p25 else 'FAIL'}")
+    print(f"  V1 router smoke:      {'PASS' if p26 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

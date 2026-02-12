@@ -1,5 +1,4 @@
-from fastapi import APIRouter, HTTPException, Header
-from fastapi.responses import Response
+from fastapi import APIRouter, HTTPException, Header, Response
 from pydantic import BaseModel
 from typing import Literal
 import json
@@ -14,8 +13,12 @@ from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
 from app.services.slot_engine import (
     run_slot_pipeline, hydrate_visuals, enforce_visuals_only,
-    build_worksheet_plan, enrich_error_spots,
+    build_worksheet_plan, enrich_error_spots, grade_student_answer,
+    explain_question, recommend_next_step, chain_drill_session,
+    attempt_and_next,
 )
+from app.services.mastery_dashboard import get_mastery, topic_summary, reset_skill
+from app.api.models_practice import AttemptResponse, MasteryGetResponse, TopicSummaryResponse, ResetResponse
 
 router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
 pdf_service = get_pdf_service()
@@ -99,6 +102,41 @@ class Worksheet(BaseModel):
 class WorksheetGenerationResponse(BaseModel):
     worksheet: Worksheet
     generation_time_ms: int
+
+
+class GradeRequest(BaseModel):
+    question: dict
+    student_answer: str
+
+
+class ExplainRequest(BaseModel):
+    question: dict
+
+
+class RecommendRequest(BaseModel):
+    question: dict
+    grade_result: dict
+
+
+class DrillRequest(BaseModel):
+    question: dict
+    student_answer: str
+
+
+class ChainRequest(BaseModel):
+    root_question: dict
+    attempts: list[dict]
+    target_streak: int = 3
+
+
+class AttemptPayload(BaseModel):
+    question: dict
+    student_answer: str
+    mode: str = "single"
+    root_question: dict | None = None
+    attempts: list[dict] = []
+    target_streak: int = 3
+    student_id: str | None = None
 
 
 # ──────────────────────────────────────────────
@@ -1411,6 +1449,69 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
 # ──────────────────────────────────────────────
 # PDF export
 # ──────────────────────────────────────────────
+
+@router.post("/grade")
+def grade(req: GradeRequest):
+    return grade_student_answer(req.question, req.student_answer)
+
+
+@router.post("/explain")
+def explain(req: ExplainRequest):
+    return explain_question(req.question)
+
+
+@router.post("/recommend")
+def recommend(req: RecommendRequest):
+    return recommend_next_step(req.question, req.grade_result)
+
+
+@router.post("/drill")
+def drill(req: DrillRequest):
+    from app.services.slot_engine import generate_isolation_drill
+    return generate_isolation_drill(req.question, req.student_answer)
+
+
+@router.post("/chain")
+def chain(req: ChainRequest):
+    return chain_drill_session(req.root_question, req.attempts, req.target_streak)
+
+
+@router.post("/attempt", response_model=AttemptResponse)
+def attempt(req: AttemptPayload, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/attempt>; rel="successor-version"'
+    return attempt_and_next(req.model_dump())
+
+
+@router.get("/mastery/get", response_model=MasteryGetResponse)
+def mastery_get(student_id: str, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/mastery/get>; rel="successor-version"'
+    return {"student_id": student_id, "states": get_mastery(student_id)}
+
+
+@router.get("/mastery/topic_summary", response_model=TopicSummaryResponse)
+def mastery_topic_summary(student_id: str, topic: str, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/mastery/topic_summary>; rel="successor-version"'
+    return topic_summary(student_id, topic)
+
+
+class MasteryResetRequest(BaseModel):
+    student_id: str
+    skill_tag: str
+
+
+@router.post("/mastery/reset", response_model=ResetResponse)
+def mastery_reset(req: MasteryResetRequest, response: Response):
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-06-01"
+    response.headers["Link"] = '</api/v1/worksheets/mastery/reset>; rel="successor-version"'
+    return reset_skill(req.student_id, req.skill_tag)
+
 
 class PDFExportRequest(BaseModel):
     worksheet: Worksheet

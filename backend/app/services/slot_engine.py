@@ -496,6 +496,19 @@ def build_worksheet_plan(
     if profile:
         plan = _apply_topic_profile(plan, profile)
 
+    # Minimal injection: ensure at least one multiplication_table_recall directive
+    _norm_topic = normalize_topic(topic).lower()
+    if "multiplication tables" in _norm_topic:
+        has_mult = any(d.get("skill_tag") == "multiplication_table_recall" for d in plan)
+        if not has_mult and plan:
+            plan[0] = {
+                **plan[0],
+                "skill_tag": "multiplication_table_recall",
+                "slot_type": "recognition",
+                "format_hint": "simple_identify",
+                "carry_required": False,
+            }
+
     return plan
 
 
@@ -972,6 +985,238 @@ def enrich_error_spots(questions: list[dict]) -> None:
                 spec["student_answer"] = int(wrong) if not isinstance(wrong, int) else wrong
 
 
+def grade_student_answer(question: dict, student_answer: str) -> dict:
+    """
+    Deterministic grading:
+    - materialize slots if missing
+    - call contract.grade()
+    - return structured feedback
+    """
+    from app.skills.registry import SKILL_REGISTRY
+
+    contract = SKILL_REGISTRY.get(question.get("skill_tag"))
+    if not contract:
+        return {
+            "is_correct": None,
+            "expected": None,
+            "student": None,
+            "place_errors": {},
+            "error_type": "no_contract",
+        }
+
+    # Ensure slots exist when relevant
+    if not question.get("_slots"):
+        try:
+            question = contract.build_slots(question)
+        except Exception:
+            pass
+
+    return contract.grade(question, student_answer)
+
+
+def explain_question(question: dict) -> dict:
+    """
+    Deterministic explanation dispatcher.
+    """
+    from app.skills.registry import SKILL_REGISTRY
+
+    contract = SKILL_REGISTRY.get(question.get("skill_tag"))
+    if not contract:
+        return {"steps": [], "final_answer": None}
+
+    if not question.get("_slots"):
+        try:
+            question = contract.build_slots(question)
+        except Exception:
+            pass
+
+    return contract.explain(question)
+
+
+def recommend_next_step(question: dict, grade_result: dict) -> dict:
+    """
+    Dispatch adaptive recommendation to contract.
+    """
+    from app.skills.registry import SKILL_REGISTRY
+
+    contract = SKILL_REGISTRY.get(question.get("skill_tag"))
+    if not contract:
+        return {
+            "next_skill_tag": None,
+            "reason": "no_contract",
+            "drill_focus": None,
+        }
+
+    return contract.recommend_next(grade_result)
+
+
+def generate_isolation_drill(question: dict, student_answer: str, rng=None):
+    from app.skills.registry import SKILL_REGISTRY
+    import random
+
+    rng = rng or random.Random()
+
+    contract = SKILL_REGISTRY.get(question.get("skill_tag"))
+    if not contract:
+        return None
+
+    grade = grade_student_answer(question, student_answer)
+    recommendation = contract.recommend_next(grade)
+
+    drill_focus = recommendation.get("drill_focus")
+    if not drill_focus:
+        return None
+
+    return contract.generate_drill(drill_focus, rng)
+
+
+def attempt_question(question: dict, student_answer: str) -> dict:
+    from app.skills.registry import SKILL_REGISTRY
+
+    grade = grade_student_answer(question, student_answer)
+    explanation = explain_question(question)
+
+    contract = SKILL_REGISTRY.get(question.get("skill_tag"))
+    if not contract:
+        recommendation = {"next_skill_tag": None, "reason": "no_contract", "drill_focus": None}
+        return {
+            "grade_result": grade,
+            "explanation": explanation,
+            "recommendation": recommendation,
+        }
+
+    recommendation = contract.recommend_next(grade)
+
+    return {
+        "grade_result": grade,
+        "explanation": explanation,
+        "recommendation": recommendation,
+    }
+
+
+def attempt_and_next(payload: dict) -> dict:
+    """
+    payload keys:
+    - question, student_answer
+    - mode: "single" or "chain"
+    - root_question, attempts, target_streak (for chain)
+    """
+    import random
+
+    question = payload.get("question") or {}
+    student_answer = str(payload.get("student_answer", ""))
+    mode = payload.get("mode", "single")
+    target = int(payload.get("target_streak", 3))
+
+    base = attempt_question(question, student_answer)
+
+    # mastery tracking
+    student_id = payload.get("student_id")
+    mastery = None
+    if student_id:
+        try:
+            from app.services.mastery_store import update_mastery_from_grade
+            mastery = update_mastery_from_grade(
+                student_id=student_id,
+                skill_tag=(question.get("skill_tag") or ""),
+                grade=base.get("grade_result") or {},
+            ).to_dict()
+        except Exception:
+            mastery = None
+
+    # default next block (no chaining)
+    next_block = {"action": "stop", "streak": 0, "target": target, "reason": "single_mode", "next_question": None}
+
+    if mode == "single":
+        # If recommendation has drill_focus, generate 1 drill
+        from app.skills.registry import SKILL_REGISTRY
+        c = SKILL_REGISTRY.get(question.get("skill_tag"))
+        rec = base.get("recommendation") or {}
+        focus = rec.get("drill_focus")
+        if c and focus:
+            q2 = c.generate_drill(focus, random.Random())
+            next_block = {"action": "continue_drill", "streak": 0, "target": target, "reason": "single_drill", "next_question": q2}
+
+    elif mode == "chain":
+        root = payload.get("root_question") or {}
+        attempts = payload.get("attempts") or []
+        next_block = chain_drill_session(root, attempts, target_streak=target)
+
+    return {
+        "grade_result": base.get("grade_result") or {},
+        "explanation": base.get("explanation"),
+        "recommendation": base.get("recommendation") or {},
+        "next": next_block,
+        "mastery_state": mastery,
+    }
+
+
+def chain_drill_session(root_question: dict, attempts: list[dict], target_streak: int = 3, rng=None) -> dict:
+    """
+    Stateless drill chaining:
+    - attempts: [{"question": dict, "student_answer": str}, ...]
+    Returns action + next_question if needed.
+    """
+    import random
+    from app.skills.registry import SKILL_REGISTRY
+
+    rng = rng or random.Random()
+
+    contract = SKILL_REGISTRY.get(root_question.get("skill_tag"))
+    if not contract:
+        return {"action": "stop", "streak": 0, "target": target_streak, "next_question": None, "reason": "no_contract"}
+
+    # Determine drill focus from grading root (or last attempt if you prefer)
+    # Use root's grade to set the drill_focus once.
+    root_grade = grade_student_answer(root_question, str(root_question.get("answer") or root_question.get("correct_answer") or ""))
+    # If root has no answer fields, fallback to using first attempt grading to infer focus.
+    recommendation = contract.recommend_next(root_grade)
+    drill_focus = recommendation.get("drill_focus")
+
+    # If root recommendation doesn't produce drill_focus, infer from last attempt:
+    if not drill_focus and attempts:
+        last_q = attempts[-1].get("question") or {}
+        last_contract = SKILL_REGISTRY.get(last_q.get("skill_tag")) or contract
+        last_grade = grade_student_answer(last_q, str(attempts[-1].get("student_answer", "")))
+        rec2 = last_contract.recommend_next(last_grade)
+        drill_focus = rec2.get("drill_focus")
+
+    if not drill_focus:
+        return {"action": "stop", "streak": 0, "target": target_streak, "next_question": None, "reason": "no_drill_focus"}
+
+    # Compute current consecutive correct streak on attempts
+    streak = 0
+    for a in reversed(attempts):
+        q = a.get("question") or {}
+        ans = str(a.get("student_answer", ""))
+        res = grade_student_answer(q, ans)
+        if res.get("is_correct") is True:
+            streak += 1
+        else:
+            break
+
+    # If streak complete → escalate to full problem
+    if streak >= target_streak:
+        nextq = contract.generate_drill("reinforce_full_problem", rng)
+        return {
+            "action": "escalate",
+            "streak": streak,
+            "target": target_streak,
+            "next_question": nextq,
+            "reason": "streak_complete",
+        }
+
+    # Otherwise continue isolation drill
+    nextq = contract.generate_drill(drill_focus, rng)
+    return {
+        "action": "continue_drill",
+        "streak": streak,
+        "target": target_streak,
+        "next_question": nextq,
+        "reason": "need_more_correct",
+    }
+
+
 def verify_visual_contract(questions: list[dict]) -> str:
     """Return a table verifying the visual rendering contract for each question."""
     header = (
@@ -1332,11 +1577,13 @@ def run_slot_pipeline(
         directive = plan_directives[i]
         _skill_tag = directive.get("skill_tag", "")
 
-        # Contract-owned variant injection (addition carry)
+        # Contract-owned variant injection (generic)
         _contract = _SR.get(_skill_tag)
-        if _contract and _skill_tag == "column_add_with_carry" and directive.get("carry_required"):
-            chosen_variants.append(_contract.build_variant(rng))
-            continue
+        if _contract:
+            variant = _contract.build_variant(rng, directive)
+            if variant:
+                chosen_variants.append(variant)
+                continue
 
         if slot_type == "application":
             # Avoid both cross-worksheet and within-worksheet repeats
@@ -1484,6 +1731,13 @@ def run_slot_pipeline(
                 (_q.get("visual_spec") or {}).get("model_id"),
                 _q.get("visual_model_ref"),
             )
+
+    # 8d-post. Contract slot materialization
+    for i, q in enumerate(questions):
+        _c = SKILL_REGISTRY.get(q.get("skill_tag"))
+        if _c:
+            q = _c.build_slots(q)
+            questions[i] = q
 
     # 8e-pre. Skill contract validation hook (repair → revalidate → regen)
     from app.skills.registry import SKILL_REGISTRY
