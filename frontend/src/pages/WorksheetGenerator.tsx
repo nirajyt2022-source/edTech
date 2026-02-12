@@ -65,6 +65,14 @@ interface Worksheet {
   questions: Question[]
 }
 
+interface GenerateResponse {
+  worksheet: Worksheet
+  worksheets?: Worksheet[]
+  generation_time_ms?: number
+  warnings?: unknown
+  verdict?: string
+}
+
 interface SyllabusTopic {
   name: string
   subtopics?: string[]
@@ -115,6 +123,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [downloadingPdfType, setDownloadingPdfType] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [worksheet, setWorksheet] = useState<Worksheet | null>(null)
+  const [worksheets, setWorksheets] = useState<Worksheet[] | null>(null)
+  const [activeIdx, setActiveIdx] = useState(0)
   const [error, setError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
@@ -366,6 +376,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
     setLoading(true)
     setError('')
     setWorksheet(null)
+    setWorksheets(null)
+    setActiveIdx(0)
 
     const requestVersion = selectionVersionRef.current
 
@@ -379,7 +391,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
           : topic
 
     try {
-      const response = await apiV1WithFallback<{ worksheet: typeof worksheet }>('post', '/api/worksheets/generate', {
+      const response = await apiV1WithFallback<GenerateResponse>('post', '/api/worksheets/generate', {
         board,
         grade_level: grade,
         subject: syllabus?.subject || subject,
@@ -395,7 +407,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       })
       // Discard stale result if selections changed during request
       if (selectionVersionRef.current !== requestVersion) return
-      setWorksheet(response.data.worksheet)
+      const wsList = response.data.worksheets?.length ? response.data.worksheets : [response.data.worksheet]
+      setWorksheets(wsList)
+      setActiveIdx(0)
+      setWorksheet(wsList[0])
       setMobileView('preview')
 
       // Track usage for free tier
@@ -972,6 +987,25 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                           </span>
                         ))}
                       </div>
+
+                      {/* Multi-skill tabs */}
+                      {worksheets && worksheets.length > 1 && (
+                        <div className="flex flex-wrap gap-1.5 print:hidden">
+                          {worksheets.map((ws, i) => (
+                            <button
+                              key={i}
+                              onClick={() => { setActiveIdx(i); setWorksheet(ws) }}
+                              className={`px-3 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                i === activeIdx
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : 'bg-secondary/50 text-muted-foreground border-border/50 hover:bg-secondary'
+                              }`}
+                            >
+                              {ws.topic || ws.title}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-2 print:hidden shrink-0">

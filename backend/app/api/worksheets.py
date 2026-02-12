@@ -105,6 +105,7 @@ class WorksheetGenerationResponse(BaseModel):
     generation_time_ms: int
     warnings: dict | None = None
     verdict: str = "ok"
+    worksheets: list[Worksheet] | None = None
 
 
 class GradeRequest(BaseModel):
@@ -1343,7 +1344,94 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
     start_time = datetime.now()
 
     try:
-        # ── Focus skill inference (v7.0) ──
+        # ── v1.3: Multi-skill bundle ──
+        if request.skills and len(request.skills) >= 2:
+            # Validate all skill topics are non-empty
+            for sk in request.skills:
+                if not sk or not sk.strip():
+                    raise HTTPException(status_code=422, detail="skill_topic must not be empty")
+
+            k = len(request.skills)
+            n = request.num_questions
+            base, rem = divmod(n, k)
+            per_skill = [base + (1 if i < rem else 0) for i in range(k)]
+
+            constraints_dict = request.constraints.model_dump() if request.constraints else None
+            visuals_only = request.visuals_only or request.problem_style == "visual"
+            min_visual_ratio = request.min_visual_ratio
+            if min_visual_ratio is None and visuals_only:
+                min_visual_ratio = 0.8
+
+            bundled: list[Worksheet] = []
+            all_warnings: list[str] = []
+
+            for idx, skill_topic in enumerate(request.skills):
+                q_count = per_skill[idx]
+                if q_count < 1:
+                    continue
+
+                worksheet_plan = None
+                if request.mix_recipe or any(kw in skill_topic.lower() for kw in ("3-digit", "3 digit", "addition", "subtraction")):
+                    recipe_dicts = [item.model_dump() for item in request.mix_recipe] if request.mix_recipe else None
+                    worksheet_plan = build_worksheet_plan(
+                        q_count=q_count,
+                        mix_recipe=recipe_dicts,
+                        constraints=constraints_dict,
+                    )
+
+                meta, slot_questions = run_slot_pipeline(
+                    client=client,
+                    grade=request.grade_level,
+                    subject=request.subject,
+                    topic=skill_topic,
+                    q_count=q_count,
+                    difficulty=request.difficulty,
+                    region=request.region,
+                    language=request.language,
+                    worksheet_plan=worksheet_plan,
+                    constraints=constraints_dict,
+                )
+
+                hydrate_visuals(slot_questions, visuals_only=visuals_only)
+                if visuals_only:
+                    enforce_visuals_only(slot_questions, min_ratio=min_visual_ratio or 0.8)
+
+                questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+                common_mistakes = meta.get("common_mistakes") or []
+
+                ws = Worksheet(
+                    title=f"{meta.get('micro_skill', skill_topic)} - Practice",
+                    grade=request.grade_level,
+                    subject=request.subject,
+                    topic=skill_topic,
+                    difficulty=meta.get("difficulty", request.difficulty).capitalize(),
+                    language=request.language,
+                    questions=questions,
+                    skill_focus=meta.get("skill_focus", ""),
+                    common_mistake=common_mistakes[0] if common_mistakes else "",
+                    parent_tip=meta.get("parent_tip", ""),
+                )
+                bundled.append(ws)
+
+                raw_warnings = meta.pop("_warnings", None) or {}
+                q_warns = raw_warnings.get("question_level") or []
+                ws_warns = raw_warnings.get("worksheet_level") or []
+                all_warnings.extend(f"[{skill_topic}] {w}" for w in q_warns + ws_warns)
+
+            end_time = datetime.now()
+            generation_time_ms = int((end_time - start_time).total_seconds() * 1000)
+
+            return WorksheetGenerationResponse(
+                worksheet=bundled[0],
+                worksheets=bundled,
+                generation_time_ms=generation_time_ms,
+                warnings={"bundle": all_warnings, "skills": request.skills, "counts": per_skill} if all_warnings else None,
+                verdict="best_effort" if all_warnings else "ok",
+            )
+
+        # ── Single-skill path ──
+
+        # Focus skill inference (v7.0)
         focus_skill = request.focus_skill
         if not focus_skill and request.skills:
             for s in request.skills:
@@ -1422,10 +1510,10 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
 
         common_mistakes = meta.get("common_mistakes") or []
         worksheet = Worksheet(
-            title=f"{meta.get('micro_skill', request.topic)} - Practice",
+            title=f"{meta.get('micro_skill', effective_topic)} - Practice",
             grade=request.grade_level,
             subject=request.subject,
-            topic=request.topic,
+            topic=effective_topic,
             difficulty=meta.get("difficulty", request.difficulty).capitalize(),
             language=request.language,
             questions=questions,

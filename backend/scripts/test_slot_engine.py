@@ -2333,6 +2333,91 @@ def test_answer_normalizers():
     return all_pass
 
 
+def test_multi_skill_bundle():
+    """Test multi-skill bundle response model and question splitting."""
+    print("\n" + "=" * 60)
+    print("37. MULTI-SKILL BUNDLE TEST")
+    print("=" * 60)
+
+    from app.api.worksheets import (
+        WorksheetGenerationResponse, Worksheet, Question,
+    )
+
+    all_pass = True
+
+    # ── Case 1: Response model accepts worksheets field
+    q1 = Question(id="q1", type="short_answer", text="456 + 279 = ?", correct_answer="735")
+    q2 = Question(id="q2", type="short_answer", text="5 x 6 = ?", correct_answer="30")
+    ws1 = Worksheet(
+        title="Addition - Practice", grade="Class 3", subject="Maths",
+        topic="Addition and subtraction (3-digit)", difficulty="Medium", language="English",
+        questions=[q1],
+    )
+    ws2 = Worksheet(
+        title="Multiplication - Practice", grade="Class 3", subject="Maths",
+        topic="Multiplication tables (2-10)", difficulty="Medium", language="English",
+        questions=[q2],
+    )
+    resp = WorksheetGenerationResponse(
+        worksheet=ws1, worksheets=[ws1, ws2], generation_time_ms=500,
+    )
+    ok = resp.worksheets is not None and len(resp.worksheets) == 2
+    print(f"  Response with worksheets field: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 2: Backward compat — worksheets=None still works
+    resp2 = WorksheetGenerationResponse(worksheet=ws1, generation_time_ms=100)
+    ok = resp2.worksheets is None and resp2.worksheet.topic == "Addition and subtraction (3-digit)"
+    print(f"  Backward compat (no worksheets): {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 3: worksheet == worksheets[0] (bundle contract)
+    ok = resp.worksheet.topic == resp.worksheets[0].topic
+    print(f"  worksheet == worksheets[0]: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 4: Each worksheet has distinct topic
+    topics = [w.topic for w in resp.worksheets]
+    ok = len(set(topics)) == 2
+    print(f"  Distinct topics per worksheet: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 5: Question splitting — deterministic base+rem distribution
+    n, k = 10, 3
+    base, rem = divmod(n, k)
+    per_skill = [base + (1 if i < rem else 0) for i in range(k)]
+    ok = per_skill == [4, 3, 3] and sum(per_skill) == n
+    print(f"  Question split 10/3 = [4,3,3]: {'PASS' if ok else f'FAIL ({per_skill})'}")
+    if not ok:
+        all_pass = False
+
+    n2, k2 = 10, 2
+    base2, rem2 = divmod(n2, k2)
+    per_skill2 = [base2 + (1 if i < rem2 else 0) for i in range(k2)]
+    ok = per_skill2 == [5, 5] and sum(per_skill2) == n2
+    print(f"  Question split 10/2 = [5,5]: {'PASS' if ok else f'FAIL ({per_skill2})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 6: JSON round-trip
+    import json
+    d = resp.model_dump()
+    try:
+        json.dumps(d)
+        ok = True
+    except (TypeError, ValueError):
+        ok = False
+    print(f"  JSON round-trip with worksheets: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -2591,6 +2676,7 @@ if __name__ == "__main__":
     p34 = test_v1_generate_response_shape()
     p35 = test_enforce_slot_counts()
     p36 = test_answer_normalizers()
+    p37 = test_multi_skill_bundle()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -2631,6 +2717,7 @@ if __name__ == "__main__":
     print(f"  V1 response shape:   {'PASS' if p34 else 'FAIL'}")
     print(f"  Enforce slot counts: {'PASS' if p35 else 'FAIL'}")
     print(f"  Answer normalizers:  {'PASS' if p36 else 'FAIL'}")
+    print(f"  Multi-skill bundle: {'PASS' if p37 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()
