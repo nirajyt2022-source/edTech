@@ -72,6 +72,13 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "estimation": ("representation", "estimation"),
     "error_spot": ("error_detection", "error_spot"),
     "thinking": ("thinking", "thinking"),
+    # Fractions (halves/quarters)
+    "fraction_identify_half": ("recognition", "place_value"),
+    "fraction_identify_quarter": ("recognition", "place_value"),
+    "fraction_of_number_half": ("application", "word_problem"),
+    "fraction_of_number_quarter": ("application", "word_problem"),
+    "fraction_of_shape_shaded": ("representation", "place_value"),
+    "fraction_word_problem_half_quarter": ("application", "word_problem"),
 }
 
 # Default mix recipe for 3-digit addition/subtraction (base 20, scaled for other counts)
@@ -82,6 +89,65 @@ DEFAULT_MIX_RECIPE_20: list[dict] = [
     {"skill_tag": "error_spot", "count": 3, "require_student_answer": True},
     {"skill_tag": "thinking", "count": 3},
 ]
+
+# ── Topic Profiles ──────────────────────────────────────────
+
+TOPIC_PROFILES: dict[str, dict] = {
+    "Fractions (halves, quarters)": {
+        "allowed_skill_tags": [
+            "fraction_identify_half",
+            "fraction_identify_quarter",
+            "fraction_of_number_half",
+            "fraction_of_number_quarter",
+            "fraction_of_shape_shaded",
+            "fraction_word_problem_half_quarter",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "thinking"],
+        "disallowed_keywords": [
+            "+", "add", "added", "sum", "total", "carry", "regroup",
+            "base ten", "column form", "column", "borrow", "subtract",
+            "change", "rupees", "dirhams", "aed",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "allowed_visual_types": ["fraction_shapes", None],
+        "max_numbers": 2,
+        "default_recipe": [
+            {"skill_tag": "fraction_identify_half", "count": 4},
+            {"skill_tag": "fraction_identify_quarter", "count": 3},
+            {"skill_tag": "fraction_of_number_half", "count": 4},
+            {"skill_tag": "fraction_of_number_quarter", "count": 3},
+            {"skill_tag": "fraction_of_shape_shaded", "count": 3},
+            {"skill_tag": "fraction_word_problem_half_quarter", "count": 3},
+        ],
+    },
+}
+
+
+def normalize_topic(topic: str) -> str:
+    return (topic or "").strip()
+
+
+def get_topic_profile(topic: str) -> dict | None:
+    return TOPIC_PROFILES.get(normalize_topic(topic))
+
+
+def _apply_topic_profile(directives: list[dict], profile: dict) -> list[dict]:
+    """Override directives with topic-specific constraints."""
+    skills = profile["allowed_skill_tags"]
+    allowed_skills = set(skills)
+    slot_types = profile.get("allowed_slot_types", SLOT_ORDER)
+    allowed_slots = set(slot_types)
+    out = []
+    for i, d in enumerate(directives):
+        nd = dict(d)
+        if nd.get("skill_tag", "") not in allowed_skills:
+            nd["skill_tag"] = skills[i % len(skills)]
+        if nd.get("slot_type", "") not in allowed_slots:
+            nd["slot_type"] = slot_types[i % len(slot_types)]
+        nd["carry_required"] = False
+        nd["allow_operations"] = []
+        out.append(nd)
+    return out
 
 
 # ════════════════════════════════════════════════════════════
@@ -382,14 +448,20 @@ def build_worksheet_plan(
     q_count: int,
     mix_recipe: list[dict] | None = None,
     constraints: dict | None = None,
+    topic: str = "",
 ) -> list[dict]:
     """Build a deterministic worksheet plan from mix_recipe or defaults.
 
     Returns list of slot directives, each with:
-      slot_type, format_hint, carry_required, require_student_answer, allow_operations
+      slot_type, format_hint, skill_tag, carry_required, require_student_answer, allow_operations
     """
+    profile = get_topic_profile(topic)
+
     if mix_recipe is None:
-        recipe = _scale_recipe(DEFAULT_MIX_RECIPE_20, q_count)
+        if profile and "default_recipe" in profile:
+            recipe = _scale_recipe(profile["default_recipe"], q_count)
+        else:
+            recipe = _scale_recipe(DEFAULT_MIX_RECIPE_20, q_count)
     else:
         total = sum(item.get("count", 0) for item in mix_recipe)
         recipe = mix_recipe if total == q_count else _scale_recipe(mix_recipe, q_count)
@@ -421,6 +493,9 @@ def build_worksheet_plan(
                 )
             plan.append(directive)
 
+    if profile:
+        plan = _apply_topic_profile(plan, profile)
+
     return plan
 
 
@@ -438,6 +513,18 @@ def _build_slot_instruction(
     chosen_variant contains the picked context/error/style for this slot.
     directive (optional) carries plan-level overrides (carry_required, format_hint, etc).
     """
+    # Topic-specific short instructions (token-efficient)
+    _skill_tag = (directive or {}).get("skill_tag", "")
+    if _skill_tag.startswith("fraction_"):
+        _fmt = (directive or {}).get("format_hint", "word_problem")
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Fractions (halves/quarters only). skill: {_skill_tag}. "
+            "Do NOT use addition, subtraction, +, -, carry, regroup, "
+            "column, money, time. "
+            "About halves (1/2) or quarters (1/4) of shapes or numbers."
+        )
+
     base = ""
 
     if slot_type == "recognition":
@@ -667,6 +754,42 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
     return issues
 
 
+def violates_topic_purity(q: dict, profile: dict) -> list[str]:
+    """Check if a question violates topic purity constraints."""
+    reasons: list[str] = []
+    text = (q.get("question_text") or "").lower()
+
+    # Visual disallow
+    vt = (q.get("visual_spec") or {}).get("model_id", "").lower()
+    for dv in profile.get("disallowed_visual_types", []):
+        if vt and vt == dv.lower():
+            reasons.append(f"disallowed_visual:{vt}")
+            break
+
+    # Keyword disallow
+    for kw in profile.get("disallowed_keywords", []):
+        if kw.lower() in text:
+            reasons.append(f"disallowed_kw:{kw}")
+            break
+
+    # Skill tag must exist and be in allowed set
+    st = (q.get("skill_tag") or "").strip()
+    if not st:
+        reasons.append("empty_skill_tag")
+    else:
+        allowed = set(profile.get("allowed_skill_tags", []))
+        if allowed and st not in allowed:
+            reasons.append(f"skill_tag_not_allowed:{st}")
+
+    return reasons
+
+
+def normalize_q_text(q: dict) -> str:
+    """Collapse whitespace for duplicate detection."""
+    s = (q.get("question_text") or "").strip().lower()
+    return " ".join(s.split())
+
+
 # ════════════════════════════════════════════════════════════
 # H-bis) Visual Hydration & Verification
 # ════════════════════════════════════════════════════════════
@@ -847,27 +970,6 @@ def enrich_error_spots(questions: list[dict]) -> None:
             spec = q.get("visual_spec")
             if spec:
                 spec["student_answer"] = int(wrong) if not isinstance(wrong, int) else wrong
-
-
-def enforce_carry_in_visuals(questions: list[dict], rng: random.Random) -> None:
-    """Post-hydration: ensure all BASE_TEN_REGROUPING visuals have carry/borrow."""
-    for q in questions:
-        spec = q.get("visual_spec")
-        if not spec or spec.get("model_id") != "BASE_TEN_REGROUPING":
-            continue
-        nums = spec.get("numbers", [])
-        if len(nums) < 2:
-            continue
-        a, b = nums[0], nums[1]
-        op = spec.get("operation", "addition")
-        if op == "addition" and not has_carry(a, b):
-            a, b = make_carry_pair(rng, "addition")
-            spec["numbers"] = [a, b]
-            logger.info("enforce_carry_in_visuals: replaced non-carry pair with %d+%d", a, b)
-        elif op == "subtraction" and not has_borrow(a, b):
-            a, b = make_carry_pair(rng, "subtraction")
-            spec["numbers"] = [a, b]
-            logger.info("enforce_carry_in_visuals: replaced non-borrow pair with %d-%d", a, b)
 
 
 def verify_visual_contract(questions: list[dict]) -> str:
@@ -1114,6 +1216,48 @@ def _extract_avoid_items(q: dict) -> list[str]:
     return items
 
 
+def _regen_question_for_topic(
+    client, directive: dict, micro_skill: str,
+    grade: str, subject: str, topic: str,
+    difficulty: str, region: str, language: str,
+    avoid_texts: set[str], max_attempts: int = 4,
+) -> dict | None:
+    """Token-efficient regen: one question at a time for topic purity."""
+    profile = get_topic_profile(topic)
+    for _ in range(max_attempts):
+        slot_instruction = _build_slot_instruction(
+            directive.get("slot_type", "application"), variant=None, directive=directive,
+        )
+        try:
+            q = generate_question(
+                client, grade, subject, micro_skill,
+                directive.get("slot_type", "application"),
+                directive.get("difficulty", difficulty),
+                list(avoid_texts)[-20:], region, language,
+                slot_instruction=slot_instruction,
+            )
+        except Exception:
+            continue
+
+        q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or directive.get("slot_type", "")
+        q["slot_type"] = directive.get("slot_type", q.get("slot_type", ""))
+        q["difficulty"] = directive.get("difficulty", difficulty)
+
+        hydrate_visuals([q])
+
+        if profile:
+            reasons = violates_topic_purity(q, profile)
+            if reasons:
+                continue
+
+        nt = normalize_q_text(q)
+        if nt in avoid_texts:
+            continue
+
+        return q
+    return None
+
+
 def run_slot_pipeline(
     client,
     grade: str,
@@ -1154,12 +1298,18 @@ def run_slot_pipeline(
         meta["difficulty"] = "Medium"
 
     # 2. Get slot plan (plan directives override simple slot_plan)
+    _topic_profile = get_topic_profile(topic)
     if worksheet_plan:
-        slot_plan = [d["slot_type"] for d in worksheet_plan]
-        plan_directives = worksheet_plan
+        plan_directives = list(worksheet_plan)
+        if _topic_profile:
+            plan_directives = _apply_topic_profile(plan_directives, _topic_profile)
+        slot_plan = [d["slot_type"] for d in plan_directives]
     else:
-        slot_plan = get_slot_plan(q_count)
-        plan_directives = [{"slot_type": st} for st in slot_plan]
+        if _topic_profile:
+            plan_directives = build_worksheet_plan(q_count, topic=topic)
+        else:
+            plan_directives = [{"slot_type": st} for st in get_slot_plan(q_count)]
+        slot_plan = [d["slot_type"] for d in plan_directives]
     logger.info("Slot plan (%d): %s", len(slot_plan), dict(Counter(slot_plan)))
 
     # 3. Load history and build avoid state
@@ -1177,8 +1327,16 @@ def run_slot_pipeline(
     used_error_ids_this_ws: list[str] = []
     used_thinking_styles_this_ws: list[str] = []
 
+    from app.skills.registry import SKILL_REGISTRY as _SR
     for i, slot_type in enumerate(slot_plan):
         directive = plan_directives[i]
+        _skill_tag = directive.get("skill_tag", "")
+
+        # Contract-owned variant injection (addition carry)
+        _contract = _SR.get(_skill_tag)
+        if _contract and _skill_tag == "column_add_with_carry" and directive.get("carry_required"):
+            chosen_variants.append(_contract.build_variant(rng))
+            continue
 
         if slot_type == "application":
             # Avoid both cross-worksheet and within-worksheet repeats
@@ -1208,7 +1366,7 @@ def run_slot_pipeline(
             chosen_variants.append({"style": style})
 
         elif slot_type == "recognition" and directive.get("carry_required"):
-            # Deterministic carry pair for column_setup
+            # Deterministic carry pair for non-addition (subtraction etc.)
             ops = directive.get("allow_operations", ["addition", "subtraction"])
             op = rng.choice(ops)
             a, b = make_carry_pair(rng, op)
@@ -1312,32 +1470,6 @@ def run_slot_pipeline(
     # 8b. Hydrate visuals (deterministic, no LLM)
     questions = hydrate_visuals(questions)
 
-    # 8c. Carry enforcement in visuals (when constraints require it)
-    if constraints.get("carry_required"):
-        enforce_carry_in_visuals(questions, rng)
-
-    # 8c-bis. Per-directive carry verification & silent repair
-    for idx, q in enumerate(questions):
-        d = plan_directives[idx] if idx < len(plan_directives) else {}
-        if not d.get("carry_required"):
-            continue
-        spec = q.get("visual_spec")
-        if not spec or spec.get("model_id") != "BASE_TEN_REGROUPING":
-            continue
-        nums = spec.get("numbers", [])
-        if len(nums) < 2:
-            continue
-        a, b = nums[0], nums[1]
-        op = spec.get("operation", "addition")
-        if op == "addition" and not has_carry(a, b):
-            a, b = make_carry_pair(rng, "addition")
-            spec["numbers"] = [a, b]
-            logger.info("Directive carry repair q%d: replaced with %d+%d", idx + 1, a, b)
-        elif op == "subtraction" and not has_borrow(a, b):
-            a, b = make_carry_pair(rng, "subtraction")
-            spec["numbers"] = [a, b]
-            logger.info("Directive carry repair q%d: replaced with %d-%d", idx + 1, a, b)
-
     # 8d. Enrich error_spot questions with student_answer
     enrich_error_spots(questions)
 
@@ -1352,6 +1484,63 @@ def run_slot_pipeline(
                 (_q.get("visual_spec") or {}).get("model_id"),
                 _q.get("visual_model_ref"),
             )
+
+    # 8e-pre. Skill contract validation hook (repair → revalidate → regen)
+    from app.skills.registry import SKILL_REGISTRY
+    for i, q in enumerate(questions):
+        contract = SKILL_REGISTRY.get(q.get("skill_tag"))
+        if contract:
+            c_issues = contract.validate(q)
+            if c_issues:
+                logger.warning("Contract q%d (%s): %s — repairing", i + 1, q.get("skill_tag"), c_issues)
+                q = contract.repair(q, rng)
+                q = hydrate_visuals([q])[0]
+                if contract.validate(q):
+                    logger.warning("Contract q%d still invalid after repair — regenerating", i + 1)
+                    d = plan_directives[i] if i < len(plan_directives) else {}
+                    newq = _regen_question_for_topic(
+                        client=client,
+                        directive=d,
+                        micro_skill=micro_skill,
+                        grade=grade,
+                        subject=subject,
+                        topic=topic,
+                        difficulty=difficulty,
+                        region=region,
+                        language=language,
+                        avoid_texts=set(),
+                        max_attempts=3,
+                    )
+                    if newq:
+                        newq["id"] = i + 1
+                        q = newq
+                questions[i] = q
+
+    # 8e. Topic purity enforcement + duplicate removal
+    seen_texts: set[str] = set()
+    for idx2, q in enumerate(questions):
+        reasons: list[str] = []
+        if _topic_profile:
+            reasons.extend(violates_topic_purity(q, _topic_profile))
+        nt = normalize_q_text(q)
+        if nt in seen_texts:
+            reasons.append("duplicate")
+        if reasons:
+            logger.warning("Purity/dedup q%d: %s — regenerating", idx2 + 1, reasons)
+            d = plan_directives[idx2] if idx2 < len(plan_directives) else {}
+            new_q = _regen_question_for_topic(
+                client, d, micro_skill, grade, subject, topic,
+                difficulty, region, language, seen_texts,
+            )
+            if new_q:
+                new_q["id"] = idx2 + 1
+                questions[idx2] = new_q
+                seen_texts.add(normalize_q_text(new_q))
+            else:
+                logger.warning("Regen failed for q%d, keeping original", idx2 + 1)
+                seen_texts.add(nt)
+        else:
+            seen_texts.add(nt)
 
     # 9. Update history
     record = build_worksheet_record(

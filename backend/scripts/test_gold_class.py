@@ -24,7 +24,6 @@ from app.services.slot_engine import (
     hydrate_visuals,
     enforce_visuals_only,
     enrich_error_spots,
-    enforce_carry_in_visuals,
     has_carry,
     has_borrow,
     make_carry_pair,
@@ -33,7 +32,12 @@ from app.services.slot_engine import (
     CONTEXT_BANK,
     NAME_BANKS,
     THINKING_STYLE_BANK,
+    TOPIC_PROFILES,
+    get_topic_profile,
+    violates_topic_purity,
+    normalize_q_text,
 )
+from app.skills.registry import SKILL_REGISTRY
 
 
 # ════════════════════════════════════════════════════════════
@@ -280,14 +284,124 @@ def run_payload(
         enforce_visuals_only(questions, min_ratio=min_visual_ratio)
     if constraints.get("carry_required"):
         rng_carry = random.Random(seed + 1)
-        enforce_carry_in_visuals(questions, rng_carry)
+        for q in questions:
+            contract = SKILL_REGISTRY.get(q.get("skill_tag"))
+            if contract:
+                if contract.validate(q):
+                    contract.repair(q, rng_carry)
     enrich_error_spots(questions)
 
     return _analyze(questions, label)
 
 
 # ════════════════════════════════════════════════════════════
-# 6 Test Payloads
+# Fractions topic purity test (deterministic, no LLM)
+# ════════════════════════════════════════════════════════════
+
+def test_fractions_topic_purity() -> bool:
+    """Test Fractions topic profile, plan building, and purity validation."""
+    issues: list[str] = []
+    topic = "Fractions (halves, quarters)"
+
+    # 1. Profile exists
+    profile = get_topic_profile(topic)
+    if not profile:
+        print("\n  FAIL: no profile for 'Fractions (halves, quarters)'")
+        return False
+
+    # 2. Plan builds with fractions recipe (10Q)
+    plan = build_worksheet_plan(10, topic=topic)
+    if len(plan) != 10:
+        issues.append(f"plan length {len(plan)}, expected 10")
+
+    # 3. All directives have topic-correct skill_tags
+    allowed_tags = set(profile["allowed_skill_tags"])
+    for d in plan:
+        if not d.get("skill_tag"):
+            issues.append("empty skill_tag in directive")
+        elif d["skill_tag"] not in allowed_tags:
+            issues.append(f"non-fractions skill_tag: {d['skill_tag']}")
+        if d.get("carry_required"):
+            issues.append("carry_required in fractions directive")
+        if d.get("allow_operations"):
+            issues.append(f"operations not empty: {d.get('allow_operations')}")
+
+    # 4. Purity catches off-topic questions
+    bad_qs = [
+        {"question_text": "Write 345 + 278 in column form.", "skill_tag": "column_setup"},
+        {"question_text": "Aarav has 100 rupees at the shop.", "skill_tag": "word_problem"},
+        {"question_text": "Subtract 456 from 789.", "skill_tag": "word_problem"},
+        {"question_text": "Add 123 and 456.", "skill_tag": "column_setup"},
+    ]
+    bad_caught = 0
+    for bq in bad_qs:
+        reasons = violates_topic_purity(bq, profile)
+        if reasons:
+            bad_caught += 1
+        else:
+            issues.append(f"off-topic not caught: {bq['question_text'][:30]}")
+
+    # 5. Clean fractions questions pass
+    good_qs = [
+        {"question_text": "What is half of 12?", "skill_tag": "fraction_of_number_half"},
+        {"question_text": "Shade one quarter of this circle.", "skill_tag": "fraction_of_shape_shaded"},
+        {"question_text": "Priya ate 1/4 of a pizza. How much is left?",
+         "skill_tag": "fraction_word_problem_half_quarter"},
+        {"question_text": "Which shape shows 1/2 shaded?", "skill_tag": "fraction_identify_half"},
+    ]
+    good_passed = 0
+    for gq in good_qs:
+        reasons = violates_topic_purity(gq, profile)
+        if not reasons:
+            good_passed += 1
+        else:
+            issues.append(f"clean fraction flagged: {gq['skill_tag']} -> {reasons}")
+
+    # 6. Duplicate detection via normalize
+    n1 = normalize_q_text({"question_text": "What is half of 12?"})
+    n2 = normalize_q_text({"question_text": "What is  half  of  12?"})
+    if n1 != n2:
+        issues.append("duplicate normalization failed")
+
+    # 7. No base_ten_regrouping visuals in fractions plan
+    # (Fractions questions shouldn't trigger hydration to BASE_TEN_REGROUPING)
+    frac_qs = [
+        {"id": i + 1, "slot_type": d["slot_type"], "skill_tag": d["skill_tag"],
+         "difficulty": "medium", "pictorial_elements": [],
+         "question_text": f"What is half of {(i + 1) * 4}?",
+         "format": "place_value", "answer": str((i + 1) * 2)}
+        for i, d in enumerate(plan)
+    ]
+    hydrate_visuals(frac_qs)
+    btr_count = sum(
+        1 for q in frac_qs
+        if (q.get("visual_spec") or {}).get("model_id") == "BASE_TEN_REGROUPING"
+    )
+    if btr_count > 0:
+        issues.append(f"{btr_count} fractions questions got BASE_TEN_REGROUPING visual")
+
+    # 8. Heuristic: plan skill_tags mention half/quarter
+    frac_tagged = [d for d in plan if "half" in d["skill_tag"] or "quarter" in d["skill_tag"]]
+
+    # Print
+    label = "7. FRACTIONS TOPIC PURITY"
+    print(f"\n{'=' * 60}")
+    print(f"  {label}")
+    print(f"{'=' * 60}")
+    print(f"  Plan directives:       {len(plan)}")
+    print(f"  Fractions skill_tags:  {len(frac_tagged)}/{len(plan)}")
+    print(f"  Off-topic caught:      {bad_caught}/{len(bad_qs)}")
+    print(f"  Clean passed:          {good_passed}/{len(good_qs)}")
+    print(f"  BTR visuals in frac:   {btr_count}")
+    print(f"  Duplicate norm works:  {'yes' if n1 == n2 else 'no'}")
+
+    verdict = "PASS" if not issues else f"WARN: {', '.join(issues)}"
+    print(f"  Verdict:               {verdict}")
+    return len(issues) == 0
+
+
+# ════════════════════════════════════════════════════════════
+# 7 Test Payloads
 # ════════════════════════════════════════════════════════════
 
 def main():
@@ -353,6 +467,9 @@ def main():
         seed=200,
     ))
 
+    # 7. Fractions topic purity
+    results.append(test_fractions_topic_purity())
+
     # Final summary
     labels = [
         "Carry addition",
@@ -361,6 +478,7 @@ def main():
         "Visual stress",
         "Parent trust",
         "Error spot only",
+        "Fractions purity",
     ]
 
     print(f"\n{'=' * 60}")

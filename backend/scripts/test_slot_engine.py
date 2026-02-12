@@ -46,7 +46,6 @@ from app.services.slot_engine import (
     has_borrow,
     make_carry_pair,
     enrich_error_spots,
-    enforce_carry_in_visuals,
     _SKILL_TAG_TO_SLOT,
     DEFAULT_MIX_RECIPE_20,
     _WRONG_ANSWER_RE,
@@ -1024,20 +1023,23 @@ def test_carry_enforcement():
     else:
         print(f"  make_carry_pair(subtraction) x20: PASS")
 
-    # enforce_carry_in_visuals replaces non-carry pairs
+    # ColumnAdditionContract.repair replaces non-carry pairs
+    from app.skills.registry import SKILL_REGISTRY
     rng2 = random.Random(99)
-    questions = [
-        {
-            "slot_type": "recognition",
-            "question_text": "Write 100 + 200 in column form.",
-            "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [100, 200], "operation": "addition"},
-            "representation": "PICTORIAL_MODEL",
-        }
-    ]
-    enforce_carry_in_visuals(questions, rng2)
-    nums = questions[0]["visual_spec"]["numbers"]
+    q_test = {
+        "slot_type": "recognition",
+        "skill_tag": "column_add_with_carry",
+        "question_text": "Write 100 + 200 in column form.",
+        "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [100, 200], "operation": "addition"},
+        "representation": "PICTORIAL_MODEL",
+    }
+    contract = SKILL_REGISTRY["column_add_with_carry"]
+    issues = contract.validate(q_test)
+    if issues:
+        contract.repair(q_test, rng2)
+    nums = q_test["visual_spec"]["numbers"]
     status = "PASS" if has_carry(nums[0], nums[1]) else "FAIL"
-    print(f"  enforce_carry_in_visuals replaced [100,200] with {nums}: {status}")
+    print(f"  contract.repair replaced [100,200] with {nums}: {status}")
     if not has_carry(nums[0], nums[1]):
         all_pass = False
 

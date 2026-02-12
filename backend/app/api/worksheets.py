@@ -14,7 +14,7 @@ from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
 from app.services.slot_engine import (
     run_slot_pipeline, hydrate_visuals, enforce_visuals_only,
-    build_worksheet_plan, enrich_error_spots, enforce_carry_in_visuals,
+    build_worksheet_plan, enrich_error_spots,
 )
 
 router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
