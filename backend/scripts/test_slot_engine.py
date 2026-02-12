@@ -40,6 +40,16 @@ from app.services.slot_engine import (
     pick_name,
     pick_error,
     pick_thinking_style,
+    build_worksheet_plan,
+    _scale_recipe,
+    has_carry,
+    has_borrow,
+    make_carry_pair,
+    enrich_error_spots,
+    enforce_carry_in_visuals,
+    _SKILL_TAG_TO_SLOT,
+    DEFAULT_MIX_RECIPE_20,
+    _WRONG_ANSWER_RE,
     SLOT_PLANS,
     SLOT_ORDER,
     VALID_FORMATS,
@@ -893,6 +903,267 @@ def test_visuals_only_mode():
     return all_pass
 
 
+def test_worksheet_plan_builder():
+    """Test build_worksheet_plan produces correct distribution counts."""
+    print("\n" + "=" * 60)
+    print("11. WORKSHEET PLAN BUILDER TESTS")
+    print("=" * 60)
+
+    all_pass = True
+
+    # Default plan for q=20 should match DEFAULT_MIX_RECIPE_20
+    plan20 = build_worksheet_plan(20)
+    counts = Counter(d["slot_type"] for d in plan20)
+    expected = {"recognition": 6, "application": 4, "representation": 4, "error_detection": 3, "thinking": 3}
+    match = all(counts.get(s, 0) == expected.get(s, 0) for s in expected)
+    status = "PASS" if match and len(plan20) == 20 else "FAIL"
+    print(f"  Default plan q=20: {status}")
+    print(f"    Expected: {expected}")
+    print(f"    Actual:   {dict(counts)}")
+    if not match or len(plan20) != 20:
+        all_pass = False
+
+    # Verify format_hints
+    fmt_counts = Counter(d["format_hint"] for d in plan20)
+    fmt_expected = {"column_setup": 6, "word_problem": 4, "missing_number": 4, "error_spot": 3, "thinking": 3}
+    fmt_match = all(fmt_counts.get(f, 0) == fmt_expected.get(f, 0) for f in fmt_expected)
+    status = "PASS" if fmt_match else "FAIL"
+    print(f"  Format hints q=20: {status}")
+    print(f"    Expected: {fmt_expected}")
+    print(f"    Actual:   {dict(fmt_counts)}")
+    if not fmt_match:
+        all_pass = False
+
+    # Scaled plan for q=10 should total 10
+    plan10 = build_worksheet_plan(10)
+    status = "PASS" if len(plan10) == 10 else "FAIL"
+    print(f"  Default plan q=10: total={len(plan10)}: {status}")
+    if len(plan10) != 10:
+        all_pass = False
+    counts10 = Counter(d["format_hint"] for d in plan10)
+    print(f"    Distribution: {dict(counts10)}")
+
+    # Scaled plan for q=5 should total 5
+    plan5 = build_worksheet_plan(5)
+    status = "PASS" if len(plan5) == 5 else "FAIL"
+    print(f"  Default plan q=5: total={len(plan5)}: {status}")
+    if len(plan5) != 5:
+        all_pass = False
+
+    # Custom mix_recipe
+    custom = [
+        {"skill_tag": "column_setup", "count": 3},
+        {"skill_tag": "word_problem", "count": 2},
+    ]
+    plan_custom = build_worksheet_plan(5, mix_recipe=custom)
+    status = "PASS" if len(plan_custom) == 5 else "FAIL"
+    fmt_custom = Counter(d["format_hint"] for d in plan_custom)
+    print(f"  Custom recipe q=5: total={len(plan_custom)}: {status}")
+    print(f"    Distribution: {dict(fmt_custom)}")
+    if len(plan_custom) != 5:
+        all_pass = False
+
+    # Constraints propagation
+    plan_carry = build_worksheet_plan(10, constraints={"carry_required": True, "allow_operations": ["addition"]})
+    all_carry = all(d.get("carry_required") for d in plan_carry)
+    all_add = all(d.get("allow_operations") == ["addition"] for d in plan_carry)
+    status = "PASS" if all_carry and all_add else "FAIL"
+    print(f"  Constraints propagated: carry={all_carry}, ops={all_add}: {status}")
+    if not all_carry or not all_add:
+        all_pass = False
+
+    return all_pass
+
+
+def test_carry_enforcement():
+    """Test carry helpers and visual carry enforcement."""
+    print("\n" + "=" * 60)
+    print("12. CARRY ENFORCEMENT TESTS")
+    print("=" * 60)
+
+    all_pass = True
+
+    # has_carry / has_borrow
+    status = "PASS" if has_carry(345, 278) else "FAIL"
+    print(f"  has_carry(345, 278): {status}")
+    if not has_carry(345, 278):
+        all_pass = False
+
+    status = "PASS" if not has_carry(100, 200) else "FAIL"
+    print(f"  NOT has_carry(100, 200): {status}")
+    if has_carry(100, 200):
+        all_pass = False
+
+    status = "PASS" if has_borrow(502, 178) else "FAIL"
+    print(f"  has_borrow(502, 178): {status}")
+    if not has_borrow(502, 178):
+        all_pass = False
+
+    status = "PASS" if not has_borrow(999, 111) else "FAIL"
+    print(f"  NOT has_borrow(999, 111): {status}")
+    if has_borrow(999, 111):
+        all_pass = False
+
+    # make_carry_pair always produces carry
+    rng = random.Random(42)
+    for i in range(20):
+        a, b = make_carry_pair(rng, "addition")
+        if not has_carry(a, b):
+            print(f"  FAIL: make_carry_pair addition #{i}: {a}+{b} has no carry")
+            all_pass = False
+            break
+    else:
+        print(f"  make_carry_pair(addition) x20: PASS")
+
+    for i in range(20):
+        a, b = make_carry_pair(rng, "subtraction")
+        if not has_borrow(a, b):
+            print(f"  FAIL: make_carry_pair subtraction #{i}: {a}-{b} has no borrow")
+            all_pass = False
+            break
+    else:
+        print(f"  make_carry_pair(subtraction) x20: PASS")
+
+    # enforce_carry_in_visuals replaces non-carry pairs
+    rng2 = random.Random(99)
+    questions = [
+        {
+            "slot_type": "recognition",
+            "question_text": "Write 100 + 200 in column form.",
+            "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [100, 200], "operation": "addition"},
+            "representation": "PICTORIAL_MODEL",
+        }
+    ]
+    enforce_carry_in_visuals(questions, rng2)
+    nums = questions[0]["visual_spec"]["numbers"]
+    status = "PASS" if has_carry(nums[0], nums[1]) else "FAIL"
+    print(f"  enforce_carry_in_visuals replaced [100,200] with {nums}: {status}")
+    if not has_carry(nums[0], nums[1]):
+        all_pass = False
+
+    return all_pass
+
+
+def test_error_spot_enrichment():
+    """Test error_spot student_answer enrichment."""
+    print("\n" + "=" * 60)
+    print("13. ERROR SPOT ENRICHMENT TESTS")
+    print("=" * 60)
+
+    all_pass = True
+
+    # With student_wrong_answer already set (from variant)
+    questions = [
+        {
+            "id": 1, "slot_type": "error_detection", "format": "error_spot",
+            "question_text": "A student says 345 + 278 = 513. Find the mistake.",
+            "student_wrong_answer": 513,
+            "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [345, 278], "operation": "addition"},
+            "representation": "PICTORIAL_MODEL",
+        },
+    ]
+    enrich_error_spots(questions)
+    sa = questions[0]["visual_spec"].get("student_answer")
+    status = "PASS" if sa == 513 else "FAIL"
+    print(f"  student_answer from variant: {sa}: {status}")
+    if sa != 513:
+        all_pass = False
+
+    # Safety-net extraction from text (no student_wrong_answer field)
+    questions2 = [
+        {
+            "id": 2, "slot_type": "error_detection", "format": "error_spot",
+            "question_text": "A student added 456 + 367 and got 713. What went wrong?",
+            "visual_spec": {"model_id": "BASE_TEN_REGROUPING", "numbers": [456, 367], "operation": "addition"},
+            "representation": "PICTORIAL_MODEL",
+        },
+    ]
+    enrich_error_spots(questions2)
+    sa2 = questions2[0]["visual_spec"].get("student_answer")
+    status = "PASS" if sa2 == 713 else "FAIL"
+    print(f"  student_answer from regex: {sa2}: {status}")
+    if sa2 != 713:
+        all_pass = False
+
+    # Regex pattern tests
+    test_texts = [
+        ("A student says 345 + 278 = 513", 513),
+        ("She got 623 as the answer", 623),
+        ("found the sum to be 420", 420),
+        ("answer is 999", 999),
+    ]
+    for text, expected in test_texts:
+        m = _WRONG_ANSWER_RE.search(text)
+        actual = int(m.group(1)) if m else None
+        ok = actual == expected
+        print(f"  regex '{text[:40]}...': {'PASS' if ok else 'FAIL'} ({actual})")
+        if not ok:
+            all_pass = False
+
+    return all_pass
+
+
+def test_visuals_only_with_ratio():
+    """Test visuals_only yields >= 80% questions with visual_type not null."""
+    print("\n" + "=" * 60)
+    print("14. VISUALS_ONLY RATIO TESTS")
+    print("=" * 60)
+
+    from app.api.worksheets import _slot_to_question
+
+    all_pass = True
+
+    # 10 questions, some deliberately hard-to-hydrate
+    questions = []
+    for i in range(10):
+        if i < 4:
+            questions.append({
+                "id": i + 1, "slot_type": "recognition", "format": "column_setup",
+                "question_text": f"Write {345 + i * 11} + {278 + i * 7} in column form.",
+                "pictorial_elements": [], "answer": str(345 + i * 11 + 278 + i * 7), "difficulty": "easy",
+            })
+        elif i < 6:
+            questions.append({
+                "id": i + 1, "slot_type": "application", "format": "word_problem",
+                "question_text": f"Aarav has {300 + i * 50} books and buys {200 + i * 30} more. How many total?",
+                "pictorial_elements": [], "answer": str(300 + i * 50 + 200 + i * 30), "difficulty": "medium",
+            })
+        elif i < 8:
+            questions.append({
+                "id": i + 1, "slot_type": "representation", "format": "missing_number",
+                "question_text": f"___ + {247 + i * 10} = {578 + i * 20}",
+                "pictorial_elements": [], "answer": str(578 + i * 20 - 247 - i * 10), "difficulty": "medium",
+            })
+        elif i == 8:
+            questions.append({
+                "id": i + 1, "slot_type": "error_detection", "format": "error_spot",
+                "question_text": "A student says 386 + 247 = 523. Find the mistake.",
+                "pictorial_elements": [], "answer": "633", "difficulty": "medium",
+            })
+        else:
+            questions.append({
+                "id": i + 1, "slot_type": "thinking", "format": "thinking",
+                "question_text": "Is 578 + 367 closer to 900 or 1000? Explain.",
+                "pictorial_elements": [], "answer": "closer to 900", "difficulty": "hard",
+            })
+
+    hydrate_visuals(questions, visuals_only=True)
+    enforce_visuals_only(questions)
+
+    api_qs = [_slot_to_question(q, i) for i, q in enumerate(questions)]
+    visual_count = sum(1 for q in api_qs if q.visual_type is not None)
+    total = len(api_qs)
+    ratio = visual_count / total if total else 0
+
+    print(f"  Visual coverage: {visual_count}/{total} ({ratio:.0%})")
+    status = "PASS" if ratio >= 0.8 else "FAIL"
+    print(f"  >= 80%: {status}")
+    if ratio < 0.8:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -1113,7 +1384,7 @@ def test_30_worksheet_diversity():
 # ════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    print("PracticeCraft Slot Engine v6.0 - Regression Tests\n")
+    print("PracticeCraft Slot Engine v7.0 - Regression Tests\n")
 
     p1 = test_slot_plans()
     p2 = test_difficulty_mapping()
@@ -1125,6 +1396,10 @@ if __name__ == "__main__":
     p8 = test_visual_hydration()
     p9 = test_endpoint_visual_propagation()
     p10 = test_visuals_only_mode()
+    p11 = test_worksheet_plan_builder()
+    p12 = test_carry_enforcement()
+    p13 = test_error_spot_enrichment()
+    p14 = test_visuals_only_with_ratio()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -1139,6 +1414,10 @@ if __name__ == "__main__":
     print(f"  Visual hydration:      {'PASS' if p8 else 'FAIL'}")
     print(f"  Endpoint propagation:  {'PASS' if p9 else 'FAIL'}")
     print(f"  Visuals-only mode:     {'PASS' if p10 else 'FAIL'}")
+    print(f"  Plan builder:          {'PASS' if p11 else 'FAIL'}")
+    print(f"  Carry enforcement:     {'PASS' if p12 else 'FAIL'}")
+    print(f"  Error spot enrichment: {'PASS' if p13 else 'FAIL'}")
+    print(f"  Visuals ratio:         {'PASS' if p14 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

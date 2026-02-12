@@ -12,7 +12,10 @@ from openai import OpenAI
 from supabase import create_client
 from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
-from app.services.slot_engine import run_slot_pipeline, hydrate_visuals, enforce_visuals_only
+from app.services.slot_engine import (
+    run_slot_pipeline, hydrate_visuals, enforce_visuals_only,
+    build_worksheet_plan, enrich_error_spots, enforce_carry_in_visuals,
+)
 
 router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
 pdf_service = get_pdf_service()
@@ -22,6 +25,19 @@ client = OpenAI(api_key=settings.openai_api_key)
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
 logger = logging.getLogger("practicecraft.worksheets")
+
+
+class MixRecipeItem(BaseModel):
+    skill_tag: str
+    count: int
+    visual_type: str | None = None
+    require_student_answer: bool = False
+    unique_contexts: bool = False
+
+
+class WorksheetConstraints(BaseModel):
+    carry_required: bool = False
+    allow_operations: list[str] | None = None
 
 
 class WorksheetGenerationRequest(BaseModel):
@@ -37,6 +53,13 @@ class WorksheetGenerationRequest(BaseModel):
     logic_tags: list[str] | None = None
     region: str = "India"
     problem_style: Literal["standard", "visual", "mixed"] = "standard"
+    # v7.0: focused worksheet controls
+    focus_skill: str | None = None
+    support_skills: list[str] | None = None
+    mix_recipe: list[MixRecipeItem] | None = None
+    constraints: WorksheetConstraints | None = None
+    visuals_only: bool = False
+    min_visual_ratio: float | None = None
 
 
 # ──────────────────────────────────────────────
@@ -1278,22 +1301,69 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
     start_time = datetime.now()
 
     try:
+        # ── Focus skill inference (v7.0) ──
+        focus_skill = request.focus_skill
+        if not focus_skill and request.skills:
+            for s in request.skills:
+                if any(kw in s.lower() for kw in ("addition", "subtraction")):
+                    focus_skill = s
+                    break
+            if not focus_skill:
+                focus_skill = request.skills[0]
+
+        # Narrow skills when list is too broad + mixed
+        effective_topic = request.topic
+        if focus_skill:
+            effective_topic = focus_skill
+        if request.skills and len(request.skills) > 2 and request.problem_style == "mixed":
+            logger.info("Narrowing %d skills to focus=%s", len(request.skills), focus_skill)
+
+        # ── Build worksheet plan (v7.0) ──
+        constraints_dict = None
+        if request.constraints:
+            constraints_dict = request.constraints.model_dump()
+
+        worksheet_plan = None
+        use_plan = request.mix_recipe is not None or (
+            focus_skill and any(kw in (focus_skill or "").lower() for kw in ("3-digit", "3 digit", "addition", "subtraction"))
+        )
+        if use_plan:
+            recipe_dicts = None
+            if request.mix_recipe:
+                recipe_dicts = [item.model_dump() for item in request.mix_recipe]
+            worksheet_plan = build_worksheet_plan(
+                q_count=request.num_questions,
+                mix_recipe=recipe_dicts,
+                constraints=constraints_dict,
+            )
+            logger.info(
+                "Worksheet plan: %d slots, recipe=%s",
+                len(worksheet_plan),
+                "custom" if request.mix_recipe else "default",
+            )
+
         meta, slot_questions = run_slot_pipeline(
             client=client,
             grade=request.grade_level,
             subject=request.subject,
-            topic=request.topic,
+            topic=effective_topic,
             q_count=request.num_questions,
             difficulty=request.difficulty,
             region=request.region,
             language=request.language,
+            worksheet_plan=worksheet_plan,
+            constraints=constraints_dict,
         )
 
         # Safety net: ensure visual hydration ran (idempotent if already done)
-        visuals_only = request.problem_style == "visual"
+        visuals_only = request.visuals_only or request.problem_style == "visual"
+        min_visual_ratio = request.min_visual_ratio
+        if min_visual_ratio is None and visuals_only:
+            min_visual_ratio = 0.8
+
         hydrate_visuals(slot_questions, visuals_only=visuals_only)
         if visuals_only:
-            enforce_visuals_only(slot_questions)
+            enforce_visuals_only(slot_questions, min_ratio=min_visual_ratio or 0.8)
 
         # Map slot-engine output → API Question models
         questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]

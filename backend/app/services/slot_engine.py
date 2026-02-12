@@ -63,6 +63,26 @@ _DOCTRINE_WEIGHTS = {
     "error_detection": 0.10, "thinking": 0.10,
 }
 
+# Mapping from mix_recipe skill_tag → (slot_type, format)
+_SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
+    "column_setup": ("recognition", "column_setup"),
+    "place_value": ("recognition", "place_value"),
+    "word_problem": ("application", "word_problem"),
+    "missing_number": ("representation", "missing_number"),
+    "estimation": ("representation", "estimation"),
+    "error_spot": ("error_detection", "error_spot"),
+    "thinking": ("thinking", "thinking"),
+}
+
+# Default mix recipe for 3-digit addition/subtraction (base 20, scaled for other counts)
+DEFAULT_MIX_RECIPE_20: list[dict] = [
+    {"skill_tag": "column_setup", "count": 6},
+    {"skill_tag": "word_problem", "count": 4, "unique_contexts": True},
+    {"skill_tag": "missing_number", "count": 4},
+    {"skill_tag": "error_spot", "count": 3, "require_student_answer": True},
+    {"skill_tag": "thinking", "count": 3},
+]
+
 
 # ════════════════════════════════════════════════════════════
 # B) Variation Banks
@@ -206,6 +226,36 @@ for _a, _b in CARRY_PAIRS:
 del _a, _b, _correct, _tag, _wrong
 
 
+def has_carry(a: int, b: int) -> bool:
+    """Check if a + b requires carrying in ones or tens column."""
+    return (a % 10) + (b % 10) >= 10 or ((a // 10) % 10) + ((b // 10) % 10) >= 10
+
+
+def has_borrow(a: int, b: int) -> bool:
+    """Check if a - b requires borrowing in ones or tens column (a > b assumed)."""
+    if a < b:
+        a, b = b, a
+    return (a % 10) < (b % 10) or ((a // 10) % 10) < ((b // 10) % 10)
+
+
+def make_carry_pair(rng: random.Random, operation: str = "addition") -> tuple[int, int]:
+    """Generate a 3-digit pair requiring carry (addition) or borrow (subtraction)."""
+    if operation == "subtraction":
+        for _ in range(50):
+            a = rng.randint(200, 999)
+            b = rng.randint(100, a - 1)
+            if has_borrow(a, b):
+                return a, b
+        return 502, 178  # guaranteed borrow fallback
+
+    for _ in range(50):
+        a = rng.randint(100, 899)
+        b = rng.randint(100, 899)
+        if has_carry(a, b) and a + b <= 999:
+            return a, b
+    return 345, 278  # guaranteed carry fallback
+
+
 # ════════════════════════════════════════════════════════════
 # D) Seeded Selection (history-aware)
 # ════════════════════════════════════════════════════════════
@@ -297,6 +347,77 @@ def get_question_difficulty(slot_type: str, worksheet_difficulty: str) -> str:
     return worksheet_difficulty
 
 
+def _scale_recipe(recipe: list[dict], target: int) -> list[dict]:
+    """Scale recipe counts proportionally to hit target total."""
+    total = sum(item.get("count", 1) for item in recipe)
+    if total == target:
+        return [dict(item) for item in recipe]
+
+    scaled = []
+    assigned = 0
+    for i, item in enumerate(recipe):
+        if i == len(recipe) - 1:
+            count = target - assigned
+        else:
+            count = max(1, round(item.get("count", 1) * target / total))
+        scaled.append({**item, "count": count})
+        assigned += count
+
+    actual_total = sum(s["count"] for s in scaled)
+    while actual_total > target:
+        idx = max(range(len(scaled)), key=lambda j: scaled[j]["count"])
+        if scaled[idx]["count"] > 1:
+            scaled[idx]["count"] -= 1
+            actual_total -= 1
+        else:
+            break
+    while actual_total < target:
+        scaled[0]["count"] += 1
+        actual_total += 1
+
+    return scaled
+
+
+def build_worksheet_plan(
+    q_count: int,
+    mix_recipe: list[dict] | None = None,
+    constraints: dict | None = None,
+) -> list[dict]:
+    """Build a deterministic worksheet plan from mix_recipe or defaults.
+
+    Returns list of slot directives, each with:
+      slot_type, format_hint, carry_required, require_student_answer, allow_operations
+    """
+    if mix_recipe is None:
+        recipe = _scale_recipe(DEFAULT_MIX_RECIPE_20, q_count)
+    else:
+        total = sum(item.get("count", 0) for item in mix_recipe)
+        recipe = mix_recipe if total == q_count else _scale_recipe(mix_recipe, q_count)
+
+    constraints = constraints or {}
+    carry_required = constraints.get("carry_required", False)
+    allow_operations = constraints.get("allow_operations") or ["addition", "subtraction"]
+
+    plan: list[dict] = []
+    for item in recipe:
+        skill_tag = item["skill_tag"]
+        mapping = _SKILL_TAG_TO_SLOT.get(skill_tag)
+        slot_type, format_hint = mapping if mapping else ("application", "word_problem")
+
+        for _ in range(item.get("count", 1)):
+            plan.append({
+                "slot_type": slot_type,
+                "format_hint": format_hint,
+                "carry_required": carry_required,
+                "require_student_answer": item.get("require_student_answer", False),
+                "allow_operations": allow_operations,
+                "visual_type": item.get("visual_type"),
+                "unique_contexts": item.get("unique_contexts", False),
+            })
+
+    return plan
+
+
 # ════════════════════════════════════════════════════════════
 # F) Slot Instructions (backend builds per-question instructions)
 # ════════════════════════════════════════════════════════════
@@ -304,33 +425,49 @@ def get_question_difficulty(slot_type: str, worksheet_difficulty: str) -> str:
 def _build_slot_instruction(
     slot_type: str,
     chosen_variant: dict | None,
+    directive: dict | None = None,
 ) -> str:
     """Build backend-chosen specific instructions for a slot question.
 
     chosen_variant contains the picked context/error/style for this slot.
+    directive (optional) carries plan-level overrides (carry_required, format_hint, etc).
     """
+    base = ""
+
     if slot_type == "recognition":
-        return (
-            "format: column_setup OR place_value. "
-            "Direct recall or single-step. Easy.\n"
-            'Examples: "Write 345 + 278 in column form." / '
-            '"What is the hundreds digit in 507?"'
-        )
+        # If variant has a deterministic carry pair, use it directly
+        if chosen_variant and chosen_variant.get("carry_pair"):
+            a, b = chosen_variant["carry_pair"]
+            op = chosen_variant.get("operation", "addition")
+            sym = "+" if op == "addition" else "-"
+            base = (
+                f"format: column_setup. "
+                f'Write EXACTLY: "Write {a} {sym} {b} in column form." '
+                f"Answer: {a} {sym} {b}"
+            )
+        else:
+            base = (
+                "format: column_setup OR place_value. "
+                "Direct recall or single-step. Easy.\n"
+                'Examples: "Write 345 + 278 in column form." / '
+                '"What is the hundreds digit in 507?"'
+            )
 
-    if slot_type == "application":
+    elif slot_type == "application":
         if not chosen_variant:
-            return "format: word_problem. Use a real-world scenario. Exact numerical answer required."
-        name = chosen_variant.get("name", "Aarav")
-        ctx = chosen_variant.get("context", {})
-        return (
-            f"format: word_problem. "
-            f"MUST use this context: {name} is {ctx.get('scenario', 'at school')}. "
-            f"Item: {ctx.get('item', 'things')}. "
-            f"Numbers must require carrying. Exact numerical answer required."
-        )
+            base = "format: word_problem. Use a real-world scenario. Exact numerical answer required."
+        else:
+            name = chosen_variant.get("name", "Aarav")
+            ctx = chosen_variant.get("context", {})
+            base = (
+                f"format: word_problem. "
+                f"MUST use this context: {name} is {ctx.get('scenario', 'at school')}. "
+                f"Item: {ctx.get('item', 'things')}. "
+                f"Numbers must require carrying. Exact numerical answer required."
+            )
 
-    if slot_type == "representation":
-        return (
+    elif slot_type == "representation":
+        base = (
             "format: missing_number OR estimation OR place_value. "
             'NEVER "visualize" or "draw" or "use array/number line".\n'
             'Examples: "___ + 178 = 502" / '
@@ -338,31 +475,47 @@ def _build_slot_instruction(
             '"Show 345 as 3 hundreds + ___ tens + 5 ones."'
         )
 
-    if slot_type == "error_detection":
+    elif slot_type == "error_detection":
         if not chosen_variant:
-            return "format: error_spot. Show a wrong addition answer for the student to correct."
-        err = chosen_variant.get("error", {})
-        return (
-            f"format: error_spot. "
-            f"MUST use EXACTLY these numbers: "
-            f"A student added {err['a']} + {err['b']} and got {err['wrong']}. "
-            f"The correct answer is {err['correct']}. "
-            f"The student's mistake: {err['hint']}. "
-            f"Write a question asking the student to find the mistake and give the correct answer."
-        )
+            base = "format: error_spot. Show a wrong addition answer for the student to correct."
+        else:
+            err = chosen_variant.get("error", {})
+            base = (
+                f"format: error_spot. "
+                f"MUST use EXACTLY these numbers: "
+                f"A student added {err['a']} + {err['b']} and got {err['wrong']}. "
+                f"The correct answer is {err['correct']}. "
+                f"The student's mistake: {err['hint']}. "
+                f"Write a question asking the student to find the mistake and give the correct answer."
+            )
 
-    if slot_type == "thinking":
+    elif slot_type == "thinking":
         if not chosen_variant:
-            return "format: thinking. Reasoning question, not pure computation."
-        style = chosen_variant.get("style", {})
-        return (
-            f"format: thinking. "
-            f"Style: {style['style']}. "
-            f"{style['instruction']} "
-            f"Use 3-digit numbers that require carrying."
-        )
+            base = "format: thinking. Reasoning question, not pure computation."
+        else:
+            style = chosen_variant.get("style", {})
+            base = (
+                f"format: thinking. "
+                f"Style: {style['style']}. "
+                f"{style['instruction']} "
+                f"Use 3-digit numbers that require carrying."
+            )
 
-    return ""
+    # ── Directive augmentation ──
+    if directive:
+        extras = []
+        if directive.get("carry_required"):
+            extras.append(
+                "Numbers MUST require carrying (digit sum >= 10 in ones or tens) "
+                "for addition, or borrowing for subtraction."
+            )
+        ops = directive.get("allow_operations")
+        if ops and len(ops) == 1:
+            extras.append(f"Use {ops[0]} only.")
+        if extras:
+            base += "\n" + " ".join(extras)
+
+    return base
 
 
 # ════════════════════════════════════════════════════════════
@@ -444,6 +597,11 @@ _REASONING_LANGUAGE = re.compile(
 )
 
 _BLANK_MARKER = re.compile(r"(_{2,}|\?{1,}|□|▢|\[ *\])")
+
+_WRONG_ANSWER_RE = re.compile(
+    r"(?:\bgot\s+|answer\s+is\s+|=\s*|found.*?(?:sum|answer|total).*?(?:to be|is|as)\s+)(\d{2,})",
+    re.IGNORECASE,
+)
 
 
 def validate_question(q: dict, slot_type: str) -> list[str]:
@@ -648,6 +806,46 @@ def enforce_visuals_only(questions: list[dict], min_ratio: float = 0.8) -> list[
     logger.info("enforce_visuals_only: final %d/%d visual (%.0f%%)",
                 visual_count, total, 100 * visual_count / total)
     return questions
+
+
+def enrich_error_spots(questions: list[dict]) -> None:
+    """Add student_answer to error_spot visual specs for frontend display."""
+    for q in questions:
+        if q.get("slot_type") != "error_detection":
+            continue
+
+        wrong = q.get("student_wrong_answer")
+        if not wrong:
+            # Safety net: extract from question text
+            m = _WRONG_ANSWER_RE.search(q.get("question_text", ""))
+            if m:
+                wrong = int(m.group(1))
+
+        if wrong is not None:
+            spec = q.get("visual_spec")
+            if spec:
+                spec["student_answer"] = int(wrong) if not isinstance(wrong, int) else wrong
+
+
+def enforce_carry_in_visuals(questions: list[dict], rng: random.Random) -> None:
+    """Post-hydration: ensure all BASE_TEN_REGROUPING visuals have carry/borrow."""
+    for q in questions:
+        spec = q.get("visual_spec")
+        if not spec or spec.get("model_id") != "BASE_TEN_REGROUPING":
+            continue
+        nums = spec.get("numbers", [])
+        if len(nums) < 2:
+            continue
+        a, b = nums[0], nums[1]
+        op = spec.get("operation", "addition")
+        if op == "addition" and not has_carry(a, b):
+            a, b = make_carry_pair(rng, "addition")
+            spec["numbers"] = [a, b]
+            logger.info("enforce_carry_in_visuals: replaced non-carry pair with %d+%d", a, b)
+        elif op == "subtraction" and not has_borrow(a, b):
+            a, b = make_carry_pair(rng, "subtraction")
+            spec["numbers"] = [a, b]
+            logger.info("enforce_carry_in_visuals: replaced non-borrow pair with %d-%d", a, b)
 
 
 def verify_visual_contract(questions: list[dict]) -> str:
@@ -903,15 +1101,22 @@ def run_slot_pipeline(
     difficulty: str,
     region: str,
     language: str = "English",
+    worksheet_plan: list[dict] | None = None,
+    constraints: dict | None = None,
 ) -> tuple[dict, list[dict]]:
     """Full slot-based generation pipeline with controlled variation.
 
     Returns (meta, questions) where each question dict has:
     id, slot_type, format, question_text, pictorial_elements, answer, difficulty
+
+    Optional worksheet_plan overrides get_slot_plan() with directive-rich slots.
+    Optional constraints dict carries carry_required, allow_operations, etc.
     """
+    constraints = constraints or {}
     logger.info(
-        "Slot pipeline v6: grade=%s topic=%s q=%d diff=%s",
+        "Slot pipeline v7: grade=%s topic=%s q=%d diff=%s plan=%s",
         grade, topic, q_count, difficulty,
+        "custom" if worksheet_plan else "default",
     )
 
     # 1. Generate meta
@@ -926,8 +1131,13 @@ def run_slot_pipeline(
         difficulty = "medium"
         meta["difficulty"] = "Medium"
 
-    # 2. Get slot plan
-    slot_plan = get_slot_plan(q_count)
+    # 2. Get slot plan (plan directives override simple slot_plan)
+    if worksheet_plan:
+        slot_plan = [d["slot_type"] for d in worksheet_plan]
+        plan_directives = worksheet_plan
+    else:
+        slot_plan = get_slot_plan(q_count)
+        plan_directives = [{"slot_type": st} for st in slot_plan]
     logger.info("Slot plan (%d): %s", len(slot_plan), dict(Counter(slot_plan)))
 
     # 3. Load history and build avoid state
@@ -945,7 +1155,9 @@ def run_slot_pipeline(
     used_error_ids_this_ws: list[str] = []
     used_thinking_styles_this_ws: list[str] = []
 
-    for slot_type in slot_plan:
+    for i, slot_type in enumerate(slot_plan):
+        directive = plan_directives[i]
+
         if slot_type == "application":
             # Avoid both cross-worksheet and within-worksheet repeats
             avoid_ctx = history_avoid["used_contexts"] + used_contexts_this_ws
@@ -966,6 +1178,13 @@ def run_slot_pipeline(
             used_thinking_styles_this_ws.append(style["style"])
             chosen_variants.append({"style": style})
 
+        elif slot_type == "recognition" and directive.get("carry_required"):
+            # Deterministic carry pair for column_setup
+            ops = directive.get("allow_operations", ["addition", "subtraction"])
+            op = rng.choice(ops)
+            a, b = make_carry_pair(rng, op)
+            chosen_variants.append({"carry_pair": (a, b), "operation": op})
+
         else:
             chosen_variants.append(None)
 
@@ -975,9 +1194,10 @@ def run_slot_pipeline(
     max_attempts = 3
 
     for i, slot_type in enumerate(slot_plan):
+        directive = plan_directives[i]
         q_difficulty = get_question_difficulty(slot_type, difficulty)
         variant = chosen_variants[i]
-        slot_instruction = _build_slot_instruction(slot_type, variant)
+        slot_instruction = _build_slot_instruction(slot_type, variant, directive=directive)
 
         generated = False
         for attempt in range(max_attempts):
@@ -1012,6 +1232,11 @@ def run_slot_pipeline(
                 q["id"] = i + 1
                 q["slot_type"] = slot_type
                 q["difficulty"] = q_difficulty
+
+                # Preserve student_wrong_answer for error_spot enrichment
+                if slot_type == "error_detection" and variant and variant.get("error"):
+                    q["student_wrong_answer"] = variant["error"]["wrong"]
+
                 questions.append(q)
 
                 avoid_state.extend(_extract_avoid_items(q))
@@ -1055,6 +1280,14 @@ def run_slot_pipeline(
 
     # 8b. Hydrate visuals (deterministic, no LLM)
     questions = hydrate_visuals(questions)
+
+    # 8c. Carry enforcement in visuals (when constraints require it)
+    if constraints.get("carry_required"):
+        enforce_carry_in_visuals(questions, rng)
+
+    # 8d. Enrich error_spot questions with student_answer
+    enrich_error_spots(questions)
+
     logger.info("Visual contract:\n%s", verify_visual_contract(questions))
 
     # DEBUG: prove hydrated fields survive to final payload (remove after verification)
