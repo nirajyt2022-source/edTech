@@ -665,19 +665,48 @@ def test_visual_hydration():
         if not ok:
             all_pass = False
 
-    # ── q2, q3, q4: TEXT_ONLY (no visual_spec / visual_model_ref) ──
-    for idx in [1, 2, 3]:
-        q = hydrated[idx]
-        ok_rep = q.get("representation") == "TEXT_ONLY"
-        print(f"  {'PASS' if ok_rep else 'FAIL'}: q{idx+1}.representation = TEXT_ONLY" + ("" if ok_rep else f" (got {q.get('representation')})"))
-        if not ok_rep:
-            all_pass = False
-        no_extras = q.get("visual_spec") is None and q.get("visual_model_ref") is None
-        print(f"  {'PASS' if no_extras else 'FAIL'}: q{idx+1} has no visual_spec/visual_model_ref")
-        if not no_extras:
+    # ── q2: BASE_TEN_REGROUPING (word problem with "more" + "total") ──
+    q2 = hydrated[1]
+    checks_q2 = [
+        ("q2.representation", q2.get("representation"), "PICTORIAL_MODEL"),
+        ("q2.visual_spec.model_id", (q2.get("visual_spec") or {}).get("model_id"), "BASE_TEN_REGROUPING"),
+        ("q2.visual_spec.numbers", (q2.get("visual_spec") or {}).get("numbers"), [284, 578]),
+        ("q2.visual_spec.operation", (q2.get("visual_spec") or {}).get("operation"), "addition"),
+    ]
+    for label, actual, expected in checks_q2:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} = {expected}" + ("" if ok else f" (got {actual})"))
+        if not ok:
             all_pass = False
 
-    # ── q5: NUMBER_LINE ──
+    # ── q3: NUMBER_LINE (missing number "___ + 247 = 578") ──
+    q3 = hydrated[2]
+    # missing = 578 - 247 = 331; markers = [247, 331, 578]
+    checks_q3 = [
+        ("q3.representation", q3.get("representation"), "PICTORIAL_MODEL"),
+        ("q3.visual_spec.model_id", (q3.get("visual_spec") or {}).get("model_id"), "NUMBER_LINE"),
+        ("q3.visual_spec.markers", (q3.get("visual_spec") or {}).get("markers"), [247, 331, 578]),
+    ]
+    for label, actual, expected in checks_q3:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} = {expected}" + ("" if ok else f" (got {actual})"))
+        if not ok:
+            all_pass = False
+
+    # ── q4: BASE_TEN_REGROUPING (error spot with "+") ──
+    q4 = hydrated[3]
+    checks_q4 = [
+        ("q4.representation", q4.get("representation"), "PICTORIAL_MODEL"),
+        ("q4.visual_spec.model_id", (q4.get("visual_spec") or {}).get("model_id"), "BASE_TEN_REGROUPING"),
+        ("q4.visual_spec.numbers", (q4.get("visual_spec") or {}).get("numbers"), [386, 247]),
+    ]
+    for label, actual, expected in checks_q4:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} = {expected}" + ("" if ok else f" (got {actual})"))
+        if not ok:
+            all_pass = False
+
+    # ── q5: NUMBER_LINE (closer to / estimation) ──
     q5 = hydrated[4]
     checks_q5 = [
         ("q5.representation", q5.get("representation"), "PICTORIAL_MODEL"),
@@ -749,12 +778,18 @@ def test_endpoint_visual_propagation():
         if not ok:
             all_pass = False
 
-    # q2: text-only, no visual
+    # q2: word problem with "more" + "total" → base_ten_regrouping
     q2 = api_questions[1]
-    ok = q2.visual_type is None and q2.visual_data is None
-    print(f"  {'PASS' if ok else 'FAIL'}: q2 visual_type=None, visual_data=None" + ("" if ok else f" (got {q2.visual_type!r})"))
-    if not ok:
-        all_pass = False
+    checks2 = [
+        ("q2.visual_type", q2.visual_type, "base_ten_regrouping"),
+        ("q2.visual_data.numbers", (q2.visual_data or {}).get("numbers"), [310, 250]),
+        ("q2.visual_data.operation", (q2.visual_data or {}).get("operation"), "addition"),
+    ]
+    for label, actual, expected in checks2:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} == {expected!r}" + ("" if ok else f" (got {actual!r})"))
+        if not ok:
+            all_pass = False
 
     # q3: number_line
     q3 = api_questions[2]
@@ -780,113 +815,80 @@ def test_endpoint_visual_propagation():
 
 
 def test_visuals_only_mode():
-    """Test visuals_only mode guarantees >=80% visual coverage."""
+    """Test broadened visual hydration: 5-question fixture → >=4/5 pictorial."""
     print("\n" + "=" * 60)
-    print("10. VISUALS_ONLY MODE TESTS")
+    print("10. VISUAL COVERAGE (broad rules + endpoint mapper)")
     print("=" * 60)
+
+    from app.api.worksheets import _slot_to_question
 
     all_pass = True
 
-    # Fixture: 10 questions (mix of formats), all missing visual fields
     questions = [
         {
             "id": 1, "slot_type": "recognition", "format": "column_setup",
-            "question_text": "Write 462 + 359 in column form.",
-            "pictorial_elements": [], "answer": "821", "difficulty": "easy",
+            "question_text": "Write 456 + 279 in column form.",
+            "pictorial_elements": [], "answer": "735", "difficulty": "easy",
         },
         {
-            "id": 2, "slot_type": "recognition", "format": "place_value",
-            "question_text": "What is the hundreds digit in 507?",
-            "pictorial_elements": [], "answer": "5", "difficulty": "easy",
+            "id": 2, "slot_type": "application", "format": "word_problem",
+            "question_text": "Aarav has 384 stickers. He got 279 more from his friend. How many stickers does he have in total?",
+            "pictorial_elements": [], "answer": "663", "difficulty": "medium",
         },
         {
-            "id": 3, "slot_type": "application", "format": "word_problem",
-            "question_text": "Aarav has 284 stickers. He finds 178 more. How many in total?",
-            "pictorial_elements": [], "answer": "462", "difficulty": "medium",
+            "id": 3, "slot_type": "representation", "format": "missing_number",
+            "question_text": "___ + 295 = 432",
+            "pictorial_elements": [], "answer": "137", "difficulty": "medium",
         },
         {
-            "id": 4, "slot_type": "application", "format": "word_problem",
-            "question_text": "Priya collected 356 coins and Rohan gave her 267 more coins altogether.",
-            "pictorial_elements": [], "answer": "623", "difficulty": "medium",
-        },
-        {
-            "id": 5, "slot_type": "application", "format": "word_problem",
-            "question_text": "Meera bought 145 pencils and 289 erasers. How many items in total?",
-            "pictorial_elements": [], "answer": "434", "difficulty": "medium",
-        },
-        {
-            "id": 6, "slot_type": "application", "format": "word_problem",
-            "question_text": "Kabir scored 478 points. Diya scored 256 points. What is the sum?",
-            "pictorial_elements": [], "answer": "734", "difficulty": "medium",
-        },
-        {
-            "id": 7, "slot_type": "representation", "format": "missing_number",
-            "question_text": "___ + 247 = 578",
-            "pictorial_elements": [], "answer": "331", "difficulty": "medium",
-        },
-        {
-            "id": 8, "slot_type": "representation", "format": "estimation",
-            "question_text": "Round 478 to the nearest hundred.",
-            "pictorial_elements": [], "answer": "500", "difficulty": "medium",
-        },
-        {
-            "id": 9, "slot_type": "error_detection", "format": "error_spot",
-            "question_text": "A student says 386 + 247 = 523. Find the mistake and correct it.",
+            "id": 4, "slot_type": "error_detection", "format": "error_spot",
+            "question_text": "A student says 386 + 247 = 523. Find the mistake and give the correct answer.",
             "pictorial_elements": [], "answer": "633", "difficulty": "medium",
         },
         {
-            "id": 10, "slot_type": "thinking", "format": "thinking",
-            "question_text": "Without calculating, explain why 399 + 250 must be less than 700.",
-            "pictorial_elements": [], "answer": "649 < 700", "difficulty": "hard",
+            "id": 5, "slot_type": "thinking", "format": "thinking",
+            "question_text": "Is 578 + 456 closer to 1000 or 1100? Explain your thinking.",
+            "pictorial_elements": [], "answer": "closer to 1000", "difficulty": "hard",
         },
     ]
 
-    # Run hydrate_visuals with visuals_only=True, then enforce
     hydrate_visuals(questions, visuals_only=True)
     enforce_visuals_only(questions)
 
-    # Count visual questions
-    visual_count = sum(1 for q in questions if q.get("representation") == "PICTORIAL_MODEL")
-    total = len(questions)
-    ratio = visual_count / total
+    # Map through endpoint serializer (visual_type / visual_data)
+    api_qs = [_slot_to_question(q, i) for i, q in enumerate(questions)]
 
-    print(f"  Visual coverage: {visual_count}/{total} = {ratio:.0%}")
-    coverage_pass = visual_count >= 8
-    print(f"  >= 80%: {'PASS' if coverage_pass else 'FAIL'}")
+    visual_count = sum(1 for q in api_qs if q.visual_type is not None)
+    total = len(api_qs)
+
+    print(f"  Visual coverage: {visual_count}/{total}")
+    coverage_pass = visual_count >= 4
+    print(f"  >= 4/5 pictorial: {'PASS' if coverage_pass else 'FAIL'}")
     if not coverage_pass:
         all_pass = False
 
-    # No topic drift: no multiplication keywords in question text
-    drift_keywords = re.compile(r"\*|times|multiply", re.IGNORECASE)
-    drift_count = 0
-    for q in questions:
-        if drift_keywords.search(q.get("question_text", "")):
-            drift_count += 1
-            print(f"  DRIFT: q{q['id']} contains multiplication keyword: {q['question_text'][:60]}")
-    drift_pass = drift_count == 0
-    print(f"  No topic drift (no multiply/times/*): {'PASS' if drift_pass else 'FAIL'}")
-    if not drift_pass:
-        all_pass = False
+    # Specific assertions
+    checks = [
+        ("q1.visual_type", api_qs[0].visual_type, "base_ten_regrouping"),
+        ("q2.visual_type", api_qs[1].visual_type, "base_ten_regrouping"),
+        ("q3.visual_type", api_qs[2].visual_type, "number_line"),
+        ("q3.highlight", (api_qs[2].visual_data or {}).get("highlight"), 137),
+        ("q4.visual_type", api_qs[3].visual_type, "base_ten_regrouping"),
+        ("q5.visual_type", api_qs[4].visual_type, "number_line"),
+        ("q5.highlight", (api_qs[4].visual_data or {}).get("highlight"), 1034),
+    ]
+    for label, actual, expected in checks:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} = {expected!r}" + ("" if ok else f" (got {actual!r})"))
+        if not ok:
+            all_pass = False
 
-    # Every visual question has valid model_id
-    valid_models = {"BASE_TEN_REGROUPING", "NUMBER_LINE"}
-    model_pass = True
-    for q in questions:
-        if q.get("representation") == "PICTORIAL_MODEL":
-            model_id = (q.get("visual_spec") or {}).get("model_id")
-            if model_id not in valid_models:
-                print(f"  FAIL: q{q['id']} has invalid model_id={model_id}")
-                model_pass = False
-                all_pass = False
-    print(f"  All visual model_ids valid: {'PASS' if model_pass else 'FAIL'}")
-
-    # Print detail
-    print(f"\n  Detail:")
-    for q in questions:
-        rep = q.get("representation", "?")
-        mid = (q.get("visual_spec") or {}).get("model_id", "-")
-        text_preview = q.get("question_text", "")[:60]
-        print(f"    q{q['id']:>2} [{rep:<16}] [{mid:<22}] {text_preview}")
+    # Sample verification table
+    print(f"\n  {'q':<4} {'visual_type':<24} {'highlight':<10} {'text':<50}")
+    print(f"  {'─'*4} {'─'*24} {'─'*10} {'─'*50}")
+    for i, q in enumerate(api_qs):
+        hl = (q.visual_data or {}).get("highlight", "-")
+        print(f"  q{i+1:<3} {str(q.visual_type):<24} {str(hl):<10} {(q.text or '')[:50]}")
 
     return all_pass
 

@@ -491,29 +491,27 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
 # H-bis) Visual Hydration & Verification
 # ════════════════════════════════════════════════════════════
 
-_HYDRATE_COLUMN = re.compile(r"column", re.IGNORECASE)
 _HYDRATE_ESTIMATION = re.compile(r"closer\s+to|estimat", re.IGNORECASE)
-_HYDRATE_NUMS = re.compile(r"\b(\d{3,4})\b")
-
-# Extended hydration patterns for visuals_only mode
-_HYDRATE_ADDITION = re.compile(r"\+|add|sum|total", re.IGNORECASE)
-_HYDRATE_WORD_PROBLEM = re.compile(r"more|in total|together|altogether|combined|finds?\b", re.IGNORECASE)
-_HYDRATE_MISSING = re.compile(r"_{2,}|\?{1,}|□")
-_HYDRATE_ROUNDING = re.compile(r"round.*nearest|nearest\s+\d+|estimate.*nearest", re.IGNORECASE)
+_HYDRATE_ADD_KW = re.compile(
+    r"\+|\badd\b|\bsum\b|\btotal\b|\baltogether\b|\bin all\b|\bmore\b|\breceived\b|\bgot\b",
+    re.IGNORECASE,
+)
+_HYDRATE_SUB_KW = re.compile(
+    r"\d\s*-\s*\d|\bsubtract|\bleft\b|\bremain|\bdifference\b",
+    re.IGNORECASE,
+)
+_HYDRATE_MISSING = re.compile(r"_{2,}|\?{2,}|□")
 _HYDRATE_NUMS_2TO4 = re.compile(r"\b(\d{2,4})\b")
 
 
 def hydrate_visuals(questions: list[dict], visuals_only: bool = False) -> list[dict]:
     """Deterministic visual hydration: infer representation + visual_spec + visual_model_ref.
 
-    Rules (in priority order):
-      A) Two 2-4 digit integers + addition keywords → BASE_TEN_REGROUPING
-         (broadened from column-only; rewrites text when visuals_only)
-      B) Two integers + word-problem keywords → BASE_TEN_REGROUPING
-      C) Blank marker + missing-number pattern → NUMBER_LINE
-      D) "round" + "nearest" → NUMBER_LINE
-      E) 'closer to' / 'estimate' with 2 reference hundreds → NUMBER_LINE (existing)
-      Fallback: TEXT_ONLY, or deterministic column-form when visuals_only.
+    Rules (always active, checked in order):
+      C) Blank marker + two integers → NUMBER_LINE (highlight=missing)
+      D) 'closer to' / 'estimate' + two integers → NUMBER_LINE (highlight=computed sum)
+      A) Two 2-4 digit integers + add/sub keywords → BASE_TEN_REGROUPING
+    Fallback: TEXT_ONLY, or deterministic template when visuals_only.
     """
     for q_index, q in enumerate(questions):
         rep = q.get("representation")
@@ -526,123 +524,73 @@ def hydrate_visuals(questions: list[dict], visuals_only: bool = False) -> list[d
 
         text = q.get("question_text") or q.get("text") or ""
         text_lower = text.lower()
-        nums = [int(n) for n in _HYDRATE_NUMS.findall(text)]
-        three_digit = [n for n in nums if 100 <= n <= 999]
+        nums_2to4 = [int(n) for n in _HYDRATE_NUMS_2TO4.findall(text) if 10 <= int(n) <= 9999]
 
-        # ── Standard rules (always active) ──
+        # Rule C: missing number (blank marker + two known values) → NUMBER_LINE
+        if _HYDRATE_MISSING.search(text) and len(nums_2to4) >= 2:
+            vals = sorted(nums_2to4)
+            min_val, max_val = vals[0], vals[-1]
+            missing = max_val - min_val if max_val > min_val else min_val
+            lo = min(min_val, missing)
+            hi = max(max_val, missing)
+            q["representation"] = "PICTORIAL_MODEL"
+            q["visual_spec"] = {
+                "model_id": "NUMBER_LINE",
+                "start": max(0, (lo // 50) * 50 - 50),
+                "end": (hi // 50 + 1) * 50 + 50,
+                "tick_interval": 50,
+                "markers": [min_val, missing, max_val],
+            }
+            q["visual_model_ref"] = "NUMBER_LINE"
+            continue
 
-        # Rule A (original): column setup + addition with two 3-digit numbers
-        fmt = q.get("format") or q.get("skill_tag") or ""
-        is_column = bool(_HYDRATE_COLUMN.search(text)) or fmt == "column_setup"
-        is_addition = "+" in text or "add" in text_lower
+        # Rule D: closer to / estimate → NUMBER_LINE with highlight=computed sum
+        if _HYDRATE_ESTIMATION.search(text) and len(nums_2to4) >= 2:
+            non_round = [n for n in nums_2to4 if n % 100 != 0]
+            if len(non_round) >= 2:
+                computed = non_round[0] + non_round[1]
+            else:
+                computed = nums_2to4[0] + nums_2to4[1]
+            ref_hundreds = sorted(set(n for n in nums_2to4 if n % 100 == 0))
+            if len(ref_hundreds) >= 2:
+                lo_ref, hi_ref = ref_hundreds[0], ref_hundreds[-1]
+            else:
+                lo_ref = (computed // 100) * 100
+                hi_ref = lo_ref + 100
+            q["representation"] = "PICTORIAL_MODEL"
+            q["visual_spec"] = {
+                "model_id": "NUMBER_LINE",
+                "start": max(0, lo_ref - 100),
+                "end": hi_ref + 100,
+                "tick_interval": 50,
+                "markers": [lo_ref, computed, hi_ref],
+            }
+            q["visual_model_ref"] = "NUMBER_LINE"
+            continue
 
-        if is_column and is_addition and len(three_digit) >= 2:
+        # Rule A/B: two integers + add/sub keywords → BASE_TEN_REGROUPING
+        is_add = bool(_HYDRATE_ADD_KW.search(text))
+        is_sub = bool(_HYDRATE_SUB_KW.search(text))
+        if (is_add or is_sub) and len(nums_2to4) >= 2:
+            a, b = nums_2to4[0], nums_2to4[1]
+            op = "subtraction" if is_sub and "+" not in text else "addition"
             q["representation"] = "PICTORIAL_MODEL"
             q["visual_spec"] = {
                 "model_id": "BASE_TEN_REGROUPING",
-                "numbers": [three_digit[0], three_digit[1]],
-                "operation": "addition",
+                "numbers": [a, b],
+                "operation": op,
             }
             q["visual_model_ref"] = "BASE_TEN_REGROUPING"
             continue
 
-        # Rule B (original): estimation / closer-to with reference hundreds
-        if _HYDRATE_ESTIMATION.search(text):
-            ref_hundreds = sorted(set(n for n in nums if n % 100 == 0))
-            non_round = [n for n in three_digit if n % 100 != 0]
-
-            if len(ref_hundreds) >= 2:
-                lower_ref = ref_hundreds[0]
-                upper_ref = ref_hundreds[-1]
-
-                markers = [lower_ref]
-                if len(non_round) >= 2:
-                    markers.append(non_round[0] + non_round[1])
-                markers.append(upper_ref)
-
-                q["representation"] = "PICTORIAL_MODEL"
-                q["visual_spec"] = {
-                    "model_id": "NUMBER_LINE",
-                    "start": lower_ref - 100,
-                    "end": upper_ref + 100,
-                    "tick_interval": 50,
-                    "markers": markers,
-                }
-                q["visual_model_ref"] = "NUMBER_LINE"
-                continue
-
-        # ── Extended rules (visuals_only mode only) ──
+        # Fallback
         if visuals_only:
-            nums_2to4 = [int(n) for n in _HYDRATE_NUMS_2TO4.findall(text) if 10 <= int(n) <= 9999]
-
-            # Rule C: two 2-4 digit integers + addition keywords → BASE_TEN_REGROUPING
-            has_addition = bool(_HYDRATE_ADDITION.search(text))
-            if has_addition and len(nums_2to4) >= 2:
+            if len(nums_2to4) >= 2:
                 a, b = nums_2to4[0], nums_2to4[1]
+            else:
+                a, b = CARRY_PAIRS[q_index % len(CARRY_PAIRS)]
                 q["question_text"] = f"Write {a} + {b} in column form."
                 q["answer"] = str(a + b)
-                q["representation"] = "PICTORIAL_MODEL"
-                q["visual_spec"] = {
-                    "model_id": "BASE_TEN_REGROUPING",
-                    "numbers": [a, b],
-                    "operation": "addition",
-                }
-                q["visual_model_ref"] = "BASE_TEN_REGROUPING"
-                continue
-
-            # Rule D: word-problem keywords + two integers → BASE_TEN_REGROUPING
-            if _HYDRATE_WORD_PROBLEM.search(text) and len(nums_2to4) >= 2:
-                a, b = nums_2to4[0], nums_2to4[1]
-                q["question_text"] = f"Write {a} + {b} in column form."
-                q["answer"] = str(a + b)
-                q["representation"] = "PICTORIAL_MODEL"
-                q["visual_spec"] = {
-                    "model_id": "BASE_TEN_REGROUPING",
-                    "numbers": [a, b],
-                    "operation": "addition",
-                }
-                q["visual_model_ref"] = "BASE_TEN_REGROUPING"
-                continue
-
-            # Rule E: missing number (blank marker + two known values) → NUMBER_LINE
-            if _HYDRATE_MISSING.search(text) and len(nums_2to4) >= 2:
-                vals = sorted(nums_2to4)
-                min_val, max_val = vals[0], vals[-1]
-                missing = max_val - min_val if max_val > min_val else min_val
-                q["representation"] = "PICTORIAL_MODEL"
-                q["visual_spec"] = {
-                    "model_id": "NUMBER_LINE",
-                    "start": max(0, min_val - 100),
-                    "end": max_val + 100,
-                    "tick_interval": 50,
-                    "markers": [min_val, missing, max_val],
-                }
-                q["visual_model_ref"] = "NUMBER_LINE"
-                continue
-
-            # Rule F: rounding ("round" + "nearest") → NUMBER_LINE
-            if _HYDRATE_ROUNDING.search(text) and nums_2to4:
-                target = nums_2to4[0]
-                base_match = re.search(r"nearest\s+(\d+)", text_lower)
-                rounding_base = int(base_match.group(1)) if base_match else 100
-                rounded_down = (target // rounding_base) * rounding_base
-                rounded_up = rounded_down + rounding_base
-                q["representation"] = "PICTORIAL_MODEL"
-                q["visual_spec"] = {
-                    "model_id": "NUMBER_LINE",
-                    "start": max(0, rounded_down - rounding_base),
-                    "end": rounded_up + rounding_base,
-                    "tick_interval": max(1, rounding_base // 2),
-                    "markers": [rounded_down, target, rounded_up],
-                }
-                q["visual_model_ref"] = "NUMBER_LINE"
-                continue
-
-            # Fallback (visuals_only): deterministic column-form from CARRY_PAIRS
-            pair = CARRY_PAIRS[q_index % len(CARRY_PAIRS)]
-            a, b = pair
-            q["question_text"] = f"Write {a} + {b} in column form."
-            q["answer"] = str(a + b)
             q["representation"] = "PICTORIAL_MODEL"
             q["visual_spec"] = {
                 "model_id": "BASE_TEN_REGROUPING",
@@ -650,10 +598,8 @@ def hydrate_visuals(questions: list[dict], visuals_only: bool = False) -> list[d
                 "operation": "addition",
             }
             q["visual_model_ref"] = "BASE_TEN_REGROUPING"
-            continue
-
-        # Default: text-only (standard mode, no match)
-        q["representation"] = "TEXT_ONLY"
+        else:
+            q["representation"] = "TEXT_ONLY"
 
     return questions
 
