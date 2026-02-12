@@ -30,6 +30,13 @@ supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
 logger = logging.getLogger("practicecraft.worksheets")
 
+# ── Skill routing: UI topic strings → internal contract keys ──
+UI_SKILL_TO_CONTRACT: dict[str, str] = {
+    "Multiplication tables (2–10)": "multiplication_table_recall",
+    "Multiplication tables (2-10)": "multiplication_table_recall",
+    "Addition and subtraction (3-digit)": "column_add_with_carry",
+}
+
 
 class MixRecipeItem(BaseModel):
     skill_tag: str
@@ -1329,7 +1336,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
         visual_type=vtype,
         visual_data=vdata,
         role=q.get("slot_type"),
-        skill_tag=fmt,
+        skill_tag=q.get("skill_tag") or fmt,
     )
 
 
@@ -1391,6 +1398,35 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                     worksheet_plan=worksheet_plan,
                     constraints=constraints_dict,
                 )
+
+                # ── Skill purity enforcement ──
+                forced_contract = UI_SKILL_TO_CONTRACT.get(skill_topic)
+                if forced_contract:
+                    import app.skills.registry as _skills_reg
+                    contract = _skills_reg.SKILL_REGISTRY.get(forced_contract)
+                    _rng = __import__("random").Random(idx)
+                    for qi, q in enumerate(slot_questions):
+                        q["skill_tag"] = forced_contract
+                        # Replace off-topic questions via contract repair
+                        if contract:
+                            off_topic = False
+                            text = q.get("question_text", "")
+                            vdata = q.get("visual_spec") or {}
+                            if forced_contract == "multiplication_table_recall":
+                                off_topic = (
+                                    vdata.get("operation") == "addition"
+                                    or "+" in text
+                                    or not any(c in text for c in ("×", "x", "*", "times"))
+                                )
+                            if off_topic:
+                                q = contract.repair(q, _rng)
+                                q["skill_tag"] = forced_contract
+                                q["id"] = qi + 1
+                                q.pop("visual_spec", None)
+                                q.pop("representation", None)
+                                q.pop("visual_model_ref", None)
+                                slot_questions[qi] = q
+                                logger.info("Purity fix q%d: replaced off-topic with %s", qi + 1, forced_contract)
 
                 hydrate_visuals(slot_questions, visuals_only=visuals_only)
                 if visuals_only:

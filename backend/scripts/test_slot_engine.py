@@ -2418,6 +2418,130 @@ def test_multi_skill_bundle():
     return all_pass
 
 
+def test_skill_purity_enforcement():
+    """Test that skill_tag forcing and purity guard work correctly."""
+    print("\n" + "=" * 60)
+    print("38. SKILL PURITY ENFORCEMENT TEST")
+    print("=" * 60)
+
+    from app.api.worksheets import UI_SKILL_TO_CONTRACT, Question, Worksheet, _slot_to_question
+    import app.skills.registry as skills_reg
+    import random as _random
+
+    all_pass = True
+
+    # ── Case 1: UI_SKILL_TO_CONTRACT has multiplication mapping
+    ok = UI_SKILL_TO_CONTRACT.get("Multiplication tables (2-10)") == "multiplication_table_recall"
+    print(f"  Mapping has multiplication (ASCII dash): {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # Also test en-dash variant
+    ok2 = UI_SKILL_TO_CONTRACT.get("Multiplication tables (2\u201310)") == "multiplication_table_recall"
+    print(f"  Mapping has multiplication (en-dash): {'PASS' if ok2 else 'FAIL'}")
+    if not ok2:
+        all_pass = False
+
+    # ── Case 2: Contract repair produces valid multiplication question
+    contract = skills_reg.SKILL_REGISTRY.get("multiplication_table_recall")
+    rng = _random.Random(42)
+    bad_q = {
+        "question_text": "456 + 279 = ?",
+        "answer": "735",
+        "format": "direct_compute",
+        "slot_type": "application",
+        "skill_tag": "column_add_with_carry",
+    }
+    repaired = contract.repair(bad_q, rng)
+    text = repaired.get("question_text", "")
+    has_mult = any(c in text for c in ("\u00d7", "x", "*"))
+    ok = has_mult and repaired.get("answer", "").isdigit()
+    print(f"  Contract repair produces multiplication: {'PASS' if ok else f'FAIL (text={text})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 3: _slot_to_question propagates skill_tag from q dict
+    q_dict = {
+        "question_text": "What is 7 \u00d7 8?",
+        "answer": "56",
+        "format": "direct_compute",
+        "skill_tag": "multiplication_table_recall",
+        "slot_type": "application",
+        "difficulty": "easy",
+    }
+    api_q = _slot_to_question(q_dict, 0)
+    ok = api_q.skill_tag == "multiplication_table_recall"
+    print(f"  skill_tag propagates to API Question: {'PASS' if ok else f'FAIL (got {api_q.skill_tag})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 4: Purity detection — addition question flagged as off-topic for multiplication
+    add_q = {"question_text": "456 + 279 = ?", "visual_spec": {"operation": "addition"}}
+    text_check = "+" in add_q["question_text"]
+    vdata_check = (add_q.get("visual_spec") or {}).get("operation") == "addition"
+    mult_check = not any(c in add_q["question_text"] for c in ("\u00d7", "x", "*", "times"))
+    ok = text_check and vdata_check and mult_check
+    print(f"  Addition question detected as off-topic: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 5: Pure multiplication question NOT flagged
+    mult_q = {"question_text": "What is 7 \u00d7 8?", "visual_spec": {}}
+    text_ok = "+" not in mult_q["question_text"]
+    vdata_ok = (mult_q.get("visual_spec") or {}).get("operation") != "addition"
+    has_mult_sym = any(c in mult_q["question_text"] for c in ("\u00d7", "x", "*", "times"))
+    off_topic = vdata_ok is False or text_ok is False or has_mult_sym is False
+    ok = not off_topic
+    print(f"  Multiplication question NOT flagged: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 6: Batch enforcement — simulate 5 mixed questions, all get repaired
+    rng2 = _random.Random(99)
+    mixed_qs = [
+        {"question_text": "456 + 279 = ?", "answer": "735", "format": "direct_compute", "skill_tag": "column_add_with_carry", "slot_type": "application", "id": 1},
+        {"question_text": "What is 3 \u00d7 9?", "answer": "27", "format": "direct_compute", "skill_tag": "multiplication_table_recall", "slot_type": "application", "id": 2},
+        {"question_text": "Set up 362 + 148 in column form", "answer": "510", "format": "column_setup", "skill_tag": "column_add_with_carry", "visual_spec": {"operation": "addition"}, "slot_type": "recognition", "id": 3},
+        {"question_text": "Estimate 47 + 36", "answer": "83", "format": "estimation", "skill_tag": "thinking", "slot_type": "thinking", "id": 4},
+        {"question_text": "Find the error: 5 \u00d7 7 = 32", "answer": "35", "format": "error_spot", "skill_tag": "error_detection", "slot_type": "error_detection", "id": 5},
+    ]
+    forced = "multiplication_table_recall"
+    for qi, q in enumerate(mixed_qs):
+        q["skill_tag"] = forced
+        text = q.get("question_text", "")
+        vdata = q.get("visual_spec") or {}
+        off = (
+            vdata.get("operation") == "addition"
+            or "+" in text
+            or not any(c in text for c in ("\u00d7", "x", "*", "times"))
+        )
+        if off and contract:
+            q = contract.repair(q, rng2)
+            q["skill_tag"] = forced
+            q["id"] = qi + 1
+            q.pop("visual_spec", None)
+            q.pop("representation", None)
+            q.pop("visual_model_ref", None)
+            mixed_qs[qi] = q
+
+    # All should now have multiplication content
+    all_mult = all(
+        any(c in q.get("question_text", "") for c in ("\u00d7", "x", "*"))
+        for q in mixed_qs
+    )
+    all_tagged = all(q.get("skill_tag") == forced for q in mixed_qs)
+    no_addition = all(
+        (q.get("visual_spec") or {}).get("operation") != "addition"
+        for q in mixed_qs
+    )
+    ok = all_mult and all_tagged and no_addition
+    print(f"  Batch purity (5 mixed \u2192 all multiplication): {'PASS' if ok else f'FAIL (mult={all_mult}, tagged={all_tagged}, no_add={no_addition})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -2677,6 +2801,7 @@ if __name__ == "__main__":
     p35 = test_enforce_slot_counts()
     p36 = test_answer_normalizers()
     p37 = test_multi_skill_bundle()
+    p38 = test_skill_purity_enforcement()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -2718,6 +2843,7 @@ if __name__ == "__main__":
     print(f"  Enforce slot counts: {'PASS' if p35 else 'FAIL'}")
     print(f"  Answer normalizers:  {'PASS' if p36 else 'FAIL'}")
     print(f"  Multi-skill bundle: {'PASS' if p37 else 'FAIL'}")
+    print(f"  Skill purity:      {'PASS' if p38 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

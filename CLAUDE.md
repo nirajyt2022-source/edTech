@@ -127,3 +127,4 @@
 
 - **2026-02-12**: Initial documentation pass. Populated all sections from codebase scan.
 - **2026-02-12**: v1.3 multi-skill bundle — generate_worksheet splits questions across skills, returns worksheets[] array. Fixed single-skill topic metadata bug. Frontend tab UI for switching worksheets in bundle. Test #37 added.
+- **2026-02-12**: Skill purity enforcement — UI_SKILL_TO_CONTRACT mapping forces contract key on bundled worksheets. Off-topic questions (addition in multiplication worksheet) repaired via contract.repair(). skill_tag propagation fixed in _slot_to_question. Test #38 (7 cases).
