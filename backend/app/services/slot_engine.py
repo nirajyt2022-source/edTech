@@ -1026,13 +1026,24 @@ def normalize_estimation_answers(questions: list[dict]) -> None:
             estimated_sum = rounded_a + rounded_b
             q["answer"] = str(estimated_sum)
 
-        # Fix visual highlight to match computed sum
+        # Fix visual highlight to match estimate (answer), not exact sum
+        answer_str = q.get("answer", "").strip()
         spec = q.get("visual_spec")
-        if spec and spec.get("model_id") == "NUMBER_LINE":
+        if spec and spec.get("model_id") == "NUMBER_LINE" and answer_str.isdigit():
+            estimate = int(answer_str)
             markers = spec.get("markers", [])
-            if len(markers) >= 2 and computed not in markers:
-                spec["markers"] = [markers[0], computed, markers[-1]]
-                logger.info("normalize_estimation: fixed highlight to %d", computed)
+            if len(markers) >= 3:
+                lo, hi = markers[0], markers[-1]
+                # Widen range if estimate falls outside current bounds
+                if estimate < lo:
+                    lo = (estimate // 100) * 100
+                if estimate > hi:
+                    hi = ((estimate // 100) + 1) * 100
+                spec["markers"] = [lo, estimate, hi]
+                spec["start"] = max(0, lo - 100)
+                spec["end"] = hi + 100
+                logger.info("normalize_estimation: highlight set to %d (estimate, was %d exact)",
+                            estimate, computed)
 
 
 def normalize_error_spot_answers(questions: list[dict]) -> None:

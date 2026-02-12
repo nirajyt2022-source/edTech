@@ -2751,6 +2751,160 @@ def test_role_explanations():
     return all_pass
 
 
+def test_estimation_highlight_consistency():
+    """Test that estimation visual highlight points to estimate, not exact sum."""
+    print("\n" + "=" * 60)
+    print("41. ESTIMATION VISUAL HIGHLIGHT CONSISTENCY")
+    print("=" * 60)
+
+    from app.services.slot_engine import normalize_estimation_answers
+
+    all_pass = True
+
+    # ── Case 1: "closer to 800 or 900" — highlight should be closer ref, not exact sum
+    q1 = {
+        "slot_type": "thinking",
+        "question_text": "Is 347 + 538 closer to 800 or 900?",
+        "answer": "885",  # LLM put exact sum
+        "visual_spec": {
+            "model_id": "NUMBER_LINE",
+            "start": 700,
+            "end": 1000,
+            "tick_interval": 50,
+            "markers": [800, 885, 900],
+        },
+    }
+    normalize_estimation_answers([q1])
+    hl = q1["visual_spec"]["markers"][1]
+    ans = q1["answer"]
+    ok = hl == int(ans) and ans == "900"
+    print(f"  closer-to: highlight={hl}, answer={ans}: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 2: "round to nearest 100" — highlight = estimated sum (rounded), not exact
+    q2 = {
+        "slot_type": "thinking",
+        "question_text": "Estimate: Round 347 and 538 to the nearest 100, then add.",
+        "answer": "885",  # LLM put exact sum
+        "visual_spec": {
+            "model_id": "NUMBER_LINE",
+            "start": 700,
+            "end": 1000,
+            "tick_interval": 50,
+            "markers": [800, 885, 900],
+        },
+    }
+    normalize_estimation_answers([q2])
+    hl = q2["visual_spec"]["markers"][1]
+    ans = q2["answer"]
+    # 347→300, 538→500, estimate=800
+    ok = ans == "800" and hl == 800
+    print(f"  round-100: highlight={hl}, answer={ans}: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 3: "round to nearest 10" — highlight = estimated sum (rounded to 10)
+    q3 = {
+        "slot_type": "thinking",
+        "question_text": "Estimate: Round 347 and 538 to the nearest 10, then add.",
+        "answer": "885",  # LLM put exact sum
+        "visual_spec": {
+            "model_id": "NUMBER_LINE",
+            "start": 700,
+            "end": 1000,
+            "tick_interval": 50,
+            "markers": [800, 885, 900],
+        },
+    }
+    normalize_estimation_answers([q3])
+    hl = q3["visual_spec"]["markers"][1]
+    ans = q3["answer"]
+    # 347→350, 538→540, estimate=890
+    ok = ans == "890" and hl == 890
+    print(f"  round-10: highlight={hl}, answer={ans}: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 4: highlight == answer for all estimation types
+    q4 = {
+        "slot_type": "thinking",
+        "question_text": "Is 123 + 456 closer to 500 or 600?",
+        "answer": "579",
+        "visual_spec": {
+            "model_id": "NUMBER_LINE",
+            "start": 400,
+            "end": 700,
+            "tick_interval": 50,
+            "markers": [500, 579, 600],
+        },
+    }
+    normalize_estimation_answers([q4])
+    hl = q4["visual_spec"]["markers"][1]
+    ans = q4["answer"]
+    # 123+456=579, closer to 600
+    ok = ans == "600" and hl == 600
+    print(f"  closer-to-2: highlight={hl}, answer={ans}: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 5: no visual_spec — no crash
+    q5 = {
+        "slot_type": "thinking",
+        "question_text": "Is 347 + 538 closer to 800 or 900?",
+        "answer": "885",
+    }
+    normalize_estimation_answers([q5])
+    ok = "visual_spec" not in q5 and q5["answer"] == "900"
+    print(f"  no visual_spec: no crash: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 6: non-estimation question untouched
+    q6 = {
+        "slot_type": "application",
+        "question_text": "Find 347 + 538",
+        "answer": "885",
+        "visual_spec": {
+            "model_id": "NUMBER_LINE",
+            "start": 700,
+            "end": 1000,
+            "tick_interval": 50,
+            "markers": [800, 885, 900],
+        },
+    }
+    normalize_estimation_answers([q6])
+    hl = q6["visual_spec"]["markers"][1]
+    ok = hl == 885
+    print(f"  non-estimation: highlight unchanged={hl}: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 7: range widened if estimate outside original bounds
+    q7 = {
+        "slot_type": "thinking",
+        "question_text": "Estimate: Round 195 and 805 to the nearest 100, then add.",
+        "answer": "1000",  # Will be fixed
+        "visual_spec": {
+            "model_id": "NUMBER_LINE",
+            "start": 800,
+            "end": 1100,
+            "tick_interval": 50,
+            "markers": [900, 1000, 1000],
+        },
+    }
+    normalize_estimation_answers([q7])
+    # 195→200, 805→800, estimate=1000
+    ans = q7["answer"]
+    hl = q7["visual_spec"]["markers"][1]
+    ok = ans == "1000" and hl == 1000
+    print(f"  range-widen: highlight={hl}, answer={ans}: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -3013,6 +3167,7 @@ if __name__ == "__main__":
     p38 = test_skill_purity_enforcement()
     p39 = test_add_sub_expansion()
     p40 = test_role_explanations()
+    p41 = test_estimation_highlight_consistency()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -3057,6 +3212,7 @@ if __name__ == "__main__":
     print(f"  Skill purity:      {'PASS' if p38 else 'FAIL'}")
     print(f"  Add/sub expansion: {'PASS' if p39 else 'FAIL'}")
     print(f"  Role explanations: {'PASS' if p40 else 'FAIL'}")
+    print(f"  Est. highlights:  {'PASS' if p41 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()
