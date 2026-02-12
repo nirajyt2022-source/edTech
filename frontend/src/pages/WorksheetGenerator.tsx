@@ -379,7 +379,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
           : topic
 
     try {
-      const response = await apiV1WithFallback('post', '/api/worksheets/generate', {
+      const response = await apiV1WithFallback<{ worksheet: typeof worksheet }>('post', '/api/worksheets/generate', {
         board,
         grade_level: grade,
         subject: syllabus?.subject || subject,
@@ -419,7 +419,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
     setDownloadingPdf(true)
     setDownloadingPdfType(pdfType)
     try {
-      const response = await apiV1WithFallback('post', '/api/worksheets/export-pdf', {
+      const response = await apiV1WithFallback<BlobPart>('post', '/api/worksheets/export-pdf', {
         worksheet,
         pdf_type: pdfType,
       }, {

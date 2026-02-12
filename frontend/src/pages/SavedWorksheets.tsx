@@ -126,7 +126,7 @@ export default function SavedWorksheets() {
   const downloadPdf = async (worksheet: FullWorksheet, pdfType: string = 'full') => {
     setDownloadingPdfType(pdfType)
     try {
-      const response = await apiV1WithFallback('post', '/api/worksheets/export-pdf', {
+      const response = await apiV1WithFallback<BlobPart>('post', '/api/worksheets/export-pdf', {
         worksheet: {
           title: worksheet.title,
           grade: worksheet.grade,
