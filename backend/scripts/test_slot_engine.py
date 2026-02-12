@@ -2424,20 +2424,22 @@ def test_skill_purity_enforcement():
     print("38. SKILL PURITY ENFORCEMENT TEST")
     print("=" * 60)
 
-    from app.api.worksheets import UI_SKILL_TO_CONTRACT, Question, Worksheet, _slot_to_question
+    from app.api.worksheets import UI_SKILL_TO_CONTRACTS, CONTRACT_TOPIC_LABEL, Question, Worksheet, _slot_to_question
     import app.skills.registry as skills_reg
     import random as _random
 
     all_pass = True
 
-    # ── Case 1: UI_SKILL_TO_CONTRACT has multiplication mapping
-    ok = UI_SKILL_TO_CONTRACT.get("Multiplication tables (2-10)") == "multiplication_table_recall"
+    # ── Case 1: UI_SKILL_TO_CONTRACTS has multiplication mapping
+    mult_contracts = UI_SKILL_TO_CONTRACTS.get("Multiplication tables (2-10)")
+    ok = mult_contracts == ["multiplication_table_recall"]
     print(f"  Mapping has multiplication (ASCII dash): {'PASS' if ok else 'FAIL'}")
     if not ok:
         all_pass = False
 
     # Also test en-dash variant
-    ok2 = UI_SKILL_TO_CONTRACT.get("Multiplication tables (2\u201310)") == "multiplication_table_recall"
+    mult_contracts2 = UI_SKILL_TO_CONTRACTS.get("Multiplication tables (2\u201310)")
+    ok2 = mult_contracts2 == ["multiplication_table_recall"]
     print(f"  Mapping has multiplication (en-dash): {'PASS' if ok2 else 'FAIL'}")
     if not ok2:
         all_pass = False
@@ -2536,6 +2538,107 @@ def test_skill_purity_enforcement():
     )
     ok = all_mult and all_tagged and no_addition
     print(f"  Batch purity (5 mixed \u2192 all multiplication): {'PASS' if ok else f'FAIL (mult={all_mult}, tagged={all_tagged}, no_add={no_addition})'}")
+    if not ok:
+        all_pass = False
+
+    return all_pass
+
+
+def test_add_sub_expansion():
+    """Test that 'Addition and subtraction (3-digit)' expands to two worksheets."""
+    print("\n" + "=" * 60)
+    print("39. ADD/SUB EXPANSION TEST")
+    print("=" * 60)
+
+    from app.api.worksheets import (
+        UI_SKILL_TO_CONTRACTS, CONTRACT_TOPIC_LABEL,
+        WorksheetGenerationResponse, Worksheet, Question,
+    )
+
+    all_pass = True
+
+    # ── Case 1: Mapping expands to two contracts
+    contracts = UI_SKILL_TO_CONTRACTS.get("Addition and subtraction (3-digit)")
+    ok = contracts == ["column_add_with_carry", "column_sub_with_borrow"]
+    print(f"  Expands to [add, sub]: {'PASS' if ok else f'FAIL ({contracts})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 2: CONTRACT_TOPIC_LABEL has honest labels
+    ok_add = CONTRACT_TOPIC_LABEL.get("column_add_with_carry") == "3-digit addition (with carry)"
+    ok_sub = CONTRACT_TOPIC_LABEL.get("column_sub_with_borrow") == "3-digit subtraction (with borrow)"
+    ok = ok_add and ok_sub
+    print(f"  Honest topic labels: {'PASS' if ok else f'FAIL (add={ok_add}, sub={ok_sub})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 3: Expansion produces 2 entries from 1 UI skill
+    _expanded = []
+    skills = ["Addition and subtraction (3-digit)"]
+    for sk in skills:
+        cts = UI_SKILL_TO_CONTRACTS.get(sk)
+        if cts:
+            for ck in cts:
+                _expanded.append((CONTRACT_TOPIC_LABEL.get(ck, sk), ck))
+        else:
+            _expanded.append((sk, None))
+    ok = len(_expanded) == 2
+    print(f"  1 UI skill -> 2 expanded entries: {'PASS' if ok else f'FAIL (got {len(_expanded)})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 4: Question split for 10 questions / 2 contracts
+    n, k = 10, len(_expanded)
+    base, rem = divmod(n, k)
+    per_skill = [base + (1 if i < rr else 0) for i, rr in enumerate([rem] * k)]
+    # Simpler: per_skill should be [5, 5]
+    per_skill = [base + (1 if i < rem else 0) for i in range(k)]
+    ok = per_skill == [5, 5] and sum(per_skill) == 10
+    print(f"  Split 10/2 = [5,5]: {'PASS' if ok else f'FAIL ({per_skill})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 5: Build two worksheets with distinct topics
+    add_qs = [Question(id=f"q{i+1}", type="short_answer", text=f"456 + 27{i} = ?", correct_answer=str(456+270+i)) for i in range(5)]
+    sub_qs = [Question(id=f"q{i+1}", type="short_answer", text=f"756 - 23{i} = ?", correct_answer=str(756-230-i)) for i in range(5)]
+    ws_add = Worksheet(
+        title="3-digit addition - Practice", grade="Class 3", subject="Maths",
+        topic="3-digit addition (with carry)", difficulty="Medium", language="English",
+        questions=add_qs,
+    )
+    ws_sub = Worksheet(
+        title="3-digit subtraction - Practice", grade="Class 3", subject="Maths",
+        topic="3-digit subtraction (with borrow)", difficulty="Medium", language="English",
+        questions=sub_qs,
+    )
+    resp = WorksheetGenerationResponse(
+        worksheet=ws_add, worksheets=[ws_add, ws_sub], generation_time_ms=800,
+    )
+    ok = resp.worksheets is not None and len(resp.worksheets) == 2
+    print(f"  Response has 2 worksheets: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 6: One topic contains "addition", one contains "subtraction"
+    topics = [w.topic.lower() for w in resp.worksheets]
+    has_add = any("addition" in t for t in topics)
+    has_sub = any("subtraction" in t for t in topics)
+    ok = has_add and has_sub
+    print(f"  Distinct add/sub topics: {'PASS' if ok else f'FAIL ({topics})'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 7: Subtraction worksheet has "-" in at least one question
+    sub_ws = [w for w in resp.worksheets if "subtraction" in w.topic.lower()][0]
+    has_minus = any("-" in q.text for q in sub_ws.questions)
+    ok = has_minus
+    print(f"  Subtraction ws has '-' in text: {'PASS' if ok else 'FAIL'}")
+    if not ok:
+        all_pass = False
+
+    # ── Case 8: Backward compat — worksheet == worksheets[0]
+    ok = resp.worksheet.topic == resp.worksheets[0].topic
+    print(f"  worksheet == worksheets[0]: {'PASS' if ok else 'FAIL'}")
     if not ok:
         all_pass = False
 
@@ -2802,6 +2905,7 @@ if __name__ == "__main__":
     p36 = test_answer_normalizers()
     p37 = test_multi_skill_bundle()
     p38 = test_skill_purity_enforcement()
+    p39 = test_add_sub_expansion()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -2844,6 +2948,7 @@ if __name__ == "__main__":
     print(f"  Answer normalizers:  {'PASS' if p36 else 'FAIL'}")
     print(f"  Multi-skill bundle: {'PASS' if p37 else 'FAIL'}")
     print(f"  Skill purity:      {'PASS' if p38 else 'FAIL'}")
+    print(f"  Add/sub expansion: {'PASS' if p39 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()

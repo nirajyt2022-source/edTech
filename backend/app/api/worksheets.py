@@ -31,10 +31,16 @@ supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 logger = logging.getLogger("practicecraft.worksheets")
 
 # ── Skill routing: UI topic strings → internal contract keys ──
-UI_SKILL_TO_CONTRACT: dict[str, str] = {
-    "Multiplication tables (2–10)": "multiplication_table_recall",
-    "Multiplication tables (2-10)": "multiplication_table_recall",
-    "Addition and subtraction (3-digit)": "column_add_with_carry",
+UI_SKILL_TO_CONTRACTS: dict[str, list[str]] = {
+    "Multiplication tables (2\u201310)": ["multiplication_table_recall"],
+    "Multiplication tables (2-10)": ["multiplication_table_recall"],
+    "Addition and subtraction (3-digit)": ["column_add_with_carry", "column_sub_with_borrow"],
+}
+
+CONTRACT_TOPIC_LABEL: dict[str, str] = {
+    "column_add_with_carry": "3-digit addition (with carry)",
+    "column_sub_with_borrow": "3-digit subtraction (with borrow)",
+    "multiplication_table_recall": "Multiplication tables (2\u201310)",
 }
 
 
@@ -1352,13 +1358,21 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
 
     try:
         # ── v1.3: Multi-skill bundle ──
-        if request.skills and len(request.skills) >= 2:
-            # Validate all skill topics are non-empty
+        # Expand UI skill labels into individual contract keys
+        _expanded: list[tuple[str, str | None]] = []  # (topic_for_pipeline, forced_contract_key)
+        if request.skills:
             for sk in request.skills:
                 if not sk or not sk.strip():
                     raise HTTPException(status_code=422, detail="skill_topic must not be empty")
+                contracts = UI_SKILL_TO_CONTRACTS.get(sk)
+                if contracts:
+                    for ck in contracts:
+                        _expanded.append((CONTRACT_TOPIC_LABEL.get(ck, sk), ck))
+                else:
+                    _expanded.append((sk, None))
 
-            k = len(request.skills)
+        if len(_expanded) >= 2:
+            k = len(_expanded)
             n = request.num_questions
             base, rem = divmod(n, k)
             per_skill = [base + (1 if i < rem else 0) for i in range(k)]
@@ -1372,7 +1386,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
             bundled: list[Worksheet] = []
             all_warnings: list[str] = []
 
-            for idx, skill_topic in enumerate(request.skills):
+            for idx, (skill_topic, forced_contract) in enumerate(_expanded):
                 q_count = per_skill[idx]
                 if q_count < 1:
                     continue
@@ -1400,7 +1414,6 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                 )
 
                 # ── Skill purity enforcement ──
-                forced_contract = UI_SKILL_TO_CONTRACT.get(skill_topic)
                 if forced_contract:
                     import app.skills.registry as _skills_reg
                     contract = _skills_reg.SKILL_REGISTRY.get(forced_contract)
@@ -1416,7 +1429,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                                 off_topic = (
                                     vdata.get("operation") == "addition"
                                     or "+" in text
-                                    or not any(c in text for c in ("×", "x", "*", "times"))
+                                    or not any(c in text for c in ("\u00d7", "x", "*", "times"))
                                 )
                             if off_topic:
                                 q = contract.repair(q, _rng)

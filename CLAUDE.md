@@ -127,4 +127,5 @@
 
 - **2026-02-12**: Initial documentation pass. Populated all sections from codebase scan.
 - **2026-02-12**: v1.3 multi-skill bundle — generate_worksheet splits questions across skills, returns worksheets[] array. Fixed single-skill topic metadata bug. Frontend tab UI for switching worksheets in bundle. Test #37 added.
-- **2026-02-12**: Skill purity enforcement — UI_SKILL_TO_CONTRACT mapping forces contract key on bundled worksheets. Off-topic questions (addition in multiplication worksheet) repaired via contract.repair(). skill_tag propagation fixed in _slot_to_question. Test #38 (7 cases).
+- **2026-02-12**: Skill purity enforcement — UI_SKILL_TO_CONTRACTS mapping forces contract key on bundled worksheets. Off-topic questions repaired via contract.repair(). skill_tag propagation fixed in _slot_to_question. Test #38 (7 cases).
+- **2026-02-12**: Add/sub expansion — "Addition and subtraction (3-digit)" now expands to two contracts (column_add_with_carry + column_sub_with_borrow), producing separate addition and subtraction worksheets. Honest topic labels via CONTRACT_TOPIC_LABEL. Test #39 (8 cases).
