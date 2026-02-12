@@ -12,7 +12,7 @@ from openai import OpenAI
 from supabase import create_client
 from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
-from app.services.slot_engine import run_slot_pipeline
+from app.services.slot_engine import run_slot_pipeline, hydrate_visuals
 
 router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
 pdf_service = get_pdf_service()
@@ -1289,8 +1289,21 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
             language=request.language,
         )
 
+        # Safety net: ensure visual hydration ran (idempotent if already done)
+        hydrate_visuals(slot_questions)
+
         # Map slot-engine output → API Question models
         questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+
+        # Dev assertion: detect visual propagation failures
+        _RE_3DIGIT = re.compile(r"\b\d{3}\b")
+        for _i, _q in enumerate(questions):
+            _t = _q.text or ""
+            if "column" in _t.lower() and "+" in _t and len(_RE_3DIGIT.findall(_t)) >= 2 and _q.visual_type is None:
+                logger.error(
+                    "VISUAL_BUG q%d: column+addition with 3-digit numbers but visual_type=null | text=%.80s",
+                    _i + 1, _t,
+                )
 
         common_mistakes = meta.get("common_mistakes") or []
         worksheet = Worksheet(

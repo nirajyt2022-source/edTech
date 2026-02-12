@@ -699,6 +699,84 @@ def test_visual_hydration():
     return all_pass
 
 
+def test_endpoint_visual_propagation():
+    """Test that hydrated visuals survive the _slot_to_question serializer."""
+    print("\n" + "=" * 60)
+    print("9. ENDPOINT VISUAL PROPAGATION TEST")
+    print("=" * 60)
+
+    from app.api.worksheets import _slot_to_question, _map_visual_fields
+
+    all_pass = True
+
+    # Simulate raw slot-engine output (pre-hydration, as run_slot_pipeline returns)
+    slot_questions = [
+        {
+            "id": 1, "slot_type": "recognition", "format": "column_setup",
+            "question_text": "Write 456 + 279 in column form.",
+            "pictorial_elements": [], "answer": "735", "difficulty": "easy",
+        },
+        {
+            "id": 2, "slot_type": "application", "format": "word_problem",
+            "question_text": "Priya has 310 stickers. She buys 250 more. How many total?",
+            "pictorial_elements": [], "answer": "560", "difficulty": "medium",
+        },
+        {
+            "id": 3, "slot_type": "thinking", "format": "thinking",
+            "question_text": "Is 578 + 367 closer to 900 or 1000? Explain.",
+            "pictorial_elements": [], "answer": "closer to 900", "difficulty": "hard",
+        },
+    ]
+
+    # Safety-net hydration (same call the endpoint now makes)
+    hydrate_visuals(slot_questions)
+
+    # Map through the real serializer
+    api_questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+
+    # q1: must be base_ten_regrouping
+    q1 = api_questions[0]
+    checks = [
+        ("q1.visual_type", q1.visual_type, "base_ten_regrouping"),
+        ("q1.visual_data.numbers", (q1.visual_data or {}).get("numbers"), [456, 279]),
+        ("q1.visual_data.operation", (q1.visual_data or {}).get("operation"), "addition"),
+    ]
+    for label, actual, expected in checks:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} == {expected!r}" + ("" if ok else f" (got {actual!r})"))
+        if not ok:
+            all_pass = False
+
+    # q2: text-only, no visual
+    q2 = api_questions[1]
+    ok = q2.visual_type is None and q2.visual_data is None
+    print(f"  {'PASS' if ok else 'FAIL'}: q2 visual_type=None, visual_data=None" + ("" if ok else f" (got {q2.visual_type!r})"))
+    if not ok:
+        all_pass = False
+
+    # q3: number_line
+    q3 = api_questions[2]
+    checks3 = [
+        ("q3.visual_type", q3.visual_type, "number_line"),
+        ("q3.visual_data.step", (q3.visual_data or {}).get("step"), 50),
+        ("q3.visual_data.highlight", (q3.visual_data or {}).get("highlight"), 945),
+    ]
+    for label, actual, expected in checks3:
+        ok = actual == expected
+        print(f"  {'PASS' if ok else 'FAIL'}: {label} == {expected!r}" + ("" if ok else f" (got {actual!r})"))
+        if not ok:
+            all_pass = False
+
+    # Pydantic serialization roundtrip
+    q1_dict = q1.model_dump()
+    ok_ser = q1_dict["visual_type"] == "base_ten_regrouping" and q1_dict["visual_data"]["numbers"] == [456, 279]
+    print(f"  {'PASS' if ok_ser else 'FAIL'}: model_dump preserves visual fields")
+    if not ok_ser:
+        all_pass = False
+
+    return all_pass
+
+
 # ════════════════════════════════════════════════
 # Part 2: LLM Pipeline Tests (requires OPENAI_API_KEY)
 # ════════════════════════════════════════════════
@@ -929,6 +1007,7 @@ if __name__ == "__main__":
     p6 = test_history_store()
     p7 = test_seeded_diversity_deterministic()
     p8 = test_visual_hydration()
+    p9 = test_endpoint_visual_propagation()
 
     print("\n" + "=" * 60)
     print("DETERMINISTIC SUMMARY")
@@ -941,6 +1020,7 @@ if __name__ == "__main__":
     print(f"  History store:         {'PASS' if p6 else 'FAIL'}")
     print(f"  Seeded diversity:      {'PASS' if p7 else 'FAIL'}")
     print(f"  Visual hydration:      {'PASS' if p8 else 'FAIL'}")
+    print(f"  Endpoint propagation:  {'PASS' if p9 else 'FAIL'}")
 
     test_llm_pipeline()
     test_30_worksheet_diversity()
