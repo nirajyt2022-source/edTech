@@ -50,11 +50,23 @@ SLOT_PLANS: dict[int, dict[str, int]] = {
 SLOT_ORDER = ["recognition", "application", "representation", "error_detection", "thinking"]
 
 VALID_FORMATS: dict[str, set[str]] = {
-    "recognition":     {"column_setup", "place_value"},
-    "application":     {"word_problem"},
-    "representation":  {"missing_number", "estimation", "place_value"},
+    "recognition": {
+        "column_setup", "place_value", "simple_identify",
+        "fraction_number", "clock_question", "calendar_question",
+        "money_question", "symmetry_question", "shape_pattern",
+        "division_problem", "place_value_question", "comparison_question",
+        "multiplication_problem",
+    },
+    "application": {
+        "word_problem", "sequence_question", "symmetry_complete",
+        "pattern_question", "ordering_question", "comparison_question",
+    },
+    "representation": {
+        "missing_number", "estimation", "place_value", "shape_question",
+        "expanded_form",
+    },
     "error_detection": {"error_spot"},
-    "thinking":        {"thinking"},
+    "thinking": {"thinking", "growing_pattern", "multi_step"},
 }
 
 DEFAULT_FORMAT_BY_SLOT_TYPE: dict[str, str] = {
@@ -72,6 +84,7 @@ _DOCTRINE_WEIGHTS = {
 
 # Mapping from mix_recipe skill_tag → (slot_type, format)
 _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
+    # Generic / arithmetic
     "column_setup": ("recognition", "column_setup"),
     "place_value": ("recognition", "place_value"),
     "word_problem": ("application", "word_problem"),
@@ -79,13 +92,74 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "estimation": ("representation", "estimation"),
     "error_spot": ("error_detection", "error_spot"),
     "thinking": ("thinking", "thinking"),
-    # Fractions (halves/quarters)
-    "fraction_identify_half": ("recognition", "place_value"),
-    "fraction_identify_quarter": ("recognition", "place_value"),
-    "fraction_of_number_half": ("application", "word_problem"),
-    "fraction_of_number_quarter": ("application", "word_problem"),
-    "fraction_of_shape_shaded": ("representation", "place_value"),
-    "fraction_word_problem_half_quarter": ("application", "word_problem"),
+    # Addition / Subtraction
+    "column_add_with_carry": ("recognition", "column_setup"),
+    "addition_word_problem": ("application", "word_problem"),
+    "addition_error_spot": ("error_detection", "error_spot"),
+    "column_sub_with_borrow": ("recognition", "column_setup"),
+    "subtraction_word_problem": ("application", "word_problem"),
+    "subtraction_error_spot": ("error_detection", "error_spot"),
+    # Multiplication
+    "multiplication_tables": ("recognition", "multiplication_problem"),
+    "multiplication_word_problem": ("application", "word_problem"),
+    "multiplication_fill_blank": ("representation", "missing_number"),
+    "multiplication_error_spot": ("error_detection", "error_spot"),
+    "multiplication_thinking": ("thinking", "multi_step"),
+    # Division
+    "division_basics": ("recognition", "division_problem"),
+    "division_word_problem": ("application", "word_problem"),
+    "division_fill_blank": ("representation", "missing_number"),
+    "division_error_spot": ("error_detection", "error_spot"),
+    "division_thinking": ("thinking", "multi_step"),
+    # Numbers and Place Value
+    "place_value_identify": ("recognition", "place_value_question"),
+    "number_comparison": ("application", "comparison_question"),
+    "number_sequence": ("application", "sequence_question"),
+    "number_expansion": ("representation", "expanded_form"),
+    "number_ordering": ("application", "ordering_question"),
+    "place_value_error": ("error_detection", "error_spot"),
+    "number_thinking": ("thinking", "multi_step"),
+    # Fractions
+    "fraction_identify_half": ("recognition", "fraction_number"),
+    "fraction_identify_quarter": ("recognition", "fraction_number"),
+    "fraction_word_problem": ("application", "word_problem"),
+    "fraction_of_shape_shaded": ("representation", "shape_question"),
+    "fraction_error_spot": ("error_detection", "error_spot"),
+    "fraction_thinking": ("thinking", "multi_step"),
+    # Fractions (generic profile extras)
+    "fraction_compare": ("application", "comparison_question"),
+    "fraction_fill_blank": ("representation", "missing_number"),
+    # Time (clock, calendar)
+    "clock_reading": ("recognition", "clock_question"),
+    "time_word_problem": ("application", "word_problem"),
+    "calendar_reading": ("recognition", "calendar_question"),
+    "time_fill_blank": ("representation", "missing_number"),
+    "time_error_spot": ("error_detection", "error_spot"),
+    "time_thinking": ("thinking", "multi_step"),
+    # Money
+    "money_recognition": ("recognition", "money_question"),
+    "money_word_problem": ("application", "word_problem"),
+    "money_change": ("application", "word_problem"),
+    "money_fill_blank": ("representation", "missing_number"),
+    "money_error_spot": ("error_detection", "error_spot"),
+    "money_thinking": ("thinking", "multi_step"),
+    # Symmetry
+    "symmetry_identify": ("recognition", "symmetry_question"),
+    "symmetry_draw": ("application", "symmetry_complete"),
+    "symmetry_fill_blank": ("representation", "shape_question"),
+    "symmetry_error_spot": ("error_detection", "error_spot"),
+    "symmetry_thinking": ("thinking", "multi_step"),
+    # Patterns
+    "number_pattern": ("recognition", "shape_pattern"),
+    "shape_pattern": ("application", "pattern_question"),
+    "pattern_fill_blank": ("representation", "missing_number"),
+    "pattern_error_spot": ("error_detection", "error_spot"),
+    "pattern_thinking": ("thinking", "growing_pattern"),
+}
+
+SLOT_INSTRUCTIONS: dict[str, str] = {
+    "clock_question": "Generate a question about reading clocks.",
+    "calendar_question": "Generate a question about calendar/dates.",
 }
 
 # Default mix recipe for 3-digit addition/subtraction (base 20, scaled for other counts)
@@ -100,31 +174,221 @@ DEFAULT_MIX_RECIPE_20: list[dict] = [
 # ── Topic Profiles ──────────────────────────────────────────
 
 TOPIC_PROFILES: dict[str, dict] = {
+    # ── Arithmetic topics (carry/borrow enforcement handled elsewhere) ──
+    "Addition (carries)": {
+        "allowed_skill_tags": [
+            "column_add_with_carry", "addition_word_problem", "addition_error_spot",
+            "missing_number", "estimation", "thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [],
+        "disallowed_visual_types": [],
+        "default_recipe": [
+            {"skill_tag": "column_add_with_carry", "count": 3},
+            {"skill_tag": "addition_word_problem", "count": 3},
+            {"skill_tag": "missing_number", "count": 2},
+            {"skill_tag": "addition_error_spot", "count": 1},
+            {"skill_tag": "thinking", "count": 1},
+        ],
+    },
+    "Subtraction (borrowing)": {
+        "allowed_skill_tags": [
+            "column_sub_with_borrow", "subtraction_word_problem", "subtraction_error_spot",
+            "missing_number", "estimation", "thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [],
+        "disallowed_visual_types": [],
+        "default_recipe": [
+            {"skill_tag": "column_sub_with_borrow", "count": 3},
+            {"skill_tag": "subtraction_word_problem", "count": 3},
+            {"skill_tag": "missing_number", "count": 2},
+            {"skill_tag": "subtraction_error_spot", "count": 1},
+            {"skill_tag": "thinking", "count": 1},
+        ],
+    },
+    # ── Multiplication / Division ──
+    "Multiplication (tables 2-10)": {
+        "allowed_skill_tags": [
+            "multiplication_tables", "multiplication_word_problem",
+            "multiplication_fill_blank", "multiplication_error_spot",
+            "multiplication_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "add", "subtract", "column form",
+            "plus", "minus", "regroup",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "multiplication_tables", "count": 3},
+            {"skill_tag": "multiplication_word_problem", "count": 3},
+            {"skill_tag": "multiplication_fill_blank", "count": 2},
+            {"skill_tag": "multiplication_error_spot", "count": 1},
+            {"skill_tag": "multiplication_thinking", "count": 1},
+        ],
+    },
+    "Division basics": {
+        "allowed_skill_tags": [
+            "division_basics", "division_word_problem",
+            "division_fill_blank", "division_error_spot", "division_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["carry", "borrow", "decimal"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "division_basics", "count": 3},
+            {"skill_tag": "division_word_problem", "count": 3},
+            {"skill_tag": "division_fill_blank", "count": 2},
+            {"skill_tag": "division_error_spot", "count": 1},
+            {"skill_tag": "division_thinking", "count": 1},
+        ],
+    },
+    # ── Numbers / Place Value ──
+    "Numbers up to 10000": {
+        "allowed_skill_tags": [
+            "place_value_identify",
+            "number_comparison",
+            "number_expansion",
+            "number_ordering",
+            "place_value_error",
+            "number_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "regroup", "base ten", "column form",
+            "rupees", "dirhams", "multiply", "divide", "addition", "subtraction",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "allowed_visual_types": [None],
+        "default_recipe": [
+            {"skill_tag": "place_value_identify", "count": 3},
+            {"skill_tag": "number_comparison", "count": 2},
+            {"skill_tag": "number_expansion", "count": 2},
+            {"skill_tag": "number_ordering", "count": 1},
+            {"skill_tag": "place_value_error", "count": 1},
+            {"skill_tag": "number_thinking", "count": 1},
+        ],
+    },
+    # ── Fractions ──
     "Fractions (halves, quarters)": {
         "allowed_skill_tags": [
             "fraction_identify_half",
             "fraction_identify_quarter",
-            "fraction_of_number_half",
-            "fraction_of_number_quarter",
+            "fraction_word_problem",
             "fraction_of_shape_shaded",
-            "fraction_word_problem_half_quarter",
+            "fraction_error_spot",
+            "fraction_thinking",
         ],
-        "allowed_slot_types": ["recognition", "application", "representation", "thinking"],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "+", "add", "added", "sum", "total", "carry", "regroup",
-            "base ten", "column form", "column", "borrow", "subtract",
-            "change", "rupees", "dirhams", "aed",
+            "thirds", "third", "eighths", "decimals", "percentage",
+            "improper fraction", "mixed number", "add fractions", "subtract fractions",
         ],
-        "disallowed_visual_types": ["base_ten_regrouping"],
-        "allowed_visual_types": ["fraction_shapes", None],
-        "max_numbers": 2,
+        "disallowed_visual_types": ["base_ten_regrouping", "clock_face"],
+        "allowed_visual_types": [None, "fraction_circle", "fraction_rectangle"],
         "default_recipe": [
-            {"skill_tag": "fraction_identify_half", "count": 4},
-            {"skill_tag": "fraction_identify_quarter", "count": 3},
-            {"skill_tag": "fraction_of_number_half", "count": 4},
-            {"skill_tag": "fraction_of_number_quarter", "count": 3},
-            {"skill_tag": "fraction_of_shape_shaded", "count": 3},
-            {"skill_tag": "fraction_word_problem_half_quarter", "count": 3},
+            {"skill_tag": "fraction_identify_half", "count": 2},
+            {"skill_tag": "fraction_identify_quarter", "count": 1},
+            {"skill_tag": "fraction_word_problem", "count": 2},
+            {"skill_tag": "fraction_of_shape_shaded", "count": 2},
+            {"skill_tag": "fraction_error_spot", "count": 1},
+            {"skill_tag": "fraction_thinking", "count": 2},
+        ],
+    },
+    "Fractions": {
+        "allowed_skill_tags": [
+            "fraction_identify_half", "fraction_identify_quarter",
+            "fraction_compare", "fraction_word_problem",
+            "fraction_fill_blank", "fraction_error_spot", "fraction_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["carry", "borrow", "decimal", "percentage"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "fraction_identify_half", "count": 2},
+            {"skill_tag": "fraction_identify_quarter", "count": 1},
+            {"skill_tag": "fraction_word_problem", "count": 3},
+            {"skill_tag": "fraction_fill_blank", "count": 2},
+            {"skill_tag": "fraction_error_spot", "count": 1},
+            {"skill_tag": "fraction_thinking", "count": 1},
+        ],
+    },
+    # ── Time ──
+    "Time (reading clock, calendar)": {
+        "allowed_skill_tags": [
+            "clock_reading", "time_word_problem", "calendar_reading",
+            "time_fill_blank", "time_error_spot", "time_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "pencils", "points", "students", "chocolates",
+            "pages", "marbles", "rupees",
+            "round", "estimate", "hundred", "thousand",
+            "base ten", "regrouping", "carry", "borrow",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "clock_reading", "count": 3},
+            {"skill_tag": "time_word_problem", "count": 3},
+            {"skill_tag": "time_fill_blank", "count": 2},
+            {"skill_tag": "time_error_spot", "count": 1},
+            {"skill_tag": "time_thinking", "count": 1},
+        ],
+    },
+    # ── Money ──
+    "Money (bills and change)": {
+        "allowed_skill_tags": [
+            "money_recognition", "money_word_problem", "money_change",
+            "money_fill_blank", "money_error_spot", "money_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["carry", "borrow", "fraction"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "money_recognition", "count": 2},
+            {"skill_tag": "money_word_problem", "count": 3},
+            {"skill_tag": "money_fill_blank", "count": 2},
+            {"skill_tag": "money_change", "count": 1},
+            {"skill_tag": "money_error_spot", "count": 1},
+            {"skill_tag": "money_thinking", "count": 1},
+        ],
+    },
+    # ── Symmetry ──
+    "Symmetry": {
+        "allowed_skill_tags": [
+            "symmetry_identify", "symmetry_draw",
+            "symmetry_fill_blank", "symmetry_error_spot", "symmetry_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "addition", "subtraction", "multiply",
+            "divide", "plus", "minus", "column",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "symmetry_identify", "count": 3},
+            {"skill_tag": "symmetry_draw", "count": 2},
+            {"skill_tag": "symmetry_fill_blank", "count": 2},
+            {"skill_tag": "symmetry_error_spot", "count": 2},
+            {"skill_tag": "symmetry_thinking", "count": 1},
+        ],
+    },
+    # ── Patterns ──
+    "Patterns and sequences": {
+        "allowed_skill_tags": [
+            "number_pattern", "shape_pattern",
+            "pattern_fill_blank", "pattern_error_spot", "pattern_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["carry", "borrow", "symmetry", "fraction"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "number_pattern", "count": 3},
+            {"skill_tag": "shape_pattern", "count": 3},
+            {"skill_tag": "pattern_fill_blank", "count": 2},
+            {"skill_tag": "pattern_error_spot", "count": 1},
+            {"skill_tag": "pattern_thinking", "count": 1},
         ],
     },
 }
@@ -134,8 +398,38 @@ def normalize_topic(topic: str) -> str:
     return (topic or "").strip()
 
 
+# Fuzzy aliases: frontend may send short names like "Multiplication"
+# but TOPIC_PROFILES uses full names like "Multiplication (tables 2-10)"
+_TOPIC_ALIASES: dict[str, str] = {
+    "addition": "Addition (carries)",
+    "subtraction": "Subtraction (borrowing)",
+    "multiplication": "Multiplication (tables 2-10)",
+    "division": "Division basics",
+    "fractions": "Fractions",
+    "time": "Time (reading clock, calendar)",
+    "money": "Money (bills and change)",
+    "symmetry": "Symmetry",
+    "patterns": "Patterns and sequences",
+    "numbers": "Numbers up to 10000",
+    "place value": "Numbers up to 10000",
+}
+
+
 def get_topic_profile(topic: str) -> dict | None:
-    return TOPIC_PROFILES.get(normalize_topic(topic))
+    normalized = normalize_topic(topic)
+    # Exact match first
+    profile = TOPIC_PROFILES.get(normalized)
+    if profile:
+        return profile
+    # Try alias (case-insensitive)
+    alias_key = normalized.lower()
+    if alias_key in _TOPIC_ALIASES:
+        return TOPIC_PROFILES.get(_TOPIC_ALIASES[alias_key])
+    # Substring match: "Multiplication" should match "Multiplication (tables 2-10)"
+    for key in TOPIC_PROFILES:
+        if key.lower().startswith(alias_key) or alias_key.startswith(key.lower().split("(")[0].strip()):
+            return TOPIC_PROFILES[key]
+    return None
 
 
 def _apply_topic_profile(directives: list[dict], profile: dict) -> list[dict]:
@@ -540,15 +834,173 @@ def _build_slot_instruction(
     """
     # Topic-specific short instructions (token-efficient)
     _skill_tag = (directive or {}).get("skill_tag", "")
-    if _skill_tag.startswith("fraction_"):
-        _fmt = (directive or {}).get("format_hint", "word_problem")
+    # Fractions
+    if _skill_tag in ("fraction_identify_half", "fraction_identify_quarter", "fraction_word_problem",
+                       "fraction_of_shape_shaded", "fraction_error_spot", "fraction_thinking"):
+        _fmt = (directive or {}).get("format_hint", "fraction_number")
+        frac_instructions = {
+            "fraction_identify_half": "Find half of a number. Half = number ÷ 2. VERIFY: half × 2 = original.",
+            "fraction_identify_quarter": "Find quarter of a number. Quarter = number ÷ 4. VERIFY: quarter × 4 = original.",
+            "fraction_word_problem": "Read carefully. Identify whole and fraction asked. Common: 1/2, 1/4, 3/4. VERIFY your answer.",
+            "fraction_of_shape_shaded": "Count total parts (denominator) and shaded parts (numerator). Write as numerator/denominator. Use DIFFERENT shapes each time: circle OR rectangle OR square OR triangle. DO NOT repeat same shape in consecutive questions.",
+            "fraction_error_spot": "Present a scenario with a WRONG fraction claim. Error must be clear (impossible shading, wrong calculation). Ask student to identify AND correct the mistake.",
+            "fraction_thinking": "Multi-step fraction problem. Step 1: Calculate amount each person gets. Step 2: Express as fraction. Fraction each = 1 ÷ number_of_people. VERIFY: (amount each) × (number of people) = total. DOUBLE-CHECK before finalizing.",
+        }
         return (
             f"format: {_fmt}. "
-            f"Topic: Fractions (halves/quarters only). skill: {_skill_tag}. "
-            "Do NOT use addition, subtraction, +, -, carry, regroup, "
-            "column, money, time. "
-            "About halves (1/2) or quarters (1/4) of shapes or numbers."
+            f"Topic: Fractions (halves, quarters). skill: {_skill_tag}. "
+            f"{frac_instructions.get(_skill_tag, 'About fractions.')} "
+            "Numbers must be divisible by 2 or 4. "
+            "Use DIFFERENT numbers and contexts each time. "
+            "DO NOT repeat similar questions."
         )
+
+    if _skill_tag in ("clock_reading", "time_word_problem", "calendar_reading", "time_fill_blank", "time_error_spot", "time_thinking"):
+        _fmt = (directive or {}).get("format_hint", SLOT_INSTRUCTIONS.get(_skill_tag, ""))
+        topic_ctx = (
+            f"Topic: Time (reading clock, calendar). skill: {_skill_tag}. "
+            "Generate ONLY time-related questions. "
+            "Do NOT use addition/subtraction of plain numbers, carry, regroup, "
+            "column form, base ten, place value, estimation, rounding. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts. "
+        )
+        if _skill_tag == "clock_reading":
+            return topic_ctx + "Ask about reading analog/digital clocks (hours, half-hours, quarter-hours)."
+        elif _skill_tag == "time_word_problem":
+            return topic_ctx + "Word problem about duration, elapsed time, or scheduling using clocks/calendars."
+        elif _skill_tag == "calendar_reading":
+            return topic_ctx + "Ask about days, weeks, months, or reading a calendar."
+        elif _skill_tag == "time_fill_blank":
+            return topic_ctx + "format: fill_blank. Fill-in-the-blank about time. Example: 'There are ___ minutes in 1 hour.' or '2 hours = ___ minutes.'"
+        elif _skill_tag == "time_error_spot":
+            return topic_ctx + (
+                "format: error_spot. A student made a SPECIFIC WRONG answer about time. "
+                "The wrong answer and correct answer MUST be DIFFERENT. "
+                "Pick ONE of these error types:\n"
+                "1) Clock misread: 'The hour hand is on 2 and the minute hand is on 3. "
+                "Riya said the time is 2:30.' WRONG=2:30, CORRECT=2:15 "
+                "(minute hand on 3 means 3×5=15 minutes, not 30).\n"
+                "2) Clock misread: 'The minute hand is on 6. "
+                "Amit said it shows 6 minutes past the hour.' WRONG=X:06, CORRECT=X:30 "
+                "(minute hand on 6 means 6×5=30 minutes).\n"
+                "3) Elapsed time error: 'A movie starts at 3:15 and ends at 5:45. "
+                "Priya said the movie is 2 hours long.' WRONG=2 hours, CORRECT=2 hours 30 minutes.\n"
+                "State the student's WRONG answer clearly, then ask: "
+                "What mistake did they make? What is the correct answer?\n"
+                "The answer field must contain the CORRECT answer (not the wrong one)."
+            )
+        elif _skill_tag == "time_thinking":
+            return topic_ctx + "format: multi_step. Reasoning question about time — e.g., elapsed time across hours, comparing durations, scheduling multiple events. NOT pure computation."
+        return topic_ctx
+
+    if _skill_tag in ("multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank", "multiplication_error_spot", "multiplication_thinking"):
+        mult_ctx = (
+            "Topic: Multiplication tables (2-10). "
+            "ONLY use multiplication (×). "
+            "Do NOT use addition, subtraction, carry, borrow, column form, +, -. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts. "
+        )
+        if _skill_tag == "multiplication_tables":
+            return mult_ctx + "Ask a multiplication fact (e.g., 'What is 7 × 8?'). Answer is the product."
+        elif _skill_tag == "multiplication_word_problem":
+            return mult_ctx + "format: word_problem. Real-world scenario using multiplication only."
+        elif _skill_tag == "multiplication_fill_blank":
+            return mult_ctx + "format: fill_blank. Fill-in-the-blank multiplication. Example: '___ × 6 = 42' or '8 × ___ = 56'. Answer is the missing number."
+        elif _skill_tag == "multiplication_error_spot":
+            return mult_ctx + (
+                "format: error_spot. Show a student who got a multiplication fact WRONG. "
+                "Example: 'Riya says 6 × 7 = 48. Is she correct? What is the right answer?' "
+                "The wrong product and correct product MUST be different. "
+                "Answer must be the CORRECT product."
+            )
+        elif _skill_tag == "multiplication_thinking":
+            return mult_ctx + "format: multi_step. Reasoning about multiplication — e.g., 'Which is greater: 4 × 9 or 5 × 7? Explain.' NOT pure computation."
+        return mult_ctx
+
+    # Numbers and Place Value
+    if _skill_tag in ("place_value_identify", "number_comparison", "number_sequence",
+                       "number_expansion", "number_ordering", "place_value_error", "number_thinking"):
+        _fmt = (directive or {}).get("format_hint", "place_value_question")
+        num_instructions = {
+            "place_value_identify": "Identify place value (ones, tens, hundreds, thousands) in 4-digit numbers.",
+            "number_comparison": "Compare two numbers using greater than (>) or less than (<). Example: Which is greater: 4532 or 4523?",
+            "number_sequence": "Complete number sequences or skip counting by 10s, 100s, 1000s.",
+            "number_expansion": "Write a number in expanded form. Example: 4532 = 4000 + 500 + 30 + 2",
+            "number_ordering": "Arrange numbers in ascending (smallest to largest) or descending (largest to smallest) order.",
+            "place_value_error": "Find the mistake in identifying place value. Example: Student says 7 in 5729 is in thousands place (wrong - it's hundreds).",
+            "number_thinking": "Multi-step reasoning about numbers. Example: What is 100 more than 4532? What number comes before 4000?",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Numbers up to 10000. skill: {_skill_tag}. "
+            f"{num_instructions.get(_skill_tag, 'About numbers.')} "
+            "Use numbers up to 4 digits (1000-9999). "
+            "Do NOT use addition/subtraction operations, money, time, fractions. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # Money
+    if _skill_tag in ("money_recognition", "money_word_problem", "money_change",
+                       "money_fill_blank", "money_error_spot", "money_thinking"):
+        _fmt = (directive or {}).get("format_hint", "money_question")
+        money_instructions = {
+            "money_recognition": "Identify coins and notes, or state the value of a set of coins/notes.",
+            "money_word_problem": "Calculate total cost AND change. VERIFY: total cost must be LESS than payment amount. ALWAYS show both: Total = X, Change = payment - total.",
+            "money_change": "When calculating change: Change = Payment - Total Cost. Double-check your math.",
+            "money_fill_blank": "Fill-in-the-blank about money. Example: '₹50 + ₹20 + ₹5 = ₹___' or '₹100 - ₹37 = ₹___'.",
+            "money_error_spot": "Verify the math in the scenario. Common errors: wrong subtraction, forgot to multiply quantity × price.",
+            "money_thinking": "First check if customer CAN afford the items (total ≤ payment). If not, answer should say 'Not enough money'.",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Money (bills and change). skill: {_skill_tag}. "
+            f"{money_instructions.get(_skill_tag, 'About money.')} "
+            "Use rupees (₹) with realistic prices. "
+            "Do NOT use plain addition/subtraction without money context, fractions, time. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # Patterns
+    if _skill_tag in ("number_pattern", "shape_pattern", "pattern_error_spot", "pattern_thinking"):
+        _fmt = (directive or {}).get("format_hint", "shape_pattern")
+        pattern_instructions = {
+            "number_pattern": "Generate a number pattern with a CLEAR rule. Rules: +2, +5, +10, ×2, -3. Pattern length: 5-6 numbers with 1-2 blanks. VERIFY: apply rule forward and backward to confirm pattern is consistent.",
+            "shape_pattern": "Generate a repeating shape pattern. Use 2-3 shapes in a cycle. Pattern length: 8-10 shapes with 2-3 blanks. VERIFY: the pattern repeats consistently.",
+            "pattern_error_spot": "Present a number pattern where ONE number is WRONG. The error must be a SINGLE number that breaks the rule. Example: 2, 4, 7, 8, 10 (7 should be 6). VERIFY: identify the wrong number AND provide correct number.",
+            "pattern_thinking": "Multi-step pattern problem. First identify the rule, then extend the pattern, then answer a question about it. VERIFY each step.",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Patterns and sequences. skill: {_skill_tag}. "
+            f"{pattern_instructions.get(_skill_tag, 'About patterns.')} "
+            "The pattern rule must be SIMPLE and CONSISTENT. "
+            "DO NOT use complex rules. "
+            "VERIFY your pattern before finalizing. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # Check if this is a non-arithmetic topic by looking at skill_tag
+    _NON_ARITHMETIC_TAGS = {
+        "multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank",
+        "multiplication_error_spot", "multiplication_thinking",
+        "division_basics", "division_word_problem", "division_fill_blank",
+        "division_error_spot", "division_thinking",
+        "place_value_identify", "number_comparison", "number_sequence",
+        "number_expansion", "number_ordering", "place_value_error", "number_thinking",
+        "fraction_identify_half", "fraction_identify_quarter",
+        "fraction_word_problem", "fraction_of_shape_shaded",
+        "fraction_compare", "fraction_fill_blank",
+        "fraction_error_spot", "fraction_thinking",
+        "clock_reading", "time_word_problem", "calendar_reading",
+        "time_fill_blank", "time_error_spot", "time_thinking",
+        "symmetry_identify", "symmetry_draw", "symmetry_fill_blank",
+        "symmetry_error_spot", "symmetry_thinking",
+        "money_recognition", "money_word_problem", "money_change",
+        "money_fill_blank", "money_error_spot", "money_thinking",
+        "number_pattern", "shape_pattern", "pattern_fill_blank",
+        "pattern_error_spot", "pattern_thinking",
+    }
+    _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
     base = ""
 
@@ -563,13 +1015,15 @@ def _build_slot_instruction(
                 f'Write EXACTLY: "Write {a} {sym} {b} in column form." '
                 f"Answer: {a} {sym} {b}"
             )
-        else:
+        elif _is_generic_arithmetic:
             base = (
                 "format: column_setup OR place_value. "
                 "Direct recall or single-step. Easy.\n"
                 'Examples: "Write 345 + 278 in column form." / '
                 '"What is the hundreds digit in 507?"'
             )
+        else:
+            base = f"format: standard. Direct recall or identification about the topic. skill: {_skill_tag}."
 
     elif slot_type == "application":
         if not chosen_variant:
@@ -588,36 +1042,49 @@ def _build_slot_instruction(
                     f"MUST use EXACTLY these numbers: {a} {sym} {b}. "
                     f"Exact numerical answer required."
                 )
-            else:
+            elif _is_generic_arithmetic:
                 base = (
                     f"format: word_problem. "
                     f"MUST use this context: {name} is {ctx.get('scenario', 'at school')}. "
                     f"Item: {ctx.get('item', 'things')}. "
                     f"Numbers must require carrying. Exact numerical answer required."
                 )
+            else:
+                base = (
+                    f"format: word_problem. "
+                    f"MUST use this context: {name} is {ctx.get('scenario', 'at school')}. "
+                    f"Item: {ctx.get('item', 'things')}. "
+                    f"Exact numerical answer required."
+                )
 
     elif slot_type == "representation":
-        base = (
-            "format: missing_number OR estimation OR place_value. "
-            'NEVER "visualize" or "draw" or "use array/number line".\n'
-            'Examples: "___ + 178 = 502" / '
-            '"Estimate 478 + 256 to the nearest hundred." / '
-            '"Show 345 as 3 hundreds + ___ tens + 5 ones."'
-        )
+        if _is_generic_arithmetic:
+            base = (
+                "format: missing_number OR estimation OR place_value. "
+                'NEVER "visualize" or "draw" or "use array/number line".\n'
+                'Examples: "___ + 178 = 502" / '
+                '"Estimate 478 + 256 to the nearest hundred." / '
+                '"Show 345 as 3 hundreds + ___ tens + 5 ones."'
+            )
+        else:
+            base = f"format: fill_blank OR standard. Represent or complete a pattern. skill: {_skill_tag}."
 
     elif slot_type == "error_detection":
         if not chosen_variant:
-            base = "format: error_spot. Show a wrong addition answer for the student to correct."
+            base = "format: error_spot. Show a wrong answer for the student to find and correct. The question MUST be about the CURRENT TOPIC (not addition/subtraction unless that IS the topic)."
         else:
             err = chosen_variant.get("error", {})
-            base = (
-                f"format: error_spot. "
-                f"MUST use EXACTLY these numbers: "
-                f"A student added {err['a']} + {err['b']} and got {err['wrong']}. "
-                f"The correct answer is {err['correct']}. "
-                f"The student's mistake: {err['hint']}. "
-                f"Write a question asking the student to find the mistake and give the correct answer."
-            )
+            if err and "a" in err and "wrong" in err:
+                base = (
+                    f"format: error_spot. "
+                    f"MUST use EXACTLY these numbers: "
+                    f"A student added {err['a']} + {err['b']} and got {err['wrong']}. "
+                    f"The correct answer is {err['correct']}. "
+                    f"The student's mistake: {err['hint']}. "
+                    f"Write a question asking the student to find the mistake and give the correct answer."
+                )
+            else:
+                base = "format: error_spot. Show a wrong answer for the student to find and correct. The question MUST be about the CURRENT TOPIC (not addition/subtraction unless that IS the topic)."
 
     elif slot_type == "thinking":
         if not chosen_variant:
@@ -681,17 +1148,70 @@ QUESTION_SYSTEM = (
     "- NEVER reference visuals, arrays, number lines, or diagrams in "
     "question_text. Students see only printed text.\n"
     "- Every answer must be mathematically correct and verifiable.\n"
-    "- pictorial_elements must be empty list []."
+    "- pictorial_elements must be empty list [].\n"
+    "\n"
+    "CRITICAL DEDUPLICATION RULES:\n"
+    "- DO NOT use the same numbers in consecutive questions\n"
+    "- DO NOT repeat the same scenario or context\n"
+    "- DO NOT use the same shape/object in consecutive questions\n"
+    "- Each question must be UNIQUE in both numbers AND context\n"
+    "- Track previous questions and ensure variety\n"
+    "\n"
+    "Example violations to avoid:\n"
+    '- Q1: "half of 8" and Q2: "half of 16" (same operation) → Use different operations\n'
+    '- Q4: "pizza cut into 4" and Q5: "cake cut into 4" (same context) → Use different food or different divisions\n'
+    '- Q6: "56 ÷ 8" and Q7: "56 ÷ 8" (same numbers) → Use different numbers'
 )
 
 QUESTION_USER_TEMPLATE = (
     "Grade {grade} {subject} | Micro-skill: {micro_skill} | "
     "Slot: {slot_type} | Difficulty: {difficulty}\n"
+    "{topic_constraint}"
     "Avoid reusing: {avoid}\n"
     "{slot_instruction}\n"
     "{language_instruction}"
     '{{"format":"","question_text":"","pictorial_elements":[],"answer":""}}'
 )
+
+# Topic-specific constraints injected into the LLM prompt
+_TOPIC_CONSTRAINTS: dict[str, str] = {
+    "Symmetry": (
+        "CRITICAL: ALL questions MUST be about Symmetry ONLY — lines of symmetry, "
+        "folding shapes, mirror images. NEVER generate addition/subtraction/arithmetic questions.\n"
+    ),
+    "Money (bills and change)": (
+        "CRITICAL: ALL questions MUST be about Money ONLY — rupees, paise, bills, coins, "
+        "making change. NEVER generate plain addition/subtraction questions.\n"
+    ),
+    "Time (reading clock, calendar)": (
+        "CRITICAL: ALL questions MUST be about Time ONLY — clocks, hours, minutes, "
+        "calendar, days, months. NEVER generate plain addition/subtraction questions.\n"
+    ),
+    "Patterns and sequences": (
+        "CRITICAL: ALL questions MUST be about Patterns ONLY — number sequences, "
+        "shape patterns, repeating patterns. NEVER generate plain arithmetic questions.\n"
+    ),
+    "Fractions": (
+        "CRITICAL: ALL questions MUST be about Fractions ONLY — halves, quarters, "
+        "parts of whole. NEVER generate addition/subtraction/carry questions.\n"
+    ),
+    "Fractions (halves, quarters)": (
+        "CRITICAL: ALL questions MUST be about Fractions (halves/quarters) ONLY. "
+        "NEVER generate addition/subtraction/carry questions.\n"
+    ),
+    "Numbers up to 10000": (
+        "CRITICAL: ALL questions MUST be about Numbers/Place Value ONLY — place value, "
+        "expanded form, comparison, ordering. NEVER generate addition/subtraction questions.\n"
+    ),
+    "Multiplication (tables 2-10)": (
+        "CRITICAL: ALL questions MUST be about Multiplication tables (2-10) ONLY. "
+        "NEVER generate addition/subtraction/carry questions.\n"
+    ),
+    "Division basics": (
+        "CRITICAL: ALL questions MUST be about Division ONLY — equal sharing, grouping, "
+        "division facts. NEVER generate addition/subtraction questions.\n"
+    ),
+}
 
 REGION_CONTEXT: dict[str, dict[str, str]] = {
     "India": {"currency": "rupees"},
@@ -761,9 +1281,33 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
     if slot_type == "error_detection":
         if not _ERROR_LANGUAGE.search(text):
             issues.append("error_detection must present a wrong answer for student to find/correct")
-        nums_in_text = re.findall(r"\d{2,}", text)
-        if len(nums_in_text) < 2:
-            issues.append("error_detection must include the wrong sum and the original numbers")
+        # Topic-specific error_detection validation
+        _skill = q.get("skill_tag", "")
+        _TIME_ERROR_LANG = re.compile(r"(o'clock|:\d{2}|hour|minute|half past|quarter|clock|time|duration|a\.m\.|p\.m\.)", re.IGNORECASE)
+        if _skill == "time_error_spot" and not _TIME_ERROR_LANG.search(text):
+            issues.append("time error_detection must reference clock/time concepts")
+        # Note: Removed addition-specific validation that required "wrong sum and original numbers"
+        # Different topics have different error patterns (symmetry, time, money, multiplication, etc.)
+
+    # Clock reading validation: verify minute hand × 5 = minutes in answer
+    _skill = q.get("skill_tag", "")
+    if _skill == "clock_reading":
+        _MINUTE_HAND_RE = re.compile(r"minute\s+hand\s+(?:is\s+)?(?:on|at|points?\s+(?:to|at))\s+(\d{1,2})", re.IGNORECASE)
+        mh_match = _MINUTE_HAND_RE.search(text)
+        if mh_match:
+            hand_pos = int(mh_match.group(1))
+            expected_min = 0 if hand_pos == 12 else hand_pos * 5
+            # Check answer contains the correct minutes
+            answer_str = str(answer).strip() if answer else ""
+            _ANS_TIME_RE = re.compile(r"(\d{1,2}):(\d{2})")
+            ans_match = _ANS_TIME_RE.search(answer_str)
+            if ans_match:
+                ans_min = int(ans_match.group(2))
+                if ans_min != expected_min:
+                    issues.append(
+                        f"clock answer minutes={ans_min} but minute hand on {hand_pos} "
+                        f"should give :{expected_min:02d} (hand_pos × 5)"
+                    )
 
     if slot_type == "representation" and fmt == "missing_number":
         if not _BLANK_MARKER.search(text):
@@ -853,6 +1397,13 @@ def hydrate_visuals(questions: list[dict], visuals_only: bool = False) -> list[d
         text = q.get("question_text") or q.get("text") or ""
         text_lower = text.lower()
         nums_2to4 = [int(n) for n in _HYDRATE_NUMS_2TO4.findall(text) if 10 <= int(n) <= 9999]
+
+        # Skip all arithmetic visuals for non-arithmetic topics
+        _q_skill = q.get("skill_tag", "")
+        _is_time_skill = _q_skill in ("clock_reading", "time_word_problem", "calendar_reading", "time_fill_blank", "time_error_spot", "time_thinking")
+        if _is_time_skill:
+            q["representation"] = "TEXT_ONLY"
+            continue
 
         # Rule C: missing number (blank marker + two known values) → NUMBER_LINE
         if _HYDRATE_MISSING.search(text) and len(nums_2to4) >= 2:
@@ -1495,6 +2046,29 @@ def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan:
         if _FORBIDDEN_VISUAL_PHRASES.search(text):
             issues.append(f"q{i+1}: references visuals that aren't rendered")
 
+    # Clock/time deduplication — detect duplicate times and time-pairs across ALL questions
+    _TIME_RE = re.compile(r"(\d{1,2}:\d{2}|\d{1,2}\s*o['\u2019]?clock|\d{1,2}\s*(?:thirty|fifteen|forty-five|half past|quarter (?:past|to)))", re.IGNORECASE)
+    _TIME_SKILLS = ("clock_reading", "time_word_problem", "calendar_reading", "time_fill_blank", "time_error_spot", "time_thinking")
+    clock_times: list[str] = []
+    time_pairs: set[str] = set()  # track (start, end) pairs — order-independent
+    for i, q in enumerate(questions):
+        _skill = q.get("skill_tag", "")
+        if _skill in _TIME_SKILLS:
+            text = q.get("question_text", "")
+            times_found = _TIME_RE.findall(text)
+            normalized = [t.strip().lower() for t in times_found]
+            for t_norm in normalized:
+                if t_norm in clock_times:
+                    issues.append(f"q{i+1}: duplicate time reference '{t_norm}'")
+                clock_times.append(t_norm)
+            # For questions with 2+ times, check (start, end) pair duplicates (order-independent)
+            if len(normalized) >= 2:
+                pair_sorted = tuple(sorted(normalized[:2]))
+                pair_key = f"{pair_sorted[0]}|{pair_sorted[1]}"
+                if pair_key in time_pairs:
+                    issues.append(f"q{i+1}: duplicate time pair ({pair_sorted[0]}, {pair_sorted[1]})")
+                time_pairs.add(pair_key)
+
     app_contexts: list[str] = []
     for q in questions:
         if q.get("slot_type") == "application":
@@ -1545,10 +2119,13 @@ def validate_error_uses_backend_numbers(q: dict, chosen_error: dict | None) -> l
     return issues
 
 
-def validate_hard_difficulty_carry(questions: list[dict], difficulty: str) -> list[str]:
-    """For hard difficulty, at least one application question should involve carry in both ones and tens."""
+def validate_hard_difficulty_carry(questions: list[dict], difficulty: str, topic: str = "") -> list[str]:
+    """For hard difficulty, at least one application question should involve carry in both ones and tens.
+    Only applicable for Addition topic."""
     if difficulty.lower() != "hard":
         return []
+    if topic and topic != "Addition (carries)":
+        return []  # Skip carry validation for non-addition topics
     issues: list[str] = []
     app_qs = [q for q in questions if q.get("slot_type") == "application"]
     if not app_qs:
@@ -1574,7 +2151,7 @@ def validate_hard_difficulty_carry(questions: list[dict], difficulty: str) -> li
 # ════════════════════════════════════════════════════════════
 
 def _clean_json(content: str) -> str:
-    """Strip markdown fences."""
+    """Strip markdown fences and handle common LLM JSON issues."""
     content = content.strip()
     if content.startswith("```json"):
         content = content[7:]
@@ -1582,7 +2159,48 @@ def _clean_json(content: str) -> str:
         content = content[3:]
     if content.endswith("```"):
         content = content[:-3]
-    return content.strip()
+    content = content.strip()
+
+    # Handle "Extra data" — LLM sometimes returns multiple JSON objects or trailing text
+    # Try parsing as-is first; if that fails, extract the first valid JSON object
+    try:
+        json.loads(content)
+        return content
+    except json.JSONDecodeError:
+        pass
+
+    # Try to extract the first complete JSON object using brace matching
+    start = content.find("{")
+    if start == -1:
+        return content
+    depth = 0
+    in_string = False
+    escape_next = False
+    for i, ch in enumerate(content[start:], start):
+        if escape_next:
+            escape_next = False
+            continue
+        if ch == "\\":
+            escape_next = True
+            continue
+        if ch == '"' and not escape_next:
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                candidate = content[start:i + 1]
+                try:
+                    json.loads(candidate)
+                    return candidate
+                except json.JSONDecodeError:
+                    break
+
+    return content
 
 
 def generate_meta(
@@ -1623,6 +2241,7 @@ def generate_question(
     region: str,
     language: str = "English",
     slot_instruction: str = "",
+    topic: str = "",
 ) -> dict:
     """Generate a single question via LLM."""
     avoid_str = ", ".join(avoid_state[-20:]) if avoid_state else "none"
@@ -1631,12 +2250,15 @@ def generate_question(
     if language != "English":
         lang_instruction = f"Write question_text in {language}.\n"
 
+    topic_constraint = _TOPIC_CONSTRAINTS.get(topic, "")
+
     user_msg = QUESTION_USER_TEMPLATE.format(
         grade=grade,
         subject=subject,
         micro_skill=micro_skill,
         slot_type=slot_type,
         difficulty=difficulty,
+        topic_constraint=topic_constraint,
         avoid=avoid_str,
         slot_instruction=slot_instruction,
         language_instruction=lang_instruction,
@@ -1663,23 +2285,55 @@ def generate_question(
     return q
 
 
+_CONTEXT_KEYWORDS = [
+    "pizza", "cake", "apple", "mango", "banana", "orange", "chocolate",
+    "cookie", "pencil", "book", "marble", "toy", "flower", "sweet",
+    "sticker", "balloon", "biscuit", "candy", "egg", "rupee",
+    "circle", "rectangle", "square", "triangle", "star", "heart",
+    "school", "park", "shop", "garden", "kitchen", "library",
+]
+
+
 def _extract_avoid_items(q: dict) -> list[str]:
     """Extract items to add to avoid_state from a generated question."""
     items: list[str] = []
     text = q.get("question_text", "")
 
+    # Track number pairs (legacy)
     nums = re.findall(r"\d{2,}", text)
     if len(nums) >= 2:
         items.append(f"{nums[0]}+{nums[1]}")
 
+    # Track individual numbers for dedup
+    all_nums = re.findall(r"\d+", text)
+    for n in all_nums:
+        items.append(f"num:{n}")
+
+    # Track context items from CONTEXT_BANK
     text_lower = text.lower()
     for ctx in CONTEXT_BANK:
         if ctx["item"] in text_lower:
             items.append(ctx["item"])
 
+    # Track broader context keywords (food, shapes, places)
+    for kw in _CONTEXT_KEYWORDS:
+        if kw in text_lower:
+            items.append(f"ctx:{kw}")
+
+    # Track format
     fmt = q.get("format", "")
     if fmt:
         items.append(f"format:{fmt}")
+
+    # Track operation type
+    if "×" in text or "multiply" in text_lower or "times" in text_lower:
+        items.append("op:multiply")
+    if "÷" in text or "divide" in text_lower or "share" in text_lower:
+        items.append("op:divide")
+    if "half" in text_lower:
+        items.append("op:half")
+    if "quarter" in text_lower:
+        items.append("op:quarter")
 
     return items
 
@@ -1694,7 +2348,7 @@ def _regen_question_for_topic(
     profile = get_topic_profile(topic)
     for _ in range(max_attempts):
         slot_instruction = _build_slot_instruction(
-            directive.get("slot_type", "application"), variant=None, directive=directive,
+            directive.get("slot_type", "application"), chosen_variant=None, directive=directive,
         )
         try:
             q = generate_question(
@@ -1703,6 +2357,7 @@ def _regen_question_for_topic(
                 directive.get("difficulty", difficulty),
                 list(avoid_texts)[-20:], region, language,
                 slot_instruction=slot_instruction,
+                topic=topic,
             )
         except Exception:
             continue
@@ -1791,6 +2446,13 @@ def run_slot_pipeline(
 
     # 2. Get slot plan (plan directives override simple slot_plan)
     _topic_profile = get_topic_profile(topic)
+    # Normalize topic to canonical key so downstream comparisons match
+    if _topic_profile:
+        for _canon_key, _canon_prof in TOPIC_PROFILES.items():
+            if _canon_prof is _topic_profile:
+                topic = _canon_key
+                break
+        logger.info("Canonical topic resolved: %s", topic)
     if worksheet_plan:
         plan_directives = list(worksheet_plan)
         if _topic_profile:
@@ -1847,16 +2509,35 @@ def run_slot_pipeline(
             chosen_variants.append(variant)
 
         elif slot_type == "error_detection":
-            avoid_err = history_avoid["used_error_ids"] + used_error_ids_this_ws
-            err = pick_error(rng, avoid_err)
-            used_error_ids_this_ws.append(err["id"])
-            chosen_variants.append({"error": err})
+            # Only use addition-specific error pool for addition/subtraction topics
+            _ARITHMETIC_TOPICS = {"Addition (carries)", "Subtraction (borrowing)"}
+            if topic in _ARITHMETIC_TOPICS:
+                avoid_err = history_avoid["used_error_ids"] + used_error_ids_this_ws
+                err = pick_error(rng, avoid_err)
+                used_error_ids_this_ws.append(err["id"])
+                chosen_variants.append({"error": err})
+            else:
+                # For other topics, let LLM generate topic-specific error questions
+                chosen_variants.append(None)
 
         elif slot_type == "thinking":
-            avoid_styles = history_avoid["used_thinking_styles"] + used_thinking_styles_this_ws
-            style = pick_thinking_style(rng, avoid_styles)
-            used_thinking_styles_this_ws.append(style["style"])
-            chosen_variants.append({"style": style})
+            # Only use estimation-based thinking for arithmetic topics
+            _THINKING_VARIANT_TOPICS = {
+                "Addition (carries)", "Subtraction (borrowing)",
+                "Multiplication (tables 2-10)", "Division basics",
+                "Numbers up to 10000",
+            }
+            if topic in _THINKING_VARIANT_TOPICS:
+                avoid_styles = history_avoid["used_thinking_styles"] + used_thinking_styles_this_ws
+                style = pick_thinking_style(rng, avoid_styles)
+                used_thinking_styles_this_ws.append(style["style"])
+                chosen_variants.append({"style": style})
+            else:
+                # For Time, Money, Symmetry, Patterns, Fractions — multi-step thinking
+                chosen_variants.append({"style": {
+                    "style": "multi_step",
+                    "instruction": "Multi-step reasoning: solve a problem with 2-3 steps, showing your reasoning.",
+                }})
 
         elif slot_type == "recognition" and directive.get("carry_required"):
             # Deterministic carry pair for non-addition (subtraction etc.)
@@ -1887,15 +2568,22 @@ def run_slot_pipeline(
                     client, grade, subject, micro_skill,
                     slot_type, q_difficulty, avoid_state, region, language,
                     slot_instruction=slot_instruction,
+                    topic=topic,
                 )
 
                 # Backfill format BEFORE validation so validators never see ""
                 backfill_format(q, {"slot_type": slot_type, **directive})
 
+                # Set skill_tag early so validators can use it
+                q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or slot_type
+
                 issues = validate_question(q, slot_type)
 
-                # Extra check: error_detection must use backend-provided numbers
-                if slot_type == "error_detection" and variant:
+                # Extra check: error_detection must use backend-provided numbers (arithmetic only)
+                _q_skill = q.get("skill_tag", "")
+                if slot_type == "error_detection" and variant and _q_skill not in (
+                    "time_error_spot", "money_error_spot", "symmetry_error_spot", "pattern_error_spot",
+                ):
                     err_issues = validate_error_uses_backend_numbers(q, variant)
                     issues.extend(err_issues)
 
@@ -1956,6 +2644,7 @@ def run_slot_pipeline(
         client, grade, subject, micro_skill, difficulty, region, language,
         questions, slot_plan, rng, history_avoid,
         used_contexts_this_ws, used_error_ids_this_ws, used_thinking_styles_this_ws,
+        topic=topic,
     )
 
     # 7a. Normalize answers (deterministic, no LLM)
@@ -1970,7 +2659,7 @@ def run_slot_pipeline(
     if ws_issues:
         logger.warning("Worksheet-level issues: %s", ws_issues)
 
-    carry_issues = validate_hard_difficulty_carry(questions, difficulty)
+    carry_issues = validate_hard_difficulty_carry(questions, difficulty, topic=topic)
     if carry_issues:
         logger.warning("Hard-difficulty carry issues: %s", carry_issues)
 
@@ -2058,6 +2747,9 @@ def run_slot_pipeline(
                 seen_texts.add(normalize_q_text(new_q))
             else:
                 logger.warning("Regen failed for q%d, keeping original", idx2 + 1)
+                # Ensure skill_tag is set even on failed regen
+                if not q.get("skill_tag"):
+                    q["skill_tag"] = d.get("skill_tag") or d.get("slot_type", "")
                 seen_texts.add(nt)
         else:
             seen_texts.add(nt)
@@ -2092,6 +2784,7 @@ def _repair_pass(
     client, grade, subject, micro_skill, difficulty, region, language,
     questions, slot_plan, rng, history_avoid,
     used_contexts, used_error_ids, used_thinking_styles,
+    topic: str = "",
 ) -> list[dict]:
     """Post-generation repair: fix critical constraint violations by re-generating specific questions."""
     for i, q in enumerate(questions):
@@ -2116,6 +2809,7 @@ def _repair_pass(
                         client, grade, subject, micro_skill,
                         "error_detection", q_diff, [], region, language,
                         slot_instruction=instr,
+                        topic=topic,
                     )
                     new_q["id"] = i + 1
                     new_q["slot_type"] = "error_detection"
@@ -2138,6 +2832,7 @@ def _repair_pass(
                         client, grade, subject, micro_skill,
                         "thinking", q_diff, [], region, language,
                         slot_instruction=instr,
+                        topic=topic,
                     )
                     new_q["id"] = i + 1
                     new_q["slot_type"] = "thinking"

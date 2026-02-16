@@ -1,4 +1,42 @@
-# Project Overview
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+# Development Commands
+
+## Backend
+```bash
+# Install dependencies (from backend/)
+pip install -r requirements.txt
+# or with pyproject.toml: pip install -e ".[dev]"
+
+# Run dev server
+cd backend && uvicorn app.main:app --reload --port 8000
+
+# Run tests (deterministic only, no API key needed)
+cd backend && python scripts/test_slot_engine.py
+
+# Run tests with LLM integration (requires OPENAI_API_KEY)
+cd backend && OPENAI_API_KEY=sk-... python scripts/test_slot_engine.py
+```
+
+## Frontend
+```bash
+# Install dependencies (from frontend/)
+cd frontend && npm install
+
+# Run dev server
+cd frontend && npm run dev
+
+# Build
+cd frontend && npm run build   # runs tsc -b && vite build
+
+# Lint
+cd frontend && npm run lint    # eslint
+```
+
+## Pre-commit Hook
+The repo has a git pre-commit hook that auto-appends a dated entry to the `# Update Log` section of CLAUDE.md with changed file paths. **You must replace that auto-generated path list with a human-readable summary** before the commit is finalized.
 
 # Architecture
 
@@ -131,3 +169,4 @@
 - **2026-02-12**: Add/sub expansion — "Addition and subtraction (3-digit)" now expands to two contracts (column_add_with_carry + column_sub_with_borrow), producing separate addition and subtraction worksheets. Honest topic labels via CONTRACT_TOPIC_LABEL. Test #39 (8 cases).
 - **2026-02-12**: Role-based explanations — `_fill_role_explanations()` adds deterministic explanations for thinking (estimation/closer-to/compare) and error_detection (carry/borrow) roles only. Other roles stay null. Capped at 160 chars, preserves pre-existing explanations. Test #40 (10 cases).
 - **2026-02-12**: Estimation visual highlight fix — `normalize_estimation_answers()` now sets NUMBER_LINE highlight to the estimate (rounded sum / closer ref), not the exact sum. Widens number line range if estimate falls outside bounds. Test #41 (7 cases).
+- **2026-02-16**: Changes in backend/app/api, backend/app/services, backend/scripts

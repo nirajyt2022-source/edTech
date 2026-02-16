@@ -1400,7 +1400,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
     try:
         # ── v1.3: Multi-skill bundle ──
         # Expand UI skill labels into individual contract keys
-        _expanded: list[tuple[str, str | None]] = []  # (topic_for_pipeline, forced_contract_key)
+        _expanded: list[tuple[str, str | None, str]] = []  # (topic_for_pipeline, forced_contract_key)
         if request.skills:
             for sk in request.skills:
                 if not sk or not sk.strip():
@@ -1408,9 +1408,9 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                 contracts = UI_SKILL_TO_CONTRACTS.get(sk)
                 if contracts:
                     for ck in contracts:
-                        _expanded.append((CONTRACT_TOPIC_LABEL.get(ck, sk), ck))
+                        _expanded.append((CONTRACT_TOPIC_LABEL.get(ck, sk), ck, sk))
                 else:
-                    _expanded.append((sk, None))
+                    _expanded.append((sk, None, sk))
 
         if len(_expanded) >= 2:
             k = len(_expanded)
@@ -1427,7 +1427,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
             bundled: list[Worksheet] = []
             all_warnings: list[str] = []
 
-            for idx, (skill_topic, forced_contract) in enumerate(_expanded):
+            for idx, (skill_topic, forced_contract, original_skill) in enumerate(_expanded):
                 q_count = per_skill[idx]
                 if q_count < 1:
                     continue
@@ -1445,7 +1445,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                     client=client,
                     grade=request.grade_level,
                     subject=request.subject,
-                    topic=skill_topic,
+                    topic=original_skill,
                     q_count=q_count,
                     difficulty=request.difficulty,
                     region=request.region,
@@ -1494,7 +1494,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                     title=f"{meta.get('micro_skill', skill_topic)} - Practice",
                     grade=request.grade_level,
                     subject=request.subject,
-                    topic=skill_topic,
+                    topic=original_skill,
                     difficulty=meta.get("difficulty", request.difficulty).capitalize(),
                     language=request.language,
                     questions=questions,
