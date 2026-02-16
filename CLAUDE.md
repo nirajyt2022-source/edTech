@@ -170,3 +170,4 @@ The repo has a git pre-commit hook that auto-appends a dated entry to the `# Upd
 - **2026-02-12**: Role-based explanations — `_fill_role_explanations()` adds deterministic explanations for thinking (estimation/closer-to/compare) and error_detection (carry/borrow) roles only. Other roles stay null. Capped at 160 chars, preserves pre-existing explanations. Test #40 (10 cases).
 - **2026-02-12**: Estimation visual highlight fix — `normalize_estimation_answers()` now sets NUMBER_LINE highlight to the estimate (rounded sum / closer ref), not the exact sum. Widens number line range if estimate falls outside bounds. Test #41 (7 cases).
 - **2026-02-16**: Changes in backend/app/api, backend/app/services, backend/scripts
+- **2026-02-17**: Changes in backend/app/services, backend/scripts

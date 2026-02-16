@@ -91,7 +91,7 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "missing_number": ("representation", "missing_number"),
     "estimation": ("representation", "estimation"),
     "error_spot": ("error_detection", "error_spot"),
-    "thinking": ("thinking", "thinking"),
+    "thinking": ("thinking", "multi_step"),
     # Addition / Subtraction
     "column_add_with_carry": ("recognition", "column_setup"),
     "addition_word_problem": ("application", "word_problem"),
@@ -206,6 +206,63 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "subtraction_error_spot", "count": 1},
             {"skill_tag": "thinking", "count": 1},
         ],
+    },
+    # ── Combined Addition + Subtraction ──
+    "Addition and subtraction (3-digit)": {
+        "allowed_skill_tags": [
+            "column_add_with_carry", "addition_word_problem", "addition_error_spot",
+            "column_sub_with_borrow", "subtraction_word_problem", "subtraction_error_spot",
+            "missing_number", "estimation", "thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [],
+        "disallowed_visual_types": [],
+        "default_recipe": [
+            {"skill_tag": "column_add_with_carry", "count": 2},
+            {"skill_tag": "column_sub_with_borrow", "count": 2},
+            {"skill_tag": "addition_word_problem", "count": 1},
+            {"skill_tag": "subtraction_word_problem", "count": 1},
+            {"skill_tag": "addition_error_spot", "count": 1},
+            {"skill_tag": "subtraction_error_spot", "count": 1},
+            {"skill_tag": "thinking", "count": 1},
+        ],
+        # Explicit recipes for common question counts
+        "recipes_by_count": {
+            5: [
+                {"skill_tag": "column_add_with_carry", "count": 1},
+                {"skill_tag": "column_sub_with_borrow", "count": 1},
+                {"skill_tag": "addition_word_problem", "count": 1},
+                {"skill_tag": "subtraction_word_problem", "count": 1},
+                {"skill_tag": "addition_error_spot", "count": 1},
+            ],
+            10: [
+                {"skill_tag": "column_add_with_carry", "count": 2},
+                {"skill_tag": "column_sub_with_borrow", "count": 2},
+                {"skill_tag": "addition_word_problem", "count": 1},
+                {"skill_tag": "subtraction_word_problem", "count": 2},
+                {"skill_tag": "missing_number", "count": 1},
+                {"skill_tag": "addition_error_spot", "count": 1},
+                {"skill_tag": "subtraction_error_spot", "count": 1},
+            ],
+            15: [
+                {"skill_tag": "column_add_with_carry", "count": 3},
+                {"skill_tag": "column_sub_with_borrow", "count": 3},
+                {"skill_tag": "addition_word_problem", "count": 2},
+                {"skill_tag": "subtraction_word_problem", "count": 3},
+                {"skill_tag": "missing_number", "count": 2},
+                {"skill_tag": "addition_error_spot", "count": 1},
+                {"skill_tag": "subtraction_error_spot", "count": 1},
+            ],
+            20: [
+                {"skill_tag": "column_add_with_carry", "count": 4},
+                {"skill_tag": "column_sub_with_borrow", "count": 4},
+                {"skill_tag": "addition_word_problem", "count": 2},
+                {"skill_tag": "subtraction_word_problem", "count": 4},
+                {"skill_tag": "missing_number", "count": 2},
+                {"skill_tag": "addition_error_spot", "count": 2},
+                {"skill_tag": "subtraction_error_spot", "count": 2},
+            ],
+        },
     },
     # ── Multiplication / Division ──
     "Multiplication (tables 2-10)": {
@@ -403,6 +460,8 @@ def normalize_topic(topic: str) -> str:
 _TOPIC_ALIASES: dict[str, str] = {
     "addition": "Addition (carries)",
     "subtraction": "Subtraction (borrowing)",
+    "addition and subtraction": "Addition and subtraction (3-digit)",
+    "add/sub": "Addition and subtraction (3-digit)",
     "multiplication": "Multiplication (tables 2-10)",
     "division": "Division basics",
     "fractions": "Fractions",
@@ -759,8 +818,14 @@ def build_worksheet_plan(
     profile = get_topic_profile(topic)
 
     if mix_recipe is None:
-        if profile and "default_recipe" in profile:
-            recipe = _scale_recipe(profile["default_recipe"], q_count)
+        if profile:
+            # Check for explicit recipe by count first
+            if "recipes_by_count" in profile and q_count in profile["recipes_by_count"]:
+                recipe = profile["recipes_by_count"][q_count]
+            elif "default_recipe" in profile:
+                recipe = _scale_recipe(profile["default_recipe"], q_count)
+            else:
+                recipe = _scale_recipe(DEFAULT_MIX_RECIPE_20, q_count)
         else:
             recipe = _scale_recipe(DEFAULT_MIX_RECIPE_20, q_count)
     else:
@@ -797,8 +862,16 @@ def build_worksheet_plan(
     if profile:
         plan = _apply_topic_profile(plan, profile)
 
-    # Minimal injection: ensure at least one multiplication_table_recall directive
+    # For combined add/sub topic, set operation flags
     _norm_topic = normalize_topic(topic).lower()
+    if "addition and subtraction" in _norm_topic or "add/sub" in _norm_topic:
+        for d in plan:
+            if d.get("skill_tag", "").startswith("column_add") or d.get("skill_tag", "").startswith("addition"):
+                d["allow_operations"] = ["addition"]
+            elif d.get("skill_tag", "").startswith("column_sub") or d.get("skill_tag", "").startswith("subtraction"):
+                d["allow_operations"] = ["subtraction"]
+
+    # Minimal injection: ensure at least one multiplication_table_recall directive
     if "multiplication tables" in _norm_topic:
         has_mult = any(d.get("skill_tag") == "multiplication_table_recall" for d in plan)
         if not has_mult and plan:
@@ -854,6 +927,50 @@ def _build_slot_instruction(
             "Use DIFFERENT numbers and contexts each time. "
             "DO NOT repeat similar questions."
         )
+
+    # Combined Addition/Subtraction - ensure proper question text length
+    if _skill_tag in ("column_add_with_carry", "addition_word_problem", "addition_error_spot",
+                       "column_sub_with_borrow", "subtraction_word_problem", "subtraction_error_spot"):
+        _fmt = (directive or {}).get("format_hint", "column_setup")
+        is_add = "add" in _skill_tag
+        if is_add:
+            op = "addition"
+            op_symbol = "+"
+            constraint = "Require carrying in ones/tens columns."
+        else:
+            op = "subtraction"
+            op_symbol = "-"
+            constraint = "Require borrowing in ones/tens columns."
+
+        if "error_spot" in _skill_tag:
+            return (
+                f"format: error_spot. Topic: {op.capitalize()} (3-digit). "
+                f"A student solved a 3-digit {op} problem and got the WRONG answer. "
+                f"Present the problem, show the student's WRONG answer, and ask what mistake they made. "
+                f"Example: 'A student computed 456 {op_symbol} 278 = XXX (wrong). What is the correct answer?' "
+                f"{constraint} "
+                f"IMPORTANT: Include BOTH the problem AND the student's wrong answer in the question text. "
+                f"The correct_answer field must be the RIGHT answer. "
+                f"Question text must be at least 50 characters. "
+                f"DO NOT use number pairs that have been used before."
+            )
+        elif "word_problem" in _skill_tag:
+            return (
+                f"format: word_problem. Topic: {op.capitalize()} (3-digit). "
+                f"Create a word problem about {op} with 3-digit numbers. "
+                f"Include a complete story with character names, context, and clear question. "
+                f"{constraint} "
+                f"Question text must be at least 80 characters. "
+                f"DO NOT use number pairs that have been used before."
+            )
+        else:
+            return (
+                f"format: {_fmt}. Topic: {op.capitalize()} (3-digit). "
+                f"Present a 3-digit {op} problem in column form. "
+                f"{constraint} "
+                f"Question text must include the full problem written out. "
+                f"DO NOT use number pairs that have been used before."
+            )
 
     if _skill_tag in ("clock_reading", "time_word_problem", "calendar_reading", "time_fill_blank", "time_error_spot", "time_thinking"):
         _fmt = (directive or {}).get("format_hint", SLOT_INSTRUCTIONS.get(_skill_tag, ""))
@@ -2031,15 +2148,22 @@ def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan:
     if actual_counts.get("thinking", 0) < 1:
         issues.append("missing mandatory thinking question")
 
-    number_pairs: list[str] = []
+    # Track used number pairs to prevent duplicates
+    _used_pairs: set[str] = set()
     for i, q in enumerate(questions):
         text = q.get("question_text", "")
-        nums = re.findall(r"\d{2,}", text)
-        if len(nums) >= 2:
-            pair = f"{nums[0]}-{nums[1]}"
-            if pair in number_pairs:
+        numbers = re.findall(r"\b\d{2,4}\b", text)
+        if len(numbers) >= 2:
+            pair = f"{numbers[0]}-{numbers[1]}"
+            if pair in _used_pairs:
                 issues.append(f"q{i+1}: duplicate number pair {pair}")
-            number_pairs.append(pair)
+            _used_pairs.add(pair)
+        # Also check all consecutive pairs for broader dedup
+        for j in range(len(numbers) - 1):
+            pair = f"{numbers[j]}-{numbers[j+1]}"
+            if pair in _used_pairs and j > 0:
+                issues.append(f"q{i+1}: duplicate number pair {pair}")
+            _used_pairs.add(pair)
 
     for i, q in enumerate(questions):
         text = q.get("question_text", "")
