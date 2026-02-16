@@ -34,7 +34,9 @@ logger = logging.getLogger("practicecraft.worksheets")
 UI_SKILL_TO_CONTRACTS: dict[str, list[str]] = {
     "Multiplication tables (2\u201310)": ["multiplication_table_recall"],
     "Multiplication tables (2-10)": ["multiplication_table_recall"],
-    "Addition and subtraction (3-digit)": ["column_add_with_carry", "column_sub_with_borrow"],
+    # NOTE: "Addition and subtraction (3-digit)" intentionally NOT here.
+    # The combined topic uses slot_engine's TOPIC_PROFILES recipe to mix
+    # add/sub questions in a single worksheet (not split into 2 bundles).
 }
 
 CONTRACT_TOPIC_LABEL: dict[str, str] = {
@@ -1439,6 +1441,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                         q_count=q_count,
                         mix_recipe=recipe_dicts,
                         constraints=constraints_dict,
+                        topic=original_skill,
                     )
 
                 meta, slot_questions = run_slot_pipeline(
@@ -1556,6 +1559,7 @@ async def generate_worksheet(request: WorksheetGenerationRequest):
                 q_count=request.num_questions,
                 mix_recipe=recipe_dicts,
                 constraints=constraints_dict,
+                topic=effective_topic,
             )
             logger.info(
                 "Worksheet plan: %d slots, recipe=%s",

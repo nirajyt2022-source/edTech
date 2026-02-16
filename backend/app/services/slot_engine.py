@@ -239,28 +239,32 @@ TOPIC_PROFILES: dict[str, dict] = {
                 {"skill_tag": "column_add_with_carry", "count": 2},
                 {"skill_tag": "column_sub_with_borrow", "count": 2},
                 {"skill_tag": "addition_word_problem", "count": 1},
-                {"skill_tag": "subtraction_word_problem", "count": 2},
+                {"skill_tag": "subtraction_word_problem", "count": 1},
                 {"skill_tag": "missing_number", "count": 1},
                 {"skill_tag": "addition_error_spot", "count": 1},
                 {"skill_tag": "subtraction_error_spot", "count": 1},
+                {"skill_tag": "thinking", "count": 1},
             ],
             15: [
                 {"skill_tag": "column_add_with_carry", "count": 3},
                 {"skill_tag": "column_sub_with_borrow", "count": 3},
                 {"skill_tag": "addition_word_problem", "count": 2},
-                {"skill_tag": "subtraction_word_problem", "count": 3},
+                {"skill_tag": "subtraction_word_problem", "count": 2},
                 {"skill_tag": "missing_number", "count": 2},
                 {"skill_tag": "addition_error_spot", "count": 1},
                 {"skill_tag": "subtraction_error_spot", "count": 1},
+                {"skill_tag": "thinking", "count": 1},
             ],
             20: [
                 {"skill_tag": "column_add_with_carry", "count": 4},
                 {"skill_tag": "column_sub_with_borrow", "count": 4},
                 {"skill_tag": "addition_word_problem", "count": 2},
-                {"skill_tag": "subtraction_word_problem", "count": 4},
+                {"skill_tag": "subtraction_word_problem", "count": 3},
                 {"skill_tag": "missing_number", "count": 2},
-                {"skill_tag": "addition_error_spot", "count": 2},
-                {"skill_tag": "subtraction_error_spot", "count": 2},
+                {"skill_tag": "addition_error_spot", "count": 1},
+                {"skill_tag": "subtraction_error_spot", "count": 1},
+                {"skill_tag": "thinking", "count": 1},
+                {"skill_tag": "estimation", "count": 2},
             ],
         },
     },
@@ -492,11 +496,21 @@ def get_topic_profile(topic: str) -> dict | None:
 
 
 def _apply_topic_profile(directives: list[dict], profile: dict) -> list[dict]:
-    """Override directives with topic-specific constraints."""
+    """Override directives with topic-specific constraints.
+
+    For arithmetic-carry topics (Addition, Subtraction, combined Add+Sub),
+    preserve carry_required and allow_operations from the original directive
+    so that deterministic carry/borrow pairs are generated.
+    """
     skills = profile["allowed_skill_tags"]
     allowed_skills = set(skills)
     slot_types = profile.get("allowed_slot_types", SLOT_ORDER)
     allowed_slots = set(slot_types)
+
+    # Detect if this is an arithmetic profile that needs carry/borrow
+    _carry_skills = {"column_add_with_carry", "column_sub_with_borrow"}
+    _is_carry_profile = bool(_carry_skills & allowed_skills)
+
     out = []
     for i, d in enumerate(directives):
         nd = dict(d)
@@ -504,8 +518,9 @@ def _apply_topic_profile(directives: list[dict], profile: dict) -> list[dict]:
             nd["skill_tag"] = skills[i % len(skills)]
         if nd.get("slot_type", "") not in allowed_slots:
             nd["slot_type"] = slot_types[i % len(slot_types)]
-        nd["carry_required"] = False
-        nd["allow_operations"] = []
+        if not _is_carry_profile:
+            nd["carry_required"] = False
+            nd["allow_operations"] = []
         out.append(nd)
     return out
 
@@ -928,33 +943,21 @@ def _build_slot_instruction(
             "DO NOT repeat similar questions."
         )
 
-    # Combined Addition/Subtraction - ensure proper question text length
-    if _skill_tag in ("column_add_with_carry", "addition_word_problem", "addition_error_spot",
-                       "column_sub_with_borrow", "subtraction_word_problem", "subtraction_error_spot"):
+    # Combined Addition/Subtraction - recognition and application only
+    # Error_spot skill tags fall through to the generic error_detection handler
+    # which properly injects pick_error() variant numbers
+    if _skill_tag in ("column_add_with_carry", "addition_word_problem",
+                       "column_sub_with_borrow", "subtraction_word_problem"):
         _fmt = (directive or {}).get("format_hint", "column_setup")
         is_add = "add" in _skill_tag
         if is_add:
             op = "addition"
-            op_symbol = "+"
             constraint = "Require carrying in ones/tens columns."
         else:
             op = "subtraction"
-            op_symbol = "-"
             constraint = "Require borrowing in ones/tens columns."
 
-        if "error_spot" in _skill_tag:
-            return (
-                f"format: error_spot. Topic: {op.capitalize()} (3-digit). "
-                f"A student solved a 3-digit {op} problem and got the WRONG answer. "
-                f"Present the problem, show the student's WRONG answer, and ask what mistake they made. "
-                f"Example: 'A student computed 456 {op_symbol} 278 = XXX (wrong). What is the correct answer?' "
-                f"{constraint} "
-                f"IMPORTANT: Include BOTH the problem AND the student's wrong answer in the question text. "
-                f"The correct_answer field must be the RIGHT answer. "
-                f"Question text must be at least 50 characters. "
-                f"DO NOT use number pairs that have been used before."
-            )
-        elif "word_problem" in _skill_tag:
+        if "word_problem" in _skill_tag:
             return (
                 f"format: word_problem. Topic: {op.capitalize()} (3-digit). "
                 f"Create a word problem about {op} with 3-digit numbers. "
@@ -2634,7 +2637,7 @@ def run_slot_pipeline(
 
         elif slot_type == "error_detection":
             # Only use addition-specific error pool for addition/subtraction topics
-            _ARITHMETIC_TOPICS = {"Addition (carries)", "Subtraction (borrowing)"}
+            _ARITHMETIC_TOPICS = {"Addition (carries)", "Subtraction (borrowing)", "Addition and subtraction (3-digit)"}
             if topic in _ARITHMETIC_TOPICS:
                 avoid_err = history_avoid["used_error_ids"] + used_error_ids_this_ws
                 err = pick_error(rng, avoid_err)
@@ -2648,6 +2651,7 @@ def run_slot_pipeline(
             # Only use estimation-based thinking for arithmetic topics
             _THINKING_VARIANT_TOPICS = {
                 "Addition (carries)", "Subtraction (borrowing)",
+                "Addition and subtraction (3-digit)",
                 "Multiplication (tables 2-10)", "Division basics",
                 "Numbers up to 10000",
             }
