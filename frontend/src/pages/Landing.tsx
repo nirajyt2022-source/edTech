@@ -49,9 +49,16 @@ const ENGLISH_TOPICS: Record<string, string[]> = {
     'Tenses', 'Sentence Types', 'Conjunctions', 'Prepositions',
     'Adverbs', 'Prefixes & Suffixes', 'Vocabulary', 'Reading Comprehension',
   ],
+  'Class 5': [
+    'Active & Passive Voice', 'Direct & Indirect Speech', 'Complex Sentences',
+    'Summary Writing', 'Comprehension', 'Synonyms & Antonyms',
+    'Formal Letter Writing', 'Creative Writing', 'Clauses',
+  ],
 }
 
 const SCIENCE_TOPICS: Record<string, string[]> = {
+  'Class 1 (EVS)': ['My Family', 'My Body', 'Plants Around Us', 'Animals Around Us', 'Food We Eat', 'Seasons & Weather'],
+  'Class 2 (EVS)': ['Plants', 'Animals & Habitats', 'Food & Nutrition', 'Water', 'Shelter', 'Our Senses'],
   'Class 3': ['Plants', 'Animals', 'Food & Nutrition', 'Shelter', 'Water', 'Air', 'Our Body'],
 }
 

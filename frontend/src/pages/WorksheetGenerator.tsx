@@ -91,10 +91,25 @@ const ENGLISH_TOPICS_BY_GRADE: Record<number, string[]> = {
   2: ['Nouns (Class 2)', 'Verbs (Class 2)', 'Pronouns (Class 2)', 'Sentences (Class 2)', 'Rhyming Words (Class 2)', 'Punctuation (Class 2)'],
   3: ['Nouns (Class 3)', 'Verbs (Class 3)', 'Adjectives (Class 3)', 'Pronouns (Class 3)', 'Tenses (Class 3)', 'Punctuation (Class 3)', 'Vocabulary (Class 3)', 'Reading Comprehension (Class 3)'],
   4: ['Tenses (Class 4)', 'Sentence Types (Class 4)', 'Conjunctions (Class 4)', 'Prepositions (Class 4)', 'Adverbs (Class 4)', 'Prefixes and Suffixes (Class 4)', 'Vocabulary (Class 4)', 'Reading Comprehension (Class 4)'],
+  5: [
+    'Active and Passive Voice (Class 5)', 'Direct and Indirect Speech (Class 5)',
+    'Complex Sentences (Class 5)', 'Summary Writing (Class 5)',
+    'Comprehension (Class 5)', 'Synonyms and Antonyms (Class 5)',
+    'Formal Letter Writing (Class 5)', 'Creative Writing (Class 5)',
+    'Clauses (Class 5)',
+  ],
 }
 
 // Grade-aware Science topics (matching backend TOPIC_PROFILES keys)
 const SCIENCE_TOPICS_BY_GRADE: Record<number, string[]> = {
+  1: [
+    'My Family (Class 1)', 'My Body (Class 1)', 'Plants Around Us (Class 1)',
+    'Animals Around Us (Class 1)', 'Food We Eat (Class 1)', 'Seasons and Weather (Class 1)',
+  ],
+  2: [
+    'Plants (Class 2)', 'Animals and Habitats (Class 2)', 'Food and Nutrition (Class 2)',
+    'Water (Class 2)', 'Shelter (Class 2)', 'Our Senses (Class 2)',
+  ],
   3: ['Plants (Class 3)', 'Animals (Class 3)', 'Food and Nutrition (Class 3)', 'Shelter (Class 3)', 'Water (Class 3)', 'Air (Class 3)', 'Our Body (Class 3)'],
 }
 
@@ -414,8 +429,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
           return ENGLISH_TOPICS_BY_GRADE[gradeNum]
         }
       }
-      // Grade-aware Science topics
-      if (subject === 'Science' && grade) {
+      // Grade-aware Science/EVS topics
+      if ((subject === 'Science' || subject === 'EVS') && grade) {
         const gradeNum = parseInt(grade.replace('Class ', ''))
         if (!isNaN(gradeNum) && SCIENCE_TOPICS_BY_GRADE[gradeNum]) {
           return SCIENCE_TOPICS_BY_GRADE[gradeNum]

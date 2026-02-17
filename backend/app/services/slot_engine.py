@@ -626,6 +626,52 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "eng_sentence_type_rearrange": ("representation", "rearrange_words"),
     "eng_sentence_type_error": ("error_detection", "error_spot_english"),
     "eng_sentence_type_thinking": ("thinking", "creative_writing"),
+    # ── Class 5 English skill tags ──
+    "eng_c5_voice_identify": ("recognition", "pick_correct"),
+    "eng_c5_voice_convert": ("application", "rewrite_sentence"),
+    "eng_c5_voice_complete": ("representation", "change_form"),
+    "eng_c5_voice_error": ("error_detection", "error_spot_english"),
+    "eng_c5_voice_thinking": ("thinking", "explain_why"),
+    "eng_c5_speech_identify": ("recognition", "pick_correct"),
+    "eng_c5_speech_convert": ("application", "rewrite_sentence"),
+    "eng_c5_speech_complete": ("representation", "change_form"),
+    "eng_c5_speech_error": ("error_detection", "error_spot_english"),
+    "eng_c5_speech_thinking": ("thinking", "explain_why"),
+    "eng_c5_complex_identify": ("recognition", "identify_sentence_type"),
+    "eng_c5_complex_rewrite": ("application", "rewrite_sentence"),
+    "eng_c5_complex_complete": ("representation", "complete_sentence"),
+    "eng_c5_complex_error": ("error_detection", "error_spot_english"),
+    "eng_c5_complex_thinking": ("thinking", "creative_writing"),
+    "eng_c5_summary_identify": ("recognition", "pick_correct"),
+    "eng_c5_summary_write": ("application", "word_problem_english"),
+    "eng_c5_summary_complete": ("representation", "paragraph_cloze"),
+    "eng_c5_summary_error": ("error_detection", "error_spot_english"),
+    "eng_c5_summary_thinking": ("thinking", "explain_why"),
+    "eng_c5_comprehension_identify": ("recognition", "pick_correct"),
+    "eng_c5_comprehension_answer": ("application", "word_problem_english"),
+    "eng_c5_comprehension_complete": ("representation", "paragraph_cloze"),
+    "eng_c5_comprehension_error": ("error_detection", "error_spot_english"),
+    "eng_c5_comprehension_thinking": ("thinking", "explain_why"),
+    "eng_c5_synonym_identify": ("recognition", "pick_correct"),
+    "eng_c5_synonym_match": ("application", "match_columns"),
+    "eng_c5_synonym_use": ("representation", "complete_sentence"),
+    "eng_c5_synonym_error": ("error_detection", "error_spot_english"),
+    "eng_c5_synonym_thinking": ("thinking", "explain_why"),
+    "eng_c5_letter_identify": ("recognition", "pick_correct"),
+    "eng_c5_letter_write": ("application", "word_problem_english"),
+    "eng_c5_letter_complete": ("representation", "paragraph_cloze"),
+    "eng_c5_letter_error": ("error_detection", "error_spot_english"),
+    "eng_c5_letter_thinking": ("thinking", "creative_writing"),
+    "eng_c5_creative_identify": ("recognition", "pick_correct"),
+    "eng_c5_creative_use": ("application", "use_in_sentence"),
+    "eng_c5_creative_expand": ("representation", "expand_sentence"),
+    "eng_c5_creative_error": ("error_detection", "error_spot_english"),
+    "eng_c5_creative_thinking": ("thinking", "creative_writing"),
+    "eng_c5_clause_identify": ("recognition", "identify_sentence_type"),
+    "eng_c5_clause_rewrite": ("application", "rewrite_sentence"),
+    "eng_c5_clause_complete": ("representation", "complete_sentence"),
+    "eng_c5_clause_error": ("error_detection", "error_spot_english"),
+    "eng_c5_clause_thinking": ("thinking", "explain_why"),
     # ── Science Class 3 skill tags ──
     "sci_plants_identify": ("recognition", "pick_correct_science"),
     "sci_plants_apply": ("application", "explain_why_science"),
@@ -662,6 +708,80 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "sci_body_represent": ("representation", "fill_diagram"),
     "sci_body_error": ("error_detection", "error_spot_science"),
     "sci_body_thinking": ("thinking", "multi_step_science"),
+    # ── EVS Class 1 skill tags (6 topics) ──────────────────
+    # My Family (Class 1)
+    "sci_c1_family_identify": ("recognition", "pick_correct_science"),
+    "sci_c1_family_apply": ("application", "give_example"),
+    "sci_c1_family_represent": ("representation", "fill_diagram"),
+    "sci_c1_family_error": ("error_detection", "error_spot_science"),
+    "sci_c1_family_thinking": ("thinking", "thinking_science"),
+    # My Body (Class 1)
+    "sci_c1_body_identify": ("recognition", "identify_part"),
+    "sci_c1_body_apply": ("application", "explain_why_science"),
+    "sci_c1_body_represent": ("representation", "fill_diagram"),
+    "sci_c1_body_error": ("error_detection", "error_spot_science"),
+    "sci_c1_body_thinking": ("thinking", "thinking_science"),
+    # Plants Around Us (Class 1)
+    "sci_c1_plants_identify": ("recognition", "pick_correct_science"),
+    "sci_c1_plants_apply": ("application", "give_example"),
+    "sci_c1_plants_represent": ("representation", "sequence_steps"),
+    "sci_c1_plants_error": ("error_detection", "error_spot_science"),
+    "sci_c1_plants_thinking": ("thinking", "thinking_science"),
+    # Animals Around Us (Class 1)
+    "sci_c1_animals_identify": ("recognition", "classify_object"),
+    "sci_c1_animals_apply": ("application", "compare_two"),
+    "sci_c1_animals_represent": ("representation", "cause_effect"),
+    "sci_c1_animals_error": ("error_detection", "error_spot_science"),
+    "sci_c1_animals_thinking": ("thinking", "thinking_science"),
+    # Food We Eat (Class 1)
+    "sci_c1_food_identify": ("recognition", "pick_correct_science"),
+    "sci_c1_food_apply": ("application", "give_example"),
+    "sci_c1_food_represent": ("representation", "fill_diagram"),
+    "sci_c1_food_error": ("error_detection", "error_spot_science"),
+    "sci_c1_food_thinking": ("thinking", "thinking_science"),
+    # Seasons and Weather (Class 1)
+    "sci_c1_seasons_identify": ("recognition", "pick_correct_science"),
+    "sci_c1_seasons_apply": ("application", "what_happens_if"),
+    "sci_c1_seasons_represent": ("representation", "cause_effect"),
+    "sci_c1_seasons_error": ("error_detection", "error_spot_science"),
+    "sci_c1_seasons_thinking": ("thinking", "thinking_science"),
+    # ── EVS Class 2 skill tags (6 topics) ──────────────────
+    # Plants (Class 2)
+    "sci_c2_plants_identify": ("recognition", "pick_correct_science"),
+    "sci_c2_plants_apply": ("application", "explain_why_science"),
+    "sci_c2_plants_represent": ("representation", "sequence_steps"),
+    "sci_c2_plants_error": ("error_detection", "error_spot_science"),
+    "sci_c2_plants_thinking": ("thinking", "thinking_science"),
+    # Animals and Habitats (Class 2)
+    "sci_c2_animals_identify": ("recognition", "classify_object"),
+    "sci_c2_animals_apply": ("application", "compare_two"),
+    "sci_c2_animals_represent": ("representation", "cause_effect"),
+    "sci_c2_animals_error": ("error_detection", "error_spot_science"),
+    "sci_c2_animals_thinking": ("thinking", "thinking_science"),
+    # Food and Nutrition (Class 2)
+    "sci_c2_food_identify": ("recognition", "pick_correct_science"),
+    "sci_c2_food_apply": ("application", "give_example"),
+    "sci_c2_food_represent": ("representation", "fill_diagram"),
+    "sci_c2_food_error": ("error_detection", "error_spot_science"),
+    "sci_c2_food_thinking": ("thinking", "thinking_science"),
+    # Water (Class 2)
+    "sci_c2_water_identify": ("recognition", "true_false"),
+    "sci_c2_water_apply": ("application", "what_happens_if"),
+    "sci_c2_water_represent": ("representation", "sequence_steps"),
+    "sci_c2_water_error": ("error_detection", "error_spot_science"),
+    "sci_c2_water_thinking": ("thinking", "thinking_science"),
+    # Shelter (Class 2)
+    "sci_c2_shelter_identify": ("recognition", "match_function"),
+    "sci_c2_shelter_apply": ("application", "compare_two"),
+    "sci_c2_shelter_represent": ("representation", "cause_effect"),
+    "sci_c2_shelter_error": ("error_detection", "error_spot_science"),
+    "sci_c2_shelter_thinking": ("thinking", "thinking_science"),
+    # Our Senses (Class 2)
+    "sci_c2_senses_identify": ("recognition", "identify_part"),
+    "sci_c2_senses_apply": ("application", "give_example"),
+    "sci_c2_senses_represent": ("representation", "fill_diagram"),
+    "sci_c2_senses_error": ("error_detection", "error_spot_science"),
+    "sci_c2_senses_thinking": ("thinking", "thinking_science"),
     # ── Hindi Language skill tags ──────────────────────────
     # Varnamala (Class 3)
     "hin_varna_identify": ("recognition", "identify_letter"),
@@ -1117,6 +1237,52 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Identify main ideas and supporting details",
         "Make predictions based on text clues",
     ],
+    # ── Class 5 English Learning Objectives ──
+    "Active and Passive Voice (Class 5)": [
+        "Identify active and passive voice in sentences",
+        "Convert sentences between active and passive voice",
+        "Understand when passive voice is appropriate",
+    ],
+    "Direct and Indirect Speech (Class 5)": [
+        "Identify direct and indirect speech in sentences",
+        "Convert direct speech to indirect speech and vice versa",
+        "Use correct punctuation for reported speech",
+    ],
+    "Complex Sentences (Class 5)": [
+        "Identify main and subordinate clauses in complex sentences",
+        "Join simple sentences using subordinating conjunctions",
+        "Write complex sentences with correct punctuation",
+    ],
+    "Summary Writing (Class 5)": [
+        "Identify the main idea and key points in a passage",
+        "Write a concise summary in own words",
+        "Distinguish between important and unimportant details",
+    ],
+    "Comprehension (Class 5)": [
+        "Read passages and answer inferential and evaluative questions",
+        "Identify themes, tone, and author's purpose",
+        "Make inferences and draw conclusions from text",
+    ],
+    "Synonyms and Antonyms (Class 5)": [
+        "Identify synonyms and antonyms of given words",
+        "Use synonyms and antonyms correctly in sentences",
+        "Choose the best synonym or antonym from context",
+    ],
+    "Formal Letter Writing (Class 5)": [
+        "Understand the format of a formal letter",
+        "Write formal letters with correct salutation, body, and closing",
+        "Use polite and formal language appropriately",
+    ],
+    "Creative Writing (Class 5)": [
+        "Write descriptive paragraphs using vivid language",
+        "Develop a story with a clear beginning, middle, and end",
+        "Use figurative language and varied sentence structures",
+    ],
+    "Clauses (Class 5)": [
+        "Identify main (independent) and subordinate (dependent) clauses",
+        "Distinguish between noun, adjective, and adverb clauses",
+        "Combine clauses to form complex sentences",
+    ],
     # ── Science Class 3 Learning Objectives ──
     "Plants (Class 3)": [
         "Identify parts of a plant and their functions",
@@ -1152,6 +1318,68 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Identify major body parts and their functions",
         "Understand the importance of hygiene and exercise",
         "Explain how different organs help us stay healthy",
+    ],
+    # ── EVS Class 1 Learning Objectives ──
+    "My Family (Class 1)": [
+        "Name and identify family members (mother, father, siblings, grandparents)",
+        "Understand that families care for and help each other",
+        "Describe simple activities done with family",
+    ],
+    "My Body (Class 1)": [
+        "Name and point to major body parts (head, hands, legs, eyes, ears, nose)",
+        "Understand that each body part helps us do different things",
+        "Learn simple hygiene habits (washing hands, brushing teeth)",
+    ],
+    "Plants Around Us (Class 1)": [
+        "Identify common plants and trees seen around us",
+        "Know that plants need water and sunlight to grow",
+        "Name simple parts of a plant (leaf, flower, stem)",
+    ],
+    "Animals Around Us (Class 1)": [
+        "Name common animals seen at home and around us",
+        "Tell where different animals live (land, water, air)",
+        "Know what different animals eat",
+    ],
+    "Food We Eat (Class 1)": [
+        "Name common foods we eat every day",
+        "Know that food comes from plants and animals",
+        "Understand that we need food to stay healthy and strong",
+    ],
+    "Seasons and Weather (Class 1)": [
+        "Name the main seasons (summer, rainy, winter)",
+        "Describe weather using simple words (hot, cold, rainy, windy)",
+        "Know what clothes we wear in different seasons",
+    ],
+    # ── EVS Class 2 Learning Objectives ──
+    "Plants (Class 2)": [
+        "Identify parts of a plant and what each part does",
+        "Know that plants give us food, shade, and fresh air",
+        "Understand how a seed grows into a plant",
+    ],
+    "Animals and Habitats (Class 2)": [
+        "Classify animals as pet, farm, or wild animals",
+        "Match animals to where they live (habitat)",
+        "Describe how animals move and what they eat",
+    ],
+    "Food and Nutrition (Class 2)": [
+        "Sort foods into groups (fruits, vegetables, grains, dairy)",
+        "Understand why eating different foods keeps us healthy",
+        "Know where common foods come from (plant or animal)",
+    ],
+    "Water (Class 2)": [
+        "Name sources of water (rain, river, well, tap)",
+        "List different uses of water in daily life",
+        "Understand why we should not waste water",
+    ],
+    "Shelter (Class 2)": [
+        "Know that all living things need a home or shelter",
+        "Name different types of houses people live in",
+        "Match animals to their homes (nest, burrow, den)",
+    ],
+    "Our Senses (Class 2)": [
+        "Name the five sense organs and what each does",
+        "Match senses to the correct body part (eyes see, ears hear)",
+        "Understand how senses help us learn about the world",
     ],
     # ── Hindi Class 3 topics ──
     "Varnamala (Class 3)": [
@@ -1743,6 +1971,80 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "a passage about the water cycle", "an article about Indian railways",
         "a story about courage and kindness", "a passage about healthy habits",
     ],
+    # ── Class 5 English Context Banks ──
+    "Active and Passive Voice (Class 5)": [
+        "The cricket match was won by India", "Amma cooked biryani for Diwali",
+        "The Taj Mahal was built by Shah Jahan", "Ravi planted a mango tree in the garden",
+        "The rangoli was drawn by Meena", "The teacher praised the students",
+        "The kite was flown by Arjun during Makar Sankranti", "Dadi told us a bedtime story",
+        "The school was decorated for Republic Day", "The postman delivered the letter",
+    ],
+    "Direct and Indirect Speech (Class 5)": [
+        "Amma said to Priya, 'Finish your homework before dinner'",
+        "The teacher said, 'India got independence in 1947'",
+        "Raju asked, 'Can we play cricket after school?'",
+        "Dadi said, 'I will make ladoos for Diwali'",
+        "The shopkeeper said, 'Mangoes cost fifty rupees a kilo'",
+        "Papa said, 'We are going to Jaipur next week'",
+        "Meena said, 'I love reading Panchatantra stories'",
+        "The doctor said, 'Drink plenty of water in summer'",
+        "Arjun said, 'I scored the highest in the maths test'",
+        "The conductor said, 'The bus to Agra leaves at 8 AM'",
+    ],
+    "Complex Sentences (Class 5)": [
+        "Ravi could not play because it was raining during monsoon",
+        "Meena finished her homework before she went to the mela",
+        "Although the exam was difficult, Priya scored well",
+        "The farmer was happy when the monsoon arrived",
+        "Arjun will go to the library after he eats his tiffin",
+        "Since Diwali is near, the market is very crowded",
+        "The train was late because there was fog in Delhi",
+        "Amma made kheer while Dadi told us a story",
+        "If you study hard, you will pass the exam with good marks",
+        "The children played kabaddi until it became dark",
+    ],
+    "Summary Writing (Class 5)": [
+        "a passage about the Indian freedom struggle", "an article about saving tigers in India",
+        "a story about a young girl winning a science competition", "a passage about the water crisis in villages",
+        "an article about ISRO's Mars mission", "a story about a farmer and the monsoon",
+        "a passage about the importance of yoga", "an article about Indian folk dances",
+        "a story about a village library", "a passage about protecting the Ganges river",
+    ],
+    "Comprehension (Class 5)": [
+        "a passage about Swami Vivekananda", "an article about the Indian Constitution",
+        "a story about a girl from Ladakh", "a passage about Indian classical dance forms",
+        "an article about renewable energy in India", "a story about a school trip to Hampi",
+        "a passage about the history of Indian textiles", "an article about child education in rural India",
+        "a story about a brave boy during a flood", "a passage about Indian cuisine and its diversity",
+    ],
+    "Synonyms and Antonyms (Class 5)": [
+        "words from an Indian newspaper editorial", "vocabulary about the environment",
+        "words from a story about an Indian festival", "vocabulary about health and hygiene",
+        "words describing Indian monuments", "vocabulary from a science article",
+        "words about sports and sportsmanship", "vocabulary from an Indian fable",
+        "words about school life and studies", "vocabulary about nature and wildlife",
+    ],
+    "Formal Letter Writing (Class 5)": [
+        "writing to the principal about a school event", "writing to the municipality about road repairs",
+        "writing to the editor about traffic near school", "writing to a company to order school supplies",
+        "writing to the headmaster requesting leave", "writing to the librarian about new books",
+        "writing to an NGO about a cleanliness drive", "writing to the district collector about water supply",
+        "writing to a pen friend about your city", "writing to the sports teacher about forming a cricket team",
+    ],
+    "Creative Writing (Class 5)": [
+        "a rainy day at school during monsoon", "visiting a mela in your village",
+        "my favourite Indian festival", "a day without electricity at home",
+        "a trip to the mountains in Himachal", "helping Amma in the kitchen during Pongal",
+        "a school picnic to a historical fort", "my best friend and our adventures",
+        "what I want to be when I grow up", "a funny incident on a train journey",
+    ],
+    "Clauses (Class 5)": [
+        "Ravi, who lives in Jaipur, loves flying kites", "The book that Meena borrowed was very interesting",
+        "Priya waited at the bus stop until the rain stopped", "The mango tree which Dadi planted has grown tall",
+        "Arjun ran fast because he was late for school", "Amma said that she would cook rajma for dinner",
+        "The boy who won the kabaddi match is my friend", "We visited the fort where Shivaji Maharaj lived",
+        "If the monsoon comes early, the farmers will be happy", "The girl whose painting won first prize is from our class",
+    ],
     # ── Science Class 3 Context Banks ──
     "Plants (Class 3)": [
         "neem tree in the school compound", "tulsi plant at home",
@@ -1792,6 +2094,92 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "a visit to the school nurse", "running in a race on sports day",
         "getting a vaccination at the health centre", "breathing during yoga",
         "wearing spectacles for reading", "a dentist visit",
+    ],
+    # ── EVS Class 1 Context Banks ──
+    "My Family (Class 1)": [
+        "Amma cooking roti in the kitchen", "Appa dropping Raju at school",
+        "Dadi telling a bedtime story", "Nani making mango pickle",
+        "playing with brother and sister in the park", "celebrating Diwali with the whole family",
+        "going to the temple with grandparents", "eating dinner together at the table",
+        "helping Amma water the tulsi plant", "visiting Nana-Nani during summer holidays",
+    ],
+    "My Body (Class 1)": [
+        "clapping hands during a rhyme", "running in the school playground",
+        "washing hands before eating tiffin", "brushing teeth every morning",
+        "touching toes during PT class", "waving goodbye to Amma at the school gate",
+        "using eyes to read a picture book", "listening to a story with ears",
+        "smelling flowers in the garden", "kicking a ball with friends",
+    ],
+    "Plants Around Us (Class 1)": [
+        "watering the tulsi plant at home", "a big neem tree in the school ground",
+        "mango tree in Dadi's garden", "lotus flowers in a village pond",
+        "coconut trees at the beach", "marigold flowers for Diwali puja",
+        "a banana plant behind the house", "sunflower seeds for parrots",
+        "a banyan tree at the park", "growing coriander in a pot",
+    ],
+    "Animals Around Us (Class 1)": [
+        "a cow at the local gaushala", "sparrows on the window ledge",
+        "a dog guarding the house gate", "a cat sleeping on the chair",
+        "parrots eating guava on a tree", "a hen and chicks in the backyard",
+        "fish in a glass bowl at home", "a monkey on the school roof",
+        "squirrels running in the park", "buffaloes near the village pond",
+    ],
+    "Food We Eat (Class 1)": [
+        "eating roti and dal for lunch", "drinking milk every morning",
+        "Amma making rice and sambar", "eating a banana after school",
+        "sharing tiffin with friends", "buying fruits from a pushcart",
+        "eating curd-rice on a hot day", "Dadi making jaggery ladoo",
+        "having idli-chutney for breakfast", "eating seasonal guava",
+    ],
+    "Seasons and Weather (Class 1)": [
+        "playing in the rain during monsoon", "wearing a sweater in winter",
+        "drinking lassi in hot summer", "flying kites on Makar Sankranti",
+        "using an umbrella on a rainy day", "sitting under a fan in summer",
+        "wrapping up in a shawl like Dadi", "jumping in puddles after rain",
+        "dry leaves falling from trees in autumn", "morning fog on the way to school",
+    ],
+    # ── EVS Class 2 Context Banks ──
+    "Plants (Class 2)": [
+        "parts of the tulsi plant at home", "seeds sprouting in a wet cloth",
+        "mango tree flowering in spring", "neem leaves used as medicine",
+        "lotus growing in the village pond", "a farmer planting rice seedlings",
+        "marigold garlands at the temple", "a banyan tree with hanging roots",
+        "coconut palm at the seaside", "bamboo growing near the river",
+    ],
+    "Animals and Habitats (Class 2)": [
+        "a peacock dancing in the rain", "cows resting at the gaushala",
+        "a camel walking in the Thar desert", "monkeys in the forest near a hill",
+        "fish swimming in a village tank", "an elephant at the wildlife sanctuary",
+        "sparrows building a nest on the window", "a frog jumping near the pond",
+        "hens pecking grain in the yard", "a snake spotted in the garden",
+    ],
+    "Food and Nutrition (Class 2)": [
+        "a school lunch of dal-roti-sabzi", "fruits from a village orchard",
+        "milk from the local dairy", "vegetables from the sabzi mandi",
+        "Amma cooking paneer at home", "eating curd and chaas in summer",
+        "a balanced thali with all food groups", "jaggery and peanut chikki",
+        "eggs for breakfast at home", "seasonal mangoes in summer",
+    ],
+    "Water (Class 2)": [
+        "filling water from a hand pump", "rainwater collecting on the roof",
+        "the Ganga river flowing through the city", "a water tanker in the colony",
+        "watering plants with a bucket", "a well in the village square",
+        "boiling water before drinking", "washing clothes by the pond",
+        "a farmer irrigating the field", "a water purifier at school",
+    ],
+    "Shelter (Class 2)": [
+        "a kutcha house in a village", "a pucca flat in the city",
+        "a bird's nest on the neem tree", "a beehive under the school roof",
+        "a tent at the Kumbh Mela ground", "a rabbit's burrow in the field",
+        "a houseboat on Dal Lake in Kashmir", "a stilt house in Assam",
+        "a spider's web in the corner", "a dog kennel in the garden",
+    ],
+    "Our Senses (Class 2)": [
+        "smelling marigold flowers in the garden", "listening to bhajan in morning assembly",
+        "tasting sweet jalebi at the mela", "touching a soft cotton dupatta",
+        "seeing colourful rangoli on Diwali", "hearing the school bell ring",
+        "smelling fresh roti being made", "feeling raindrops on the hand",
+        "watching a kite in the sky", "tasting sour lemon pickle",
     ],
     # ── Hindi Class 3 Context Banks ──
     "Varnamala (Class 3)": [
@@ -3385,6 +3773,163 @@ TOPIC_PROFILES: dict[str, dict] = {
         ],
     },
     # ════════════════════════════════════════════════════════════
+    # ── Class 5 English (9 topics) ──
+    # ════════════════════════════════════════════════════════════
+    "Active and Passive Voice (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_voice_identify", "eng_c5_voice_convert",
+            "eng_c5_voice_complete", "eng_c5_voice_error", "eng_c5_voice_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_voice_identify", "count": 3},
+            {"skill_tag": "eng_c5_voice_convert", "count": 3},
+            {"skill_tag": "eng_c5_voice_complete", "count": 2},
+            {"skill_tag": "eng_c5_voice_error", "count": 1},
+            {"skill_tag": "eng_c5_voice_thinking", "count": 1},
+        ],
+    },
+    "Direct and Indirect Speech (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_speech_identify", "eng_c5_speech_convert",
+            "eng_c5_speech_complete", "eng_c5_speech_error", "eng_c5_speech_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_speech_identify", "count": 3},
+            {"skill_tag": "eng_c5_speech_convert", "count": 3},
+            {"skill_tag": "eng_c5_speech_complete", "count": 2},
+            {"skill_tag": "eng_c5_speech_error", "count": 1},
+            {"skill_tag": "eng_c5_speech_thinking", "count": 1},
+        ],
+    },
+    "Complex Sentences (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_complex_identify", "eng_c5_complex_rewrite",
+            "eng_c5_complex_complete", "eng_c5_complex_error", "eng_c5_complex_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_complex_identify", "count": 3},
+            {"skill_tag": "eng_c5_complex_rewrite", "count": 3},
+            {"skill_tag": "eng_c5_complex_complete", "count": 2},
+            {"skill_tag": "eng_c5_complex_error", "count": 1},
+            {"skill_tag": "eng_c5_complex_thinking", "count": 1},
+        ],
+    },
+    "Summary Writing (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_summary_identify", "eng_c5_summary_write",
+            "eng_c5_summary_complete", "eng_c5_summary_error", "eng_c5_summary_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_summary_identify", "count": 3},
+            {"skill_tag": "eng_c5_summary_write", "count": 3},
+            {"skill_tag": "eng_c5_summary_complete", "count": 2},
+            {"skill_tag": "eng_c5_summary_error", "count": 1},
+            {"skill_tag": "eng_c5_summary_thinking", "count": 1},
+        ],
+    },
+    "Comprehension (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_comprehension_identify", "eng_c5_comprehension_answer",
+            "eng_c5_comprehension_complete", "eng_c5_comprehension_error",
+            "eng_c5_comprehension_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_comprehension_identify", "count": 3},
+            {"skill_tag": "eng_c5_comprehension_answer", "count": 3},
+            {"skill_tag": "eng_c5_comprehension_complete", "count": 2},
+            {"skill_tag": "eng_c5_comprehension_error", "count": 1},
+            {"skill_tag": "eng_c5_comprehension_thinking", "count": 1},
+        ],
+    },
+    "Synonyms and Antonyms (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_synonym_identify", "eng_c5_synonym_match",
+            "eng_c5_synonym_use", "eng_c5_synonym_error", "eng_c5_synonym_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_synonym_identify", "count": 3},
+            {"skill_tag": "eng_c5_synonym_match", "count": 3},
+            {"skill_tag": "eng_c5_synonym_use", "count": 2},
+            {"skill_tag": "eng_c5_synonym_error", "count": 1},
+            {"skill_tag": "eng_c5_synonym_thinking", "count": 1},
+        ],
+    },
+    "Formal Letter Writing (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_letter_identify", "eng_c5_letter_write",
+            "eng_c5_letter_complete", "eng_c5_letter_error", "eng_c5_letter_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_letter_identify", "count": 3},
+            {"skill_tag": "eng_c5_letter_write", "count": 3},
+            {"skill_tag": "eng_c5_letter_complete", "count": 2},
+            {"skill_tag": "eng_c5_letter_error", "count": 1},
+            {"skill_tag": "eng_c5_letter_thinking", "count": 1},
+        ],
+    },
+    "Creative Writing (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_creative_identify", "eng_c5_creative_use",
+            "eng_c5_creative_expand", "eng_c5_creative_error", "eng_c5_creative_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_creative_identify", "count": 3},
+            {"skill_tag": "eng_c5_creative_use", "count": 3},
+            {"skill_tag": "eng_c5_creative_expand", "count": 2},
+            {"skill_tag": "eng_c5_creative_error", "count": 1},
+            {"skill_tag": "eng_c5_creative_thinking", "count": 1},
+        ],
+    },
+    "Clauses (Class 5)": {
+        "allowed_skill_tags": [
+            "eng_c5_clause_identify", "eng_c5_clause_rewrite",
+            "eng_c5_clause_complete", "eng_c5_clause_error", "eng_c5_clause_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c5_clause_identify", "count": 3},
+            {"skill_tag": "eng_c5_clause_rewrite", "count": 3},
+            {"skill_tag": "eng_c5_clause_complete", "count": 2},
+            {"skill_tag": "eng_c5_clause_error", "count": 1},
+            {"skill_tag": "eng_c5_clause_thinking", "count": 1},
+        ],
+    },
+    # ════════════════════════════════════════════════════════════
     # ── Science Class 3 (7 topics) ──
     # ════════════════════════════════════════════════════════════
     "Plants (Class 3)": {
@@ -3504,6 +4049,216 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "sci_body_represent", "count": 2},
             {"skill_tag": "sci_body_error", "count": 1},
             {"skill_tag": "sci_body_thinking", "count": 1},
+        ],
+    },
+    # ════════════════════════════════════════════════════════════
+    # ── EVS Class 1 (6 topics) ──
+    # ════════════════════════════════════════════════════════════
+    "My Family (Class 1)": {
+        "allowed_skill_tags": [
+            "sci_c1_family_identify", "sci_c1_family_apply", "sci_c1_family_represent",
+            "sci_c1_family_error", "sci_c1_family_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c1_family_identify", "count": 3},
+            {"skill_tag": "sci_c1_family_apply", "count": 3},
+            {"skill_tag": "sci_c1_family_represent", "count": 2},
+            {"skill_tag": "sci_c1_family_error", "count": 1},
+            {"skill_tag": "sci_c1_family_thinking", "count": 1},
+        ],
+    },
+    "My Body (Class 1)": {
+        "allowed_skill_tags": [
+            "sci_c1_body_identify", "sci_c1_body_apply", "sci_c1_body_represent",
+            "sci_c1_body_error", "sci_c1_body_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c1_body_identify", "count": 3},
+            {"skill_tag": "sci_c1_body_apply", "count": 3},
+            {"skill_tag": "sci_c1_body_represent", "count": 2},
+            {"skill_tag": "sci_c1_body_error", "count": 1},
+            {"skill_tag": "sci_c1_body_thinking", "count": 1},
+        ],
+    },
+    "Plants Around Us (Class 1)": {
+        "allowed_skill_tags": [
+            "sci_c1_plants_identify", "sci_c1_plants_apply", "sci_c1_plants_represent",
+            "sci_c1_plants_error", "sci_c1_plants_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c1_plants_identify", "count": 3},
+            {"skill_tag": "sci_c1_plants_apply", "count": 3},
+            {"skill_tag": "sci_c1_plants_represent", "count": 2},
+            {"skill_tag": "sci_c1_plants_error", "count": 1},
+            {"skill_tag": "sci_c1_plants_thinking", "count": 1},
+        ],
+    },
+    "Animals Around Us (Class 1)": {
+        "allowed_skill_tags": [
+            "sci_c1_animals_identify", "sci_c1_animals_apply", "sci_c1_animals_represent",
+            "sci_c1_animals_error", "sci_c1_animals_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c1_animals_identify", "count": 3},
+            {"skill_tag": "sci_c1_animals_apply", "count": 3},
+            {"skill_tag": "sci_c1_animals_represent", "count": 2},
+            {"skill_tag": "sci_c1_animals_error", "count": 1},
+            {"skill_tag": "sci_c1_animals_thinking", "count": 1},
+        ],
+    },
+    "Food We Eat (Class 1)": {
+        "allowed_skill_tags": [
+            "sci_c1_food_identify", "sci_c1_food_apply", "sci_c1_food_represent",
+            "sci_c1_food_error", "sci_c1_food_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c1_food_identify", "count": 3},
+            {"skill_tag": "sci_c1_food_apply", "count": 3},
+            {"skill_tag": "sci_c1_food_represent", "count": 2},
+            {"skill_tag": "sci_c1_food_error", "count": 1},
+            {"skill_tag": "sci_c1_food_thinking", "count": 1},
+        ],
+    },
+    "Seasons and Weather (Class 1)": {
+        "allowed_skill_tags": [
+            "sci_c1_seasons_identify", "sci_c1_seasons_apply", "sci_c1_seasons_represent",
+            "sci_c1_seasons_error", "sci_c1_seasons_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c1_seasons_identify", "count": 3},
+            {"skill_tag": "sci_c1_seasons_apply", "count": 3},
+            {"skill_tag": "sci_c1_seasons_represent", "count": 2},
+            {"skill_tag": "sci_c1_seasons_error", "count": 1},
+            {"skill_tag": "sci_c1_seasons_thinking", "count": 1},
+        ],
+    },
+    # ════════════════════════════════════════════════════════════
+    # ── EVS Class 2 (6 topics) ──
+    # ════════════════════════════════════════════════════════════
+    "Plants (Class 2)": {
+        "allowed_skill_tags": [
+            "sci_c2_plants_identify", "sci_c2_plants_apply", "sci_c2_plants_represent",
+            "sci_c2_plants_error", "sci_c2_plants_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c2_plants_identify", "count": 3},
+            {"skill_tag": "sci_c2_plants_apply", "count": 3},
+            {"skill_tag": "sci_c2_plants_represent", "count": 2},
+            {"skill_tag": "sci_c2_plants_error", "count": 1},
+            {"skill_tag": "sci_c2_plants_thinking", "count": 1},
+        ],
+    },
+    "Animals and Habitats (Class 2)": {
+        "allowed_skill_tags": [
+            "sci_c2_animals_identify", "sci_c2_animals_apply", "sci_c2_animals_represent",
+            "sci_c2_animals_error", "sci_c2_animals_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c2_animals_identify", "count": 3},
+            {"skill_tag": "sci_c2_animals_apply", "count": 3},
+            {"skill_tag": "sci_c2_animals_represent", "count": 2},
+            {"skill_tag": "sci_c2_animals_error", "count": 1},
+            {"skill_tag": "sci_c2_animals_thinking", "count": 1},
+        ],
+    },
+    "Food and Nutrition (Class 2)": {
+        "allowed_skill_tags": [
+            "sci_c2_food_identify", "sci_c2_food_apply", "sci_c2_food_represent",
+            "sci_c2_food_error", "sci_c2_food_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c2_food_identify", "count": 3},
+            {"skill_tag": "sci_c2_food_apply", "count": 3},
+            {"skill_tag": "sci_c2_food_represent", "count": 2},
+            {"skill_tag": "sci_c2_food_error", "count": 1},
+            {"skill_tag": "sci_c2_food_thinking", "count": 1},
+        ],
+    },
+    "Water (Class 2)": {
+        "allowed_skill_tags": [
+            "sci_c2_water_identify", "sci_c2_water_apply", "sci_c2_water_represent",
+            "sci_c2_water_error", "sci_c2_water_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c2_water_identify", "count": 3},
+            {"skill_tag": "sci_c2_water_apply", "count": 3},
+            {"skill_tag": "sci_c2_water_represent", "count": 2},
+            {"skill_tag": "sci_c2_water_error", "count": 1},
+            {"skill_tag": "sci_c2_water_thinking", "count": 1},
+        ],
+    },
+    "Shelter (Class 2)": {
+        "allowed_skill_tags": [
+            "sci_c2_shelter_identify", "sci_c2_shelter_apply", "sci_c2_shelter_represent",
+            "sci_c2_shelter_error", "sci_c2_shelter_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c2_shelter_identify", "count": 3},
+            {"skill_tag": "sci_c2_shelter_apply", "count": 3},
+            {"skill_tag": "sci_c2_shelter_represent", "count": 2},
+            {"skill_tag": "sci_c2_shelter_error", "count": 1},
+            {"skill_tag": "sci_c2_shelter_thinking", "count": 1},
+        ],
+    },
+    "Our Senses (Class 2)": {
+        "allowed_skill_tags": [
+            "sci_c2_senses_identify", "sci_c2_senses_apply", "sci_c2_senses_represent",
+            "sci_c2_senses_error", "sci_c2_senses_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c2_senses_identify", "count": 3},
+            {"skill_tag": "sci_c2_senses_apply", "count": 3},
+            {"skill_tag": "sci_c2_senses_represent", "count": 2},
+            {"skill_tag": "sci_c2_senses_error", "count": 1},
+            {"skill_tag": "sci_c2_senses_thinking", "count": 1},
         ],
     },
     # ── Hindi Class 3 topic profiles ──────────────────────────
@@ -3820,6 +4575,39 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 4 prefixes": "Prefixes and Suffixes (Class 4)",
     "class 4 vocabulary": "Vocabulary (Class 4)",
     "class 4 comprehension": "Reading Comprehension (Class 4)",
+    # ── Class 5 English aliases ──
+    "active and passive voice": "Active and Passive Voice (Class 5)",
+    "class 5 voice": "Active and Passive Voice (Class 5)",
+    "c5 voice": "Active and Passive Voice (Class 5)",
+    "active passive": "Active and Passive Voice (Class 5)",
+    "direct and indirect speech": "Direct and Indirect Speech (Class 5)",
+    "class 5 speech": "Direct and Indirect Speech (Class 5)",
+    "c5 speech": "Direct and Indirect Speech (Class 5)",
+    "reported speech": "Direct and Indirect Speech (Class 5)",
+    "complex sentences": "Complex Sentences (Class 5)",
+    "class 5 complex sentences": "Complex Sentences (Class 5)",
+    "c5 complex sentences": "Complex Sentences (Class 5)",
+    "summary writing": "Summary Writing (Class 5)",
+    "class 5 summary": "Summary Writing (Class 5)",
+    "c5 summary": "Summary Writing (Class 5)",
+    "class 5 comprehension": "Comprehension (Class 5)",
+    "c5 comprehension": "Comprehension (Class 5)",
+    "class 5 reading comprehension": "Comprehension (Class 5)",
+    "synonyms and antonyms": "Synonyms and Antonyms (Class 5)",
+    "class 5 synonyms": "Synonyms and Antonyms (Class 5)",
+    "c5 synonyms": "Synonyms and Antonyms (Class 5)",
+    "class 5 antonyms": "Synonyms and Antonyms (Class 5)",
+    "formal letter writing": "Formal Letter Writing (Class 5)",
+    "class 5 letter writing": "Formal Letter Writing (Class 5)",
+    "c5 letter writing": "Formal Letter Writing (Class 5)",
+    "formal letter": "Formal Letter Writing (Class 5)",
+    "creative writing": "Creative Writing (Class 5)",
+    "class 5 creative writing": "Creative Writing (Class 5)",
+    "c5 creative writing": "Creative Writing (Class 5)",
+    "clauses": "Clauses (Class 5)",
+    "class 5 clauses": "Clauses (Class 5)",
+    "c5 clauses": "Clauses (Class 5)",
+    "main and subordinate clauses": "Clauses (Class 5)",
     # ── Science Class 3 aliases ──
     "plants": "Plants (Class 3)",
     "class 3 plants": "Plants (Class 3)",
@@ -3846,6 +4634,55 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 3 body": "Our Body (Class 3)",
     "human body": "Our Body (Class 3)",
     "body parts": "Our Body (Class 3)",
+    # ── EVS Class 1 aliases ──
+    "my family": "My Family (Class 1)",
+    "c1 my family": "My Family (Class 1)",
+    "c1 family evs": "My Family (Class 1)",
+    "class 1 family evs": "My Family (Class 1)",
+    "my body": "My Body (Class 1)",
+    "c1 my body": "My Body (Class 1)",
+    "c1 body evs": "My Body (Class 1)",
+    "class 1 body evs": "My Body (Class 1)",
+    "plants around us": "Plants Around Us (Class 1)",
+    "c1 plants": "Plants Around Us (Class 1)",
+    "class 1 plants": "Plants Around Us (Class 1)",
+    "c1 plants evs": "Plants Around Us (Class 1)",
+    "animals around us": "Animals Around Us (Class 1)",
+    "c1 animals": "Animals Around Us (Class 1)",
+    "class 1 animals": "Animals Around Us (Class 1)",
+    "c1 animals evs": "Animals Around Us (Class 1)",
+    "food we eat": "Food We Eat (Class 1)",
+    "c1 food": "Food We Eat (Class 1)",
+    "class 1 food": "Food We Eat (Class 1)",
+    "c1 food evs": "Food We Eat (Class 1)",
+    "seasons and weather": "Seasons and Weather (Class 1)",
+    "c1 seasons": "Seasons and Weather (Class 1)",
+    "c1 weather": "Seasons and Weather (Class 1)",
+    "class 1 weather": "Seasons and Weather (Class 1)",
+    # ── EVS Class 2 aliases ──
+    "c2 plants": "Plants (Class 2)",
+    "class 2 plants": "Plants (Class 2)",
+    "c2 plants evs": "Plants (Class 2)",
+    "animals and habitats": "Animals and Habitats (Class 2)",
+    "c2 animals": "Animals and Habitats (Class 2)",
+    "class 2 animals": "Animals and Habitats (Class 2)",
+    "c2 habitats": "Animals and Habitats (Class 2)",
+    "food and nutrition class 2": "Food and Nutrition (Class 2)",
+    "c2 food": "Food and Nutrition (Class 2)",
+    "class 2 food": "Food and Nutrition (Class 2)",
+    "c2 nutrition": "Food and Nutrition (Class 2)",
+    "water class 2": "Water (Class 2)",
+    "c2 water": "Water (Class 2)",
+    "class 2 water": "Water (Class 2)",
+    "c2 water evs": "Water (Class 2)",
+    "shelter class 2": "Shelter (Class 2)",
+    "c2 shelter": "Shelter (Class 2)",
+    "class 2 shelter": "Shelter (Class 2)",
+    "c2 shelter evs": "Shelter (Class 2)",
+    "our senses": "Our Senses (Class 2)",
+    "c2 senses": "Our Senses (Class 2)",
+    "class 2 senses": "Our Senses (Class 2)",
+    "five senses": "Our Senses (Class 2)",
     # ── Hindi Class 3 aliases ──
     "varnamala": "Varnamala (Class 3)",
     "class 3 varnamala": "Varnamala (Class 3)",
@@ -5695,6 +6532,161 @@ def _build_slot_instruction(
         }
         return eng_stype_ctx + eng_stype_map.get(_skill_tag, "About sentence types.")
 
+    # ── Class 5 English instruction builders ──
+
+    # Active and Passive Voice (Class 5)
+    if _skill_tag.startswith("eng_c5_voice_"):
+        eng_voice_ctx = (
+            "Topic: Active and Passive Voice (Class 5). "
+            "Use simple present, past, and future tense sentences only. "
+            "Use Indian names (Ravi, Meena, Priya, Arjun) and contexts. "
+            "DO NOT repeat the same sentence pattern or subject. "
+        )
+        eng_voice_map = {
+            "eng_c5_voice_identify": "Identify whether the sentence is in active or passive voice. Example: 'The ball was kicked by Ravi.' → Passive voice.",
+            "eng_c5_voice_convert": "format: rewrite_sentence. Convert the sentence from active to passive voice or vice versa. Example: 'Meena wrote a letter.' → 'A letter was written by Meena.'",
+            "eng_c5_voice_complete": "format: change_form. Change the form of the sentence to the other voice. Fill in the blank. Example: 'The cake was baked by Amma.' → Active: 'Amma ___ the cake.' (baked)",
+            "eng_c5_voice_error": "format: error_spot_english. Show a sentence with an INCORRECT voice conversion. Example: 'The book was read by she.' (should be 'her'). Ask student to find and correct the error.",
+            "eng_c5_voice_thinking": "format: explain_why. Ask why a particular voice is more suitable. Example: 'Why is \"The Taj Mahal was built by Shah Jahan\" better in passive voice for a history book?'",
+        }
+        return eng_voice_ctx + eng_voice_map.get(_skill_tag, "About active and passive voice.")
+
+    # Direct and Indirect Speech (Class 5)
+    if _skill_tag.startswith("eng_c5_speech_"):
+        eng_speech_ctx = (
+            "Topic: Direct and Indirect Speech (Class 5). "
+            "Use said/told/asked as reporting verbs. Change pronouns and tenses correctly. "
+            "Use Indian names and contexts. "
+            "DO NOT repeat the same reporting verb or sentence structure. "
+        )
+        eng_speech_map = {
+            "eng_c5_speech_identify": "Identify whether the sentence uses direct or indirect speech. Example: 'Amma said, \"Eat your vegetables.\"' → Direct speech.",
+            "eng_c5_speech_convert": "format: rewrite_sentence. Convert direct speech to indirect or vice versa. Example: 'Ravi said, \"I am going to school.\"' → 'Ravi said that he was going to school.'",
+            "eng_c5_speech_complete": "format: change_form. Complete the indirect speech conversion by filling in blanks. Example: 'Priya said, \"I like mangoes.\"' → 'Priya said that ___ ___ mangoes.' (she liked)",
+            "eng_c5_speech_error": "format: error_spot_english. Show incorrect speech conversion. Example: 'Meena said that I am happy.' (should be 'she was happy'). Ask student to correct.",
+            "eng_c5_speech_thinking": "format: explain_why. Ask about rules of speech conversion. Example: 'Why does \"am\" change to \"was\" when we convert direct speech to indirect speech?'",
+        }
+        return eng_speech_ctx + eng_speech_map.get(_skill_tag, "About direct and indirect speech.")
+
+    # Complex Sentences (Class 5)
+    if _skill_tag.startswith("eng_c5_complex_"):
+        eng_complex_ctx = (
+            "Topic: Complex Sentences (Class 5). "
+            "Use subordinating conjunctions: because, although, when, while, if, since, before, after, until, unless. "
+            "Use Indian names and contexts. "
+            "DO NOT repeat the same conjunction or sentence pattern. "
+        )
+        eng_complex_map = {
+            "eng_c5_complex_identify": "Identify the subordinating conjunction or the main/subordinate clause. Example: 'Ravi stayed home because it was raining.' → Conjunction: because.",
+            "eng_c5_complex_rewrite": "format: rewrite_sentence. Join two simple sentences into a complex sentence. Example: 'It was hot. We went swimming.' → 'Since it was hot, we went swimming.'",
+            "eng_c5_complex_complete": "format: complete_sentence. Complete with a suitable subordinate clause. Example: 'Meena could not play ___ (because/although)...' → 'because she had a fever.'",
+            "eng_c5_complex_error": "format: error_spot_english. Show a sentence with the WRONG conjunction. Example: 'Although it was sunny, we took an umbrella.' (should be 'Because'). Ask student to correct.",
+            "eng_c5_complex_thinking": "format: creative_writing. Ask student to write 2-3 complex sentences about a given topic using different conjunctions.",
+        }
+        return eng_complex_ctx + eng_complex_map.get(_skill_tag, "About complex sentences.")
+
+    # Summary Writing (Class 5)
+    if _skill_tag.startswith("eng_c5_summary_"):
+        eng_summary_ctx = (
+            "Topic: Summary Writing (Class 5). "
+            "Include a short passage (50-80 words) with Indian contexts. "
+            "Focus on identifying main idea, key points, and writing concise summaries. "
+            "DO NOT repeat the same passage topic or structure. "
+        )
+        eng_summary_map = {
+            "eng_c5_summary_identify": "Read a short passage and pick the best summary or main idea from options. Include the passage and 3-4 options.",
+            "eng_c5_summary_write": "format: word_problem_english. Read a short passage and write a 2-3 sentence summary in your own words. Include the passage.",
+            "eng_c5_summary_complete": "format: paragraph_cloze. Complete a summary of a passage by filling in key words. Include the passage and the summary with blanks.",
+            "eng_c5_summary_error": "format: error_spot_english. Show a passage and a WRONG summary (with incorrect facts or missing key points). Ask student to find the error.",
+            "eng_c5_summary_thinking": "format: explain_why. Ask student to explain why certain details should or should not be included in a summary. Example: 'Why is the date not important in a summary of this story?'",
+        }
+        return eng_summary_ctx + eng_summary_map.get(_skill_tag, "About summary writing.")
+
+    # Comprehension (Class 5)
+    if _skill_tag.startswith("eng_c5_comprehension_"):
+        eng_c5comp_ctx = (
+            "Topic: Comprehension (Class 5). "
+            "Include a passage (60-100 words) with Indian contexts. "
+            "Ask factual, inferential, and evaluative questions. "
+            "DO NOT repeat the same passage topic. "
+        )
+        eng_c5comp_map = {
+            "eng_c5_comprehension_identify": "Read the passage and pick the correct answer from options. Include the passage and a factual question with 3-4 options.",
+            "eng_c5_comprehension_answer": "format: word_problem_english. Read the passage and answer a question in your own words. Include the passage.",
+            "eng_c5_comprehension_complete": "format: paragraph_cloze. Passage with blanks to fill in from context. Include the passage with 2-3 blanks.",
+            "eng_c5_comprehension_error": "format: error_spot_english. Show a passage with a factual or grammatical error. Ask student to find and correct it.",
+            "eng_c5_comprehension_thinking": "format: explain_why. After reading a passage, ask an inferential or opinion question. Example: 'What lesson can we learn from this story?'",
+        }
+        return eng_c5comp_ctx + eng_c5comp_map.get(_skill_tag, "About comprehension.")
+
+    # Synonyms and Antonyms (Class 5)
+    if _skill_tag.startswith("eng_c5_synonym_"):
+        eng_synonym_ctx = (
+            "Topic: Synonyms and Antonyms (Class 5). "
+            "Use Class 5 level vocabulary. Include words from CBSE English textbooks. "
+            "Use Indian contexts where possible. "
+            "DO NOT repeat the same word or word pair. "
+        )
+        eng_synonym_map = {
+            "eng_c5_synonym_identify": "Pick the synonym or antonym of a given word from options. Example: 'Choose the synonym of \"brave\": (a) coward (b) fearless (c) timid (d) weak' → fearless",
+            "eng_c5_synonym_match": "format: match_columns. Match words with their synonyms or antonyms. Example: Match: happy → glad, big → large, fast → quick.",
+            "eng_c5_synonym_use": "format: fill_in_blank. Replace the underlined word with a synonym or antonym. Example: 'The king was very angry (synonym: _____).' → furious",
+            "eng_c5_synonym_error": "format: error_spot_english. Show a sentence where a word is used with the WRONG synonym/antonym. Example: 'The antonym of \"kind\" is \"gentle\".' (should be 'cruel'). Ask student to correct.",
+            "eng_c5_synonym_thinking": "format: explain_why. Ask student to explain meaning differences. Example: 'How are \"big\" and \"enormous\" different? When would you use each?'",
+        }
+        return eng_synonym_ctx + eng_synonym_map.get(_skill_tag, "About synonyms and antonyms.")
+
+    # Formal Letter Writing (Class 5)
+    if _skill_tag.startswith("eng_c5_letter_"):
+        eng_letter_ctx = (
+            "Topic: Formal Letter Writing (Class 5). "
+            "Cover format: sender's address, date, receiver's address, subject, salutation, body, closing. "
+            "Use school and community topics. Use Indian contexts. "
+            "DO NOT repeat the same letter topic or format element. "
+        )
+        eng_letter_map = {
+            "eng_c5_letter_identify": "Identify the correct part of a formal letter from options. Example: 'Which part comes first: Subject line or Salutation?' → Subject line.",
+            "eng_c5_letter_write": "format: word_problem_english. Write a formal letter on a given topic. Example: 'Write a letter to your principal requesting a holiday for a school function.'",
+            "eng_c5_letter_complete": "format: paragraph_cloze. Complete a formal letter by filling in missing parts (salutation, subject, closing). Include the letter template with blanks.",
+            "eng_c5_letter_error": "format: error_spot_english. Show a formal letter with format errors (wrong order, missing parts, informal language). Ask student to find and correct.",
+            "eng_c5_letter_thinking": "format: creative_writing. Write a formal letter on a given topic using correct format. Example: 'Write to the editor of a newspaper about traffic problems near your school.'",
+        }
+        return eng_letter_ctx + eng_letter_map.get(_skill_tag, "About formal letter writing.")
+
+    # Creative Writing (Class 5)
+    if _skill_tag.startswith("eng_c5_creative_"):
+        eng_creative_ctx = (
+            "Topic: Creative Writing (Class 5). "
+            "Encourage descriptive language, vivid vocabulary, similes, and varied sentence structures. "
+            "Use topics relatable to Indian Class 5 students. "
+            "DO NOT repeat the same writing prompt or style. "
+        )
+        eng_creative_map = {
+            "eng_c5_creative_identify": "Read a short passage and identify the literary device or writing technique. Example: 'The sun smiled down at us.' → Personification.",
+            "eng_c5_creative_use": "format: use_in_sentence. Use the given word or literary device in a creative sentence. Example: 'Use a simile to describe the moon.'",
+            "eng_c5_creative_expand": "format: expand_sentence. Expand the given sentence by adding descriptive details. Example: 'The boy ran.' → 'The little boy ran quickly through the dusty village road.'",
+            "eng_c5_creative_error": "format: error_spot_english. Show a paragraph with a dull/incorrect description and ask to improve. Example: 'The flower was nice.' → needs more vivid language.",
+            "eng_c5_creative_thinking": "format: creative_writing. Write a short paragraph or story on a given topic. Example: 'Describe a rainy day at your school in 5-6 sentences using vivid language.'",
+        }
+        return eng_creative_ctx + eng_creative_map.get(_skill_tag, "About creative writing.")
+
+    # Clauses (Class 5)
+    if _skill_tag.startswith("eng_c5_clause_"):
+        eng_clause_ctx = (
+            "Topic: Clauses (Class 5). "
+            "Cover main (independent) and subordinate (dependent) clauses — noun, adjective, and adverb clauses. "
+            "Use Indian names and contexts. "
+            "DO NOT repeat the same clause type or sentence pattern. "
+        )
+        eng_clause_map = {
+            "eng_c5_clause_identify": "Identify the main clause and subordinate clause. Example: 'The boy who won the race is my friend.' → Main: 'The boy is my friend.' Subordinate: 'who won the race'.",
+            "eng_c5_clause_rewrite": "format: rewrite_sentence. Combine two sentences using a relative pronoun or conjunction to form a sentence with a clause. Example: 'Priya is my friend. She lives in Delhi.' → 'Priya, who lives in Delhi, is my friend.'",
+            "eng_c5_clause_complete": "format: complete_sentence. Complete the sentence with a suitable clause. Example: 'The teacher praised the student who ___.' → 'who scored the highest marks.'",
+            "eng_c5_clause_error": "format: error_spot_english. Show a sentence with the WRONG relative pronoun or clause structure. Example: 'The book which I met yesterday was interesting.' (should be 'that I read'). Ask student to correct.",
+            "eng_c5_clause_thinking": "format: explain_why. Ask student to explain clause types. Example: 'In the sentence \"I know that she is honest,\" what kind of clause is \"that she is honest\"? Why?'",
+        }
+        return eng_clause_ctx + eng_clause_map.get(_skill_tag, "About clauses.")
+
     # ── Science Class 3 instruction builders ──
 
     # Plants
@@ -5826,6 +6818,235 @@ def _build_slot_instruction(
             "sci_body_thinking": "format: multi_step_science. Ask reasoning. Example: 'Why is it important to do yoga or exercise every day? Give two reasons.'",
         }
         return sci_body_ctx + sci_body_map.get(_skill_tag, "About the human body.")
+
+    # ── EVS Class 1: My Family ──
+    if _skill_tag.startswith("sci_c1_family_"):
+        ctx = (
+            "Topic: My Family (Class 1 EVS, CBSE). "
+            "Cover family members: mother (Amma), father (Appa/Papa), brother, sister, "
+            "grandmother (Dadi/Nani), grandfather (Dada/Nana). "
+            "Use Indian names: Raju, Meena, Amma, Appa, Dadi, Nani. "
+            "Keep vocabulary VERY simple — Class 1 level. "
+            "DO NOT repeat the same family member or scenario. "
+        )
+        tag_map = {
+            "sci_c1_family_identify": "Identify a family member. Example: 'Who cooks food at home? (a) Teacher (b) Amma (c) Doctor (d) Policeman' -> Amma",
+            "sci_c1_family_apply": "format: give_example. Ask for examples about family. Example: 'Name two people in your family who take care of you.'",
+            "sci_c1_family_represent": "format: fill_diagram. Match family members. Example: 'Match: Dadi -> ___. Appa -> ___. (father / grandmother)'",
+            "sci_c1_family_error": "format: error_spot_science. Present a WRONG fact about family. Example: 'Dadi is my younger sister.' Ask: 'Find the mistake and correct it.'",
+            "sci_c1_family_thinking": "format: thinking_science. Ask a simple reasoning question. Example: 'Why do we love our family? Tell one reason.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About family.")
+
+    # ── EVS Class 1: My Body ──
+    if _skill_tag.startswith("sci_c1_body_"):
+        ctx = (
+            "Topic: My Body (Class 1 EVS, CBSE). "
+            "Cover basic body parts: head, eyes, ears, nose, mouth, hands, legs, feet. "
+            "Simple functions: eyes help us see, ears help us hear. "
+            "Use Indian contexts: clapping hands, running in the playground. "
+            "Keep vocabulary VERY simple — Class 1 level. NO internal organs. "
+            "DO NOT repeat the same body part. "
+        )
+        tag_map = {
+            "sci_c1_body_identify": "Identify a body part. Example: 'Which part helps us see? (a) Ears (b) Eyes (c) Nose (d) Mouth' -> Eyes",
+            "sci_c1_body_apply": "format: explain_why_science. Simple explanation. Example: 'Why do we need legs?'",
+            "sci_c1_body_represent": "format: fill_diagram. Match parts to use. Example: 'Match: Eyes -> ___. Ears -> ___. (hear / see)'",
+            "sci_c1_body_error": "format: error_spot_science. Present a WRONG fact. Example: 'We smell with our eyes.' Ask: 'Find the mistake and correct it.'",
+            "sci_c1_body_thinking": "format: thinking_science. Simple reasoning. Example: 'What would happen if we could not hear? Tell one thing.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About body parts.")
+
+    # ── EVS Class 1: Plants Around Us ──
+    if _skill_tag.startswith("sci_c1_plants_"):
+        ctx = (
+            "Topic: Plants Around Us (Class 1 EVS, CBSE). "
+            "Cover common plants: neem, tulsi, mango, banyan, marigold, sunflower. "
+            "Simple parts: leaf, flower, stem. Plants need water and sun. "
+            "Use Indian contexts: tulsi at home, mango tree in garden. "
+            "Keep vocabulary VERY simple — Class 1 level. NO photosynthesis. "
+            "DO NOT repeat the same plant. "
+        )
+        tag_map = {
+            "sci_c1_plants_identify": "Identify a plant or part. Example: 'Which part of the plant is green and flat? (a) Root (b) Leaf (c) Flower (d) Fruit' -> Leaf",
+            "sci_c1_plants_apply": "format: give_example. Ask for examples. Example: 'Name two trees you see near your house.'",
+            "sci_c1_plants_represent": "format: sequence_steps. Simple order. Example: 'What comes first? (a) Big tree (b) Tiny plant (c) Seed in soil' -> Put in order.",
+            "sci_c1_plants_error": "format: error_spot_science. Present a WRONG fact. Example: 'Plants do not need water to grow.' Ask: 'Find the mistake and correct it.'",
+            "sci_c1_plants_thinking": "format: thinking_science. Simple reasoning. Example: 'Why should we water plants every day?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About plants.")
+
+    # ── EVS Class 1: Animals Around Us ──
+    if _skill_tag.startswith("sci_c1_animals_"):
+        ctx = (
+            "Topic: Animals Around Us (Class 1 EVS, CBSE). "
+            "Cover common animals: cow, dog, cat, hen, parrot, fish, elephant, monkey, squirrel. "
+            "Simple groups: pets, farm animals, wild animals. Where they live, what they eat. "
+            "Use Indian animals: peacock, cow, parrot, monkey. "
+            "Keep vocabulary VERY simple — Class 1 level. "
+            "DO NOT repeat the same animal. "
+        )
+        tag_map = {
+            "sci_c1_animals_identify": "Identify or classify an animal. Example: 'Which animal gives us milk? (a) Dog (b) Cat (c) Cow (d) Parrot' -> Cow",
+            "sci_c1_animals_apply": "format: compare_two. Simple comparison. Example: 'How is a fish different from a bird?'",
+            "sci_c1_animals_represent": "format: cause_effect. Simple cause-effect. Example: 'A bird has wings -> it can ___.'",
+            "sci_c1_animals_error": "format: error_spot_science. Present a WRONG fact. Example: 'A fish lives on land.' Ask: 'Find the mistake and correct it.'",
+            "sci_c1_animals_thinking": "format: thinking_science. Simple reasoning. Example: 'Why does a dog wag its tail?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About animals.")
+
+    # ── EVS Class 1: Food We Eat ──
+    if _skill_tag.startswith("sci_c1_food_"):
+        ctx = (
+            "Topic: Food We Eat (Class 1 EVS, CBSE). "
+            "Cover basic foods: roti, rice, dal, milk, banana, mango, curd, idli, sabzi. "
+            "Food comes from plants or animals. We eat food to stay strong. "
+            "Use Indian foods and contexts: tiffin at school, Amma cooking. "
+            "Keep vocabulary VERY simple — Class 1 level. NO nutrition science. "
+            "DO NOT repeat the same food item. "
+        )
+        tag_map = {
+            "sci_c1_food_identify": "Identify a food. Example: 'Which food comes from a cow? (a) Rice (b) Milk (c) Mango (d) Roti' -> Milk",
+            "sci_c1_food_apply": "format: give_example. Ask for examples. Example: 'Name two fruits you like to eat.'",
+            "sci_c1_food_represent": "format: fill_diagram. Classify foods. Example: 'Which comes from plants? Which from animals? Rice, Milk, Banana, Egg'",
+            "sci_c1_food_error": "format: error_spot_science. Present a WRONG fact. Example: 'We get rice from a cow.' Ask: 'Find the mistake and correct it.'",
+            "sci_c1_food_thinking": "format: thinking_science. Simple reasoning. Example: 'Why should we eat fruits and vegetables every day?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About food.")
+
+    # ── EVS Class 1: Seasons and Weather ──
+    if _skill_tag.startswith("sci_c1_seasons_"):
+        ctx = (
+            "Topic: Seasons and Weather (Class 1 EVS, CBSE). "
+            "Cover three seasons: summer (hot), rainy/monsoon (wet), winter (cold). "
+            "Weather words: hot, cold, rainy, windy, sunny, cloudy. "
+            "Clothes for each season: cotton in summer, raincoat in rain, sweater in winter. "
+            "Use Indian contexts: monsoon, Sankranti kites, Diwali in autumn. "
+            "Keep vocabulary VERY simple — Class 1 level. "
+            "DO NOT repeat the same season or scenario. "
+        )
+        tag_map = {
+            "sci_c1_seasons_identify": "Identify a season or weather. Example: 'In which season do we wear sweaters? (a) Summer (b) Rainy (c) Winter' -> Winter",
+            "sci_c1_seasons_apply": "format: what_happens_if. Simple cause. Example: 'What happens when it rains a lot?'",
+            "sci_c1_seasons_represent": "format: cause_effect. Match season to activity. Example: 'Summer is hot -> we drink more ___.'",
+            "sci_c1_seasons_error": "format: error_spot_science. Present a WRONG fact. Example: 'We wear sweaters in summer because it is hot.' Ask: 'Find the mistake and correct it.'",
+            "sci_c1_seasons_thinking": "format: thinking_science. Simple reasoning. Example: 'Why do we carry an umbrella in the rainy season?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About seasons and weather.")
+
+    # ── EVS Class 2: Plants ──
+    if _skill_tag.startswith("sci_c2_plants_"):
+        ctx = (
+            "Topic: Plants (Class 2 EVS, CBSE). "
+            "Cover parts of a plant (root, stem, leaf, flower, fruit, seed), how a seed grows, "
+            "plants give us food, shade, and fresh air. "
+            "Use Indian plants: neem, tulsi, mango, banyan, lotus, coconut, marigold. "
+            "Keep sentences simple — Class 2 level. NO photosynthesis detail. "
+            "DO NOT repeat the same plant or concept. "
+        )
+        tag_map = {
+            "sci_c2_plants_identify": "Identify a plant part or type. Example: 'Which part of the plant takes in water from the soil? (a) Leaf (b) Root (c) Flower (d) Fruit' -> Root",
+            "sci_c2_plants_apply": "format: explain_why_science. Explain a concept. Example: 'Why do plants need sunlight?'",
+            "sci_c2_plants_represent": "format: sequence_steps. Arrange steps. Example: 'Put in order: A seed is planted -> It gets water -> A tiny plant comes out -> The plant grows big.'",
+            "sci_c2_plants_error": "format: error_spot_science. Present a WRONG fact. Example: 'Roots of a plant make flowers.' Ask: 'Find the mistake and correct it.'",
+            "sci_c2_plants_thinking": "format: thinking_science. Reasoning question. Example: 'What would happen if a plant does not get water for many days?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About plants.")
+
+    # ── EVS Class 2: Animals and Habitats ──
+    if _skill_tag.startswith("sci_c2_animals_"):
+        ctx = (
+            "Topic: Animals and Habitats (Class 2 EVS, CBSE). "
+            "Cover pet, farm, and wild animals. Where animals live (forest, water, desert, home). "
+            "What they eat, how they move (fly, swim, walk, crawl). "
+            "Use Indian animals: peacock, cow, camel, elephant, parrot, cobra, monkey. "
+            "Keep sentences simple — Class 2 level. NO scientific classification. "
+            "DO NOT repeat the same animal or concept. "
+        )
+        tag_map = {
+            "sci_c2_animals_identify": "Classify or identify an animal. Example: 'Which animal lives in water? (a) Cow (b) Fish (c) Dog (d) Parrot' -> Fish",
+            "sci_c2_animals_apply": "format: compare_two. Compare animals. Example: 'How is a camel different from a fish?'",
+            "sci_c2_animals_represent": "format: cause_effect. Cause and effect. Example: 'A frog lives near water -> it can ___.'",
+            "sci_c2_animals_error": "format: error_spot_science. Present a WRONG fact. Example: 'A parrot lives in water.' Ask: 'Find the mistake and correct it.'",
+            "sci_c2_animals_thinking": "format: thinking_science. Reasoning. Example: 'Why do you think birds have wings but cows do not?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About animals and habitats.")
+
+    # ── EVS Class 2: Food and Nutrition ──
+    if _skill_tag.startswith("sci_c2_food_"):
+        ctx = (
+            "Topic: Food and Nutrition (Class 2 EVS, CBSE). "
+            "Cover food groups: fruits, vegetables, grains, dairy. Sources: plants or animals. "
+            "Eating different foods keeps us healthy. "
+            "Use Indian foods: dal, roti, rice, curd, paneer, sabzi, jaggery, idli. "
+            "Keep sentences simple — Class 2 level. NO calorie or vitamin details. "
+            "DO NOT repeat the same food item or concept. "
+        )
+        tag_map = {
+            "sci_c2_food_identify": "Identify food source or type. Example: 'Which food is a fruit? (a) Roti (b) Mango (c) Paneer (d) Rice' -> Mango",
+            "sci_c2_food_apply": "format: give_example. Ask for examples. Example: 'Name two vegetables you eat at home.'",
+            "sci_c2_food_represent": "format: fill_diagram. Classify foods. Example: 'Sort into groups — Fruits / Vegetables / Grains: apple, carrot, rice, banana, potato, wheat'",
+            "sci_c2_food_error": "format: error_spot_science. Present a WRONG fact. Example: 'Rice is a fruit that grows on trees.' Ask: 'Find the mistake and correct it.'",
+            "sci_c2_food_thinking": "format: thinking_science. Reasoning. Example: 'Why should we not eat only sweets every day?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About food and nutrition.")
+
+    # ── EVS Class 2: Water ──
+    if _skill_tag.startswith("sci_c2_water_"):
+        ctx = (
+            "Topic: Water (Class 2 EVS, CBSE). "
+            "Cover sources of water (rain, river, well, tap), uses (drinking, cooking, washing, farming), "
+            "why we should save water, clean vs dirty water. "
+            "Use Indian contexts: hand pump, monsoon, village well, water tanker. "
+            "Keep sentences simple — Class 2 level. NO water cycle detail. "
+            "DO NOT repeat the same concept or context. "
+        )
+        tag_map = {
+            "sci_c2_water_identify": "Identify facts about water. Example: 'True or False: We use water for cooking.' -> True",
+            "sci_c2_water_apply": "format: what_happens_if. Cause-effect. Example: 'What happens if we drink dirty water?'",
+            "sci_c2_water_represent": "format: sequence_steps. Simple order. Example: 'Put in order: Turn on the tap -> Fill the glass -> Drink the water -> Close the tap.'",
+            "sci_c2_water_error": "format: error_spot_science. Present a WRONG fact. Example: 'We should waste water because there is a lot of it.' Ask: 'Find the mistake and correct it.'",
+            "sci_c2_water_thinking": "format: thinking_science. Reasoning. Example: 'Name two ways you can save water at home.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About water.")
+
+    # ── EVS Class 2: Shelter ──
+    if _skill_tag.startswith("sci_c2_shelter_"):
+        ctx = (
+            "Topic: Shelter (Class 2 EVS, CBSE). "
+            "Cover why living things need shelter, types of houses (kutcha, pucca, tent, houseboat, flat), "
+            "animal homes (nest, burrow, den, hive, web). "
+            "Use Indian contexts: village house, city flat, houseboat in Kashmir, stilt house in Assam. "
+            "Keep sentences simple — Class 2 level. "
+            "DO NOT repeat the same shelter type. "
+        )
+        tag_map = {
+            "sci_c2_shelter_identify": "Identify a shelter. Example: 'Where does a bird live? (a) Den (b) Nest (c) Burrow (d) Hive' -> Nest",
+            "sci_c2_shelter_apply": "format: compare_two. Compare shelters. Example: 'How is a kutcha house different from a pucca house?'",
+            "sci_c2_shelter_represent": "format: cause_effect. Cause and effect. Example: 'It rains a lot in Assam -> people build ___ houses.'",
+            "sci_c2_shelter_error": "format: error_spot_science. Present a WRONG fact. Example: 'Bees live in a burrow.' Ask: 'Find the mistake and correct it.'",
+            "sci_c2_shelter_thinking": "format: thinking_science. Reasoning. Example: 'Why do animals need homes just like people do?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About shelter.")
+
+    # ── EVS Class 2: Our Senses ──
+    if _skill_tag.startswith("sci_c2_senses_"):
+        ctx = (
+            "Topic: Our Senses (Class 2 EVS, CBSE). "
+            "Cover five senses: eyes (see), ears (hear), nose (smell), tongue (taste), skin (touch/feel). "
+            "Match senses to body parts and everyday experiences. "
+            "Use Indian contexts: smelling flowers, tasting jalebi, hearing temple bells. "
+            "Keep sentences simple — Class 2 level. NO nervous system. "
+            "DO NOT repeat the same sense or scenario. "
+        )
+        tag_map = {
+            "sci_c2_senses_identify": "Identify a sense organ. Example: 'Which body part helps us taste food? (a) Eyes (b) Ears (c) Tongue (d) Nose' -> Tongue",
+            "sci_c2_senses_apply": "format: give_example. Ask for examples. Example: 'Name two things you can smell.'",
+            "sci_c2_senses_represent": "format: fill_diagram. Match senses. Example: 'Match: Eyes -> ___. Nose -> ___. Tongue -> ___. (taste / see / smell)'",
+            "sci_c2_senses_error": "format: error_spot_science. Present a WRONG fact. Example: 'We hear with our nose.' Ask: 'Find the mistake and correct it.'",
+            "sci_c2_senses_thinking": "format: thinking_science. Reasoning. Example: 'Why are all five senses important to us? Give one reason.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About senses.")
 
     # ── Hindi Varnamala (Class 3) ──
     if _skill_tag.startswith("hin_varna_"):
@@ -6570,6 +7791,61 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "and answer questions. Include the passage in question_text. Use Class 4 level text. "
         "NEVER generate arithmetic or maths questions.\n"
     ),
+    # ── Class 5 English constraints ──
+    "Active and Passive Voice (Class 5)": (
+        "SCOPE: Active and passive voice for Class 5. ONLY use simple present, past, and future tense sentences. "
+        "NEVER use complex tenses (perfect continuous, past perfect). "
+        "Use age-appropriate vocabulary and Indian contexts. "
+        "NEVER include maths content or arithmetic questions.\n"
+    ),
+    "Direct and Indirect Speech (Class 5)": (
+        "SCOPE: Direct and indirect (reported) speech for Class 5. "
+        "Cover said/told/asked reporting verbs. Change pronouns and tenses correctly. "
+        "Use simple and continuous tenses only. NEVER use perfect tenses in reported speech. "
+        "Use Indian names and contexts. NEVER include maths content.\n"
+    ),
+    "Complex Sentences (Class 5)": (
+        "SCOPE: Complex sentences with subordinating conjunctions for Class 5. "
+        "Use: because, although, when, while, if, since, before, after, until, unless. "
+        "NEVER use advanced grammar terms like 'subjunctive' or 'conditional perfect'. "
+        "Use age-appropriate vocabulary. NEVER include maths content.\n"
+    ),
+    "Summary Writing (Class 5)": (
+        "SCOPE: Summary writing skills for Class 5. "
+        "Include a short passage (50-80 words) and ask to identify main idea or write a summary. "
+        "Passages must be age-appropriate with Indian contexts. "
+        "NEVER include maths content or arithmetic questions.\n"
+    ),
+    "Comprehension (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Reading Comprehension ONLY — read a passage "
+        "and answer factual, inferential, or evaluative questions. "
+        "Include the passage in question_text. Use Class 5 level text with Indian contexts. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Synonyms and Antonyms (Class 5)": (
+        "SCOPE: Synonyms and antonyms for Class 5. "
+        "Use age-appropriate vocabulary (Class 5 level). "
+        "Include words commonly found in CBSE Class 5 English textbooks. "
+        "NEVER include maths content or arithmetic questions.\n"
+    ),
+    "Formal Letter Writing (Class 5)": (
+        "SCOPE: Formal letter writing for Class 5. "
+        "Cover format: sender's address, date, receiver's address, subject line, salutation, body, closing. "
+        "Use polite and formal language. Topics should be school or community related. "
+        "Use Indian contexts. NEVER include maths content.\n"
+    ),
+    "Creative Writing (Class 5)": (
+        "SCOPE: Creative writing for Class 5 — descriptive paragraphs, short stories, diary entries. "
+        "Encourage vivid language, similes, and interesting vocabulary. "
+        "Topics should be relatable to Indian Class 5 students. "
+        "NEVER include maths content or arithmetic questions.\n"
+    ),
+    "Clauses (Class 5)": (
+        "SCOPE: Main (independent) and subordinate (dependent) clauses for Class 5. "
+        "Cover noun clauses, adjective clauses (relative clauses with who/which/that), and adverb clauses. "
+        "Use age-appropriate sentences. NEVER use advanced grammar terminology. "
+        "Use Indian names and contexts. NEVER include maths content.\n"
+    ),
     # ── Science Class 3 constraints ──
     "Plants (Class 3)": (
         "CRITICAL: ALL questions MUST be about Plants ONLY — parts of a plant (root, stem, leaf, flower, fruit), "
@@ -6612,6 +7888,96 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "CRITICAL: ALL questions MUST be about the Human Body ONLY — major body parts and organs, "
         "sense organs (eyes, ears, nose, tongue, skin), hygiene, healthy habits, food for a healthy body. "
         "Use Indian contexts: yoga, PT period, school nurse, morning assembly exercises. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    # ── EVS Class 1 topic constraints ──
+    "My Family (Class 1)": (
+        "SCOPE: Family members for Class 1 EVS. Use mother, father, brother, sister, grandparents. "
+        "Keep vocabulary very simple (3-4 letter words preferred). "
+        "Use Indian names: Amma, Appa, Dadi, Nani, Raju, Meena. "
+        "NEVER use complex family tree terms (uncle, cousin, nephew). "
+        "NEVER include maths content, arithmetic, or English grammar questions.\n"
+    ),
+    "My Body (Class 1)": (
+        "SCOPE: Basic body parts for Class 1 EVS — head, eyes, ears, nose, mouth, hands, legs, feet. "
+        "Focus on naming parts and simple functions (eyes help us see). "
+        "Keep vocabulary very simple. NO internal organs (heart, lungs, brain). "
+        "Use Indian contexts: clapping during a rhyme, running in the playground. "
+        "NEVER include maths content, arithmetic, or English grammar questions.\n"
+    ),
+    "Plants Around Us (Class 1)": (
+        "SCOPE: Simple plants for Class 1 EVS. Name common plants and trees (neem, tulsi, mango, banyan). "
+        "Simple parts only: leaf, flower, stem. NO photosynthesis, NO scientific terms. "
+        "Plants need water and sunlight to grow — that is all. "
+        "Keep vocabulary very simple. "
+        "NEVER include maths content, arithmetic, or English grammar questions.\n"
+    ),
+    "Animals Around Us (Class 1)": (
+        "SCOPE: Common animals for Class 1 EVS — cow, dog, cat, parrot, hen, fish, elephant. "
+        "Simple classification: pet, farm, wild animals. Where they live (land, water, sky). "
+        "What they eat (grass, grain, fish). NO scientific terms, NO habitat ecology. "
+        "Use Indian animals: peacock, cow, parrot, monkey, squirrel. "
+        "NEVER include maths content, arithmetic, or English grammar questions.\n"
+    ),
+    "Food We Eat (Class 1)": (
+        "SCOPE: Basic foods for Class 1 EVS — roti, rice, dal, milk, fruits, vegetables. "
+        "Food comes from plants or animals. We need food to grow strong. "
+        "NO food groups, NO nutrition science, NO calories. Keep it very simple. "
+        "Use Indian foods: roti, dal, rice, curd, banana, mango, idli. "
+        "NEVER include maths content, arithmetic, or English grammar questions.\n"
+    ),
+    "Seasons and Weather (Class 1)": (
+        "SCOPE: Three main seasons for Class 1 EVS — summer (hot), rainy/monsoon (wet), winter (cold). "
+        "Simple weather words: hot, cold, rainy, windy, sunny, cloudy. "
+        "Clothes we wear in each season. NO temperature numbers, NO climate science. "
+        "Use Indian contexts: monsoon rains, Sankranti kite flying, wearing sweaters in winter. "
+        "NEVER include maths content, arithmetic, or English grammar questions.\n"
+    ),
+    # ── EVS Class 2 topic constraints ──
+    "Plants (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Plants for Class 2 EVS ONLY — parts of a plant "
+        "(root, stem, leaf, flower, fruit, seed), how a seed grows, plants give us food/shade/air. "
+        "Use Indian plants: neem, tulsi, mango, banyan, lotus, coconut, marigold. "
+        "NO photosynthesis detail, NO scientific terminology. Keep sentences simple. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Animals and Habitats (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Animals and their Habitats for Class 2 EVS ONLY — "
+        "pet/farm/wild animals, where animals live (forest, water, desert), what they eat, how they move. "
+        "Use Indian animals: peacock, cow, camel, elephant, parrot, cobra, monkey. "
+        "NO scientific classification, NO food chains. Keep sentences simple. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Food and Nutrition (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Food for Class 2 EVS ONLY — "
+        "food groups (fruits, vegetables, grains, dairy), plant vs animal food sources, "
+        "eating different foods keeps us healthy. "
+        "Use Indian foods: dal, roti, rice, curd, paneer, sabzi, jaggery. "
+        "NO calorie counting, NO vitamins by name. Keep sentences simple. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Water (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Water for Class 2 EVS ONLY — "
+        "sources of water (rain, river, well, tap), uses (drinking, cooking, washing, farming), "
+        "why we should save water, clean vs dirty water. "
+        "Use Indian contexts: hand pump, monsoon, Ganga, water tanker. "
+        "NO water cycle detail, NO chemical formulas. Keep sentences simple. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Shelter (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Shelter for Class 2 EVS ONLY — "
+        "why living things need shelter, types of houses (kutcha, pucca, tent, houseboat), "
+        "animal homes (nest, burrow, den, hive, web). "
+        "Use Indian contexts: village house, city flat, houseboat in Kashmir, stilt house in Assam. "
+        "NO architecture, NO building materials science. Keep sentences simple. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Our Senses (Class 2)": (
+        "CRITICAL: ALL questions MUST be about the Five Senses for Class 2 EVS ONLY — "
+        "eyes (see), ears (hear), nose (smell), tongue (taste), skin (touch). "
+        "Match senses to body parts and everyday experiences. "
+        "Use Indian contexts: smelling flowers, tasting jalebi, hearing temple bells. "
+        "NO nervous system, NO brain science. Keep sentences simple. "
         "NEVER generate arithmetic, maths, or English grammar questions.\n"
     ),
     # ── Hindi Class 3 topic constraints ──
