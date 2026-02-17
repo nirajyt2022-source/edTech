@@ -405,7 +405,7 @@ class PDFService:
                 story.append(Paragraph(tier_desc, self.styles['TierDesc']))
 
             for question in tier_qs:
-                elements = self._build_single_question(question, q_number)
+                elements = self._build_single_question(question, q_number, tier_key)
                 # KeepTogether prevents a question from breaking across pages
                 story.append(KeepTogether(elements))
                 story.append(Spacer(1, 10))
@@ -470,15 +470,25 @@ class PDFService:
         ]))
         story.append(obj_table)
 
-    def _build_single_question(self, question: dict, number: int) -> list:
+    def _build_single_question(self, question: dict, number: int, tier_key: str = "all") -> list:
         """Build elements for a single question. Returns list of flowables."""
         elements = []
         q_type = question.get('type', 'short_answer')
         q_text = _sanitize_text(question.get('text', ''))
 
-        # Question text with number
+        # Star badge based on tier
+        star_badge = ""
+        if tier_key == "foundation":
+            star_badge = " *"
+        elif tier_key == "application":
+            star_badge = " **"
+        elif tier_key == "stretch":
+            star_badge = " ***"
+
+        # Question text with number + star badge
         elements.append(Paragraph(
-            f"<b><font color='#{_PRIMARY.hexval()[2:]}'>{number}.</font></b>  {q_text}",
+            f"<b><font color='#{_PRIMARY.hexval()[2:]}'>{number}.</font></b>"
+            f"<font size='7' color='#{_ACCENT.hexval()[2:]}'>{star_badge}</font>  {q_text}",
             self.styles['QuestionText']
         ))
 

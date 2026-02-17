@@ -1196,12 +1196,18 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                               {tier.questions.map((question) => {
                                 qNum++
                                 const idx = qNum
+                                const starCount = tier.key === 'foundation' ? 1 : tier.key === 'application' ? 2 : 3
                                 return (
                                   <div key={question.id} className="relative group stagger-item" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                                     <div className="flex gap-5">
-                                      <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-primary/20 text-primary/70 text-xs font-bold mt-0.5 print:border-black/30 print:text-black/60">
-                                        {idx}
-                                      </span>
+                                      <div className="flex-shrink-0 flex flex-col items-center gap-0.5 mt-0.5">
+                                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-primary/20 text-primary/70 text-xs font-bold print:border-black/30 print:text-black/60">
+                                          {idx}
+                                        </span>
+                                        <span className="text-[9px] text-amber-500 leading-none print:text-black/40" title={`${tier.label} (${starCount} star${starCount > 1 ? 's' : ''})`}>
+                                          {'\u2605'.repeat(starCount)}
+                                        </span>
+                                      </div>
                                       <div className="flex-grow space-y-4">
                                         <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
                                         {question.visual_type && question.visual_data && (
