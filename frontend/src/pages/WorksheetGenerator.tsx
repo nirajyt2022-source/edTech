@@ -51,6 +51,11 @@ const ENGLISH_TOPICS_BY_GRADE: Record<number, string[]> = {
   4: ['Tenses (Class 4)', 'Sentence Types (Class 4)', 'Conjunctions (Class 4)', 'Prepositions (Class 4)', 'Adverbs (Class 4)', 'Prefixes and Suffixes (Class 4)', 'Vocabulary (Class 4)', 'Reading Comprehension (Class 4)'],
 }
 
+// Grade-aware Science topics (matching backend TOPIC_PROFILES keys)
+const SCIENCE_TOPICS_BY_GRADE: Record<number, string[]> = {
+  3: ['Plants (Class 3)', 'Animals (Class 3)', 'Food and Nutrition (Class 3)', 'Shelter (Class 3)', 'Water (Class 3)', 'Air (Class 3)', 'Our Body (Class 3)'],
+}
+
 interface Question {
   id: string
   type: string
@@ -350,6 +355,13 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         const gradeNum = parseInt(grade.replace('Class ', ''))
         if (!isNaN(gradeNum) && ENGLISH_TOPICS_BY_GRADE[gradeNum]) {
           return ENGLISH_TOPICS_BY_GRADE[gradeNum]
+        }
+      }
+      // Grade-aware Science topics
+      if (subject === 'Science' && grade) {
+        const gradeNum = parseInt(grade.replace('Class ', ''))
+        if (!isNaN(gradeNum) && SCIENCE_TOPICS_BY_GRADE[gradeNum]) {
+          return SCIENCE_TOPICS_BY_GRADE[gradeNum]
         }
       }
       return DEFAULT_TOPICS[subject] || []

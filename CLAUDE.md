@@ -79,6 +79,17 @@ error_detection: {error_spot_english}
 thinking:        {explain_why, creative_writing}
 ```
 
+## Valid Formats per Slot (Science)
+```
+recognition:     {identify_part, classify_object, true_false, match_function,
+                  label_diagram, pick_correct_science}
+application:     {explain_why_science, what_happens_if, give_example,
+                  compare_two, word_problem_science}
+representation:  {fill_diagram, sequence_steps, cause_effect, complete_sentence_science}
+error_detection: {error_spot_science}
+thinking:        {thinking_science, multi_step_science}
+```
+
 Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot(subject)` — default to Maths.
 
 ## Per-Question Schema (internal)
@@ -92,7 +103,7 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 
 # Topic System
 
-## 54 Supported Topics (TOPIC_PROFILES keys)
+## 61 Supported Topics (TOPIC_PROFILES keys)
 
 ### Class 2 Maths (10 topics)
 1. Numbers up to 1000 (Class 2) — 3-digit place value
@@ -141,8 +152,12 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 ### Class 4 English (8 topics)
 47. Tenses (Class 4), 48. Sentence Types (Class 4), 49. Conjunctions (Class 4), 50. Prepositions (Class 4), 51. Adverbs (Class 4), 52. Prefixes and Suffixes (Class 4), 53. Vocabulary (Class 4), 54. Reading Comprehension (Class 4)
 
+### Class 3 Science (7 topics)
+55. Plants (Class 3), 56. Animals (Class 3), 57. Food and Nutrition (Class 3), 58. Shelter (Class 3), 59. Water (Class 3), 60. Air (Class 3), 61. Our Body (Class 3)
+
 Each Maths profile has: `allowed_skill_tags`, `allowed_slot_types`, `disallowed_keywords`, `disallowed_visual_types`, `default_recipe`, optional `recipes_by_count`.
 Each English profile additionally has: `subject: "English"`. English topics use `VALID_FORMATS_ENGLISH` and skip visual hydration (text-only).
+Each Science profile additionally has: `subject: "Science"`. Science topics use `VALID_FORMATS_SCIENCE` and skip visual hydration (text-only).
 
 ## Topic Alias Resolution
 `get_topic_profile()` resolves frontend short names → canonical profile keys via `_TOPIC_ALIASES` + fuzzy matching. Key aliases: "Addition" → "Addition (carries)", "Multiplication" → "Multiplication (tables 2-10)", "Numbers"/"Place Value" → "Numbers up to 10000", "add/sub" → "Addition and subtraction (3-digit)".
@@ -278,3 +293,4 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - **2026-02-17**: Phase 9 Gold-G3 — Indian Context Word Problems. Added TOPIC_CONTEXT_BANK (32 topics × 10 contexts each) with rich Indian scenarios (cricket, Diwali, mela, auto-rickshaw, etc.). Injected into _build_slot_instruction() for application slots — LLM uses Indian names and contexts instead of generic problems.
 - **2026-02-17**: Phase 9 Gold-G4 — Rich Visual Types. Backend: 5 new hydration rules in hydrate_visuals() for PIE_FRACTION, GRID_SYMMETRY, MONEY_COINS, PATTERN_TILES, ABACUS — mapped by question format. Added to _MODEL_TO_VTYPE. Frontend: 5 new SVG components (PieFractionVisual, GridSymmetryVisual, MoneyCoinsVisual, PatternTilesVisual, AbacusVisual) in VisualProblem.tsx — all print-safe, B&W friendly, accessible.
 - **2026-02-17**: Phase 7 — English Language Engine. Multi-subject support: 22 English topic profiles (6 Class 2, 8 Class 3, 8 Class 4) with VALID_FORMATS_ENGLISH, subject-aware validate_question/enforce_slot_counts/backfill_format, QUESTION_SYSTEM_ENGLISH prompt, 80+ eng_* skill tags, 15 instruction builder blocks, 45 aliases, 22 constraints/objectives/context banks. Frontend: grade-aware English topic selector. Zero Maths regression (709+282 deterministic checks pass).
+- **2026-02-17**: Phase 8 — Science Engine. 7 Class 3 Science topic profiles (Plants, Animals, Food and Nutrition, Shelter, Water, Air, Our Body) with VALID_FORMATS_SCIENCE (18 formats), QUESTION_SYSTEM_SCIENCE prompt, 35 sci_* skill tags, 7 instruction builder blocks, 25 aliases, 7 constraints/objectives/context banks (Indian contexts). Frontend: grade-aware Science topic selector. Pipeline: text-only rendering (like English), reuses text answer normalizer. QA: 169-check test suite (28 combinations), zero regression (779+282+169 = 1,230 deterministic checks pass).

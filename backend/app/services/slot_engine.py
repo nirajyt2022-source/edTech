@@ -109,11 +109,42 @@ DEFAULT_FORMAT_BY_SLOT_TYPE_ENGLISH: dict[str, str] = {
     "thinking": "explain_why",
 }
 
+# ════════════════════════════════════════════════════════════
+# A-sci) Science Format Dicts
+# ════════════════════════════════════════════════════════════
+
+VALID_FORMATS_SCIENCE: dict[str, set[str]] = {
+    "recognition": {
+        "identify_part", "classify_object", "true_false",
+        "match_function", "label_diagram", "pick_correct_science",
+    },
+    "application": {
+        "explain_why_science", "what_happens_if", "give_example",
+        "compare_two", "word_problem_science",
+    },
+    "representation": {
+        "fill_diagram", "sequence_steps", "cause_effect",
+        "complete_sentence_science",
+    },
+    "error_detection": {"error_spot_science"},
+    "thinking": {"thinking_science", "multi_step_science"},
+}
+
+DEFAULT_FORMAT_BY_SLOT_TYPE_SCIENCE: dict[str, str] = {
+    "recognition": "pick_correct_science",
+    "application": "explain_why_science",
+    "representation": "sequence_steps",
+    "error_detection": "error_spot_science",
+    "thinking": "thinking_science",
+}
+
 
 def get_valid_formats(subject: str = "Mathematics") -> dict[str, set[str]]:
     """Return the VALID_FORMATS dict for the given subject."""
     if subject and subject.lower() == "english":
         return VALID_FORMATS_ENGLISH
+    if subject and subject.lower() == "science":
+        return VALID_FORMATS_SCIENCE
     return VALID_FORMATS
 
 
@@ -121,6 +152,8 @@ def get_default_format_by_slot(subject: str = "Mathematics") -> dict[str, str]:
     """Return the DEFAULT_FORMAT_BY_SLOT_TYPE dict for the given subject."""
     if subject and subject.lower() == "english":
         return DEFAULT_FORMAT_BY_SLOT_TYPE_ENGLISH
+    if subject and subject.lower() == "science":
+        return DEFAULT_FORMAT_BY_SLOT_TYPE_SCIENCE
     return DEFAULT_FORMAT_BY_SLOT_TYPE
 
 
@@ -414,6 +447,42 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "eng_sentence_type_rearrange": ("representation", "rearrange_words"),
     "eng_sentence_type_error": ("error_detection", "error_spot_english"),
     "eng_sentence_type_thinking": ("thinking", "creative_writing"),
+    # ── Science Class 3 skill tags ──
+    "sci_plants_identify": ("recognition", "pick_correct_science"),
+    "sci_plants_apply": ("application", "explain_why_science"),
+    "sci_plants_represent": ("representation", "sequence_steps"),
+    "sci_plants_error": ("error_detection", "error_spot_science"),
+    "sci_plants_thinking": ("thinking", "thinking_science"),
+    "sci_animals_identify": ("recognition", "classify_object"),
+    "sci_animals_apply": ("application", "compare_two"),
+    "sci_animals_represent": ("representation", "cause_effect"),
+    "sci_animals_error": ("error_detection", "error_spot_science"),
+    "sci_animals_thinking": ("thinking", "thinking_science"),
+    "sci_food_identify": ("recognition", "pick_correct_science"),
+    "sci_food_apply": ("application", "give_example"),
+    "sci_food_represent": ("representation", "fill_diagram"),
+    "sci_food_error": ("error_detection", "error_spot_science"),
+    "sci_food_thinking": ("thinking", "thinking_science"),
+    "sci_shelter_identify": ("recognition", "match_function"),
+    "sci_shelter_apply": ("application", "compare_two"),
+    "sci_shelter_represent": ("representation", "cause_effect"),
+    "sci_shelter_error": ("error_detection", "error_spot_science"),
+    "sci_shelter_thinking": ("thinking", "thinking_science"),
+    "sci_water_identify": ("recognition", "true_false"),
+    "sci_water_apply": ("application", "what_happens_if"),
+    "sci_water_represent": ("representation", "sequence_steps"),
+    "sci_water_error": ("error_detection", "error_spot_science"),
+    "sci_water_thinking": ("thinking", "multi_step_science"),
+    "sci_air_identify": ("recognition", "true_false"),
+    "sci_air_apply": ("application", "explain_why_science"),
+    "sci_air_represent": ("representation", "cause_effect"),
+    "sci_air_error": ("error_detection", "error_spot_science"),
+    "sci_air_thinking": ("thinking", "thinking_science"),
+    "sci_body_identify": ("recognition", "identify_part"),
+    "sci_body_apply": ("application", "explain_why_science"),
+    "sci_body_represent": ("representation", "fill_diagram"),
+    "sci_body_error": ("error_detection", "error_spot_science"),
+    "sci_body_thinking": ("thinking", "multi_step_science"),
 }
 
 SLOT_INSTRUCTIONS: dict[str, str] = {
@@ -708,6 +777,42 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Read passages and answer inferential questions",
         "Identify main ideas and supporting details",
         "Make predictions based on text clues",
+    ],
+    # ── Science Class 3 Learning Objectives ──
+    "Plants (Class 3)": [
+        "Identify parts of a plant and their functions",
+        "Understand how plants make food and grow",
+        "Classify plants based on their features",
+    ],
+    "Animals (Class 3)": [
+        "Classify animals by habitat, food, and body covering",
+        "Understand how animals move and protect themselves",
+        "Compare features of different animal groups",
+    ],
+    "Food and Nutrition (Class 3)": [
+        "Identify different food groups and their sources",
+        "Understand why a balanced diet is important",
+        "Classify foods as energy-giving, body-building, or protective",
+    ],
+    "Shelter (Class 3)": [
+        "Understand why living things need shelter",
+        "Compare different types of animal and human shelters",
+        "Relate shelter types to climate and materials available",
+    ],
+    "Water (Class 3)": [
+        "Identify sources and uses of water",
+        "Understand the water cycle in simple terms",
+        "Explain why saving water is important",
+    ],
+    "Air (Class 3)": [
+        "Understand that air is everywhere and has weight",
+        "Identify what air is made of and why it matters",
+        "Explain how air pollution affects living things",
+    ],
+    "Our Body (Class 3)": [
+        "Identify major body parts and their functions",
+        "Understand the importance of hygiene and exercise",
+        "Explain how different organs help us stay healthy",
     ],
 }
 
@@ -1093,6 +1198,56 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "an article about Indian classical music", "a story about a young inventor",
         "a passage about the water cycle", "an article about Indian railways",
         "a story about courage and kindness", "a passage about healthy habits",
+    ],
+    # ── Science Class 3 Context Banks ──
+    "Plants (Class 3)": [
+        "neem tree in the school compound", "tulsi plant at home",
+        "mango tree in the garden", "rice paddy fields in a village",
+        "lotus in a pond", "banyan tree in the park",
+        "coconut trees on a beach", "sunflower in a pot",
+        "cactus in Rajasthan", "bamboo grove near a river",
+    ],
+    "Animals (Class 3)": [
+        "a peacock dancing in the rain", "cows at a gaushala",
+        "monkeys in a forest", "camels in the Thar desert",
+        "elephants at a wildlife sanctuary", "sparrows nesting on a window",
+        "fish in a village pond", "a snake in the garden",
+        "hens in a backyard", "a dog guarding the house",
+    ],
+    "Food and Nutrition (Class 3)": [
+        "dal-roti lunch at school", "rice and sambar from a mess",
+        "fruits at a pushcart vendor", "milk from the local dairy",
+        "vegetables at a sabzi mandi", "a thali with all food groups",
+        "curd and buttermilk in summer", "jaggery and peanuts as a snack",
+        "eggs and paneer for protein", "seasonal fruits like guava and papaya",
+    ],
+    "Shelter (Class 3)": [
+        "a kutcha house in a village", "a pucca house in a city",
+        "a bird's nest on a tree", "a beehive under the roof",
+        "an igloo in cold regions", "a tent at a camping site",
+        "a burrow of a rabbit", "a spider's web in the corner",
+        "a houseboat in Kashmir", "stilt houses in Assam",
+    ],
+    "Water (Class 3)": [
+        "collecting rainwater during monsoon", "a village hand pump",
+        "the Ganga river flowing through a city", "a farmer irrigating fields",
+        "boiling water before drinking", "a water tanker in summer",
+        "a pond where clothes are washed", "an overhead water tank in a colony",
+        "a well in a Rajasthani village", "water purifier at home",
+    ],
+    "Air (Class 3)": [
+        "flying a kite on Makar Sankranti", "a windy day during monsoon",
+        "smoke from a factory chimney", "breathing during morning exercise",
+        "a balloon filled with air", "Diwali fireworks and smoke",
+        "a fan spinning in a classroom", "drying clothes on a rooftop",
+        "a windmill in a village", "air pollution from vehicles on the road",
+    ],
+    "Our Body (Class 3)": [
+        "brushing teeth in the morning", "stretching during PT class",
+        "eating lunch at school", "washing hands before meals",
+        "a visit to the school nurse", "running in a race on sports day",
+        "getting a vaccination at the health centre", "breathing during yoga",
+        "wearing spectacles for reading", "a dentist visit",
     ],
 }
 
@@ -2178,6 +2333,128 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "eng_comprehension_thinking", "count": 1},
         ],
     },
+    # ════════════════════════════════════════════════════════════
+    # ── Science Class 3 (7 topics) ──
+    # ════════════════════════════════════════════════════════════
+    "Plants (Class 3)": {
+        "allowed_skill_tags": [
+            "sci_plants_identify", "sci_plants_apply", "sci_plants_represent",
+            "sci_plants_error", "sci_plants_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_plants_identify", "count": 3},
+            {"skill_tag": "sci_plants_apply", "count": 3},
+            {"skill_tag": "sci_plants_represent", "count": 2},
+            {"skill_tag": "sci_plants_error", "count": 1},
+            {"skill_tag": "sci_plants_thinking", "count": 1},
+        ],
+    },
+    "Animals (Class 3)": {
+        "allowed_skill_tags": [
+            "sci_animals_identify", "sci_animals_apply", "sci_animals_represent",
+            "sci_animals_error", "sci_animals_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_animals_identify", "count": 3},
+            {"skill_tag": "sci_animals_apply", "count": 3},
+            {"skill_tag": "sci_animals_represent", "count": 2},
+            {"skill_tag": "sci_animals_error", "count": 1},
+            {"skill_tag": "sci_animals_thinking", "count": 1},
+        ],
+    },
+    "Food and Nutrition (Class 3)": {
+        "allowed_skill_tags": [
+            "sci_food_identify", "sci_food_apply", "sci_food_represent",
+            "sci_food_error", "sci_food_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_food_identify", "count": 3},
+            {"skill_tag": "sci_food_apply", "count": 3},
+            {"skill_tag": "sci_food_represent", "count": 2},
+            {"skill_tag": "sci_food_error", "count": 1},
+            {"skill_tag": "sci_food_thinking", "count": 1},
+        ],
+    },
+    "Shelter (Class 3)": {
+        "allowed_skill_tags": [
+            "sci_shelter_identify", "sci_shelter_apply", "sci_shelter_represent",
+            "sci_shelter_error", "sci_shelter_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_shelter_identify", "count": 3},
+            {"skill_tag": "sci_shelter_apply", "count": 3},
+            {"skill_tag": "sci_shelter_represent", "count": 2},
+            {"skill_tag": "sci_shelter_error", "count": 1},
+            {"skill_tag": "sci_shelter_thinking", "count": 1},
+        ],
+    },
+    "Water (Class 3)": {
+        "allowed_skill_tags": [
+            "sci_water_identify", "sci_water_apply", "sci_water_represent",
+            "sci_water_error", "sci_water_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_water_identify", "count": 3},
+            {"skill_tag": "sci_water_apply", "count": 3},
+            {"skill_tag": "sci_water_represent", "count": 2},
+            {"skill_tag": "sci_water_error", "count": 1},
+            {"skill_tag": "sci_water_thinking", "count": 1},
+        ],
+    },
+    "Air (Class 3)": {
+        "allowed_skill_tags": [
+            "sci_air_identify", "sci_air_apply", "sci_air_represent",
+            "sci_air_error", "sci_air_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_air_identify", "count": 3},
+            {"skill_tag": "sci_air_apply", "count": 3},
+            {"skill_tag": "sci_air_represent", "count": 2},
+            {"skill_tag": "sci_air_error", "count": 1},
+            {"skill_tag": "sci_air_thinking", "count": 1},
+        ],
+    },
+    "Our Body (Class 3)": {
+        "allowed_skill_tags": [
+            "sci_body_identify", "sci_body_apply", "sci_body_represent",
+            "sci_body_error", "sci_body_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_body_identify", "count": 3},
+            {"skill_tag": "sci_body_apply", "count": 3},
+            {"skill_tag": "sci_body_represent", "count": 2},
+            {"skill_tag": "sci_body_error", "count": 1},
+            {"skill_tag": "sci_body_thinking", "count": 1},
+        ],
+    },
 }
 
 
@@ -2306,6 +2583,32 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 4 prefixes": "Prefixes and Suffixes (Class 4)",
     "class 4 vocabulary": "Vocabulary (Class 4)",
     "class 4 comprehension": "Reading Comprehension (Class 4)",
+    # ── Science Class 3 aliases ──
+    "plants": "Plants (Class 3)",
+    "class 3 plants": "Plants (Class 3)",
+    "parts of a plant": "Plants (Class 3)",
+    "animals": "Animals (Class 3)",
+    "class 3 animals": "Animals (Class 3)",
+    "animal habitats": "Animals (Class 3)",
+    "food and nutrition": "Food and Nutrition (Class 3)",
+    "class 3 food": "Food and Nutrition (Class 3)",
+    "food groups": "Food and Nutrition (Class 3)",
+    "nutrition": "Food and Nutrition (Class 3)",
+    "balanced diet": "Food and Nutrition (Class 3)",
+    "shelter": "Shelter (Class 3)",
+    "class 3 shelter": "Shelter (Class 3)",
+    "houses and shelters": "Shelter (Class 3)",
+    "water": "Water (Class 3)",
+    "class 3 water": "Water (Class 3)",
+    "sources of water": "Water (Class 3)",
+    "water cycle": "Water (Class 3)",
+    "air": "Air (Class 3)",
+    "class 3 air": "Air (Class 3)",
+    "air around us": "Air (Class 3)",
+    "our body": "Our Body (Class 3)",
+    "class 3 body": "Our Body (Class 3)",
+    "human body": "Our Body (Class 3)",
+    "body parts": "Our Body (Class 3)",
 }
 
 
@@ -3640,6 +3943,138 @@ def _build_slot_instruction(
         }
         return eng_stype_ctx + eng_stype_map.get(_skill_tag, "About sentence types.")
 
+    # ── Science Class 3 instruction builders ──
+
+    # Plants
+    if _skill_tag.startswith("sci_plants_"):
+        sci_plants_ctx = (
+            "Topic: Plants (Class 3 Science, CBSE). "
+            "Cover parts of a plant (root, stem, leaf, flower, fruit, seed), how plants grow, "
+            "types of plants (herbs, shrubs, trees, climbers, creepers), photosynthesis in simple terms. "
+            "Use Indian plants: neem, tulsi, mango, banyan, lotus, coconut, bamboo. "
+            "DO NOT repeat the same plant or concept. "
+        )
+        sci_plants_map = {
+            "sci_plants_identify": "Identify a part of a plant or type of plant. Example: 'Which part of the plant makes food? (a) Root (b) Leaf (c) Stem (d) Flower' → Leaf",
+            "sci_plants_apply": "format: explain_why_science. Explain a concept about plants. Example: 'Why do plants need sunlight?'",
+            "sci_plants_represent": "format: sequence_steps. Arrange steps of a process in order. Example: 'Arrange the steps of how a seed grows into a plant.'",
+            "sci_plants_error": "format: error_spot_science. Present a WRONG fact about plants. Example: 'Roots make food for the plant.' Ask: 'Find the mistake and correct it.'",
+            "sci_plants_thinking": "format: thinking_science. Ask a reasoning question. Example: 'A plant is kept in a dark room for a week. What do you think will happen? Why?'",
+        }
+        return sci_plants_ctx + sci_plants_map.get(_skill_tag, "About plants.")
+
+    # Animals
+    if _skill_tag.startswith("sci_animals_"):
+        sci_animals_ctx = (
+            "Topic: Animals (Class 3 Science, CBSE). "
+            "Cover types of animals (wild, domestic, pet), habitats (forest, water, desert, grassland), "
+            "body coverings (fur, feathers, scales, shell), food habits (herbivore, carnivore, omnivore), movement. "
+            "Use Indian animals: peacock, cow, elephant, camel, parrot, cobra, tiger, monkey. "
+            "DO NOT repeat the same animal or concept. "
+        )
+        sci_animals_map = {
+            "sci_animals_identify": "Classify or identify an animal. Example: 'Which of these is a herbivore? (a) Lion (b) Cow (c) Eagle (d) Frog' → Cow",
+            "sci_animals_apply": "format: compare_two. Compare two animals. Example: 'How are a fish and a frog different in how they breathe?'",
+            "sci_animals_represent": "format: cause_effect. Show cause and effect. Example: 'Birds have wings → they can ___.'",
+            "sci_animals_error": "format: error_spot_science. Present a WRONG fact about animals. Example: 'A snake is covered with fur.' Ask: 'Find the mistake and correct it.'",
+            "sci_animals_thinking": "format: thinking_science. Ask a reasoning question. Example: 'Why do you think camels can survive in the desert? Give two reasons.'",
+        }
+        return sci_animals_ctx + sci_animals_map.get(_skill_tag, "About animals.")
+
+    # Food and Nutrition
+    if _skill_tag.startswith("sci_food_"):
+        sci_food_ctx = (
+            "Topic: Food and Nutrition (Class 3 Science, CBSE). "
+            "Cover food groups (energy-giving: rice, roti, ghee; body-building: dal, paneer, eggs; "
+            "protective: fruits, vegetables), balanced diet, sources of food (plants, animals), "
+            "cooking methods, food preservation. "
+            "Use Indian foods: dal, roti, rice, sabzi, curd, paneer, jaggery, ghee. "
+            "DO NOT repeat the same food item or concept. "
+        )
+        sci_food_map = {
+            "sci_food_identify": "Identify food group or source. Example: 'Which food gives us energy? (a) Spinach (b) Rice (c) Curd (d) Water' → Rice",
+            "sci_food_apply": "format: give_example. Ask for examples. Example: 'Give two examples of body-building foods.'",
+            "sci_food_represent": "format: fill_diagram. Classify foods into groups. Example: 'Write each food in the correct group: rice, dal, apple, ghee → Energy-giving / Body-building / Protective'",
+            "sci_food_error": "format: error_spot_science. Present a WRONG fact. Example: 'Ghee is a protective food that gives us vitamins.' Ask: 'Find the mistake and correct it.'",
+            "sci_food_thinking": "format: thinking_science. Ask a reasoning question. Example: 'Why should we eat different types of food every day instead of just our favourite food?'",
+        }
+        return sci_food_ctx + sci_food_map.get(_skill_tag, "About food and nutrition.")
+
+    # Shelter
+    if _skill_tag.startswith("sci_shelter_"):
+        sci_shelter_ctx = (
+            "Topic: Shelter (Class 3 Science, CBSE). "
+            "Cover why living things need shelter, types of human houses (kutcha, pucca, tent, houseboat, stilt house), "
+            "animal shelters (nest, burrow, den, hive, web), materials used for building. "
+            "Use Indian contexts: village houses, city flats, houseboats in Kashmir, stilt houses in Assam. "
+            "DO NOT repeat the same shelter type or concept. "
+        )
+        sci_shelter_map = {
+            "sci_shelter_identify": "Identify or match shelter. Example: 'Where does a rabbit live? (a) Nest (b) Burrow (c) Den (d) Hive' → Burrow",
+            "sci_shelter_apply": "format: compare_two. Compare shelters. Example: 'How is a kutcha house different from a pucca house?'",
+            "sci_shelter_represent": "format: cause_effect. Show cause and effect. Example: 'In Assam, it rains a lot → people build ___ houses.'",
+            "sci_shelter_error": "format: error_spot_science. Present a WRONG fact. Example: 'A beehive is built by birds.' Ask: 'Find the mistake and correct it.'",
+            "sci_shelter_thinking": "format: thinking_science. Ask a reasoning question. Example: 'Why do people in Rajasthan build houses with thick walls?'",
+        }
+        return sci_shelter_ctx + sci_shelter_map.get(_skill_tag, "About shelter.")
+
+    # Water
+    if _skill_tag.startswith("sci_water_"):
+        sci_water_ctx = (
+            "Topic: Water (Class 3 Science, CBSE). "
+            "Cover sources of water (rain, river, well, tap, borewell), uses of water (drinking, cooking, "
+            "washing, farming), water cycle (evaporation, condensation, precipitation), saving water, "
+            "clean vs dirty water, water purification. "
+            "Use Indian contexts: monsoon, Ganga, hand pumps, water tankers, rainwater harvesting. "
+            "DO NOT repeat the same concept or context. "
+        )
+        sci_water_map = {
+            "sci_water_identify": "Identify facts about water. Example: 'True or False: We get most of our water from the ocean.' → False",
+            "sci_water_apply": "format: what_happens_if. Ask cause-effect. Example: 'What happens if we leave a glass of water in the sun for a long time?'",
+            "sci_water_represent": "format: sequence_steps. Arrange steps. Example: 'Arrange the steps of the water cycle: Rain falls → Water in rivers → Sun heats water → Clouds form'",
+            "sci_water_error": "format: error_spot_science. Present a WRONG fact. Example: 'Sea water is safe to drink directly.' Ask: 'Find the mistake and correct it.'",
+            "sci_water_thinking": "format: multi_step_science. Ask multi-step reasoning. Example: 'Your village has no rain for 3 months. List two ways to save water and explain why each works.'",
+        }
+        return sci_water_ctx + sci_water_map.get(_skill_tag, "About water.")
+
+    # Air
+    if _skill_tag.startswith("sci_air_"):
+        sci_air_ctx = (
+            "Topic: Air (Class 3 Science, CBSE). "
+            "Cover air is everywhere, properties of air (takes up space, has weight, moves), "
+            "composition (oxygen, carbon dioxide, nitrogen), uses of air (breathing, burning, drying), "
+            "air pollution (vehicle smoke, factory smoke, burning waste), wind energy. "
+            "Use Indian contexts: kite flying on Sankranti, windmills, Diwali fireworks, vehicle pollution. "
+            "DO NOT repeat the same concept or context. "
+        )
+        sci_air_map = {
+            "sci_air_identify": "Identify facts about air. Example: 'True or False: Air has weight.' → True",
+            "sci_air_apply": "format: explain_why_science. Explain a concept. Example: 'Why do we see bubbles when we blow air into water?'",
+            "sci_air_represent": "format: cause_effect. Show cause and effect. Example: 'Burning crackers on Diwali → ___ happens to the air.'",
+            "sci_air_error": "format: error_spot_science. Present a WRONG fact. Example: 'Air is made up of only oxygen.' Ask: 'Find the mistake and correct it.'",
+            "sci_air_thinking": "format: thinking_science. Ask reasoning. Example: 'Why should we plant more trees to keep the air clean?'",
+        }
+        return sci_air_ctx + sci_air_map.get(_skill_tag, "About air.")
+
+    # Our Body
+    if _skill_tag.startswith("sci_body_"):
+        sci_body_ctx = (
+            "Topic: Our Body (Class 3 Science, CBSE). "
+            "Cover major body parts and organs (heart, lungs, brain, stomach, bones, muscles), "
+            "sense organs (eyes, ears, nose, tongue, skin), hygiene (handwashing, bathing, brushing), "
+            "healthy habits (exercise, balanced diet, sleep), keeping the body safe. "
+            "Use Indian contexts: yoga, PT class, school nurse, morning assembly. "
+            "DO NOT repeat the same body part or concept. "
+        )
+        sci_body_map = {
+            "sci_body_identify": "Identify a body part or its function. Example: 'Which organ pumps blood? (a) Brain (b) Heart (c) Lungs (d) Stomach' → Heart",
+            "sci_body_apply": "format: explain_why_science. Explain a concept. Example: 'Why should we wash our hands before eating?'",
+            "sci_body_represent": "format: fill_diagram. Match organs to functions. Example: 'Match: Eyes → ___. Ears → ___. Nose → ___.'",
+            "sci_body_error": "format: error_spot_science. Present a WRONG fact. Example: 'We breathe with our stomach.' Ask: 'Find the mistake and correct it.'",
+            "sci_body_thinking": "format: multi_step_science. Ask reasoning. Example: 'Why is it important to do yoga or exercise every day? Give two reasons.'",
+        }
+        return sci_body_ctx + sci_body_map.get(_skill_tag, "About the human body.")
+
     # Check if this is a non-arithmetic topic by looking at skill_tag
     _NON_ARITHMETIC_TAGS = {
         "multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank",
@@ -3663,7 +4098,7 @@ def _build_slot_instruction(
     }
     # Include all c2_, c4_, and eng_ prefixed tags as non-arithmetic
     _NON_ARITHMETIC_TAGS.update(
-        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("eng_")
+        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("eng_") or tag.startswith("sci_")
     )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
@@ -3857,6 +4292,25 @@ QUESTION_SYSTEM_ENGLISH = (
     "- DO NOT repeat the same grammar concept in consecutive questions\n"
     "- Each question must test a UNIQUE aspect of the topic\n"
     "- Vary sentence structures and vocabulary\n"
+)
+
+QUESTION_SYSTEM_SCIENCE = (
+    "Expert question writer for primary-school Science worksheets (CBSE curriculum). "
+    "Output JSON only. No markdown. No extra keys.\n"
+    "Rules:\n"
+    "- Grade-appropriate scientific vocabulary.\n"
+    "- NEVER reference visuals, pictures, or diagrams in question_text.\n"
+    "- Every answer must be scientifically accurate and age-appropriate.\n"
+    "- pictorial_elements must be empty list [].\n"
+    "- Use Indian contexts: local plants (neem, tulsi, mango), Indian animals, "
+    "Indian food (dal, roti, rice), monsoon, Indian seasons.\n"
+    "- NEVER generate arithmetic or maths questions.\n"
+    "\n"
+    "CRITICAL DEDUPLICATION RULES:\n"
+    "- DO NOT reuse the same fact, organism, or concept across questions\n"
+    "- DO NOT repeat the same question pattern in consecutive questions\n"
+    "- Each question must test a UNIQUE aspect of the topic\n"
+    "- Vary contexts, examples, and question styles\n"
 )
 
 QUESTION_USER_TEMPLATE = (
@@ -4087,6 +4541,50 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "and answer questions. Include the passage in question_text. Use Class 4 level text. "
         "NEVER generate arithmetic or maths questions.\n"
     ),
+    # ── Science Class 3 constraints ──
+    "Plants (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Plants ONLY — parts of a plant (root, stem, leaf, flower, fruit), "
+        "how plants grow, types of plants, photosynthesis in simple terms. "
+        "Use Indian plants: neem, tulsi, mango, banyan, lotus, coconut. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Animals (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Animals ONLY — types of animals, habitats, "
+        "body coverings (fur, feathers, scales), food habits (herbivore, carnivore, omnivore), movement. "
+        "Use Indian animals: peacock, cow, elephant, camel, parrot, cobra. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Food and Nutrition (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Food and Nutrition ONLY — food groups "
+        "(energy-giving, body-building, protective), balanced diet, sources of food, cooking, preservation. "
+        "Use Indian foods: dal, roti, rice, paneer, curd, sabzi, ghee, jaggery. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Shelter (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Shelter ONLY — why living things need shelter, "
+        "types of houses (kutcha, pucca, tent, houseboat, stilt house), animal shelters (nest, burrow, den, web). "
+        "Use Indian contexts: village homes, city flats, houseboats in Kashmir, stilt houses in Assam. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Water (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Water ONLY — sources of water (river, well, rain, tap), "
+        "uses of water, water cycle (evaporation, condensation, rain), saving water, clean vs dirty water. "
+        "Use Indian contexts: monsoon, Ganga, hand pumps, water tankers. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Air (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Air ONLY — air is everywhere, properties of air "
+        "(takes up space, has weight), composition (oxygen, carbon dioxide, nitrogen), "
+        "air pollution, wind and its uses. "
+        "Use Indian contexts: kite flying on Sankranti, windmills, factory smoke, vehicle pollution. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    "Our Body (Class 3)": (
+        "CRITICAL: ALL questions MUST be about the Human Body ONLY — major body parts and organs, "
+        "sense organs (eyes, ears, nose, tongue, skin), hygiene, healthy habits, food for a healthy body. "
+        "Use Indian contexts: yoga, PT period, school nurse, morning assembly exercises. "
+        "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
 }
 
 REGION_CONTEXT: dict[str, dict[str, str]] = {
@@ -4156,12 +4654,13 @@ def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> 
     text = q.get("question_text", "")
     answer = q.get("answer")
     is_english = subject and subject.lower() == "english"
+    is_science = subject and subject.lower() == "science"
 
     allowed = get_valid_formats(subject).get(slot_type, set())
     if fmt not in allowed:
         issues.append(f"format '{fmt}' not allowed for {slot_type}; expected one of {sorted(allowed)}")
 
-    if not is_english and _FORBIDDEN_VISUAL_PHRASES.search(text):
+    if not is_english and not is_science and _FORBIDDEN_VISUAL_PHRASES.search(text):
         issues.append("question_text references visuals/arrays/diagrams that aren't rendered")
 
     if answer is None or (isinstance(answer, str) and not answer.strip()):
@@ -4169,6 +4668,31 @@ def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> 
 
     if not text or len(text.strip()) < 10:
         issues.append("question_text is too short or missing")
+
+    # ── Science-specific validation ──
+    if is_science:
+        if slot_type == "error_detection":
+            _SCI_ERROR_LANG = re.compile(
+                r"(wrong|incorrect|mistake|error|not true|false statement|"
+                r"find the (?:error|mistake)|correct the|what is wrong)",
+                re.IGNORECASE,
+            )
+            if not _SCI_ERROR_LANG.search(text):
+                issues.append("Science error_detection must present a factual error for student to find/correct")
+
+        if slot_type == "thinking":
+            _SCI_REASONING_LANG = re.compile(
+                r"(why|how|explain|reason|what would happen|think|predict|"
+                r"what if|describe|compare|suggest)",
+                re.IGNORECASE,
+            )
+            if not _SCI_REASONING_LANG.search(text):
+                issues.append("Science thinking slot should involve reasoning or explanation")
+
+        if q.get("pictorial_elements"):
+            issues.append("pictorial_elements must be empty (no renderer available)")
+
+        return issues
 
     # ── English-specific validation ──
     if is_english:
@@ -5270,7 +5794,13 @@ def generate_question(
         language_instruction=lang_instruction,
     )
 
-    sys_prompt = QUESTION_SYSTEM_ENGLISH if subject and subject.lower() == "english" else QUESTION_SYSTEM
+    _subj_lower = (subject or "").lower()
+    if _subj_lower == "english":
+        sys_prompt = QUESTION_SYSTEM_ENGLISH
+    elif _subj_lower == "science":
+        sys_prompt = QUESTION_SYSTEM_SCIENCE
+    else:
+        sys_prompt = QUESTION_SYSTEM
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -5813,8 +6343,10 @@ def run_slot_pipeline(
 
     # 7a. Normalize answers (deterministic, no LLM)
     _is_english = subject and subject.lower() == "english"
-    if _is_english:
-        normalize_english_answers(questions)
+    _is_science = subject and subject.lower() == "science"
+    _is_text_only = _is_english or _is_science
+    if _is_text_only:
+        normalize_english_answers(questions)  # reuse text normalizer for Science too
     else:
         normalize_estimation_answers(questions)
         normalize_error_spot_answers(questions)
@@ -5827,13 +6359,13 @@ def run_slot_pipeline(
     if ws_issues:
         logger.warning("Worksheet-level issues: %s", ws_issues)
 
-    if not _is_english:
+    if not _is_text_only:
         carry_issues = validate_hard_difficulty_carry(questions, difficulty, topic=topic)
         if carry_issues:
             logger.warning("Hard-difficulty carry issues: %s", carry_issues)
 
-    # 8b. Hydrate visuals (deterministic, no LLM) — skip for English (text-only)
-    if not _is_english:
+    # 8b. Hydrate visuals (deterministic, no LLM) — skip for English/Science (text-only)
+    if not _is_text_only:
         questions = hydrate_visuals(questions)
     else:
         for q in questions:
