@@ -241,6 +241,25 @@
       "stage": "Preparatory",
       "subjects": [
         {
+          "name": "Maths",
+          "region": "Global",
+          "skills": [
+            "Addition and subtraction (3-digit)",
+            "Multiplication tables (2-5)",
+            "Division basics",
+            "Fractions (halves and quarters)",
+            "Time (reading clock, calendar)",
+            "Money (bills and change)",
+            "Measurement (length, weight)"
+          ],
+          "logic_tags": [
+            "numerical",
+            "spatial",
+            "logical"
+          ],
+          "depth": "core"
+        },
+        {
           "name": "English",
           "region": "Global",
           "skills": [
@@ -359,6 +378,25 @@
       "grade": 4,
       "stage": "Preparatory",
       "subjects": [
+        {
+          "name": "Maths",
+          "region": "Global",
+          "skills": [
+            "Addition and subtraction (4-digit)",
+            "Multiplication (2-digit by 1-digit)",
+            "Division (2-digit by 1-digit)",
+            "Fractions (addition and subtraction)",
+            "Decimals introduction",
+            "Time (minutes, 24-hour clock)",
+            "Money (word problems)"
+          ],
+          "logic_tags": [
+            "numerical",
+            "spatial",
+            "logical"
+          ],
+          "depth": "core"
+        },
         {
           "name": "English",
           "region": "Global",
