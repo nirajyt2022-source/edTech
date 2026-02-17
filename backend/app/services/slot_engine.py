@@ -782,6 +782,92 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "sci_c2_senses_represent": ("representation", "fill_diagram"),
     "sci_c2_senses_error": ("error_detection", "error_spot_science"),
     "sci_c2_senses_thinking": ("thinking", "thinking_science"),
+    # ── Science Class 4 skill tags (7 topics) ──────────────────
+    # Living Things (Class 4)
+    "sci_c4_living_identify": ("recognition", "classify_object"),
+    "sci_c4_living_apply": ("application", "compare_two"),
+    "sci_c4_living_represent": ("representation", "fill_diagram"),
+    "sci_c4_living_error": ("error_detection", "error_spot_science"),
+    "sci_c4_living_thinking": ("thinking", "thinking_science"),
+    # Human Body (Class 4)
+    "sci_c4_humanbody_identify": ("recognition", "identify_part"),
+    "sci_c4_humanbody_apply": ("application", "explain_why_science"),
+    "sci_c4_humanbody_represent": ("representation", "fill_diagram"),
+    "sci_c4_humanbody_error": ("error_detection", "error_spot_science"),
+    "sci_c4_humanbody_thinking": ("thinking", "multi_step_science"),
+    # States of Matter (Class 4)
+    "sci_c4_matter_identify": ("recognition", "pick_correct_science"),
+    "sci_c4_matter_apply": ("application", "what_happens_if"),
+    "sci_c4_matter_represent": ("representation", "cause_effect"),
+    "sci_c4_matter_error": ("error_detection", "error_spot_science"),
+    "sci_c4_matter_thinking": ("thinking", "thinking_science"),
+    # Force and Motion (Class 4)
+    "sci_c4_force_identify": ("recognition", "true_false"),
+    "sci_c4_force_apply": ("application", "explain_why_science"),
+    "sci_c4_force_represent": ("representation", "cause_effect"),
+    "sci_c4_force_error": ("error_detection", "error_spot_science"),
+    "sci_c4_force_thinking": ("thinking", "thinking_science"),
+    # Simple Machines (Class 4)
+    "sci_c4_machines_identify": ("recognition", "match_function"),
+    "sci_c4_machines_apply": ("application", "give_example"),
+    "sci_c4_machines_represent": ("representation", "fill_diagram"),
+    "sci_c4_machines_error": ("error_detection", "error_spot_science"),
+    "sci_c4_machines_thinking": ("thinking", "multi_step_science"),
+    # Photosynthesis (Class 4)
+    "sci_c4_photosyn_identify": ("recognition", "pick_correct_science"),
+    "sci_c4_photosyn_apply": ("application", "explain_why_science"),
+    "sci_c4_photosyn_represent": ("representation", "sequence_steps"),
+    "sci_c4_photosyn_error": ("error_detection", "error_spot_science"),
+    "sci_c4_photosyn_thinking": ("thinking", "thinking_science"),
+    # Animal Adaptation (Class 4)
+    "sci_c4_adapt_identify": ("recognition", "classify_object"),
+    "sci_c4_adapt_apply": ("application", "compare_two"),
+    "sci_c4_adapt_represent": ("representation", "cause_effect"),
+    "sci_c4_adapt_error": ("error_detection", "error_spot_science"),
+    "sci_c4_adapt_thinking": ("thinking", "thinking_science"),
+    # ── Science Class 5 skill tags (7 topics) ──────────────────
+    # Circulatory System (Class 5)
+    "sci_c5_circulatory_identify": ("recognition", "identify_part"),
+    "sci_c5_circulatory_apply": ("application", "explain_why_science"),
+    "sci_c5_circulatory_represent": ("representation", "sequence_steps"),
+    "sci_c5_circulatory_error": ("error_detection", "error_spot_science"),
+    "sci_c5_circulatory_thinking": ("thinking", "multi_step_science"),
+    # Respiratory and Nervous System (Class 5)
+    "sci_c5_respnerv_identify": ("recognition", "identify_part"),
+    "sci_c5_respnerv_apply": ("application", "explain_why_science"),
+    "sci_c5_respnerv_represent": ("representation", "fill_diagram"),
+    "sci_c5_respnerv_error": ("error_detection", "error_spot_science"),
+    "sci_c5_respnerv_thinking": ("thinking", "thinking_science"),
+    # Reproduction in Plants and Animals (Class 5)
+    "sci_c5_reprod_identify": ("recognition", "pick_correct_science"),
+    "sci_c5_reprod_apply": ("application", "compare_two"),
+    "sci_c5_reprod_represent": ("representation", "sequence_steps"),
+    "sci_c5_reprod_error": ("error_detection", "error_spot_science"),
+    "sci_c5_reprod_thinking": ("thinking", "thinking_science"),
+    # Physical and Chemical Changes (Class 5)
+    "sci_c5_changes_identify": ("recognition", "classify_object"),
+    "sci_c5_changes_apply": ("application", "what_happens_if"),
+    "sci_c5_changes_represent": ("representation", "cause_effect"),
+    "sci_c5_changes_error": ("error_detection", "error_spot_science"),
+    "sci_c5_changes_thinking": ("thinking", "thinking_science"),
+    # Forms of Energy (Class 5)
+    "sci_c5_energy_identify": ("recognition", "pick_correct_science"),
+    "sci_c5_energy_apply": ("application", "give_example"),
+    "sci_c5_energy_represent": ("representation", "cause_effect"),
+    "sci_c5_energy_error": ("error_detection", "error_spot_science"),
+    "sci_c5_energy_thinking": ("thinking", "multi_step_science"),
+    # Solar System and Earth (Class 5)
+    "sci_c5_solar_identify": ("recognition", "true_false"),
+    "sci_c5_solar_apply": ("application", "explain_why_science"),
+    "sci_c5_solar_represent": ("representation", "sequence_steps"),
+    "sci_c5_solar_error": ("error_detection", "error_spot_science"),
+    "sci_c5_solar_thinking": ("thinking", "thinking_science"),
+    # Ecosystem and Food Chains (Class 5)
+    "sci_c5_ecosystem_identify": ("recognition", "classify_object"),
+    "sci_c5_ecosystem_apply": ("application", "explain_why_science"),
+    "sci_c5_ecosystem_represent": ("representation", "sequence_steps"),
+    "sci_c5_ecosystem_error": ("error_detection", "error_spot_science"),
+    "sci_c5_ecosystem_thinking": ("thinking", "thinking_science"),
     # ── Hindi Language skill tags ──────────────────────────
     # Varnamala (Class 3)
     "hin_varna_identify": ("recognition", "identify_letter"),
@@ -1380,6 +1466,78 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Name the five sense organs and what each does",
         "Match senses to the correct body part (eyes see, ears hear)",
         "Understand how senses help us learn about the world",
+    ],
+    # ── Science Class 4 Learning Objectives ──
+    "Living Things (Class 4)": [
+        "Classify objects as living or non-living and explain why",
+        "Identify basic features of plant and animal cells",
+        "Compare characteristics of plants and animals",
+    ],
+    "Human Body (Class 4)": [
+        "Describe the main parts of the digestive system and their roles",
+        "Identify major bones and joints of the skeletal system",
+        "Explain how the digestive and skeletal systems work together",
+    ],
+    "States of Matter (Class 4)": [
+        "Identify the three states of matter and their properties",
+        "Explain how matter changes from one state to another",
+        "Relate changes of state to everyday situations",
+    ],
+    "Force and Motion (Class 4)": [
+        "Understand that a push or pull is a force that causes motion",
+        "Describe how friction affects the movement of objects",
+        "Explain the role of gravity in keeping things on the ground",
+    ],
+    "Simple Machines (Class 4)": [
+        "Identify the six types of simple machines and their uses",
+        "Explain how simple machines make work easier",
+        "Give real-life examples of levers, pulleys, and inclined planes",
+    ],
+    "Photosynthesis (Class 4)": [
+        "Explain what plants need to make their own food",
+        "Describe the process of photosynthesis in simple terms",
+        "Understand the role of sunlight, water, and carbon dioxide in photosynthesis",
+    ],
+    "Animal Adaptation (Class 4)": [
+        "Explain how animals adapt to survive in their habitats",
+        "Compare adaptations of desert, aquatic, and polar animals",
+        "Identify body features that help animals find food and stay safe",
+    ],
+    # ── Science Class 5 Learning Objectives ──
+    "Circulatory System (Class 5)": [
+        "Identify the main parts of the circulatory system (heart, blood vessels, blood)",
+        "Describe how blood flows through the body",
+        "Explain why the circulatory system is important for health",
+    ],
+    "Respiratory and Nervous System (Class 5)": [
+        "Describe how the lungs help us breathe",
+        "Explain the role of the brain and nerves in controlling the body",
+        "Understand how the respiratory and nervous systems work together",
+    ],
+    "Reproduction in Plants and Animals (Class 5)": [
+        "Describe how plants reproduce through pollination and seeds",
+        "Compare egg-laying and live-birth reproduction in animals",
+        "Identify parts of a flower involved in reproduction",
+    ],
+    "Physical and Chemical Changes (Class 5)": [
+        "Distinguish between physical and chemical changes",
+        "Identify reversible and irreversible changes with examples",
+        "Explain what happens during common chemical changes like rusting",
+    ],
+    "Forms of Energy (Class 5)": [
+        "Name different forms of energy (heat, light, sound, electrical)",
+        "Explain how energy changes from one form to another",
+        "Give examples of energy use in daily life",
+    ],
+    "Solar System and Earth (Class 5)": [
+        "Name the planets in our solar system in order",
+        "Explain why we have day and night (rotation) and seasons (revolution)",
+        "Describe the role of the sun in our solar system",
+    ],
+    "Ecosystem and Food Chains (Class 5)": [
+        "Identify producers, consumers, and decomposers in an ecosystem",
+        "Draw and explain a simple food chain",
+        "Understand how living things depend on each other in a food web",
     ],
     # ── Hindi Class 3 topics ──
     "Varnamala (Class 3)": [
@@ -2180,6 +2338,106 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "seeing colourful rangoli on Diwali", "hearing the school bell ring",
         "smelling fresh roti being made", "feeling raindrops on the hand",
         "watching a kite in the sky", "tasting sour lemon pickle",
+    ],
+    # ── Science Class 4 Context Banks ──
+    "Living Things (Class 4)": [
+        "observing ants carrying food near the school gate", "a tulsi plant growing in a pot at home",
+        "watching fish swim in a village pond", "comparing a stone and a puppy in the park",
+        "a banyan tree in the school compound", "mushrooms growing on a wet log after monsoon",
+        "a lizard on the classroom wall", "a cactus plant in a Rajasthani garden",
+        "butterflies in a mustard field in Punjab", "a cow chewing cud at a gaushala",
+    ],
+    "Human Body (Class 4)": [
+        "eating roti-sabzi in the school canteen", "running a race on sports day",
+        "bending and stretching during yoga class", "visiting a doctor at the PHC",
+        "brushing teeth after eating jalebi", "drinking water after PT period",
+        "a skeleton model in the science lab", "getting a health check-up at school",
+        "chewing sugarcane at a mela", "doing surya namaskar in morning assembly",
+    ],
+    "States of Matter (Class 4)": [
+        "making ice candy (gola) in summer", "boiling milk on a gas stove at home",
+        "steam rising from a pressure cooker", "drying clothes on the terrace in summer",
+        "water turning to ice in the freezer", "morning dew on grass in winter",
+        "fog covering the road on a Delhi morning", "melting ghee in a kadhai",
+        "water droplets on a cold glass of lassi", "Amma making jaggery from sugarcane juice",
+    ],
+    "Force and Motion (Class 4)": [
+        "pushing a heavy trunk across the room", "pulling a bucket of water from a well",
+        "a cricket ball rolling on the pitch", "riding a bicycle on a village road",
+        "sliding down a slide in the school playground", "a bullock cart moving on a muddy path",
+        "a marble rolling on the classroom floor", "Appa pushing a car that won't start",
+        "a child on a swing in the park", "a kite being pulled by the wind on Sankranti",
+    ],
+    "Simple Machines (Class 4)": [
+        "using a see-saw in the school playground", "pulling water from a well with a pulley",
+        "opening a bottle cap with a lever", "rolling heavy drums up a ramp at a godown",
+        "using scissors to cut paper in art class", "a ramp at the railway station for luggage",
+        "a flagpole pulley during Republic Day", "using a screwdriver to tighten a screw",
+        "a wheelbarrow at a construction site", "a nutcracker to crack walnuts from Kashmir",
+    ],
+    "Photosynthesis (Class 4)": [
+        "a neem tree making food in sunlight", "tulsi leaves turning green in the balcony",
+        "rice paddy fields turning green in monsoon", "a mango tree with broad green leaves",
+        "lotus leaves floating on a pond", "indoor money plant near a window",
+        "banana plants in a Kerala garden", "tea gardens on the hills of Assam",
+        "sunflowers facing the sun in a field", "coconut palms along the Goa coast",
+    ],
+    "Animal Adaptation (Class 4)": [
+        "a camel walking in the Thar desert", "fish breathing underwater in a river",
+        "a polar bear at a zoo exhibit", "a frog near a village pond in monsoon",
+        "an eagle soaring high in the Himalayas", "a chameleon changing colour on a branch",
+        "a snake shedding its skin in the garden", "ducks floating on Dal Lake in Kashmir",
+        "a yak in the Ladakh mountains", "a monkey swinging from tree to tree in a forest",
+    ],
+    # ── Science Class 5 Context Banks ──
+    "Circulatory System (Class 5)": [
+        "feeling the pulse after running in PT class", "a doctor using a stethoscope at a clinic",
+        "heart beating faster during a cricket match", "blood flowing from a small cut on the knee",
+        "donating blood at a camp in the colony", "veins visible on the back of your hand",
+        "a model of the heart in the science lab", "resting after climbing stairs at school",
+        "Dadi taking blood pressure medicine", "a Red Cross poster at the hospital",
+    ],
+    "Respiratory and Nervous System (Class 5)": [
+        "breathing heavily after running a race", "doing pranayam during morning yoga",
+        "blowing up balloons for a birthday party", "sneezing during a dusty day in summer",
+        "feeling pain when touching a hot tawa", "the brain telling your hand to write in class",
+        "holding your breath while diving in a pool", "the smell of biryani reaching your nose",
+        "a reflex action when stepping on a thorn", "a doctor checking reflexes at the PHC",
+    ],
+    "Reproduction in Plants and Animals (Class 5)": [
+        "bees buzzing around marigold flowers", "a mango tree flowering in spring",
+        "seeds sprouting in a wet cloth at school", "a hen sitting on eggs in the backyard",
+        "coconut seeds floating in ocean water", "a butterfly laying eggs on a leaf",
+        "cotton bolls bursting open in a Gujarat field", "puppies born at the neighbour's house",
+        "lotus seeds in a village pond", "a farmer planting rice seedlings in a paddy field",
+    ],
+    "Physical and Chemical Changes (Class 5)": [
+        "Amma making paneer by adding lemon to milk", "an iron gate rusting during monsoon",
+        "ice cream melting at a summer mela", "burning wood for a bonfire on Lohri",
+        "folding a paper boat during class", "curd forming from warm milk overnight",
+        "tearing a page from a notebook", "cooking a chapati on a tawa",
+        "dissolving sugar in chai", "a matchstick burning with a bright flame",
+    ],
+    "Forms of Energy (Class 5)": [
+        "a solar panel on the school rooftop", "a torch lighting up a dark room during a power cut",
+        "a tabla being played at a school function", "a windmill generating electricity in Rajasthan",
+        "an electric heater warming the room in winter", "a pressure cooker whistling in the kitchen",
+        "Diwali diyas glowing with heat and light", "a radio playing songs at a chai stall",
+        "a microwave oven heating food at home", "lightning and thunder during monsoon",
+    ],
+    "Solar System and Earth (Class 5)": [
+        "watching the sunrise from a hilltop in Munnar", "a globe on the teacher's desk at school",
+        "the moon shining bright on Sharad Purnima", "visiting a planetarium on a school trip",
+        "shadows changing size during the day", "stars visible on a clear winter night in a village",
+        "the sun setting behind the Qutub Minar", "a solar eclipse watched with special glasses",
+        "reading about Chandrayaan in the newspaper", "seasons changing from summer to monsoon",
+    ],
+    "Ecosystem and Food Chains (Class 5)": [
+        "a frog eating insects near a rice paddy", "grass growing in a park where deer graze",
+        "a tiger hunting in Ranthambore National Park", "mushrooms growing on a fallen tree in a forest",
+        "a hawk catching a mouse in a wheat field", "fish eating algae in a Ganga tributary",
+        "an owl hunting at night near a village", "earthworms in the school garden compost",
+        "a food web poster in the science classroom", "vultures at a carcass in a wildlife sanctuary",
     ],
     # ── Hindi Class 3 Context Banks ──
     "Varnamala (Class 3)": [
@@ -4261,6 +4519,246 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "sci_c2_senses_thinking", "count": 1},
         ],
     },
+    # ── Science Class 4 (7 topics) ──────────────────────────
+    "Living Things (Class 4)": {
+        "allowed_skill_tags": [
+            "sci_c4_living_identify", "sci_c4_living_apply", "sci_c4_living_represent",
+            "sci_c4_living_error", "sci_c4_living_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c4_living_identify", "count": 2},
+            {"skill_tag": "sci_c4_living_apply", "count": 3},
+            {"skill_tag": "sci_c4_living_represent", "count": 2},
+            {"skill_tag": "sci_c4_living_error", "count": 2},
+            {"skill_tag": "sci_c4_living_thinking", "count": 1},
+        ],
+    },
+    "Human Body (Class 4)": {
+        "allowed_skill_tags": [
+            "sci_c4_humanbody_identify", "sci_c4_humanbody_apply", "sci_c4_humanbody_represent",
+            "sci_c4_humanbody_error", "sci_c4_humanbody_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c4_humanbody_identify", "count": 2},
+            {"skill_tag": "sci_c4_humanbody_apply", "count": 3},
+            {"skill_tag": "sci_c4_humanbody_represent", "count": 2},
+            {"skill_tag": "sci_c4_humanbody_error", "count": 2},
+            {"skill_tag": "sci_c4_humanbody_thinking", "count": 1},
+        ],
+    },
+    "States of Matter (Class 4)": {
+        "allowed_skill_tags": [
+            "sci_c4_matter_identify", "sci_c4_matter_apply", "sci_c4_matter_represent",
+            "sci_c4_matter_error", "sci_c4_matter_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c4_matter_identify", "count": 2},
+            {"skill_tag": "sci_c4_matter_apply", "count": 3},
+            {"skill_tag": "sci_c4_matter_represent", "count": 2},
+            {"skill_tag": "sci_c4_matter_error", "count": 2},
+            {"skill_tag": "sci_c4_matter_thinking", "count": 1},
+        ],
+    },
+    "Force and Motion (Class 4)": {
+        "allowed_skill_tags": [
+            "sci_c4_force_identify", "sci_c4_force_apply", "sci_c4_force_represent",
+            "sci_c4_force_error", "sci_c4_force_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c4_force_identify", "count": 2},
+            {"skill_tag": "sci_c4_force_apply", "count": 3},
+            {"skill_tag": "sci_c4_force_represent", "count": 2},
+            {"skill_tag": "sci_c4_force_error", "count": 2},
+            {"skill_tag": "sci_c4_force_thinking", "count": 1},
+        ],
+    },
+    "Simple Machines (Class 4)": {
+        "allowed_skill_tags": [
+            "sci_c4_machines_identify", "sci_c4_machines_apply", "sci_c4_machines_represent",
+            "sci_c4_machines_error", "sci_c4_machines_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c4_machines_identify", "count": 2},
+            {"skill_tag": "sci_c4_machines_apply", "count": 3},
+            {"skill_tag": "sci_c4_machines_represent", "count": 2},
+            {"skill_tag": "sci_c4_machines_error", "count": 2},
+            {"skill_tag": "sci_c4_machines_thinking", "count": 1},
+        ],
+    },
+    "Photosynthesis (Class 4)": {
+        "allowed_skill_tags": [
+            "sci_c4_photosyn_identify", "sci_c4_photosyn_apply", "sci_c4_photosyn_represent",
+            "sci_c4_photosyn_error", "sci_c4_photosyn_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c4_photosyn_identify", "count": 2},
+            {"skill_tag": "sci_c4_photosyn_apply", "count": 3},
+            {"skill_tag": "sci_c4_photosyn_represent", "count": 2},
+            {"skill_tag": "sci_c4_photosyn_error", "count": 2},
+            {"skill_tag": "sci_c4_photosyn_thinking", "count": 1},
+        ],
+    },
+    "Animal Adaptation (Class 4)": {
+        "allowed_skill_tags": [
+            "sci_c4_adapt_identify", "sci_c4_adapt_apply", "sci_c4_adapt_represent",
+            "sci_c4_adapt_error", "sci_c4_adapt_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c4_adapt_identify", "count": 2},
+            {"skill_tag": "sci_c4_adapt_apply", "count": 3},
+            {"skill_tag": "sci_c4_adapt_represent", "count": 2},
+            {"skill_tag": "sci_c4_adapt_error", "count": 2},
+            {"skill_tag": "sci_c4_adapt_thinking", "count": 1},
+        ],
+    },
+    # ── Science Class 5 (7 topics) ──────────────────────────
+    "Circulatory System (Class 5)": {
+        "allowed_skill_tags": [
+            "sci_c5_circulatory_identify", "sci_c5_circulatory_apply", "sci_c5_circulatory_represent",
+            "sci_c5_circulatory_error", "sci_c5_circulatory_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c5_circulatory_identify", "count": 2},
+            {"skill_tag": "sci_c5_circulatory_apply", "count": 3},
+            {"skill_tag": "sci_c5_circulatory_represent", "count": 2},
+            {"skill_tag": "sci_c5_circulatory_error", "count": 2},
+            {"skill_tag": "sci_c5_circulatory_thinking", "count": 1},
+        ],
+    },
+    "Respiratory and Nervous System (Class 5)": {
+        "allowed_skill_tags": [
+            "sci_c5_respnerv_identify", "sci_c5_respnerv_apply", "sci_c5_respnerv_represent",
+            "sci_c5_respnerv_error", "sci_c5_respnerv_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c5_respnerv_identify", "count": 2},
+            {"skill_tag": "sci_c5_respnerv_apply", "count": 3},
+            {"skill_tag": "sci_c5_respnerv_represent", "count": 2},
+            {"skill_tag": "sci_c5_respnerv_error", "count": 2},
+            {"skill_tag": "sci_c5_respnerv_thinking", "count": 1},
+        ],
+    },
+    "Reproduction in Plants and Animals (Class 5)": {
+        "allowed_skill_tags": [
+            "sci_c5_reprod_identify", "sci_c5_reprod_apply", "sci_c5_reprod_represent",
+            "sci_c5_reprod_error", "sci_c5_reprod_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c5_reprod_identify", "count": 2},
+            {"skill_tag": "sci_c5_reprod_apply", "count": 3},
+            {"skill_tag": "sci_c5_reprod_represent", "count": 2},
+            {"skill_tag": "sci_c5_reprod_error", "count": 2},
+            {"skill_tag": "sci_c5_reprod_thinking", "count": 1},
+        ],
+    },
+    "Physical and Chemical Changes (Class 5)": {
+        "allowed_skill_tags": [
+            "sci_c5_changes_identify", "sci_c5_changes_apply", "sci_c5_changes_represent",
+            "sci_c5_changes_error", "sci_c5_changes_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c5_changes_identify", "count": 2},
+            {"skill_tag": "sci_c5_changes_apply", "count": 3},
+            {"skill_tag": "sci_c5_changes_represent", "count": 2},
+            {"skill_tag": "sci_c5_changes_error", "count": 2},
+            {"skill_tag": "sci_c5_changes_thinking", "count": 1},
+        ],
+    },
+    "Forms of Energy (Class 5)": {
+        "allowed_skill_tags": [
+            "sci_c5_energy_identify", "sci_c5_energy_apply", "sci_c5_energy_represent",
+            "sci_c5_energy_error", "sci_c5_energy_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c5_energy_identify", "count": 2},
+            {"skill_tag": "sci_c5_energy_apply", "count": 3},
+            {"skill_tag": "sci_c5_energy_represent", "count": 2},
+            {"skill_tag": "sci_c5_energy_error", "count": 2},
+            {"skill_tag": "sci_c5_energy_thinking", "count": 1},
+        ],
+    },
+    "Solar System and Earth (Class 5)": {
+        "allowed_skill_tags": [
+            "sci_c5_solar_identify", "sci_c5_solar_apply", "sci_c5_solar_represent",
+            "sci_c5_solar_error", "sci_c5_solar_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c5_solar_identify", "count": 2},
+            {"skill_tag": "sci_c5_solar_apply", "count": 3},
+            {"skill_tag": "sci_c5_solar_represent", "count": 2},
+            {"skill_tag": "sci_c5_solar_error", "count": 2},
+            {"skill_tag": "sci_c5_solar_thinking", "count": 1},
+        ],
+    },
+    "Ecosystem and Food Chains (Class 5)": {
+        "allowed_skill_tags": [
+            "sci_c5_ecosystem_identify", "sci_c5_ecosystem_apply", "sci_c5_ecosystem_represent",
+            "sci_c5_ecosystem_error", "sci_c5_ecosystem_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
+        "disallowed_visual_types": [],
+        "subject": "Science",
+        "default_recipe": [
+            {"skill_tag": "sci_c5_ecosystem_identify", "count": 2},
+            {"skill_tag": "sci_c5_ecosystem_apply", "count": 3},
+            {"skill_tag": "sci_c5_ecosystem_represent", "count": 2},
+            {"skill_tag": "sci_c5_ecosystem_error", "count": 2},
+            {"skill_tag": "sci_c5_ecosystem_thinking", "count": 1},
+        ],
+    },
     # ── Hindi Class 3 topic profiles ──────────────────────────
     "Varnamala (Class 3)": {
         "allowed_skill_tags": [
@@ -4683,6 +5181,73 @@ _TOPIC_ALIASES: dict[str, str] = {
     "c2 senses": "Our Senses (Class 2)",
     "class 2 senses": "Our Senses (Class 2)",
     "five senses": "Our Senses (Class 2)",
+    # ── Science Class 4 aliases ──
+    "living things": "Living Things (Class 4)",
+    "class 4 living things": "Living Things (Class 4)",
+    "c4 living things": "Living Things (Class 4)",
+    "living and nonliving": "Living Things (Class 4)",
+    "living and non-living": "Living Things (Class 4)",
+    "human body class 4": "Human Body (Class 4)",
+    "class 4 human body": "Human Body (Class 4)",
+    "c4 human body": "Human Body (Class 4)",
+    "digestive system": "Human Body (Class 4)",
+    "skeletal system": "Human Body (Class 4)",
+    "states of matter": "States of Matter (Class 4)",
+    "class 4 matter": "States of Matter (Class 4)",
+    "c4 matter": "States of Matter (Class 4)",
+    "solid liquid gas": "States of Matter (Class 4)",
+    "force and motion": "Force and Motion (Class 4)",
+    "class 4 force": "Force and Motion (Class 4)",
+    "c4 force": "Force and Motion (Class 4)",
+    "push and pull": "Force and Motion (Class 4)",
+    "friction": "Force and Motion (Class 4)",
+    "simple machines": "Simple Machines (Class 4)",
+    "class 4 machines": "Simple Machines (Class 4)",
+    "c4 machines": "Simple Machines (Class 4)",
+    "lever and pulley": "Simple Machines (Class 4)",
+    "photosynthesis": "Photosynthesis (Class 4)",
+    "class 4 photosynthesis": "Photosynthesis (Class 4)",
+    "c4 photosynthesis": "Photosynthesis (Class 4)",
+    "how plants make food": "Photosynthesis (Class 4)",
+    "animal adaptation": "Animal Adaptation (Class 4)",
+    "class 4 adaptation": "Animal Adaptation (Class 4)",
+    "c4 adaptation": "Animal Adaptation (Class 4)",
+    "animal adaptations": "Animal Adaptation (Class 4)",
+    "desert aquatic polar": "Animal Adaptation (Class 4)",
+    # ── Science Class 5 aliases ──
+    "circulatory system": "Circulatory System (Class 5)",
+    "class 5 circulatory": "Circulatory System (Class 5)",
+    "c5 circulatory": "Circulatory System (Class 5)",
+    "heart and blood": "Circulatory System (Class 5)",
+    "blood circulation": "Circulatory System (Class 5)",
+    "respiratory and nervous system": "Respiratory and Nervous System (Class 5)",
+    "class 5 respiratory": "Respiratory and Nervous System (Class 5)",
+    "c5 respiratory": "Respiratory and Nervous System (Class 5)",
+    "lungs and brain": "Respiratory and Nervous System (Class 5)",
+    "nervous system": "Respiratory and Nervous System (Class 5)",
+    "reproduction in plants and animals": "Reproduction in Plants and Animals (Class 5)",
+    "class 5 reproduction": "Reproduction in Plants and Animals (Class 5)",
+    "c5 reproduction": "Reproduction in Plants and Animals (Class 5)",
+    "pollination and seeds": "Reproduction in Plants and Animals (Class 5)",
+    "physical and chemical changes": "Physical and Chemical Changes (Class 5)",
+    "class 5 changes": "Physical and Chemical Changes (Class 5)",
+    "c5 changes": "Physical and Chemical Changes (Class 5)",
+    "reversible irreversible": "Physical and Chemical Changes (Class 5)",
+    "chemical changes": "Physical and Chemical Changes (Class 5)",
+    "forms of energy": "Forms of Energy (Class 5)",
+    "class 5 energy": "Forms of Energy (Class 5)",
+    "c5 energy": "Forms of Energy (Class 5)",
+    "heat light sound": "Forms of Energy (Class 5)",
+    "solar system and earth": "Solar System and Earth (Class 5)",
+    "class 5 solar system": "Solar System and Earth (Class 5)",
+    "c5 solar system": "Solar System and Earth (Class 5)",
+    "planets and earth": "Solar System and Earth (Class 5)",
+    "solar system": "Solar System and Earth (Class 5)",
+    "ecosystem and food chains": "Ecosystem and Food Chains (Class 5)",
+    "class 5 ecosystem": "Ecosystem and Food Chains (Class 5)",
+    "c5 ecosystem": "Ecosystem and Food Chains (Class 5)",
+    "food chains": "Ecosystem and Food Chains (Class 5)",
+    "food web": "Ecosystem and Food Chains (Class 5)",
     # ── Hindi Class 3 aliases ──
     "varnamala": "Varnamala (Class 3)",
     "class 3 varnamala": "Varnamala (Class 3)",
@@ -7048,6 +7613,259 @@ def _build_slot_instruction(
         }
         return ctx + tag_map.get(_skill_tag, "About senses.")
 
+    # ── Science Class 4: Living Things ──
+    if _skill_tag.startswith("sci_c4_living_"):
+        ctx = (
+            "Topic: Living Things (Class 4 Science, CBSE). "
+            "Cover classification of living vs non-living things, characteristics of living things "
+            "(growth, respiration, reproduction, response to stimuli), basic plant and animal cell features. "
+            "Use Indian examples: neem tree, cow, river stone, bicycle. "
+            "DO NOT repeat the same example or concept. "
+        )
+        tag_map = {
+            "sci_c4_living_identify": "Classify an object as living or non-living. Example: 'Which of these is a living thing? (a) Stone (b) Chair (c) Mushroom (d) Water' -> Mushroom",
+            "sci_c4_living_apply": "format: compare_two. Compare features of two things. Example: 'How is a plant different from a rock? Give two reasons.'",
+            "sci_c4_living_represent": "format: fill_diagram. Label or classify. Example: 'Put each item in the correct group — Living / Non-living: cow, table, tulsi, pencil.'",
+            "sci_c4_living_error": "format: error_spot_science. Present a WRONG fact. Example: 'A car is a living thing because it moves.' Ask: 'Find the mistake and correct it.'",
+            "sci_c4_living_thinking": "format: thinking_science. Ask reasoning. Example: 'A seed is kept in soil and watered. After a week it sprouts. Is the seed living or non-living? Explain your answer.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About living things.")
+
+    # ── Science Class 4: Human Body ──
+    if _skill_tag.startswith("sci_c4_humanbody_"):
+        ctx = (
+            "Topic: Human Body (Class 4 Science, CBSE). "
+            "Cover the digestive system (mouth, food pipe, stomach, small intestine, large intestine), "
+            "skeletal system (skull, ribcage, backbone, joints — hinge, ball-and-socket). "
+            "Use Indian contexts: eating roti, chewing sugarcane, playing kabaddi, doing yoga. "
+            "DO NOT repeat the same organ or concept. "
+        )
+        tag_map = {
+            "sci_c4_humanbody_identify": "Identify a body part or organ. Example: 'Which organ breaks down food in our body? (a) Heart (b) Lungs (c) Stomach (d) Brain' -> Stomach",
+            "sci_c4_humanbody_apply": "format: explain_why_science. Explain function. Example: 'Why do we need to chew food properly before swallowing?'",
+            "sci_c4_humanbody_represent": "format: fill_diagram. Label parts. Example: 'Fill in the order: Mouth → ___ → Stomach → ___ → Large Intestine. (Food pipe / Small intestine)'",
+            "sci_c4_humanbody_error": "format: error_spot_science. Present a WRONG fact. Example: 'The skull protects our stomach.' Ask: 'Find the mistake and correct it.'",
+            "sci_c4_humanbody_thinking": "format: multi_step_science. Multi-step reasoning. Example: 'Ravi ate a roti. Describe the journey of that roti through his body in 3 steps.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About the human body.")
+
+    # ── Science Class 4: States of Matter ──
+    if _skill_tag.startswith("sci_c4_matter_"):
+        ctx = (
+            "Topic: States of Matter (Class 4 Science, CBSE). "
+            "Cover three states of matter (solid, liquid, gas), properties of each (shape, volume, compressibility), "
+            "changes of state (melting, freezing, evaporation, condensation, boiling). "
+            "Use Indian contexts: making ice gola, boiling chai, drying clothes, morning dew. "
+            "DO NOT repeat the same example or concept. "
+        )
+        tag_map = {
+            "sci_c4_matter_identify": "Identify the state of matter. Example: 'What state of matter is steam? (a) Solid (b) Liquid (c) Gas (d) None' -> Gas",
+            "sci_c4_matter_apply": "format: what_happens_if. Ask about changes. Example: 'What happens if you keep an ice cube on a plate in the sun?'",
+            "sci_c4_matter_represent": "format: cause_effect. Show cause and effect. Example: 'Water is heated strongly → it turns into ___.'",
+            "sci_c4_matter_error": "format: error_spot_science. Present a WRONG fact. Example: 'Gases have a fixed shape and volume.' Ask: 'Find the mistake and correct it.'",
+            "sci_c4_matter_thinking": "format: thinking_science. Ask reasoning. Example: 'Why do wet clothes dry faster on a hot, windy day than on a cold day?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About states of matter.")
+
+    # ── Science Class 4: Force and Motion ──
+    if _skill_tag.startswith("sci_c4_force_"):
+        ctx = (
+            "Topic: Force and Motion (Class 4 Science, CBSE). "
+            "Cover push and pull as forces, types of force (muscular, frictional, gravitational, magnetic), "
+            "friction (rough vs smooth surfaces), gravity pulls things downward. "
+            "Use Indian contexts: playing cricket, riding a bicycle, pulling a bullock cart, sliding on a playground slide. "
+            "DO NOT repeat the same scenario or concept. "
+        )
+        tag_map = {
+            "sci_c4_force_identify": "Identify type of force. Example: 'True or False: Friction helps us walk without slipping.' -> True",
+            "sci_c4_force_apply": "format: explain_why_science. Explain a concept. Example: 'Why is it easier to slide on a polished floor than on a rough road?'",
+            "sci_c4_force_represent": "format: cause_effect. Show cause and effect. Example: 'A ball is thrown upwards → ___ pulls it back down.'",
+            "sci_c4_force_error": "format: error_spot_science. Present a WRONG fact. Example: 'Objects fall down because of friction.' Ask: 'Find the mistake and correct it.'",
+            "sci_c4_force_thinking": "format: thinking_science. Ask reasoning. Example: 'Why do we put oil on a squeaky door hinge? What force are we reducing?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About force and motion.")
+
+    # ── Science Class 4: Simple Machines ──
+    if _skill_tag.startswith("sci_c4_machines_"):
+        ctx = (
+            "Topic: Simple Machines (Class 4 Science, CBSE). "
+            "Cover six simple machines: lever, pulley, wheel and axle, inclined plane, wedge, screw. "
+            "How they make work easier by changing force direction or reducing effort. "
+            "Use Indian contexts: see-saw, well pulley, ramp at station, scissors, wheelbarrow. "
+            "DO NOT repeat the same machine type or example. "
+        )
+        tag_map = {
+            "sci_c4_machines_identify": "Match machine to function. Example: 'Which simple machine is used to draw water from a well? (a) Lever (b) Pulley (c) Wedge (d) Screw' -> Pulley",
+            "sci_c4_machines_apply": "format: give_example. Ask for examples. Example: 'Give two examples of levers that you use at home or school.'",
+            "sci_c4_machines_represent": "format: fill_diagram. Classify machines. Example: 'Write each item in the correct group — Lever / Pulley / Inclined Plane: see-saw, flag pole, ramp.'",
+            "sci_c4_machines_error": "format: error_spot_science. Present a WRONG fact. Example: 'A see-saw is an example of a pulley.' Ask: 'Find the mistake and correct it.'",
+            "sci_c4_machines_thinking": "format: multi_step_science. Multi-step reasoning. Example: 'A heavy box needs to be loaded onto a truck. Which two simple machines could help? Explain how each works.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About simple machines.")
+
+    # ── Science Class 4: Photosynthesis ──
+    if _skill_tag.startswith("sci_c4_photosyn_"):
+        ctx = (
+            "Topic: Photosynthesis (Class 4 Science, CBSE). "
+            "Cover how plants make food: sunlight + water + carbon dioxide → food (glucose) + oxygen. "
+            "Role of leaves (chlorophyll, stomata), roots absorb water, leaves absorb CO₂. "
+            "Use Indian plants: neem, mango, tulsi, banyan, rice paddy. "
+            "DO NOT repeat the same plant or concept. "
+        )
+        tag_map = {
+            "sci_c4_photosyn_identify": "Identify a fact about photosynthesis. Example: 'What gas do plants take in during photosynthesis? (a) Oxygen (b) Nitrogen (c) Carbon dioxide (d) Hydrogen' -> Carbon dioxide",
+            "sci_c4_photosyn_apply": "format: explain_why_science. Explain a concept. Example: 'Why are leaves green in colour?'",
+            "sci_c4_photosyn_represent": "format: sequence_steps. Arrange steps. Example: 'Arrange the steps of photosynthesis in order: Plant makes food → Roots absorb water → Sunlight falls on leaves → Leaves take in CO₂.'",
+            "sci_c4_photosyn_error": "format: error_spot_science. Present a WRONG fact. Example: 'Plants take in oxygen and give out carbon dioxide during photosynthesis.' Ask: 'Find the mistake and correct it.'",
+            "sci_c4_photosyn_thinking": "format: thinking_science. Ask reasoning. Example: 'Why do you think plants kept in a dark cupboard for many days turn yellow and weak?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About photosynthesis.")
+
+    # ── Science Class 4: Animal Adaptation ──
+    if _skill_tag.startswith("sci_c4_adapt_"):
+        ctx = (
+            "Topic: Animal Adaptation (Class 4 Science, CBSE). "
+            "Cover how animals adapt to survive: desert (camel — hump, long eyelashes), "
+            "aquatic (fish — gills, streamlined body), polar (polar bear — thick fur, fat layer), "
+            "forest (monkey — long arms, camouflage). Body features for food, movement, protection. "
+            "Use Indian animals: camel, fish, frog, eagle, chameleon, yak. "
+            "DO NOT repeat the same animal or adaptation. "
+        )
+        tag_map = {
+            "sci_c4_adapt_identify": "Classify an adaptation. Example: 'Which animal is adapted to live in the desert? (a) Penguin (b) Camel (c) Whale (d) Frog' -> Camel",
+            "sci_c4_adapt_apply": "format: compare_two. Compare adaptations. Example: 'How is a fish adapted to live in water differently from a frog?'",
+            "sci_c4_adapt_represent": "format: cause_effect. Show cause and effect. Example: 'A polar bear has thick fur → it can survive in ___.'",
+            "sci_c4_adapt_error": "format: error_spot_science. Present a WRONG fact. Example: 'Fish breathe using lungs.' Ask: 'Find the mistake and correct it.'",
+            "sci_c4_adapt_thinking": "format: thinking_science. Ask reasoning. Example: 'Why do you think a chameleon changes its colour? How does this help it survive?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About animal adaptation.")
+
+    # ── Science Class 5: Circulatory System ──
+    if _skill_tag.startswith("sci_c5_circulatory_"):
+        ctx = (
+            "Topic: Circulatory System (Class 5 Science, CBSE). "
+            "Cover the heart (4 chambers), blood vessels (arteries, veins, capillaries), "
+            "blood flow path (heart → arteries → body → veins → heart), blood carries oxygen and nutrients. "
+            "Use Indian contexts: feeling pulse after running, doctor's stethoscope, blood donation camp. "
+            "DO NOT repeat the same organ or concept. "
+        )
+        tag_map = {
+            "sci_c5_circulatory_identify": "Identify a part of the circulatory system. Example: 'Which blood vessels carry blood away from the heart? (a) Veins (b) Arteries (c) Capillaries (d) Nerves' -> Arteries",
+            "sci_c5_circulatory_apply": "format: explain_why_science. Explain function. Example: 'Why does your heart beat faster when you run?'",
+            "sci_c5_circulatory_represent": "format: sequence_steps. Arrange blood flow steps. Example: 'Arrange: Blood reaches lungs → Heart pumps blood → Blood picks up oxygen → Blood returns to heart.'",
+            "sci_c5_circulatory_error": "format: error_spot_science. Present a WRONG fact. Example: 'Veins carry blood away from the heart.' Ask: 'Find the mistake and correct it.'",
+            "sci_c5_circulatory_thinking": "format: multi_step_science. Multi-step reasoning. Example: 'Anita ran for 5 minutes. Her pulse went from 72 to 110. Why did this happen? What is her body doing?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About the circulatory system.")
+
+    # ── Science Class 5: Respiratory and Nervous System ──
+    if _skill_tag.startswith("sci_c5_respnerv_"):
+        ctx = (
+            "Topic: Respiratory and Nervous System (Class 5 Science, CBSE). "
+            "Cover breathing (nose → windpipe → lungs → oxygen in, CO₂ out), "
+            "nervous system (brain, spinal cord, nerves), reflex actions, five senses connected to brain. "
+            "Use Indian contexts: pranayam, sneezing in dust, stepping on a thorn, smelling biryani. "
+            "DO NOT repeat the same organ or concept. "
+        )
+        tag_map = {
+            "sci_c5_respnerv_identify": "Identify a body part. Example: 'Which organ controls all our actions and thoughts? (a) Heart (b) Lungs (c) Brain (d) Stomach' -> Brain",
+            "sci_c5_respnerv_apply": "format: explain_why_science. Explain function. Example: 'Why do we sneeze when dust enters our nose?'",
+            "sci_c5_respnerv_represent": "format: fill_diagram. Label parts. Example: 'Fill in the breathing path: Nose → ___ → Lungs. (Windpipe / Stomach)'",
+            "sci_c5_respnerv_error": "format: error_spot_science. Present a WRONG fact. Example: 'We breathe in carbon dioxide and breathe out oxygen.' Ask: 'Find the mistake and correct it.'",
+            "sci_c5_respnerv_thinking": "format: thinking_science. Ask reasoning. Example: 'When you touch a hot tawa, your hand pulls back instantly. Why does this happen without you thinking about it?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About respiratory and nervous systems.")
+
+    # ── Science Class 5: Reproduction in Plants and Animals ──
+    if _skill_tag.startswith("sci_c5_reprod_"):
+        ctx = (
+            "Topic: Reproduction in Plants and Animals (Class 5 Science, CBSE). "
+            "Cover plant reproduction: parts of a flower (petals, stamens, pistil), pollination (insects, wind), "
+            "seed formation, seed dispersal. Animal reproduction: egg-laying (birds, reptiles, fish), live birth (mammals). "
+            "Use Indian contexts: mango flowering, bees on marigold, hen and eggs, puppies born. "
+            "DO NOT repeat the same example or concept. "
+        )
+        tag_map = {
+            "sci_c5_reprod_identify": "Identify a fact about reproduction. Example: 'Which part of a flower develops into a fruit? (a) Petal (b) Sepal (c) Pistil (d) Stamen' -> Pistil",
+            "sci_c5_reprod_apply": "format: compare_two. Compare methods. Example: 'How is egg-laying in a hen different from live birth in a cow?'",
+            "sci_c5_reprod_represent": "format: sequence_steps. Arrange steps. Example: 'Arrange: Seed grows into a plant → Flower produces seeds → Pollination occurs → Flower blooms.'",
+            "sci_c5_reprod_error": "format: error_spot_science. Present a WRONG fact. Example: 'Seeds are formed inside the stamen of a flower.' Ask: 'Find the mistake and correct it.'",
+            "sci_c5_reprod_thinking": "format: thinking_science. Ask reasoning. Example: 'Why do you think some fruits are sweet and colourful? How does this help the plant?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About reproduction.")
+
+    # ── Science Class 5: Physical and Chemical Changes ──
+    if _skill_tag.startswith("sci_c5_changes_"):
+        ctx = (
+            "Topic: Physical and Chemical Changes (Class 5 Science, CBSE). "
+            "Cover physical changes (reversible — melting ice, folding paper, dissolving sugar), "
+            "chemical changes (irreversible — burning, rusting, cooking, curdling milk). "
+            "Use Indian contexts: making paneer, rusting iron gate, burning wood on Lohri, making curd. "
+            "DO NOT repeat the same example or change type. "
+        )
+        tag_map = {
+            "sci_c5_changes_identify": "Classify a change. Example: 'Is melting of ice a physical or chemical change? (a) Physical (b) Chemical' -> Physical",
+            "sci_c5_changes_apply": "format: what_happens_if. Ask about changes. Example: 'What happens if you leave an iron nail in water for a week?'",
+            "sci_c5_changes_represent": "format: cause_effect. Show cause and effect. Example: 'Lemon juice is added to hot milk → ___ is formed.'",
+            "sci_c5_changes_error": "format: error_spot_science. Present a WRONG fact. Example: 'Burning a piece of paper is a reversible change.' Ask: 'Find the mistake and correct it.'",
+            "sci_c5_changes_thinking": "format: thinking_science. Ask reasoning. Example: 'You can melt ice back into water, but you cannot un-cook an egg. Why is cooking called a chemical change?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About physical and chemical changes.")
+
+    # ── Science Class 5: Forms of Energy ──
+    if _skill_tag.startswith("sci_c5_energy_"):
+        ctx = (
+            "Topic: Forms of Energy (Class 5 Science, CBSE). "
+            "Cover different forms: heat, light, sound, electrical, kinetic, potential. "
+            "Energy conversion examples: bulb (electrical → light + heat), drum (kinetic → sound). "
+            "Use Indian contexts: solar panel, Diwali diyas, tabla, windmill in Rajasthan, pressure cooker. "
+            "DO NOT repeat the same energy form or example. "
+        )
+        tag_map = {
+            "sci_c5_energy_identify": "Identify a form of energy. Example: 'What form of energy does a burning candle give? (a) Sound (b) Light and heat (c) Electrical (d) Magnetic' -> Light and heat",
+            "sci_c5_energy_apply": "format: give_example. Ask for examples. Example: 'Give two examples of objects that convert electrical energy into sound energy.'",
+            "sci_c5_energy_represent": "format: cause_effect. Show energy conversion. Example: 'Pressing a switch → electrical energy → light bulb glows. The electrical energy changes into ___ and ___.'",
+            "sci_c5_energy_error": "format: error_spot_science. Present a WRONG fact. Example: 'A solar panel converts sound energy into light energy.' Ask: 'Find the mistake and correct it.'",
+            "sci_c5_energy_thinking": "format: multi_step_science. Multi-step reasoning. Example: 'Ravi claps his hands and makes a sound. Describe the energy changes that happen from start to finish.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About forms of energy.")
+
+    # ── Science Class 5: Solar System and Earth ──
+    if _skill_tag.startswith("sci_c5_solar_"):
+        ctx = (
+            "Topic: Solar System and Earth (Class 5 Science, CBSE). "
+            "Cover the sun, 8 planets in order (Mercury to Neptune), Earth's rotation (day/night), "
+            "Earth's revolution (seasons), moon phases, basic facts about each planet. "
+            "Use Indian contexts: Chandrayaan mission, sunrise times, seasons in India, planetarium visits. "
+            "DO NOT repeat the same planet or concept. "
+        )
+        tag_map = {
+            "sci_c5_solar_identify": "Identify a fact about the solar system. Example: 'True or False: Mars is the largest planet in the solar system.' -> False",
+            "sci_c5_solar_apply": "format: explain_why_science. Explain a concept. Example: 'Why do we have day and night on Earth?'",
+            "sci_c5_solar_represent": "format: sequence_steps. Arrange planets. Example: 'Arrange these planets from closest to farthest from the Sun: Earth, Mars, Mercury, Venus.'",
+            "sci_c5_solar_error": "format: error_spot_science. Present a WRONG fact. Example: 'The moon produces its own light.' Ask: 'Find the mistake and correct it.'",
+            "sci_c5_solar_thinking": "format: thinking_science. Ask reasoning. Example: 'India has very hot summers and cold winters. What causes this change in seasons? Explain.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About the solar system.")
+
+    # ── Science Class 5: Ecosystem and Food Chains ──
+    if _skill_tag.startswith("sci_c5_ecosystem_"):
+        ctx = (
+            "Topic: Ecosystem and Food Chains (Class 5 Science, CBSE). "
+            "Cover producers (plants), consumers (herbivores, carnivores, omnivores), decomposers (fungi, bacteria), "
+            "food chains (grass → deer → tiger), food webs, interdependence of living things. "
+            "Use Indian contexts: Ranthambore, rice paddy ecosystem, village pond, forest near a hill station. "
+            "DO NOT repeat the same food chain or organism. "
+        )
+        tag_map = {
+            "sci_c5_ecosystem_identify": "Classify an organism. Example: 'In a food chain, what is a deer? (a) Producer (b) Herbivore (c) Carnivore (d) Decomposer' -> Herbivore",
+            "sci_c5_ecosystem_apply": "format: explain_why_science. Explain a concept. Example: 'Why are plants called producers in a food chain?'",
+            "sci_c5_ecosystem_represent": "format: sequence_steps. Build a food chain. Example: 'Arrange into a food chain: Tiger, Grass, Deer → ___ → ___ → ___.'",
+            "sci_c5_ecosystem_error": "format: error_spot_science. Present a WRONG fact. Example: 'A tiger is a producer in the food chain.' Ask: 'Find the mistake and correct it.'",
+            "sci_c5_ecosystem_thinking": "format: thinking_science. Ask reasoning. Example: 'If all the frogs in a paddy field disappeared, what would happen to the insects and snakes? Explain.'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About ecosystems and food chains.")
+
     # ── Hindi Varnamala (Class 3) ──
     if _skill_tag.startswith("hin_varna_"):
         hin_varna_ctx = (
@@ -7979,6 +8797,112 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "Use Indian contexts: smelling flowers, tasting jalebi, hearing temple bells. "
         "NO nervous system, NO brain science. Keep sentences simple. "
         "NEVER generate arithmetic, maths, or English grammar questions.\n"
+    ),
+    # ── Science Class 4 topic constraints ──
+    "Living Things (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Living Things ONLY — classification of living vs non-living, "
+        "characteristics of living things (growth, respiration, reproduction, response to stimuli), "
+        "basic intro to plant and animal cells. "
+        "Use Indian examples: neem tree, cow, mushroom, stone, bicycle. "
+        "Keep answers factual and age-appropriate for Class 4. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Human Body (Class 4)": (
+        "CRITICAL: ALL questions MUST be about the Human Body for Class 4 ONLY — "
+        "digestive system (mouth, food pipe, stomach, small intestine, large intestine), "
+        "skeletal system (skull, ribcage, backbone, joints — hinge, ball-and-socket). "
+        "Use Indian contexts: eating roti, doing yoga, playing kabaddi. "
+        "NO circulatory system, NO nervous system (those are Class 5). "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "States of Matter (Class 4)": (
+        "CRITICAL: ALL questions MUST be about States of Matter ONLY — solid, liquid, gas. "
+        "Properties (shape, volume), changes of state (melting, freezing, evaporation, condensation, boiling). "
+        "Use Indian contexts: ice gola, boiling chai, drying clothes, morning dew. "
+        "Keep answers factual and age-appropriate for Class 4. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Force and Motion (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Force and Motion ONLY — push/pull forces, "
+        "types of force (muscular, frictional, gravitational, magnetic), friction on surfaces, gravity. "
+        "Use Indian contexts: cricket, bicycle, bullock cart, playground slide. "
+        "Keep answers factual and age-appropriate for Class 4. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Simple Machines (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Simple Machines ONLY — lever, pulley, wheel and axle, "
+        "inclined plane, wedge, screw. How they make work easier. "
+        "Use Indian contexts: see-saw, well pulley, ramp at railway station, scissors, wheelbarrow. "
+        "Keep answers factual and age-appropriate for Class 4. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Photosynthesis (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Photosynthesis ONLY — how plants make food "
+        "using sunlight, water, and carbon dioxide. Role of leaves, chlorophyll, stomata. "
+        "Use Indian plants: neem, mango, tulsi, banyan, rice paddy. "
+        "Keep explanations simple for Class 4. NO chemical equations, NO complex biochemistry. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Animal Adaptation (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Animal Adaptation ONLY — how animals adapt "
+        "to desert, aquatic, polar, and forest habitats. Body features for survival. "
+        "Use Indian animals: camel, fish, frog, eagle, chameleon, yak, cobra. "
+        "Keep answers factual and age-appropriate for Class 4. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    # ── Science Class 5 topic constraints ──
+    "Circulatory System (Class 5)": (
+        "CRITICAL: ALL questions MUST be about the Circulatory System ONLY — "
+        "heart (4 chambers), blood vessels (arteries, veins, capillaries), blood flow, "
+        "blood carries oxygen and nutrients. "
+        "Use Indian contexts: checking pulse, doctor visits, blood donation camp. "
+        "Keep answers factual and age-appropriate for Class 5. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Respiratory and Nervous System (Class 5)": (
+        "CRITICAL: ALL questions MUST be about the Respiratory and Nervous System ONLY — "
+        "breathing (nose, windpipe, lungs, oxygen in, CO₂ out), nervous system (brain, spinal cord, nerves), "
+        "reflex actions. "
+        "Use Indian contexts: pranayam, yoga, sneezing, reflex when touching hot tawa. "
+        "Keep answers factual and age-appropriate for Class 5. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Reproduction in Plants and Animals (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Reproduction ONLY — "
+        "parts of a flower (petals, stamens, pistil), pollination (insect, wind), "
+        "seed formation, seed dispersal, egg-laying vs live birth in animals. "
+        "Use Indian contexts: mango flowering, bees on marigold, hen and eggs. "
+        "Keep content age-appropriate for Class 5. NO human reproduction. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Physical and Chemical Changes (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Physical and Chemical Changes ONLY — "
+        "physical (reversible — melting, freezing, dissolving), chemical (irreversible — burning, rusting, cooking). "
+        "Use Indian contexts: making paneer, rusting gate, burning wood on Lohri, making curd. "
+        "Keep answers factual and age-appropriate for Class 5. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Forms of Energy (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Forms of Energy ONLY — "
+        "heat, light, sound, electrical energy. Energy conversions (electrical to light, kinetic to sound). "
+        "Use Indian contexts: solar panel, Diwali diyas, tabla, windmill, pressure cooker. "
+        "Keep answers factual and age-appropriate for Class 5. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Solar System and Earth (Class 5)": (
+        "CRITICAL: ALL questions MUST be about the Solar System and Earth ONLY — "
+        "Sun, 8 planets in order, Earth's rotation (day/night), revolution (seasons), moon phases. "
+        "Use Indian contexts: Chandrayaan mission, sunrise, Indian seasons, planetarium. "
+        "Keep answers factual and age-appropriate for Class 5. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
+    ),
+    "Ecosystem and Food Chains (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Ecosystems and Food Chains ONLY — "
+        "producers, consumers (herbivore, carnivore, omnivore), decomposers, "
+        "food chains, food webs, interdependence. "
+        "Use Indian contexts: Ranthambore, rice paddy, village pond, forest ecosystem. "
+        "Keep answers factual and age-appropriate for Class 5. "
+        "NEVER generate maths computation, English grammar, or unrelated science questions.\n"
     ),
     # ── Hindi Class 3 topic constraints ──
     "Varnamala (Class 3)": (

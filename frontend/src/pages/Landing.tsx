@@ -60,6 +60,8 @@ const SCIENCE_TOPICS: Record<string, string[]> = {
   'Class 1 (EVS)': ['My Family', 'My Body', 'Plants Around Us', 'Animals Around Us', 'Food We Eat', 'Seasons & Weather'],
   'Class 2 (EVS)': ['Plants', 'Animals & Habitats', 'Food & Nutrition', 'Water', 'Shelter', 'Our Senses'],
   'Class 3': ['Plants', 'Animals', 'Food & Nutrition', 'Shelter', 'Water', 'Air', 'Our Body'],
+  'Class 4': ['Living Things', 'Human Body', 'States of Matter', 'Force & Motion', 'Simple Machines', 'Photosynthesis', 'Animal Adaptation'],
+  'Class 5': ['Circulatory System', 'Respiratory & Nervous System', 'Reproduction', 'Physical & Chemical Changes', 'Forms of Energy', 'Solar System & Earth', 'Ecosystem & Food Chains'],
 }
 
 /* ─── Gold Class feature steps ─── */

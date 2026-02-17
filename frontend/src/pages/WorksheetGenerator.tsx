@@ -111,6 +111,17 @@ const SCIENCE_TOPICS_BY_GRADE: Record<number, string[]> = {
     'Water (Class 2)', 'Shelter (Class 2)', 'Our Senses (Class 2)',
   ],
   3: ['Plants (Class 3)', 'Animals (Class 3)', 'Food and Nutrition (Class 3)', 'Shelter (Class 3)', 'Water (Class 3)', 'Air (Class 3)', 'Our Body (Class 3)'],
+  4: [
+    'Living Things (Class 4)', 'Human Body (Class 4)', 'States of Matter (Class 4)',
+    'Force and Motion (Class 4)', 'Simple Machines (Class 4)',
+    'Photosynthesis (Class 4)', 'Animal Adaptation (Class 4)',
+  ],
+  5: [
+    'Circulatory System (Class 5)', 'Respiratory and Nervous System (Class 5)',
+    'Reproduction in Plants and Animals (Class 5)', 'Physical and Chemical Changes (Class 5)',
+    'Forms of Energy (Class 5)', 'Solar System and Earth (Class 5)',
+    'Ecosystem and Food Chains (Class 5)',
+  ],
 }
 
 // Grade-aware Hindi topics (matching backend TOPIC_PROFILES keys)

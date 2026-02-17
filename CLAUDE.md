@@ -114,7 +114,7 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 
 # Topic System
 
-## 112 Supported Topics (TOPIC_PROFILES keys)
+## 126 Supported Topics (TOPIC_PROFILES keys)
 
 ### Class 1 Maths (8 topics)
 1. Numbers 1 to 50 (Class 1) — counting, comparing, ordering 1-50
@@ -200,8 +200,14 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 ### Class 3 Science (7 topics)
 93. Plants (Class 3), 94. Animals (Class 3), 95. Food and Nutrition (Class 3), 96. Shelter (Class 3), 97. Water (Class 3), 98. Air (Class 3), 99. Our Body (Class 3)
 
+### Class 4 Science (7 topics)
+100. Living Things (Class 4), 101. Human Body (Class 4), 102. States of Matter (Class 4), 103. Force and Motion (Class 4), 104. Simple Machines (Class 4), 105. Photosynthesis (Class 4), 106. Animal Adaptation (Class 4)
+
+### Class 5 Science (7 topics)
+107. Circulatory System (Class 5), 108. Respiratory and Nervous System (Class 5), 109. Reproduction in Plants and Animals (Class 5), 110. Physical and Chemical Changes (Class 5), 111. Forms of Energy (Class 5), 112. Solar System and Earth (Class 5), 113. Ecosystem and Food Chains (Class 5)
+
 ### Class 3 Hindi (5 topics)
-100. Varnamala (Class 3), 101. Matras (Class 3), 102. Shabd Rachna (Class 3), 103. Vakya Rachna (Class 3), 104. Kahani Lekhan (Class 3)
+114. Varnamala (Class 3), 115. Matras (Class 3), 116. Shabd Rachna (Class 3), 117. Vakya Rachna (Class 3), 118. Kahani Lekhan (Class 3)
 
 Each Maths profile has: `allowed_skill_tags`, `allowed_slot_types`, `disallowed_keywords`, `disallowed_visual_types`, `default_recipe`, optional `recipes_by_count`.
 Each English profile additionally has: `subject: "English"`. English topics use `VALID_FORMATS_ENGLISH` and skip visual hydration (text-only).
@@ -353,3 +359,4 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - **2026-02-17**: World-class landing page (Landing.tsx). 12 sections: sticky nav, hero with animated underline + floating worksheet preview, social proof bar, problem statement, Gold Class 6-step tabbed stepper, subjects explorer (66 topics across Maths/English/Science), comparison table vs free tools, parent/teacher cards, pricing (Free + ₹299/mo), philosophy, final CTA, footer. Playfair Display serif headings, academic dot-grid pattern, IntersectionObserver scroll-reveal animations, mobile-responsive. Replaces old LandingPage.tsx. 26/26 E2E pass, zero lint errors.
 - **2026-02-17**: Phase 11B — English Class 5 (9 topics). Backend: 9 new English topic profiles (Active and Passive Voice, Direct and Indirect Speech, Complex Sentences, Summary Writing, Comprehension, Synonyms and Antonyms, Formal Letter Writing, Creative Writing, Clauses) with subject="English", advanced grade constraints. 45 eng_c5_* skill tags, 33 aliases, 9 constraints, 27 learning objectives, 90 Indian context bank entries, 9 instruction builder blocks. QA: test_class5_english.py (99 checks). Total: 103 profiles.
 - **2026-02-17**: Phase 12A — EVS Class 1 & 2 (12 topics). Backend: 12 new Science topic profiles (6 Class 1: My Family, My Body, Plants Around Us, Animals Around Us, Food We Eat, Seasons and Weather; 6 Class 2: Plants, Animals and Habitats, Food and Nutrition, Water, Shelter, Our Senses) with subject="Science", EVS-specific constraints (disallow maths keywords). 60 sci_c1_*/sci_c2_* skill tags, 53 aliases, 12 constraints, 36 learning objectives, 120 Indian context bank entries, 12 instruction builder blocks. Frontend: EVS Class 1 & 2 in Science grade selector + landing page. QA: test_class12_evs.py (132 checks). verify_topics: 1289 passed. Total: 112 topic profiles.
+- **2026-02-17**: Phase 12B — Science Class 4 & 5 (14 topics). Backend: 14 new Science topic profiles (7 Class 4: Living Things, Human Body, States of Matter, Force and Motion, Simple Machines, Photosynthesis, Animal Adaptation; 7 Class 5: Circulatory System, Respiratory and Nervous System, Reproduction in Plants and Animals, Physical and Chemical Changes, Forms of Energy, Solar System and Earth, Ecosystem and Food Chains). 70 sci_c4_*/sci_c5_* skill tags, 67 aliases, 14 constraints, 42 learning objectives, 140 Indian context bank entries, 14 instruction builder blocks. Frontend: Science Class 4 & 5 in grade selector + landing page. QA: test_class45_science.py (154 checks). verify_topics: 1429 passed. Total: 126 topic profiles.
