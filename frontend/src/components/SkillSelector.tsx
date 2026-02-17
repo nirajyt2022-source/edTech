@@ -8,67 +8,39 @@ interface Props {
 }
 
 export default function SkillSelector({ skills, logicTags, onSelectionChange, reinforcementSkills }: Props) {
-  const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set(skills))
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null)
   const [showReinforcement, setShowReinforcement] = useState(false)
 
-  const toggleSkill = (skill: string) => {
-    const next = new Set(selectedSkills)
-    if (next.has(skill)) {
-      next.delete(skill)
-    } else {
-      next.add(skill)
-    }
-    setSelectedSkills(next)
-    onSelectionChange(Array.from(next), logicTags)
-  }
-
-  const selectAll = () => {
-    const all = new Set(skills)
-    setSelectedSkills(all)
-    onSelectionChange(Array.from(all), logicTags)
-  }
-
-  const deselectAll = () => {
-    setSelectedSkills(new Set())
-    onSelectionChange([], logicTags)
+  const selectSkill = (skill: string) => {
+    // Clicking the active skill deselects it
+    const next = selectedSkill === skill ? null : skill
+    setSelectedSkill(next)
+    onSelectionChange(next ? [next] : [], logicTags)
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h4 className="text-sm font-bold text-foreground">Practice Skills</h4>
-          <span className="text-[10px] font-bold text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-md border border-border/40">
-            {selectedSkills.size} of {skills.length} selected
+      <div className="flex items-center gap-3">
+        <h4 className="text-sm font-bold text-foreground">Practice Skills</h4>
+        {selectedSkill ? (
+          <span className="text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-md border border-primary/10">
+            1 selected
           </span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={selectAll}
-            className="text-[10px] font-bold text-primary hover:text-primary/80 uppercase tracking-wider transition-colors"
-          >
-            All
-          </button>
-          <span className="text-border">|</span>
-          <button
-            type="button"
-            onClick={deselectAll}
-            className="text-[10px] font-bold text-muted-foreground hover:text-foreground uppercase tracking-wider transition-colors"
-          >
-            None
-          </button>
-        </div>
+        ) : (
+          <span className="text-[10px] font-bold text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-md border border-border/40">
+            None selected
+          </span>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">
         {skills.map((skill) => {
-          const isSelected = selectedSkills.has(skill)
+          const isSelected = selectedSkill === skill
           return (
             <button
               key={skill}
               type="button"
-              onClick={() => toggleSkill(skill)}
+              onClick={() => selectSkill(skill)}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all duration-200 ${
                 isSelected
                   ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/15 scale-[1.02]'
@@ -103,12 +75,12 @@ export default function SkillSelector({ skills, logicTags, onSelectionChange, re
           {showReinforcement && (
             <div className="flex flex-wrap gap-2 mt-3 pl-5 animate-in fade-in slide-in-from-top-2 duration-300">
               {reinforcementSkills.map((skill) => {
-                const isSelected = selectedSkills.has(skill)
+                const isSelected = selectedSkill === skill
                 return (
                   <button
                     key={skill}
                     type="button"
-                    onClick={() => toggleSkill(skill)}
+                    onClick={() => selectSkill(skill)}
                     className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all duration-200 ${
                       isSelected
                         ? 'bg-accent/20 text-accent-foreground border-accent/30 shadow-sm'
