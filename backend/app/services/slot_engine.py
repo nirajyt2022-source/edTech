@@ -8632,6 +8632,7 @@ def _build_slot_instruction(
     chosen_variant: dict | None,
     directive: dict | None = None,
     topic: str = "",
+    subject: str = "Mathematics",
 ) -> str:
     """Build backend-chosen specific instructions for a slot question.
 
@@ -12202,6 +12203,45 @@ def _build_slot_instruction(
     )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
+    # ── Non-Maths subject with no profile: return subject-appropriate instructions ──
+    _is_non_maths = subject and subject.lower() in (
+        "english", "hindi", "science", "evs", "computer", "gk", "moral science", "health"
+    )
+    if _is_non_maths and _is_generic_arithmetic:
+        _dfmt = get_default_format_by_slot(subject).get(slot_type, "pick_correct")
+        _subj_lower = subject.lower()
+        _slot_instructions = {
+            "recognition": {
+                "english": f"format: {_dfmt}. Ask a simple identification or recall question about '{topic}'. Example: identify a part of speech, pick the correct word, or recognise a language pattern.",
+                "hindi": f"format: {_dfmt}. '{topic}' पर एक सरल पहचान प्रश्न पूछें। Ask in Devanagari script.",
+                "default": f"format: {_dfmt}. Ask a simple identification or recall question about '{topic}'.",
+            },
+            "application": {
+                "english": f"format: {_dfmt}. Create a fill-in-the-blank or sentence-writing question about '{topic}'. Use an age-appropriate context.",
+                "hindi": f"format: {_dfmt}. '{topic}' पर एक वाक्य या रिक्त स्थान भरो प्रश्न बनाएं। Use Devanagari script.",
+                "default": f"format: {_dfmt}. Create an application question about '{topic}'. Use a real-world scenario.",
+            },
+            "representation": {
+                "english": f"format: {_dfmt}. Ask the student to complete, rearrange, or transform a sentence about '{topic}'.",
+                "hindi": f"format: {_dfmt}. '{topic}' पर वाक्य पूरा करो या शब्द क्रम बदलो प्रश्न बनाएं।",
+                "default": f"format: {_dfmt}. Ask a representation question about '{topic}' — complete, label, or organise information.",
+            },
+            "error_detection": {
+                "english": f"format: error_spot_english. Show a sentence about '{topic}' with a deliberate grammar or spelling error. Ask the student to find and correct it.",
+                "hindi": f"format: error_spot_hindi. '{topic}' पर एक वाक्य में जानबूझकर गलती दें। छात्र को गलती खोजने और सुधारने को कहें।",
+                "default": f"format: error_spot_science. Show a statement about '{topic}' with a factual error. Ask the student to find and correct it.",
+            },
+            "thinking": {
+                "english": f"format: explain_why. Ask a thought-provoking question about '{topic}' that requires the student to reason or write creatively.",
+                "hindi": f"format: explain_meaning. '{topic}' पर एक सोचने वाला प्रश्न पूछें जिसमें छात्र को अपने शब्दों में उत्तर देना हो।",
+                "default": f"format: thinking_science. Ask a thought-provoking question about '{topic}' that requires reasoning or explanation.",
+            },
+        }
+        slot_map = _slot_instructions.get(slot_type, _slot_instructions["recognition"])
+        base = slot_map.get(_subj_lower, slot_map["default"])
+        base += f"\n\nSUBJECT ENFORCEMENT: This is a {subject} worksheet about '{topic}'. NEVER generate maths/arithmetic questions (no addition, subtraction, multiplication, division, place value, column form, carry, borrow)."
+        return base
+
     base = ""
 
     if slot_type == "recognition":
@@ -13693,6 +13733,15 @@ _REASONING_LANGUAGE = re.compile(
 
 _BLANK_MARKER = re.compile(r"(_{2,}|\?{1,}|□|▢|\[ *\])")
 
+# Cross-subject arithmetic contamination detector
+_ARITHMETIC_CONTENT_RE = re.compile(
+    r"(\d+\s*[+\-×÷]\s*\d+|column\s*form|carry|borrow|"
+    r"hundreds?\s*digit|tens?\s*digit|ones?\s*digit|"
+    r"place\s*value\s*of|write\s+\d+\s*[+\-]|"
+    r"add\s+\d+\s+and\s+\d+|subtract\s+\d+\s+from)",
+    re.IGNORECASE,
+)
+
 # English-specific validation patterns
 _GRAMMAR_ERROR_LANGUAGE = re.compile(
     r"(mistake|error|wrong|incorrect|correct\s+(the|it|this)|find.*(wrong|mistake|error)"
@@ -13738,6 +13787,10 @@ def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> 
     is_english = subject and subject.lower() == "english"
     is_science = subject and subject.lower() in ("science", "computer", "gk", "moral science", "health")
     is_hindi = subject and subject.lower() == "hindi"
+
+    # Cross-subject contamination check: reject arithmetic content in non-Maths subjects
+    if (is_english or is_science or is_hindi) and text and _ARITHMETIC_CONTENT_RE.search(text):
+        issues.append(f"question contains arithmetic content but subject is {subject}")
 
     allowed = get_valid_formats(subject).get(slot_type, set())
     if fmt not in allowed:
@@ -15223,7 +15276,7 @@ def run_slot_pipeline(
         if _topic_profile:
             plan_directives = build_worksheet_plan(q_count, topic=topic)
         else:
-            plan_directives = [{"slot_type": st} for st in get_slot_plan(q_count)]
+            plan_directives = [{"slot_type": st, "subject": subject or "Mathematics"} for st in get_slot_plan(q_count)]
         slot_plan = [d["slot_type"] for d in plan_directives]
     logger.info("Slot plan (%d): %s", len(slot_plan), dict(Counter(slot_plan)))
 
@@ -15349,7 +15402,7 @@ def run_slot_pipeline(
         directive = plan_directives[i]
         q_difficulty = get_question_difficulty(slot_type, difficulty)
         variant = chosen_variants[i]
-        slot_instruction = _build_slot_instruction(slot_type, variant, directive=directive, topic=topic)
+        slot_instruction = _build_slot_instruction(slot_type, variant, directive=directive, topic=topic, subject=subject)
         # Inject mastery constraint for targeted practice
         if mastery_constraint and slot_type in ("recognition", "application", "representation"):
             slot_instruction += f"\n\nMASTERY FOCUS: {mastery_constraint}"
