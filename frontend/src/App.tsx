@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import SharedWorksheet from './pages/SharedWorksheet'
 import WorksheetGenerator from './pages/WorksheetGenerator'
 import SyllabusUpload from './pages/SyllabusUpload'
 import SavedWorksheets from './pages/SavedWorksheets'
@@ -8,6 +9,7 @@ import ClassManager from './pages/ClassManager'
 import Auth from './pages/Auth'
 import LandingPage from './pages/LandingPage'
 import History from './pages/History'
+import ParentDashboard from './pages/ParentDashboard'
 import RoleSelector from '@/components/RoleSelector'
 import {
   DropdownMenu,
@@ -25,7 +27,7 @@ import { ProfileProvider, useProfile } from '@/lib/profile'
 import { EngagementProvider } from '@/lib/engagement'
 import './index.css'
 
-type Page = 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history'
+type Page = 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history' | 'progress'
 
 interface ParsedSyllabus {
   id: string
@@ -84,7 +86,7 @@ function AppContent() {
   // When role switches, reset to default page for that role
   useEffect(() => {
     const isTeacherPage = ['dashboard', 'classes'].includes(currentPage)
-    const isParentPage = ['generator', 'syllabus', 'children'].includes(currentPage)
+    const isParentPage = ['generator', 'syllabus', 'children', 'progress'].includes(currentPage)
 
     const sharedPages = ['saved', 'history']
     if (activeRole === 'teacher' && !isTeacherPage && !sharedPages.includes(currentPage)) {
@@ -139,6 +141,7 @@ function AppContent() {
 
   const parentTabs: { id: Page; label: string }[] = [
     { id: 'generator', label: 'Practice' },
+    { id: 'progress', label: 'Progress' },
     { id: 'saved', label: 'Saved' },
     { id: 'history', label: 'History' },
     { id: 'syllabus', label: 'Syllabus' },
@@ -295,6 +298,7 @@ function AppContent() {
         {currentPage === 'history' && (
           <History onNavigateToGenerator={() => setCurrentPage('generator')} />
         )}
+        {currentPage === 'progress' && <ParentDashboard />}
         {currentPage === 'children' && <ChildProfiles />}
       </main>
     </div>
@@ -302,6 +306,17 @@ function AppContent() {
 }
 
 function App() {
+  // Check if we're on a public /shared/:id route (no auth required)
+  const sharedWorksheetId = useMemo(() => {
+    const match = window.location.pathname.match(/^\/shared\/([a-f0-9-]+)$/i)
+    return match ? match[1] : null
+  }, [])
+
+  // Public shared worksheet route — no auth providers needed
+  if (sharedWorksheetId) {
+    return <SharedWorksheet worksheetId={sharedWorksheetId} />
+  }
+
   return (
     <AuthProvider>
       <ProfileProvider>

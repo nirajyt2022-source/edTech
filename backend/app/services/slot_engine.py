@@ -138,6 +138,35 @@ DEFAULT_FORMAT_BY_SLOT_TYPE_SCIENCE: dict[str, str] = {
     "thinking": "thinking_science",
 }
 
+# ════════════════════════════════════════════════════════════
+# A-hin) Hindi Language Format Dicts
+# ════════════════════════════════════════════════════════════
+
+VALID_FORMATS_HINDI: dict[str, set[str]] = {
+    "recognition": {
+        "identify_letter", "identify_matra", "identify_word_type",
+        "match_letter_sound", "pick_correct_hindi",
+    },
+    "application": {
+        "fill_matra", "make_word", "make_sentence_hindi",
+        "use_in_sentence_hindi", "word_problem_hindi",
+    },
+    "representation": {
+        "complete_word", "rearrange_letters", "word_formation",
+        "complete_sentence_hindi",
+    },
+    "error_detection": {"error_spot_hindi"},
+    "thinking": {"creative_writing_hindi", "explain_meaning"},
+}
+
+DEFAULT_FORMAT_BY_SLOT_TYPE_HINDI: dict[str, str] = {
+    "recognition": "pick_correct_hindi",
+    "application": "fill_matra",
+    "representation": "complete_word",
+    "error_detection": "error_spot_hindi",
+    "thinking": "explain_meaning",
+}
+
 
 def get_valid_formats(subject: str = "Mathematics") -> dict[str, set[str]]:
     """Return the VALID_FORMATS dict for the given subject."""
@@ -145,6 +174,8 @@ def get_valid_formats(subject: str = "Mathematics") -> dict[str, set[str]]:
         return VALID_FORMATS_ENGLISH
     if subject and subject.lower() == "science":
         return VALID_FORMATS_SCIENCE
+    if subject and subject.lower() == "hindi":
+        return VALID_FORMATS_HINDI
     return VALID_FORMATS
 
 
@@ -154,6 +185,8 @@ def get_default_format_by_slot(subject: str = "Mathematics") -> dict[str, str]:
         return DEFAULT_FORMAT_BY_SLOT_TYPE_ENGLISH
     if subject and subject.lower() == "science":
         return DEFAULT_FORMAT_BY_SLOT_TYPE_SCIENCE
+    if subject and subject.lower() == "hindi":
+        return DEFAULT_FORMAT_BY_SLOT_TYPE_HINDI
     return DEFAULT_FORMAT_BY_SLOT_TYPE
 
 
@@ -483,6 +516,37 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "sci_body_represent": ("representation", "fill_diagram"),
     "sci_body_error": ("error_detection", "error_spot_science"),
     "sci_body_thinking": ("thinking", "multi_step_science"),
+    # ── Hindi Language skill tags ──────────────────────────
+    # Varnamala (Class 3)
+    "hin_varna_identify": ("recognition", "identify_letter"),
+    "hin_varna_use": ("application", "fill_matra"),
+    "hin_varna_complete": ("representation", "complete_word"),
+    "hin_varna_error": ("error_detection", "error_spot_hindi"),
+    "hin_varna_thinking": ("thinking", "explain_meaning"),
+    # Matras (Class 3)
+    "hin_matra_identify": ("recognition", "identify_matra"),
+    "hin_matra_fill": ("application", "fill_matra"),
+    "hin_matra_complete": ("representation", "complete_word"),
+    "hin_matra_error": ("error_detection", "error_spot_hindi"),
+    "hin_matra_thinking": ("thinking", "explain_meaning"),
+    # Shabd Rachna (Class 3)
+    "hin_shabd_identify": ("recognition", "identify_word_type"),
+    "hin_shabd_make": ("application", "make_word"),
+    "hin_shabd_complete": ("representation", "word_formation"),
+    "hin_shabd_error": ("error_detection", "error_spot_hindi"),
+    "hin_shabd_thinking": ("thinking", "explain_meaning"),
+    # Vakya Rachna (Class 3)
+    "hin_vakya_identify": ("recognition", "pick_correct_hindi"),
+    "hin_vakya_make": ("application", "make_sentence_hindi"),
+    "hin_vakya_rearrange": ("representation", "rearrange_letters"),
+    "hin_vakya_error": ("error_detection", "error_spot_hindi"),
+    "hin_vakya_thinking": ("thinking", "creative_writing_hindi"),
+    # Kahani Lekhan (Class 3)
+    "hin_kahani_identify": ("recognition", "pick_correct_hindi"),
+    "hin_kahani_answer": ("application", "word_problem_hindi"),
+    "hin_kahani_complete": ("representation", "complete_sentence_hindi"),
+    "hin_kahani_error": ("error_detection", "error_spot_hindi"),
+    "hin_kahani_thinking": ("thinking", "creative_writing_hindi"),
 }
 
 SLOT_INSTRUCTIONS: dict[str, str] = {
@@ -813,6 +877,32 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Identify major body parts and their functions",
         "Understand the importance of hygiene and exercise",
         "Explain how different organs help us stay healthy",
+    ],
+    # ── Hindi Class 3 topics ──
+    "Varnamala (Class 3)": [
+        "Identify and write Hindi vowels (swar) and consonants (vyanjan)",
+        "Match letters to their sounds and use them in words",
+        "Spot and correct mistakes in Hindi letter writing",
+    ],
+    "Matras (Class 3)": [
+        "Identify different matras (vowel signs) and their sounds",
+        "Use matras correctly to form Hindi words",
+        "Read and write words with aa, ee, oo, and other matras",
+    ],
+    "Shabd Rachna (Class 3)": [
+        "Form new words using prefixes and suffixes in Hindi",
+        "Break compound words into their parts",
+        "Build words from given letters and syllables",
+    ],
+    "Vakya Rachna (Class 3)": [
+        "Write simple Hindi sentences with correct word order",
+        "Use punctuation marks correctly in Hindi sentences",
+        "Identify and correct errors in Hindi sentences",
+    ],
+    "Kahani Lekhan (Class 3)": [
+        "Read and understand short Hindi stories and passages",
+        "Answer comprehension questions about a Hindi passage",
+        "Write a short paragraph or story in Hindi",
     ],
 }
 
@@ -1248,6 +1338,42 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "a visit to the school nurse", "running in a race on sports day",
         "getting a vaccination at the health centre", "breathing during yoga",
         "wearing spectacles for reading", "a dentist visit",
+    ],
+    # ── Hindi Class 3 Context Banks ──
+    "Varnamala (Class 3)": [
+        "writing letters on a slate at school", "singing the barakhadi in morning assembly",
+        "tracing letters in a Hindi textbook", "a chart of swar and vyanjan on the classroom wall",
+        "learning to write your name in Hindi", "matching letters to pictures of animals",
+        "a Hindi alphabet puzzle game", "copying letters from the blackboard",
+        "practising ka-kha-ga in a notebook", "reading a Hindi storybook with large letters",
+    ],
+    "Matras (Class 3)": [
+        "reading signboards in the bazaar", "spelling words on a Diwali greeting card",
+        "labelling pictures in a Hindi workbook", "singing a Hindi rhyme with matra words",
+        "reading a menu at a dhaba", "writing names of fruits and vegetables in Hindi",
+        "filling in matras on a classroom worksheet", "reading a poster at a mela",
+        "a shopkeeper writing prices in Hindi", "writing an invitation card for a birthday party",
+    ],
+    "Shabd Rachna (Class 3)": [
+        "making new words from a Hindi crossword puzzle", "finding opposite words in a story",
+        "learning compound words from a Hindi newspaper headline", "a word-building game in class",
+        "adding prefixes to words in a Hindi grammar exercise", "breaking long words into parts during reading",
+        "making rhyming words for a Hindi poem", "sorting words by type in a workbook",
+        "creating a word chain with friends", "finding similar-sounding words in a song",
+    ],
+    "Vakya Rachna (Class 3)": [
+        "writing about a school picnic", "describing your best friend in Hindi",
+        "making sentences about a festival celebration", "writing a letter to grandmother",
+        "describing a picture of a village scene", "writing about what you did on Sunday",
+        "making sentences about animals at the zoo", "writing about your favourite food",
+        "describing the weather today in Hindi", "writing about a trip to the market",
+    ],
+    "Kahani Lekhan (Class 3)": [
+        "a story about a clever fox in a jungle", "a tale about a farmer and his golden goose",
+        "a story about Birbal's wisdom", "a passage about Holi celebrations in a village",
+        "a story about a kind auto-rickshaw driver", "a tale about sharing tiffin at school",
+        "a passage about planting trees on Van Mahotsav", "a story about a brave girl saving a bird",
+        "a tale about Diwali preparations at home", "a passage about a visit to the Taj Mahal",
     ],
 }
 
@@ -2455,6 +2581,92 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "sci_body_thinking", "count": 1},
         ],
     },
+    # ── Hindi Class 3 topic profiles ──────────────────────────
+    "Varnamala (Class 3)": {
+        "allowed_skill_tags": [
+            "hin_varna_identify", "hin_varna_use", "hin_varna_complete",
+            "hin_varna_error", "hin_varna_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_varna_identify", "count": 3},
+            {"skill_tag": "hin_varna_use", "count": 3},
+            {"skill_tag": "hin_varna_complete", "count": 2},
+            {"skill_tag": "hin_varna_error", "count": 1},
+            {"skill_tag": "hin_varna_thinking", "count": 1},
+        ],
+    },
+    "Matras (Class 3)": {
+        "allowed_skill_tags": [
+            "hin_matra_identify", "hin_matra_fill", "hin_matra_complete",
+            "hin_matra_error", "hin_matra_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_matra_identify", "count": 3},
+            {"skill_tag": "hin_matra_fill", "count": 3},
+            {"skill_tag": "hin_matra_complete", "count": 2},
+            {"skill_tag": "hin_matra_error", "count": 1},
+            {"skill_tag": "hin_matra_thinking", "count": 1},
+        ],
+    },
+    "Shabd Rachna (Class 3)": {
+        "allowed_skill_tags": [
+            "hin_shabd_identify", "hin_shabd_make", "hin_shabd_complete",
+            "hin_shabd_error", "hin_shabd_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_shabd_identify", "count": 3},
+            {"skill_tag": "hin_shabd_make", "count": 3},
+            {"skill_tag": "hin_shabd_complete", "count": 2},
+            {"skill_tag": "hin_shabd_error", "count": 1},
+            {"skill_tag": "hin_shabd_thinking", "count": 1},
+        ],
+    },
+    "Vakya Rachna (Class 3)": {
+        "allowed_skill_tags": [
+            "hin_vakya_identify", "hin_vakya_make", "hin_vakya_rearrange",
+            "hin_vakya_error", "hin_vakya_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_vakya_identify", "count": 3},
+            {"skill_tag": "hin_vakya_make", "count": 3},
+            {"skill_tag": "hin_vakya_rearrange", "count": 2},
+            {"skill_tag": "hin_vakya_error", "count": 1},
+            {"skill_tag": "hin_vakya_thinking", "count": 1},
+        ],
+    },
+    "Kahani Lekhan (Class 3)": {
+        "allowed_skill_tags": [
+            "hin_kahani_identify", "hin_kahani_answer", "hin_kahani_complete",
+            "hin_kahani_error", "hin_kahani_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_kahani_identify", "count": 3},
+            {"skill_tag": "hin_kahani_answer", "count": 3},
+            {"skill_tag": "hin_kahani_complete", "count": 2},
+            {"skill_tag": "hin_kahani_error", "count": 1},
+            {"skill_tag": "hin_kahani_thinking", "count": 1},
+        ],
+    },
 }
 
 
@@ -2609,6 +2821,28 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 3 body": "Our Body (Class 3)",
     "human body": "Our Body (Class 3)",
     "body parts": "Our Body (Class 3)",
+    # ── Hindi Class 3 aliases ──
+    "varnamala": "Varnamala (Class 3)",
+    "class 3 varnamala": "Varnamala (Class 3)",
+    "hindi alphabet": "Varnamala (Class 3)",
+    "hindi varnamala": "Varnamala (Class 3)",
+    "matras": "Matras (Class 3)",
+    "class 3 matras": "Matras (Class 3)",
+    "hindi matras": "Matras (Class 3)",
+    "vowel signs": "Matras (Class 3)",
+    "shabd rachna": "Shabd Rachna (Class 3)",
+    "class 3 shabd rachna": "Shabd Rachna (Class 3)",
+    "word formation hindi": "Shabd Rachna (Class 3)",
+    "hindi word formation": "Shabd Rachna (Class 3)",
+    "vakya rachna": "Vakya Rachna (Class 3)",
+    "class 3 vakya rachna": "Vakya Rachna (Class 3)",
+    "sentence formation hindi": "Vakya Rachna (Class 3)",
+    "hindi sentence formation": "Vakya Rachna (Class 3)",
+    "kahani lekhan": "Kahani Lekhan (Class 3)",
+    "class 3 kahani lekhan": "Kahani Lekhan (Class 3)",
+    "hindi story": "Kahani Lekhan (Class 3)",
+    "hindi stories": "Kahani Lekhan (Class 3)",
+    "hindi comprehension": "Kahani Lekhan (Class 3)",
 }
 
 
@@ -4075,6 +4309,98 @@ def _build_slot_instruction(
         }
         return sci_body_ctx + sci_body_map.get(_skill_tag, "About the human body.")
 
+    # ── Hindi Varnamala (Class 3) ──
+    if _skill_tag.startswith("hin_varna_"):
+        hin_varna_ctx = (
+            "Topic: Varnamala (Class 3 Hindi, CBSE). "
+            "Cover Hindi alphabet: swar (अ, आ, इ, ई, उ, ऊ, ए, ऐ, ओ, औ, अं, अः) and "
+            "vyanjan (क, ख, ग, घ... to ज्ञ). Letter recognition, sounds, and usage in words. "
+            "MUST use Devanagari script for all questions and answers. "
+            "DO NOT repeat the same letter or word. "
+        )
+        hin_varna_map = {
+            "hin_varna_identify": "format: identify_letter. Identify a Hindi letter or its type. Example: 'इनमें से कौन सा स्वर है? (क) क (ख) आ (ग) ग (घ) म' → आ",
+            "hin_varna_use": "format: fill_matra. Use a letter to complete a word. Example: 'रिक्त स्थान भरो: ___मल (क/ख/ग/घ)' → कमल",
+            "hin_varna_complete": "format: complete_word. Complete a word with the missing letter. Example: 'शब्द पूरा करो: प___ल' → पहल",
+            "hin_varna_error": "format: error_spot_hindi. Present a WRONG letter usage. Example: 'गलती ढूँढो: \"सेब\" में \"स\" एक स्वर है।' Ask: 'गलती ढूँढो और सही करो।'",
+            "hin_varna_thinking": "format: explain_meaning. Ask reasoning about letters. Example: 'स्वर और व्यंजन में क्या अंतर है? अपने शब्दों में समझाओ।'",
+        }
+        return hin_varna_ctx + hin_varna_map.get(_skill_tag, "About Hindi Varnamala.")
+
+    # ── Hindi Matras (Class 3) ──
+    if _skill_tag.startswith("hin_matra_"):
+        hin_matra_ctx = (
+            "Topic: Matras (Class 3 Hindi, CBSE). "
+            "Cover vowel signs (matras): aa (ा), i (ि), ee (ी), u (ु), oo (ू), "
+            "e (े), ai (ै), o (ो), au (ौ), anusvaar (ं), visarg (ः). "
+            "Forming and reading words with matras. "
+            "MUST use Devanagari script for all questions and answers. "
+            "DO NOT repeat the same matra or word. "
+        )
+        hin_matra_map = {
+            "hin_matra_identify": "format: identify_matra. Identify the matra in a word. Example: 'शब्द \"काम\" में कौन सी मात्रा है? (क) इ की मात्रा (ख) आ की मात्रा (ग) उ की मात्रा (घ) ए की मात्रा' → आ की मात्रा",
+            "hin_matra_fill": "format: fill_matra. Fill in the correct matra. Example: 'सही मात्रा लगाकर शब्द बनाओ: क___ला (ा / ि / ी / ु)' → केला",
+            "hin_matra_complete": "format: complete_word. Complete the word with correct matra. Example: 'शब्द पूरा करो: ग___ला' → गुलाब → गाला",
+            "hin_matra_error": "format: error_spot_hindi. Present a word with WRONG matra. Example: 'गलती ढूँढो: \"किताब\" को \"कीताब\" लिखा गया है।' Ask: 'गलती सही करो।'",
+            "hin_matra_thinking": "format: explain_meaning. Ask about matra usage. Example: '\"कल\" और \"काल\" में क्या अंतर है? समझाओ।'",
+        }
+        return hin_matra_ctx + hin_matra_map.get(_skill_tag, "About Hindi Matras.")
+
+    # ── Hindi Shabd Rachna (Class 3) ──
+    if _skill_tag.startswith("hin_shabd_"):
+        hin_shabd_ctx = (
+            "Topic: Shabd Rachna (Class 3 Hindi, CBSE). "
+            "Cover word formation: prefix (upsarg), suffix (pratyay), compound words (samas/sanyukt shabd), "
+            "synonyms (paryayvachi), antonyms (vilom shabd), word building from syllables. "
+            "MUST use Devanagari script for all questions and answers. "
+            "DO NOT repeat the same word or word pair. "
+        )
+        hin_shabd_map = {
+            "hin_shabd_identify": "format: identify_word_type. Identify word type. Example: '\"सुंदर\" का विलोम शब्द कौन सा है? (क) अच्छा (ख) कुरूप (ग) बड़ा (घ) छोटा' → कुरूप",
+            "hin_shabd_make": "format: make_word. Form a new word. Example: 'इन अक्षरों से शब्द बनाओ: म, क, ा, न' → मकान",
+            "hin_shabd_complete": "format: word_formation. Complete word formation. Example: '\"अन\" उपसर्ग लगाकर नया शब्द बनाओ: ___ + पढ़ = ___' → अनपढ़",
+            "hin_shabd_error": "format: error_spot_hindi. Present a WRONG word formation. Example: 'गलती ढूँढो: \"बड़ा\" का विलोम शब्द \"लम्बा\" है।' Ask: 'गलती सही करो।'",
+            "hin_shabd_thinking": "format: explain_meaning. Ask about word meaning. Example: '\"विद्यालय\" शब्द किन दो शब्दों से मिलकर बना है? समझाओ।'",
+        }
+        return hin_shabd_ctx + hin_shabd_map.get(_skill_tag, "About Hindi Shabd Rachna.")
+
+    # ── Hindi Vakya Rachna (Class 3) ──
+    if _skill_tag.startswith("hin_vakya_"):
+        hin_vakya_ctx = (
+            "Topic: Vakya Rachna (Class 3 Hindi, CBSE). "
+            "Cover sentence formation: simple Hindi sentences, word order (subject-object-verb), "
+            "punctuation (poorn viram, prashn chinh), sentence types (statement, question, exclamation). "
+            "MUST use Devanagari script for all questions and answers. "
+            "DO NOT repeat the same sentence or structure. "
+        )
+        hin_vakya_map = {
+            "hin_vakya_identify": "format: pick_correct_hindi. Identify sentence type. Example: 'कौन सा वाक्य सही है? (क) गया बाज़ार राम (ख) राम बाज़ार गया (ग) बाज़ार गया राम (घ) राम गया बाज़ार' → राम बाज़ार गया",
+            "hin_vakya_make": "format: make_sentence_hindi. Make a sentence. Example: 'इन शब्दों से वाक्य बनाओ: खेलते / बच्चे / हैं / मैदान में' → बच्चे मैदान में खेलते हैं।",
+            "hin_vakya_rearrange": "format: rearrange_letters. Rearrange words. Example: 'शब्दों को सही क्रम में लगाओ: है / मीठा / आम / बहुत' → आम बहुत मीठा है।",
+            "hin_vakya_error": "format: error_spot_hindi. Present a sentence with WRONG word order or punctuation. Example: 'गलती ढूँढो: \"सीता ने खाना खाया\"' Ask: 'विराम चिह्न लगाओ।'",
+            "hin_vakya_thinking": "format: creative_writing_hindi. Creative writing. Example: 'अपने विद्यालय के बारे में तीन वाक्य लिखो।'",
+        }
+        return hin_vakya_ctx + hin_vakya_map.get(_skill_tag, "About Hindi Vakya Rachna.")
+
+    # ── Hindi Kahani Lekhan (Class 3) ──
+    if _skill_tag.startswith("hin_kahani_"):
+        hin_kahani_ctx = (
+            "Topic: Kahani Lekhan (Class 3 Hindi, CBSE). "
+            "Cover story/passage comprehension: reading short Hindi passages, answering questions, "
+            "writing short paragraphs, moral of the story, story sequencing. "
+            "Use Indian stories: Panchatantra, Birbal, folk tales, festival stories. "
+            "MUST use Devanagari script for all questions and answers. "
+            "DO NOT repeat the same story or passage theme. "
+        )
+        hin_kahani_map = {
+            "hin_kahani_identify": "format: pick_correct_hindi. Comprehension question. Example: Provide a short passage (2-3 lines) then ask: 'इस कहानी का मुख्य पात्र कौन है? (क) लोमड़ी (ख) शेर (ग) खरगोश (घ) हाथी' → लोमड़ी",
+            "hin_kahani_answer": "format: word_problem_hindi. Answer from passage. Example: Provide a short passage then ask: 'लोमड़ी ने क्या किया? अपने शब्दों में लिखो।'",
+            "hin_kahani_complete": "format: complete_sentence_hindi. Complete from passage. Example: 'कहानी पूरी करो: एक दिन एक चिड़िया ___ पर बैठी थी।'",
+            "hin_kahani_error": "format: error_spot_hindi. Present a WRONG fact from a story. Example: 'गलती ढूँढो: पंचतंत्र की कहानी में खरगोश ने कछुए से दौड़ में हार मानी।' Ask: 'गलती सही करो।'",
+            "hin_kahani_thinking": "format: creative_writing_hindi. Creative writing. Example: 'अगर तुम जंगल में होते तो क्या करते? कल्पना करो और लिखो।'",
+        }
+        return hin_kahani_ctx + hin_kahani_map.get(_skill_tag, "About Hindi Kahani Lekhan.")
+
     # Check if this is a non-arithmetic topic by looking at skill_tag
     _NON_ARITHMETIC_TAGS = {
         "multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank",
@@ -4098,7 +4424,7 @@ def _build_slot_instruction(
     }
     # Include all c2_, c4_, and eng_ prefixed tags as non-arithmetic
     _NON_ARITHMETIC_TAGS.update(
-        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("eng_") or tag.startswith("sci_")
+        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_")
     )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
@@ -4311,6 +4637,28 @@ QUESTION_SYSTEM_SCIENCE = (
     "- DO NOT repeat the same question pattern in consecutive questions\n"
     "- Each question must test a UNIQUE aspect of the topic\n"
     "- Vary contexts, examples, and question styles\n"
+)
+
+QUESTION_SYSTEM_HINDI = (
+    "Expert question writer for primary-school Hindi language worksheets (CBSE curriculum). "
+    "Output JSON only. No markdown. No extra keys.\n"
+    "Rules:\n"
+    "- Use Devanagari script for question_text and answer.\n"
+    "- Grade-appropriate Hindi vocabulary.\n"
+    "- CBSE curriculum aligned (Rimjhim textbook topics).\n"
+    "- NEVER reference visuals, pictures, or diagrams in question_text.\n"
+    "- Every answer must be grammatically correct Hindi in Devanagari.\n"
+    "- pictorial_elements must be empty list [].\n"
+    "- Use Indian cultural contexts: festivals (Diwali, Holi, Raksha Bandhan), "
+    "food (roti, dal, sabzi), family (dadi, nani, chacha), school life, "
+    "Indian animals (mor, hathi, bandar), Indian places.\n"
+    "- NEVER generate arithmetic, maths, or English grammar questions.\n"
+    "\n"
+    "CRITICAL DEDUPLICATION RULES:\n"
+    "- DO NOT reuse the same word, letter, or sentence across questions\n"
+    "- DO NOT repeat the same concept in consecutive questions\n"
+    "- Each question must test a UNIQUE aspect of the topic\n"
+    "- Vary vocabulary and sentence structures\n"
 )
 
 QUESTION_USER_TEMPLATE = (
@@ -4585,6 +4933,45 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "Use Indian contexts: yoga, PT period, school nurse, morning assembly exercises. "
         "NEVER generate arithmetic, maths, or English grammar questions.\n"
     ),
+    # ── Hindi Class 3 topic constraints ──
+    "Varnamala (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Hindi Varnamala (alphabet) ONLY — "
+        "swar (vowels: अ, आ, इ, ई, उ, ऊ, ए, ऐ, ओ, औ, अं, अः), "
+        "vyanjan (consonants: क to ज्ञ), letter recognition, letter sounds. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic or English grammar questions.\n"
+    ),
+    "Matras (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Hindi Matras (vowel signs) ONLY — "
+        "aa ki matra (ा), ee ki matra (ि, ी), oo ki matra (ु, ू), "
+        "e ki matra (े), ai ki matra (ै), o ki matra (ो), au ki matra (ौ), "
+        "anusvaar (ं), visarg (ः). Forming words with matras. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic or English grammar questions.\n"
+    ),
+    "Shabd Rachna (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Hindi Shabd Rachna (word formation) ONLY — "
+        "prefix (upsarg), suffix (pratyay), compound words (samas), "
+        "synonyms (paryayvachi), antonyms (vilom shabd), word building from letters/syllables. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic or English grammar questions.\n"
+    ),
+    "Vakya Rachna (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Hindi Vakya Rachna (sentence formation) ONLY — "
+        "simple sentences, word order in Hindi (subject-object-verb), "
+        "punctuation (poorn viram, prashn chinh, vistar chinh), "
+        "types of sentences (vidhaan vakya, nishedh vakya, prashn vakya). "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic or English grammar questions.\n"
+    ),
+    "Kahani Lekhan (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Hindi Kahani/Gadyansh (story/passage) ONLY — "
+        "reading comprehension of short Hindi passages, answering questions from a passage, "
+        "writing short paragraphs or stories, moral of a story, story sequencing. "
+        "Use Indian stories: Panchatantra, Birbal, folk tales. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic or English grammar questions.\n"
+    ),
 }
 
 REGION_CONTEXT: dict[str, dict[str, str]] = {
@@ -4646,6 +5033,21 @@ _WRONG_ANSWER_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Hindi-specific validation patterns
+_HINDI_ERROR_LANGUAGE = re.compile(
+    r"(गलती|गलत|त्रुटि|सही करो|सही कीजिए|ठीक करो|mistake|error|wrong|incorrect"
+    r"|correct\s+(the|it|this)|find.*(wrong|mistake|error)|spot the|what is wrong"
+    r"|शुद्ध करो|अशुद्ध)",
+    re.IGNORECASE,
+)
+
+_HINDI_REASONING_LANGUAGE = re.compile(
+    r"(क्यों|कैसे|समझाओ|बताओ|सोचो|कल्पना करो|लिखो|रचना करो|वर्णन करो"
+    r"|explain|why|how|think|imagine|write|describe|create|compose"
+    r"|अपने शब्दों में|कहानी लिखो|अनुच्छेद लिखो)",
+    re.IGNORECASE,
+)
+
 
 def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> list[str]:
     """Validate a single generated question against slot constraints."""
@@ -4655,12 +5057,13 @@ def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> 
     answer = q.get("answer")
     is_english = subject and subject.lower() == "english"
     is_science = subject and subject.lower() == "science"
+    is_hindi = subject and subject.lower() == "hindi"
 
     allowed = get_valid_formats(subject).get(slot_type, set())
     if fmt not in allowed:
         issues.append(f"format '{fmt}' not allowed for {slot_type}; expected one of {sorted(allowed)}")
 
-    if not is_english and not is_science and _FORBIDDEN_VISUAL_PHRASES.search(text):
+    if not is_english and not is_science and not is_hindi and _FORBIDDEN_VISUAL_PHRASES.search(text):
         issues.append("question_text references visuals/arrays/diagrams that aren't rendered")
 
     if answer is None or (isinstance(answer, str) and not answer.strip()):
@@ -4688,6 +5091,21 @@ def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> 
             )
             if not _SCI_REASONING_LANG.search(text):
                 issues.append("Science thinking slot should involve reasoning or explanation")
+
+        if q.get("pictorial_elements"):
+            issues.append("pictorial_elements must be empty (no renderer available)")
+
+        return issues
+
+    # ── Hindi-specific validation ──
+    if is_hindi:
+        if slot_type == "error_detection":
+            if not _HINDI_ERROR_LANGUAGE.search(text):
+                issues.append("Hindi error_detection must present a spelling/grammar error for student to find/correct")
+
+        if slot_type == "thinking":
+            if not _HINDI_REASONING_LANGUAGE.search(text):
+                issues.append("Hindi thinking slot should involve reasoning, creativity, or explanation")
 
         if q.get("pictorial_elements"):
             issues.append("pictorial_elements must be empty (no renderer available)")
@@ -5799,6 +6217,8 @@ def generate_question(
         sys_prompt = QUESTION_SYSTEM_ENGLISH
     elif _subj_lower == "science":
         sys_prompt = QUESTION_SYSTEM_SCIENCE
+    elif _subj_lower == "hindi":
+        sys_prompt = QUESTION_SYSTEM_HINDI
     else:
         sys_prompt = QUESTION_SYSTEM
 
@@ -6344,7 +6764,8 @@ def run_slot_pipeline(
     # 7a. Normalize answers (deterministic, no LLM)
     _is_english = subject and subject.lower() == "english"
     _is_science = subject and subject.lower() == "science"
-    _is_text_only = _is_english or _is_science
+    _is_hindi = subject and subject.lower() == "hindi"
+    _is_text_only = _is_english or _is_science or _is_hindi
     if _is_text_only:
         normalize_english_answers(questions)  # reuse text normalizer for Science too
     else:

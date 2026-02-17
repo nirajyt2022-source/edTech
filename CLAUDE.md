@@ -90,6 +90,17 @@ error_detection: {error_spot_science}
 thinking:        {thinking_science, multi_step_science}
 ```
 
+## Valid Formats per Slot (Hindi)
+```
+recognition:     {identify_letter, identify_matra, identify_word_type, pick_correct_hindi,
+                  match_letter_sound}
+application:     {fill_matra, make_word, make_sentence_hindi, word_problem_hindi,
+                  use_in_sentence_hindi}
+representation:  {complete_word, complete_sentence_hindi, rearrange_letters, word_formation}
+error_detection: {error_spot_hindi}
+thinking:        {explain_meaning, creative_writing_hindi}
+```
+
 Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot(subject)` — default to Maths.
 
 ## Per-Question Schema (internal)
@@ -103,7 +114,7 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 
 # Topic System
 
-## 61 Supported Topics (TOPIC_PROFILES keys)
+## 66 Supported Topics (TOPIC_PROFILES keys)
 
 ### Class 2 Maths (10 topics)
 1. Numbers up to 1000 (Class 2) — 3-digit place value
@@ -155,9 +166,13 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 ### Class 3 Science (7 topics)
 55. Plants (Class 3), 56. Animals (Class 3), 57. Food and Nutrition (Class 3), 58. Shelter (Class 3), 59. Water (Class 3), 60. Air (Class 3), 61. Our Body (Class 3)
 
+### Class 3 Hindi (5 topics)
+62. Varnamala (Class 3), 63. Matras (Class 3), 64. Shabd Rachna (Class 3), 65. Vakya Rachna (Class 3), 66. Kahani Lekhan (Class 3)
+
 Each Maths profile has: `allowed_skill_tags`, `allowed_slot_types`, `disallowed_keywords`, `disallowed_visual_types`, `default_recipe`, optional `recipes_by_count`.
 Each English profile additionally has: `subject: "English"`. English topics use `VALID_FORMATS_ENGLISH` and skip visual hydration (text-only).
 Each Science profile additionally has: `subject: "Science"`. Science topics use `VALID_FORMATS_SCIENCE` and skip visual hydration (text-only).
+Each Hindi profile additionally has: `subject: "Hindi"`. Hindi topics use `VALID_FORMATS_HINDI` and skip visual hydration (text-only). Questions use Devanagari script.
 
 ## Topic Alias Resolution
 `get_topic_profile()` resolves frontend short names → canonical profile keys via `_TOPIC_ALIASES` + fuzzy matching. Key aliases: "Addition" → "Addition (carries)", "Multiplication" → "Multiplication (tables 2-10)", "Numbers"/"Place Value" → "Numbers up to 10000", "add/sub" → "Addition and subtraction (3-digit)".
@@ -205,6 +220,8 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - `/api/curriculum/` — curriculum endpoints (`curriculum.py`)
 - `/api/topic-preferences/` — user topic preferences (`topic_preferences.py`)
 - `/api/engagement/` — engagement tracking (`engagement.py`)
+- `/api/worksheets/{id}/share` — generate public share link (`share.py`)
+- `/api/shared/{token}` — public worksheet viewer (`share.py`)
 - `/api/analytics/` — analytics endpoints (`analytics.py`)
 - `/health` — health check (`health.py`)
 
@@ -294,3 +311,4 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - **2026-02-17**: Phase 9 Gold-G4 — Rich Visual Types. Backend: 5 new hydration rules in hydrate_visuals() for PIE_FRACTION, GRID_SYMMETRY, MONEY_COINS, PATTERN_TILES, ABACUS — mapped by question format. Added to _MODEL_TO_VTYPE. Frontend: 5 new SVG components (PieFractionVisual, GridSymmetryVisual, MoneyCoinsVisual, PatternTilesVisual, AbacusVisual) in VisualProblem.tsx — all print-safe, B&W friendly, accessible.
 - **2026-02-17**: Phase 7 — English Language Engine. Multi-subject support: 22 English topic profiles (6 Class 2, 8 Class 3, 8 Class 4) with VALID_FORMATS_ENGLISH, subject-aware validate_question/enforce_slot_counts/backfill_format, QUESTION_SYSTEM_ENGLISH prompt, 80+ eng_* skill tags, 15 instruction builder blocks, 45 aliases, 22 constraints/objectives/context banks. Frontend: grade-aware English topic selector. Zero Maths regression (709+282 deterministic checks pass).
 - **2026-02-17**: Phase 8 — Science Engine. 7 Class 3 Science topic profiles (Plants, Animals, Food and Nutrition, Shelter, Water, Air, Our Body) with VALID_FORMATS_SCIENCE (18 formats), QUESTION_SYSTEM_SCIENCE prompt, 35 sci_* skill tags, 7 instruction builder blocks, 25 aliases, 7 constraints/objectives/context banks (Indian contexts). Frontend: grade-aware Science topic selector. Pipeline: text-only rendering (like English), reuses text answer normalizer. QA: 169-check test suite (28 combinations), zero regression (779+282+169 = 1,230 deterministic checks pass).
+- **2026-02-17**: P2 Growth Features — 3 parallel features. (1) Parent Progress Dashboard: rewrote dashboard_service.py to work without missing DB views (graceful fallback to worksheets table), new ParentDashboard.tsx with stats cards + skill progress table + recent topics, "Progress" tab in parent nav. (2) WhatsApp Share: new share.py router (POST /api/worksheets/{id}/share + GET /api/shared/{token}), share_tokens table, WhatsApp + copy-link buttons in worksheet toolbar, SharedWorksheet.tsx public viewer with no-auth route. (3) Hindi Language Engine: 5 Class 3 Hindi topic profiles (Varnamala, Matras, Shabd Rachna, Vakya Rachna, Kahani Lekhan) with VALID_FORMATS_HINDI (17 formats), QUESTION_SYSTEM_HINDI (Devanagari script), 25 hin_* skill tags, 5 instruction builders, 21 aliases, 5 constraints/objectives/context banks. QA: 138-check test suite, zero regression (829+282+169+138 = 1,418 checks pass).
