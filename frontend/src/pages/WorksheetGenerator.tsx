@@ -72,6 +72,13 @@ const MATHS_TOPICS_BY_GRADE: Record<number, string[]> = {
     'Geometry (angles, lines)', 'Perimeter and area',
     'Time (minutes, 24-hour clock)', 'Money (bills, profit/loss)',
   ],
+  5: [
+    'Numbers up to 10 lakh (Class 5)', 'Factors and multiples (Class 5)',
+    'HCF and LCM (Class 5)', 'Fractions (add and subtract) (Class 5)',
+    'Decimals (all operations) (Class 5)', 'Percentage (Class 5)',
+    'Area and volume (Class 5)', 'Geometry (circles, symmetry) (Class 5)',
+    'Data handling (pie charts) (Class 5)', 'Speed distance time (Class 5)',
+  ],
 }
 
 // Grade-aware English topics (matching backend TOPIC_PROFILES keys)

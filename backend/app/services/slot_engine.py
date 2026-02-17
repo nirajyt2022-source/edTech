@@ -448,6 +448,67 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "c4_money_missing": ("representation", "missing_number"),
     "c4_money_error": ("error_detection", "error_spot"),
     "c4_money_thinking": ("thinking", "multi_step"),
+    # ── Class 5 specific tags ──────────────────────────────
+    # Numbers up to 10 lakh (Class 5)
+    "c5_lakh_identify": ("recognition", "place_value_question"),
+    "c5_lakh_compare": ("application", "comparison_question"),
+    "c5_lakh_expand": ("representation", "expanded_form"),
+    "c5_lakh_error": ("error_detection", "error_spot"),
+    "c5_lakh_think": ("thinking", "multi_step"),
+    # Factors and multiples (Class 5)
+    "c5_factor_identify": ("recognition", "simple_identify"),
+    "c5_factor_apply": ("application", "word_problem"),
+    "c5_factor_missing": ("representation", "missing_number"),
+    "c5_factor_error": ("error_detection", "error_spot"),
+    "c5_factor_think": ("thinking", "multi_step"),
+    # HCF and LCM (Class 5)
+    "c5_hcf_identify": ("recognition", "simple_identify"),
+    "c5_hcf_apply": ("application", "word_problem"),
+    "c5_hcf_missing": ("representation", "missing_number"),
+    "c5_hcf_error": ("error_detection", "error_spot"),
+    "c5_hcf_think": ("thinking", "multi_step"),
+    # Fractions (add and subtract) (Class 5)
+    "c5_frac_identify": ("recognition", "fraction_number"),
+    "c5_frac_apply": ("application", "word_problem"),
+    "c5_frac_missing": ("representation", "missing_number"),
+    "c5_frac_error": ("error_detection", "error_spot"),
+    "c5_frac_think": ("thinking", "multi_step"),
+    # Decimals (all operations) (Class 5)
+    "c5_dec_identify": ("recognition", "place_value_question"),
+    "c5_dec_apply": ("application", "word_problem"),
+    "c5_dec_missing": ("representation", "missing_number"),
+    "c5_dec_error": ("error_detection", "error_spot"),
+    "c5_dec_think": ("thinking", "multi_step"),
+    # Percentage (Class 5)
+    "c5_percent_identify": ("recognition", "simple_identify"),
+    "c5_percent_apply": ("application", "word_problem"),
+    "c5_percent_missing": ("representation", "missing_number"),
+    "c5_percent_error": ("error_detection", "error_spot"),
+    "c5_percent_think": ("thinking", "multi_step"),
+    # Area and volume (Class 5)
+    "c5_area_identify": ("recognition", "simple_identify"),
+    "c5_area_apply": ("application", "word_problem"),
+    "c5_area_missing": ("representation", "missing_number"),
+    "c5_area_error": ("error_detection", "error_spot"),
+    "c5_area_think": ("thinking", "multi_step"),
+    # Geometry (circles, symmetry) (Class 5)
+    "c5_geo_identify": ("recognition", "simple_identify"),
+    "c5_geo_apply": ("application", "word_problem"),
+    "c5_geo_missing": ("representation", "shape_question"),
+    "c5_geo_error": ("error_detection", "error_spot"),
+    "c5_geo_think": ("thinking", "multi_step"),
+    # Data handling (pie charts) (Class 5)
+    "c5_data_identify": ("recognition", "simple_identify"),
+    "c5_data_apply": ("application", "word_problem"),
+    "c5_data_missing": ("representation", "missing_number"),
+    "c5_data_error": ("error_detection", "error_spot"),
+    "c5_data_think": ("thinking", "multi_step"),
+    # Speed distance time (Class 5)
+    "c5_speed_identify": ("recognition", "simple_identify"),
+    "c5_speed_apply": ("application", "word_problem"),
+    "c5_speed_missing": ("representation", "missing_number"),
+    "c5_speed_error": ("error_detection", "error_spot"),
+    "c5_speed_think": ("thinking", "multi_step"),
     # ── English Language skill tags ──────────────────────────
     # Class 2 English
     "eng_noun_identify": ("recognition", "identify_noun"),
@@ -820,6 +881,57 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Calculate total cost, change, and bills",
         "Understand simple profit and loss",
         "Solve multi-step money word problems",
+    ],
+    # ── Class 5 topics ──
+    "Numbers up to 10 lakh (Class 5)": [
+        "Read, write, and compare numbers up to 10,00,000",
+        "Use the Indian place value system for 6- and 7-digit numbers",
+        "Expand and compose large numbers using lakhs and ten-thousands",
+    ],
+    "Factors and multiples (Class 5)": [
+        "Find all factors of a given number",
+        "Identify multiples and common multiples of numbers",
+        "Determine if a number is prime or composite",
+    ],
+    "HCF and LCM (Class 5)": [
+        "Find the Highest Common Factor of two numbers",
+        "Find the Least Common Multiple of two numbers",
+        "Solve word problems using HCF and LCM",
+    ],
+    "Fractions (add and subtract) (Class 5)": [
+        "Add fractions with like and unlike denominators",
+        "Subtract fractions with like and unlike denominators",
+        "Solve word problems involving addition and subtraction of fractions",
+    ],
+    "Decimals (all operations) (Class 5)": [
+        "Add and subtract decimals up to two decimal places",
+        "Multiply and divide simple decimals",
+        "Solve real-life problems involving decimal operations",
+    ],
+    "Percentage (Class 5)": [
+        "Convert fractions and decimals to percentages and vice versa",
+        "Find a given percentage of a number",
+        "Solve simple percentage word problems",
+    ],
+    "Area and volume (Class 5)": [
+        "Calculate area of triangles and composite shapes",
+        "Find volume of cubes and cuboids",
+        "Solve real-life problems involving area and volume",
+    ],
+    "Geometry (circles, symmetry) (Class 5)": [
+        "Identify radius, diameter, and circumference of a circle",
+        "Identify and draw lines of symmetry in shapes",
+        "Understand rotational symmetry at a basic level",
+    ],
+    "Data handling (pie charts) (Class 5)": [
+        "Read and interpret pie charts",
+        "Compare data shown in pie charts",
+        "Solve problems using data from pie charts and tables",
+    ],
+    "Speed distance time (Class 5)": [
+        "Understand the relationship Speed = Distance / Time",
+        "Calculate speed, distance, or time when two are given",
+        "Solve word problems involving travel and speed",
     ],
     # ── English Language Learning Objectives ──
     "Nouns (Class 2)": [
@@ -1298,6 +1410,77 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "buying wholesale and selling retail sweets", "craft fair stall earnings",
         "farmer selling crops at market", "tailor's cloth cost vs stitching charge",
         "mobile recharge shop profit", "Diwali gift hamper business",
+    ],
+    # Class 5 topics
+    "Numbers up to 10 lakh (Class 5)": [
+        "population of Indian cities", "annual budget of a school",
+        "cricket stadium seating capacity", "distance between Indian cities in km",
+        "railway passengers in a month", "votes counted in a Lok Sabha election",
+        "number of books in a state library", "annual rainfall across states",
+        "sales figures of a Diwali mela", "Aadhaar card numbers and PIN codes",
+    ],
+    "Factors and multiples (Class 5)": [
+        "arranging students in equal rows for assembly", "grouping sweets into equal boxes for Diwali",
+        "packing biscuit packets into cartons", "dividing land into equal plots",
+        "bus departure intervals from a station", "flower arrangements in a temple",
+        "seating arrangements in a marriage hall", "distributing textbooks to classrooms",
+        "tiling a floor with square tiles", "organising cricket teams from a player pool",
+    ],
+    "HCF and LCM (Class 5)": [
+        "two buses starting together and meeting again", "cutting cloth and ribbon into equal pieces",
+        "traffic signal timing at a crossing", "bells ringing at different intervals in a temple",
+        "making gift hampers with equal items", "scheduling two recurring school events",
+        "packing fruits equally into baskets", "finding common free period for two classes",
+        "dividing sweets and namkeen equally for guests", "overlapping train schedules at a junction",
+    ],
+    "Fractions (add and subtract) (Class 5)": [
+        "sharing a pizza among friends", "dividing a paratha into parts at lunch",
+        "adding lengths of ribbon for gift wrapping", "combining fractions of work done by siblings",
+        "mixing ingredients for a recipe", "fraction of homework done over two days",
+        "combining portions of a tank filled by two taps", "adding distances walked in two trips",
+        "fraction of a cricket ground mowed in two days", "sharing a watermelon at a picnic",
+    ],
+    "Decimals (all operations) (Class 5)": [
+        "shopping bill at a supermarket", "measuring heights of students in metres",
+        "petrol pump readings in litres", "cricket batting and bowling averages",
+        "race timing in seconds at sports day", "weighing gold at a jewellery shop",
+        "temperature readings from a weather station", "electricity meter readings",
+        "tailor measuring cloth in metres", "distance run during a morning jog",
+    ],
+    "Percentage (Class 5)": [
+        "exam marks as percentage", "discount on Diwali shopping",
+        "school attendance percentage", "cricket win percentage of a team",
+        "election voting percentage", "savings as percentage of pocket money",
+        "marks needed to pass an exam", "percentage of students in a bus vs walking",
+        "sale discount at a garment shop", "nutrient percentage on a food packet label",
+    ],
+    "Area and volume (Class 5)": [
+        "painting walls of a classroom", "volume of a water tank on the roof",
+        "area of a school playground", "tiling a courtyard at home",
+        "volume of a cuboidal lunch box", "fencing and planting a garden",
+        "area of cloth for making a curtain", "volume of a brick for construction",
+        "carpeting a room for a puja ceremony", "area of a triangular park in a colony",
+    ],
+    "Geometry (circles, symmetry) (Class 5)": [
+        "wheel of a bicycle", "rangoli designs using circles",
+        "bangle shapes and sizes", "circular garden in a park",
+        "clock face as a circle", "symmetry of a butterfly",
+        "kolam patterns for Pongal", "circular rotis and parathas",
+        "Indian flag symmetry", "ashoka chakra wheel spokes",
+    ],
+    "Data handling (pie charts) (Class 5)": [
+        "favourite sports survey in school", "monthly household expenses",
+        "types of vehicles passing school gate", "how students travel to school",
+        "subjects liked by students in a class", "sales of different items at a canteen",
+        "time spent on activities in a day", "rainfall data across months",
+        "population distribution of a village", "favourite festival survey results",
+    ],
+    "Speed distance time (Class 5)": [
+        "train journey between cities", "auto-rickshaw ride to school",
+        "running race at sports day", "cycling trip to a friend's house",
+        "aeroplane travel between Indian metros", "walking to the market and back",
+        "bus speed on a highway", "boat crossing a river",
+        "relay race in school sports meet", "delivery van reaching on time",
     ],
     # ── English Language Context Banks ──
     "Nouns (Class 2)": [
@@ -2372,6 +2555,205 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "c4_money_thinking", "count": 1},
         ],
     },
+    # ══════════════════════════════════════════════════════════
+    # Class 5 Topic Profiles
+    # ══════════════════════════════════════════════════════════
+    # ── Numbers up to 10 lakh (Class 5) ──
+    "Numbers up to 10 lakh (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_lakh_identify", "c5_lakh_compare",
+            "c5_lakh_expand", "c5_lakh_error", "c5_lakh_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "regroup", "base ten", "column form",
+            "multiply", "divide", "fraction", "decimal",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_lakh_identify", "count": 3},
+            {"skill_tag": "c5_lakh_compare", "count": 3},
+            {"skill_tag": "c5_lakh_expand", "count": 2},
+            {"skill_tag": "c5_lakh_error", "count": 1},
+            {"skill_tag": "c5_lakh_think", "count": 1},
+        ],
+    },
+    # ── Factors and multiples (Class 5) ──
+    "Factors and multiples (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_factor_identify", "c5_factor_apply",
+            "c5_factor_missing", "c5_factor_error", "c5_factor_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "decimal", "percentage",
+            "angle", "perimeter", "symmetry",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_factor_identify", "count": 3},
+            {"skill_tag": "c5_factor_apply", "count": 3},
+            {"skill_tag": "c5_factor_missing", "count": 2},
+            {"skill_tag": "c5_factor_error", "count": 1},
+            {"skill_tag": "c5_factor_think", "count": 1},
+        ],
+    },
+    # ── HCF and LCM (Class 5) ──
+    "HCF and LCM (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_hcf_identify", "c5_hcf_apply",
+            "c5_hcf_missing", "c5_hcf_error", "c5_hcf_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "decimal", "percentage",
+            "angle", "perimeter", "symmetry",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_hcf_identify", "count": 3},
+            {"skill_tag": "c5_hcf_apply", "count": 3},
+            {"skill_tag": "c5_hcf_missing", "count": 2},
+            {"skill_tag": "c5_hcf_error", "count": 1},
+            {"skill_tag": "c5_hcf_think", "count": 1},
+        ],
+    },
+    # ── Fractions (add and subtract) (Class 5) ──
+    "Fractions (add and subtract) (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_frac_identify", "c5_frac_apply",
+            "c5_frac_missing", "c5_frac_error", "c5_frac_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "decimal", "percentage",
+            "angle", "perimeter", "symmetry",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_frac_identify", "count": 3},
+            {"skill_tag": "c5_frac_apply", "count": 3},
+            {"skill_tag": "c5_frac_missing", "count": 2},
+            {"skill_tag": "c5_frac_error", "count": 1},
+            {"skill_tag": "c5_frac_think", "count": 1},
+        ],
+    },
+    # ── Decimals (all operations) (Class 5) ──
+    "Decimals (all operations) (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_dec_identify", "c5_dec_apply",
+            "c5_dec_missing", "c5_dec_error", "c5_dec_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "angle", "perimeter", "symmetry",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_dec_identify", "count": 3},
+            {"skill_tag": "c5_dec_apply", "count": 3},
+            {"skill_tag": "c5_dec_missing", "count": 2},
+            {"skill_tag": "c5_dec_error", "count": 1},
+            {"skill_tag": "c5_dec_think", "count": 1},
+        ],
+    },
+    # ── Percentage (Class 5) ──
+    "Percentage (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_percent_identify", "c5_percent_apply",
+            "c5_percent_missing", "c5_percent_error", "c5_percent_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "angle", "perimeter", "symmetry",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_percent_identify", "count": 3},
+            {"skill_tag": "c5_percent_apply", "count": 3},
+            {"skill_tag": "c5_percent_missing", "count": 2},
+            {"skill_tag": "c5_percent_error", "count": 1},
+            {"skill_tag": "c5_percent_think", "count": 1},
+        ],
+    },
+    # ── Area and volume (Class 5) ──
+    "Area and volume (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_area_identify", "c5_area_apply",
+            "c5_area_missing", "c5_area_error", "c5_area_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "fraction", "percentage",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_area_identify", "count": 3},
+            {"skill_tag": "c5_area_apply", "count": 3},
+            {"skill_tag": "c5_area_missing", "count": 2},
+            {"skill_tag": "c5_area_error", "count": 1},
+            {"skill_tag": "c5_area_think", "count": 1},
+        ],
+    },
+    # ── Geometry (circles, symmetry) (Class 5) ──
+    "Geometry (circles, symmetry) (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_geo_identify", "c5_geo_apply",
+            "c5_geo_missing", "c5_geo_error", "c5_geo_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "fraction", "decimal",
+            "percentage", "multiply", "divide",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c5_geo_identify", "count": 3},
+            {"skill_tag": "c5_geo_apply", "count": 3},
+            {"skill_tag": "c5_geo_missing", "count": 2},
+            {"skill_tag": "c5_geo_error", "count": 1},
+            {"skill_tag": "c5_geo_think", "count": 1},
+        ],
+    },
+    # ── Data handling (pie charts) (Class 5) ──
+    "Data handling (pie charts) (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_data_identify", "c5_data_apply",
+            "c5_data_missing", "c5_data_error", "c5_data_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "fraction", "symmetry",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_data_identify", "count": 3},
+            {"skill_tag": "c5_data_apply", "count": 3},
+            {"skill_tag": "c5_data_missing", "count": 2},
+            {"skill_tag": "c5_data_error", "count": 1},
+            {"skill_tag": "c5_data_think", "count": 1},
+        ],
+    },
+    # ── Speed distance time (Class 5) ──
+    "Speed distance time (Class 5)": {
+        "allowed_skill_tags": [
+            "c5_speed_identify", "c5_speed_apply",
+            "c5_speed_missing", "c5_speed_error", "c5_speed_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "fraction", "symmetry",
+            "angle", "perimeter",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c5_speed_identify", "count": 3},
+            {"skill_tag": "c5_speed_apply", "count": 3},
+            {"skill_tag": "c5_speed_missing", "count": 2},
+            {"skill_tag": "c5_speed_error", "count": 1},
+            {"skill_tag": "c5_speed_think", "count": 1},
+        ],
+    },
     # ════════════════════════════════════════════════════════════
     # English Language Topics (22 topics: 6 Class 2, 8 Class 3, 8 Class 4)
     # ════════════════════════════════════════════════════════════
@@ -3084,6 +3466,45 @@ _TOPIC_ALIASES: dict[str, str] = {
     "c4 money": "Money (bills, profit/loss)",
     "profit and loss": "Money (bills, profit/loss)",
     "profit/loss": "Money (bills, profit/loss)",
+    # Class 5 aliases
+    "class 5 numbers": "Numbers up to 10 lakh (Class 5)",
+    "c5 numbers": "Numbers up to 10 lakh (Class 5)",
+    "numbers up to 10 lakh": "Numbers up to 10 lakh (Class 5)",
+    "lakhs": "Numbers up to 10 lakh (Class 5)",
+    "class 5 factors": "Factors and multiples (Class 5)",
+    "c5 factors": "Factors and multiples (Class 5)",
+    "factors and multiples": "Factors and multiples (Class 5)",
+    "prime numbers": "Factors and multiples (Class 5)",
+    "class 5 hcf lcm": "HCF and LCM (Class 5)",
+    "c5 hcf": "HCF and LCM (Class 5)",
+    "hcf and lcm": "HCF and LCM (Class 5)",
+    "hcf": "HCF and LCM (Class 5)",
+    "lcm": "HCF and LCM (Class 5)",
+    "class 5 fractions": "Fractions (add and subtract) (Class 5)",
+    "c5 fractions": "Fractions (add and subtract) (Class 5)",
+    "add subtract fractions": "Fractions (add and subtract) (Class 5)",
+    "fraction addition": "Fractions (add and subtract) (Class 5)",
+    "class 5 decimals": "Decimals (all operations) (Class 5)",
+    "c5 decimals": "Decimals (all operations) (Class 5)",
+    "decimal operations": "Decimals (all operations) (Class 5)",
+    "class 5 percentage": "Percentage (Class 5)",
+    "c5 percentage": "Percentage (Class 5)",
+    "percentage": "Percentage (Class 5)",
+    "percent": "Percentage (Class 5)",
+    "class 5 area volume": "Area and volume (Class 5)",
+    "c5 area": "Area and volume (Class 5)",
+    "area and volume": "Area and volume (Class 5)",
+    "volume": "Area and volume (Class 5)",
+    "class 5 geometry": "Geometry (circles, symmetry) (Class 5)",
+    "c5 geometry": "Geometry (circles, symmetry) (Class 5)",
+    "circles and symmetry": "Geometry (circles, symmetry) (Class 5)",
+    "class 5 data": "Data handling (pie charts) (Class 5)",
+    "c5 data": "Data handling (pie charts) (Class 5)",
+    "pie charts": "Data handling (pie charts) (Class 5)",
+    "class 5 speed": "Speed distance time (Class 5)",
+    "c5 speed": "Speed distance time (Class 5)",
+    "speed distance time": "Speed distance time (Class 5)",
+    "speed time distance": "Speed distance time (Class 5)",
     # ── English Language aliases ──
     "nouns": "Nouns (Class 3)",
     "verbs": "Verbs (Class 3)",
@@ -4440,6 +4861,199 @@ def _build_slot_instruction(
             return c2_data_ctx + "format: multi_step. Reasoning about data — e.g., 'If each symbol stands for 1 child, and Class A has 8 symbols and Class B has 5, which class has more children and by how many?' NOT pure counting."
         return c2_data_ctx
 
+
+    # ── Class 5 instruction builders ──────────────────────────
+
+    # Numbers up to 10 lakh (Class 5)
+    if _skill_tag in ("c5_lakh_identify", "c5_lakh_compare", "c5_lakh_expand",
+                       "c5_lakh_error", "c5_lakh_think"):
+        _fmt = (directive or {}).get("format_hint", "place_value_question")
+        c5_lakh_map = {
+            "c5_lakh_identify": "Identify place value in 6-7 digit numbers using Indian system (lakhs, ten-thousands, thousands). Example: 'What is the place value of 3 in 3,45,678?'",
+            "c5_lakh_compare": "Compare two large numbers (6-7 digits) using > or <. Example: 'Which is greater: 4,56,789 or 4,65,789?'",
+            "c5_lakh_expand": "Write a large number in expanded form using Indian system. Example: 4,56,789 = 4,00,000 + 56,000 + 789.",
+            "c5_lakh_error": "A student made a WRONG place value statement about a large number. Ask student to find and correct the mistake.",
+            "c5_lakh_think": "Multi-step reasoning about large numbers. Example: 'What number is 10,000 more than 4,56,789? Which digit changes?'",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Numbers up to 10 lakh (Class 5). skill: {_skill_tag}. "
+            f"{c5_lakh_map.get(_skill_tag, 'About large numbers.')} "
+            "Use 6-7 digit numbers in Indian system (up to 10,00,000). "
+            "Do NOT use addition/subtraction operations, fractions, decimals. "
+            "DO NOT repeat the same numbers or scenarios."
+        )
+
+    # Factors and multiples (Class 5)
+    if _skill_tag in ("c5_factor_identify", "c5_factor_apply", "c5_factor_missing",
+                       "c5_factor_error", "c5_factor_think"):
+        c5_factor_ctx = (
+            "Topic: Factors and multiples (Class 5). "
+            "Use numbers up to 100 for factors. "
+            "Do NOT use carry, borrow, decimal, percentage. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        c5_factor_map = {
+            "c5_factor_identify": "List all factors of a given number. Example: 'What are the factors of 24?' or 'Is 7 a factor of 42?'",
+            "c5_factor_apply": "format: word_problem. Real-world scenario using factors/multiples. Example: 'Can 36 students be arranged in equal rows of 8?'",
+            "c5_factor_missing": "format: fill_blank. Fill-in-the-blank. Example: 'The first 5 multiples of 6 are: 6, 12, 18, ___, ___.'",
+            "c5_factor_error": "format: error_spot. A student listed factors or multiples INCORRECTLY. Ask student to find and correct the mistake.",
+            "c5_factor_think": "format: multi_step. Reasoning about factors/multiples. Example: 'Is every multiple of 6 also a multiple of 3? Why?'",
+        }
+        return c5_factor_ctx + c5_factor_map.get(_skill_tag, "About factors and multiples.")
+
+    # HCF and LCM (Class 5)
+    if _skill_tag in ("c5_hcf_identify", "c5_hcf_apply", "c5_hcf_missing",
+                       "c5_hcf_error", "c5_hcf_think"):
+        c5_hcf_ctx = (
+            "Topic: HCF and LCM (Class 5). "
+            "Use numbers up to 100. "
+            "HCF = Highest Common Factor, LCM = Least Common Multiple. "
+            "Do NOT use carry, borrow, decimal, percentage. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        c5_hcf_map = {
+            "c5_hcf_identify": "Find the HCF or LCM of two numbers. Example: 'Find the HCF of 12 and 18.' or 'Find the LCM of 4 and 6.'",
+            "c5_hcf_apply": "format: word_problem. Real-world scenario using HCF/LCM. Example: 'Two bells ring every 4 and 6 minutes. When do they ring together?'",
+            "c5_hcf_missing": "format: fill_blank. Fill-in-the-blank. Example: 'HCF of 24 and 36 = ___' or 'LCM of 5 and 7 = ___.'",
+            "c5_hcf_error": "format: error_spot. A student computed HCF or LCM INCORRECTLY. Ask student to find and correct the mistake.",
+            "c5_hcf_think": "format: multi_step. Reasoning. Example: 'The HCF of two numbers is 6 and their LCM is 36. If one number is 12, what is the other?'",
+        }
+        return c5_hcf_ctx + c5_hcf_map.get(_skill_tag, "About HCF and LCM.")
+
+    # Fractions (add and subtract) (Class 5)
+    if _skill_tag in ("c5_frac_identify", "c5_frac_apply", "c5_frac_missing",
+                       "c5_frac_error", "c5_frac_think"):
+        c5_frac_ctx = (
+            "Topic: Fractions — add and subtract (Class 5). "
+            "Use like and unlike fractions. Denominators up to 20. "
+            "For unlike fractions, find LCM of denominators. "
+            "Do NOT use decimals or percentages. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        c5_frac_map = {
+            "c5_frac_identify": "Identify the operation needed. Example: 'Add 2/5 and 1/5.' or 'What is 3/4 - 1/4?'",
+            "c5_frac_apply": "format: word_problem. Real-world problem. Example: 'Riya drank 1/3 litre of milk in the morning and 1/4 litre in the evening. How much in total?'",
+            "c5_frac_missing": "format: fill_blank. Fill-in-the-blank. Example: '2/7 + ___ = 5/7' or '3/4 - 1/6 = ___.'",
+            "c5_frac_error": "format: error_spot. A student added/subtracted fractions INCORRECTLY (common error: adding denominators). Ask student to correct.",
+            "c5_frac_think": "format: multi_step. Multi-step fraction reasoning. Example: 'Aarav ate 1/3 of a cake. Priya ate 1/4. Who ate more? How much is left?'",
+        }
+        return c5_frac_ctx + c5_frac_map.get(_skill_tag, "About adding/subtracting fractions.")
+
+    # Decimals (all operations) (Class 5)
+    if _skill_tag in ("c5_dec_identify", "c5_dec_apply", "c5_dec_missing",
+                       "c5_dec_error", "c5_dec_think"):
+        c5_dec_ctx = (
+            "Topic: Decimals — all operations (Class 5). "
+            "Use decimals up to 2 decimal places. "
+            "Cover addition, subtraction, multiplication by whole number, simple division. "
+            "Do NOT use fractions or percentages. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        c5_dec_map = {
+            "c5_dec_identify": "Perform a decimal operation. Example: 'What is 3.45 + 2.7?' or 'What is 5.6 × 3?'",
+            "c5_dec_apply": "format: word_problem. Real-world decimal problem. Example: 'A pen costs Rs 12.50 and a notebook costs Rs 35.75. What is the total cost?'",
+            "c5_dec_missing": "format: fill_blank. Fill-in-the-blank. Example: '4.5 + ___ = 7.2' or '8.4 - 3.6 = ___.'",
+            "c5_dec_error": "format: error_spot. A student made a decimal computation error (common: misaligned decimal point). Ask student to correct.",
+            "c5_dec_think": "format: multi_step. Reasoning about decimals. Example: 'Which is greater: 3 × 1.5 or 2 × 2.3? Explain.'",
+        }
+        return c5_dec_ctx + c5_dec_map.get(_skill_tag, "About decimal operations.")
+
+    # Percentage (Class 5)
+    if _skill_tag in ("c5_percent_identify", "c5_percent_apply", "c5_percent_missing",
+                       "c5_percent_error", "c5_percent_think"):
+        c5_pct_ctx = (
+            "Topic: Percentage (Class 5). "
+            "Convert fractions/decimals to percentages and vice versa. "
+            "Find percentage of a number. Simple discount problems. "
+            "Do NOT use complex fractions or multi-step algebra. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        c5_pct_map = {
+            "c5_percent_identify": "Convert or compute percentage. Example: 'What is 25% of 80?' or 'Convert 3/4 to a percentage.'",
+            "c5_percent_apply": "format: word_problem. Real-world percentage problem. Example: 'A shirt costs Rs 400 and there is a 20% discount. What is the sale price?'",
+            "c5_percent_missing": "format: fill_blank. Fill-in-the-blank. Example: '50% of 120 = ___' or '___ % of 200 = 50.'",
+            "c5_percent_error": "format: error_spot. A student computed a percentage INCORRECTLY. Example: '25% of 80 = 25' (wrong). Ask student to correct.",
+            "c5_percent_think": "format: multi_step. Reasoning about percentages. Example: 'Priya scored 45 out of 60. Aarav scored 38 out of 50. Who scored a higher percentage?'",
+        }
+        return c5_pct_ctx + c5_pct_map.get(_skill_tag, "About percentages.")
+
+    # Area and volume (Class 5)
+    if _skill_tag in ("c5_area_identify", "c5_area_apply", "c5_area_missing",
+                       "c5_area_error", "c5_area_think"):
+        c5_av_ctx = (
+            "Topic: Area and volume (Class 5). "
+            "Area of triangle = 1/2 × base × height. Volume of cuboid = l × b × h. Volume of cube = side^3. "
+            "Use whole numbers for dimensions (cm, m). "
+            "Do NOT use fractions or decimals in dimensions. "
+            "DO NOT repeat the same dimensions or scenarios. "
+        )
+        c5_av_map = {
+            "c5_area_identify": "Calculate area or volume. Example: 'Find the area of a triangle with base 8 cm and height 6 cm.' or 'Find the volume of a cube with side 5 cm.'",
+            "c5_area_apply": "format: word_problem. Real-world area/volume problem. Example: 'A room is 5m long, 4m wide, and 3m high. What is its volume?'",
+            "c5_area_missing": "format: fill_blank. Fill-in-the-blank. Example: 'A cuboid has l=6, b=4, h=3. Volume = ___ cubic cm.' or 'Area of triangle = ___ sq cm (base=10, height=8).'",
+            "c5_area_error": "format: error_spot. A student computed area or volume INCORRECTLY (forgot ½ for triangle, used wrong formula). Ask student to correct.",
+            "c5_area_think": "format: multi_step. Reasoning. Example: 'Two boxes have volumes: 5×4×3 and 6×3×3. Which holds more? By how much?'",
+        }
+        return c5_av_ctx + c5_av_map.get(_skill_tag, "About area and volume.")
+
+    # Geometry (circles, symmetry) (Class 5)
+    if _skill_tag in ("c5_geo_identify", "c5_geo_apply", "c5_geo_missing",
+                       "c5_geo_error", "c5_geo_think"):
+        c5_geo_ctx = (
+            "Topic: Geometry — circles and symmetry (Class 5). "
+            "Circles: radius, diameter (= 2 × radius), circumference concepts. "
+            "Symmetry: lines of symmetry, rotational symmetry. "
+            "Do NOT use arithmetic operations, fractions, or decimals. "
+            "DO NOT repeat the same shapes or scenarios. "
+        )
+        c5_geo_map = {
+            "c5_geo_identify": "Identify circle parts or symmetry. Example: 'If the radius of a circle is 7 cm, what is its diameter?' or 'How many lines of symmetry does a square have?'",
+            "c5_geo_apply": "format: word_problem. Real-world problem. Example: 'A circular garden has a diameter of 14 m. What is its radius?'",
+            "c5_geo_missing": "format: fill_blank. Fill-in-the-blank. Example: 'Diameter = 2 × ___' or 'A regular hexagon has ___ lines of symmetry.'",
+            "c5_geo_error": "format: error_spot. A student made a WRONG statement about circles or symmetry. Ask student to correct.",
+            "c5_geo_think": "format: multi_step. Reasoning. Example: 'Which has more lines of symmetry: a circle or a square? Explain.'",
+        }
+        return c5_geo_ctx + c5_geo_map.get(_skill_tag, "About circles and symmetry.")
+
+    # Data handling (pie charts) (Class 5)
+    if _skill_tag in ("c5_data_identify", "c5_data_apply", "c5_data_missing",
+                       "c5_data_error", "c5_data_think"):
+        c5_data_ctx = (
+            "Topic: Data handling — pie charts (Class 5). "
+            "Questions about reading and interpreting pie charts. "
+            "Use percentages or fractions of a circle (halves, quarters). "
+            "Do NOT use complex calculations. "
+            "DO NOT repeat the same data sets or scenarios. "
+        )
+        c5_data_map = {
+            "c5_data_identify": "Read a pie chart. Example: 'In a pie chart, Cricket takes up 50% and Football 25%. What fraction does Cricket represent?'",
+            "c5_data_apply": "format: word_problem. Question requiring pie chart interpretation. Example: 'A pie chart shows 40% students like Maths. If there are 200 students, how many like Maths?'",
+            "c5_data_missing": "format: fill_blank. Fill-in-the-blank. Example: 'In a pie chart, three sectors show 30%, 25%, 20%. The fourth sector = ___ %.'",
+            "c5_data_error": "format: error_spot. A student misread a pie chart. Example: 'The largest sector shows 40% but Amit says it represents less than a quarter.' Ask student to correct.",
+            "c5_data_think": "format: multi_step. Reasoning. Example: 'A pie chart shows monthly expenses. Rent is 50%, Food is 25%, Transport is 15%. Is there money left for savings? How much?'",
+        }
+        return c5_data_ctx + c5_data_map.get(_skill_tag, "About pie charts.")
+
+    # Speed distance time (Class 5)
+    if _skill_tag in ("c5_speed_identify", "c5_speed_apply", "c5_speed_missing",
+                       "c5_speed_error", "c5_speed_think"):
+        c5_speed_ctx = (
+            "Topic: Speed, distance, and time (Class 5). "
+            "Speed = Distance ÷ Time. Distance = Speed × Time. Time = Distance ÷ Speed. "
+            "Use km/hr for speed, km for distance, hours for time. "
+            "Use simple whole numbers. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        c5_speed_map = {
+            "c5_speed_identify": "Compute speed, distance, or time. Example: 'A car travels 120 km in 2 hours. What is its speed?'",
+            "c5_speed_apply": "format: word_problem. Real-world problem. Example: 'A train travels at 60 km/hr. How far will it go in 5 hours?'",
+            "c5_speed_missing": "format: fill_blank. Fill-in-the-blank. Example: 'Speed = 40 km/hr, Time = 3 hours, Distance = ___ km.'",
+            "c5_speed_error": "format: error_spot. A student computed speed/distance/time WRONG (common: multiplied instead of dividing). Ask student to correct.",
+            "c5_speed_think": "format: multi_step. Reasoning. Example: 'Car A travels at 60 km/hr and Car B at 80 km/hr. Both start at the same time. After 3 hours, how much further has Car B gone?'",
+        }
+        return c5_speed_ctx + c5_speed_map.get(_skill_tag, "About speed, distance, and time.")
+
     # ── English Language instruction builders ──
 
     # Nouns
@@ -4933,7 +5547,7 @@ def _build_slot_instruction(
     }
     # Include all c2_, c4_, and eng_ prefixed tags as non-arithmetic
     _NON_ARITHMETIC_TAGS.update(
-        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_")
+        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("c5_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_")
     )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
@@ -5263,6 +5877,19 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "NO notes (no ₹10, ₹20, ₹50, ₹100). Total must NEVER exceed ₹20. "
         "Simple counting of coins only. NEVER generate arithmetic beyond simple coin counting.\n"
     ),
+    "Addition (2-digit with carry)": (
+        "CRITICAL: ALL questions MUST be about 2-digit Addition with carrying ONLY. "
+        "Both numbers must be 2-digit (10-99). Sums must NOT exceed 198. "
+        "Numbers MUST require carrying (ones digits sum >= 10). NEVER use 3-digit numbers. "
+        "NEVER generate subtraction, multiplication, or division questions.\n"
+    ),
+    "Subtraction (2-digit with borrow)": (
+        "CRITICAL: ALL questions MUST be about 2-digit Subtraction with borrowing ONLY. "
+        "Both numbers must be 2-digit (10-99). "
+        "Numbers MUST require borrowing (ones digit of top < ones digit of bottom). "
+        "NEVER use 3-digit numbers. "
+        "NEVER generate addition, multiplication, or division questions.\n"
+    ),
     # ── Class 2 non-arithmetic topic constraints ──
     "Numbers up to 1000 (Class 2)": (
         "CRITICAL: ALL questions MUST be about Numbers/Place Value up to 1000 ONLY — "
@@ -5304,6 +5931,11 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "NEVER generate addition/subtraction questions.\n"
     ),
     # ── Class 4 topic constraints ──
+    "Addition and subtraction (5-digit)": (
+        "CRITICAL: ALL questions MUST be about 5-digit addition and subtraction ONLY. "
+        "Use numbers in range 10000-99999. Require carrying for addition and borrowing for subtraction. "
+        "NEVER generate fraction, decimal, or plain 2/3-digit arithmetic questions.\n"
+    ),
     "Large numbers (up to 1,00,000)": (
         "CRITICAL: ALL questions MUST be about large numbers (5-digit, up to 99999) ONLY — "
         "Indian system place value (ten-thousands, thousands, hundreds, tens, ones), "
@@ -5348,6 +5980,64 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "CRITICAL: ALL questions MUST be about Money ONLY — bills, budgets, "
         "cost price, selling price, profit and loss. "
         "Use rupees (₹). NEVER generate plain arithmetic questions.\n"
+    ),
+    # ── Class 5 topic constraints ──
+    "Numbers up to 10 lakh (Class 5)": (
+        "CRITICAL: ALL questions MUST be about large numbers (up to 10,00,000) ONLY — "
+        "Indian place value system (lakhs, ten-thousands, thousands, hundreds, tens, ones), "
+        "expanded form, comparison, ordering. Numbers must be 6-7 digits. "
+        "NEVER generate addition/subtraction operation questions.\n"
+    ),
+    "Factors and multiples (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Factors and Multiples ONLY — "
+        "finding factors, listing multiples, prime/composite numbers, divisibility rules. "
+        "Use numbers up to 100 for factors. "
+        "NEVER generate addition/subtraction/carry questions.\n"
+    ),
+    "HCF and LCM (Class 5)": (
+        "CRITICAL: ALL questions MUST be about HCF and LCM ONLY — "
+        "Highest Common Factor, Least Common Multiple, prime factorisation. "
+        "Use numbers up to 100. "
+        "NEVER generate plain arithmetic or fraction questions.\n"
+    ),
+    "Fractions (add and subtract) (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Adding and Subtracting Fractions ONLY — "
+        "like fractions, unlike fractions (find LCM of denominators), mixed numbers. "
+        "Denominators up to 20. NEVER generate decimal or percentage questions.\n"
+    ),
+    "Decimals (all operations) (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Decimal Operations ONLY — "
+        "addition, subtraction, multiplication, and division of decimals. "
+        "Up to 2 decimal places. NEVER generate fraction or percentage questions.\n"
+    ),
+    "Percentage (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Percentage ONLY — "
+        "converting fractions/decimals to percentage, finding percentage of a number, "
+        "simple discount and increase problems. "
+        "NEVER generate plain fraction or decimal arithmetic questions.\n"
+    ),
+    "Area and volume (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Area and Volume ONLY — "
+        "area of triangles (½ × base × height), area of composite shapes, "
+        "volume of cubes (side³) and cuboids (l × b × h). "
+        "Use whole numbers for dimensions. "
+        "NEVER generate plain arithmetic or fraction questions.\n"
+    ),
+    "Geometry (circles, symmetry) (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Circles and Symmetry ONLY — "
+        "radius, diameter, circumference (basic), lines of symmetry, rotational symmetry. "
+        "NEVER generate arithmetic, fraction, or decimal questions.\n"
+    ),
+    "Data handling (pie charts) (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Pie Charts and Data Handling ONLY — "
+        "reading pie charts, comparing sectors, calculating simple percentages from pie charts. "
+        "NEVER generate plain arithmetic questions.\n"
+    ),
+    "Speed distance time (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Speed, Distance, and Time ONLY — "
+        "Speed = Distance ÷ Time, Distance = Speed × Time, Time = Distance ÷ Speed. "
+        "Use km/hr and simple numbers. "
+        "NEVER generate plain arithmetic or fraction questions.\n"
     ),
     # ── English Language topic constraints ──
     "Nouns (Class 2)": (

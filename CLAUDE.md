@@ -114,7 +114,7 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 
 # Topic System
 
-## 74 Supported Topics (TOPIC_PROFILES keys)
+## 84 Supported Topics (TOPIC_PROFILES keys)
 
 ### Class 1 Maths (8 topics)
 1. Numbers 1 to 50 (Class 1) — counting, comparing, ordering 1-50
@@ -164,20 +164,32 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 31. Time (minutes, 24-hour clock)
 32. Money (bills, profit/loss)
 
+### Class 5 Maths (10 topics)
+33. Numbers up to 10 lakh (Class 5) — Indian system, 7-digit
+34. Factors and multiples (Class 5)
+35. HCF and LCM (Class 5)
+36. Fractions (add and subtract) (Class 5) — unlike fractions
+37. Decimals (all operations) (Class 5)
+38. Percentage (Class 5)
+39. Area and volume (Class 5) — cubes, cuboids
+40. Geometry (circles, symmetry) (Class 5)
+41. Data handling (pie charts) (Class 5)
+42. Speed distance time (Class 5)
+
 ### Class 2 English (6 topics)
-33. Nouns (Class 2), 34. Verbs (Class 2), 35. Pronouns (Class 2), 36. Sentences (Class 2), 37. Rhyming Words (Class 2), 38. Punctuation (Class 2)
+43. Nouns (Class 2), 44. Verbs (Class 2), 45. Pronouns (Class 2), 46. Sentences (Class 2), 47. Rhyming Words (Class 2), 48. Punctuation (Class 2)
 
 ### Class 3 English (8 topics)
-39. Nouns (Class 3), 40. Verbs (Class 3), 41. Adjectives (Class 3), 42. Pronouns (Class 3), 43. Tenses (Class 3), 44. Punctuation (Class 3), 45. Vocabulary (Class 3), 46. Reading Comprehension (Class 3)
+49. Nouns (Class 3), 50. Verbs (Class 3), 51. Adjectives (Class 3), 52. Pronouns (Class 3), 53. Tenses (Class 3), 54. Punctuation (Class 3), 55. Vocabulary (Class 3), 56. Reading Comprehension (Class 3)
 
 ### Class 4 English (8 topics)
-47. Tenses (Class 4), 48. Sentence Types (Class 4), 49. Conjunctions (Class 4), 50. Prepositions (Class 4), 51. Adverbs (Class 4), 52. Prefixes and Suffixes (Class 4), 53. Vocabulary (Class 4), 54. Reading Comprehension (Class 4)
+57. Tenses (Class 4), 58. Sentence Types (Class 4), 59. Conjunctions (Class 4), 60. Prepositions (Class 4), 61. Adverbs (Class 4), 62. Prefixes and Suffixes (Class 4), 63. Vocabulary (Class 4), 64. Reading Comprehension (Class 4)
 
 ### Class 3 Science (7 topics)
-55. Plants (Class 3), 56. Animals (Class 3), 57. Food and Nutrition (Class 3), 58. Shelter (Class 3), 59. Water (Class 3), 60. Air (Class 3), 61. Our Body (Class 3)
+65. Plants (Class 3), 66. Animals (Class 3), 67. Food and Nutrition (Class 3), 68. Shelter (Class 3), 69. Water (Class 3), 70. Air (Class 3), 71. Our Body (Class 3)
 
 ### Class 3 Hindi (5 topics)
-62. Varnamala (Class 3), 63. Matras (Class 3), 64. Shabd Rachna (Class 3), 65. Vakya Rachna (Class 3), 66. Kahani Lekhan (Class 3)
+72. Varnamala (Class 3), 73. Matras (Class 3), 74. Shabd Rachna (Class 3), 75. Vakya Rachna (Class 3), 76. Kahani Lekhan (Class 3)
 
 Each Maths profile has: `allowed_skill_tags`, `allowed_slot_types`, `disallowed_keywords`, `disallowed_visual_types`, `default_recipe`, optional `recipes_by_count`.
 Each English profile additionally has: `subject: "English"`. English topics use `VALID_FORMATS_ENGLISH` and skip visual hydration (text-only).
@@ -321,6 +333,7 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - **2026-02-17**: Phase 9 Gold-G4 — Rich Visual Types. Backend: 5 new hydration rules in hydrate_visuals() for PIE_FRACTION, GRID_SYMMETRY, MONEY_COINS, PATTERN_TILES, ABACUS — mapped by question format. Added to _MODEL_TO_VTYPE. Frontend: 5 new SVG components (PieFractionVisual, GridSymmetryVisual, MoneyCoinsVisual, PatternTilesVisual, AbacusVisual) in VisualProblem.tsx — all print-safe, B&W friendly, accessible.
 - **2026-02-17**: Phase 7 — English Language Engine. Multi-subject support: 22 English topic profiles (6 Class 2, 8 Class 3, 8 Class 4) with VALID_FORMATS_ENGLISH, subject-aware validate_question/enforce_slot_counts/backfill_format, QUESTION_SYSTEM_ENGLISH prompt, 80+ eng_* skill tags, 15 instruction builder blocks, 45 aliases, 22 constraints/objectives/context banks. Frontend: grade-aware English topic selector. Zero Maths regression (709+282 deterministic checks pass).
 - **2026-02-17**: Phase 10A — Maths Class 1 (8 topics). Backend: 8 new topic profiles (Numbers 1-50, Numbers 51-100, Addition up to 20, Subtraction within 20, Basic Shapes, Measurement, Time, Money) with strict grade constraints (sums ≤20, no carry/borrow, no standard units, coins only). 40 skill tags, 30 aliases, 8 constraints, 8×3 learning objectives, 8×10 Indian context bank entries, 8 instruction builder blocks. Frontend: grade-aware Maths topic selector + Class 1 on landing page. QA: test_class1_maths.py (82 checks). verify_topics: 909 passed.
+- **2026-02-17**: Phase 10B+10C+10D — Maths Class 2 guardrails, Class 4 completion, Class 5 (10 new topics). Backend: Added missing _TOPIC_CONSTRAINTS for 3 arithmetic topics (Class 2 add/sub, Class 4 add/sub). Added 10 new Class 5 topic profiles (Numbers up to 10 lakh, Factors & Multiples, HCF & LCM, Fractions add/sub, Decimals all ops, Percentage, Area & Volume, Geometry circles/symmetry, Data handling pie charts, Speed distance time). 50 new skill tags, 38 aliases, 10 constraints, 30 learning objectives, 100 Indian context bank entries, 10 instruction builder blocks. Frontend: Class 5 Maths topics in grade selector + landing page. QA: test_class2/4/5_maths.py (99+101+98=298 checks). verify_topics: 1009 passed.
 - **2026-02-17**: Phase 8 — Science Engine. 7 Class 3 Science topic profiles (Plants, Animals, Food and Nutrition, Shelter, Water, Air, Our Body) with VALID_FORMATS_SCIENCE (18 formats), QUESTION_SYSTEM_SCIENCE prompt, 35 sci_* skill tags, 7 instruction builder blocks, 25 aliases, 7 constraints/objectives/context banks (Indian contexts). Frontend: grade-aware Science topic selector. Pipeline: text-only rendering (like English), reuses text answer normalizer. QA: 169-check test suite (28 combinations), zero regression (779+282+169 = 1,230 deterministic checks pass).
 - **2026-02-17**: P2 Growth Features — 3 parallel features. (1) Parent Progress Dashboard: rewrote dashboard_service.py to work without missing DB views (graceful fallback to worksheets table), new ParentDashboard.tsx with stats cards + skill progress table + recent topics, "Progress" tab in parent nav. (2) WhatsApp Share: new share.py router (POST /api/worksheets/{id}/share + GET /api/shared/{token}), share_tokens table, WhatsApp + copy-link buttons in worksheet toolbar, SharedWorksheet.tsx public viewer with no-auth route. (3) Hindi Language Engine: 5 Class 3 Hindi topic profiles (Varnamala, Matras, Shabd Rachna, Vakya Rachna, Kahani Lekhan) with VALID_FORMATS_HINDI (17 formats), QUESTION_SYSTEM_HINDI (Devanagari script), 25 hin_* skill tags, 5 instruction builders, 21 aliases, 5 constraints/objectives/context banks. QA: 138-check test suite, zero regression (829+282+169+138 = 1,418 checks pass).
 - **2026-02-17**: Fixed teacher routing bug (isTeacherPage missing generator) and free tier silent blocking — users now see remaining count and upgrade prompt before generation, generate button replaced with upgrade CTA at limit. E2E test suite: 26/26 pass.

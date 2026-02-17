@@ -27,6 +27,12 @@ const MATHS_TOPICS: Record<string, string[]> = {
     'Decimals (tenths)', 'Geometry (angles)', 'Perimeter & Area',
     'Time (24-hour clock)', 'Money (profit/loss)',
   ],
+  'Class 5': [
+    'Numbers up to 10 lakh', 'Factors & Multiples', 'HCF & LCM',
+    'Fractions (add & subtract)', 'Decimals (all operations)', 'Percentage',
+    'Area & Volume', 'Geometry (circles)', 'Data handling (pie charts)',
+    'Speed, Distance & Time',
+  ],
 }
 
 const ENGLISH_TOPICS: Record<string, string[]> = {
