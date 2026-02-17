@@ -510,6 +510,42 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "c5_speed_error": ("error_detection", "error_spot"),
     "c5_speed_think": ("thinking", "multi_step"),
     # ── English Language skill tags ──────────────────────────
+    # Class 1 English
+    "eng_c1_alpha_identify": ("recognition", "pick_correct"),
+    "eng_c1_alpha_match": ("application", "match_columns"),
+    "eng_c1_alpha_fill": ("representation", "complete_sentence"),
+    "eng_c1_alpha_error": ("error_detection", "error_spot_english"),
+    "eng_c1_alpha_think": ("thinking", "explain_why"),
+    "eng_c1_phonics_identify": ("recognition", "pick_correct"),
+    "eng_c1_phonics_match": ("application", "fill_in_blank"),
+    "eng_c1_phonics_fill": ("representation", "complete_sentence"),
+    "eng_c1_phonics_error": ("error_detection", "error_spot_english"),
+    "eng_c1_phonics_think": ("thinking", "explain_why"),
+    "eng_c1_family_identify": ("recognition", "pick_correct"),
+    "eng_c1_family_match": ("application", "fill_in_blank"),
+    "eng_c1_family_fill": ("representation", "complete_sentence"),
+    "eng_c1_family_error": ("error_detection", "error_spot_english"),
+    "eng_c1_family_think": ("thinking", "explain_why"),
+    "eng_c1_animals_identify": ("recognition", "pick_correct"),
+    "eng_c1_animals_match": ("application", "match_columns"),
+    "eng_c1_animals_fill": ("representation", "complete_sentence"),
+    "eng_c1_animals_error": ("error_detection", "error_spot_english"),
+    "eng_c1_animals_think": ("thinking", "explain_why"),
+    "eng_c1_greetings_identify": ("recognition", "pick_correct"),
+    "eng_c1_greetings_match": ("application", "fill_in_blank"),
+    "eng_c1_greetings_fill": ("representation", "complete_sentence"),
+    "eng_c1_greetings_error": ("error_detection", "error_spot_english"),
+    "eng_c1_greetings_think": ("thinking", "explain_why"),
+    "eng_c1_seasons_identify": ("recognition", "pick_correct"),
+    "eng_c1_seasons_match": ("application", "fill_in_blank"),
+    "eng_c1_seasons_fill": ("representation", "complete_sentence"),
+    "eng_c1_seasons_error": ("error_detection", "error_spot_english"),
+    "eng_c1_seasons_think": ("thinking", "explain_why"),
+    "eng_c1_simple_identify": ("recognition", "pick_correct"),
+    "eng_c1_simple_rewrite": ("application", "rewrite_sentence"),
+    "eng_c1_simple_fill": ("representation", "complete_sentence"),
+    "eng_c1_simple_error": ("error_detection", "error_spot_english"),
+    "eng_c1_simple_think": ("thinking", "creative_writing"),
     # Class 2 English
     "eng_noun_identify": ("recognition", "identify_noun"),
     "eng_noun_use": ("application", "fill_in_blank"),
@@ -934,6 +970,43 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Solve word problems involving travel and speed",
     ],
     # ── English Language Learning Objectives ──
+    # ── Class 1 English ──
+    "Alphabet (Class 1)": [
+        "Recognise and name all 26 capital and small letters",
+        "Match capital letters to their small letter forms",
+        "Write missing letters in alphabetical order",
+    ],
+    "Phonics (Class 1)": [
+        "Identify the beginning sound of simple words",
+        "Match letters to their common sounds",
+        "Say a word that starts with a given letter sound",
+    ],
+    "Self and Family Vocabulary (Class 1)": [
+        "Name family members using English words (mother, father, sister, brother)",
+        "Say and read words for body parts (hand, eye, nose)",
+        "Use simple words about myself and my family",
+    ],
+    "Animals and Food Vocabulary (Class 1)": [
+        "Name common animals in English (cat, dog, cow, hen)",
+        "Name common fruits and foods (apple, banana, rice, roti)",
+        "Match animal or food names to pictures",
+    ],
+    "Greetings and Polite Words (Class 1)": [
+        "Use greetings like Hello, Good morning, Goodbye",
+        "Say polite words: Please, Thank you, Sorry",
+        "Know when to use each greeting or polite word",
+    ],
+    "Seasons (Class 1)": [
+        "Name the seasons (summer, winter, rainy)",
+        "Say what we wear or do in each season",
+        "Match season names to simple descriptions",
+    ],
+    "Simple Sentences (Class 1)": [
+        "Read simple 3-4 word sentences",
+        "Put words in order to make a sentence",
+        "Say a simple sentence about a picture",
+    ],
+    # ── Class 2 English ──
     "Nouns (Class 2)": [
         "Identify naming words (nouns) in sentences",
         "Use nouns correctly in simple sentences",
@@ -1483,6 +1556,57 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "relay race in school sports meet", "delivery van reaching on time",
     ],
     # ── English Language Context Banks ──
+    # ── Class 1 English ──
+    "Alphabet (Class 1)": [
+        "letters on a classroom board", "letters on building blocks",
+        "alphabet chart on the wall", "letters in Raju's name",
+        "letters on Amma's shopping list", "letters on a school bus",
+        "letters in a picture book", "letters on a birthday card",
+        "letters on a lunch box", "letters on a colourful poster",
+    ],
+    "Phonics (Class 1)": [
+        "sounds of animals at a farm", "sounds of things at school",
+        "sounds heard at a mela", "sounds of objects in the kitchen",
+        "sounds of toys", "sounds of vehicles on the road",
+        "sounds at a park", "sounds during a rainy day",
+        "sounds of birds in the garden", "sounds at a Diwali celebration",
+    ],
+    "Self and Family Vocabulary (Class 1)": [
+        "Meena's family photo", "Raju talking about his Dadi",
+        "a family having dinner together", "Amma combing Priya's hair",
+        "Papa reading a story at bedtime", "visiting Nani's house",
+        "brother and sister playing together", "family going to a temple",
+        "helping Amma in the kitchen", "family celebrating a birthday",
+    ],
+    "Animals and Food Vocabulary (Class 1)": [
+        "animals at a village farm", "pets at Raju's home",
+        "birds near a pond", "fruits at a fruit cart",
+        "vegetables in Amma's basket", "food on a banana leaf",
+        "animals at a small zoo", "a cow in the field",
+        "a hen and her chicks", "lunch boxes at school",
+    ],
+    "Greetings and Polite Words (Class 1)": [
+        "greeting the teacher in the morning", "saying goodbye to Amma at the school gate",
+        "thanking a friend for sharing lunch", "saying sorry after bumping into someone",
+        "welcoming a guest at home", "saying good night to Dadi",
+        "meeting a new friend at school", "asking for water politely",
+        "thanking the auto-rickshaw driver", "greeting neighbours during Diwali",
+    ],
+    "Seasons (Class 1)": [
+        "playing in the rain during monsoon", "wearing sweaters in winter",
+        "drinking lassi in summer", "flying kites on Makar Sankranti",
+        "picking mangoes in summer", "jumping in puddles during rain",
+        "a cold morning at school", "flowers blooming in spring",
+        "a hot afternoon at the park", "Holi celebrations in spring",
+    ],
+    "Simple Sentences (Class 1)": [
+        "things Meena sees at school", "what Raju does in the morning",
+        "a day at the park", "things in my school bag",
+        "my pet dog", "what I eat for lunch",
+        "playing with friends", "helping Amma at home",
+        "a visit to Dadi's house", "things I see on the road",
+    ],
+    # ── Class 2 English ──
     "Nouns (Class 2)": [
         "things in a school bag", "animals at a zoo", "fruits at a market",
         "people in a family", "places in a town", "things in a kitchen",
@@ -2755,8 +2879,128 @@ TOPIC_PROFILES: dict[str, dict] = {
         ],
     },
     # ════════════════════════════════════════════════════════════
-    # English Language Topics (22 topics: 6 Class 2, 8 Class 3, 8 Class 4)
+    # English Language Topics (29 topics: 7 Class 1, 6 Class 2, 8 Class 3, 8 Class 4)
     # ════════════════════════════════════════════════════════════
+    # ── Class 1 English (7 topics) ──
+    "Alphabet (Class 1)": {
+        "allowed_skill_tags": [
+            "eng_c1_alpha_identify", "eng_c1_alpha_match", "eng_c1_alpha_fill",
+            "eng_c1_alpha_error", "eng_c1_alpha_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c1_alpha_identify", "count": 3},
+            {"skill_tag": "eng_c1_alpha_match", "count": 3},
+            {"skill_tag": "eng_c1_alpha_fill", "count": 2},
+            {"skill_tag": "eng_c1_alpha_error", "count": 1},
+            {"skill_tag": "eng_c1_alpha_think", "count": 1},
+        ],
+    },
+    "Phonics (Class 1)": {
+        "allowed_skill_tags": [
+            "eng_c1_phonics_identify", "eng_c1_phonics_match", "eng_c1_phonics_fill",
+            "eng_c1_phonics_error", "eng_c1_phonics_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c1_phonics_identify", "count": 3},
+            {"skill_tag": "eng_c1_phonics_match", "count": 3},
+            {"skill_tag": "eng_c1_phonics_fill", "count": 2},
+            {"skill_tag": "eng_c1_phonics_error", "count": 1},
+            {"skill_tag": "eng_c1_phonics_think", "count": 1},
+        ],
+    },
+    "Self and Family Vocabulary (Class 1)": {
+        "allowed_skill_tags": [
+            "eng_c1_family_identify", "eng_c1_family_match", "eng_c1_family_fill",
+            "eng_c1_family_error", "eng_c1_family_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c1_family_identify", "count": 3},
+            {"skill_tag": "eng_c1_family_match", "count": 3},
+            {"skill_tag": "eng_c1_family_fill", "count": 2},
+            {"skill_tag": "eng_c1_family_error", "count": 1},
+            {"skill_tag": "eng_c1_family_think", "count": 1},
+        ],
+    },
+    "Animals and Food Vocabulary (Class 1)": {
+        "allowed_skill_tags": [
+            "eng_c1_animals_identify", "eng_c1_animals_match", "eng_c1_animals_fill",
+            "eng_c1_animals_error", "eng_c1_animals_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c1_animals_identify", "count": 3},
+            {"skill_tag": "eng_c1_animals_match", "count": 3},
+            {"skill_tag": "eng_c1_animals_fill", "count": 2},
+            {"skill_tag": "eng_c1_animals_error", "count": 1},
+            {"skill_tag": "eng_c1_animals_think", "count": 1},
+        ],
+    },
+    "Greetings and Polite Words (Class 1)": {
+        "allowed_skill_tags": [
+            "eng_c1_greetings_identify", "eng_c1_greetings_match", "eng_c1_greetings_fill",
+            "eng_c1_greetings_error", "eng_c1_greetings_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c1_greetings_identify", "count": 3},
+            {"skill_tag": "eng_c1_greetings_match", "count": 3},
+            {"skill_tag": "eng_c1_greetings_fill", "count": 2},
+            {"skill_tag": "eng_c1_greetings_error", "count": 1},
+            {"skill_tag": "eng_c1_greetings_think", "count": 1},
+        ],
+    },
+    "Seasons (Class 1)": {
+        "allowed_skill_tags": [
+            "eng_c1_seasons_identify", "eng_c1_seasons_match", "eng_c1_seasons_fill",
+            "eng_c1_seasons_error", "eng_c1_seasons_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c1_seasons_identify", "count": 3},
+            {"skill_tag": "eng_c1_seasons_match", "count": 3},
+            {"skill_tag": "eng_c1_seasons_fill", "count": 2},
+            {"skill_tag": "eng_c1_seasons_error", "count": 1},
+            {"skill_tag": "eng_c1_seasons_think", "count": 1},
+        ],
+    },
+    "Simple Sentences (Class 1)": {
+        "allowed_skill_tags": [
+            "eng_c1_simple_identify", "eng_c1_simple_rewrite", "eng_c1_simple_fill",
+            "eng_c1_simple_error", "eng_c1_simple_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_c1_simple_identify", "count": 3},
+            {"skill_tag": "eng_c1_simple_rewrite", "count": 3},
+            {"skill_tag": "eng_c1_simple_fill", "count": 2},
+            {"skill_tag": "eng_c1_simple_error", "count": 1},
+            {"skill_tag": "eng_c1_simple_think", "count": 1},
+        ],
+    },
     # ── Class 2 English (6 topics) ──
     "Nouns (Class 2)": {
         "allowed_skill_tags": [
@@ -3506,6 +3750,35 @@ _TOPIC_ALIASES: dict[str, str] = {
     "speed distance time": "Speed distance time (Class 5)",
     "speed time distance": "Speed distance time (Class 5)",
     # ── English Language aliases ──
+    # ── Class 1 English aliases ──
+    "alphabet": "Alphabet (Class 1)",
+    "class 1 alphabet": "Alphabet (Class 1)",
+    "c1 alphabet": "Alphabet (Class 1)",
+    "abc": "Alphabet (Class 1)",
+    "phonics": "Phonics (Class 1)",
+    "class 1 phonics": "Phonics (Class 1)",
+    "c1 phonics": "Phonics (Class 1)",
+    "letter sounds": "Phonics (Class 1)",
+    "self and family vocabulary": "Self and Family Vocabulary (Class 1)",
+    "class 1 family": "Self and Family Vocabulary (Class 1)",
+    "c1 family": "Self and Family Vocabulary (Class 1)",
+    "family vocabulary": "Self and Family Vocabulary (Class 1)",
+    "animals and food vocabulary": "Animals and Food Vocabulary (Class 1)",
+    "class 1 animals": "Animals and Food Vocabulary (Class 1)",
+    "c1 animals": "Animals and Food Vocabulary (Class 1)",
+    "animals and food": "Animals and Food Vocabulary (Class 1)",
+    "greetings and polite words": "Greetings and Polite Words (Class 1)",
+    "class 1 greetings": "Greetings and Polite Words (Class 1)",
+    "c1 greetings": "Greetings and Polite Words (Class 1)",
+    "polite words": "Greetings and Polite Words (Class 1)",
+    "seasons": "Seasons (Class 1)",
+    "class 1 seasons": "Seasons (Class 1)",
+    "c1 seasons": "Seasons (Class 1)",
+    "simple sentences": "Simple Sentences (Class 1)",
+    "class 1 sentences": "Simple Sentences (Class 1)",
+    "c1 sentences": "Simple Sentences (Class 1)",
+    "class 1 simple sentences": "Simple Sentences (Class 1)",
+    # ── Class 2+ English aliases ──
     "nouns": "Nouns (Class 3)",
     "verbs": "Verbs (Class 3)",
     "adjectives": "Adjectives (Class 3)",
@@ -5056,6 +5329,128 @@ def _build_slot_instruction(
 
     # ── English Language instruction builders ──
 
+    # ── Class 1 English instruction builders ──
+
+    # Alphabet (Class 1)
+    if _skill_tag.startswith("eng_c1_alpha_"):
+        c1_alpha_ctx = (
+            "Topic: Alphabet (Class 1). Capital and small letters A-Z/a-z ONLY. "
+            "Use simple 3-5 letter words. NO grammar. Use Indian names: Raju, Meena, Amma. "
+            "DO NOT repeat the same letters or words. "
+        )
+        c1_alpha_map = {
+            "eng_c1_alpha_identify": "Show a letter and ask: 'Is this a capital letter or a small letter?' OR 'What letter is this?' Example: 'What letter is this: B?' → B (capital)",
+            "eng_c1_alpha_match": "format: match_columns. Match capital letters to small letters. Example: Match A → a, B → b, C → c.",
+            "eng_c1_alpha_fill": "format: complete_sentence. Fill in the missing letter in the alphabet. Example: 'A, B, ___, D' → C",
+            "eng_c1_alpha_error": "format: error_spot_english. Show a wrong letter in a sequence and ask to correct. Example: 'A, B, D, D — which letter is wrong?' Answer: The first D should be C.",
+            "eng_c1_alpha_think": "format: explain_why. Ask: 'Write 2 words that start with the letter M.' OR 'What comes after the letter P?'",
+        }
+        return c1_alpha_ctx + c1_alpha_map.get(_skill_tag, "About the alphabet.")
+
+    # Phonics (Class 1)
+    if _skill_tag.startswith("eng_c1_phonics_"):
+        c1_phonics_ctx = (
+            "Topic: Phonics (Class 1). Beginning letter sounds ONLY. "
+            "Use simple 3-5 letter words (cat, bat, sun, dog). NO blends. NO grammar. "
+            "Use Indian contexts. DO NOT repeat the same words or sounds. "
+        )
+        c1_phonics_map = {
+            "eng_c1_phonics_identify": "Ask which letter sound a word starts with. Example: 'What sound does the word CAT start with?' → c",
+            "eng_c1_phonics_match": "format: fill_in_blank. Fill in the first letter of a word. Example: '_at' → c (cat) or b (bat)",
+            "eng_c1_phonics_fill": "format: complete_sentence. Complete the word by adding the missing first letter. Example: '_og' → d (dog)",
+            "eng_c1_phonics_error": "format: error_spot_english. Show a word with the WRONG starting letter. Example: 'Does DUN start with the same sound as SUN?' → No, SUN starts with S.",
+            "eng_c1_phonics_think": "format: explain_why. Ask: 'Say 2 words that start with the same sound as BIG.' OR 'Which words start with the S sound: sun, cat, sit?'",
+        }
+        return c1_phonics_ctx + c1_phonics_map.get(_skill_tag, "About phonics.")
+
+    # Self and Family Vocabulary (Class 1)
+    if _skill_tag.startswith("eng_c1_family_"):
+        c1_family_ctx = (
+            "Topic: Self and Family Vocabulary (Class 1). Family words and body parts ONLY. "
+            "Use words: mother, father, sister, brother, hand, eye, nose. "
+            "Use Indian names: Amma, Papa, Dadi, Nani, Raju, Meena. "
+            "NO grammar. Simple 3-5 letter words. DO NOT repeat the same words. "
+        )
+        c1_family_map = {
+            "eng_c1_family_identify": "Show a description and ask to pick the correct family word. Example: 'Who is your mother's mother?' → grandmother / Nani",
+            "eng_c1_family_match": "format: fill_in_blank. Fill in with the correct family or body word. Example: 'I see with my ___.' → eyes",
+            "eng_c1_family_fill": "format: complete_sentence. Complete: 'My ___ cooks food for me.' → mother / Amma",
+            "eng_c1_family_error": "format: error_spot_english. Show a wrong word and ask to correct. Example: 'I hear with my nose.' → Wrong! I hear with my ears.",
+            "eng_c1_family_think": "format: explain_why. Ask: 'Name 2 people in your family.' OR 'What do you use your hands for?'",
+        }
+        return c1_family_ctx + c1_family_map.get(_skill_tag, "About family vocabulary.")
+
+    # Animals and Food Vocabulary (Class 1)
+    if _skill_tag.startswith("eng_c1_animals_"):
+        c1_animals_ctx = (
+            "Topic: Animals and Food Vocabulary (Class 1). Animal and food names ONLY. "
+            "Use words: cat, dog, cow, hen, apple, banana, rice, roti, milk. "
+            "Use Indian contexts. NO grammar. Simple 3-5 letter words. "
+            "DO NOT repeat the same animals or foods. "
+        )
+        c1_animals_map = {
+            "eng_c1_animals_identify": "Show a description and ask to name the animal or food. Example: 'This animal says moo. What is it?' → cow",
+            "eng_c1_animals_match": "format: match_columns. Match animals to their sounds or foods to their colours. Example: cow → moo, dog → bark.",
+            "eng_c1_animals_fill": "format: complete_sentence. Complete: 'A ___ gives us milk.' → cow",
+            "eng_c1_animals_error": "format: error_spot_english. Show a wrong animal-fact pair. Example: 'A hen says moo.' → Wrong! A hen says cluck.",
+            "eng_c1_animals_think": "format: explain_why. Ask: 'Name 2 animals you see at home.' OR 'Name 2 fruits you like to eat.'",
+        }
+        return c1_animals_ctx + c1_animals_map.get(_skill_tag, "About animals and food.")
+
+    # Greetings and Polite Words (Class 1)
+    if _skill_tag.startswith("eng_c1_greetings_"):
+        c1_greetings_ctx = (
+            "Topic: Greetings and Polite Words (Class 1). "
+            "Words: Hello, Good morning, Good night, Goodbye, Please, Thank you, Sorry. "
+            "Use Indian contexts. NO grammar. Sentences 3-5 words max. "
+            "DO NOT repeat the same greetings. "
+        )
+        c1_greetings_map = {
+            "eng_c1_greetings_identify": "Ask when to use a greeting. Example: 'What do you say when you meet your teacher in the morning?' → Good morning",
+            "eng_c1_greetings_match": "format: fill_in_blank. Fill in the correct greeting or polite word. Example: 'When someone gives you a gift, you say ___.' → Thank you",
+            "eng_c1_greetings_fill": "format: complete_sentence. Complete: '___ morning, teacher!' → Good",
+            "eng_c1_greetings_error": "format: error_spot_english. Show the wrong greeting for a situation. Example: 'Raju says Good night to his teacher at school.' → Wrong! He should say Good morning.",
+            "eng_c1_greetings_think": "format: explain_why. Ask: 'When do we say Sorry?' OR 'Why do we say Thank you?'",
+        }
+        return c1_greetings_ctx + c1_greetings_map.get(_skill_tag, "About greetings and polite words.")
+
+    # Seasons (Class 1)
+    if _skill_tag.startswith("eng_c1_seasons_"):
+        c1_seasons_ctx = (
+            "Topic: Seasons (Class 1). Season names and weather words ONLY. "
+            "Seasons: summer, winter, rainy/monsoon, spring. "
+            "Words: hot, cold, rain, umbrella, sweater, fan. "
+            "Use Indian contexts. NO grammar. Simple words. "
+            "DO NOT repeat the same seasons or weather words. "
+        )
+        c1_seasons_map = {
+            "eng_c1_seasons_identify": "Ask about a season from a description. Example: 'In which season do we use an umbrella?' → rainy / monsoon",
+            "eng_c1_seasons_match": "format: fill_in_blank. Fill in the season or weather word. Example: 'In ___ we feel very hot.' → summer",
+            "eng_c1_seasons_fill": "format: complete_sentence. Complete: 'We wear a ___ in winter.' → sweater",
+            "eng_c1_seasons_error": "format: error_spot_english. Show a wrong season-fact pair. Example: 'We use a fan in winter.' → Wrong! We use a fan in summer.",
+            "eng_c1_seasons_think": "format: explain_why. Ask: 'What do you wear in the rainy season? Why?' OR 'Name 2 things you do in summer.'",
+        }
+        return c1_seasons_ctx + c1_seasons_map.get(_skill_tag, "About seasons.")
+
+    # Simple Sentences (Class 1)
+    if _skill_tag.startswith("eng_c1_simple_"):
+        c1_simple_ctx = (
+            "Topic: Simple Sentences (Class 1). 3-5 word sentences ONLY. "
+            "Example sentences: 'I see a cat.', 'Raju has a ball.', 'Amma is kind.' "
+            "Use Indian names: Raju, Meena, Amma, Papa. NO grammar terms. "
+            "All words must be 3-5 letters max. DO NOT repeat sentence patterns. "
+        )
+        c1_simple_map = {
+            "eng_c1_simple_identify": "Show a group of words and ask if it is a sentence. Example: 'Is this a sentence? → The cat sat.' → Yes",
+            "eng_c1_simple_rewrite": "format: rewrite_sentence. Put words in order to make a sentence. Example: 'ball / a / I / have' → 'I have a ball.'",
+            "eng_c1_simple_fill": "format: complete_sentence. Complete a simple sentence. Example: 'Meena has a ___.' (cat / pen / bag)",
+            "eng_c1_simple_error": "format: error_spot_english. Show a sentence with a wrong word order. Example: 'Cat the is big.' → Wrong! The cat is big.",
+            "eng_c1_simple_think": "format: creative_writing. Ask: 'Say a sentence about your pet.' OR 'Make a sentence using the word Amma.'",
+        }
+        return c1_simple_ctx + c1_simple_map.get(_skill_tag, "About simple sentences.")
+
+    # ── Class 2+ English instruction builders ──
+
     # Nouns
     if _skill_tag.startswith("eng_noun_"):
         eng_noun_ctx = (
@@ -6040,6 +6435,48 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "NEVER generate plain arithmetic or fraction questions.\n"
     ),
     # ── English Language topic constraints ──
+    # ── Class 1 English constraints ──
+    "Alphabet (Class 1)": (
+        "CRITICAL: Only capital and small letter recognition. NO grammar. NO sentences longer than 3 words. "
+        "Only A-Z and a-z. Use words with 3-5 letters maximum. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Phonics (Class 1)": (
+        "CRITICAL: Only beginning letter sounds (e.g., 'b' for bat). NO blends, NO digraphs, NO grammar rules. "
+        "Use only simple 3-5 letter words. NO long sentences. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Self and Family Vocabulary (Class 1)": (
+        "CRITICAL: Only words for family members (mother, father, sister, brother, grandmother, grandfather) "
+        "and body parts (hand, eye, nose, ear, leg). NO grammar terminology. NO complex sentences. "
+        "Use names like Amma, Papa, Dadi, Nani, Raju, Meena. Words must be 3-5 letters max. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Animals and Food Vocabulary (Class 1)": (
+        "CRITICAL: Only common animal names (cat, dog, cow, hen, fish, bird) and food names "
+        "(apple, banana, rice, roti, milk, egg). NO grammar. NO complex sentences. "
+        "Words must be 3-5 letters max. Use Indian contexts. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Greetings and Polite Words (Class 1)": (
+        "CRITICAL: Only greetings (Hello, Good morning, Good night, Goodbye) and polite words "
+        "(Please, Thank you, Sorry, Excuse me). NO grammar rules. NO complex sentences. "
+        "Sentences must be 3-5 words max. Use Indian contexts (Namaste is OK). "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Seasons (Class 1)": (
+        "CRITICAL: Only season names (summer, winter, rainy/monsoon, spring) and simple associated words "
+        "(hot, cold, rain, umbrella, sweater, fan). NO grammar. NO complex sentences. "
+        "Words must be 3-5 letters max. Use Indian seasons and contexts. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Simple Sentences (Class 1)": (
+        "CRITICAL: Only simple 3-5 word sentences (e.g., 'I see a cat.', 'Raju has a ball.'). "
+        "NO grammar terminology. NO tenses. NO complex structures. "
+        "Use Indian names: Raju, Meena, Amma, Papa. All words must be 3-5 letters max. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    # ── Class 2 English constraints ──
     "Nouns (Class 2)": (
         "CRITICAL: ALL questions MUST be about Nouns ONLY — naming words for people, places, animals, things. "
         "Use simple Class 2 level vocabulary. NEVER generate arithmetic or maths questions.\n"

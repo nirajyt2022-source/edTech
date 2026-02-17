@@ -36,6 +36,10 @@ const MATHS_TOPICS: Record<string, string[]> = {
 }
 
 const ENGLISH_TOPICS: Record<string, string[]> = {
+  'Class 1': [
+    'Alphabet', 'Phonics', 'Family Vocabulary', 'Animals & Food',
+    'Greetings', 'Seasons', 'Simple Sentences',
+  ],
   'Class 2': ['Nouns', 'Verbs', 'Pronouns', 'Sentences', 'Rhyming Words', 'Punctuation'],
   'Class 3': [
     'Nouns', 'Verbs', 'Adjectives', 'Pronouns', 'Tenses',

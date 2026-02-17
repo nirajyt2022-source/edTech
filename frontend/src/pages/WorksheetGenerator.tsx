@@ -83,6 +83,11 @@ const MATHS_TOPICS_BY_GRADE: Record<number, string[]> = {
 
 // Grade-aware English topics (matching backend TOPIC_PROFILES keys)
 const ENGLISH_TOPICS_BY_GRADE: Record<number, string[]> = {
+  1: [
+    'Alphabet (Class 1)', 'Phonics (Class 1)', 'Self and Family Vocabulary (Class 1)',
+    'Animals and Food Vocabulary (Class 1)', 'Greetings and Polite Words (Class 1)',
+    'Seasons (Class 1)', 'Simple Sentences (Class 1)',
+  ],
   2: ['Nouns (Class 2)', 'Verbs (Class 2)', 'Pronouns (Class 2)', 'Sentences (Class 2)', 'Rhyming Words (Class 2)', 'Punctuation (Class 2)'],
   3: ['Nouns (Class 3)', 'Verbs (Class 3)', 'Adjectives (Class 3)', 'Pronouns (Class 3)', 'Tenses (Class 3)', 'Punctuation (Class 3)', 'Vocabulary (Class 3)', 'Reading Comprehension (Class 3)'],
   4: ['Tenses (Class 4)', 'Sentence Types (Class 4)', 'Conjunctions (Class 4)', 'Prepositions (Class 4)', 'Adverbs (Class 4)', 'Prefixes and Suffixes (Class 4)', 'Vocabulary (Class 4)', 'Reading Comprehension (Class 4)'],
