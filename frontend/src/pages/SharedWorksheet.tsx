@@ -70,7 +70,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           <div className="w-14 h-14 border-4 border-emerald-200 border-t-emerald-700 rounded-full animate-spin" />
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold text-stone-800" style={{ fontFamily: 'Fraunces, Georgia, serif' }}>
+          <h2 className="text-xl font-bold text-stone-800" style={{ fontFamily: 'Lora, Georgia, serif' }}>
             Loading worksheet...
           </h2>
           <p className="text-sm text-stone-500">Fetching shared content</p>
@@ -88,7 +88,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           </svg>
         </div>
         <div className="text-center space-y-2 max-w-md">
-          <h2 className="text-xl font-bold text-stone-800" style={{ fontFamily: 'Fraunces, Georgia, serif' }}>
+          <h2 className="text-xl font-bold text-stone-800" style={{ fontFamily: 'Lora, Georgia, serif' }}>
             Worksheet not found
           </h2>
           <p className="text-sm text-stone-500">{error || 'This worksheet could not be loaded.'}</p>
@@ -137,7 +137,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-stone-100">
             <h1
               className="text-2xl sm:text-3xl font-bold text-stone-800 mb-3"
-              style={{ fontFamily: 'Fraunces, Georgia, serif' }}
+              style={{ fontFamily: 'Lora, Georgia, serif' }}
             >
               {worksheet.title}
             </h1>

@@ -1282,7 +1282,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                 <CardHeader className="print:pb-4 print:px-0 print:pt-0 pt-12 px-10">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                     <div className="space-y-4">
-                      <CardTitle className="text-3xl md:text-4xl font-serif text-foreground leading-tight">
+                      <CardTitle className="text-lg md:text-xl font-semibold text-foreground leading-snug">
                         {worksheet.title}
                       </CardTitle>
                       <div className="flex flex-wrap gap-2 print:mt-4">

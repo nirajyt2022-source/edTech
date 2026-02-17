@@ -158,7 +158,7 @@ const COMPARISON_ROWS = [
   {
     feature: 'Curriculum alignment',
     free: 'Loosely tagged to chapters. Questions often off-syllabus or wrong grade level.',
-    pc: 'Every topic mapped to NCERT. 66 topic profiles with per-grade constraints.',
+    pc: 'Every topic mapped to NCERT. 196 topic profiles with per-grade constraints.',
   },
   {
     feature: 'Difficulty tiering',
@@ -226,7 +226,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-['Playfair_Display',Georgia,serif] text-3xl sm:text-4xl md:text-[2.75rem] font-semibold leading-[1.15] tracking-tight text-slate-900 mb-4">
+    <h2 className="font-['Lora',Georgia,serif] text-3xl sm:text-4xl md:text-[2.75rem] font-semibold leading-[1.15] tracking-tight text-slate-900 mb-4">
       {children}
     </h2>
   )
@@ -279,9 +279,9 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           {/* Logo */}
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <span className="font-['Playfair_Display',Georgia,serif] text-white font-bold text-lg leading-none">P</span>
+              <span className="font-['Lora',Georgia,serif] text-white font-bold text-lg leading-none">P</span>
             </div>
-            <span className="font-['Playfair_Display',Georgia,serif] text-xl font-semibold tracking-tight">
+            <span className="font-['Lora',Georgia,serif] text-xl font-semibold tracking-tight">
               <span className="text-slate-900">Practice</span><span className="text-primary">Craft</span>
             </span>
           </div>
@@ -347,10 +347,10 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-xs font-medium tracking-[0.2em] uppercase text-slate-400 mb-6">
-              CBSE Classes 2 &middot; 3 &middot; 4 &nbsp;&middot;&nbsp; Maths &middot; English &middot; Science
+              CBSE Classes 1–5 &nbsp;&middot;&nbsp; 8 Subjects &nbsp;&middot;&nbsp; 196 Topics
             </p>
 
-            <h1 className="font-['Playfair_Display',Georgia,serif] text-[2.75rem] sm:text-6xl md:text-7xl font-semibold leading-[1.08] tracking-tight text-slate-900 mb-6">
+            <h1 className="font-['Lora',Georgia,serif] text-[2.75rem] sm:text-6xl md:text-7xl font-semibold leading-[1.08] tracking-tight text-slate-900 mb-6">
               Worksheets that{' '}
               <span className="relative inline-block">
                 <span className="relative z-10">know your child.</span>
@@ -416,13 +416,13 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         <div className="max-w-4xl mx-auto px-5 text-center">
           <p className="text-sm text-slate-400 mb-3">Trusted by parents and teachers across India</p>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold text-slate-600">
-            <span>66 Topics</span>
+            <span>196 Topics</span>
             <span className="text-slate-300">&middot;</span>
-            <span>4 Subjects</span>
+            <span>8 Subjects</span>
             <span className="text-slate-300">&middot;</span>
-            <span>3 Grade Levels</span>
+            <span>Class 1–5</span>
             <span className="text-slate-300">&middot;</span>
-            <span>26/26 Tests Passing</span>
+            <span>CBSE / NCERT Aligned</span>
           </div>
         </div>
       </section>
@@ -502,7 +502,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
               <p className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-2">
                 {GOLD_STEPS[activeStep].num}
               </p>
-              <h3 className="font-['Playfair_Display',Georgia,serif] text-2xl sm:text-3xl font-semibold text-slate-900 mb-4">
+              <h3 className="font-['Lora',Georgia,serif] text-2xl sm:text-3xl font-semibold text-slate-900 mb-4">
                 {GOLD_STEPS[activeStep].title}
               </h3>
               <p className="text-slate-500 leading-relaxed mb-6">{GOLD_STEPS[activeStep].desc}</p>
@@ -619,7 +619,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           <RevealSection>
             <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-8 h-full">
               <p className="text-3xl mb-4">{'\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67'}</p>
-              <h3 className="font-['Playfair_Display',Georgia,serif] text-2xl font-semibold text-slate-900 mb-5">For Parents</h3>
+              <h3 className="font-['Lora',Georgia,serif] text-2xl font-semibold text-slate-900 mb-5">For Parents</h3>
               <ul className="space-y-3 text-sm text-slate-600 leading-relaxed">
                 <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Generate a worksheet in 30 seconds &mdash; pick grade, topic, go</li>
                 <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Every sheet adapts to your child's mastery level automatically</li>
@@ -633,7 +633,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           <RevealSection>
             <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-8 h-full">
               <p className="text-3xl mb-4">{'\uD83C\uDFEB'}</p>
-              <h3 className="font-['Playfair_Display',Georgia,serif] text-2xl font-semibold text-slate-900 mb-5">For Teachers</h3>
+              <h3 className="font-['Lora',Georgia,serif] text-2xl font-semibold text-slate-900 mb-5">For Teachers</h3>
               <ul className="space-y-3 text-sm text-slate-600 leading-relaxed">
                 <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Bulk generation &mdash; create 5 topic worksheets for a class in one click</li>
                 <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>CBSE-aligned to NCERT &mdash; use as homework, classwork, or revision</li>
@@ -658,11 +658,11 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
             {/* Free tier */}
             <RevealSection>
               <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-8 h-full flex flex-col">
-                <h3 className="font-['Playfair_Display',Georgia,serif] text-3xl font-semibold text-slate-900 mb-1">Free</h3>
+                <h3 className="font-['Lora',Georgia,serif] text-3xl font-semibold text-slate-900 mb-1">Free</h3>
                 <p className="text-sm text-slate-400 mb-6">10 worksheets / month</p>
                 <ul className="space-y-3 text-sm text-slate-600 mb-8 flex-1">
                   <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>All 4 subjects &mdash; Maths, English, Science, Hindi</li>
-                  <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>All grades (Class 2, 3, 4)</li>
+                  <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>All grades — Class 1 to Class 5</li>
                   <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>Basic PDF with answer key</li>
                   <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>Generate in 30 seconds</li>
                 </ul>
@@ -681,7 +681,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
                 <span className="absolute -top-3 left-6 px-3 py-1 bg-amber-400 text-amber-900 text-xs font-bold uppercase tracking-wider rounded-full">
                   Most Popular
                 </span>
-                <h3 className="font-['Playfair_Display',Georgia,serif] text-3xl font-semibold text-slate-900 mb-1">
+                <h3 className="font-['Lora',Georgia,serif] text-3xl font-semibold text-slate-900 mb-1">
                   {'\u20B9'}299<span className="text-lg font-normal text-slate-400"> / month</span>
                 </h3>
                 <p className="text-sm text-slate-400 mb-6">Unlimited worksheets</p>
@@ -738,13 +738,13 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
               {
                 num: '03',
                 title: 'Educational Integrity',
-                desc: 'No AI hallucinations. Every question is pedagogically validated and deterministically sound. 66 topic profiles, each hand-crafted.',
+                desc: 'No AI hallucinations. Every question is pedagogically validated and deterministically sound. 196 topic profiles, each hand-crafted.',
               },
             ].map((card, i) => (
               <RevealSection key={i}>
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-7">
                   <p className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-3">{card.num}</p>
-                  <h3 className="font-['Playfair_Display',Georgia,serif] text-xl font-semibold text-slate-900 mb-3">{card.title}</h3>
+                  <h3 className="font-['Lora',Georgia,serif] text-xl font-semibold text-slate-900 mb-3">{card.title}</h3>
                   <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
                 </div>
               </RevealSection>
@@ -782,9 +782,9 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <span className="font-['Playfair_Display',Georgia,serif] text-white font-bold text-sm leading-none">P</span>
+              <span className="font-['Lora',Georgia,serif] text-white font-bold text-sm leading-none">P</span>
             </div>
-            <span className="font-['Playfair_Display',Georgia,serif] text-base font-semibold">
+            <span className="font-['Lora',Georgia,serif] text-base font-semibold">
               Practice<span className="text-primary">Craft</span>
             </span>
           </div>
