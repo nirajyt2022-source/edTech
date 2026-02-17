@@ -62,7 +62,13 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
   const handleGoogleSignIn = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/` },
+      options: {
+        redirectTo: `${window.location.origin}/`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
     })
     if (error) {
       setError('Google sign-in failed. Try email instead.')
