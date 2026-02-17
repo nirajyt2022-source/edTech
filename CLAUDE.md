@@ -54,7 +54,7 @@ API endpoint: `backend/app/api/worksheets.py` calls `run_slot_pipeline()`.
 ## Slot Plans (exact, no rounding)
 5→ 1R,1A,1Rep,1ED,1T | 10→ 2,4,2,1,1 | 15→ 3,6,3,2,1 | 20→ 4,8,4,2,2. Non-standard counts use proportional fallback with mandatory ED≥1, T≥1.
 
-## Valid Formats per Slot
+## Valid Formats per Slot (Maths)
 ```
 recognition:     {column_setup, place_value, simple_identify, fraction_number, clock_question,
                   calendar_question, money_question, symmetry_question, shape_pattern,
@@ -66,20 +66,35 @@ error_detection: {error_spot}
 thinking:        {thinking, growing_pattern, multi_step}
 ```
 
+## Valid Formats per Slot (English)
+```
+recognition:     {identify_noun, identify_verb, identify_adjective, identify_pronoun,
+                  identify_adverb, identify_preposition, identify_conjunction, identify_tense,
+                  identify_sentence_type, identify_prefix, identify_suffix, identify_rhyme,
+                  identify_punctuation, pick_correct}
+application:     {fill_in_blank, rewrite_sentence, match_columns, use_in_sentence,
+                  word_problem_english, correct_sentence}
+representation:  {complete_sentence, rearrange_words, change_form, expand_sentence, paragraph_cloze}
+error_detection: {error_spot_english}
+thinking:        {explain_why, creative_writing}
+```
+
+Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot(subject)` — default to Maths.
+
 ## Per-Question Schema (internal)
 `{format, question_text, pictorial_elements:[], answer}` — LLM fills content only, backend controls slot_type/difficulty.
 
 ## Validators
-- **Per-question** (`validate_question`): format in VALID_FORMATS, no visual phrases, non-empty answer, text ≥10 chars, error_detection needs error language + 2 numbers, representation needs blank markers, thinking needs reasoning language, pictorial_elements must be empty
+- **Per-question** (`validate_question`): format in VALID_FORMATS (subject-aware via `get_valid_formats()`), no visual phrases (Maths only), non-empty answer, text ≥10 chars, error_detection needs error language + 2 numbers (Maths) or grammar error language (English), representation needs blank markers, thinking needs reasoning language, pictorial_elements must be empty
 - **Worksheet-level** (`validate_worksheet_slots`): slot counts match plan, ED≥1 and T≥1, unique number pairs, no duplicate question text, no repeated contexts in application questions
 - **Safety net** (`enforce_slot_counts`): deterministic trim/fill, re-numbers IDs 1→N
-- **Answer normalizers**: `normalize_estimation_answers` recomputes closer-to/round-to sums deterministically; `normalize_error_spot_answers` extracts numeric answer from LLM explanatory text
+- **Answer normalizers**: `normalize_estimation_answers` recomputes closer-to/round-to sums deterministically; `normalize_error_spot_answers` extracts numeric answer from LLM explanatory text; `normalize_english_answers` cleans up text answers for English
 
 # Topic System
 
-## 32 Supported Topics (TOPIC_PROFILES keys)
+## 54 Supported Topics (TOPIC_PROFILES keys)
 
-### Class 2 (10 topics)
+### Class 2 Maths (10 topics)
 1. Numbers up to 1000 (Class 2) — 3-digit place value
 2. Addition (2-digit with carry)
 3. Subtraction (2-digit with borrow)
@@ -91,7 +106,7 @@ thinking:        {thinking, growing_pattern, multi_step}
 9. Money (coins and notes) — amounts up to ₹100
 10. Data handling (pictographs)
 
-### Class 3 (12 topics)
+### Class 3 Maths (12 topics)
 11. Addition (carries) — 3-digit with carry enforcement
 12. Subtraction (borrowing) — 3-digit with borrow enforcement
 13. Addition and subtraction (3-digit) — combined, uses `recipes_by_count` for 5/10/15/20
@@ -105,7 +120,7 @@ thinking:        {thinking, growing_pattern, multi_step}
 21. Symmetry
 22. Patterns and sequences
 
-### Class 4 (10 topics)
+### Class 4 Maths (10 topics)
 23. Large numbers (up to 1,00,000) — Indian system, 5-digit
 24. Addition and subtraction (5-digit)
 25. Multiplication (3-digit × 2-digit)
@@ -117,7 +132,17 @@ thinking:        {thinking, growing_pattern, multi_step}
 31. Time (minutes, 24-hour clock)
 32. Money (bills, profit/loss)
 
-Each profile has: `allowed_skill_tags`, `allowed_slot_types`, `disallowed_keywords`, `disallowed_visual_types`, `default_recipe`, optional `recipes_by_count`.
+### Class 2 English (6 topics)
+33. Nouns (Class 2), 34. Verbs (Class 2), 35. Pronouns (Class 2), 36. Sentences (Class 2), 37. Rhyming Words (Class 2), 38. Punctuation (Class 2)
+
+### Class 3 English (8 topics)
+39. Nouns (Class 3), 40. Verbs (Class 3), 41. Adjectives (Class 3), 42. Pronouns (Class 3), 43. Tenses (Class 3), 44. Punctuation (Class 3), 45. Vocabulary (Class 3), 46. Reading Comprehension (Class 3)
+
+### Class 4 English (8 topics)
+47. Tenses (Class 4), 48. Sentence Types (Class 4), 49. Conjunctions (Class 4), 50. Prepositions (Class 4), 51. Adverbs (Class 4), 52. Prefixes and Suffixes (Class 4), 53. Vocabulary (Class 4), 54. Reading Comprehension (Class 4)
+
+Each Maths profile has: `allowed_skill_tags`, `allowed_slot_types`, `disallowed_keywords`, `disallowed_visual_types`, `default_recipe`, optional `recipes_by_count`.
+Each English profile additionally has: `subject: "English"`. English topics use `VALID_FORMATS_ENGLISH` and skip visual hydration (text-only).
 
 ## Topic Alias Resolution
 `get_topic_profile()` resolves frontend short names → canonical profile keys via `_TOPIC_ALIASES` + fuzzy matching. Key aliases: "Addition" → "Addition (carries)", "Multiplication" → "Multiplication (tables 2-10)", "Numbers"/"Place Value" → "Numbers up to 10000", "add/sub" → "Addition and subtraction (3-digit)".
@@ -252,3 +277,4 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - **2026-02-17**: Phase 9 Gold-G7 — Parent Insight Footer. Backend: `WATCH_FOR_MESSAGES` (10 error types) and `NEXT_STEP_MESSAGES` (4 levels, topic-specific) + `build_parent_insight()` injected into attempt response. `ParentInsight` model added to AttemptResponse. Frontend: insight footer on worksheet with watch-for, next-step, mastery progress bar + streak.
 - **2026-02-17**: Phase 9 Gold-G3 — Indian Context Word Problems. Added TOPIC_CONTEXT_BANK (32 topics × 10 contexts each) with rich Indian scenarios (cricket, Diwali, mela, auto-rickshaw, etc.). Injected into _build_slot_instruction() for application slots — LLM uses Indian names and contexts instead of generic problems.
 - **2026-02-17**: Phase 9 Gold-G4 — Rich Visual Types. Backend: 5 new hydration rules in hydrate_visuals() for PIE_FRACTION, GRID_SYMMETRY, MONEY_COINS, PATTERN_TILES, ABACUS — mapped by question format. Added to _MODEL_TO_VTYPE. Frontend: 5 new SVG components (PieFractionVisual, GridSymmetryVisual, MoneyCoinsVisual, PatternTilesVisual, AbacusVisual) in VisualProblem.tsx — all print-safe, B&W friendly, accessible.
+- **2026-02-17**: Phase 7 — English Language Engine. Multi-subject support: 22 English topic profiles (6 Class 2, 8 Class 3, 8 Class 4) with VALID_FORMATS_ENGLISH, subject-aware validate_question/enforce_slot_counts/backfill_format, QUESTION_SYSTEM_ENGLISH prompt, 80+ eng_* skill tags, 15 instruction builder blocks, 45 aliases, 22 constraints/objectives/context banks. Frontend: grade-aware English topic selector. Zero Maths regression (709+282 deterministic checks pass).

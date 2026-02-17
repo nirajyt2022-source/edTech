@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from collections import Counter
 from app.services.slot_engine import (
     TOPIC_PROFILES, _TOPIC_ALIASES, _SKILL_TAG_TO_SLOT, VALID_FORMATS,
+    VALID_FORMATS_ENGLISH, get_valid_formats,
     SLOT_ORDER, get_topic_profile, build_worksheet_plan,
     _TOPIC_CONSTRAINTS,
 )
@@ -138,14 +139,16 @@ for ft in FRONTEND_TOPICS:
 print("\n-- TEST 2: Skill Tag -> Slot Mapping --")
 for topic_name, profile in TOPIC_PROFILES.items():
     print(f"\n  [{topic_name}]")
+    _subject = profile.get("subject", "Mathematics")
+    _formats = get_valid_formats(_subject)
     for item in profile["default_recipe"]:
         tag = item["skill_tag"]
         if tag in _SKILL_TAG_TO_SLOT:
             slot_type, fmt = _SKILL_TAG_TO_SLOT[tag]
-            if fmt in VALID_FORMATS.get(slot_type, []):
+            if fmt in _formats.get(slot_type, []):
                 ok(f"{tag} -> ({slot_type}, {fmt})")
             else:
-                fail(f"{tag} -> ({slot_type}, {fmt}) -- format '{fmt}' not in VALID_FORMATS['{slot_type}']")
+                fail(f"{tag} -> ({slot_type}, {fmt}) -- format '{fmt}' not in {'VALID_FORMATS_ENGLISH' if _subject == 'English' else 'VALID_FORMATS'}['{slot_type}']")
         else:
             fail(f"{tag} -> NOT IN _SKILL_TAG_TO_SLOT")
 

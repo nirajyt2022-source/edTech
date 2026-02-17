@@ -37,11 +37,18 @@ const VISUAL_THEMES = [
 // Fallback topics for when curriculum API is unavailable
 const DEFAULT_TOPICS: Record<string, string[]> = {
   Maths: ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Fractions', 'Word Problems'],
-  English: ['Grammar', 'Vocabulary', 'Reading Comprehension', 'Sentence Formation'],
+  English: ['Nouns', 'Verbs', 'Pronouns', 'Sentences', 'Punctuation', 'Vocabulary'],
   EVS: ['Environment', 'Family & Community', 'Daily Life', 'Plants & Animals'],
   Hindi: ['Varnamala', 'Matras', 'Shabd Rachna', 'Vakya Rachna', 'Kahani Lekhan'],
   Science: ['Living Things', 'Matter', 'Force and Motion', 'Earth and Space', 'Human Body'],
   Computer: ['Computer Basics', 'Parts of Computer', 'MS Paint', 'MS Word', 'Internet Safety'],
+}
+
+// Grade-aware English topics (matching backend TOPIC_PROFILES keys)
+const ENGLISH_TOPICS_BY_GRADE: Record<number, string[]> = {
+  2: ['Nouns (Class 2)', 'Verbs (Class 2)', 'Pronouns (Class 2)', 'Sentences (Class 2)', 'Rhyming Words (Class 2)', 'Punctuation (Class 2)'],
+  3: ['Nouns (Class 3)', 'Verbs (Class 3)', 'Adjectives (Class 3)', 'Pronouns (Class 3)', 'Tenses (Class 3)', 'Punctuation (Class 3)', 'Vocabulary (Class 3)', 'Reading Comprehension (Class 3)'],
+  4: ['Tenses (Class 4)', 'Sentence Types (Class 4)', 'Conjunctions (Class 4)', 'Prepositions (Class 4)', 'Adverbs (Class 4)', 'Prefixes and Suffixes (Class 4)', 'Vocabulary (Class 4)', 'Reading Comprehension (Class 4)'],
 }
 
 interface Question {
@@ -338,6 +345,13 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       return selectedChapter ? selectedChapter.topics.map(t => t.name) : []
     }
     if (!syllabus && subject) {
+      // Grade-aware English topics
+      if (subject === 'English' && grade) {
+        const gradeNum = parseInt(grade.replace('Class ', ''))
+        if (!isNaN(gradeNum) && ENGLISH_TOPICS_BY_GRADE[gradeNum]) {
+          return ENGLISH_TOPICS_BY_GRADE[gradeNum]
+        }
+      }
       return DEFAULT_TOPICS[subject] || []
     }
     return []

@@ -77,6 +77,53 @@ DEFAULT_FORMAT_BY_SLOT_TYPE: dict[str, str] = {
     "thinking": "thinking",
 }
 
+# ════════════════════════════════════════════════════════════
+# A-eng) English Language Format Dicts
+# ════════════════════════════════════════════════════════════
+
+VALID_FORMATS_ENGLISH: dict[str, set[str]] = {
+    "recognition": {
+        "identify_noun", "identify_verb", "identify_adjective",
+        "identify_pronoun", "identify_adverb", "identify_preposition",
+        "identify_conjunction", "identify_tense", "identify_sentence_type",
+        "identify_prefix", "identify_suffix", "identify_rhyme",
+        "identify_punctuation", "pick_correct",
+    },
+    "application": {
+        "fill_in_blank", "rewrite_sentence", "match_columns",
+        "use_in_sentence", "word_problem_english", "correct_sentence",
+    },
+    "representation": {
+        "complete_sentence", "rearrange_words", "change_form",
+        "expand_sentence", "paragraph_cloze",
+    },
+    "error_detection": {"error_spot_english"},
+    "thinking": {"explain_why", "creative_writing"},
+}
+
+DEFAULT_FORMAT_BY_SLOT_TYPE_ENGLISH: dict[str, str] = {
+    "recognition": "pick_correct",
+    "application": "fill_in_blank",
+    "representation": "complete_sentence",
+    "error_detection": "error_spot_english",
+    "thinking": "explain_why",
+}
+
+
+def get_valid_formats(subject: str = "Mathematics") -> dict[str, set[str]]:
+    """Return the VALID_FORMATS dict for the given subject."""
+    if subject and subject.lower() == "english":
+        return VALID_FORMATS_ENGLISH
+    return VALID_FORMATS
+
+
+def get_default_format_by_slot(subject: str = "Mathematics") -> dict[str, str]:
+    """Return the DEFAULT_FORMAT_BY_SLOT_TYPE dict for the given subject."""
+    if subject and subject.lower() == "english":
+        return DEFAULT_FORMAT_BY_SLOT_TYPE_ENGLISH
+    return DEFAULT_FORMAT_BY_SLOT_TYPE
+
+
 _DOCTRINE_WEIGHTS = {
     "recognition": 0.20, "application": 0.40, "representation": 0.20,
     "error_detection": 0.10, "thinking": 0.10,
@@ -286,6 +333,87 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "c4_money_missing": ("representation", "missing_number"),
     "c4_money_error": ("error_detection", "error_spot"),
     "c4_money_thinking": ("thinking", "multi_step"),
+    # ── English Language skill tags ──────────────────────────
+    # Class 2 English
+    "eng_noun_identify": ("recognition", "identify_noun"),
+    "eng_noun_use": ("application", "fill_in_blank"),
+    "eng_noun_complete": ("representation", "complete_sentence"),
+    "eng_noun_error": ("error_detection", "error_spot_english"),
+    "eng_noun_thinking": ("thinking", "explain_why"),
+    "eng_verb_identify": ("recognition", "identify_verb"),
+    "eng_verb_use": ("application", "fill_in_blank"),
+    "eng_verb_complete": ("representation", "complete_sentence"),
+    "eng_verb_error": ("error_detection", "error_spot_english"),
+    "eng_verb_thinking": ("thinking", "explain_why"),
+    "eng_pronoun_identify": ("recognition", "identify_pronoun"),
+    "eng_pronoun_use": ("application", "fill_in_blank"),
+    "eng_pronoun_complete": ("representation", "complete_sentence"),
+    "eng_pronoun_error": ("error_detection", "error_spot_english"),
+    "eng_pronoun_thinking": ("thinking", "explain_why"),
+    "eng_sentence_identify": ("recognition", "identify_sentence_type"),
+    "eng_sentence_rewrite": ("application", "rewrite_sentence"),
+    "eng_sentence_rearrange": ("representation", "rearrange_words"),
+    "eng_sentence_error": ("error_detection", "error_spot_english"),
+    "eng_sentence_thinking": ("thinking", "creative_writing"),
+    "eng_rhyme_identify": ("recognition", "identify_rhyme"),
+    "eng_rhyme_match": ("application", "match_columns"),
+    "eng_rhyme_complete": ("representation", "complete_sentence"),
+    "eng_rhyme_error": ("error_detection", "error_spot_english"),
+    "eng_rhyme_thinking": ("thinking", "creative_writing"),
+    "eng_punctuation_identify": ("recognition", "identify_punctuation"),
+    "eng_punctuation_use": ("application", "correct_sentence"),
+    "eng_punctuation_complete": ("representation", "complete_sentence"),
+    "eng_punctuation_error": ("error_detection", "error_spot_english"),
+    "eng_punctuation_thinking": ("thinking", "explain_why"),
+    # Class 3 English
+    "eng_adjective_identify": ("recognition", "identify_adjective"),
+    "eng_adjective_use": ("application", "fill_in_blank"),
+    "eng_adjective_complete": ("representation", "complete_sentence"),
+    "eng_adjective_error": ("error_detection", "error_spot_english"),
+    "eng_adjective_thinking": ("thinking", "creative_writing"),
+    "eng_tense_identify": ("recognition", "identify_tense"),
+    "eng_tense_change": ("application", "rewrite_sentence"),
+    "eng_tense_complete": ("representation", "change_form"),
+    "eng_tense_error": ("error_detection", "error_spot_english"),
+    "eng_tense_thinking": ("thinking", "explain_why"),
+    "eng_vocabulary_identify": ("recognition", "pick_correct"),
+    "eng_vocabulary_use": ("application", "use_in_sentence"),
+    "eng_vocabulary_match": ("application", "match_columns"),
+    "eng_vocabulary_complete": ("representation", "complete_sentence"),
+    "eng_vocabulary_error": ("error_detection", "error_spot_english"),
+    "eng_vocabulary_thinking": ("thinking", "explain_why"),
+    "eng_comprehension_identify": ("recognition", "pick_correct"),
+    "eng_comprehension_answer": ("application", "word_problem_english"),
+    "eng_comprehension_complete": ("representation", "paragraph_cloze"),
+    "eng_comprehension_error": ("error_detection", "error_spot_english"),
+    "eng_comprehension_thinking": ("thinking", "explain_why"),
+    # Class 4 English
+    "eng_conjunction_identify": ("recognition", "identify_conjunction"),
+    "eng_conjunction_use": ("application", "fill_in_blank"),
+    "eng_conjunction_complete": ("representation", "complete_sentence"),
+    "eng_conjunction_error": ("error_detection", "error_spot_english"),
+    "eng_conjunction_thinking": ("thinking", "explain_why"),
+    "eng_preposition_identify": ("recognition", "identify_preposition"),
+    "eng_preposition_use": ("application", "fill_in_blank"),
+    "eng_preposition_complete": ("representation", "complete_sentence"),
+    "eng_preposition_error": ("error_detection", "error_spot_english"),
+    "eng_preposition_thinking": ("thinking", "explain_why"),
+    "eng_adverb_identify": ("recognition", "identify_adverb"),
+    "eng_adverb_use": ("application", "fill_in_blank"),
+    "eng_adverb_complete": ("representation", "complete_sentence"),
+    "eng_adverb_error": ("error_detection", "error_spot_english"),
+    "eng_adverb_thinking": ("thinking", "explain_why"),
+    "eng_prefix_identify": ("recognition", "identify_prefix"),
+    "eng_suffix_identify": ("recognition", "identify_suffix"),
+    "eng_affix_use": ("application", "fill_in_blank"),
+    "eng_affix_change": ("representation", "change_form"),
+    "eng_affix_error": ("error_detection", "error_spot_english"),
+    "eng_affix_thinking": ("thinking", "explain_why"),
+    "eng_sentence_type_identify": ("recognition", "identify_sentence_type"),
+    "eng_sentence_type_rewrite": ("application", "rewrite_sentence"),
+    "eng_sentence_type_rearrange": ("representation", "rearrange_words"),
+    "eng_sentence_type_error": ("error_detection", "error_spot_english"),
+    "eng_sentence_type_thinking": ("thinking", "creative_writing"),
 }
 
 SLOT_INSTRUCTIONS: dict[str, str] = {
@@ -469,6 +597,117 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Calculate total cost, change, and bills",
         "Understand simple profit and loss",
         "Solve multi-step money word problems",
+    ],
+    # ── English Language Learning Objectives ──
+    "Nouns (Class 2)": [
+        "Identify naming words (nouns) in sentences",
+        "Use nouns correctly in simple sentences",
+        "Tell the difference between names of people, places, and things",
+    ],
+    "Verbs (Class 2)": [
+        "Identify action words (verbs) in sentences",
+        "Use action words to complete sentences",
+        "Match actions to the correct pictures or descriptions",
+    ],
+    "Pronouns (Class 2)": [
+        "Identify pronouns (he, she, it, they) in sentences",
+        "Replace nouns with the correct pronouns",
+        "Use pronouns to avoid repeating names",
+    ],
+    "Sentences (Class 2)": [
+        "Form simple sentences with a subject and verb",
+        "Begin sentences with a capital letter and end with a full stop",
+        "Arrange words in the correct order to make sentences",
+    ],
+    "Rhyming Words (Class 2)": [
+        "Identify words that rhyme (sound the same at the end)",
+        "Match rhyming word pairs",
+        "Think of new words that rhyme with given words",
+    ],
+    "Punctuation (Class 2)": [
+        "Use full stops and capital letters correctly",
+        "Use question marks for asking sentences",
+        "Read sentences with correct pauses",
+    ],
+    "Nouns (Class 3)": [
+        "Classify nouns as common, proper, or collective",
+        "Change singular nouns to plural and vice versa",
+        "Use nouns correctly in different contexts",
+    ],
+    "Verbs (Class 3)": [
+        "Identify main verbs and helping verbs",
+        "Use correct verb forms in sentences",
+        "Match verbs with their subjects",
+    ],
+    "Adjectives (Class 3)": [
+        "Identify adjectives (describing words) in sentences",
+        "Use degrees of comparison (big, bigger, biggest)",
+        "Add adjectives to make sentences more descriptive",
+    ],
+    "Pronouns (Class 3)": [
+        "Use personal and possessive pronouns correctly",
+        "Replace nouns with pronouns in paragraphs",
+        "Identify the noun a pronoun refers to",
+    ],
+    "Tenses (Class 3)": [
+        "Identify simple present, past, and future tenses",
+        "Change sentences from one tense to another",
+        "Use correct tense forms in context",
+    ],
+    "Punctuation (Class 3)": [
+        "Use commas, apostrophes, and exclamation marks correctly",
+        "Add missing punctuation to sentences",
+        "Explain why specific punctuation is used",
+    ],
+    "Vocabulary (Class 3)": [
+        "Understand and use new words in context",
+        "Find synonyms and antonyms for given words",
+        "Choose the correct word meaning from options",
+    ],
+    "Reading Comprehension (Class 3)": [
+        "Read a short passage and answer questions about it",
+        "Find specific information in a passage",
+        "Understand the main idea of a passage",
+    ],
+    "Tenses (Class 4)": [
+        "Use simple, continuous, and perfect tenses correctly",
+        "Convert sentences between different tense forms",
+        "Identify tense errors and correct them",
+    ],
+    "Sentence Types (Class 4)": [
+        "Identify declarative, interrogative, exclamatory, and imperative sentences",
+        "Convert sentences from one type to another",
+        "Use correct punctuation for each sentence type",
+    ],
+    "Conjunctions (Class 4)": [
+        "Join sentences using conjunctions (and, but, or, because)",
+        "Choose the correct conjunction for meaning",
+        "Write compound sentences using conjunctions",
+    ],
+    "Prepositions (Class 4)": [
+        "Identify prepositions in sentences",
+        "Use prepositions of place, time, and direction correctly",
+        "Complete sentences with appropriate prepositions",
+    ],
+    "Adverbs (Class 4)": [
+        "Identify adverbs of manner, time, place, and frequency",
+        "Use adverbs to add detail to sentences",
+        "Form adverbs from adjectives (-ly)",
+    ],
+    "Prefixes and Suffixes (Class 4)": [
+        "Add prefixes (un-, re-, dis-, pre-) to change word meaning",
+        "Add suffixes (-ful, -less, -ness, -ly) to form new words",
+        "Identify root words in words with prefixes/suffixes",
+    ],
+    "Vocabulary (Class 4)": [
+        "Use context clues to guess word meanings",
+        "Identify homophones and use them correctly",
+        "Understand and use common idioms",
+    ],
+    "Reading Comprehension (Class 4)": [
+        "Read passages and answer inferential questions",
+        "Identify main ideas and supporting details",
+        "Make predictions based on text clues",
     ],
 }
 
@@ -717,6 +956,143 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "buying wholesale and selling retail sweets", "craft fair stall earnings",
         "farmer selling crops at market", "tailor's cloth cost vs stitching charge",
         "mobile recharge shop profit", "Diwali gift hamper business",
+    ],
+    # ── English Language Context Banks ──
+    "Nouns (Class 2)": [
+        "things in a school bag", "animals at a zoo", "fruits at a market",
+        "people in a family", "places in a town", "things in a kitchen",
+        "toys in a room", "birds in a garden", "things at a park", "vehicles on a road",
+    ],
+    "Verbs (Class 2)": [
+        "things children do at school", "actions at a playground", "morning routine activities",
+        "cooking actions in kitchen", "festival celebration activities", "actions at a cricket match",
+        "things a pet dog does", "actions at a birthday party", "rainy day activities", "garden activities",
+    ],
+    "Pronouns (Class 2)": [
+        "talking about a friend at school", "describing family members", "a day at the park with friends",
+        "Meera and her new pet", "Arjun and his cricket match", "children playing in the rain",
+        "helping grandmother in the kitchen", "visiting grandparents during holidays",
+        "Priya sharing her lunch", "going to the market with mother",
+    ],
+    "Sentences (Class 2)": [
+        "describing a school day", "a visit to the zoo", "a rainy day at home",
+        "going to a Diwali mela", "playing with friends", "helping at home",
+        "a birthday celebration", "visiting a farm", "a picnic at the park", "a day at the beach",
+    ],
+    "Rhyming Words (Class 2)": [
+        "animals and their sounds", "things at school", "colours and objects",
+        "food items", "body parts", "weather words",
+        "action words", "family members", "nature words", "playground words",
+    ],
+    "Punctuation (Class 2)": [
+        "questions about school", "sentences about family", "talking about pets",
+        "describing a festival", "telling about a holiday", "asking about food",
+        "sentences about friends", "talking about weather", "describing a picture", "telling a story",
+    ],
+    "Nouns (Class 3)": [
+        "visiting a historical monument", "a cricket tournament at school", "Diwali shopping at a bazaar",
+        "animals at a wildlife sanctuary", "a train journey across India",
+        "school assembly activities", "things at a science exhibition",
+        "Independence Day celebration", "market day in a village", "a visit to a temple",
+    ],
+    "Verbs (Class 3)": [
+        "activities during a school sports day", "cooking a meal with family",
+        "a day at a hill station", "celebrating Holi", "a morning at the river ghat",
+        "playing kabaddi", "helping in the school garden",
+        "activities at a book fair", "a rainy day adventure", "packing for a trip",
+    ],
+    "Adjectives (Class 3)": [
+        "describing Indian festivals", "comparing animals at a zoo", "describing Indian food",
+        "weather in different seasons", "comparing fruits at a market",
+        "describing a new classroom", "beautiful places in India",
+        "comparing cricketers", "describing a monsoon day", "things at a craft mela",
+    ],
+    "Pronouns (Class 3)": [
+        "a school trip to a museum", "siblings doing homework together",
+        "Aarav and his science project", "a joint family gathering",
+        "teammates at a cricket match", "children at a summer camp",
+        "Diya helping her neighbour", "festival preparations at home",
+        "a teacher and her students", "friends at a birthday party",
+    ],
+    "Tenses (Class 3)": [
+        "a school day routine", "what happened at the mela yesterday",
+        "plans for the summer holidays", "a cricket match story",
+        "cooking with grandmother", "a rainy day experience",
+        "visiting the Taj Mahal", "a school picnic", "festival celebrations", "daily morning routine",
+    ],
+    "Punctuation (Class 3)": [
+        "a letter to a friend", "a diary entry about a holiday",
+        "a conversation between friends", "instructions for a game",
+        "an invitation to a party", "a notice for school",
+        "questions in a quiz", "exclamations at a magic show", "a shopping list dialogue", "a news report",
+    ],
+    "Vocabulary (Class 3)": [
+        "words about Indian festivals", "school-related vocabulary", "nature and environment words",
+        "food and cooking terms", "transport and travel words",
+        "sports vocabulary", "family and relationships", "weather words",
+        "market and shopping terms", "animal habitats",
+    ],
+    "Reading Comprehension (Class 3)": [
+        "a story about a brave girl from a village", "a passage about Indian wildlife",
+        "an article about healthy eating", "a story about a school competition",
+        "a passage about Indian festivals", "a story about helping others",
+        "an article about saving water", "a story about a train journey",
+        "a passage about Indian monuments", "a story about friendship",
+    ],
+    "Tenses (Class 4)": [
+        "describing a historical event", "a diary entry about today",
+        "plans for a school annual day", "a news report about a cricket match",
+        "writing about a science experiment", "a story with flashbacks",
+        "describing a festival that just ended", "future plans for summer camp",
+        "what is happening right now at school", "a letter about yesterday's trip",
+    ],
+    "Sentence Types (Class 4)": [
+        "a classroom discussion", "a trip to a national park",
+        "giving instructions for a recipe", "a surprise birthday party",
+        "a school debate", "emergency instructions",
+        "a science experiment", "a football match commentary", "a shopping conversation", "a fire drill",
+    ],
+    "Conjunctions (Class 4)": [
+        "comparing two Indian cities", "reasons for being late to school",
+        "choosing between two activities", "a cause-and-effect story",
+        "describing two friends who are different", "advantages and disadvantages of TV",
+        "a story with multiple events", "explaining choices at a restaurant",
+        "contrasting seasons", "connecting ideas about a holiday",
+    ],
+    "Prepositions (Class 4)": [
+        "describing a room layout", "giving directions to the library",
+        "describing a picture of a market", "a treasure hunt at school",
+        "where things are in a classroom", "a journey through a city",
+        "describing positions in a cricket field", "a map of a village",
+        "objects in a school bag", "a scene at a railway station",
+    ],
+    "Adverbs (Class 4)": [
+        "describing how animals move", "a sports commentary",
+        "telling about daily routines", "a detective story",
+        "comparing how two children study", "a cooking show description",
+        "weather report", "describing a dance performance",
+        "how people travel to school", "actions during a fire drill",
+    ],
+    "Prefixes and Suffixes (Class 4)": [
+        "words about feelings and emotions", "words describing people",
+        "words about doing things again", "opposite meanings",
+        "words about states and conditions", "science-related words",
+        "words about abilities", "words from daily life",
+        "words about size and quantity", "words about actions and results",
+    ],
+    "Vocabulary (Class 4)": [
+        "words from an Indian newspaper", "vocabulary about Indian cuisine",
+        "words related to Indian geography", "vocabulary from a science textbook",
+        "words about Indian art and culture", "environmental vocabulary",
+        "words about technology", "vocabulary from Indian stories",
+        "words about health and fitness", "words from a travel brochure",
+    ],
+    "Reading Comprehension (Class 4)": [
+        "a passage about Mahatma Gandhi", "an article about Indian space programme",
+        "a story about a village school", "a passage about endangered animals in India",
+        "an article about Indian classical music", "a story about a young inventor",
+        "a passage about the water cycle", "an article about Indian railways",
+        "a story about courage and kindness", "a passage about healthy habits",
     ],
 }
 
@@ -1416,6 +1792,392 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "c4_money_thinking", "count": 1},
         ],
     },
+    # ════════════════════════════════════════════════════════════
+    # English Language Topics (22 topics: 6 Class 2, 8 Class 3, 8 Class 4)
+    # ════════════════════════════════════════════════════════════
+    # ── Class 2 English (6 topics) ──
+    "Nouns (Class 2)": {
+        "allowed_skill_tags": [
+            "eng_noun_identify", "eng_noun_use", "eng_noun_complete",
+            "eng_noun_error", "eng_noun_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_noun_identify", "count": 3},
+            {"skill_tag": "eng_noun_use", "count": 3},
+            {"skill_tag": "eng_noun_complete", "count": 2},
+            {"skill_tag": "eng_noun_error", "count": 1},
+            {"skill_tag": "eng_noun_thinking", "count": 1},
+        ],
+    },
+    "Verbs (Class 2)": {
+        "allowed_skill_tags": [
+            "eng_verb_identify", "eng_verb_use", "eng_verb_complete",
+            "eng_verb_error", "eng_verb_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_verb_identify", "count": 3},
+            {"skill_tag": "eng_verb_use", "count": 3},
+            {"skill_tag": "eng_verb_complete", "count": 2},
+            {"skill_tag": "eng_verb_error", "count": 1},
+            {"skill_tag": "eng_verb_thinking", "count": 1},
+        ],
+    },
+    "Pronouns (Class 2)": {
+        "allowed_skill_tags": [
+            "eng_pronoun_identify", "eng_pronoun_use", "eng_pronoun_complete",
+            "eng_pronoun_error", "eng_pronoun_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_pronoun_identify", "count": 3},
+            {"skill_tag": "eng_pronoun_use", "count": 3},
+            {"skill_tag": "eng_pronoun_complete", "count": 2},
+            {"skill_tag": "eng_pronoun_error", "count": 1},
+            {"skill_tag": "eng_pronoun_thinking", "count": 1},
+        ],
+    },
+    "Sentences (Class 2)": {
+        "allowed_skill_tags": [
+            "eng_sentence_identify", "eng_sentence_rewrite", "eng_sentence_rearrange",
+            "eng_sentence_error", "eng_sentence_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_sentence_identify", "count": 3},
+            {"skill_tag": "eng_sentence_rewrite", "count": 3},
+            {"skill_tag": "eng_sentence_rearrange", "count": 2},
+            {"skill_tag": "eng_sentence_error", "count": 1},
+            {"skill_tag": "eng_sentence_thinking", "count": 1},
+        ],
+    },
+    "Rhyming Words (Class 2)": {
+        "allowed_skill_tags": [
+            "eng_rhyme_identify", "eng_rhyme_match", "eng_rhyme_complete",
+            "eng_rhyme_error", "eng_rhyme_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_rhyme_identify", "count": 3},
+            {"skill_tag": "eng_rhyme_match", "count": 3},
+            {"skill_tag": "eng_rhyme_complete", "count": 2},
+            {"skill_tag": "eng_rhyme_error", "count": 1},
+            {"skill_tag": "eng_rhyme_thinking", "count": 1},
+        ],
+    },
+    "Punctuation (Class 2)": {
+        "allowed_skill_tags": [
+            "eng_punctuation_identify", "eng_punctuation_use", "eng_punctuation_complete",
+            "eng_punctuation_error", "eng_punctuation_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_punctuation_identify", "count": 3},
+            {"skill_tag": "eng_punctuation_use", "count": 3},
+            {"skill_tag": "eng_punctuation_complete", "count": 2},
+            {"skill_tag": "eng_punctuation_error", "count": 1},
+            {"skill_tag": "eng_punctuation_thinking", "count": 1},
+        ],
+    },
+    # ── Class 3 English (8 topics) ──
+    "Nouns (Class 3)": {
+        "allowed_skill_tags": [
+            "eng_noun_identify", "eng_noun_use", "eng_noun_complete",
+            "eng_noun_error", "eng_noun_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_noun_identify", "count": 3},
+            {"skill_tag": "eng_noun_use", "count": 3},
+            {"skill_tag": "eng_noun_complete", "count": 2},
+            {"skill_tag": "eng_noun_error", "count": 1},
+            {"skill_tag": "eng_noun_thinking", "count": 1},
+        ],
+    },
+    "Verbs (Class 3)": {
+        "allowed_skill_tags": [
+            "eng_verb_identify", "eng_verb_use", "eng_verb_complete",
+            "eng_verb_error", "eng_verb_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_verb_identify", "count": 3},
+            {"skill_tag": "eng_verb_use", "count": 3},
+            {"skill_tag": "eng_verb_complete", "count": 2},
+            {"skill_tag": "eng_verb_error", "count": 1},
+            {"skill_tag": "eng_verb_thinking", "count": 1},
+        ],
+    },
+    "Adjectives (Class 3)": {
+        "allowed_skill_tags": [
+            "eng_adjective_identify", "eng_adjective_use", "eng_adjective_complete",
+            "eng_adjective_error", "eng_adjective_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_adjective_identify", "count": 3},
+            {"skill_tag": "eng_adjective_use", "count": 3},
+            {"skill_tag": "eng_adjective_complete", "count": 2},
+            {"skill_tag": "eng_adjective_error", "count": 1},
+            {"skill_tag": "eng_adjective_thinking", "count": 1},
+        ],
+    },
+    "Pronouns (Class 3)": {
+        "allowed_skill_tags": [
+            "eng_pronoun_identify", "eng_pronoun_use", "eng_pronoun_complete",
+            "eng_pronoun_error", "eng_pronoun_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_pronoun_identify", "count": 3},
+            {"skill_tag": "eng_pronoun_use", "count": 3},
+            {"skill_tag": "eng_pronoun_complete", "count": 2},
+            {"skill_tag": "eng_pronoun_error", "count": 1},
+            {"skill_tag": "eng_pronoun_thinking", "count": 1},
+        ],
+    },
+    "Tenses (Class 3)": {
+        "allowed_skill_tags": [
+            "eng_tense_identify", "eng_tense_change", "eng_tense_complete",
+            "eng_tense_error", "eng_tense_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_tense_identify", "count": 3},
+            {"skill_tag": "eng_tense_change", "count": 3},
+            {"skill_tag": "eng_tense_complete", "count": 2},
+            {"skill_tag": "eng_tense_error", "count": 1},
+            {"skill_tag": "eng_tense_thinking", "count": 1},
+        ],
+    },
+    "Punctuation (Class 3)": {
+        "allowed_skill_tags": [
+            "eng_punctuation_identify", "eng_punctuation_use", "eng_punctuation_complete",
+            "eng_punctuation_error", "eng_punctuation_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_punctuation_identify", "count": 3},
+            {"skill_tag": "eng_punctuation_use", "count": 3},
+            {"skill_tag": "eng_punctuation_complete", "count": 2},
+            {"skill_tag": "eng_punctuation_error", "count": 1},
+            {"skill_tag": "eng_punctuation_thinking", "count": 1},
+        ],
+    },
+    "Vocabulary (Class 3)": {
+        "allowed_skill_tags": [
+            "eng_vocabulary_identify", "eng_vocabulary_use", "eng_vocabulary_match",
+            "eng_vocabulary_complete", "eng_vocabulary_error", "eng_vocabulary_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_vocabulary_identify", "count": 2},
+            {"skill_tag": "eng_vocabulary_use", "count": 2},
+            {"skill_tag": "eng_vocabulary_match", "count": 2},
+            {"skill_tag": "eng_vocabulary_complete", "count": 2},
+            {"skill_tag": "eng_vocabulary_error", "count": 1},
+            {"skill_tag": "eng_vocabulary_thinking", "count": 1},
+        ],
+    },
+    "Reading Comprehension (Class 3)": {
+        "allowed_skill_tags": [
+            "eng_comprehension_identify", "eng_comprehension_answer",
+            "eng_comprehension_complete", "eng_comprehension_error",
+            "eng_comprehension_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_comprehension_identify", "count": 3},
+            {"skill_tag": "eng_comprehension_answer", "count": 3},
+            {"skill_tag": "eng_comprehension_complete", "count": 2},
+            {"skill_tag": "eng_comprehension_error", "count": 1},
+            {"skill_tag": "eng_comprehension_thinking", "count": 1},
+        ],
+    },
+    # ── Class 4 English (8 topics) ──
+    "Tenses (Class 4)": {
+        "allowed_skill_tags": [
+            "eng_tense_identify", "eng_tense_change", "eng_tense_complete",
+            "eng_tense_error", "eng_tense_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_tense_identify", "count": 3},
+            {"skill_tag": "eng_tense_change", "count": 3},
+            {"skill_tag": "eng_tense_complete", "count": 2},
+            {"skill_tag": "eng_tense_error", "count": 1},
+            {"skill_tag": "eng_tense_thinking", "count": 1},
+        ],
+    },
+    "Sentence Types (Class 4)": {
+        "allowed_skill_tags": [
+            "eng_sentence_type_identify", "eng_sentence_type_rewrite",
+            "eng_sentence_type_rearrange", "eng_sentence_type_error",
+            "eng_sentence_type_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_sentence_type_identify", "count": 3},
+            {"skill_tag": "eng_sentence_type_rewrite", "count": 3},
+            {"skill_tag": "eng_sentence_type_rearrange", "count": 2},
+            {"skill_tag": "eng_sentence_type_error", "count": 1},
+            {"skill_tag": "eng_sentence_type_thinking", "count": 1},
+        ],
+    },
+    "Conjunctions (Class 4)": {
+        "allowed_skill_tags": [
+            "eng_conjunction_identify", "eng_conjunction_use", "eng_conjunction_complete",
+            "eng_conjunction_error", "eng_conjunction_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_conjunction_identify", "count": 3},
+            {"skill_tag": "eng_conjunction_use", "count": 3},
+            {"skill_tag": "eng_conjunction_complete", "count": 2},
+            {"skill_tag": "eng_conjunction_error", "count": 1},
+            {"skill_tag": "eng_conjunction_thinking", "count": 1},
+        ],
+    },
+    "Prepositions (Class 4)": {
+        "allowed_skill_tags": [
+            "eng_preposition_identify", "eng_preposition_use", "eng_preposition_complete",
+            "eng_preposition_error", "eng_preposition_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_preposition_identify", "count": 3},
+            {"skill_tag": "eng_preposition_use", "count": 3},
+            {"skill_tag": "eng_preposition_complete", "count": 2},
+            {"skill_tag": "eng_preposition_error", "count": 1},
+            {"skill_tag": "eng_preposition_thinking", "count": 1},
+        ],
+    },
+    "Adverbs (Class 4)": {
+        "allowed_skill_tags": [
+            "eng_adverb_identify", "eng_adverb_use", "eng_adverb_complete",
+            "eng_adverb_error", "eng_adverb_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_adverb_identify", "count": 3},
+            {"skill_tag": "eng_adverb_use", "count": 3},
+            {"skill_tag": "eng_adverb_complete", "count": 2},
+            {"skill_tag": "eng_adverb_error", "count": 1},
+            {"skill_tag": "eng_adverb_thinking", "count": 1},
+        ],
+    },
+    "Prefixes and Suffixes (Class 4)": {
+        "allowed_skill_tags": [
+            "eng_prefix_identify", "eng_suffix_identify", "eng_affix_use",
+            "eng_affix_change", "eng_affix_error", "eng_affix_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_prefix_identify", "count": 2},
+            {"skill_tag": "eng_suffix_identify", "count": 2},
+            {"skill_tag": "eng_affix_use", "count": 2},
+            {"skill_tag": "eng_affix_change", "count": 2},
+            {"skill_tag": "eng_affix_error", "count": 1},
+            {"skill_tag": "eng_affix_thinking", "count": 1},
+        ],
+    },
+    "Vocabulary (Class 4)": {
+        "allowed_skill_tags": [
+            "eng_vocabulary_identify", "eng_vocabulary_use", "eng_vocabulary_match",
+            "eng_vocabulary_complete", "eng_vocabulary_error", "eng_vocabulary_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_vocabulary_identify", "count": 2},
+            {"skill_tag": "eng_vocabulary_use", "count": 2},
+            {"skill_tag": "eng_vocabulary_match", "count": 2},
+            {"skill_tag": "eng_vocabulary_complete", "count": 2},
+            {"skill_tag": "eng_vocabulary_error", "count": 1},
+            {"skill_tag": "eng_vocabulary_thinking", "count": 1},
+        ],
+    },
+    "Reading Comprehension (Class 4)": {
+        "allowed_skill_tags": [
+            "eng_comprehension_identify", "eng_comprehension_answer",
+            "eng_comprehension_complete", "eng_comprehension_error",
+            "eng_comprehension_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
+        "disallowed_visual_types": [],
+        "subject": "English",
+        "default_recipe": [
+            {"skill_tag": "eng_comprehension_identify", "count": 3},
+            {"skill_tag": "eng_comprehension_answer", "count": 3},
+            {"skill_tag": "eng_comprehension_complete", "count": 2},
+            {"skill_tag": "eng_comprehension_error", "count": 1},
+            {"skill_tag": "eng_comprehension_thinking", "count": 1},
+        ],
+    },
 }
 
 
@@ -1502,6 +2264,48 @@ _TOPIC_ALIASES: dict[str, str] = {
     "c4 money": "Money (bills, profit/loss)",
     "profit and loss": "Money (bills, profit/loss)",
     "profit/loss": "Money (bills, profit/loss)",
+    # ── English Language aliases ──
+    "nouns": "Nouns (Class 3)",
+    "verbs": "Verbs (Class 3)",
+    "adjectives": "Adjectives (Class 3)",
+    "pronouns": "Pronouns (Class 3)",
+    "tenses": "Tenses (Class 3)",
+    "punctuation": "Punctuation (Class 3)",
+    "vocabulary": "Vocabulary (Class 3)",
+    "reading comprehension": "Reading Comprehension (Class 3)",
+    "comprehension": "Reading Comprehension (Class 3)",
+    "conjunctions": "Conjunctions (Class 4)",
+    "prepositions": "Prepositions (Class 4)",
+    "adverbs": "Adverbs (Class 4)",
+    "prefixes and suffixes": "Prefixes and Suffixes (Class 4)",
+    "prefixes": "Prefixes and Suffixes (Class 4)",
+    "suffixes": "Prefixes and Suffixes (Class 4)",
+    "sentence types": "Sentence Types (Class 4)",
+    "rhyming words": "Rhyming Words (Class 2)",
+    "rhyming": "Rhyming Words (Class 2)",
+    "sentences": "Sentences (Class 2)",
+    "class 2 nouns": "Nouns (Class 2)",
+    "class 2 verbs": "Verbs (Class 2)",
+    "class 2 pronouns": "Pronouns (Class 2)",
+    "class 2 sentences": "Sentences (Class 2)",
+    "class 2 rhyming": "Rhyming Words (Class 2)",
+    "class 2 punctuation": "Punctuation (Class 2)",
+    "class 3 nouns": "Nouns (Class 3)",
+    "class 3 verbs": "Verbs (Class 3)",
+    "class 3 adjectives": "Adjectives (Class 3)",
+    "class 3 pronouns": "Pronouns (Class 3)",
+    "class 3 tenses": "Tenses (Class 3)",
+    "class 3 punctuation": "Punctuation (Class 3)",
+    "class 3 vocabulary": "Vocabulary (Class 3)",
+    "class 3 comprehension": "Reading Comprehension (Class 3)",
+    "class 4 tenses": "Tenses (Class 4)",
+    "class 4 sentence types": "Sentence Types (Class 4)",
+    "class 4 conjunctions": "Conjunctions (Class 4)",
+    "class 4 prepositions": "Prepositions (Class 4)",
+    "class 4 adverbs": "Adverbs (Class 4)",
+    "class 4 prefixes": "Prefixes and Suffixes (Class 4)",
+    "class 4 vocabulary": "Vocabulary (Class 4)",
+    "class 4 comprehension": "Reading Comprehension (Class 4)",
 }
 
 
@@ -2590,6 +3394,252 @@ def _build_slot_instruction(
             return c2_data_ctx + "format: multi_step. Reasoning about data — e.g., 'If each symbol stands for 1 child, and Class A has 8 symbols and Class B has 5, which class has more children and by how many?' NOT pure counting."
         return c2_data_ctx
 
+    # ── English Language instruction builders ──
+
+    # Nouns
+    if _skill_tag.startswith("eng_noun_"):
+        eng_noun_ctx = (
+            "Topic: Nouns (naming words). "
+            "Use simple, age-appropriate sentences about school, family, animals, places. "
+            "Use Indian names and contexts. "
+            "DO NOT repeat the same nouns or sentences. "
+        )
+        eng_noun_map = {
+            "eng_noun_identify": "Pick out the noun(s) in a given sentence. Example: 'The dog sat on the mat.' → dog, mat",
+            "eng_noun_use": "format: fill_in_blank. Fill in the blank with a suitable noun. Example: 'The ___ flew over the tree.'",
+            "eng_noun_complete": "format: complete_sentence. Complete the sentence by adding a noun in the blank. Example: 'Aarav went to the ___.'",
+            "eng_noun_error": "format: error_spot_english. Show a sentence where a noun is used INCORRECTLY (wrong word or wrong form). Ask student to find and correct the mistake.",
+            "eng_noun_thinking": "format: explain_why. Ask student to explain or classify nouns. Example: 'Write 3 naming words for things you see in a classroom.'",
+        }
+        return eng_noun_ctx + eng_noun_map.get(_skill_tag, "About nouns.")
+
+    # Verbs
+    if _skill_tag.startswith("eng_verb_"):
+        eng_verb_ctx = (
+            "Topic: Verbs (action words). "
+            "Use simple, age-appropriate sentences. Use Indian names and contexts. "
+            "DO NOT repeat the same verbs or sentences. "
+        )
+        eng_verb_map = {
+            "eng_verb_identify": "Pick out the verb(s) in a given sentence. Example: 'The cat jumped over the wall.' → jumped",
+            "eng_verb_use": "format: fill_in_blank. Fill in the blank with a suitable verb. Example: 'The children ___ in the garden.'",
+            "eng_verb_complete": "format: complete_sentence. Complete the sentence with the correct verb form. Example: 'Priya ___ (run) to school every day.'",
+            "eng_verb_error": "format: error_spot_english. Show a sentence with an INCORRECT verb form. Ask student to find and fix it. Example: 'She go to school yesterday.'",
+            "eng_verb_thinking": "format: explain_why. Ask student to think about verbs. Example: 'Write 3 action words for things you do in the morning.'",
+        }
+        return eng_verb_ctx + eng_verb_map.get(_skill_tag, "About verbs.")
+
+    # Pronouns
+    if _skill_tag.startswith("eng_pronoun_"):
+        eng_pron_ctx = (
+            "Topic: Pronouns (he, she, it, they, we, I, you). "
+            "Use simple sentences. Use Indian names and contexts. "
+            "DO NOT repeat the same pronouns or sentences. "
+        )
+        eng_pron_map = {
+            "eng_pronoun_identify": "Pick out the pronoun(s) in a given sentence. Example: 'She likes to read books.' → She",
+            "eng_pronoun_use": "format: fill_in_blank. Replace the underlined noun with the correct pronoun. Example: 'Aarav is tall. ___ plays basketball.'",
+            "eng_pronoun_complete": "format: complete_sentence. Complete with the correct pronoun. Example: '___ went to the park. (Meera)'",
+            "eng_pronoun_error": "format: error_spot_english. Show a sentence with the WRONG pronoun. Example: 'Meera is kind. He helps everyone.' Ask student to correct.",
+            "eng_pronoun_thinking": "format: explain_why. Ask student to explain pronoun usage. Example: 'Why do we use pronouns instead of repeating names?'",
+        }
+        return eng_pron_ctx + eng_pron_map.get(_skill_tag, "About pronouns.")
+
+    # Sentences
+    if _skill_tag.startswith("eng_sentence_") and not _skill_tag.startswith("eng_sentence_type_"):
+        eng_sent_ctx = (
+            "Topic: Sentences (forming correct sentences). "
+            "Use simple sentence structures. Use Indian names and contexts. "
+            "DO NOT repeat the same sentence patterns. "
+        )
+        eng_sent_map = {
+            "eng_sentence_identify": "Identify whether a group of words is a complete sentence or not. Example: 'The big brown' → Not a sentence. 'The dog is sleeping.' → Sentence.",
+            "eng_sentence_rewrite": "format: rewrite_sentence. Rewrite jumbled words into a correct sentence. Example: 'school / to / goes / Aarav' → 'Aarav goes to school.'",
+            "eng_sentence_rearrange": "format: rearrange_words. Put the given words in the correct order to form a sentence.",
+            "eng_sentence_error": "format: error_spot_english. Show a sentence with a grammatical error. Example: 'the cat is sitting on mat.' Ask student to correct.",
+            "eng_sentence_thinking": "format: creative_writing. Ask student to create their own sentence. Example: 'Write a sentence about your best friend.'",
+        }
+        return eng_sent_ctx + eng_sent_map.get(_skill_tag, "About sentences.")
+
+    # Rhyming Words
+    if _skill_tag.startswith("eng_rhyme_"):
+        eng_rhyme_ctx = (
+            "Topic: Rhyming Words (words that sound the same at the end). "
+            "Use simple, common English words. "
+            "DO NOT repeat the same rhyming pairs. "
+        )
+        eng_rhyme_map = {
+            "eng_rhyme_identify": "Identify which words rhyme from a given set. Example: 'Which word rhymes with cat: dog, bat, pen?' → bat",
+            "eng_rhyme_match": "format: match_columns. Match rhyming pairs. Example: cat-bat, tree-free, sun-fun.",
+            "eng_rhyme_complete": "format: complete_sentence. Complete a rhyme: 'I see a ___ sitting on a log.' (Answer: frog)",
+            "eng_rhyme_error": "format: error_spot_english. Show an incorrect rhyming pair and ask student to fix it. Example: 'Does cat rhyme with pen? Find the correct rhyming word.'",
+            "eng_rhyme_thinking": "format: creative_writing. Ask student to write a short rhyming couplet. Example: 'Write two lines that end with rhyming words.'",
+        }
+        return eng_rhyme_ctx + eng_rhyme_map.get(_skill_tag, "About rhyming words.")
+
+    # Punctuation
+    if _skill_tag.startswith("eng_punctuation_"):
+        eng_punct_ctx = (
+            "Topic: Punctuation (full stop, question mark, exclamation mark, comma, apostrophe). "
+            "Use simple sentences. Use Indian names and contexts. "
+            "DO NOT repeat the same punctuation patterns. "
+        )
+        eng_punct_map = {
+            "eng_punctuation_identify": "Identify the punctuation mark used and explain why. Example: 'What punctuation mark ends this sentence: How are you?'",
+            "eng_punctuation_use": "format: correct_sentence. Add the correct punctuation to a sentence. Example: 'Where is the library' → 'Where is the library?'",
+            "eng_punctuation_complete": "format: complete_sentence. Add missing punctuation marks to complete the sentence correctly.",
+            "eng_punctuation_error": "format: error_spot_english. Show a sentence with WRONG punctuation. Example: 'What is your name.' Ask student to correct the punctuation.",
+            "eng_punctuation_thinking": "format: explain_why. Ask student to explain why specific punctuation is used. Example: 'Why do we use a question mark at the end of some sentences?'",
+        }
+        return eng_punct_ctx + eng_punct_map.get(_skill_tag, "About punctuation.")
+
+    # Adjectives
+    if _skill_tag.startswith("eng_adjective_"):
+        eng_adj_ctx = (
+            "Topic: Adjectives (describing words). "
+            "Use simple, descriptive sentences. Use Indian names and contexts. "
+            "DO NOT repeat the same adjectives or sentences. "
+        )
+        eng_adj_map = {
+            "eng_adjective_identify": "Pick out the adjective(s) in a sentence. Example: 'The tall boy ran fast.' → tall",
+            "eng_adjective_use": "format: fill_in_blank. Fill in the blank with a suitable adjective. Example: 'The ___ mango was very sweet.'",
+            "eng_adjective_complete": "format: complete_sentence. Complete the sentence with an adjective. Example: 'Diya wore a ___ dress to the party.'",
+            "eng_adjective_error": "format: error_spot_english. Show a sentence with an incorrect degree of comparison. Example: 'This building is more taller than that one.' Ask student to correct.",
+            "eng_adjective_thinking": "format: creative_writing. Ask student to describe something using adjectives. Example: 'Describe your classroom using 3 adjectives.'",
+        }
+        return eng_adj_ctx + eng_adj_map.get(_skill_tag, "About adjectives.")
+
+    # Tenses
+    if _skill_tag.startswith("eng_tense_"):
+        eng_tense_ctx = (
+            "Topic: Tenses (past, present, future). "
+            "Use simple, clear sentences. Use Indian names and contexts. "
+            "DO NOT repeat the same verb or tense pattern. "
+        )
+        eng_tense_map = {
+            "eng_tense_identify": "Identify the tense of a given sentence. Example: 'Aarav played cricket yesterday.' → Simple past tense",
+            "eng_tense_change": "format: rewrite_sentence. Change the sentence to a different tense. Example: 'She reads a book.' → Past tense: 'She read a book.'",
+            "eng_tense_complete": "format: change_form. Fill in the correct tense form of the verb. Example: 'Yesterday, Priya ___ (walk) to school.'",
+            "eng_tense_error": "format: error_spot_english. Show a sentence with the WRONG tense form. Example: 'Yesterday I am going to the park.' Ask student to correct.",
+            "eng_tense_thinking": "format: explain_why. Ask student to explain tense usage. Example: 'Why do we say \"she ran\" instead of \"she runned\"?'",
+        }
+        return eng_tense_ctx + eng_tense_map.get(_skill_tag, "About tenses.")
+
+    # Vocabulary
+    if _skill_tag.startswith("eng_vocabulary_"):
+        eng_vocab_ctx = (
+            "Topic: Vocabulary (word meanings, synonyms, antonyms). "
+            "Use age-appropriate words. Use Indian contexts. "
+            "DO NOT repeat the same words or meanings. "
+        )
+        eng_vocab_map = {
+            "eng_vocabulary_identify": "Choose the correct meaning of a word from options. Example: 'What does \"enormous\" mean? (a) tiny (b) huge (c) fast'",
+            "eng_vocabulary_use": "format: use_in_sentence. Use a given word in a sentence. Example: 'Use the word \"brave\" in a sentence.'",
+            "eng_vocabulary_match": "format: match_columns. Match words with their meanings or synonyms/antonyms.",
+            "eng_vocabulary_complete": "format: complete_sentence. Complete the sentence with the correct vocabulary word. Example: 'The opposite of happy is ___.'",
+            "eng_vocabulary_error": "format: error_spot_english. Show a sentence where a word is used with the WRONG meaning. Example: 'The tiny elephant...' Ask student to fix it.",
+            "eng_vocabulary_thinking": "format: explain_why. Ask student to explain word meanings or relationships. Example: 'How are the words \"happy\" and \"glad\" related?'",
+        }
+        return eng_vocab_ctx + eng_vocab_map.get(_skill_tag, "About vocabulary.")
+
+    # Reading Comprehension
+    if _skill_tag.startswith("eng_comprehension_"):
+        eng_comp_ctx = (
+            "Topic: Reading Comprehension. "
+            "Include a SHORT passage (3-5 sentences) in the question_text, then ask a question about it. "
+            "Use Indian names, places, and situations. "
+            "DO NOT repeat the same passage theme. "
+        )
+        eng_comp_map = {
+            "eng_comprehension_identify": "Read the passage and pick the correct answer from options. Include the passage and a factual question.",
+            "eng_comprehension_answer": "format: word_problem_english. Read the passage and answer a question in your own words. Include the passage.",
+            "eng_comprehension_complete": "format: paragraph_cloze. Passage with blanks to fill in from context. Include the passage with 2-3 blanks.",
+            "eng_comprehension_error": "format: error_spot_english. Show a passage with a factual or grammatical error. Ask student to find and correct it.",
+            "eng_comprehension_thinking": "format: explain_why. After reading a passage, ask an inferential or opinion question. Example: 'Why do you think the character did that?'",
+        }
+        return eng_comp_ctx + eng_comp_map.get(_skill_tag, "About reading comprehension.")
+
+    # Conjunctions
+    if _skill_tag.startswith("eng_conjunction_"):
+        eng_conj_ctx = (
+            "Topic: Conjunctions (and, but, or, so, because, although, while, when). "
+            "Use simple sentences. Use Indian names and contexts. "
+            "DO NOT repeat the same conjunction or sentence pattern. "
+        )
+        eng_conj_map = {
+            "eng_conjunction_identify": "Identify the conjunction in a sentence. Example: 'I like tea but she likes coffee.' → but",
+            "eng_conjunction_use": "format: fill_in_blank. Fill in with the correct conjunction. Example: 'Aarav was tired ___ he kept playing.' (but/so)",
+            "eng_conjunction_complete": "format: complete_sentence. Join two sentences using a conjunction. Example: 'It was raining. We went out.' → 'It was raining but we went out.'",
+            "eng_conjunction_error": "format: error_spot_english. Show a sentence with the WRONG conjunction. Example: 'I was hungry but I ate food.' (should be 'so'). Ask student to correct.",
+            "eng_conjunction_thinking": "format: explain_why. Ask student to explain conjunction choice. Example: 'Why is \"because\" better than \"and\" in this sentence?'",
+        }
+        return eng_conj_ctx + eng_conj_map.get(_skill_tag, "About conjunctions.")
+
+    # Prepositions
+    if _skill_tag.startswith("eng_preposition_"):
+        eng_prep_ctx = (
+            "Topic: Prepositions (in, on, at, under, over, between, behind, beside, through). "
+            "Use simple sentences about places, directions, positions. Use Indian contexts. "
+            "DO NOT repeat the same preposition or sentence pattern. "
+        )
+        eng_prep_map = {
+            "eng_preposition_identify": "Identify the preposition in a sentence. Example: 'The book is on the table.' → on",
+            "eng_preposition_use": "format: fill_in_blank. Fill in with the correct preposition. Example: 'The cat is hiding ___ the bed.' (under)",
+            "eng_preposition_complete": "format: complete_sentence. Complete with a preposition. Example: 'Diya walked ___ the bridge to reach school.'",
+            "eng_preposition_error": "format: error_spot_english. Show a sentence with the WRONG preposition. Example: 'The bird is sitting in the tree.' (should be 'on'). Ask student to correct.",
+            "eng_preposition_thinking": "format: explain_why. Ask student to explain preposition usage. Example: 'What is the difference between \"in\" and \"on\"?'",
+        }
+        return eng_prep_ctx + eng_prep_map.get(_skill_tag, "About prepositions.")
+
+    # Adverbs
+    if _skill_tag.startswith("eng_adverb_"):
+        eng_adv_ctx = (
+            "Topic: Adverbs (words that tell how, when, where — quickly, slowly, always, here). "
+            "Use simple sentences. Use Indian names and contexts. "
+            "DO NOT repeat the same adverb or sentence pattern. "
+        )
+        eng_adv_map = {
+            "eng_adverb_identify": "Identify the adverb in a sentence. Example: 'She sings beautifully.' → beautifully",
+            "eng_adverb_use": "format: fill_in_blank. Fill in with a suitable adverb. Example: 'The tortoise walked ___.' (slowly)",
+            "eng_adverb_complete": "format: complete_sentence. Complete with the adverb form. Example: 'Priya speaks ___ (soft → softly).'",
+            "eng_adverb_error": "format: error_spot_english. Show a sentence where an adjective is used instead of an adverb. Example: 'He runs quick.' (should be 'quickly'). Ask student to correct.",
+            "eng_adverb_thinking": "format: explain_why. Ask student to form adverbs or explain usage. Example: 'How do you change \"careful\" into an adverb?'",
+        }
+        return eng_adv_ctx + eng_adv_map.get(_skill_tag, "About adverbs.")
+
+    # Prefixes and Suffixes
+    if _skill_tag.startswith("eng_prefix_") or _skill_tag.startswith("eng_suffix_") or _skill_tag.startswith("eng_affix_"):
+        eng_affix_ctx = (
+            "Topic: Prefixes (un-, re-, dis-, pre-) and Suffixes (-ful, -less, -ness, -ly, -ment). "
+            "Use age-appropriate words. Use Indian contexts. "
+            "DO NOT repeat the same prefix/suffix or root word. "
+        )
+        eng_affix_map = {
+            "eng_prefix_identify": "Identify the prefix and root word. Example: 'What is the prefix in \"unhappy\"?' → un- (root: happy)",
+            "eng_suffix_identify": "Identify the suffix and root word. Example: 'What is the suffix in \"careful\"?' → -ful (root: care)",
+            "eng_affix_use": "format: fill_in_blank. Add the correct prefix or suffix. Example: 'Add a prefix to \"kind\" to make its opposite.' → unkind",
+            "eng_affix_change": "format: change_form. Change the word by adding a prefix or suffix. Example: 'Make a new word from \"play\" using a suffix.' → playful",
+            "eng_affix_error": "format: error_spot_english. Show a word with the WRONG prefix/suffix. Example: 'The opposite of happy is dishappy.' (should be 'unhappy'). Ask student to correct.",
+            "eng_affix_thinking": "format: explain_why. Ask student to explain how a prefix/suffix changes meaning. Example: 'How does adding \"un-\" change the meaning of a word?'",
+        }
+        return eng_affix_ctx + eng_affix_map.get(_skill_tag, "About prefixes and suffixes.")
+
+    # Sentence Types (Class 4)
+    if _skill_tag.startswith("eng_sentence_type_"):
+        eng_stype_ctx = (
+            "Topic: Sentence Types (declarative, interrogative, exclamatory, imperative). "
+            "Use clear examples of each type. Use Indian names and contexts. "
+            "DO NOT repeat the same sentence type or pattern. "
+        )
+        eng_stype_map = {
+            "eng_sentence_type_identify": "Identify the type of sentence. Example: 'Close the door!' → Imperative. 'It is raining.' → Declarative.",
+            "eng_sentence_type_rewrite": "format: rewrite_sentence. Change a sentence from one type to another. Example: 'It is cold.' → Question: 'Is it cold?'",
+            "eng_sentence_type_rearrange": "format: rearrange_words. Rearrange words to form a specific type of sentence (question, command, statement).",
+            "eng_sentence_type_error": "format: error_spot_english. Show a sentence with wrong punctuation for its type. Example: 'What is your name.' (should be ?). Ask student to correct.",
+            "eng_sentence_type_thinking": "format: creative_writing. Ask student to write one sentence of each type about a given topic.",
+        }
+        return eng_stype_ctx + eng_stype_map.get(_skill_tag, "About sentence types.")
+
     # Check if this is a non-arithmetic topic by looking at skill_tag
     _NON_ARITHMETIC_TAGS = {
         "multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank",
@@ -2611,9 +3661,9 @@ def _build_slot_instruction(
         "number_pattern", "shape_pattern", "pattern_fill_blank",
         "pattern_error_spot", "pattern_thinking",
     }
-    # Include all c2_ and c4_ prefixed tags as non-arithmetic
+    # Include all c2_, c4_, and eng_ prefixed tags as non-arithmetic
     _NON_ARITHMETIC_TAGS.update(
-        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_")
+        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("eng_")
     )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
@@ -2791,6 +3841,24 @@ QUESTION_SYSTEM = (
     '- Q6: "56 ÷ 8" and Q7: "56 ÷ 8" (same numbers) → Use different numbers'
 )
 
+QUESTION_SYSTEM_ENGLISH = (
+    "Expert question writer for primary-school English language worksheets. "
+    "Output JSON only. No markdown. No extra keys.\n"
+    "Rules:\n"
+    "- Grade-appropriate vocabulary and sentence complexity.\n"
+    "- NEVER reference visuals, pictures, or diagrams in question_text.\n"
+    "- Every answer must be grammatically correct and unambiguous.\n"
+    "- pictorial_elements must be empty list [].\n"
+    "- Use Indian English spelling and conventions (colour, favourite, etc.).\n"
+    "- Use age-appropriate Indian contexts (school, family, festivals, cricket).\n"
+    "\n"
+    "CRITICAL DEDUPLICATION RULES:\n"
+    "- DO NOT reuse the same word, sentence, or passage across questions\n"
+    "- DO NOT repeat the same grammar concept in consecutive questions\n"
+    "- Each question must test a UNIQUE aspect of the topic\n"
+    "- Vary sentence structures and vocabulary\n"
+)
+
 QUESTION_USER_TEMPLATE = (
     "Grade {grade} {subject} | Micro-skill: {micro_skill} | "
     "Slot: {slot_type} | Difficulty: {difficulty}\n"
@@ -2925,6 +3993,100 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "cost price, selling price, profit and loss. "
         "Use rupees (₹). NEVER generate plain arithmetic questions.\n"
     ),
+    # ── English Language topic constraints ──
+    "Nouns (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Nouns ONLY — naming words for people, places, animals, things. "
+        "Use simple Class 2 level vocabulary. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Verbs (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Verbs (action words) ONLY — running, jumping, eating, etc. "
+        "Use simple Class 2 level vocabulary. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Pronouns (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Pronouns ONLY — he, she, it, they, we, I, you. "
+        "Use simple Class 2 level sentences. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Sentences (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Sentences ONLY — forming sentences, "
+        "capital letters at start, full stop at end, simple sentence structure. "
+        "Use Class 2 level vocabulary. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Rhyming Words (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Rhyming Words ONLY — words that sound alike "
+        "(cat/bat, tree/free, etc.). Use simple Class 2 level words. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Punctuation (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Punctuation ONLY — full stop (.), "
+        "question mark (?), capital letters. Simple Class 2 level. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Nouns (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Nouns ONLY — common nouns, proper nouns, "
+        "collective nouns, singular/plural. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Verbs (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Verbs ONLY — action verbs, helping verbs, "
+        "verb forms. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Adjectives (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Adjectives ONLY — describing words, "
+        "degrees of comparison (big/bigger/biggest). NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Pronouns (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Pronouns ONLY — personal pronouns (I, you, he, she, it, we, they), "
+        "possessive pronouns (my, your, his, her, its). NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Tenses (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Tenses ONLY — simple present, simple past, "
+        "simple future. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Punctuation (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Punctuation ONLY — full stop, question mark, "
+        "exclamation mark, comma, apostrophe. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Vocabulary (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Vocabulary ONLY — word meanings, synonyms, "
+        "antonyms, word usage. Use Class 3 level words. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Reading Comprehension (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Reading Comprehension ONLY — read a short passage "
+        "and answer questions about it. Include the passage in question_text. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Tenses (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Tenses ONLY — simple, continuous, and perfect tenses "
+        "(past, present, future). NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Sentence Types (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Sentence Types ONLY — declarative, interrogative, "
+        "exclamatory, imperative sentences. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Conjunctions (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Conjunctions ONLY — and, but, or, so, because, "
+        "although, while, when. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Prepositions (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Prepositions ONLY — in, on, at, under, over, "
+        "between, behind, beside, through. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Adverbs (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Adverbs ONLY — words that describe how, when, where "
+        "(quickly, slowly, always, here, there). NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Prefixes and Suffixes (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Prefixes and Suffixes ONLY — un-, re-, dis-, pre-, "
+        "-ful, -less, -ness, -ly, -ment. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Vocabulary (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Vocabulary ONLY — word meanings, synonyms, antonyms, "
+        "homophones, homonyms, idioms. Use Class 4 level words. NEVER generate arithmetic or maths questions.\n"
+    ),
+    "Reading Comprehension (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Reading Comprehension ONLY — read a passage "
+        "and answer questions. Include the passage in question_text. Use Class 4 level text. "
+        "NEVER generate arithmetic or maths questions.\n"
+    ),
 }
 
 REGION_CONTEXT: dict[str, dict[str, str]] = {
@@ -2966,24 +4128,40 @@ _REASONING_LANGUAGE = re.compile(
 
 _BLANK_MARKER = re.compile(r"(_{2,}|\?{1,}|□|▢|\[ *\])")
 
+# English-specific validation patterns
+_GRAMMAR_ERROR_LANGUAGE = re.compile(
+    r"(mistake|error|wrong|incorrect|correct\s+(the|it|this)|find.*(wrong|mistake|error)"
+    r"|spot the|what is wrong|rewrite.*correct|fix the)",
+    re.IGNORECASE,
+)
+
+_ENGLISH_REASONING_LANGUAGE = re.compile(
+    r"(explain|why|which.*(better|correct|appropriate|suitable)"
+    r"|how do you know|in your own words|what would happen"
+    r"|give a reason|think about|what if|create|write your own"
+    r"|make up|compose|describe|imagine)",
+    re.IGNORECASE,
+)
+
 _WRONG_ANSWER_RE = re.compile(
     r"(?:\bgot\s+|answer\s+is\s+|=\s*|found.*?(?:sum|answer|total).*?(?:to be|is|as)\s+)(\d{2,})",
     re.IGNORECASE,
 )
 
 
-def validate_question(q: dict, slot_type: str) -> list[str]:
+def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> list[str]:
     """Validate a single generated question against slot constraints."""
     issues: list[str] = []
     fmt = q.get("format", "")
     text = q.get("question_text", "")
     answer = q.get("answer")
+    is_english = subject and subject.lower() == "english"
 
-    allowed = VALID_FORMATS.get(slot_type, set())
+    allowed = get_valid_formats(subject).get(slot_type, set())
     if fmt not in allowed:
         issues.append(f"format '{fmt}' not allowed for {slot_type}; expected one of {sorted(allowed)}")
 
-    if _FORBIDDEN_VISUAL_PHRASES.search(text):
+    if not is_english and _FORBIDDEN_VISUAL_PHRASES.search(text):
         issues.append("question_text references visuals/arrays/diagrams that aren't rendered")
 
     if answer is None or (isinstance(answer, str) and not answer.strip()):
@@ -2992,6 +4170,26 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
     if not text or len(text.strip()) < 10:
         issues.append("question_text is too short or missing")
 
+    # ── English-specific validation ──
+    if is_english:
+        if slot_type == "error_detection":
+            if not _GRAMMAR_ERROR_LANGUAGE.search(text):
+                issues.append("English error_detection must present a grammar/spelling error for student to find/correct")
+
+        if slot_type == "thinking":
+            if not _ENGLISH_REASONING_LANGUAGE.search(text):
+                issues.append("English thinking slot should involve reasoning, creativity, or explanation")
+
+        if slot_type == "representation" and fmt == "complete_sentence":
+            if not _BLANK_MARKER.search(text):
+                issues.append("complete_sentence format should contain a blank (___, ?, [])")
+
+        if q.get("pictorial_elements"):
+            issues.append("pictorial_elements must be empty (no renderer available)")
+
+        return issues
+
+    # ── Maths-specific validation below ──
     if slot_type == "error_detection":
         if not _ERROR_LANGUAGE.search(text):
             issues.append("error_detection must present a wrong answer for student to find/correct")
@@ -3000,8 +4198,6 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
         _TIME_ERROR_LANG = re.compile(r"(o'clock|:\d{2}|hour|minute|half past|quarter|clock|time|duration|a\.m\.|p\.m\.)", re.IGNORECASE)
         if _skill == "time_error_spot" and not _TIME_ERROR_LANG.search(text):
             issues.append("time error_detection must reference clock/time concepts")
-        # Note: Removed addition-specific validation that required "wrong sum and original numbers"
-        # Different topics have different error patterns (symmetry, time, money, multiplication, etc.)
 
     # Clock reading validation: verify minute hand × 5 = minutes in answer
     _skill = q.get("skill_tag", "")
@@ -3011,7 +4207,6 @@ def validate_question(q: dict, slot_type: str) -> list[str]:
         if mh_match:
             hand_pos = int(mh_match.group(1))
             expected_min = 0 if hand_pos == 12 else hand_pos * 5
-            # Check answer contains the correct minutes
             answer_str = str(answer).strip() if answer else ""
             _ANS_TIME_RE = re.compile(r"(\d{1,2}):(\d{2})")
             ans_match = _ANS_TIME_RE.search(answer_str)
@@ -3446,6 +4641,26 @@ def enrich_error_spots(questions: list[dict]) -> None:
                 spec["student_answer"] = int(wrong) if not isinstance(wrong, int) else wrong
 
 
+def normalize_text_answer(answer: str) -> str:
+    """Normalize a text answer: strip, lowercase, collapse whitespace, remove trailing punctuation."""
+    ans = answer.strip().lower()
+    ans = re.sub(r"\s+", " ", ans)
+    ans = ans.rstrip(".,;:!?")
+    return ans
+
+
+def normalize_english_answers(questions: list[dict]) -> None:
+    """Normalize English answers — clean up whitespace and ensure non-empty."""
+    for q in questions:
+        answer = q.get("answer")
+        if isinstance(answer, str):
+            cleaned = answer.strip()
+            if cleaned:
+                q["answer"] = cleaned
+            else:
+                logger.warning("normalize_english_answers: empty answer for q%s", q.get("id"))
+
+
 def grade_student_answer(question: dict, student_answer: str) -> dict:
     """
     Deterministic grading:
@@ -3742,13 +4957,14 @@ def verify_visual_contract(questions: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def enforce_slot_counts(questions: list[dict], slot_plan: list[str]) -> list[dict]:
+def enforce_slot_counts(questions: list[dict], slot_plan: list[str], subject: str = "Mathematics") -> list[dict]:
     """Deterministically trim extras / fill gaps so output matches slot_plan exactly.
 
     - If a slot_type has too many questions: keep only the first N (by position).
     - If a slot_type has too few: synthesize minimal fallback placeholders.
     Mutates nothing; returns a new list.
     """
+    formats = get_valid_formats(subject)
     expected_counts = Counter(slot_plan)
     by_slot: dict[str, list[dict]] = {st: [] for st in SLOT_ORDER}
     for q in questions:
@@ -3770,7 +4986,7 @@ def enforce_slot_counts(questions: list[dict], slot_plan: list[str]) -> list[dic
                 "slot_type": st,
                 "role": st,
                 "skill_tag": st,
-                "format": sorted(VALID_FORMATS[st])[0],
+                "format": sorted(formats.get(st, {"unknown"}))[0],
                 "question_text": f"[Slot fill for {st} question]",
                 "pictorial_elements": [],
                 "answer": "",
@@ -4054,10 +5270,12 @@ def generate_question(
         language_instruction=lang_instruction,
     )
 
+    sys_prompt = QUESTION_SYSTEM_ENGLISH if subject and subject.lower() == "english" else QUESTION_SYSTEM
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": QUESTION_SYSTEM},
+            {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_msg},
         ],
         temperature=0.8,
@@ -4175,21 +5393,22 @@ def _regen_question_for_topic(
     return None
 
 
-def backfill_format(q: dict, directive: dict | None = None) -> None:
+def backfill_format(q: dict, directive: dict | None = None, subject: str = "Mathematics") -> None:
     """Ensure q['format'] is never missing or blank. Mutates q in place.
 
     Resolution order:
     1. Existing q['format'] (trimmed)
     2. directive['format_hint']
-    3. DEFAULT_FORMAT_BY_SLOT_TYPE[slot_type]
+    3. DEFAULT_FORMAT_BY_SLOT_TYPE[slot_type] (subject-aware)
     Raises ValueError if slot_type is unknown and format is still empty.
     """
+    defaults = get_default_format_by_slot(subject)
     fmt = (q.get("format") or "").strip()
     if not fmt:
         fmt = ((directive or {}).get("format_hint") or "").strip()
     if not fmt:
         slot_type = q.get("slot_type") or (directive or {}).get("slot_type") or ""
-        fmt = DEFAULT_FORMAT_BY_SLOT_TYPE.get(slot_type, "")
+        fmt = defaults.get(slot_type, "")
         if not fmt:
             raise ValueError(f"backfill_format: unknown slot_type '{slot_type}', cannot assign default format")
     q["format"] = fmt
@@ -4516,18 +5735,18 @@ def run_slot_pipeline(
                 )
 
                 # Backfill format BEFORE validation so validators never see ""
-                backfill_format(q, {"slot_type": slot_type, **directive})
+                backfill_format(q, {"slot_type": slot_type, **directive}, subject=subject)
 
                 # Set skill_tag early so validators can use it
                 q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or slot_type
 
-                issues = validate_question(q, slot_type)
+                issues = validate_question(q, slot_type, subject=subject)
 
                 # Extra check: error_detection must use backend-provided numbers (arithmetic only)
                 _q_skill = q.get("skill_tag", "")
                 if slot_type == "error_detection" and variant and _q_skill not in (
                     "time_error_spot", "money_error_spot", "symmetry_error_spot", "pattern_error_spot",
-                ):
+                ) and not (subject and subject.lower() == "english"):
                     err_issues = validate_error_uses_backend_numbers(q, variant)
                     issues.extend(err_issues)
 
@@ -4566,12 +5785,13 @@ def run_slot_pipeline(
                 logger.error("Q%d/%d attempt %d error: %s", i + 1, len(slot_plan), attempt + 1, exc)
 
         if not generated:
+            _fallback_formats = get_valid_formats(subject)
             questions.append({
                 "id": i + 1,
                 "slot_type": slot_type,
                 "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
-                "format": sorted(VALID_FORMATS[slot_type])[0],
+                "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
                 "question_text": f"[Generation failed for {slot_type} question]",
                 "pictorial_elements": [],
                 "answer": "",
@@ -4592,23 +5812,32 @@ def run_slot_pipeline(
     )
 
     # 7a. Normalize answers (deterministic, no LLM)
-    normalize_estimation_answers(questions)
-    normalize_error_spot_answers(questions)
+    _is_english = subject and subject.lower() == "english"
+    if _is_english:
+        normalize_english_answers(questions)
+    else:
+        normalize_estimation_answers(questions)
+        normalize_error_spot_answers(questions)
 
     # 7b. Enforce slot counts — trim extras, fill gaps
-    questions = enforce_slot_counts(questions, slot_plan)
+    questions = enforce_slot_counts(questions, slot_plan, subject=subject)
 
     # 8. Validate whole worksheet (against the actual plan, not SLOT_PLANS)
     ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
     if ws_issues:
         logger.warning("Worksheet-level issues: %s", ws_issues)
 
-    carry_issues = validate_hard_difficulty_carry(questions, difficulty, topic=topic)
-    if carry_issues:
-        logger.warning("Hard-difficulty carry issues: %s", carry_issues)
+    if not _is_english:
+        carry_issues = validate_hard_difficulty_carry(questions, difficulty, topic=topic)
+        if carry_issues:
+            logger.warning("Hard-difficulty carry issues: %s", carry_issues)
 
-    # 8b. Hydrate visuals (deterministic, no LLM)
-    questions = hydrate_visuals(questions)
+    # 8b. Hydrate visuals (deterministic, no LLM) — skip for English (text-only)
+    if not _is_english:
+        questions = hydrate_visuals(questions)
+    else:
+        for q in questions:
+            q["representation"] = "TEXT_ONLY"
 
     # 8d. Enrich error_spot questions with student_answer
     enrich_error_spots(questions)
