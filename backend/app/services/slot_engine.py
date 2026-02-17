@@ -15063,6 +15063,47 @@ def generate_question(
     return q
 
 
+
+def _validate_question_matches_topic(q: dict, skill_tag: str, disallowed_keywords: list[str]) -> tuple[bool, str]:
+    """Validate that generated question respects topic constraints.
+    
+    Returns: (is_valid, reason)
+    """
+    text = (q.get("question_text", "") + " " + str(q.get("answer", ""))).lower()
+    
+    # Check disallowed keywords
+    for kw in disallowed_keywords:
+        if kw in text:
+            return (False, f"Contains disallowed keyword '{kw}'")
+    
+    # Topic-specific validation
+    if "shape" in skill_tag.lower():
+        # Must contain shape words
+        shape_words = ["circle", "square", "triangle", "rectangle", "shape", "corner", "side", "round", "straight"]
+        if not any(w in text for w in shape_words):
+            return (False, "Shape question missing shape vocabulary")
+        # Must NOT contain arithmetic
+        bad_words = ["add", "subtract", "+", "-", "×", "÷", "column", "carry", "borrow"]
+        if any(w in text for w in bad_words):
+            return (False, "Shape question contains arithmetic")
+    
+    if "time" in skill_tag.lower():
+        time_words = ["clock", "hour", "minute", "morning", "afternoon", "evening", "day", "week", "o'clock"]
+        if not any(w in text for w in time_words):
+            return (False, "Time question missing time vocabulary")
+    
+    if "money" in skill_tag.lower():
+        money_words = ["rupee", "coin", "note", "cost", "price", "buy", "₹", "rs"]
+        if not any(w in text for w in money_words):
+            return (False, "Money question missing money vocabulary")
+    
+    if "measure" in skill_tag.lower():
+        measure_words = ["longer", "shorter", "taller", "heavier", "lighter", "length", "weight", "height"]
+        if not any(w in text for w in measure_words):
+            return (False, "Measurement question missing measurement vocabulary")
+    
+    return (True, "OK")
+
 # ── Topic-specific vocabulary for constraint validation ──
 _TOPIC_VOCABULARY: dict[str, list[str]] = {
     "shape": ["circle", "square", "triangle", "rectangle", "shape", "corner", "side", "round", "sides", "corners"],
@@ -15074,6 +15115,39 @@ _TOPIC_VOCABULARY: dict[str, list[str]] = {
     "fraction": ["fraction", "half", "quarter", "third", "equal parts", "whole", "numerator", "denominator"],
 }
 
+
+
+def _check_format_variety(questions: list[dict]) -> list[str]:
+    """Check for repetitive question formats and return warnings.
+    
+    Returns list of warning messages.
+    """
+    warnings = []
+    
+    # Check for identical question starts
+    starts = []
+    for q in questions:
+        text = q.get("question_text", "")
+        # First 30 chars
+        start = text[:30].strip() if text else ""
+        if start:
+            starts.append(start)
+    
+    # Count duplicates
+    from collections import Counter
+    counts = Counter(starts)
+    for start, count in counts.items():
+        if count >= 3:
+            warnings.append(f"Format repeated {count} times: '{start}...'")
+    
+    # Check for exact duplicates
+    texts = [q.get("question_text", "").strip() for q in questions]
+    text_counts = Counter(texts)
+    for text, count in text_counts.items():
+        if count > 1 and text:
+            warnings.append(f"EXACT DUPLICATE ({count}x): '{text[:50]}...'")
+    
+    return warnings
 
 def _get_topic_vocab_key(skill_tag: str, topic: str) -> str | None:
     """Map a skill_tag or topic to a vocabulary key for constraint checking."""

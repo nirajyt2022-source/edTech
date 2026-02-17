@@ -250,7 +250,8 @@
             "Fractions (halves and quarters)",
             "Time (reading clock, calendar)",
             "Money (bills and change)",
-            "Measurement (length, weight)"
+            "Measurement (length)",
+            "Measurement (weight)"
           ],
           "logic_tags": [
             "numerical",
