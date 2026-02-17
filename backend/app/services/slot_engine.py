@@ -6780,6 +6780,7 @@ def run_slot_pipeline(
     if ws_issues:
         logger.warning("Worksheet-level issues: %s", ws_issues)
 
+    carry_issues: list[str] | None = None
     if not _is_text_only:
         carry_issues = validate_hard_difficulty_carry(questions, difficulty, topic=topic)
         if carry_issues:
