@@ -124,6 +124,15 @@ const SCIENCE_TOPICS_BY_GRADE: Record<number, string[]> = {
   ],
 }
 
+// Grade-aware Computer topics (matching backend TOPIC_PROFILES keys)
+const COMPUTER_TOPICS_BY_GRADE: Record<number, string[]> = {
+  1: ['Parts of Computer (Class 1)', 'Using Mouse and Keyboard (Class 1)'],
+  2: ['Desktop and Icons (Class 2)', 'Basic Typing (Class 2)', 'Special Keys (Class 2)'],
+  3: ['MS Paint Basics (Class 3)', 'Keyboard Shortcuts (Class 3)', 'Files and Folders (Class 3)'],
+  4: ['MS Word Basics (Class 4)', 'Introduction to Scratch (Class 4)', 'Internet Safety (Class 4)'],
+  5: ['Scratch Programming (Class 5)', 'Internet Basics (Class 5)', 'MS PowerPoint Basics (Class 5)', 'Digital Citizenship (Class 5)'],
+}
+
 // Grade-aware Hindi topics (matching backend TOPIC_PROFILES keys)
 const HINDI_TOPICS_BY_GRADE: Record<number, string[]> = {
   3: ['Varnamala (Class 3)', 'Matras (Class 3)', 'Shabd Rachna (Class 3)', 'Vakya Rachna (Class 3)', 'Kahani Lekhan (Class 3)'],
@@ -445,6 +454,13 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         const gradeNum = parseInt(grade.replace('Class ', ''))
         if (!isNaN(gradeNum) && SCIENCE_TOPICS_BY_GRADE[gradeNum]) {
           return SCIENCE_TOPICS_BY_GRADE[gradeNum]
+        }
+      }
+      // Grade-aware Computer topics
+      if (subject === 'Computer' && grade) {
+        const gradeNum = parseInt(grade.replace('Class ', ''))
+        if (!isNaN(gradeNum) && COMPUTER_TOPICS_BY_GRADE[gradeNum]) {
+          return COMPUTER_TOPICS_BY_GRADE[gradeNum]
         }
       }
       // Grade-aware Hindi topics

@@ -172,7 +172,7 @@ def get_valid_formats(subject: str = "Mathematics") -> dict[str, set[str]]:
     """Return the VALID_FORMATS dict for the given subject."""
     if subject and subject.lower() == "english":
         return VALID_FORMATS_ENGLISH
-    if subject and subject.lower() == "science":
+    if subject and subject.lower() in ("science", "computer"):
         return VALID_FORMATS_SCIENCE
     if subject and subject.lower() == "hindi":
         return VALID_FORMATS_HINDI
@@ -183,7 +183,7 @@ def get_default_format_by_slot(subject: str = "Mathematics") -> dict[str, str]:
     """Return the DEFAULT_FORMAT_BY_SLOT_TYPE dict for the given subject."""
     if subject and subject.lower() == "english":
         return DEFAULT_FORMAT_BY_SLOT_TYPE_ENGLISH
-    if subject and subject.lower() == "science":
+    if subject and subject.lower() in ("science", "computer"):
         return DEFAULT_FORMAT_BY_SLOT_TYPE_SCIENCE
     if subject and subject.lower() == "hindi":
         return DEFAULT_FORMAT_BY_SLOT_TYPE_HINDI
@@ -899,6 +899,97 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "hin_kahani_complete": ("representation", "complete_sentence_hindi"),
     "hin_kahani_error": ("error_detection", "error_spot_hindi"),
     "hin_kahani_thinking": ("thinking", "creative_writing_hindi"),
+    # ── Computer Science skill tags ──────────────────────────
+    # Parts of Computer (Class 1)
+    "comp_c1_parts_identify": ("recognition", "pick_correct_science"),
+    "comp_c1_parts_apply": ("application", "explain_why_science"),
+    "comp_c1_parts_represent": ("representation", "fill_diagram"),
+    "comp_c1_parts_error": ("error_detection", "error_spot_science"),
+    "comp_c1_parts_thinking": ("thinking", "thinking_science"),
+    # Using Mouse and Keyboard (Class 1)
+    "comp_c1_mouse_identify": ("recognition", "true_false"),
+    "comp_c1_mouse_apply": ("application", "give_example"),
+    "comp_c1_mouse_represent": ("representation", "sequence_steps"),
+    "comp_c1_mouse_error": ("error_detection", "error_spot_science"),
+    "comp_c1_mouse_thinking": ("thinking", "thinking_science"),
+    # Desktop and Icons (Class 2)
+    "comp_c2_desktop_identify": ("recognition", "pick_correct_science"),
+    "comp_c2_desktop_apply": ("application", "explain_why_science"),
+    "comp_c2_desktop_represent": ("representation", "fill_diagram"),
+    "comp_c2_desktop_error": ("error_detection", "error_spot_science"),
+    "comp_c2_desktop_thinking": ("thinking", "thinking_science"),
+    # Basic Typing (Class 2)
+    "comp_c2_typing_identify": ("recognition", "true_false"),
+    "comp_c2_typing_apply": ("application", "give_example"),
+    "comp_c2_typing_represent": ("representation", "sequence_steps"),
+    "comp_c2_typing_error": ("error_detection", "error_spot_science"),
+    "comp_c2_typing_thinking": ("thinking", "thinking_science"),
+    # Special Keys (Class 2)
+    "comp_c2_special_identify": ("recognition", "pick_correct_science"),
+    "comp_c2_special_apply": ("application", "explain_why_science"),
+    "comp_c2_special_represent": ("representation", "fill_diagram"),
+    "comp_c2_special_error": ("error_detection", "error_spot_science"),
+    "comp_c2_special_thinking": ("thinking", "thinking_science"),
+    # MS Paint Basics (Class 3)
+    "comp_c3_paint_identify": ("recognition", "pick_correct_science"),
+    "comp_c3_paint_apply": ("application", "give_example"),
+    "comp_c3_paint_represent": ("representation", "sequence_steps"),
+    "comp_c3_paint_error": ("error_detection", "error_spot_science"),
+    "comp_c3_paint_thinking": ("thinking", "thinking_science"),
+    # Keyboard Shortcuts (Class 3)
+    "comp_c3_shortcuts_identify": ("recognition", "pick_correct_science"),
+    "comp_c3_shortcuts_apply": ("application", "explain_why_science"),
+    "comp_c3_shortcuts_represent": ("representation", "fill_diagram"),
+    "comp_c3_shortcuts_error": ("error_detection", "error_spot_science"),
+    "comp_c3_shortcuts_thinking": ("thinking", "thinking_science"),
+    # Files and Folders (Class 3)
+    "comp_c3_files_identify": ("recognition", "true_false"),
+    "comp_c3_files_apply": ("application", "give_example"),
+    "comp_c3_files_represent": ("representation", "sequence_steps"),
+    "comp_c3_files_error": ("error_detection", "error_spot_science"),
+    "comp_c3_files_thinking": ("thinking", "thinking_science"),
+    # MS Word Basics (Class 4)
+    "comp_c4_word_identify": ("recognition", "pick_correct_science"),
+    "comp_c4_word_apply": ("application", "explain_why_science"),
+    "comp_c4_word_represent": ("representation", "sequence_steps"),
+    "comp_c4_word_error": ("error_detection", "error_spot_science"),
+    "comp_c4_word_thinking": ("thinking", "thinking_science"),
+    # Introduction to Scratch (Class 4)
+    "comp_c4_scratch_identify": ("recognition", "pick_correct_science"),
+    "comp_c4_scratch_apply": ("application", "give_example"),
+    "comp_c4_scratch_represent": ("representation", "sequence_steps"),
+    "comp_c4_scratch_error": ("error_detection", "error_spot_science"),
+    "comp_c4_scratch_thinking": ("thinking", "thinking_science"),
+    # Internet Safety (Class 4)
+    "comp_c4_safety_identify": ("recognition", "true_false"),
+    "comp_c4_safety_apply": ("application", "explain_why_science"),
+    "comp_c4_safety_represent": ("representation", "sequence_steps"),
+    "comp_c4_safety_error": ("error_detection", "error_spot_science"),
+    "comp_c4_safety_thinking": ("thinking", "thinking_science"),
+    # Scratch Programming (Class 5)
+    "comp_c5_scratch_identify": ("recognition", "pick_correct_science"),
+    "comp_c5_scratch_apply": ("application", "explain_why_science"),
+    "comp_c5_scratch_represent": ("representation", "sequence_steps"),
+    "comp_c5_scratch_error": ("error_detection", "error_spot_science"),
+    "comp_c5_scratch_thinking": ("thinking", "thinking_science"),
+    # Internet Basics (Class 5)
+    "comp_c5_internet_identify": ("recognition", "pick_correct_science"),
+    "comp_c5_internet_apply": ("application", "give_example"),
+    "comp_c5_internet_represent": ("representation", "sequence_steps"),
+    "comp_c5_internet_error": ("error_detection", "error_spot_science"),
+    "comp_c5_internet_thinking": ("thinking", "thinking_science"),
+    # MS PowerPoint Basics (Class 5)
+    "comp_c5_ppt_identify": ("recognition", "pick_correct_science"),
+    "comp_c5_ppt_apply": ("application", "explain_why_science"),
+    "comp_c5_ppt_represent": ("representation", "sequence_steps"),
+    "comp_c5_ppt_error": ("error_detection", "error_spot_science"),
+    "comp_c5_ppt_thinking": ("thinking", "thinking_science"),
+    # Digital Citizenship (Class 5)
+    "comp_c5_digital_identify": ("recognition", "true_false"),
+    "comp_c5_digital_apply": ("application", "explain_why_science"),
+    "comp_c5_digital_represent": ("representation", "sequence_steps"),
+    "comp_c5_digital_error": ("error_detection", "error_spot_science"),
+    "comp_c5_digital_thinking": ("thinking", "thinking_science"),
 }
 
 SLOT_INSTRUCTIONS: dict[str, str] = {
@@ -1564,6 +1655,86 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Read and understand short Hindi stories and passages",
         "Answer comprehension questions about a Hindi passage",
         "Write a short paragraph or story in Hindi",
+    ],
+    # ── Computer Science Class 1 (2 topics) ──
+    "Parts of Computer (Class 1)": [
+        "Identify the main parts of a computer: monitor, keyboard, mouse, CPU, speaker",
+        "Describe the function of each computer part",
+        "Explain how computer parts work together",
+    ],
+    "Using Mouse and Keyboard (Class 1)": [
+        "Demonstrate basic mouse actions: left click, right click, drag",
+        "Identify the keys on a keyboard and practise typing letters",
+        "Follow step-by-step instructions to use the mouse and keyboard",
+    ],
+    # ── Computer Science Class 2 (3 topics) ──
+    "Desktop and Icons (Class 2)": [
+        "Identify parts of the desktop: icons, taskbar, start menu, wallpaper",
+        "Open and close applications using desktop icons",
+        "Navigate the start menu to find programs",
+    ],
+    "Basic Typing (Class 2)": [
+        "Place fingers correctly on the home row keys",
+        "Type simple words and sentences using proper posture",
+        "Identify and use special keys: Space, Enter, Backspace",
+    ],
+    "Special Keys (Class 2)": [
+        "Identify special keys: Enter, Space, Backspace, Shift, Caps Lock, Tab",
+        "Explain the function of each special key",
+        "Use special keys correctly while typing",
+    ],
+    # ── Computer Science Class 3 (3 topics) ──
+    "MS Paint Basics (Class 3)": [
+        "Use drawing tools in MS Paint: pencil, brush, fill, eraser",
+        "Draw basic shapes and colour them using the colour palette",
+        "Save and open a drawing file in MS Paint",
+    ],
+    "Keyboard Shortcuts (Class 3)": [
+        "Recall common keyboard shortcuts: Ctrl+C, Ctrl+V, Ctrl+Z, Ctrl+S",
+        "Use keyboard shortcuts to copy, paste, undo, and save",
+        "Explain when and why keyboard shortcuts are useful",
+    ],
+    "Files and Folders (Class 3)": [
+        "Create, rename, and delete files and folders",
+        "Organise files into appropriate folders",
+        "Navigate folder structures to find saved files",
+    ],
+    # ── Computer Science Class 4 (3 topics) ──
+    "MS Word Basics (Class 4)": [
+        "Type and format text in MS Word: bold, italic, underline",
+        "Change font size, font style, and text colour",
+        "Save, open, and print a document in MS Word",
+    ],
+    "Introduction to Scratch (Class 4)": [
+        "Identify Scratch interface elements: stage, sprites, script area",
+        "Create simple animations using motion and looks blocks",
+        "Use event blocks to start and control scripts",
+    ],
+    "Internet Safety (Class 4)": [
+        "Create strong passwords and keep them safe",
+        "Identify personal information that should not be shared online",
+        "Recognise unsafe websites and cyberbullying situations",
+    ],
+    # ── Computer Science Class 5 (4 topics) ──
+    "Scratch Programming (Class 5)": [
+        "Use variables, conditionals, and loops in Scratch programs",
+        "Create interactive games with broadcasting and events",
+        "Debug and improve Scratch projects logically",
+    ],
+    "Internet Basics (Class 5)": [
+        "Navigate a web browser and enter URLs to visit websites",
+        "Use search engines to find information safely",
+        "Compose and send an email with proper format",
+    ],
+    "MS PowerPoint Basics (Class 5)": [
+        "Create a presentation with text, images, and shapes",
+        "Add slide transitions and basic animations",
+        "Present a slideshow to an audience effectively",
+    ],
+    "Digital Citizenship (Class 5)": [
+        "Practise online etiquette and respectful communication",
+        "Understand the concept of digital footprint and privacy",
+        "Recognise copyright rules and responsible use of digital content",
     ],
 }
 
@@ -2474,6 +2645,116 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "a story about a kind auto-rickshaw driver", "a tale about sharing tiffin at school",
         "a passage about planting trees on Van Mahotsav", "a story about a brave girl saving a bird",
         "a tale about Diwali preparations at home", "a passage about a visit to the Taj Mahal",
+    ],
+    # ── Computer Science Class 1 (2 topics) ──
+    "Parts of Computer (Class 1)": [
+        "Riya learning computer parts in her school lab", "Aman pointing to the monitor during IT class",
+        "a computer lab in a government school in Jaipur", "Meena using the mouse for the first time",
+        "a new computer arriving at a village school", "Arjun asking his teacher about the CPU box",
+        "Priya listening to a rhyme on computer speakers", "the keyboard in the Atal Tinkering Lab",
+        "Dadi watching her grandson use a computer", "a computer corner in a Delhi library",
+    ],
+    "Using Mouse and Keyboard (Class 1)": [
+        "Ravi practising left-click to open a game", "Ananya learning to type her name on the keyboard",
+        "dragging an icon in the school computer lab", "Kiran right-clicking to see a menu",
+        "a typing game in an Atal Tinkering Lab", "Sita learning mouse clicks on a donated laptop",
+        "Arun scrolling through a picture gallery", "practising mouse control in a Pune school",
+        "clicking on letters in an alphabet game", "a teacher showing double-click in IT class",
+    ],
+    # ── Computer Science Class 2 (3 topics) ──
+    "Desktop and Icons (Class 2)": [
+        "Priya finding the Recycle Bin icon on her desktop", "Rohit opening Paint from the Start Menu",
+        "the school computer showing a Taj Mahal wallpaper", "Meena spotting the taskbar at the bottom",
+        "Aman arranging desktop icons in his father's shop", "finding the My Computer icon in the school lab",
+        "a desktop with folders named Hindi, Maths, English", "Kavita clicking the Start button for the first time",
+        "the computer teacher explaining the desktop layout", "desktop icons at a cyber cafe in a small town",
+    ],
+    "Basic Typing (Class 2)": [
+        "Arjun placing fingers on A-S-D-F in typing class", "Sneha typing her school name in Notepad",
+        "a typing speed test in the school computer lab", "Ravi learning correct sitting posture for typing",
+        "practising home row keys in an IT period", "Meena typing a short Hindi sentence using a keyboard",
+        "a typing tutor game in the Atal Tinkering Lab", "Kiran practising J-K-L keys in her school",
+        "typing a Diwali greeting card message", "Aman learning to type without looking at the keyboard",
+    ],
+    "Special Keys (Class 2)": [
+        "Riya pressing Enter to go to the next line", "Aman using Backspace to erase a spelling mistake",
+        "Sneha pressing Space bar between two words", "the teacher explaining Shift key for capital letters",
+        "Kiran pressing Caps Lock to type her name in capitals", "using Tab key to indent a paragraph",
+        "Arjun pressing Escape to close a dialog box", "practising Delete key in a school typing exercise",
+        "Meena using Shift+A to type a capital A", "exploring special keys during IT period in a Bangalore school",
+    ],
+    # ── Computer Science Class 3 (3 topics) ──
+    "MS Paint Basics (Class 3)": [
+        "Riya drawing the Indian flag in MS Paint", "Aman colouring a rangoli pattern using the fill tool",
+        "drawing a mango tree using pencil and brush tools", "Sneha erasing a mistake with the eraser tool",
+        "creating a Diwali greeting card in MS Paint", "drawing shapes for a maths diagram",
+        "Kiran painting a sunset scene using the colour palette", "saving a drawing as 'MyArt' on the desktop",
+        "the IT teacher showing the text tool in Paint", "drawing a cricket bat and ball in the school lab",
+    ],
+    "Keyboard Shortcuts (Class 3)": [
+        "Aman pressing Ctrl+C to copy text for a school project", "Riya using Ctrl+V to paste a paragraph",
+        "pressing Ctrl+Z to undo a mistake in a document", "Sneha saving her essay with Ctrl+S",
+        "using Alt+Tab to switch between Paint and Word", "the teacher showing Ctrl+A to select all text",
+        "Kiran pressing Ctrl+P to print a Diwali card", "using Ctrl+B to make a heading bold",
+        "pressing Ctrl+X to cut a sentence and move it", "practising shortcuts during a school computer quiz",
+    ],
+    "Files and Folders (Class 3)": [
+        "Riya creating a folder called 'Class 3 Homework'", "Aman renaming a file from 'Untitled' to 'MyEssay'",
+        "organising photos from a school picnic into folders", "deleting an old file from the Downloads folder",
+        "Sneha moving her drawing from Desktop to My Documents", "creating subject-wise folders: Maths, Science, English",
+        "finding a saved project in the school computer", "the teacher explaining file extensions like .txt and .png",
+        "copying a file to a pen drive for a school project", "Kiran searching for a lost file using the search bar",
+    ],
+    # ── Computer Science Class 4 (3 topics) ──
+    "MS Word Basics (Class 4)": [
+        "Riya typing an essay about Mahatma Gandhi in MS Word", "Aman making a heading bold and underlined",
+        "changing the font to Comic Sans for a school poster", "Sneha inserting a page border for her project",
+        "typing a letter to the principal using MS Word", "Kiran changing font colour to red for a title",
+        "saving a document as 'IndependenceDay_Essay'", "the teacher showing how to insert a table",
+        "Arjun increasing font size to 16 for the heading", "printing a holiday homework sheet from MS Word",
+    ],
+    "Introduction to Scratch (Class 4)": [
+        "Riya making a cat sprite walk across the stage", "Aman adding a cricket ground backdrop in Scratch",
+        "creating a Diwali animation with fireworks sprites", "Sneha using a loop to make a sprite dance",
+        "programming a sprite to say 'Namaste' when clicked", "the teacher explaining the green flag event block",
+        "Kiran changing a sprite costume for animation", "making a mango fall from a tree using motion blocks",
+        "creating a simple quiz game about Indian states", "Arjun using repeat block to draw a square",
+    ],
+    "Internet Safety (Class 4)": [
+        "Riya creating a strong password for her school account", "Aman learning not to share his address online",
+        "a lesson about safe browsing in the school IT lab", "Sneha spotting a suspicious email and not clicking the link",
+        "the teacher explaining why we should not talk to strangers online", "Kiran reporting a mean comment to her teacher",
+        "understanding privacy settings on a kids' website", "Arjun learning what personal information means",
+        "a poster about cyberbullying at a Bangalore school", "discussing online safety rules during IT period",
+    ],
+    # ── Computer Science Class 5 (4 topics) ──
+    "Scratch Programming (Class 5)": [
+        "Riya using a variable to keep score in a cricket game", "Aman using if-else to check quiz answers in Scratch",
+        "creating a maze game with arrow key controls", "Sneha using broadcast to switch scenes in a story",
+        "programming a Diwali fireworks animation with loops", "Kiran debugging a script that moves the wrong way",
+        "making a multiplication quiz game in Scratch", "using a repeat-until block for a racing game",
+        "Arjun creating a clone-based game with falling mangoes", "presenting a Scratch project in the school science fair",
+    ],
+    "Internet Basics (Class 5)": [
+        "Riya typing a URL in the browser to visit a kids' encyclopedia", "Aman using Google to search for Indian freedom fighters",
+        "Sneha composing an email to her teacher about homework", "learning about browser tabs in the school IT lab",
+        "Kiran downloading a PDF worksheet from her school website", "the teacher explaining what a search engine does",
+        "Arjun bookmarking a useful maths practice website", "understanding the address bar and home button in Chrome",
+        "sending an email with an attachment for a school project", "comparing different search engines like Google and Bing",
+    ],
+    "MS PowerPoint Basics (Class 5)": [
+        "Riya creating a presentation about the Solar System", "Aman adding a slide transition for a science project",
+        "inserting a photo of the Taj Mahal into a slide", "Sneha adding bullet points about Indian festivals",
+        "the teacher showing how to add animation to text", "Kiran presenting her PPT on Indian wildlife to the class",
+        "creating a title slide with the school name and logo", "Arjun adding a chart showing monsoon rainfall data",
+        "saving a presentation as 'MyProject.pptx'", "practising slideshow mode before the school assembly",
+    ],
+    "Digital Citizenship (Class 5)": [
+        "Riya learning about digital footprint in her IT class", "Aman understanding why copying images without permission is wrong",
+        "a class discussion about online etiquette at a Delhi school", "Sneha learning the difference between sharing and oversharing",
+        "the teacher explaining Creative Commons licenses", "Kiran reporting a fake account to the school counsellor",
+        "Arjun learning responsible use of Wikipedia for projects", "understanding what cyberbullying looks like and how to stop it",
+        "a poster-making activity about safe internet use", "discussing respectful comments and replies during IT class",
     ],
 }
 
@@ -4845,6 +5126,266 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "hin_kahani_thinking", "count": 1},
         ],
     },
+    # ── Computer Science Class 1 (2 topics) ──────────────────────────
+    "Parts of Computer (Class 1)": {
+        "allowed_skill_tags": [
+            "comp_c1_parts_identify", "comp_c1_parts_apply", "comp_c1_parts_represent",
+            "comp_c1_parts_error", "comp_c1_parts_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c1_parts_identify", "count": 2},
+            {"skill_tag": "comp_c1_parts_apply", "count": 3},
+            {"skill_tag": "comp_c1_parts_represent", "count": 2},
+            {"skill_tag": "comp_c1_parts_error", "count": 2},
+            {"skill_tag": "comp_c1_parts_thinking", "count": 1},
+        ],
+    },
+    "Using Mouse and Keyboard (Class 1)": {
+        "allowed_skill_tags": [
+            "comp_c1_mouse_identify", "comp_c1_mouse_apply", "comp_c1_mouse_represent",
+            "comp_c1_mouse_error", "comp_c1_mouse_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c1_mouse_identify", "count": 2},
+            {"skill_tag": "comp_c1_mouse_apply", "count": 3},
+            {"skill_tag": "comp_c1_mouse_represent", "count": 2},
+            {"skill_tag": "comp_c1_mouse_error", "count": 2},
+            {"skill_tag": "comp_c1_mouse_thinking", "count": 1},
+        ],
+    },
+    # ── Computer Science Class 2 (3 topics) ──────────────────────────
+    "Desktop and Icons (Class 2)": {
+        "allowed_skill_tags": [
+            "comp_c2_desktop_identify", "comp_c2_desktop_apply", "comp_c2_desktop_represent",
+            "comp_c2_desktop_error", "comp_c2_desktop_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c2_desktop_identify", "count": 2},
+            {"skill_tag": "comp_c2_desktop_apply", "count": 3},
+            {"skill_tag": "comp_c2_desktop_represent", "count": 2},
+            {"skill_tag": "comp_c2_desktop_error", "count": 2},
+            {"skill_tag": "comp_c2_desktop_thinking", "count": 1},
+        ],
+    },
+    "Basic Typing (Class 2)": {
+        "allowed_skill_tags": [
+            "comp_c2_typing_identify", "comp_c2_typing_apply", "comp_c2_typing_represent",
+            "comp_c2_typing_error", "comp_c2_typing_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c2_typing_identify", "count": 2},
+            {"skill_tag": "comp_c2_typing_apply", "count": 3},
+            {"skill_tag": "comp_c2_typing_represent", "count": 2},
+            {"skill_tag": "comp_c2_typing_error", "count": 2},
+            {"skill_tag": "comp_c2_typing_thinking", "count": 1},
+        ],
+    },
+    "Special Keys (Class 2)": {
+        "allowed_skill_tags": [
+            "comp_c2_special_identify", "comp_c2_special_apply", "comp_c2_special_represent",
+            "comp_c2_special_error", "comp_c2_special_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c2_special_identify", "count": 2},
+            {"skill_tag": "comp_c2_special_apply", "count": 3},
+            {"skill_tag": "comp_c2_special_represent", "count": 2},
+            {"skill_tag": "comp_c2_special_error", "count": 2},
+            {"skill_tag": "comp_c2_special_thinking", "count": 1},
+        ],
+    },
+    # ── Computer Science Class 3 (3 topics) ──────────────────────────
+    "MS Paint Basics (Class 3)": {
+        "allowed_skill_tags": [
+            "comp_c3_paint_identify", "comp_c3_paint_apply", "comp_c3_paint_represent",
+            "comp_c3_paint_error", "comp_c3_paint_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c3_paint_identify", "count": 2},
+            {"skill_tag": "comp_c3_paint_apply", "count": 3},
+            {"skill_tag": "comp_c3_paint_represent", "count": 2},
+            {"skill_tag": "comp_c3_paint_error", "count": 2},
+            {"skill_tag": "comp_c3_paint_thinking", "count": 1},
+        ],
+    },
+    "Keyboard Shortcuts (Class 3)": {
+        "allowed_skill_tags": [
+            "comp_c3_shortcuts_identify", "comp_c3_shortcuts_apply", "comp_c3_shortcuts_represent",
+            "comp_c3_shortcuts_error", "comp_c3_shortcuts_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c3_shortcuts_identify", "count": 2},
+            {"skill_tag": "comp_c3_shortcuts_apply", "count": 3},
+            {"skill_tag": "comp_c3_shortcuts_represent", "count": 2},
+            {"skill_tag": "comp_c3_shortcuts_error", "count": 2},
+            {"skill_tag": "comp_c3_shortcuts_thinking", "count": 1},
+        ],
+    },
+    "Files and Folders (Class 3)": {
+        "allowed_skill_tags": [
+            "comp_c3_files_identify", "comp_c3_files_apply", "comp_c3_files_represent",
+            "comp_c3_files_error", "comp_c3_files_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c3_files_identify", "count": 2},
+            {"skill_tag": "comp_c3_files_apply", "count": 3},
+            {"skill_tag": "comp_c3_files_represent", "count": 2},
+            {"skill_tag": "comp_c3_files_error", "count": 2},
+            {"skill_tag": "comp_c3_files_thinking", "count": 1},
+        ],
+    },
+    # ── Computer Science Class 4 (3 topics) ──────────────────────────
+    "MS Word Basics (Class 4)": {
+        "allowed_skill_tags": [
+            "comp_c4_word_identify", "comp_c4_word_apply", "comp_c4_word_represent",
+            "comp_c4_word_error", "comp_c4_word_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c4_word_identify", "count": 2},
+            {"skill_tag": "comp_c4_word_apply", "count": 3},
+            {"skill_tag": "comp_c4_word_represent", "count": 2},
+            {"skill_tag": "comp_c4_word_error", "count": 2},
+            {"skill_tag": "comp_c4_word_thinking", "count": 1},
+        ],
+    },
+    "Introduction to Scratch (Class 4)": {
+        "allowed_skill_tags": [
+            "comp_c4_scratch_identify", "comp_c4_scratch_apply", "comp_c4_scratch_represent",
+            "comp_c4_scratch_error", "comp_c4_scratch_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c4_scratch_identify", "count": 2},
+            {"skill_tag": "comp_c4_scratch_apply", "count": 3},
+            {"skill_tag": "comp_c4_scratch_represent", "count": 2},
+            {"skill_tag": "comp_c4_scratch_error", "count": 2},
+            {"skill_tag": "comp_c4_scratch_thinking", "count": 1},
+        ],
+    },
+    "Internet Safety (Class 4)": {
+        "allowed_skill_tags": [
+            "comp_c4_safety_identify", "comp_c4_safety_apply", "comp_c4_safety_represent",
+            "comp_c4_safety_error", "comp_c4_safety_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c4_safety_identify", "count": 2},
+            {"skill_tag": "comp_c4_safety_apply", "count": 3},
+            {"skill_tag": "comp_c4_safety_represent", "count": 2},
+            {"skill_tag": "comp_c4_safety_error", "count": 2},
+            {"skill_tag": "comp_c4_safety_thinking", "count": 1},
+        ],
+    },
+    # ── Computer Science Class 5 (4 topics) ──────────────────────────
+    "Scratch Programming (Class 5)": {
+        "allowed_skill_tags": [
+            "comp_c5_scratch_identify", "comp_c5_scratch_apply", "comp_c5_scratch_represent",
+            "comp_c5_scratch_error", "comp_c5_scratch_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c5_scratch_identify", "count": 2},
+            {"skill_tag": "comp_c5_scratch_apply", "count": 3},
+            {"skill_tag": "comp_c5_scratch_represent", "count": 2},
+            {"skill_tag": "comp_c5_scratch_error", "count": 2},
+            {"skill_tag": "comp_c5_scratch_thinking", "count": 1},
+        ],
+    },
+    "Internet Basics (Class 5)": {
+        "allowed_skill_tags": [
+            "comp_c5_internet_identify", "comp_c5_internet_apply", "comp_c5_internet_represent",
+            "comp_c5_internet_error", "comp_c5_internet_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c5_internet_identify", "count": 2},
+            {"skill_tag": "comp_c5_internet_apply", "count": 3},
+            {"skill_tag": "comp_c5_internet_represent", "count": 2},
+            {"skill_tag": "comp_c5_internet_error", "count": 2},
+            {"skill_tag": "comp_c5_internet_thinking", "count": 1},
+        ],
+    },
+    "MS PowerPoint Basics (Class 5)": {
+        "allowed_skill_tags": [
+            "comp_c5_ppt_identify", "comp_c5_ppt_apply", "comp_c5_ppt_represent",
+            "comp_c5_ppt_error", "comp_c5_ppt_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c5_ppt_identify", "count": 2},
+            {"skill_tag": "comp_c5_ppt_apply", "count": 3},
+            {"skill_tag": "comp_c5_ppt_represent", "count": 2},
+            {"skill_tag": "comp_c5_ppt_error", "count": 2},
+            {"skill_tag": "comp_c5_ppt_thinking", "count": 1},
+        ],
+    },
+    "Digital Citizenship (Class 5)": {
+        "allowed_skill_tags": [
+            "comp_c5_digital_identify", "comp_c5_digital_apply", "comp_c5_digital_represent",
+            "comp_c5_digital_error", "comp_c5_digital_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Computer",
+        "default_recipe": [
+            {"skill_tag": "comp_c5_digital_identify", "count": 2},
+            {"skill_tag": "comp_c5_digital_apply", "count": 3},
+            {"skill_tag": "comp_c5_digital_represent", "count": 2},
+            {"skill_tag": "comp_c5_digital_error", "count": 2},
+            {"skill_tag": "comp_c5_digital_thinking", "count": 1},
+        ],
+    },
 }
 
 
@@ -5270,6 +5811,63 @@ _TOPIC_ALIASES: dict[str, str] = {
     "hindi story": "Kahani Lekhan (Class 3)",
     "hindi stories": "Kahani Lekhan (Class 3)",
     "hindi comprehension": "Kahani Lekhan (Class 3)",
+    # ── Computer Science aliases ──
+    "parts of computer": "Parts of Computer (Class 1)",
+    "class 1 parts of computer": "Parts of Computer (Class 1)",
+    "computer parts": "Parts of Computer (Class 1)",
+    "computer parts class 1": "Parts of Computer (Class 1)",
+    "using mouse and keyboard": "Using Mouse and Keyboard (Class 1)",
+    "class 1 mouse and keyboard": "Using Mouse and Keyboard (Class 1)",
+    "mouse and keyboard": "Using Mouse and Keyboard (Class 1)",
+    "mouse keyboard": "Using Mouse and Keyboard (Class 1)",
+    "desktop and icons": "Desktop and Icons (Class 2)",
+    "class 2 desktop and icons": "Desktop and Icons (Class 2)",
+    "desktop icons": "Desktop and Icons (Class 2)",
+    "basic typing": "Basic Typing (Class 2)",
+    "class 2 basic typing": "Basic Typing (Class 2)",
+    "typing basics": "Basic Typing (Class 2)",
+    "typing class 2": "Basic Typing (Class 2)",
+    "special keys": "Special Keys (Class 2)",
+    "class 2 special keys": "Special Keys (Class 2)",
+    "keyboard special keys": "Special Keys (Class 2)",
+    "ms paint basics": "MS Paint Basics (Class 3)",
+    "class 3 ms paint": "MS Paint Basics (Class 3)",
+    "ms paint": "MS Paint Basics (Class 3)",
+    "paint basics": "MS Paint Basics (Class 3)",
+    "keyboard shortcuts": "Keyboard Shortcuts (Class 3)",
+    "class 3 keyboard shortcuts": "Keyboard Shortcuts (Class 3)",
+    "shortcuts": "Keyboard Shortcuts (Class 3)",
+    "files and folders": "Files and Folders (Class 3)",
+    "class 3 files and folders": "Files and Folders (Class 3)",
+    "file management": "Files and Folders (Class 3)",
+    "ms word basics": "MS Word Basics (Class 4)",
+    "class 4 ms word": "MS Word Basics (Class 4)",
+    "ms word": "MS Word Basics (Class 4)",
+    "word basics": "MS Word Basics (Class 4)",
+    "introduction to scratch": "Introduction to Scratch (Class 4)",
+    "class 4 scratch": "Introduction to Scratch (Class 4)",
+    "scratch class 4": "Introduction to Scratch (Class 4)",
+    "scratch intro": "Introduction to Scratch (Class 4)",
+    "internet safety": "Internet Safety (Class 4)",
+    "class 4 internet safety": "Internet Safety (Class 4)",
+    "online safety": "Internet Safety (Class 4)",
+    "cyber safety": "Internet Safety (Class 4)",
+    "scratch programming": "Scratch Programming (Class 5)",
+    "class 5 scratch": "Scratch Programming (Class 5)",
+    "scratch class 5": "Scratch Programming (Class 5)",
+    "advanced scratch": "Scratch Programming (Class 5)",
+    "internet basics": "Internet Basics (Class 5)",
+    "class 5 internet": "Internet Basics (Class 5)",
+    "internet class 5": "Internet Basics (Class 5)",
+    "ms powerpoint basics": "MS PowerPoint Basics (Class 5)",
+    "class 5 powerpoint": "MS PowerPoint Basics (Class 5)",
+    "powerpoint basics": "MS PowerPoint Basics (Class 5)",
+    "ms powerpoint": "MS PowerPoint Basics (Class 5)",
+    "ppt basics": "MS PowerPoint Basics (Class 5)",
+    "digital citizenship": "Digital Citizenship (Class 5)",
+    "class 5 digital citizenship": "Digital Citizenship (Class 5)",
+    "digital citizen": "Digital Citizenship (Class 5)",
+    "online etiquette": "Digital Citizenship (Class 5)",
 }
 
 
@@ -7958,6 +8556,297 @@ def _build_slot_instruction(
         }
         return hin_kahani_ctx + hin_kahani_map.get(_skill_tag, "About Hindi Kahani Lekhan.")
 
+    # ── Computer Science: Parts of Computer (Class 1) ──
+    if _skill_tag.startswith("comp_c1_parts_"):
+        comp_parts_ctx = (
+            "Topic: Parts of Computer (Class 1 Computer, CBSE). "
+            "Cover the 5 main parts: Monitor (screen), Keyboard (typing), Mouse (pointing/clicking), "
+            "CPU (brain of the computer), Speaker (sound). "
+            "Use Indian school contexts: computer lab, IT period. "
+            "Keep vocabulary VERY simple — Class 1 level. NO technical specs. "
+            "DO NOT repeat the same computer part or scenario. "
+        )
+        comp_parts_map = {
+            "comp_c1_parts_identify": "format: pick_correct_science. Identify a computer part. Example: 'Which part of the computer do you use to type letters? (a) Mouse (b) Monitor (c) Keyboard (d) Speaker' -> Keyboard",
+            "comp_c1_parts_apply": "format: explain_why_science. Simple explanation. Example: 'Why do we need a monitor? Tell one reason.'",
+            "comp_c1_parts_represent": "format: fill_diagram. Match parts to functions. Example: 'Match: Mouse -> ___. Speaker -> ___. (pointing / sound)'",
+            "comp_c1_parts_error": "format: error_spot_science. Present a WRONG fact. Example: 'We use the speaker to type letters.' Ask: 'Find the mistake and correct it.'",
+            "comp_c1_parts_thinking": "format: thinking_science. Simple reasoning. Example: 'What would happen if a computer had no monitor? Tell one thing.'",
+        }
+        return comp_parts_ctx + comp_parts_map.get(_skill_tag, "About parts of a computer.")
+
+    # ── Computer Science: Using Mouse and Keyboard (Class 1) ──
+    if _skill_tag.startswith("comp_c1_mouse_"):
+        comp_mouse_ctx = (
+            "Topic: Using Mouse and Keyboard (Class 1 Computer, CBSE). "
+            "Cover mouse actions: left click, right click, double click, drag. "
+            "Cover keyboard basics: typing letters, space bar, enter key. "
+            "Use Indian school contexts: IT class, computer lab. "
+            "Keep vocabulary VERY simple — Class 1 level. "
+            "DO NOT repeat the same action or scenario. "
+        )
+        comp_mouse_map = {
+            "comp_c1_mouse_identify": "format: true_false. True/false about mouse or keyboard. Example: 'True or False: We use the left button of the mouse to click on things.' -> True",
+            "comp_c1_mouse_apply": "format: give_example. Ask for examples. Example: 'Name two things you can do with a mouse.'",
+            "comp_c1_mouse_represent": "format: sequence_steps. Order the steps. Example: 'Put in order: (a) Move the mouse pointer to the icon (b) Double-click (c) The program opens'",
+            "comp_c1_mouse_error": "format: error_spot_science. Present a WRONG fact. Example: 'To open a program, you right-click on it once.' Ask: 'Find the mistake and correct it.'",
+            "comp_c1_mouse_thinking": "format: thinking_science. Simple reasoning. Example: 'Why do you think we need both a mouse and a keyboard? Can we use only one?'",
+        }
+        return comp_mouse_ctx + comp_mouse_map.get(_skill_tag, "About using mouse and keyboard.")
+
+    # ── Computer Science: Desktop and Icons (Class 2) ──
+    if _skill_tag.startswith("comp_c2_desktop_"):
+        comp_desktop_ctx = (
+            "Topic: Desktop and Icons (Class 2 Computer, CBSE). "
+            "Cover desktop elements: icons, taskbar, start menu, wallpaper, Recycle Bin. "
+            "Explain how to open programs, find applications. "
+            "Use Indian school contexts: school computer lab, IT period. "
+            "Keep vocabulary simple — Class 2 level. "
+            "DO NOT repeat the same desktop element or scenario. "
+        )
+        comp_desktop_map = {
+            "comp_c2_desktop_identify": "format: pick_correct_science. Identify desktop elements. Example: 'Where do you click to find all programs on the computer? (a) Recycle Bin (b) Taskbar (c) Start Menu (d) Wallpaper' -> Start Menu",
+            "comp_c2_desktop_apply": "format: explain_why_science. Explain purpose. Example: 'Why do we have a Recycle Bin on the desktop?'",
+            "comp_c2_desktop_represent": "format: fill_diagram. Match elements to functions. Example: 'Match: Start Menu -> ___. Recycle Bin -> ___. (find programs / deleted files)'",
+            "comp_c2_desktop_error": "format: error_spot_science. Present a WRONG fact. Example: 'The Recycle Bin is used to open new programs.' Ask: 'Find the mistake and correct it.'",
+            "comp_c2_desktop_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think icons have different pictures on them?'",
+        }
+        return comp_desktop_ctx + comp_desktop_map.get(_skill_tag, "About desktop and icons.")
+
+    # ── Computer Science: Basic Typing (Class 2) ──
+    if _skill_tag.startswith("comp_c2_typing_"):
+        comp_typing_ctx = (
+            "Topic: Basic Typing (Class 2 Computer, CBSE). "
+            "Cover home row keys (A, S, D, F, J, K, L), correct posture, "
+            "proper finger placement, typing simple words and sentences. "
+            "Use Indian school contexts: IT class, typing practice. "
+            "Keep vocabulary simple — Class 2 level. "
+            "DO NOT repeat the same typing concept. "
+        )
+        comp_typing_map = {
+            "comp_c2_typing_identify": "format: true_false. True/false about typing. Example: 'True or False: The home row keys are A, S, D, F, J, K, L.' -> True",
+            "comp_c2_typing_apply": "format: give_example. Ask about typing practice. Example: 'Name the four keys your left hand rests on in the home row.'",
+            "comp_c2_typing_represent": "format: sequence_steps. Order typing steps. Example: 'Put in order: (a) Place fingers on home row (b) Sit straight (c) Look at the screen and type'",
+            "comp_c2_typing_error": "format: error_spot_science. Present a WRONG fact. Example: 'For correct typing posture, you should slouch in your chair.' Ask: 'Find the mistake and correct it.'",
+            "comp_c2_typing_thinking": "format: thinking_science. Reasoning question. Example: 'Why is it important to sit straight while typing? Give one reason.'",
+        }
+        return comp_typing_ctx + comp_typing_map.get(_skill_tag, "About basic typing.")
+
+    # ── Computer Science: Special Keys (Class 2) ──
+    if _skill_tag.startswith("comp_c2_special_"):
+        comp_special_ctx = (
+            "Topic: Special Keys (Class 2 Computer, CBSE). "
+            "Cover special keys: Enter (new line/confirm), Space (gap between words), "
+            "Backspace (erase left), Shift (capital letters), Caps Lock (all capitals), "
+            "Tab (indent), Delete (erase right), Escape (cancel). "
+            "Use Indian school contexts: typing class, IT lab. "
+            "Keep vocabulary simple — Class 2 level. "
+            "DO NOT repeat the same key. "
+        )
+        comp_special_map = {
+            "comp_c2_special_identify": "format: pick_correct_science. Identify special keys. Example: 'Which key do you press to erase the letter on the left? (a) Enter (b) Backspace (c) Space (d) Shift' -> Backspace",
+            "comp_c2_special_apply": "format: explain_why_science. Explain purpose. Example: 'Why do we press the Space bar while typing a sentence?'",
+            "comp_c2_special_represent": "format: fill_diagram. Match keys to functions. Example: 'Match: Enter -> ___. Caps Lock -> ___. (new line / all capitals)'",
+            "comp_c2_special_error": "format: error_spot_science. Present a WRONG fact. Example: 'Pressing Caps Lock makes all letters small.' Ask: 'Find the mistake and correct it.'",
+            "comp_c2_special_thinking": "format: thinking_science. Reasoning question. Example: 'What is the difference between Backspace and Delete? Explain in your own words.'",
+        }
+        return comp_special_ctx + comp_special_map.get(_skill_tag, "About special keys.")
+
+    # ── Computer Science: MS Paint Basics (Class 3) ──
+    if _skill_tag.startswith("comp_c3_paint_"):
+        comp_paint_ctx = (
+            "Topic: MS Paint Basics (Class 3 Computer, CBSE). "
+            "Cover tools: pencil, brush, fill (colour bucket), eraser, text tool, "
+            "shape tools (rectangle, circle, line), colour palette, save/open. "
+            "Use Indian contexts: drawing Indian flag, rangoli, Diwali card. "
+            "Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same tool or scenario. "
+        )
+        comp_paint_map = {
+            "comp_c3_paint_identify": "format: pick_correct_science. Identify Paint tools. Example: 'Which tool fills a closed shape with colour in MS Paint? (a) Pencil (b) Eraser (c) Fill with colour (d) Brush' -> Fill with colour",
+            "comp_c3_paint_apply": "format: give_example. Ask about using tools. Example: 'Name two shapes you can draw using the Shapes tool in MS Paint.'",
+            "comp_c3_paint_represent": "format: sequence_steps. Order drawing steps. Example: 'Put in order to draw and colour a circle: (a) Select the circle shape (b) Choose a colour (c) Draw the circle (d) Use fill tool to colour it'",
+            "comp_c3_paint_error": "format: error_spot_science. Present a WRONG fact. Example: 'The eraser tool is used to add colour to a shape.' Ask: 'Find the mistake and correct it.'",
+            "comp_c3_paint_thinking": "format: thinking_science. Reasoning question. Example: 'Why should you save your drawing before closing MS Paint? What could happen if you don't?'",
+        }
+        return comp_paint_ctx + comp_paint_map.get(_skill_tag, "About MS Paint basics.")
+
+    # ── Computer Science: Keyboard Shortcuts (Class 3) ──
+    if _skill_tag.startswith("comp_c3_shortcuts_"):
+        comp_shortcuts_ctx = (
+            "Topic: Keyboard Shortcuts (Class 3 Computer, CBSE). "
+            "Cover shortcuts: Ctrl+C (copy), Ctrl+V (paste), Ctrl+X (cut), "
+            "Ctrl+Z (undo), Ctrl+S (save), Ctrl+A (select all), Ctrl+P (print), "
+            "Alt+Tab (switch windows), Ctrl+B (bold). "
+            "Use Indian school contexts: school projects, IT class. "
+            "Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same shortcut. "
+        )
+        comp_shortcuts_map = {
+            "comp_c3_shortcuts_identify": "format: pick_correct_science. Identify shortcuts. Example: 'Which keyboard shortcut is used to copy text? (a) Ctrl+V (b) Ctrl+C (c) Ctrl+Z (d) Ctrl+S' -> Ctrl+C",
+            "comp_c3_shortcuts_apply": "format: explain_why_science. Explain usage. Example: 'Why is Ctrl+Z a useful shortcut? When would you use it?'",
+            "comp_c3_shortcuts_represent": "format: fill_diagram. Match shortcuts to actions. Example: 'Match: Ctrl+C -> ___. Ctrl+V -> ___. (copy / paste)'",
+            "comp_c3_shortcuts_error": "format: error_spot_science. Present a WRONG fact. Example: 'Ctrl+S is the shortcut to paste text.' Ask: 'Find the mistake and correct it.'",
+            "comp_c3_shortcuts_thinking": "format: thinking_science. Reasoning question. Example: 'Why are keyboard shortcuts faster than using the mouse to do the same thing? Give an example.'",
+        }
+        return comp_shortcuts_ctx + comp_shortcuts_map.get(_skill_tag, "About keyboard shortcuts.")
+
+    # ── Computer Science: Files and Folders (Class 3) ──
+    if _skill_tag.startswith("comp_c3_files_"):
+        comp_files_ctx = (
+            "Topic: Files and Folders (Class 3 Computer, CBSE). "
+            "Cover: creating folders, renaming files, deleting files, moving files, "
+            "file extensions (.txt, .png, .docx), organising into subject folders. "
+            "Use Indian school contexts: saving school projects, organising homework. "
+            "Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same file operation. "
+        )
+        comp_files_map = {
+            "comp_c3_files_identify": "format: true_false. True/false about files. Example: 'True or False: A folder can contain other folders inside it.' -> True",
+            "comp_c3_files_apply": "format: give_example. Ask about file management. Example: 'Name two types of files you can save on a computer (like documents and pictures).'",
+            "comp_c3_files_represent": "format: sequence_steps. Order steps for file operations. Example: 'Put in order to create a new folder: (a) Right-click on desktop (b) Click New (c) Click Folder (d) Type the folder name'",
+            "comp_c3_files_error": "format: error_spot_science. Present a WRONG fact. Example: 'To rename a file, you should delete it and create a new one.' Ask: 'Find the mistake and correct it.'",
+            "comp_c3_files_thinking": "format: thinking_science. Reasoning question. Example: 'Why is it a good idea to organise your files into folders? What could happen if you don't?'",
+        }
+        return comp_files_ctx + comp_files_map.get(_skill_tag, "About files and folders.")
+
+    # ── Computer Science: MS Word Basics (Class 4) ──
+    if _skill_tag.startswith("comp_c4_word_"):
+        comp_word_ctx = (
+            "Topic: MS Word Basics (Class 4 Computer, CBSE). "
+            "Cover: typing text, formatting (bold/italic/underline), font size, font colour, "
+            "alignment (left/centre/right), save/open/print, inserting tables and page borders. "
+            "Use Indian school contexts: writing essays, school projects, letters. "
+            "Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same formatting feature. "
+        )
+        comp_word_map = {
+            "comp_c4_word_identify": "format: pick_correct_science. Identify Word features. Example: 'Which button do you click to make text bold in MS Word? (a) I (b) B (c) U (d) A' -> B",
+            "comp_c4_word_apply": "format: explain_why_science. Explain usage. Example: 'Why would you change the font size of a heading in your essay? Give one reason.'",
+            "comp_c4_word_represent": "format: sequence_steps. Order steps. Example: 'Put in order to save a document: (a) Click File (b) Click Save As (c) Type file name (d) Click Save'",
+            "comp_c4_word_error": "format: error_spot_science. Present a WRONG fact. Example: 'To underline text in MS Word, press Ctrl+B.' Ask: 'Find the mistake and correct it.'",
+            "comp_c4_word_thinking": "format: thinking_science. Reasoning question. Example: 'Why is it important to save your document regularly while working on it?'",
+        }
+        return comp_word_ctx + comp_word_map.get(_skill_tag, "About MS Word basics.")
+
+    # ── Computer Science: Introduction to Scratch (Class 4) ──
+    if _skill_tag.startswith("comp_c4_scratch_"):
+        comp_scratch4_ctx = (
+            "Topic: Introduction to Scratch (Class 4 Computer, CBSE). "
+            "Cover: Scratch interface (stage, sprite, script area), motion blocks (move, turn, glide), "
+            "looks blocks (say, think, change costume), events (green flag, when clicked), "
+            "simple loops (repeat), basic animation. "
+            "Use Indian contexts: making a sprite say Namaste, cricket game sprite. "
+            "Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same block type or scenario. "
+        )
+        comp_scratch4_map = {
+            "comp_c4_scratch_identify": "format: pick_correct_science. Identify Scratch elements. Example: 'What is the character in Scratch called? (a) Actor (b) Sprite (c) Avatar (d) Player' -> Sprite",
+            "comp_c4_scratch_apply": "format: give_example. Ask about Scratch usage. Example: 'Name two things a sprite can do using Motion blocks.'",
+            "comp_c4_scratch_represent": "format: sequence_steps. Order steps to create animation. Example: 'Put in order: (a) Add a sprite (b) Drag motion blocks (c) Click green flag to run (d) Add a backdrop'",
+            "comp_c4_scratch_error": "format: error_spot_science. Present a WRONG fact. Example: 'In Scratch, the Stage is where you write your code blocks.' Ask: 'Find the mistake and correct it.'",
+            "comp_c4_scratch_thinking": "format: thinking_science. Reasoning question. Example: 'Why do we use a loop (repeat) block instead of writing the same command many times?'",
+        }
+        return comp_scratch4_ctx + comp_scratch4_map.get(_skill_tag, "About Introduction to Scratch.")
+
+    # ── Computer Science: Internet Safety (Class 4) ──
+    if _skill_tag.startswith("comp_c4_safety_"):
+        comp_safety_ctx = (
+            "Topic: Internet Safety (Class 4 Computer, CBSE). "
+            "Cover: strong passwords, personal information (name, address, phone), "
+            "safe browsing, not clicking unknown links, cyberbullying (recognising, reporting), "
+            "talking to a trusted adult about online problems. "
+            "Use Indian school contexts: school email accounts, kids' websites. "
+            "Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same safety rule. "
+        )
+        comp_safety_map = {
+            "comp_c4_safety_identify": "format: true_false. True/false about internet safety. Example: 'True or False: You should share your password with your best friend.' -> False",
+            "comp_c4_safety_apply": "format: explain_why_science. Explain safety rules. Example: 'Why should you never share your home address with someone you meet online?'",
+            "comp_c4_safety_represent": "format: sequence_steps. Order safety steps. Example: 'Put in order if you see a mean message online: (a) Don't reply (b) Take a screenshot (c) Tell your teacher or parent (d) Block the person'",
+            "comp_c4_safety_error": "format: error_spot_science. Present a WRONG fact. Example: 'A strong password should be your birthday so you can remember it easily.' Ask: 'Find the mistake and correct it.'",
+            "comp_c4_safety_thinking": "format: thinking_science. Reasoning question. Example: 'Why is a password like \"abc123\" not a good password? What makes a password strong?'",
+        }
+        return comp_safety_ctx + comp_safety_map.get(_skill_tag, "About internet safety.")
+
+    # ── Computer Science: Scratch Programming (Class 5) ──
+    if _skill_tag.startswith("comp_c5_scratch_"):
+        comp_scratch5_ctx = (
+            "Topic: Scratch Programming (Class 5 Computer, CBSE). "
+            "Cover: variables (score, lives), conditionals (if-then, if-then-else), "
+            "loops (repeat, forever, repeat until), broadcasting (messages between sprites), "
+            "events, cloning, game creation, debugging. "
+            "Use Indian contexts: cricket score game, mango catching game. "
+            "Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same programming concept. "
+        )
+        comp_scratch5_map = {
+            "comp_c5_scratch_identify": "format: pick_correct_science. Identify programming concepts. Example: 'Which block in Scratch is used to store a score? (a) Motion (b) Variable (c) Looks (d) Sound' -> Variable",
+            "comp_c5_scratch_apply": "format: explain_why_science. Explain programming concepts. Example: 'Why do we use an if-then block in Scratch? Give an example of when you would use it.'",
+            "comp_c5_scratch_represent": "format: sequence_steps. Order steps to build a game. Example: 'Put in order to make a catching game: (a) Create a falling object (b) Add score variable (c) Use if-touching to increase score (d) Add forever loop'",
+            "comp_c5_scratch_error": "format: error_spot_science. Present a WRONG fact. Example: 'A forever loop in Scratch runs the code inside it exactly 10 times.' Ask: 'Find the mistake and correct it.'",
+            "comp_c5_scratch_thinking": "format: thinking_science. Reasoning question. Example: 'How would you make a game more difficult as the player scores more points? Describe your idea.'",
+        }
+        return comp_scratch5_ctx + comp_scratch5_map.get(_skill_tag, "About Scratch programming.")
+
+    # ── Computer Science: Internet Basics (Class 5) ──
+    if _skill_tag.startswith("comp_c5_internet_"):
+        comp_internet_ctx = (
+            "Topic: Internet Basics (Class 5 Computer, CBSE). "
+            "Cover: web browser (Chrome, Edge), URL/address bar, search engines (Google), "
+            "email basics (compose, send, reply, attach), downloading files, bookmarks, tabs. "
+            "Use Indian school contexts: searching for school projects, emailing teachers. "
+            "Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same internet concept. "
+        )
+        comp_internet_map = {
+            "comp_c5_internet_identify": "format: pick_correct_science. Identify internet concepts. Example: 'What do you type in the address bar of a browser? (a) Password (b) Email (c) URL/web address (d) File name' -> URL/web address",
+            "comp_c5_internet_apply": "format: give_example. Ask about internet usage. Example: 'Name two things you need to include when composing an email.'",
+            "comp_c5_internet_represent": "format: sequence_steps. Order steps. Example: 'Put in order to send an email: (a) Type the message (b) Click Compose (c) Enter the email address (d) Click Send'",
+            "comp_c5_internet_error": "format: error_spot_science. Present a WRONG fact. Example: 'A search engine is a program that saves your files on the computer.' Ask: 'Find the mistake and correct it.'",
+            "comp_c5_internet_thinking": "format: thinking_science. Reasoning question. Example: 'Why should you check if a website is trustworthy before using information from it for a school project?'",
+        }
+        return comp_internet_ctx + comp_internet_map.get(_skill_tag, "About internet basics.")
+
+    # ── Computer Science: MS PowerPoint Basics (Class 5) ──
+    if _skill_tag.startswith("comp_c5_ppt_"):
+        comp_ppt_ctx = (
+            "Topic: MS PowerPoint Basics (Class 5 Computer, CBSE). "
+            "Cover: creating slides, adding text and images, slide layouts, "
+            "transitions (fade, wipe), basic animations, slideshow mode, presenting. "
+            "Use Indian school contexts: school presentations, science fair projects. "
+            "Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same PowerPoint feature. "
+        )
+        comp_ppt_map = {
+            "comp_c5_ppt_identify": "format: pick_correct_science. Identify PPT features. Example: 'What is a single page in a PowerPoint presentation called? (a) Document (b) Sheet (c) Slide (d) Frame' -> Slide",
+            "comp_c5_ppt_apply": "format: explain_why_science. Explain usage. Example: 'Why do we add transitions between slides in a presentation?'",
+            "comp_c5_ppt_represent": "format: sequence_steps. Order steps. Example: 'Put in order to create a presentation: (a) Open PowerPoint (b) Add a title slide (c) Add content slides (d) Add transitions (e) Start slideshow'",
+            "comp_c5_ppt_error": "format: error_spot_science. Present a WRONG fact. Example: 'A transition in PowerPoint changes the font of the text on a slide.' Ask: 'Find the mistake and correct it.'",
+            "comp_c5_ppt_thinking": "format: thinking_science. Reasoning question. Example: 'Why should you not put too much text on one slide? How does it affect your audience?'",
+        }
+        return comp_ppt_ctx + comp_ppt_map.get(_skill_tag, "About MS PowerPoint basics.")
+
+    # ── Computer Science: Digital Citizenship (Class 5) ──
+    if _skill_tag.startswith("comp_c5_digital_"):
+        comp_digital_ctx = (
+            "Topic: Digital Citizenship (Class 5 Computer, CBSE). "
+            "Cover: online etiquette (respectful comments), digital footprint (what you post stays), "
+            "copyright (not copying others' work), responsible use of technology, "
+            "privacy settings, reporting inappropriate content. "
+            "Use Indian school contexts: school projects, class WhatsApp groups. "
+            "Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same digital citizenship concept. "
+        )
+        comp_digital_map = {
+            "comp_c5_digital_identify": "format: true_false. True/false about digital citizenship. Example: 'True or False: Everything you post online can be seen by others even after you delete it.' -> True",
+            "comp_c5_digital_apply": "format: explain_why_science. Explain digital citizenship. Example: 'Why should you always ask permission before using someone else's photo or artwork for your project?'",
+            "comp_c5_digital_represent": "format: sequence_steps. Order steps. Example: 'Put in order if you find copied content in a classmate's project: (a) Tell the classmate politely (b) Explain why copying is wrong (c) Help them find original sources (d) Inform the teacher if needed'",
+            "comp_c5_digital_error": "format: error_spot_science. Present a WRONG fact. Example: 'It is okay to copy pictures from the internet for your school project without giving credit.' Ask: 'Find the mistake and correct it.'",
+            "comp_c5_digital_thinking": "format: thinking_science. Reasoning question. Example: 'What does \"digital footprint\" mean? Why should you be careful about what you post online?'",
+        }
+        return comp_digital_ctx + comp_digital_map.get(_skill_tag, "About digital citizenship.")
+
     # Check if this is a non-arithmetic topic by looking at skill_tag
     _NON_ARITHMETIC_TAGS = {
         "multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank",
@@ -7981,7 +8870,7 @@ def _build_slot_instruction(
     }
     # Include all c2_, c4_, and eng_ prefixed tags as non-arithmetic
     _NON_ARITHMETIC_TAGS.update(
-        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("c5_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_")
+        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("c5_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_") or tag.startswith("comp_")
     )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
@@ -8943,6 +9832,106 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "MUST use Devanagari script. "
         "NEVER generate arithmetic or English grammar questions.\n"
     ),
+    # ── Computer Science topic constraints ──
+    "Parts of Computer (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Parts of a Computer ONLY — "
+        "monitor, keyboard, mouse, CPU, speaker. Their names and basic functions. "
+        "Keep language VERY simple for Class 1. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Using Mouse and Keyboard (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Using Mouse and Keyboard ONLY — "
+        "left click, right click, double click, drag, typing letters, space bar, enter key. "
+        "Keep language VERY simple for Class 1. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Desktop and Icons (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Desktop and Icons ONLY — "
+        "desktop layout, icons, taskbar, start menu, wallpaper, Recycle Bin, opening programs. "
+        "Keep language simple for Class 2. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Basic Typing (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Basic Typing ONLY — "
+        "home row keys (ASDF JKL), correct posture, finger placement, typing words/sentences. "
+        "Keep language simple for Class 2. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Special Keys (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Special Keys ONLY — "
+        "Enter, Space, Backspace, Shift, Caps Lock, Tab, Delete, Escape and their functions. "
+        "Keep language simple for Class 2. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "MS Paint Basics (Class 3)": (
+        "CRITICAL: ALL questions MUST be about MS Paint ONLY — "
+        "drawing tools (pencil, brush, fill, eraser), shapes, colour palette, text tool, "
+        "save/open drawings. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Keyboard Shortcuts (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Keyboard Shortcuts ONLY — "
+        "Ctrl+C (copy), Ctrl+V (paste), Ctrl+X (cut), Ctrl+Z (undo), Ctrl+S (save), "
+        "Ctrl+A (select all), Ctrl+P (print), Alt+Tab (switch windows). "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Files and Folders (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Files and Folders ONLY — "
+        "creating, renaming, deleting, moving files/folders, file extensions, organising files. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "MS Word Basics (Class 4)": (
+        "CRITICAL: ALL questions MUST be about MS Word ONLY — "
+        "typing text, formatting (bold, italic, underline), font size/colour, alignment, "
+        "save/open/print, inserting tables and borders. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Introduction to Scratch (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Scratch programming ONLY — "
+        "sprites, stage, script area, motion blocks, looks blocks, events (green flag), "
+        "simple loops (repeat), basic animation. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Internet Safety (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Internet Safety ONLY — "
+        "strong passwords, personal information protection, safe browsing, "
+        "not clicking unknown links, cyberbullying awareness, reporting to trusted adults. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Scratch Programming (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Scratch Programming ONLY — "
+        "variables, conditionals (if-then-else), loops (repeat, forever, repeat-until), "
+        "broadcasting, cloning, events, game creation, debugging. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Internet Basics (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Internet Basics ONLY — "
+        "web browsers, URLs, search engines, email (compose, send, reply, attach), "
+        "downloading, bookmarks, tabs. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "MS PowerPoint Basics (Class 5)": (
+        "CRITICAL: ALL questions MUST be about MS PowerPoint ONLY — "
+        "slides, adding text/images, slide layouts, transitions, basic animations, "
+        "slideshow mode, presenting to an audience. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Digital Citizenship (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Digital Citizenship ONLY — "
+        "online etiquette, digital footprint, copyright, responsible use of technology, "
+        "privacy settings, reporting inappropriate content. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
 }
 
 REGION_CONTEXT: dict[str, dict[str, str]] = {
@@ -9027,7 +10016,7 @@ def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> 
     text = q.get("question_text", "")
     answer = q.get("answer")
     is_english = subject and subject.lower() == "english"
-    is_science = subject and subject.lower() == "science"
+    is_science = subject and subject.lower() in ("science", "computer")
     is_hindi = subject and subject.lower() == "hindi"
 
     allowed = get_valid_formats(subject).get(slot_type, set())
@@ -10186,7 +11175,7 @@ def generate_question(
     _subj_lower = (subject or "").lower()
     if _subj_lower == "english":
         sys_prompt = QUESTION_SYSTEM_ENGLISH
-    elif _subj_lower == "science":
+    elif _subj_lower in ("science", "computer"):
         sys_prompt = QUESTION_SYSTEM_SCIENCE
     elif _subj_lower == "hindi":
         sys_prompt = QUESTION_SYSTEM_HINDI
@@ -10734,7 +11723,7 @@ def run_slot_pipeline(
 
     # 7a. Normalize answers (deterministic, no LLM)
     _is_english = subject and subject.lower() == "english"
-    _is_science = subject and subject.lower() == "science"
+    _is_science = subject and subject.lower() in ("science", "computer")
     _is_hindi = subject and subject.lower() == "hindi"
     _is_text_only = _is_english or _is_science or _is_hindi
     if _is_text_only:

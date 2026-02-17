@@ -64,6 +64,14 @@ const SCIENCE_TOPICS: Record<string, string[]> = {
   'Class 5': ['Circulatory System', 'Respiratory & Nervous System', 'Reproduction', 'Physical & Chemical Changes', 'Forms of Energy', 'Solar System & Earth', 'Ecosystem & Food Chains'],
 }
 
+const COMPUTER_TOPICS: Record<string, string[]> = {
+  'Class 1': ['Parts of Computer', 'Mouse & Keyboard'],
+  'Class 2': ['Desktop & Icons', 'Basic Typing', 'Special Keys'],
+  'Class 3': ['MS Paint', 'Keyboard Shortcuts', 'Files & Folders'],
+  'Class 4': ['MS Word', 'Scratch', 'Internet Safety'],
+  'Class 5': ['Scratch Programming', 'Internet Basics', 'MS PowerPoint', 'Digital Citizenship'],
+}
+
 /* ─── Gold Class feature steps ─── */
 const GOLD_STEPS = [
   {
@@ -198,7 +206,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 export default function Landing({ onGetStarted, onSignIn }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Science'>('Maths')
+  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Science' | 'Computer'>('Maths')
   const [activeStep, setActiveStep] = useState(0)
 
   // Sticky nav scroll detection
@@ -222,6 +230,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
 
   const subjectData = activeSubject === 'Maths' ? MATHS_TOPICS
     : activeSubject === 'English' ? ENGLISH_TOPICS
+    : activeSubject === 'Computer' ? COMPUTER_TOPICS
     : SCIENCE_TOPICS
 
   return (
@@ -496,7 +505,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
 
           {/* Subject toggles */}
           <div className="flex justify-center gap-3 mb-10">
-            {(['Maths', 'English', 'Science'] as const).map((subj) => (
+            {(['Maths', 'English', 'Science', 'Computer'] as const).map((subj) => (
               <button
                 key={subj}
                 onClick={() => setActiveSubject(subj)}
