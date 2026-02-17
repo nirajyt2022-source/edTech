@@ -302,6 +302,189 @@ DEFAULT_MIX_RECIPE_20: list[dict] = [
     {"skill_tag": "thinking", "count": 3},
 ]
 
+# ── Learning Objectives (Gold-G5) ──────────────────────────
+# Deterministic, no LLM call. Hardcoded per topic.
+# Rendered as header box on worksheet and PDF.
+
+LEARNING_OBJECTIVES: dict[str, list[str]] = {
+    # ── Class 3 topics ──
+    "Addition (carries)": [
+        "Add 3-digit numbers where carrying is needed",
+        "Spot common addition mistakes and fix them",
+        "Solve real-life addition word problems",
+    ],
+    "Subtraction (borrowing)": [
+        "Subtract 3-digit numbers where borrowing is needed",
+        "Identify and correct common subtraction errors",
+        "Solve real-life subtraction word problems",
+    ],
+    "Addition and subtraction (3-digit)": [
+        "Add and subtract 3-digit numbers fluently",
+        "Choose the correct operation for a word problem",
+        "Spot errors in both addition and subtraction",
+    ],
+    "Multiplication (tables 2-10)": [
+        "Recall multiplication facts for tables 2 to 10",
+        "Solve multiplication word problems",
+        "Spot and fix errors in multiplication calculations",
+    ],
+    "Division basics": [
+        "Divide numbers using equal sharing and grouping",
+        "Solve simple division word problems",
+        "Understand the relationship between multiplication and division",
+    ],
+    "Numbers up to 10000": [
+        "Read, write, and compare numbers up to 10,000",
+        "Identify place value of digits in 4-digit numbers",
+        "Arrange numbers in ascending and descending order",
+    ],
+    "Fractions (halves, quarters)": [
+        "Identify halves and quarters of shapes and quantities",
+        "Compare simple fractions using visual models",
+        "Solve problems involving halves and quarters",
+    ],
+    "Fractions": [
+        "Read and write fractions with different denominators",
+        "Compare and order simple fractions",
+        "Solve word problems involving fractions",
+    ],
+    "Time (reading clock, calendar)": [
+        "Read time on analog and digital clocks",
+        "Solve problems involving days, weeks, and months",
+        "Calculate simple time durations",
+    ],
+    "Money (bills and change)": [
+        "Add and subtract amounts of money",
+        "Make change and calculate totals when shopping",
+        "Solve real-life money word problems",
+    ],
+    "Symmetry": [
+        "Identify lines of symmetry in shapes and patterns",
+        "Complete symmetric figures on a grid",
+        "Recognise symmetry in everyday objects",
+    ],
+    "Patterns and sequences": [
+        "Identify and extend number and shape patterns",
+        "Describe the rule behind a pattern",
+        "Create growing and repeating patterns",
+    ],
+    # ── Class 2 topics ──
+    "Numbers up to 1000 (Class 2)": [
+        "Read, write, and compare numbers up to 1,000",
+        "Identify place value of hundreds, tens, and ones",
+        "Arrange 3-digit numbers in order",
+    ],
+    "Addition (2-digit with carry)": [
+        "Add 2-digit numbers with carrying",
+        "Solve addition word problems with small numbers",
+        "Spot mistakes in 2-digit addition",
+    ],
+    "Subtraction (2-digit with borrow)": [
+        "Subtract 2-digit numbers with borrowing",
+        "Solve subtraction word problems with small numbers",
+        "Spot mistakes in 2-digit subtraction",
+    ],
+    "Multiplication (tables 2-5)": [
+        "Recall multiplication facts for tables 2 to 5",
+        "Use multiplication to solve simple word problems",
+        "Understand multiplication as repeated addition",
+    ],
+    "Division (sharing equally)": [
+        "Share objects equally into groups",
+        "Solve simple division problems (no remainders)",
+        "Understand division as equal sharing",
+    ],
+    "Shapes and space (2D)": [
+        "Identify and name basic 2D shapes",
+        "Describe properties of circles, squares, triangles, and rectangles",
+        "Spot shapes in everyday objects",
+    ],
+    "Measurement (length, weight)": [
+        "Measure lengths in centimetres and metres",
+        "Compare and order objects by weight",
+        "Solve simple measurement word problems",
+    ],
+    "Time (hour, half-hour)": [
+        "Tell time to the hour and half-hour",
+        "Read o'clock and half-past on a clock face",
+        "Solve simple problems about daily routines and time",
+    ],
+    "Money (coins and notes)": [
+        "Identify Indian coins and notes up to Rs 100",
+        "Add small amounts of money",
+        "Solve simple shopping word problems",
+    ],
+    "Data handling (pictographs)": [
+        "Read and interpret simple pictographs",
+        "Answer questions based on pictograph data",
+        "Collect and organise data into a pictograph",
+    ],
+    # ── Class 4 topics ──
+    "Large numbers (up to 1,00,000)": [
+        "Read, write, and compare numbers up to 1,00,000",
+        "Use the Indian place value system for 5-digit numbers",
+        "Expand and compose large numbers",
+    ],
+    "Addition and subtraction (5-digit)": [
+        "Add and subtract 5-digit numbers fluently",
+        "Solve multi-step word problems with large numbers",
+        "Estimate sums and differences of large numbers",
+    ],
+    "Multiplication (3-digit × 2-digit)": [
+        "Multiply a 3-digit number by a 2-digit number",
+        "Solve multiplication word problems with larger numbers",
+        "Estimate products using rounding",
+    ],
+    "Division (long division)": [
+        "Divide 3-digit numbers by 1-digit numbers using long division",
+        "Interpret remainders in word problems",
+        "Check division answers using multiplication",
+    ],
+    "Fractions (equivalent, comparison)": [
+        "Find equivalent fractions",
+        "Compare and order fractions with different denominators",
+        "Solve word problems involving fractions",
+    ],
+    "Decimals (tenths, hundredths)": [
+        "Read and write decimals to the hundredths place",
+        "Convert between fractions and decimals",
+        "Compare and order decimal numbers",
+    ],
+    "Geometry (angles, lines)": [
+        "Identify and classify angles as acute, right, or obtuse",
+        "Recognise parallel and perpendicular lines",
+        "Measure angles using simple tools",
+    ],
+    "Perimeter and area": [
+        "Calculate the perimeter of rectangles and squares",
+        "Calculate the area of rectangles and squares",
+        "Solve real-life problems involving perimeter and area",
+    ],
+    "Time (minutes, 24-hour clock)": [
+        "Tell time to the nearest minute",
+        "Convert between 12-hour and 24-hour clock formats",
+        "Calculate durations across hours",
+    ],
+    "Money (bills, profit/loss)": [
+        "Calculate total cost, change, and bills",
+        "Understand simple profit and loss",
+        "Solve multi-step money word problems",
+    ],
+}
+
+
+def get_learning_objectives(topic: str) -> list[str]:
+    """Return learning objectives for a topic. Falls back to empty list."""
+    from app.services.slot_engine import get_topic_profile, TOPIC_PROFILES as _TP
+    # Resolve to canonical key
+    profile = get_topic_profile(topic)
+    if profile:
+        for key, prof in _TP.items():
+            if prof is profile:
+                return LEARNING_OBJECTIVES.get(key, [])
+    return LEARNING_OBJECTIVES.get(topic, [])
+
+
 # ── Topic Profiles ──────────────────────────────────────────
 
 TOPIC_PROFILES: dict[str, dict] = {

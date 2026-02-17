@@ -215,6 +215,24 @@ class PDFService:
             spaceAfter=4,
         ))
 
+        # ── Learning objective ──
+        self.styles.add(ParagraphStyle(
+            name='ObjectiveTitle',
+            fontName='Helvetica-Bold',
+            fontSize=9.5,
+            leading=12,
+            textColor=_PRIMARY,
+            spaceAfter=4,
+        ))
+        self.styles.add(ParagraphStyle(
+            name='ObjectiveItem',
+            fontName='Helvetica',
+            fontSize=9,
+            leading=12,
+            leftIndent=12,
+            textColor=colors.Color(0.25, 0.25, 0.25),
+        ))
+
         # ── Answer key ──
         self.styles.add(ParagraphStyle(
             name='AnswerKeyTitle',
@@ -349,6 +367,12 @@ class PDFService:
 
         story.append(Spacer(1, 4))
 
+        # ── Learning Objectives (Gold-G5) ──
+        objectives = worksheet.get('learning_objectives', [])
+        if objectives:
+            self._build_learning_objectives(story, objectives)
+            story.append(Spacer(1, 6))
+
         # ── Name / Date / Score header fields ──
         self._build_header_fields(story, worksheet, questions)
 
@@ -413,6 +437,38 @@ class PDFService:
             ('LINEBELOW', (0, 0), (-1, -1), 0.5, _RULE),
         ]))
         story.append(header_table)
+
+    def _build_learning_objectives(self, story: list, objectives: list[str]) -> None:
+        """Render a learning objective box at the top of the worksheet."""
+        page_width = A4[0] - 4.0 * cm
+
+        # Build content: title + bullet items
+        obj_elements = []
+        obj_elements.append(Paragraph(
+            "Today's Learning Goal",
+            self.styles['ObjectiveTitle']
+        ))
+        for obj in objectives:
+            obj_elements.append(Paragraph(
+                f"<bullet>&bull;</bullet> {_sanitize_text(obj)}",
+                self.styles['ObjectiveItem']
+            ))
+
+        # Wrap in a single-cell table for the bordered box
+        obj_table = Table(
+            [[obj_elements]],
+            colWidths=[page_width - 1.0 * cm],
+        )
+        obj_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), _LIGHT_BG),
+            ('BOX', (0, 0), (-1, -1), 0.5, _PRIMARY),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        story.append(obj_table)
 
     def _build_single_question(self, question: dict, number: int) -> list:
         """Build elements for a single question. Returns list of flowables."""

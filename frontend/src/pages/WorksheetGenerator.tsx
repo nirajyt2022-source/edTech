@@ -65,6 +65,7 @@ interface Worksheet {
   difficulty: string
   language: string
   questions: Question[]
+  learning_objectives?: string[]
 }
 
 interface GenerateResponse {
@@ -1134,6 +1135,21 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                     <span className="text-sm">Date: ______________</span>
                     <span className="text-sm">Score: _____ / {worksheet.questions.length}</span>
                   </div>
+
+                  {/* Learning Objectives (Gold-G5) */}
+                  {worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && (
+                    <div className="mb-8 p-5 border border-primary/20 rounded-xl bg-primary/[0.03] print:border-primary/30 print:rounded-none print:p-4">
+                      <p className="font-bold text-primary text-sm mb-2 tracking-tight">Today's Learning Goal</p>
+                      <ul className="space-y-1">
+                        {worksheet.learning_objectives.map((obj, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
+                            <span className="text-primary mt-0.5 text-xs">&#10003;</span>
+                            <span>{obj}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   <div className="mb-10 p-5 bg-secondary/30 border border-border/30 rounded-xl print:border-border print:bg-gray-100 print:rounded-none print:p-4">
                     <p className="font-semibold text-foreground/80 flex items-center gap-2 mb-1 text-xs">

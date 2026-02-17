@@ -105,6 +105,7 @@ class WorksheetV1(BaseModel):
     skill_focus: str = ""
     common_mistake: str = ""
     parent_tip: str = ""
+    learning_objectives: list[str] = []
 
 
 class PDFExportRequestV1(BaseModel):
@@ -400,6 +401,7 @@ async def _generate_single_worksheet(
     )
     from app.services.slot_engine import (
         run_slot_pipeline, hydrate_visuals, build_worksheet_plan,
+        get_learning_objectives,
     )
 
     # Build worksheet plan for arithmetic topics
@@ -445,6 +447,7 @@ async def _generate_single_worksheet(
         skill_focus=meta.get("skill_focus", ""),
         common_mistake=common_mistakes[0] if common_mistakes else "",
         parent_tip=meta.get("parent_tip", ""),
+        learning_objectives=get_learning_objectives(topic),
     )
 
     # Save to database

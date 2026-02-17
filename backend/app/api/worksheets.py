@@ -15,7 +15,7 @@ from app.services.slot_engine import (
     run_slot_pipeline, hydrate_visuals, enforce_visuals_only,
     build_worksheet_plan, enrich_error_spots, grade_student_answer,
     explain_question, recommend_next_step, chain_drill_session,
-    attempt_and_next,
+    attempt_and_next, get_learning_objectives,
 )
 from app.services.mastery_dashboard import get_mastery, topic_summary, reset_skill
 from app.api.models_practice import AttemptResponse, MasteryGetResponse, TopicSummaryResponse, ResetResponse
@@ -113,6 +113,7 @@ class Worksheet(BaseModel):
     skill_focus: str = ""
     common_mistake: str = ""
     parent_tip: str = ""
+    learning_objectives: list[str] = []
 
 
 class WorksheetGenerationResponse(BaseModel):
@@ -1531,6 +1532,7 @@ async def generate_worksheet(
                     skill_focus=meta.get("skill_focus", ""),
                     common_mistake=common_mistakes[0] if common_mistakes else "",
                     parent_tip=meta.get("parent_tip", ""),
+                    learning_objectives=get_learning_objectives(skill_topic),
                 )
                 bundled.append(ws)
 
@@ -1643,6 +1645,7 @@ async def generate_worksheet(
             skill_focus=meta.get("skill_focus", ""),
             common_mistake=common_mistakes[0] if common_mistakes else "",
             parent_tip=meta.get("parent_tip", ""),
+            learning_objectives=get_learning_objectives(effective_topic),
         )
 
         end_time = datetime.now()
@@ -2121,6 +2124,7 @@ async def regenerate_worksheet(
             skill_focus=meta.get("skill_focus", ""),
             common_mistake=common_mistakes[0] if common_mistakes else "",
             parent_tip=meta.get("parent_tip", ""),
+            learning_objectives=get_learning_objectives(original["topic"]),
         )
 
         # Increment regeneration count on original worksheet
