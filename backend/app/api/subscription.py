@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/subscription", tags=["subscription"])
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
-FREE_TIER_LIMIT = 3  # worksheets per month
+from app.services.subscription_check import FREE_TIER_LIMIT  # 10 worksheets/month
 
 
 class SubscriptionStatus(BaseModel):

@@ -162,6 +162,7 @@ class AttemptPayload(BaseModel):
 # v3.8 System Prompt Builder
 # ──────────────────────────────────────────────
 
+# DEAD: not called from main pipeline [2026-02-17]
 def build_system_prompt(
     region: str = "India",
     problem_style: str = "standard",
@@ -412,6 +413,7 @@ def parse_question(q: dict, index: int, fallback_difficulty: str) -> Question:
     )
 
 
+# DEAD: not called from main pipeline [2026-02-17]
 def _fixup_question_types(data: dict) -> None:
     """Mutate data in-place: remap visual type names used as question type."""
     for q in data.get("questions", []):
@@ -473,6 +475,7 @@ def _trim_to_count(data: dict, n: int, problem_style: str, is_visual: bool) -> N
         q["id"] = f"q{i + 1}"
 
 
+# DEAD: not called from main pipeline [2026-02-17]
 def _fix_computational_answers(data: dict) -> None:
     """Force answer_type='exact' and flag missing correct_answer on computational questions."""
     for q in data.get("questions", []):
@@ -486,6 +489,7 @@ def _fix_computational_answers(data: dict) -> None:
             # flag it — validator will catch and send to repair
 
 
+# DEAD: not called from main pipeline [2026-02-17]
 def _fix_inconsistent_visuals(data: dict) -> None:
     """Fail-safe: null out broken visuals; migrate old schemas to current format."""
     for q in data.get("questions", []):
@@ -1395,9 +1399,32 @@ def _slot_to_question(q: dict, idx: int) -> Question:
 
 @router.post("/generate", response_model=WorksheetGenerationResponse)
 @instrument(route="/api/worksheets/generate", version="legacy")
-async def generate_worksheet(request: WorksheetGenerationRequest):
+async def generate_worksheet(
+    request: WorksheetGenerationRequest,
+    authorization: str = Header(None),
+):
     """Generate a new worksheet using slot-based pipeline."""
     start_time = datetime.now()
+
+    # ── Subscription enforcement ──
+    if authorization:
+        try:
+            user_id = get_user_id_from_token(authorization)
+            from app.services.subscription_check import check_and_increment_usage
+            usage = await check_and_increment_usage(user_id, supabase)
+            if not usage["allowed"]:
+                raise HTTPException(
+                    status_code=402,
+                    detail={
+                        "detail": usage["message"],
+                        "worksheets_remaining": 0,
+                        "tier": usage["tier"],
+                    },
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning("Subscription check failed (fail-open): %s", e)
 
     try:
         # ── v1.3: Multi-skill bundle ──
@@ -1978,7 +2005,7 @@ async def delete_saved_worksheet(
 # Subscription helpers
 # ──────────────────────────────────────────────
 
-FREE_TIER_LIMIT = 3  # worksheets per month
+from app.services.subscription_check import FREE_TIER_LIMIT  # 10 worksheets/month
 
 
 def check_can_generate(user_id: str) -> tuple[bool, str, dict]:

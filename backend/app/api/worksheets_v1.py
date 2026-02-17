@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Header, Response
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, field_validator
 from typing import Literal, Optional
@@ -157,12 +157,34 @@ class MasteryResetRequestV1(BaseModel):
 
 @router.post("/generate", response_model=GenerateResponse)
 @instrument(route="/api/v1/worksheets/generate", version="v1")
-async def generate_v1(request: GenerateRequestV1):
+async def generate_v1(request: GenerateRequestV1, authorization: str = Header(None)):
     from app.api.worksheets import generate_worksheet as _legacy_generate
     from app.api.worksheets import WorksheetGenerationRequest
+
+    # ── Subscription enforcement ──
+    if authorization:
+        try:
+            from app.api.worksheets import get_user_id_from_token, supabase
+            from app.services.subscription_check import check_and_increment_usage
+            user_id = get_user_id_from_token(authorization)
+            usage = await check_and_increment_usage(user_id, supabase)
+            if not usage["allowed"]:
+                raise HTTPException(
+                    status_code=402,
+                    detail={
+                        "detail": usage["message"],
+                        "worksheets_remaining": 0,
+                        "tier": usage["tier"],
+                    },
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning("Subscription check failed (fail-open): %s", e)
+
     try:
         legacy_req = WorksheetGenerationRequest(**request.model_dump())
-        result = await _legacy_generate(legacy_req)
+        result = await _legacy_generate(legacy_req, authorization=None)
         ws = result.worksheet
         logger.debug(
             "v1 /generate serializing worksheet type=%s questions=%d",

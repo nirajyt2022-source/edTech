@@ -7,6 +7,7 @@ import TeacherDashboard from './pages/TeacherDashboard'
 import ClassManager from './pages/ClassManager'
 import Auth from './pages/Auth'
 import LandingPage from './pages/LandingPage'
+import History from './pages/History'
 import RoleSelector from '@/components/RoleSelector'
 import {
   DropdownMenu,
@@ -24,7 +25,7 @@ import { ProfileProvider, useProfile } from '@/lib/profile'
 import { EngagementProvider } from '@/lib/engagement'
 import './index.css'
 
-type Page = 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes'
+type Page = 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history'
 
 interface ParsedSyllabus {
   id: string
@@ -85,10 +86,11 @@ function AppContent() {
     const isTeacherPage = ['dashboard', 'classes'].includes(currentPage)
     const isParentPage = ['generator', 'syllabus', 'children'].includes(currentPage)
 
-    if (activeRole === 'teacher' && !isTeacherPage && currentPage !== 'saved') {
+    const sharedPages = ['saved', 'history']
+    if (activeRole === 'teacher' && !isTeacherPage && !sharedPages.includes(currentPage)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPage('dashboard')
-    } else if (activeRole === 'parent' && !isParentPage && currentPage !== 'saved') {
+    } else if (activeRole === 'parent' && !isParentPage && !sharedPages.includes(currentPage)) {
       setCurrentPage('generator')
     }
   }, [activeRole, currentPage])
@@ -131,12 +133,14 @@ function AppContent() {
     { id: 'generator', label: 'Practice' },
     { id: 'classes', label: 'Classes' },
     { id: 'saved', label: 'Saved' },
+    { id: 'history', label: 'History' },
     { id: 'dashboard', label: 'Dashboard' },
   ]
 
   const parentTabs: { id: Page; label: string }[] = [
     { id: 'generator', label: 'Practice' },
     { id: 'saved', label: 'Saved' },
+    { id: 'history', label: 'History' },
     { id: 'syllabus', label: 'Syllabus' },
     { id: 'children', label: 'Profile' },
   ]
@@ -288,6 +292,9 @@ function AppContent() {
           />
         )}
         {currentPage === 'saved' && <SavedWorksheets />}
+        {currentPage === 'history' && (
+          <History onNavigateToGenerator={() => setCurrentPage('generator')} />
+        )}
         {currentPage === 'children' && <ChildProfiles />}
       </main>
     </div>
