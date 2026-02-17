@@ -12468,6 +12468,14 @@ META_USER_TEMPLATE = (
 )
 
 QUESTION_SYSTEM = (
+    "CRITICAL CONSTRAINT ENFORCEMENT:\n"
+    "- You MUST generate questions for the EXACT topic specified.\n"
+    "- If the topic is about shapes, generate ONLY shape questions.\n"
+    "- If the topic is about time, generate ONLY time questions.\n"
+    "- If the topic is about money, generate ONLY money questions.\n"
+    "- If instructions say 'NO addition', do NOT generate addition.\n"
+    "- Violating topic constraints is a CRITICAL ERROR.\n"
+    "\n"
     "Expert question writer for primary-school worksheets. "
     "Output JSON only. No markdown. No extra keys.\n"
     "Rules:\n"
@@ -15055,6 +15063,49 @@ def generate_question(
     return q
 
 
+# ── Topic-specific vocabulary for constraint validation ──
+_TOPIC_VOCABULARY: dict[str, list[str]] = {
+    "shape": ["circle", "square", "triangle", "rectangle", "shape", "corner", "side", "round", "sides", "corners"],
+    "time": ["clock", "hour", "minute", "morning", "afternoon", "evening", "day", "week", "o'clock", "half past", "night"],
+    "money": ["rupee", "coin", "note", "cost", "price", "buy", "₹", "paise", "change", "pay"],
+    "measurement": ["longer", "shorter", "taller", "heavier", "lighter", "thick", "thin", "big", "small", "heavy", "light"],
+    "symmetry": ["symmetry", "symmetric", "fold", "mirror", "line of symmetry", "half", "reflection"],
+    "pattern": ["pattern", "sequence", "next", "rule", "repeat", "growing", "what comes next"],
+    "fraction": ["fraction", "half", "quarter", "third", "equal parts", "whole", "numerator", "denominator"],
+}
+
+
+def _get_topic_vocab_key(skill_tag: str, topic: str) -> str | None:
+    """Map a skill_tag or topic to a vocabulary key for constraint checking."""
+    combined = (skill_tag + " " + topic).lower()
+    for key in _TOPIC_VOCABULARY:
+        if key in combined:
+            return key
+    return None
+
+
+def _validate_question_constraints(
+    q: dict, skill_tag: str, topic: str, disallowed_keywords: list[str],
+) -> tuple[bool, str]:
+    """Validate generated question respects topic constraints.
+    Returns (is_valid, reason)."""
+    text = (q.get("question_text", "") + " " + str(q.get("answer", ""))).lower()
+
+    # Check disallowed keywords
+    for kw in disallowed_keywords:
+        if kw in text:
+            return (False, f"Contains disallowed keyword '{kw}'")
+
+    # Topic-specific vocabulary check
+    vocab_key = _get_topic_vocab_key(skill_tag, topic)
+    if vocab_key and vocab_key in _TOPIC_VOCABULARY:
+        required_words = _TOPIC_VOCABULARY[vocab_key]
+        if not any(w in text for w in required_words):
+            return (False, f"{vocab_key.title()} question missing {vocab_key} vocabulary")
+
+    return (True, "OK")
+
+
 _CONTEXT_KEYWORDS = [
     "pizza", "cake", "apple", "mango", "banana", "orange", "chocolate",
     "cookie", "pencil", "book", "marble", "toy", "flower", "sweet",
@@ -15511,6 +15562,15 @@ def run_slot_pipeline(
                 ) and not (subject and subject.lower() == "english"):
                     err_issues = validate_error_uses_backend_numbers(q, variant)
                     issues.extend(err_issues)
+
+                # Topic constraint validation: reject off-topic content
+                _constraint_skill = directive.get("skill_tag") or q.get("skill_tag", "")
+                _disallowed = _topic_profile.get("disallowed_keywords", []) if _topic_profile else []
+                _tc_valid, _tc_reason = _validate_question_constraints(
+                    q, _constraint_skill, topic, _disallowed,
+                )
+                if not _tc_valid:
+                    issues.append(f"topic_constraint: {_tc_reason}")
 
                 if issues and attempt < max_attempts - 1:
                     logger.warning(
