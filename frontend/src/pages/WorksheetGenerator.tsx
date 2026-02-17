@@ -287,6 +287,24 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   }, [])
   const [loadingSyllabus, setLoadingSyllabus] = useState(false)
 
+  // Pre-fill form from URL search params (e.g. from Progress dashboard links)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const paramGrade = params.get('grade')
+    const paramSubject = params.get('subject')
+    const paramTopic = params.get('topic')
+
+    if (paramGrade) setGrade(paramGrade)
+    if (paramSubject) setSubject(paramSubject)
+    if (paramTopic) setTopic(paramTopic)
+
+    // Clean up URL params after reading so they don't persist on refresh
+    if (paramGrade || paramSubject || paramTopic) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Selection version guard for async race prevention
   const selectionVersionRef = useRef(0)
   useEffect(() => {
