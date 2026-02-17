@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Full topic x count matrix test for Class 3 Maths worksheet engine.
+Full topic x count matrix test for Class 2, 3 & 4 Maths worksheet engine.
 
-Tests 12 topics x 4 question counts = 48 combinations.
+Tests all topics x 4 question counts combinations.
 Deterministic only — no LLM calls, no API keys required.
 
 Validates:
@@ -35,6 +35,18 @@ from app.services.slot_engine import (
 
 
 ALL_TOPICS = [
+    # Class 2
+    "Numbers up to 1000 (Class 2)",
+    "Addition (2-digit with carry)",
+    "Subtraction (2-digit with borrow)",
+    "Multiplication (tables 2-5)",
+    "Division (sharing equally)",
+    "Shapes and space (2D)",
+    "Measurement (length, weight)",
+    "Time (hour, half-hour)",
+    "Money (coins and notes)",
+    "Data handling (pictographs)",
+    # Class 3
     "Addition (carries)",
     "Subtraction (borrowing)",
     "Addition and subtraction (3-digit)",
@@ -47,6 +59,17 @@ ALL_TOPICS = [
     "Money (bills and change)",
     "Symmetry",
     "Patterns and sequences",
+    # Class 4
+    "Large numbers (up to 1,00,000)",
+    "Addition and subtraction (5-digit)",
+    "Multiplication (3-digit \u00d7 2-digit)",
+    "Division (long division)",
+    "Fractions (equivalent, comparison)",
+    "Decimals (tenths, hundredths)",
+    "Geometry (angles, lines)",
+    "Perimeter and area",
+    "Time (minutes, 24-hour clock)",
+    "Money (bills, profit/loss)",
 ]
 
 ALL_COUNTS = [5, 10, 15, 20]
@@ -79,7 +102,9 @@ def record_fail(label, reason):
 # SECTION 1: Topic profile existence and required keys
 # ================================================================
 print("=" * 70)
-print("TEST SUITE: All Topics x All Counts (12 x 4 = 48 combinations)")
+n_topics = len(ALL_TOPICS)
+n_combos = n_topics * len(ALL_COUNTS)
+print(f"TEST SUITE: All Topics x All Counts ({n_topics} x {len(ALL_COUNTS)} = {n_combos} combinations)")
 print("=" * 70)
 
 print("\n-- Section 1: Topic profile existence and required keys --")

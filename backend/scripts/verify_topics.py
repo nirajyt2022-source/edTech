@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Comprehensive verification of all Class 3 maths topic profiles.
+Comprehensive verification of all Class 2, 3 & 4 maths topic profiles.
 
 Checks (deterministic — no LLM calls):
 1. Every skill_tag in every recipe maps to a valid (slot_type, format) via _SKILL_TAG_TO_SLOT
@@ -30,46 +30,95 @@ WARN = 0
 def ok(msg):
     global PASS
     PASS += 1
-    print(f"  ✅ {msg}")
+    print(f"  PASS {msg}")
 
 def fail(msg):
     global FAIL
     FAIL += 1
-    print(f"  ❌ {msg}")
+    print(f"  FAIL {msg}")
 
 def warn(msg):
     global WARN
     WARN += 1
-    print(f"  ⚠️  {msg}")
+    print(f"  WARN  {msg}")
 
 # ── Frontend topic names (what the UI actually sends) ──
 FRONTEND_TOPICS = [
+    # Class 2 short names
+    "class 2 numbers", "class 2 addition", "class 2 subtraction",
+    "class 2 multiplication", "class 2 division", "class 2 shapes",
+    "class 2 measurement", "class 2 time", "class 2 money",
+    "class 2 data handling", "class 2 data",
+    "c2 numbers", "c2 addition", "c2 subtraction",
+    "c2 multiplication", "c2 division", "c2 shapes",
+    "c2 measurement", "c2 time", "c2 money", "c2 data",
+    "sharing equally", "pictographs", "2d shapes",
+    # Class 2 exact canonical names
+    "Numbers up to 1000 (Class 2)",
+    "Addition (2-digit with carry)",
+    "Subtraction (2-digit with borrow)",
+    "Multiplication (tables 2-5)",
+    "Division (sharing equally)",
+    "Shapes and space (2D)",
+    "Measurement (length, weight)",
+    "Time (hour, half-hour)",
+    "Money (coins and notes)",
+    "Data handling (pictographs)",
+    # Class 3 short names
     "Addition", "Subtraction", "Multiplication", "Division",
     "Fractions", "Time", "Money", "Symmetry", "Patterns",
     "Numbers", "Place Value",
     "Addition and Subtraction", "add/sub",
-    # Also try exact canonical names
+    # Class 3 exact canonical names
     "Addition (carries)", "Subtraction (borrowing)",
     "Addition and subtraction (3-digit)",
     "Multiplication (tables 2-10)", "Division basics",
     "Numbers up to 10000", "Fractions (halves, quarters)",
     "Time (reading clock, calendar)", "Money (bills and change)",
     "Patterns and sequences",
+    # Class 4 short names
+    "class 4 large numbers", "c4 large numbers", "large numbers",
+    "class 4 multiplication", "c4 multiplication",
+    "class 4 division", "c4 division", "long division",
+    "class 4 fractions", "c4 fractions", "equivalent fractions",
+    "class 4 decimals", "c4 decimals", "decimals",
+    "class 4 geometry", "c4 geometry", "angles and lines",
+    "class 4 perimeter", "c4 perimeter", "perimeter and area",
+    "class 4 time", "c4 time", "24-hour clock",
+    "class 4 money", "c4 money", "profit/loss",
+    "class 4 add/sub", "c4 add/sub",
+    # Class 4 exact canonical names
+    "Large numbers (up to 1,00,000)",
+    "Addition and subtraction (5-digit)",
+    "Multiplication (3-digit \u00d7 2-digit)",
+    "Division (long division)",
+    "Fractions (equivalent, comparison)",
+    "Decimals (tenths, hundredths)",
+    "Geometry (angles, lines)",
+    "Perimeter and area",
+    "Time (minutes, 24-hour clock)",
+    "Money (bills, profit/loss)",
 ]
 
-ARITHMETIC_CANONICALS = {"Addition (carries)", "Subtraction (borrowing)", "Addition and subtraction (3-digit)"}
+ARITHMETIC_CANONICALS = {
+    "Addition (carries)", "Subtraction (borrowing)", "Addition and subtraction (3-digit)",
+    # Class 2 arithmetic
+    "Addition (2-digit with carry)", "Subtraction (2-digit with borrow)",
+    # Class 4 arithmetic
+    "Addition and subtraction (5-digit)",
+}
 
 # Combined topics may intentionally skip thinking to fit both add+sub error detection
 _FLEXIBLE_SLOT_TOPICS = {"Addition and subtraction (3-digit)"}
 
 print("=" * 70)
-print("TOPIC PROFILE VERIFICATION — Class 3 Maths")
+print("TOPIC PROFILE VERIFICATION — Class 2, 3 & 4 Maths")
 print("=" * 70)
 
-# ═══════════════════════════════════════
+# ===================================
 # TEST 1: Alias resolution
-# ═══════════════════════════════════════
-print("\n── TEST 1: Topic Alias Resolution ──")
+# ===================================
+print("\n-- TEST 1: Topic Alias Resolution --")
 for ft in FRONTEND_TOPICS:
     profile = get_topic_profile(ft)
     if profile:
@@ -79,14 +128,14 @@ for ft in FRONTEND_TOPICS:
             if v is profile:
                 canon = k
                 break
-        ok(f'"{ft}" → "{canon}"')
+        ok(f'"{ft}" -> "{canon}"')
     else:
-        fail(f'"{ft}" → NO MATCH')
+        fail(f'"{ft}" -> NO MATCH')
 
-# ═══════════════════════════════════════
+# ===================================
 # TEST 2: Skill tag mapping
-# ═══════════════════════════════════════
-print("\n── TEST 2: Skill Tag → Slot Mapping ──")
+# ===================================
+print("\n-- TEST 2: Skill Tag -> Slot Mapping --")
 for topic_name, profile in TOPIC_PROFILES.items():
     print(f"\n  [{topic_name}]")
     for item in profile["default_recipe"]:
@@ -94,16 +143,16 @@ for topic_name, profile in TOPIC_PROFILES.items():
         if tag in _SKILL_TAG_TO_SLOT:
             slot_type, fmt = _SKILL_TAG_TO_SLOT[tag]
             if fmt in VALID_FORMATS.get(slot_type, []):
-                ok(f"{tag} → ({slot_type}, {fmt})")
+                ok(f"{tag} -> ({slot_type}, {fmt})")
             else:
-                fail(f"{tag} → ({slot_type}, {fmt}) — format '{fmt}' not in VALID_FORMATS['{slot_type}']")
+                fail(f"{tag} -> ({slot_type}, {fmt}) -- format '{fmt}' not in VALID_FORMATS['{slot_type}']")
         else:
-            fail(f"{tag} → NOT IN _SKILL_TAG_TO_SLOT")
+            fail(f"{tag} -> NOT IN _SKILL_TAG_TO_SLOT")
 
-# ═══════════════════════════════════════
+# ===================================
 # TEST 3: All 5 slot types covered
-# ═══════════════════════════════════════
-print("\n── TEST 3: All 5 Slot Types Covered per Recipe ──")
+# ===================================
+print("\n-- TEST 3: All 5 Slot Types Covered per Recipe --")
 for topic_name, profile in TOPIC_PROFILES.items():
     slot_counts = Counter()
     for item in profile["default_recipe"]:
@@ -117,32 +166,44 @@ for topic_name, profile in TOPIC_PROFILES.items():
     dist = {s: slot_counts.get(s, 0) for s in SLOT_ORDER}
 
     if not missing:
-        ok(f"{topic_name}: {total}q → R={dist['recognition']} A={dist['application']} Rep={dist['representation']} ED={dist['error_detection']} T={dist['thinking']}")
+        ok(f"{topic_name}: {total}q -> R={dist['recognition']} A={dist['application']} Rep={dist['representation']} ED={dist['error_detection']} T={dist['thinking']}")
     elif topic_name in _FLEXIBLE_SLOT_TOPICS:
-        warn(f"{topic_name}: missing {missing} (expected for combined topic) — {dist}")
+        warn(f"{topic_name}: missing {missing} (expected for combined topic) -- {dist}")
     else:
-        fail(f"{topic_name}: MISSING slot types: {missing} — got {dist}")
+        fail(f"{topic_name}: MISSING slot types: {missing} -- got {dist}")
 
-# ═══════════════════════════════════════
+# ===================================
 # TEST 4: Topic constraints exist
-# ═══════════════════════════════════════
-print("\n── TEST 4: _TOPIC_CONSTRAINTS Coverage ──")
+# ===================================
+print("\n-- TEST 4: _TOPIC_CONSTRAINTS Coverage --")
 for topic_name in TOPIC_PROFILES:
     if topic_name in ARITHMETIC_CANONICALS:
         # Arithmetic topics don't need constraints (they're the default)
-        ok(f"{topic_name}: arithmetic — no constraint needed")
+        ok(f"{topic_name}: arithmetic -- no constraint needed")
     elif topic_name in _TOPIC_CONSTRAINTS:
         constraint = _TOPIC_CONSTRAINTS[topic_name]
         ok(f"{topic_name}: has constraint ({len(constraint)} chars)")
     else:
-        fail(f"{topic_name}: NO ENTRY in _TOPIC_CONSTRAINTS — LLM may generate off-topic questions!")
+        fail(f"{topic_name}: NO ENTRY in _TOPIC_CONSTRAINTS -- LLM may generate off-topic questions!")
 
-# ═══════════════════════════════════════
+# ===================================
 # TEST 5: Canonical normalization in pipeline
-# ═══════════════════════════════════════
-print("\n── TEST 5: Pipeline Topic Normalization ──")
+# ===================================
+print("\n-- TEST 5: Pipeline Topic Normalization --")
 print("  Simulating run_slot_pipeline canonical resolution...")
 short_to_canonical = {
+    # Class 2
+    "class 2 numbers": "Numbers up to 1000 (Class 2)",
+    "class 2 addition": "Addition (2-digit with carry)",
+    "class 2 subtraction": "Subtraction (2-digit with borrow)",
+    "class 2 multiplication": "Multiplication (tables 2-5)",
+    "class 2 division": "Division (sharing equally)",
+    "class 2 shapes": "Shapes and space (2D)",
+    "class 2 measurement": "Measurement (length, weight)",
+    "class 2 time": "Time (hour, half-hour)",
+    "class 2 money": "Money (coins and notes)",
+    "class 2 data handling": "Data handling (pictographs)",
+    # Class 3
     "Multiplication": "Multiplication (tables 2-10)",
     "Division": "Division basics",
     "Fractions": "Fractions",
@@ -155,12 +216,23 @@ short_to_canonical = {
     "Subtraction": "Subtraction (borrowing)",
     "Addition and Subtraction": "Addition and subtraction (3-digit)",
     "add/sub": "Addition and subtraction (3-digit)",
+    # Class 4
+    "class 4 large numbers": "Large numbers (up to 1,00,000)",
+    "class 4 multiplication": "Multiplication (3-digit \u00d7 2-digit)",
+    "class 4 division": "Division (long division)",
+    "class 4 fractions": "Fractions (equivalent, comparison)",
+    "class 4 decimals": "Decimals (tenths, hundredths)",
+    "class 4 geometry": "Geometry (angles, lines)",
+    "class 4 perimeter": "Perimeter and area",
+    "class 4 time": "Time (minutes, 24-hour clock)",
+    "class 4 money": "Money (bills, profit/loss)",
+    "class 4 add/sub": "Addition and subtraction (5-digit)",
 }
 
 for short_name, expected_canon in short_to_canonical.items():
     profile = get_topic_profile(short_name)
     if not profile:
-        fail(f'"{short_name}" → profile not found')
+        fail(f'"{short_name}" -> profile not found')
         continue
     # Simulate the canonicalization in run_slot_pipeline
     resolved = None
@@ -169,21 +241,21 @@ for short_name, expected_canon in short_to_canonical.items():
             resolved = k
             break
     if resolved == expected_canon:
-        ok(f'"{short_name}" → "{resolved}"')
+        ok(f'"{short_name}" -> "{resolved}"')
     else:
-        fail(f'"{short_name}" → "{resolved}" (expected "{expected_canon}")')
+        fail(f'"{short_name}" -> "{resolved}" (expected "{expected_canon}")')
 
     # Check that the resolved name works in _TOPIC_CONSTRAINTS
     if resolved not in ARITHMETIC_CANONICALS:
         if resolved in _TOPIC_CONSTRAINTS:
-            ok(f'  _TOPIC_CONSTRAINTS["{resolved}"] ✓')
+            ok(f'  _TOPIC_CONSTRAINTS["{resolved}"] OK')
         else:
             fail(f'  _TOPIC_CONSTRAINTS["{resolved}"] MISSING')
 
-# ═══════════════════════════════════════
+# ===================================
 # TEST 6: build_worksheet_plan integration
-# ═══════════════════════════════════════
-print("\n── TEST 6: build_worksheet_plan() for each topic ──")
+# ===================================
+print("\n-- TEST 6: build_worksheet_plan() for each topic --")
 for topic_name in TOPIC_PROFILES:
     try:
         plan = build_worksheet_plan(10, topic=topic_name)
@@ -191,18 +263,18 @@ for topic_name in TOPIC_PROFILES:
         missing = [s for s in SLOT_ORDER if slot_counts.get(s, 0) == 0]
         dist = {s: slot_counts.get(s, 0) for s in SLOT_ORDER}
         if not missing:
-            ok(f"{topic_name}: plan(10) → {dist}")
+            ok(f"{topic_name}: plan(10) -> {dist}")
         elif topic_name in _FLEXIBLE_SLOT_TOPICS:
-            warn(f"{topic_name}: plan(10) missing {missing} (expected for combined topic) — {dist}")
+            warn(f"{topic_name}: plan(10) missing {missing} (expected for combined topic) -- {dist}")
         else:
-            fail(f"{topic_name}: plan(10) MISSING: {missing} — {dist}")
+            fail(f"{topic_name}: plan(10) MISSING: {missing} -- {dist}")
     except Exception as e:
         fail(f"{topic_name}: build_worksheet_plan() raised {e}")
 
-# ═══════════════════════════════════════
+# ===================================
 # TEST 7: Disallowed keywords in skill tags
-# ═══════════════════════════════════════
-print("\n── TEST 7: No cross-topic skill_tag contamination ──")
+# ===================================
+print("\n-- TEST 7: No cross-topic skill_tag contamination --")
 for topic_name, profile in TOPIC_PROFILES.items():
     allowed_tags = set(profile["allowed_skill_tags"])
     recipe_tags = {item["skill_tag"] for item in profile["default_recipe"]}
@@ -212,10 +284,10 @@ for topic_name, profile in TOPIC_PROFILES.items():
     else:
         ok(f"{topic_name}: all recipe tags in allowed_skill_tags")
 
-# ═══════════════════════════════════════
+# ===================================
 # TEST 8: _ARITHMETIC_TOPICS and _THINKING_VARIANT_TOPICS alignment
-# ═══════════════════════════════════════
-print("\n── TEST 8: Variant selection topic sets ──")
+# ===================================
+print("\n-- TEST 8: Variant selection topic sets --")
 # These are the hardcoded sets inside run_slot_pipeline
 _ARITHMETIC_TOPICS_CHECK = {"Addition (carries)", "Subtraction (borrowing)"}
 _THINKING_VARIANT_TOPICS_CHECK = {
@@ -235,16 +307,16 @@ for topic_name in TOPIC_PROFILES:
     else:
         ok(f"{topic_name}: uses LLM error_detection + multi_step thinking")
 
-# ═══════════════════════════════════════
+# ===================================
 # SUMMARY
-# ═══════════════════════════════════════
+# ===================================
 print("\n" + "=" * 70)
 print(f"RESULTS: {PASS} passed, {FAIL} failed, {WARN} warnings")
 print("=" * 70)
 
 if FAIL > 0:
-    print("\n⚠️  SOME CHECKS FAILED — review above for details")
+    print("\nSOME CHECKS FAILED -- review above for details")
     sys.exit(1)
 else:
-    print("\n🎉 ALL CHECKS PASSED — all topics are correctly configured")
+    print("\nALL CHECKS PASSED -- all topics are correctly configured")
     sys.exit(0)

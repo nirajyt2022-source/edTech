@@ -155,6 +155,137 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "pattern_fill_blank": ("representation", "missing_number"),
     "pattern_error_spot": ("error_detection", "error_spot"),
     "pattern_thinking": ("thinking", "growing_pattern"),
+    # ── Class 2 specific tags ──
+    # Numbers up to 1000 (Class 2)
+    "c2_place_value_identify": ("recognition", "place_value_question"),
+    "c2_number_compare": ("application", "comparison_question"),
+    "c2_number_expansion": ("representation", "expanded_form"),
+    "c2_number_ordering": ("application", "ordering_question"),
+    "c2_place_value_error": ("error_detection", "error_spot"),
+    "c2_number_thinking": ("thinking", "multi_step"),
+    # Addition (2-digit with carry)
+    "c2_add_column": ("recognition", "column_setup"),
+    "c2_add_word_problem": ("application", "word_problem"),
+    "c2_add_missing_number": ("representation", "missing_number"),
+    "c2_add_error_spot": ("error_detection", "error_spot"),
+    "c2_add_thinking": ("thinking", "multi_step"),
+    # Subtraction (2-digit with borrow)
+    "c2_sub_column": ("recognition", "column_setup"),
+    "c2_sub_word_problem": ("application", "word_problem"),
+    "c2_sub_missing_number": ("representation", "missing_number"),
+    "c2_sub_error_spot": ("error_detection", "error_spot"),
+    "c2_sub_thinking": ("thinking", "multi_step"),
+    # Multiplication (tables 2-5)
+    "c2_mult_tables": ("recognition", "multiplication_problem"),
+    "c2_mult_word_problem": ("application", "word_problem"),
+    "c2_mult_fill_blank": ("representation", "missing_number"),
+    "c2_mult_error_spot": ("error_detection", "error_spot"),
+    "c2_mult_thinking": ("thinking", "multi_step"),
+    # Division (sharing equally)
+    "c2_div_sharing": ("recognition", "division_problem"),
+    "c2_div_word_problem": ("application", "word_problem"),
+    "c2_div_fill_blank": ("representation", "missing_number"),
+    "c2_div_error_spot": ("error_detection", "error_spot"),
+    "c2_div_thinking": ("thinking", "multi_step"),
+    # Shapes and space (2D)
+    "c2_shape_identify": ("recognition", "symmetry_question"),
+    "c2_shape_word_problem": ("application", "word_problem"),
+    "c2_shape_fill_blank": ("representation", "shape_question"),
+    "c2_shape_error_spot": ("error_detection", "error_spot"),
+    "c2_shape_thinking": ("thinking", "multi_step"),
+    # Measurement (length, weight)
+    "c2_measure_identify": ("recognition", "simple_identify"),
+    "c2_measure_compare": ("application", "comparison_question"),
+    "c2_measure_fill_blank": ("representation", "missing_number"),
+    "c2_measure_error_spot": ("error_detection", "error_spot"),
+    "c2_measure_thinking": ("thinking", "multi_step"),
+    # Time (hour, half-hour)
+    "c2_clock_reading": ("recognition", "clock_question"),
+    "c2_time_word_problem": ("application", "word_problem"),
+    "c2_time_fill_blank": ("representation", "missing_number"),
+    "c2_time_error_spot": ("error_detection", "error_spot"),
+    "c2_time_thinking": ("thinking", "multi_step"),
+    # Money (coins and notes)
+    "c2_money_identify": ("recognition", "money_question"),
+    "c2_money_word_problem": ("application", "word_problem"),
+    "c2_money_fill_blank": ("representation", "missing_number"),
+    "c2_money_error_spot": ("error_detection", "error_spot"),
+    "c2_money_thinking": ("thinking", "multi_step"),
+    # Data handling (pictographs)
+    "c2_data_read": ("recognition", "simple_identify"),
+    "c2_data_word_problem": ("application", "word_problem"),
+    "c2_data_fill_blank": ("representation", "missing_number"),
+    "c2_data_error_spot": ("error_detection", "error_spot"),
+    "c2_data_thinking": ("thinking", "multi_step"),
+    # ── Class 4 specific tags ──────────────────────────────
+    # Large numbers (up to 1,00,000)
+    "c4_large_number_identify": ("recognition", "place_value_question"),
+    "c4_large_number_compare": ("application", "comparison_question"),
+    "c4_large_number_order": ("application", "ordering_question"),
+    "c4_large_number_expand": ("representation", "expanded_form"),
+    "c4_large_number_error": ("error_detection", "error_spot"),
+    "c4_large_number_thinking": ("thinking", "multi_step"),
+    # Addition and subtraction (5-digit)
+    "c4_add5_column": ("recognition", "column_setup"),
+    "c4_add5_word_problem": ("application", "word_problem"),
+    "c4_sub5_column": ("recognition", "column_setup"),
+    "c4_sub5_word_problem": ("application", "word_problem"),
+    "c4_addsub5_missing": ("representation", "missing_number"),
+    "c4_addsub5_error": ("error_detection", "error_spot"),
+    "c4_addsub5_thinking": ("thinking", "multi_step"),
+    # Multiplication (3-digit x 2-digit)
+    "c4_mult_setup": ("recognition", "multiplication_problem"),
+    "c4_mult_word_problem": ("application", "word_problem"),
+    "c4_mult_missing": ("representation", "missing_number"),
+    "c4_mult_error": ("error_detection", "error_spot"),
+    "c4_mult_thinking": ("thinking", "multi_step"),
+    # Division (long division)
+    "c4_div_setup": ("recognition", "division_problem"),
+    "c4_div_word_problem": ("application", "word_problem"),
+    "c4_div_missing": ("representation", "missing_number"),
+    "c4_div_error": ("error_detection", "error_spot"),
+    "c4_div_thinking": ("thinking", "multi_step"),
+    # Fractions (equivalent, comparison)
+    "c4_fraction_identify": ("recognition", "fraction_number"),
+    "c4_fraction_compare": ("application", "comparison_question"),
+    "c4_fraction_equivalent": ("application", "word_problem"),
+    "c4_fraction_represent": ("representation", "missing_number"),
+    "c4_fraction_error": ("error_detection", "error_spot"),
+    "c4_fraction_thinking": ("thinking", "multi_step"),
+    # Decimals (tenths, hundredths)
+    "c4_decimal_identify": ("recognition", "place_value_question"),
+    "c4_decimal_compare": ("application", "comparison_question"),
+    "c4_decimal_word_problem": ("application", "word_problem"),
+    "c4_decimal_represent": ("representation", "expanded_form"),
+    "c4_decimal_error": ("error_detection", "error_spot"),
+    "c4_decimal_thinking": ("thinking", "multi_step"),
+    # Geometry (angles, lines)
+    "c4_geometry_identify": ("recognition", "simple_identify"),
+    "c4_geometry_classify": ("application", "comparison_question"),
+    "c4_geometry_represent": ("representation", "shape_question"),
+    "c4_geometry_error": ("error_detection", "error_spot"),
+    "c4_geometry_thinking": ("thinking", "multi_step"),
+    # Perimeter and area
+    "c4_perimeter_identify": ("recognition", "simple_identify"),
+    "c4_perimeter_word_problem": ("application", "word_problem"),
+    "c4_area_word_problem": ("application", "word_problem"),
+    "c4_perimeter_area_missing": ("representation", "missing_number"),
+    "c4_perimeter_area_error": ("error_detection", "error_spot"),
+    "c4_perimeter_area_thinking": ("thinking", "multi_step"),
+    # Time (minutes, 24-hour clock)
+    "c4_time_reading": ("recognition", "clock_question"),
+    "c4_time_word_problem": ("application", "word_problem"),
+    "c4_time_convert": ("application", "word_problem"),
+    "c4_time_missing": ("representation", "missing_number"),
+    "c4_time_error": ("error_detection", "error_spot"),
+    "c4_time_thinking": ("thinking", "multi_step"),
+    # Money (bills, profit/loss)
+    "c4_money_identify": ("recognition", "money_question"),
+    "c4_money_word_problem": ("application", "word_problem"),
+    "c4_money_profit_loss": ("application", "word_problem"),
+    "c4_money_missing": ("representation", "missing_number"),
+    "c4_money_error": ("error_detection", "error_spot"),
+    "c4_money_thinking": ("thinking", "multi_step"),
 }
 
 SLOT_INSTRUCTIONS: dict[str, str] = {
@@ -452,6 +583,410 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "pattern_thinking", "count": 1},
         ],
     },
+    # ══════════════════════════════════════════════════════════
+    # Class 2 Topic Profiles
+    # ══════════════════════════════════════════════════════════
+    # ── Numbers up to 1000 (Class 2) ──
+    "Numbers up to 1000 (Class 2)": {
+        "allowed_skill_tags": [
+            "c2_place_value_identify", "c2_number_compare",
+            "c2_number_expansion", "c2_number_ordering",
+            "c2_place_value_error", "c2_number_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "regroup", "base ten", "column form",
+            "rupees", "multiply", "divide", "addition", "subtraction",
+            "thousand", "10000",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c2_place_value_identify", "count": 3},
+            {"skill_tag": "c2_number_compare", "count": 2},
+            {"skill_tag": "c2_number_expansion", "count": 2},
+            {"skill_tag": "c2_number_ordering", "count": 1},
+            {"skill_tag": "c2_place_value_error", "count": 1},
+            {"skill_tag": "c2_number_thinking", "count": 1},
+        ],
+    },
+    # ── Addition (2-digit with carry) ──
+    "Addition (2-digit with carry)": {
+        "allowed_skill_tags": [
+            "c2_add_column", "c2_add_word_problem",
+            "c2_add_missing_number", "c2_add_error_spot", "c2_add_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["3-digit", "thousand", "hundred"],
+        "disallowed_visual_types": [],
+        "default_recipe": [
+            {"skill_tag": "c2_add_column", "count": 3},
+            {"skill_tag": "c2_add_word_problem", "count": 3},
+            {"skill_tag": "c2_add_missing_number", "count": 2},
+            {"skill_tag": "c2_add_error_spot", "count": 1},
+            {"skill_tag": "c2_add_thinking", "count": 1},
+        ],
+    },
+    # ── Subtraction (2-digit with borrow) ──
+    "Subtraction (2-digit with borrow)": {
+        "allowed_skill_tags": [
+            "c2_sub_column", "c2_sub_word_problem",
+            "c2_sub_missing_number", "c2_sub_error_spot", "c2_sub_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["3-digit", "thousand", "hundred"],
+        "disallowed_visual_types": [],
+        "default_recipe": [
+            {"skill_tag": "c2_sub_column", "count": 3},
+            {"skill_tag": "c2_sub_word_problem", "count": 3},
+            {"skill_tag": "c2_sub_missing_number", "count": 2},
+            {"skill_tag": "c2_sub_error_spot", "count": 1},
+            {"skill_tag": "c2_sub_thinking", "count": 1},
+        ],
+    },
+    # ── Multiplication (tables 2-5) ──
+    "Multiplication (tables 2-5)": {
+        "allowed_skill_tags": [
+            "c2_mult_tables", "c2_mult_word_problem",
+            "c2_mult_fill_blank", "c2_mult_error_spot", "c2_mult_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "add", "subtract", "column form",
+            "plus", "minus", "regroup",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c2_mult_tables", "count": 3},
+            {"skill_tag": "c2_mult_word_problem", "count": 3},
+            {"skill_tag": "c2_mult_fill_blank", "count": 2},
+            {"skill_tag": "c2_mult_error_spot", "count": 1},
+            {"skill_tag": "c2_mult_thinking", "count": 1},
+        ],
+    },
+    # ── Division (sharing equally) ──
+    "Division (sharing equally)": {
+        "allowed_skill_tags": [
+            "c2_div_sharing", "c2_div_word_problem",
+            "c2_div_fill_blank", "c2_div_error_spot", "c2_div_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["carry", "borrow", "decimal", "remainder"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c2_div_sharing", "count": 3},
+            {"skill_tag": "c2_div_word_problem", "count": 3},
+            {"skill_tag": "c2_div_fill_blank", "count": 2},
+            {"skill_tag": "c2_div_error_spot", "count": 1},
+            {"skill_tag": "c2_div_thinking", "count": 1},
+        ],
+    },
+    # ── Shapes and space (2D) ──
+    "Shapes and space (2D)": {
+        "allowed_skill_tags": [
+            "c2_shape_identify", "c2_shape_word_problem",
+            "c2_shape_fill_blank", "c2_shape_error_spot", "c2_shape_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "addition", "subtraction", "multiply",
+            "divide", "plus", "minus", "column",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c2_shape_identify", "count": 3},
+            {"skill_tag": "c2_shape_word_problem", "count": 3},
+            {"skill_tag": "c2_shape_fill_blank", "count": 2},
+            {"skill_tag": "c2_shape_error_spot", "count": 1},
+            {"skill_tag": "c2_shape_thinking", "count": 1},
+        ],
+    },
+    # ── Measurement (length, weight) ──
+    "Measurement (length, weight)": {
+        "allowed_skill_tags": [
+            "c2_measure_identify", "c2_measure_compare",
+            "c2_measure_fill_blank", "c2_measure_error_spot", "c2_measure_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "fraction", "symmetry", "multiply", "divide",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c2_measure_identify", "count": 3},
+            {"skill_tag": "c2_measure_compare", "count": 3},
+            {"skill_tag": "c2_measure_fill_blank", "count": 2},
+            {"skill_tag": "c2_measure_error_spot", "count": 1},
+            {"skill_tag": "c2_measure_thinking", "count": 1},
+        ],
+    },
+    # ── Time (hour, half-hour) ──
+    "Time (hour, half-hour)": {
+        "allowed_skill_tags": [
+            "c2_clock_reading", "c2_time_word_problem",
+            "c2_time_fill_blank", "c2_time_error_spot", "c2_time_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "quarter", "quarter-hour", "15 minutes",
+            "carry", "borrow", "base ten", "regrouping",
+            "round", "estimate", "hundred", "thousand",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c2_clock_reading", "count": 3},
+            {"skill_tag": "c2_time_word_problem", "count": 3},
+            {"skill_tag": "c2_time_fill_blank", "count": 2},
+            {"skill_tag": "c2_time_error_spot", "count": 1},
+            {"skill_tag": "c2_time_thinking", "count": 1},
+        ],
+    },
+    # ── Money (coins and notes) ──
+    "Money (coins and notes)": {
+        "allowed_skill_tags": [
+            "c2_money_identify", "c2_money_word_problem",
+            "c2_money_fill_blank", "c2_money_error_spot", "c2_money_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["carry", "borrow", "fraction", "bills"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c2_money_identify", "count": 2},
+            {"skill_tag": "c2_money_word_problem", "count": 3},
+            {"skill_tag": "c2_money_fill_blank", "count": 3},
+            {"skill_tag": "c2_money_error_spot", "count": 1},
+            {"skill_tag": "c2_money_thinking", "count": 1},
+        ],
+    },
+    # ── Data handling (pictographs) ──
+    "Data handling (pictographs)": {
+        "allowed_skill_tags": [
+            "c2_data_read", "c2_data_word_problem",
+            "c2_data_fill_blank", "c2_data_error_spot", "c2_data_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "fraction", "symmetry", "multiply", "divide",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c2_data_read", "count": 3},
+            {"skill_tag": "c2_data_word_problem", "count": 3},
+            {"skill_tag": "c2_data_fill_blank", "count": 2},
+            {"skill_tag": "c2_data_error_spot", "count": 1},
+            {"skill_tag": "c2_data_thinking", "count": 1},
+        ],
+    },
+    # ══════════════════════════════════════════════════════════
+    # Class 4 Topic Profiles
+    # ══════════════════════════════════════════════════════════
+    # ── Large numbers (up to 1,00,000) ──
+    "Large numbers (up to 1,00,000)": {
+        "allowed_skill_tags": [
+            "c4_large_number_identify", "c4_large_number_compare",
+            "c4_large_number_order", "c4_large_number_expand",
+            "c4_large_number_error", "c4_large_number_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "regroup", "base ten", "column form",
+            "rupees", "multiply", "divide", "addition", "subtraction",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c4_large_number_identify", "count": 3},
+            {"skill_tag": "c4_large_number_compare", "count": 2},
+            {"skill_tag": "c4_large_number_order", "count": 1},
+            {"skill_tag": "c4_large_number_expand", "count": 2},
+            {"skill_tag": "c4_large_number_error", "count": 1},
+            {"skill_tag": "c4_large_number_thinking", "count": 1},
+        ],
+    },
+    # ── Addition and subtraction (5-digit) ──
+    "Addition and subtraction (5-digit)": {
+        "allowed_skill_tags": [
+            "c4_add5_column", "c4_add5_word_problem",
+            "c4_sub5_column", "c4_sub5_word_problem",
+            "c4_addsub5_missing", "c4_addsub5_error", "c4_addsub5_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["fraction", "decimal", "angle", "perimeter"],
+        "disallowed_visual_types": [],
+        "default_recipe": [
+            {"skill_tag": "c4_add5_column", "count": 2},
+            {"skill_tag": "c4_sub5_column", "count": 1},
+            {"skill_tag": "c4_add5_word_problem", "count": 2},
+            {"skill_tag": "c4_sub5_word_problem", "count": 1},
+            {"skill_tag": "c4_addsub5_missing", "count": 2},
+            {"skill_tag": "c4_addsub5_error", "count": 1},
+            {"skill_tag": "c4_addsub5_thinking", "count": 1},
+        ],
+    },
+    # ── Multiplication (3-digit x 2-digit) ──
+    "Multiplication (3-digit × 2-digit)": {
+        "allowed_skill_tags": [
+            "c4_mult_setup", "c4_mult_word_problem",
+            "c4_mult_missing", "c4_mult_error", "c4_mult_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "add", "subtract", "column form",
+            "plus", "minus", "regroup", "fraction", "decimal",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c4_mult_setup", "count": 3},
+            {"skill_tag": "c4_mult_word_problem", "count": 3},
+            {"skill_tag": "c4_mult_missing", "count": 2},
+            {"skill_tag": "c4_mult_error", "count": 1},
+            {"skill_tag": "c4_mult_thinking", "count": 1},
+        ],
+    },
+    # ── Division (long division) ──
+    "Division (long division)": {
+        "allowed_skill_tags": [
+            "c4_div_setup", "c4_div_word_problem",
+            "c4_div_missing", "c4_div_error", "c4_div_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "add", "subtract", "fraction", "decimal",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c4_div_setup", "count": 3},
+            {"skill_tag": "c4_div_word_problem", "count": 3},
+            {"skill_tag": "c4_div_missing", "count": 2},
+            {"skill_tag": "c4_div_error", "count": 1},
+            {"skill_tag": "c4_div_thinking", "count": 1},
+        ],
+    },
+    # ── Fractions (equivalent, comparison) ──
+    "Fractions (equivalent, comparison)": {
+        "allowed_skill_tags": [
+            "c4_fraction_identify", "c4_fraction_compare",
+            "c4_fraction_equivalent", "c4_fraction_represent",
+            "c4_fraction_error", "c4_fraction_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "decimal", "percentage", "angle", "perimeter",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c4_fraction_identify", "count": 2},
+            {"skill_tag": "c4_fraction_compare", "count": 2},
+            {"skill_tag": "c4_fraction_equivalent", "count": 2},
+            {"skill_tag": "c4_fraction_represent", "count": 2},
+            {"skill_tag": "c4_fraction_error", "count": 1},
+            {"skill_tag": "c4_fraction_thinking", "count": 1},
+        ],
+    },
+    # ── Decimals (tenths, hundredths) ──
+    "Decimals (tenths, hundredths)": {
+        "allowed_skill_tags": [
+            "c4_decimal_identify", "c4_decimal_compare",
+            "c4_decimal_word_problem", "c4_decimal_represent",
+            "c4_decimal_error", "c4_decimal_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "column form", "regroup",
+            "angle", "perimeter", "symmetry",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c4_decimal_identify", "count": 3},
+            {"skill_tag": "c4_decimal_compare", "count": 2},
+            {"skill_tag": "c4_decimal_word_problem", "count": 1},
+            {"skill_tag": "c4_decimal_represent", "count": 2},
+            {"skill_tag": "c4_decimal_error", "count": 1},
+            {"skill_tag": "c4_decimal_thinking", "count": 1},
+        ],
+    },
+    # ── Geometry (angles, lines) ──
+    "Geometry (angles, lines)": {
+        "allowed_skill_tags": [
+            "c4_geometry_identify", "c4_geometry_classify",
+            "c4_geometry_represent", "c4_geometry_error", "c4_geometry_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "addition", "subtraction", "multiply",
+            "divide", "plus", "minus", "fraction", "decimal",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c4_geometry_identify", "count": 3},
+            {"skill_tag": "c4_geometry_classify", "count": 3},
+            {"skill_tag": "c4_geometry_represent", "count": 2},
+            {"skill_tag": "c4_geometry_error", "count": 1},
+            {"skill_tag": "c4_geometry_thinking", "count": 1},
+        ],
+    },
+    # ── Perimeter and area ──
+    "Perimeter and area": {
+        "allowed_skill_tags": [
+            "c4_perimeter_identify", "c4_perimeter_word_problem",
+            "c4_area_word_problem", "c4_perimeter_area_missing",
+            "c4_perimeter_area_error", "c4_perimeter_area_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "fraction", "decimal", "angle",
+            "symmetry", "pattern",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c4_perimeter_identify", "count": 2},
+            {"skill_tag": "c4_perimeter_word_problem", "count": 2},
+            {"skill_tag": "c4_area_word_problem", "count": 2},
+            {"skill_tag": "c4_perimeter_area_missing", "count": 2},
+            {"skill_tag": "c4_perimeter_area_error", "count": 1},
+            {"skill_tag": "c4_perimeter_area_thinking", "count": 1},
+        ],
+    },
+    # ── Time (minutes, 24-hour clock) ──
+    "Time (minutes, 24-hour clock)": {
+        "allowed_skill_tags": [
+            "c4_time_reading", "c4_time_word_problem", "c4_time_convert",
+            "c4_time_missing", "c4_time_error", "c4_time_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "base ten", "regrouping", "column form",
+            "fraction", "decimal", "angle", "perimeter",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c4_time_reading", "count": 2},
+            {"skill_tag": "c4_time_word_problem", "count": 3},
+            {"skill_tag": "c4_time_convert", "count": 1},
+            {"skill_tag": "c4_time_missing", "count": 2},
+            {"skill_tag": "c4_time_error", "count": 1},
+            {"skill_tag": "c4_time_thinking", "count": 1},
+        ],
+    },
+    # ── Money (bills, profit/loss) ──
+    "Money (bills, profit/loss)": {
+        "allowed_skill_tags": [
+            "c4_money_identify", "c4_money_word_problem",
+            "c4_money_profit_loss", "c4_money_missing",
+            "c4_money_error", "c4_money_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "carry", "borrow", "fraction", "decimal", "angle", "perimeter",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c4_money_identify", "count": 2},
+            {"skill_tag": "c4_money_word_problem", "count": 2},
+            {"skill_tag": "c4_money_profit_loss", "count": 2},
+            {"skill_tag": "c4_money_missing", "count": 2},
+            {"skill_tag": "c4_money_error", "count": 1},
+            {"skill_tag": "c4_money_thinking", "count": 1},
+        ],
+    },
 }
 
 
@@ -475,6 +1010,69 @@ _TOPIC_ALIASES: dict[str, str] = {
     "patterns": "Patterns and sequences",
     "numbers": "Numbers up to 10000",
     "place value": "Numbers up to 10000",
+    # Class 2 aliases
+    "class 2 numbers": "Numbers up to 1000 (Class 2)",
+    "class 2 addition": "Addition (2-digit with carry)",
+    "class 2 subtraction": "Subtraction (2-digit with borrow)",
+    "class 2 multiplication": "Multiplication (tables 2-5)",
+    "class 2 division": "Division (sharing equally)",
+    "class 2 shapes": "Shapes and space (2D)",
+    "class 2 measurement": "Measurement (length, weight)",
+    "class 2 time": "Time (hour, half-hour)",
+    "class 2 money": "Money (coins and notes)",
+    "class 2 data handling": "Data handling (pictographs)",
+    "class 2 data": "Data handling (pictographs)",
+    "c2 numbers": "Numbers up to 1000 (Class 2)",
+    "c2 addition": "Addition (2-digit with carry)",
+    "c2 subtraction": "Subtraction (2-digit with borrow)",
+    "c2 multiplication": "Multiplication (tables 2-5)",
+    "c2 division": "Division (sharing equally)",
+    "c2 shapes": "Shapes and space (2D)",
+    "c2 measurement": "Measurement (length, weight)",
+    "c2 time": "Time (hour, half-hour)",
+    "c2 money": "Money (coins and notes)",
+    "c2 data": "Data handling (pictographs)",
+    "sharing equally": "Division (sharing equally)",
+    "pictographs": "Data handling (pictographs)",
+    "2d shapes": "Shapes and space (2D)",
+    "shapes 2d": "Shapes and space (2D)",
+    "length weight": "Measurement (length, weight)",
+    # Class 4 aliases
+    "class 4 large numbers": "Large numbers (up to 1,00,000)",
+    "c4 large numbers": "Large numbers (up to 1,00,000)",
+    "large numbers": "Large numbers (up to 1,00,000)",
+    "numbers up to 100000": "Large numbers (up to 1,00,000)",
+    "class 4 addition subtraction": "Addition and subtraction (5-digit)",
+    "class 4 add/sub": "Addition and subtraction (5-digit)",
+    "c4 add/sub": "Addition and subtraction (5-digit)",
+    "5-digit addition": "Addition and subtraction (5-digit)",
+    "class 4 multiplication": "Multiplication (3-digit × 2-digit)",
+    "c4 multiplication": "Multiplication (3-digit × 2-digit)",
+    "multi-digit multiplication": "Multiplication (3-digit × 2-digit)",
+    "class 4 division": "Division (long division)",
+    "c4 division": "Division (long division)",
+    "long division": "Division (long division)",
+    "class 4 fractions": "Fractions (equivalent, comparison)",
+    "c4 fractions": "Fractions (equivalent, comparison)",
+    "equivalent fractions": "Fractions (equivalent, comparison)",
+    "class 4 decimals": "Decimals (tenths, hundredths)",
+    "c4 decimals": "Decimals (tenths, hundredths)",
+    "decimals": "Decimals (tenths, hundredths)",
+    "class 4 geometry": "Geometry (angles, lines)",
+    "c4 geometry": "Geometry (angles, lines)",
+    "angles and lines": "Geometry (angles, lines)",
+    "class 4 perimeter": "Perimeter and area",
+    "c4 perimeter": "Perimeter and area",
+    "perimeter and area": "Perimeter and area",
+    "perimeter": "Perimeter and area",
+    "area": "Perimeter and area",
+    "class 4 time": "Time (minutes, 24-hour clock)",
+    "c4 time": "Time (minutes, 24-hour clock)",
+    "24-hour clock": "Time (minutes, 24-hour clock)",
+    "class 4 money": "Money (bills, profit/loss)",
+    "c4 money": "Money (bills, profit/loss)",
+    "profit and loss": "Money (bills, profit/loss)",
+    "profit/loss": "Money (bills, profit/loss)",
 }
 
 
@@ -1123,6 +1721,444 @@ def _build_slot_instruction(
             "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
         )
 
+    # ── Class 4 instruction builders ──────────────────────────
+
+    # Large numbers (up to 1,00,000)
+    if _skill_tag in ("c4_large_number_identify", "c4_large_number_compare",
+                       "c4_large_number_order", "c4_large_number_expand",
+                       "c4_large_number_error", "c4_large_number_thinking"):
+        _fmt = (directive or {}).get("format_hint", "place_value_question")
+        c4_num_instructions = {
+            "c4_large_number_identify": "Identify place value (ten-thousands, thousands, hundreds, tens, ones) in 5-digit numbers. Use Indian numbering system (e.g., 45,678).",
+            "c4_large_number_compare": "Compare two 5-digit numbers using > or <. Example: Which is greater: 45,678 or 45,687?",
+            "c4_large_number_order": "Arrange 4-5 five-digit numbers in ascending or descending order.",
+            "c4_large_number_expand": "Write a 5-digit number in expanded form. Example: 45,678 = 40,000 + 5,000 + 600 + 70 + 8",
+            "c4_large_number_error": "A student made a WRONG statement about place value of a 5-digit number. Ask student to find and correct the mistake.",
+            "c4_large_number_thinking": "Multi-step reasoning about 5-digit numbers. Example: What number is 1000 more than 45,678? Which digit changes when you add 100 to 39,950?",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Large numbers (up to 1,00,000). skill: {_skill_tag}. "
+            f"{c4_num_instructions.get(_skill_tag, 'About large numbers.')} "
+            "Use 5-digit numbers (10000-99999) in Indian system. "
+            "Do NOT use addition/subtraction operations, fractions, decimals. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # Addition and subtraction (5-digit)
+    if _skill_tag in ("c4_add5_column", "c4_add5_word_problem",
+                       "c4_sub5_column", "c4_sub5_word_problem",
+                       "c4_addsub5_missing", "c4_addsub5_error", "c4_addsub5_thinking"):
+        _fmt = (directive or {}).get("format_hint", "column_setup")
+        is_add = "add5" in _skill_tag
+        is_sub = "sub5" in _skill_tag
+        if is_add:
+            op_ctx = "addition with 5-digit numbers. Require carrying in at least one column."
+        elif is_sub:
+            op_ctx = "subtraction with 5-digit numbers. Require borrowing in at least one column."
+        else:
+            op_ctx = "addition or subtraction with 5-digit numbers (10000-99999)."
+        c4_addsub_instructions = {
+            "c4_add5_column": f"Present a 5-digit addition problem in column form. {op_ctx}",
+            "c4_add5_word_problem": f"Create a word problem about {op_ctx} Include a story with character names.",
+            "c4_sub5_column": f"Present a 5-digit subtraction problem in column form. {op_ctx}",
+            "c4_sub5_word_problem": f"Create a word problem about {op_ctx} Include a story with character names.",
+            "c4_addsub5_missing": "Fill-in-the-blank: ___ + 23456 = 56789 or 78901 - ___ = 45678. Answer is the missing number.",
+            "c4_addsub5_error": "A student added or subtracted two 5-digit numbers and got a WRONG answer. The error must involve carrying/borrowing mistake. Ask student to find and correct.",
+            "c4_addsub5_thinking": "Multi-step reasoning about 5-digit addition/subtraction. Example: estimate the sum, compare two expressions, or explain which is greater.",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Addition and subtraction (5-digit). skill: {_skill_tag}. "
+            f"{c4_addsub_instructions.get(_skill_tag, 'About 5-digit add/sub.')} "
+            "Use numbers in range 10000-99999. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # Multiplication (3-digit x 2-digit)
+    if _skill_tag in ("c4_mult_setup", "c4_mult_word_problem",
+                       "c4_mult_missing", "c4_mult_error", "c4_mult_thinking"):
+        c4_mult_ctx = (
+            "Topic: Multiplication (3-digit × 2-digit). "
+            "ONLY use multiplication (×). "
+            "Do NOT use addition, subtraction, carry, borrow, column form, +, -. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts. "
+        )
+        c4_mult_map = {
+            "c4_mult_setup": "Compute the product. Example: 'What is 234 × 56?' Answer is the product.",
+            "c4_mult_word_problem": "format: word_problem. Real-world scenario using multi-digit multiplication. Use 3-digit × 1-digit or 3-digit × 2-digit.",
+            "c4_mult_missing": "format: fill_blank. Fill-in-the-blank multiplication. Example: '___ × 45 = 5400' or '120 × ___ = 3600'. Answer is the missing number.",
+            "c4_mult_error": "format: error_spot. Show a student who got a multi-digit multiplication WRONG. The wrong product and correct product MUST be different. Answer must be the CORRECT product.",
+            "c4_mult_thinking": "format: multi_step. Reasoning about multiplication — e.g., 'Which is greater: 125 × 32 or 250 × 16? Explain.' NOT pure computation.",
+        }
+        return c4_mult_ctx + c4_mult_map.get(_skill_tag, "About multi-digit multiplication.")
+
+    # Division (long division)
+    if _skill_tag in ("c4_div_setup", "c4_div_word_problem",
+                       "c4_div_missing", "c4_div_error", "c4_div_thinking"):
+        c4_div_ctx = (
+            "Topic: Division (long division). "
+            "ONLY use division (÷). "
+            "Use 3-digit ÷ 1-digit (divisor 2-9). May have remainder. "
+            "Do NOT use addition, subtraction, carry, borrow, +, -. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts. "
+        )
+        c4_div_map = {
+            "c4_div_setup": "Compute the quotient and remainder. Example: 'What is 456 ÷ 7?' Answer: quotient = 65, remainder = 1.",
+            "c4_div_word_problem": "format: word_problem. Real-world equal sharing/grouping scenario using long division. Include remainder if applicable.",
+            "c4_div_missing": "format: fill_blank. Fill-in-the-blank division. Example: '___ ÷ 8 = 45 remainder 3' or '567 ÷ ___ = 81'. Answer is the missing number.",
+            "c4_div_error": "format: error_spot. Show a student who got a long division WRONG. Common errors: wrong quotient digit, subtraction mistake in steps. Answer must be the CORRECT quotient.",
+            "c4_div_thinking": "format: multi_step. Reasoning about division — e.g., 'Will 789 ÷ 6 have a remainder? How do you know?' NOT pure computation.",
+        }
+        return c4_div_ctx + c4_div_map.get(_skill_tag, "About long division.")
+
+    # Fractions (equivalent, comparison)
+    if _skill_tag in ("c4_fraction_identify", "c4_fraction_compare",
+                       "c4_fraction_equivalent", "c4_fraction_represent",
+                       "c4_fraction_error", "c4_fraction_thinking"):
+        _fmt = (directive or {}).get("format_hint", "fraction_number")
+        c4_frac_instructions = {
+            "c4_fraction_identify": "Identify a fraction from a picture or description. Use proper fractions (numerator < denominator). Denominators: 2-12.",
+            "c4_fraction_compare": "Compare two fractions. Use same denominator or convert to common denominator. Example: Which is greater: 3/4 or 2/3?",
+            "c4_fraction_equivalent": "Find equivalent fractions. Example: 1/2 = ?/6 or 2/3 = 4/?. Multiply or divide both numerator and denominator by same number.",
+            "c4_fraction_represent": "Fill-in-the-blank with equivalent fraction or simplification. Example: 4/8 = ___/2 or 6/9 simplified = ___.",
+            "c4_fraction_error": "A student made a WRONG statement about equivalent fractions or comparison. Ask student to find and correct the mistake.",
+            "c4_fraction_thinking": "Multi-step fraction reasoning. Example: arrange fractions in order, find fraction between two given fractions, or real-world problem with equivalent fractions.",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Fractions (equivalent, comparison). skill: {_skill_tag}. "
+            f"{c4_frac_instructions.get(_skill_tag, 'About fractions.')} "
+            "Use proper fractions with denominators 2-12. "
+            "Do NOT use decimals, percentages, or mixed numbers. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # Decimals (tenths, hundredths)
+    if _skill_tag in ("c4_decimal_identify", "c4_decimal_compare",
+                       "c4_decimal_word_problem", "c4_decimal_represent",
+                       "c4_decimal_error", "c4_decimal_thinking"):
+        _fmt = (directive or {}).get("format_hint", "place_value_question")
+        c4_dec_instructions = {
+            "c4_decimal_identify": "Identify the decimal place value. Example: 'In 3.45, what digit is in the tenths place?' or 'Write 7 tenths as a decimal.'",
+            "c4_decimal_compare": "Compare two decimals using > or <. Example: Which is greater: 0.45 or 0.5? Always compare with same number of decimal places.",
+            "c4_decimal_word_problem": "Word problem involving decimals in measurement or money context. Example: 'A pencil is 12.5 cm and a pen is 13.2 cm. Which is longer?'",
+            "c4_decimal_represent": "Write a decimal in expanded form. Example: 4.56 = 4 + 0.5 + 0.06. Or convert fraction to decimal: 3/10 = ?",
+            "c4_decimal_error": "A student made a WRONG statement about decimals. Example: '0.5 < 0.45 because 5 < 45'. Ask student to find and correct the mistake.",
+            "c4_decimal_thinking": "Multi-step decimal reasoning. Example: 'Arrange these decimals in order: 0.5, 0.45, 0.54' or 'Which fraction equals 0.25?'",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Decimals (tenths, hundredths). skill: {_skill_tag}. "
+            f"{c4_dec_instructions.get(_skill_tag, 'About decimals.')} "
+            "Use decimals with 1-2 decimal places only (tenths, hundredths). "
+            "Do NOT use fractions with denominators other than 10 or 100. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # Geometry (angles, lines)
+    if _skill_tag in ("c4_geometry_identify", "c4_geometry_classify",
+                       "c4_geometry_represent", "c4_geometry_error", "c4_geometry_thinking"):
+        _fmt = (directive or {}).get("format_hint", "simple_identify")
+        c4_geo_instructions = {
+            "c4_geometry_identify": "Identify types of angles (acute, right, obtuse, straight) or lines (parallel, perpendicular, intersecting).",
+            "c4_geometry_classify": "Classify a given angle or pair of lines. Example: 'An angle of 120° is _____ (acute/right/obtuse).'",
+            "c4_geometry_represent": "Draw or describe a geometric figure with specific properties. Example: 'Draw a shape with exactly 2 right angles.'",
+            "c4_geometry_error": "A student made a WRONG classification of an angle or line type. Ask student to find and correct the mistake.",
+            "c4_geometry_thinking": "Multi-step geometric reasoning. Example: 'A triangle has one right angle and one 45° angle. What is the third angle?'",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Geometry (angles, lines). skill: {_skill_tag}. "
+            f"{c4_geo_instructions.get(_skill_tag, 'About geometry.')} "
+            "Use acute (<90°), right (90°), obtuse (>90°), straight (180°) angles. "
+            "Use parallel, perpendicular, and intersecting lines. "
+            "Do NOT use arithmetic, fractions, or decimals. "
+            "DO NOT repeat the same scenarios. Each question must use DIFFERENT shapes and angles."
+        )
+
+    # Perimeter and area
+    if _skill_tag in ("c4_perimeter_identify", "c4_perimeter_word_problem",
+                       "c4_area_word_problem", "c4_perimeter_area_missing",
+                       "c4_perimeter_area_error", "c4_perimeter_area_thinking"):
+        _fmt = (directive or {}).get("format_hint", "simple_identify")
+        c4_pa_instructions = {
+            "c4_perimeter_identify": "State the formula and compute perimeter of a rectangle or square. Use whole number dimensions (cm or m).",
+            "c4_perimeter_word_problem": "Word problem about perimeter. Example: 'A garden is 12 m long and 8 m wide. How much fencing is needed?'",
+            "c4_area_word_problem": "Word problem about area. Example: 'A room is 5 m long and 4 m wide. What is the area of the floor?'",
+            "c4_perimeter_area_missing": "Fill-in-the-blank. Example: 'A rectangle has length 10 cm and perimeter 30 cm. Width = ___ cm.'",
+            "c4_perimeter_area_error": "A student computed perimeter or area WRONG. Common error: confusing perimeter with area or using wrong formula.",
+            "c4_perimeter_area_thinking": "Multi-step reasoning. Example: 'Two rectangles have the same perimeter. One is 10×5, the other is 8×7. Which has greater area?'",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Perimeter and area. skill: {_skill_tag}. "
+            f"{c4_pa_instructions.get(_skill_tag, 'About perimeter and area.')} "
+            "Use rectangles and squares only. Dimensions in whole numbers (cm or m). "
+            "Perimeter = 2 × (L + W). Area = L × W. "
+            "Do NOT use fractions, decimals, or angles. "
+            "DO NOT repeat the same dimensions. Each question must use DIFFERENT numbers."
+        )
+
+    # Time (minutes, 24-hour clock)
+    if _skill_tag in ("c4_time_reading", "c4_time_word_problem",
+                       "c4_time_convert", "c4_time_missing",
+                       "c4_time_error", "c4_time_thinking"):
+        c4_time_ctx = (
+            "Topic: Time (minutes, 24-hour clock). "
+            "Generate ONLY time-related questions. "
+            "Use 24-hour clock format and minutes. "
+            "Do NOT use addition/subtraction of plain numbers, carry, regroup, "
+            "column form, base ten, place value, estimation, rounding. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT times. "
+        )
+        c4_time_map = {
+            "c4_time_reading": "Read a 24-hour clock. Example: 'What is 15:45 in 12-hour format?' or 'A clock shows 2:30 PM. Write in 24-hour format.'",
+            "c4_time_word_problem": "Word problem about duration in hours and minutes. Example: 'A train departs at 14:30 and arrives at 17:15. How long is the journey?'",
+            "c4_time_convert": "Convert between 12-hour and 24-hour format. Example: '3:45 PM = ___:___ (24-hour)' or '20:15 = ___:___ PM.'",
+            "c4_time_missing": "Fill-in-the-blank about time. Example: '2 hours 30 minutes = ___ minutes' or 'From 09:15 to 11:45 = ___ hours ___ minutes.'",
+            "c4_time_error": "A student made a WRONG time conversion or duration calculation. Example: 'Rani said 15:00 is 5 PM' (wrong — it is 3 PM). Ask student to correct.",
+            "c4_time_thinking": "Multi-step time reasoning. Example: scheduling multiple events, finding overlap, or calculating total duration across midnight.",
+        }
+        return c4_time_ctx + c4_time_map.get(_skill_tag, "About 24-hour time.")
+
+    # Money (bills, profit/loss)
+    if _skill_tag in ("c4_money_identify", "c4_money_word_problem",
+                       "c4_money_profit_loss", "c4_money_missing",
+                       "c4_money_error", "c4_money_thinking"):
+        _fmt = (directive or {}).get("format_hint", "money_question")
+        c4_money_instructions = {
+            "c4_money_identify": "Identify denominations of Indian currency notes and coins. State the total value of a set of notes/coins.",
+            "c4_money_word_problem": "Word problem about buying, selling, making bills. Use realistic prices. VERIFY: total cost < payment amount when computing change.",
+            "c4_money_profit_loss": "Profit/loss problem. Cost Price (CP) and Selling Price (SP). Profit = SP - CP (when SP > CP). Loss = CP - SP (when CP > SP).",
+            "c4_money_missing": "Fill-in-the-blank. Example: 'CP = ₹450, SP = ₹520. Profit = ₹___' or '₹200 + ₹350 + ₹150 = ₹___.'",
+            "c4_money_error": "A student calculated profit/loss or change WRONG. Common error: subtracting in wrong direction, forgetting to multiply by quantity.",
+            "c4_money_thinking": "Multi-step money reasoning. Example: comparing two deals, budgeting for multiple items, or deciding if there is profit or loss.",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Money (bills, profit/loss). skill: {_skill_tag}. "
+            f"{c4_money_instructions.get(_skill_tag, 'About money.')} "
+            "Use rupees (₹) with realistic prices. "
+            "Do NOT use plain arithmetic without money context. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # ── Class 2: Numbers up to 1000 ──
+    if _skill_tag in ("c2_place_value_identify", "c2_number_compare", "c2_number_expansion",
+                       "c2_number_ordering", "c2_place_value_error", "c2_number_thinking"):
+        _fmt = (directive or {}).get("format_hint", "place_value_question")
+        c2_num_instructions = {
+            "c2_place_value_identify": "Identify place value (ones, tens, hundreds) in 3-digit numbers (100-999).",
+            "c2_number_compare": "Compare two 3-digit numbers using > or <. Example: Which is greater: 453 or 435?",
+            "c2_number_expansion": "Write a 3-digit number in expanded form. Example: 453 = 400 + 50 + 3",
+            "c2_number_ordering": "Arrange 3-digit numbers in ascending or descending order.",
+            "c2_place_value_error": "Find the mistake in identifying place value of a 3-digit number.",
+            "c2_number_thinking": "Multi-step reasoning about 3-digit numbers. Example: What is 10 more than 453?",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Numbers up to 1000 (Class 2). skill: {_skill_tag}. "
+            f"{c2_num_instructions.get(_skill_tag, 'About 3-digit numbers.')} "
+            "Use numbers 100-999 ONLY. NEVER use 4-digit numbers or numbers above 999. "
+            "Do NOT use addition/subtraction operations, money, time, fractions. "
+            "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
+        )
+
+    # ── Class 2: Addition (2-digit with carry) ──
+    if _skill_tag in ("c2_add_column", "c2_add_word_problem", "c2_add_missing_number",
+                       "c2_add_error_spot", "c2_add_thinking"):
+        _fmt = (directive or {}).get("format_hint", "column_setup")
+        c2_add_instructions = {
+            "c2_add_column": "Present a 2-digit addition problem in column form. Both numbers 10-99. Require carrying from ones to tens.",
+            "c2_add_word_problem": "Word problem about adding two 2-digit numbers. Include a character name, context, and clear question. Require carrying.",
+            "c2_add_missing_number": "Fill-in-the-blank: '___ + 27 = 54' or '38 + ___ = 65'. Answer is the missing number.",
+            "c2_add_error_spot": "Show a student who added two 2-digit numbers INCORRECTLY (forgot the carry). Ask student to find and correct the mistake.",
+            "c2_add_thinking": "Reasoning about 2-digit addition — e.g., 'Is 47 + 38 closer to 80 or 90? Explain.' NOT pure computation.",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Addition (2-digit with carry). skill: {_skill_tag}. "
+            f"{c2_add_instructions.get(_skill_tag, 'About 2-digit addition.')} "
+            "Use 2-digit numbers (10-99) ONLY. NEVER use 3-digit numbers. "
+            "Numbers MUST require carrying (ones digits sum >= 10). "
+            "DO NOT repeat the same numbers or scenarios."
+        )
+
+    # ── Class 2: Subtraction (2-digit with borrow) ──
+    if _skill_tag in ("c2_sub_column", "c2_sub_word_problem", "c2_sub_missing_number",
+                       "c2_sub_error_spot", "c2_sub_thinking"):
+        _fmt = (directive or {}).get("format_hint", "column_setup")
+        c2_sub_instructions = {
+            "c2_sub_column": "Present a 2-digit subtraction in column form. Both numbers 10-99. Require borrowing.",
+            "c2_sub_word_problem": "Word problem about subtracting two 2-digit numbers. Include a character name and context. Require borrowing.",
+            "c2_sub_missing_number": "Fill-in-the-blank: '63 - ___ = 27' or '___ - 18 = 45'. Answer is the missing number.",
+            "c2_sub_error_spot": "Show a student who subtracted two 2-digit numbers INCORRECTLY (forgot to borrow). Ask student to find and correct the mistake.",
+            "c2_sub_thinking": "Reasoning about 2-digit subtraction — e.g., 'Is 73 - 48 more or less than 30? Explain.' NOT pure computation.",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Subtraction (2-digit with borrow). skill: {_skill_tag}. "
+            f"{c2_sub_instructions.get(_skill_tag, 'About 2-digit subtraction.')} "
+            "Use 2-digit numbers (10-99) ONLY. NEVER use 3-digit numbers. "
+            "Numbers MUST require borrowing (ones digit of top number < ones digit of bottom number). "
+            "DO NOT repeat the same numbers or scenarios."
+        )
+
+    # ── Class 2: Multiplication (tables 2-5) ──
+    if _skill_tag in ("c2_mult_tables", "c2_mult_word_problem", "c2_mult_fill_blank",
+                       "c2_mult_error_spot", "c2_mult_thinking"):
+        c2_mult_ctx = (
+            "Topic: Multiplication tables (2-5) Class 2. "
+            "ONLY use tables 2, 3, 4, 5. NEVER use tables 6-10. "
+            "ONLY use multiplication (x). "
+            "Do NOT use addition, subtraction, carry, borrow, column form, +, -. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        if _skill_tag == "c2_mult_tables":
+            return c2_mult_ctx + "Ask a multiplication fact from tables 2-5 (e.g., 'What is 3 x 4?'). Answer is the product."
+        elif _skill_tag == "c2_mult_word_problem":
+            return c2_mult_ctx + "format: word_problem. Real-world scenario using multiplication from tables 2-5 only."
+        elif _skill_tag == "c2_mult_fill_blank":
+            return c2_mult_ctx + "format: fill_blank. Fill-in-the-blank: '___ x 3 = 12' or '4 x ___ = 20'. Answer is the missing number."
+        elif _skill_tag == "c2_mult_error_spot":
+            return c2_mult_ctx + "format: error_spot. Show a student who got a multiplication fact from tables 2-5 WRONG. Answer must be the CORRECT product."
+        elif _skill_tag == "c2_mult_thinking":
+            return c2_mult_ctx + "format: multi_step. Reasoning about multiplication — e.g., 'Which is greater: 3 x 5 or 4 x 4? Explain.' NOT pure computation."
+        return c2_mult_ctx
+
+    # ── Class 2: Division (sharing equally) ──
+    if _skill_tag in ("c2_div_sharing", "c2_div_word_problem", "c2_div_fill_blank",
+                       "c2_div_error_spot", "c2_div_thinking"):
+        c2_div_ctx = (
+            "Topic: Division (sharing equally) Class 2. "
+            "ONLY use division by 2, 3, 4, 5. NEVER use divisors above 5. "
+            "All divisions must be EXACT (no remainders). "
+            "Do NOT use addition, subtraction, carry, borrow. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        if _skill_tag == "c2_div_sharing":
+            return c2_div_ctx + "Ask about sharing equally (e.g., '12 sweets shared among 3 children. How many each?'). Answer is the quotient."
+        elif _skill_tag == "c2_div_word_problem":
+            return c2_div_ctx + "format: word_problem. Real-world equal sharing problem. Dividends up to 50."
+        elif _skill_tag == "c2_div_fill_blank":
+            return c2_div_ctx + "format: fill_blank. Fill-in-the-blank: '___ / 4 = 5' or '20 / ___ = 4'. Answer is the missing number."
+        elif _skill_tag == "c2_div_error_spot":
+            return c2_div_ctx + "format: error_spot. Show a student who got a sharing/division answer WRONG. Answer must be the CORRECT quotient."
+        elif _skill_tag == "c2_div_thinking":
+            return c2_div_ctx + "format: multi_step. Reasoning about division — e.g., 'Aarav has 20 stickers. He shares equally among some friends and each gets 5. How many friends?' NOT pure computation."
+        return c2_div_ctx
+
+    # ── Class 2: Shapes and space (2D) ──
+    if _skill_tag in ("c2_shape_identify", "c2_shape_word_problem", "c2_shape_fill_blank",
+                       "c2_shape_error_spot", "c2_shape_thinking"):
+        c2_shape_ctx = (
+            "Topic: Shapes and space (2D) Class 2. "
+            "ONLY use basic 2D shapes: circle, square, triangle, rectangle. "
+            "Focus on sides, corners, shape names, real-world shape examples. "
+            "Do NOT use addition, subtraction, multiplication, division. "
+            "DO NOT repeat the same shapes or scenarios. "
+        )
+        if _skill_tag == "c2_shape_identify":
+            return c2_shape_ctx + "Identify a 2D shape by its properties (e.g., 'I have 3 sides and 3 corners. What shape am I?')."
+        elif _skill_tag == "c2_shape_word_problem":
+            return c2_shape_ctx + "format: word_problem. Count sides or corners, or identify shapes in real-world objects."
+        elif _skill_tag == "c2_shape_fill_blank":
+            return c2_shape_ctx + "format: fill_blank. Fill-in-the-blank about shapes. Example: 'A rectangle has ___ sides.' or 'A triangle has ___ corners.'"
+        elif _skill_tag == "c2_shape_error_spot":
+            return c2_shape_ctx + "format: error_spot. Show a student who made a WRONG claim about a shape. Example: 'Priya says a triangle has 4 sides. Is she correct?' Answer must be the correct fact."
+        elif _skill_tag == "c2_shape_thinking":
+            return c2_shape_ctx + "format: multi_step. Reasoning about shapes — e.g., 'How many corners in total do 2 triangles and 1 square have?' NOT pure computation."
+        return c2_shape_ctx
+
+    # ── Class 2: Measurement (length, weight) ──
+    if _skill_tag in ("c2_measure_identify", "c2_measure_compare", "c2_measure_fill_blank",
+                       "c2_measure_error_spot", "c2_measure_thinking"):
+        c2_meas_ctx = (
+            "Topic: Measurement (length, weight) Class 2. "
+            "Use cm, m for length and g, kg for weight. "
+            "Keep numbers simple (up to 100 for cm/g, up to 10 for m/kg). "
+            "Do NOT use addition, subtraction, multiplication, division as standalone. "
+            "DO NOT repeat the same items or scenarios. "
+        )
+        if _skill_tag == "c2_measure_identify":
+            return c2_meas_ctx + "Identify the correct unit for measuring an object. Example: 'Would you use cm or m to measure the length of a pencil?'"
+        elif _skill_tag == "c2_measure_compare":
+            return c2_meas_ctx + "format: comparison_question. Compare two measurements. Example: 'Which is longer: 50 cm or 1 m?'"
+        elif _skill_tag == "c2_measure_fill_blank":
+            return c2_meas_ctx + "format: fill_blank. Fill-in-the-blank: '1 m = ___ cm' or '1 kg = ___ g'."
+        elif _skill_tag == "c2_measure_error_spot":
+            return c2_meas_ctx + "format: error_spot. Show a student who used the WRONG unit or made a measurement comparison error. Answer must be the correct measurement."
+        elif _skill_tag == "c2_measure_thinking":
+            return c2_meas_ctx + "format: multi_step. Reasoning about measurement — e.g., 'Rohan is 120 cm tall. His sister is 95 cm. Who is taller and by how much?' NOT pure unit recall."
+        return c2_meas_ctx
+
+    # ── Class 2: Time (hour, half-hour) ──
+    if _skill_tag in ("c2_clock_reading", "c2_time_word_problem", "c2_time_fill_blank",
+                       "c2_time_error_spot", "c2_time_thinking"):
+        c2_time_ctx = (
+            "Topic: Time (hour, half-hour) Class 2. "
+            "ONLY use o'clock and half past times. "
+            "NEVER use quarter-hours, 15 minutes, or specific minutes. "
+            "Do NOT use addition, subtraction, carry, regroup, base ten, place value. "
+            "DO NOT repeat the same times or scenarios. "
+        )
+        if _skill_tag == "c2_clock_reading":
+            return c2_time_ctx + "Ask about reading clocks showing o'clock or half past only. Example: 'The hour hand is on 3 and the minute hand is on 12. What time is it?'"
+        elif _skill_tag == "c2_time_word_problem":
+            return c2_time_ctx + "format: word_problem. Simple time scenario using o'clock or half past. Example: 'School starts at 8 o'clock. Lunch is at 12 o'clock. How many hours between?'"
+        elif _skill_tag == "c2_time_fill_blank":
+            return c2_time_ctx + "format: fill_blank. Fill-in-the-blank: '1 hour = ___ minutes' or 'Half past 3 is the same as 3:___'."
+        elif _skill_tag == "c2_time_error_spot":
+            return c2_time_ctx + "format: error_spot. Show a student who misread a clock showing o'clock or half past. Answer must be the correct time."
+        elif _skill_tag == "c2_time_thinking":
+            return c2_time_ctx + "format: multi_step. Reasoning about time — e.g., 'Aarav sleeps at 9 o'clock and wakes up at 6 o'clock. How many hours did he sleep?' Use only o'clock and half past."
+        return c2_time_ctx
+
+    # ── Class 2: Money (coins and notes) ──
+    if _skill_tag in ("c2_money_identify", "c2_money_word_problem", "c2_money_fill_blank",
+                       "c2_money_error_spot", "c2_money_thinking"):
+        c2_money_ctx = (
+            "Topic: Money (coins and notes) Class 2. "
+            "Use coins: 1, 2, 5, 10 rupees. Notes: 10, 20, 50, 100 rupees. "
+            "Keep amounts up to 100 rupees. Simple counting, no complex change. "
+            "Do NOT use multiplication, division, fractions, or amounts over 100. "
+            "DO NOT repeat the same amounts or scenarios. "
+        )
+        if _skill_tag == "c2_money_identify":
+            return c2_money_ctx + "Identify coins/notes or count a small set of coins. Example: 'How much is 2 five-rupee coins and 1 two-rupee coin?'"
+        elif _skill_tag == "c2_money_word_problem":
+            return c2_money_ctx + "format: word_problem. Simple buying scenario with amounts up to 100 rupees."
+        elif _skill_tag == "c2_money_fill_blank":
+            return c2_money_ctx + "format: fill_blank. Fill-in-the-blank: '3 ten-rupee notes = Rs ___' or 'Rs 50 - Rs 20 = Rs ___'."
+        elif _skill_tag == "c2_money_error_spot":
+            return c2_money_ctx + "format: error_spot. Show a student who counted coins/notes INCORRECTLY. Answer must be the correct total."
+        elif _skill_tag == "c2_money_thinking":
+            return c2_money_ctx + "format: multi_step. Reasoning about money — e.g., 'Priya has Rs 50. She buys a toy for Rs 35. Does she have enough to also buy a pencil for Rs 20? Why?' NOT pure computation."
+        return c2_money_ctx
+
+    # ── Class 2: Data handling (pictographs) ──
+    if _skill_tag in ("c2_data_read", "c2_data_word_problem", "c2_data_fill_blank",
+                       "c2_data_error_spot", "c2_data_thinking"):
+        c2_data_ctx = (
+            "Topic: Data handling (pictographs) Class 2. "
+            "Questions about reading and interpreting pictographs/picture graphs. "
+            "Use simple categories (fruits, animals, colours) with symbols representing 1 item each. "
+            "Do NOT use addition, subtraction, multiplication, division as standalone topics. "
+            "DO NOT repeat the same data sets or scenarios. "
+        )
+        if _skill_tag == "c2_data_read":
+            return c2_data_ctx + "Read a pictograph: describe data in words. Example: 'In a pictograph, apples have 5 symbols and bananas have 3. How many apples are shown?'"
+        elif _skill_tag == "c2_data_word_problem":
+            return c2_data_ctx + "format: word_problem. Ask a question that requires reading a pictograph to answer — e.g., 'Which fruit is most popular? How many more apples than bananas?'"
+        elif _skill_tag == "c2_data_fill_blank":
+            return c2_data_ctx + "format: fill_blank. Fill-in-the-blank from a pictograph. Example: 'Red has 4 symbols and Blue has ___. Together they have 7.'"
+        elif _skill_tag == "c2_data_error_spot":
+            return c2_data_ctx + "format: error_spot. Show a student who misread a pictograph. Example: 'There are 6 symbols for cats but Amit says there are 8. What is wrong?' Answer must be the correct count."
+        elif _skill_tag == "c2_data_thinking":
+            return c2_data_ctx + "format: multi_step. Reasoning about data — e.g., 'If each symbol stands for 1 child, and Class A has 8 symbols and Class B has 5, which class has more children and by how many?' NOT pure counting."
+        return c2_data_ctx
+
     # Check if this is a non-arithmetic topic by looking at skill_tag
     _NON_ARITHMETIC_TAGS = {
         "multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank",
@@ -1144,6 +2180,10 @@ def _build_slot_instruction(
         "number_pattern", "shape_pattern", "pattern_fill_blank",
         "pattern_error_spot", "pattern_thinking",
     }
+    # Include all c2_ and c4_ prefixed tags as non-arithmetic
+    _NON_ARITHMETIC_TAGS.update(
+        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_")
+    )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
     base = ""
@@ -1354,6 +2394,92 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
     "Division basics": (
         "CRITICAL: ALL questions MUST be about Division ONLY — equal sharing, grouping, "
         "division facts. NEVER generate addition/subtraction questions.\n"
+    ),
+    # ── Class 2 non-arithmetic topic constraints ──
+    "Numbers up to 1000 (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Numbers/Place Value up to 1000 ONLY — "
+        "hundreds, tens, ones, expanded form, comparison, ordering. "
+        "Numbers must be 3-digit (100-999). NEVER use numbers above 999. "
+        "NEVER generate addition/subtraction questions.\n"
+    ),
+    "Shapes and space (2D)": (
+        "CRITICAL: ALL questions MUST be about 2D shapes ONLY — circle, square, triangle, "
+        "rectangle, sides, corners. NEVER generate arithmetic questions.\n"
+    ),
+    "Measurement (length, weight)": (
+        "CRITICAL: ALL questions MUST be about Measurement ONLY — length (cm, m), "
+        "weight (g, kg). Compare, estimate, convert simple units. "
+        "NEVER generate plain arithmetic questions.\n"
+    ),
+    "Time (hour, half-hour)": (
+        "CRITICAL: ALL questions MUST be about Time ONLY — hours and half-hours on clocks. "
+        "ONLY use o'clock and half past times. NEVER use quarter-hours or minutes. "
+        "NEVER generate addition/subtraction questions.\n"
+    ),
+    "Money (coins and notes)": (
+        "CRITICAL: ALL questions MUST be about Money ONLY — coins (1, 2, 5, 10 rupees), "
+        "notes (10, 20, 50, 100 rupees). Simple buying, counting coins. "
+        "NEVER generate plain arithmetic questions.\n"
+    ),
+    "Data handling (pictographs)": (
+        "CRITICAL: ALL questions MUST be about reading and interpreting pictographs ONLY — "
+        "picture graphs, counting symbols, comparing categories. "
+        "NEVER generate plain arithmetic questions.\n"
+    ),
+    "Multiplication (tables 2-5)": (
+        "CRITICAL: ALL questions MUST be about Multiplication tables 2, 3, 4, 5 ONLY. "
+        "NEVER use tables above 5. NEVER generate addition/subtraction/carry questions.\n"
+    ),
+    "Division (sharing equally)": (
+        "CRITICAL: ALL questions MUST be about equal sharing/division by 2, 3, 4, 5 ONLY. "
+        "All division must be exact (no remainders). NEVER use divisors above 5. "
+        "NEVER generate addition/subtraction questions.\n"
+    ),
+    # ── Class 4 topic constraints ──
+    "Large numbers (up to 1,00,000)": (
+        "CRITICAL: ALL questions MUST be about large numbers (5-digit, up to 99999) ONLY — "
+        "Indian system place value (ten-thousands, thousands, hundreds, tens, ones), "
+        "expanded form, comparison, ordering. NEVER generate addition/subtraction operation questions.\n"
+    ),
+    "Multiplication (3-digit × 2-digit)": (
+        "CRITICAL: ALL questions MUST be about multi-digit multiplication ONLY — "
+        "3-digit × 1-digit or 3-digit × 2-digit. NEVER generate addition/subtraction/carry questions.\n"
+    ),
+    "Division (long division)": (
+        "CRITICAL: ALL questions MUST be about long division ONLY — "
+        "3-digit ÷ 1-digit with or without remainder. Show steps of long division. "
+        "NEVER generate addition/subtraction questions.\n"
+    ),
+    "Fractions (equivalent, comparison)": (
+        "CRITICAL: ALL questions MUST be about Fractions ONLY — equivalent fractions, "
+        "comparing fractions, simplifying fractions, fractions on number line. "
+        "NEVER generate addition/subtraction/decimal questions.\n"
+    ),
+    "Decimals (tenths, hundredths)": (
+        "CRITICAL: ALL questions MUST be about Decimals ONLY — tenths (0.1), hundredths (0.01), "
+        "decimal place value, converting fractions to decimals, comparing decimals. "
+        "NEVER generate addition/subtraction/carry questions.\n"
+    ),
+    "Geometry (angles, lines)": (
+        "CRITICAL: ALL questions MUST be about Geometry ONLY — types of angles (acute, right, obtuse, straight), "
+        "types of lines (parallel, perpendicular, intersecting). "
+        "NEVER generate arithmetic, fraction, or decimal questions.\n"
+    ),
+    "Perimeter and area": (
+        "CRITICAL: ALL questions MUST be about Perimeter and Area ONLY — "
+        "perimeter of rectangles/squares, area of rectangles/squares. "
+        "Use formulas: Perimeter = 2 × (length + width), Area = length × width. "
+        "NEVER generate plain arithmetic questions.\n"
+    ),
+    "Time (minutes, 24-hour clock)": (
+        "CRITICAL: ALL questions MUST be about Time ONLY — reading 24-hour clocks, "
+        "converting between 12-hour and 24-hour format, calculating duration in hours and minutes. "
+        "NEVER generate plain addition/subtraction questions.\n"
+    ),
+    "Money (bills, profit/loss)": (
+        "CRITICAL: ALL questions MUST be about Money ONLY — bills, budgets, "
+        "cost price, selling price, profit and loss. "
+        "Use rupees (₹). NEVER generate plain arithmetic questions.\n"
     ),
 }
 

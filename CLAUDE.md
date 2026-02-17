@@ -77,19 +77,45 @@ thinking:        {thinking, growing_pattern, multi_step}
 
 # Topic System
 
-## 12 Supported Topics (TOPIC_PROFILES keys)
-1. Addition (carries) — 3-digit with carry enforcement
-2. Subtraction (borrowing) — 3-digit with borrow enforcement
-3. Addition and subtraction (3-digit) — combined, uses `recipes_by_count` for 5/10/15/20
-4. Multiplication (tables 2-10)
-5. Division basics
-6. Numbers up to 10000 — place value, comparison, expansion, ordering
-7. Fractions (halves, quarters) — limited scope
-8. Fractions — broader fractions
-9. Time (reading clock, calendar)
-10. Money (bills and change)
-11. Symmetry
-12. Patterns and sequences
+## 32 Supported Topics (TOPIC_PROFILES keys)
+
+### Class 2 (10 topics)
+1. Numbers up to 1000 (Class 2) — 3-digit place value
+2. Addition (2-digit with carry)
+3. Subtraction (2-digit with borrow)
+4. Multiplication (tables 2-5)
+5. Division (sharing equally) — division by 2-5, no remainders
+6. Shapes and space (2D) — circle, square, triangle, rectangle
+7. Measurement (length, weight) — cm, m, kg, g
+8. Time (hour, half-hour) — o'clock and half past only
+9. Money (coins and notes) — amounts up to ₹100
+10. Data handling (pictographs)
+
+### Class 3 (12 topics)
+11. Addition (carries) — 3-digit with carry enforcement
+12. Subtraction (borrowing) — 3-digit with borrow enforcement
+13. Addition and subtraction (3-digit) — combined, uses `recipes_by_count` for 5/10/15/20
+14. Multiplication (tables 2-10)
+15. Division basics
+16. Numbers up to 10000 — place value, comparison, expansion, ordering
+17. Fractions (halves, quarters) — limited scope
+18. Fractions — broader fractions
+19. Time (reading clock, calendar)
+20. Money (bills and change)
+21. Symmetry
+22. Patterns and sequences
+
+### Class 4 (10 topics)
+23. Large numbers (up to 1,00,000) — Indian system, 5-digit
+24. Addition and subtraction (5-digit)
+25. Multiplication (3-digit × 2-digit)
+26. Division (long division) — 3-digit ÷ 1-digit with remainder
+27. Fractions (equivalent, comparison)
+28. Decimals (tenths, hundredths)
+29. Geometry (angles, lines)
+30. Perimeter and area — rectangles, squares
+31. Time (minutes, 24-hour clock)
+32. Money (bills, profit/loss)
 
 Each profile has: `allowed_skill_tags`, `allowed_slot_types`, `disallowed_keywords`, `disallowed_visual_types`, `default_recipe`, optional `recipes_by_count`.
 
@@ -214,3 +240,4 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - **2026-02-17**: Combined add/sub profile with recipes_by_count, enhanced instruction builders, dedup tracking.
 - **2026-02-17**: Fix combined add/sub to generate 10 mixed questions in single worksheet (removed from UI_SKILL_TO_CONTRACTS, pass topic to build_worksheet_plan, add thinking to recipes_by_count).
 - **2026-02-17**: Phase 1 — Fix the Foundation. Backend: replaced 10 bare except blocks with proper logging across audit, telemetry, mastery_store, worksheets_v1, slot_engine. Fixed _scale_recipe() bug causing incorrect 5-question worksheets. Frontend: added console.warn logging for silent failures in subscription, engagement, profile, api fallback. QA: new test_all_topics.py (48 combinations, 80 checks). Fixed stale test_add_sub_expansion test.
+- **2026-02-17**: Phase 3 — Content Expansion. Syllabus: hardcoded CBSE syllabus endpoint GET /api/syllabus/cbse/{grade}/{subject} for Class 1-5 Maths & English (no DB needed). Topics: added 10 Class 2 + 10 Class 4 Maths topic profiles (32 total). 110+ new skill tags, aliases, constraints, and instruction builders. Test suite now covers 128 combinations (200 checks).
