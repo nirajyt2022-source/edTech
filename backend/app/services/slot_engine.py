@@ -317,6 +317,13 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "c1_money_fill": ("representation", "missing_number"),
     "c1_money_error": ("error_detection", "error_spot"),
     "c1_money_think": ("thinking", "multi_step"),
+    # Spatial sense (Class 1)
+    "c1_spatial_in_out_identify": ("recognition", "simple_identify"),
+    "c1_spatial_near_far_identify": ("recognition", "simple_identify"),
+    "c1_spatial_position_word": ("application", "word_problem"),
+    "c1_spatial_draw": ("representation", "shape_question"),
+    "c1_spatial_error": ("error_detection", "error_spot"),
+    "c1_spatial_thinking": ("thinking", "multi_step"),
     # ── Class 2 specific tags ──
     # Numbers up to 1000 (Class 2)
     "c2_place_value_identify": ("recognition", "place_value_question"),
@@ -1462,6 +1469,11 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Count a small group of coins up to 20 rupees",
         "Solve simple problems about buying with coins",
     ],
+    "Spatial sense (in/out, near/far) (Class 1)": [
+        "Identify objects that are inside or outside a container",
+        "Recognize objects that are near or far from a reference point",
+        "Describe positions using spatial vocabulary (in/out, near/far)",
+    ],
     # ── Class 2 topics ──
     "Numbers up to 1000 (Class 2)": [
         "Read, write, and compare numbers up to 1,000",
@@ -2534,6 +2546,13 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "Raju saving one-rupee coins", "buying a balloon at a mela",
         "Meena counting coins after Diwali", "paying for an ice cream bar",
         "coins found under the sofa cushion", "buying a eraser at the stationery shop",
+    ],
+    "Spatial sense (in/out, near/far) (Class 1)": [
+        "toys in a toy box", "books on a shelf or inside a bag",
+        "fruits in a basket", "pencils in a pencil case",
+        "flowers in a pot", "birds near or far from a tree",
+        "children inside or outside the classroom", "ball near or far from the goal",
+        "shoes inside or outside the cupboard", "car near or far from the house",
     ],
     # Class 2 topics
     "Numbers up to 1000 (Class 2)": [
@@ -4235,6 +4254,28 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "c1_money_fill", "count": 2},
             {"skill_tag": "c1_money_error", "count": 1},
             {"skill_tag": "c1_money_think", "count": 1},
+        ],
+    },
+    # ── Spatial sense (Class 1) ──
+    "Spatial sense (in/out, near/far) (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_spatial_in_out_identify", "c1_spatial_near_far_identify",
+            "c1_spatial_position_word", "c1_spatial_draw",
+            "c1_spatial_error", "c1_spatial_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "add", "subtract", "multiply", "divide", "fraction", "decimal",
+            "carry", "borrow", "sum", "difference", "product",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c1_spatial_in_out_identify", "count": 2},
+            {"skill_tag": "c1_spatial_near_far_identify", "count": 1},
+            {"skill_tag": "c1_spatial_position_word", "count": 4},
+            {"skill_tag": "c1_spatial_draw", "count": 1},
+            {"skill_tag": "c1_spatial_error", "count": 1},
+            {"skill_tag": "c1_spatial_thinking", "count": 1},
         ],
     },
     # ══════════════════════════════════════════════════════════
@@ -7452,6 +7493,12 @@ _TOPIC_ALIASES: dict[str, str] = {
     "c1 money": "Money (Class 1)",
     "class 1 money": "Money (Class 1)",
     "coins": "Money (Class 1)",
+    "spatial sense": "Spatial sense (in/out, near/far) (Class 1)",
+    "in/out": "Spatial sense (in/out, near/far) (Class 1)",
+    "near/far": "Spatial sense (in/out, near/far) (Class 1)",
+    "spatial sense (in/out, near/far)": "Spatial sense (in/out, near/far) (Class 1)",
+    "c1 spatial": "Spatial sense (in/out, near/far) (Class 1)",
+    "class 1 spatial": "Spatial sense (in/out, near/far) (Class 1)",
     # Class 2 aliases
     "class 2 numbers": "Numbers up to 1000 (Class 2)",
     "class 2 addition": "Addition (2-digit with carry)",
@@ -9219,6 +9266,33 @@ def _build_slot_instruction(
         elif _skill_tag == "c1_money_think":
             return c1_money_ctx + "format: multi_step. Reasoning about money. Example: 'Priya has ₹10. A toffee costs ₹2. Can she buy 4 toffees? Why?' NOT pure computation."
         return c1_money_ctx
+
+    # ── Class 1: Spatial sense ──
+    if _skill_tag in ("c1_spatial_in_out_identify", "c1_spatial_near_far_identify",
+                       "c1_spatial_position_word", "c1_spatial_draw",
+                       "c1_spatial_error", "c1_spatial_thinking"):
+        c1_spatial_ctx = (
+            "Topic: Spatial sense (in/out, near/far) (Class 1). "
+            "GRADE 1 ONLY: Spatial relationships. Use simple child-friendly language. "
+            "Use Indian contexts: home, school, park, toys, everyday objects. "
+            "Names: Raju, Meena, Priya, Bablu, Amma, Dadi. "
+            "NEVER use numbers, addition, subtraction, or arithmetic. "
+            "Focus ONLY on position words: in, out, near, far. "
+            "DO NOT repeat the same objects or scenarios. "
+        )
+        if _skill_tag == "c1_spatial_in_out_identify":
+            return c1_spatial_ctx + "Identify what is inside or outside. Example: 'Is the ball inside or outside the box?' Answer: inside."
+        elif _skill_tag == "c1_spatial_near_far_identify":
+            return c1_spatial_ctx + "Identify what is near or far. Example: 'Is the tree near or far from the house?' Answer: near."
+        elif _skill_tag == "c1_spatial_position_word":
+            return c1_spatial_ctx + "format: word_problem. Describe a scene and ask about position. Example: 'Raju puts his shoes inside the cupboard. Where are the shoes?' Answer: inside the cupboard."
+        elif _skill_tag == "c1_spatial_draw":
+            return c1_spatial_ctx + "format: shape_question. Ask child to describe or identify position in a picture scenario. Example: 'Draw a flower INSIDE the pot.' Answer: flower inside pot."
+        elif _skill_tag == "c1_spatial_error":
+            return c1_spatial_ctx + "format: error_spot. Show a student who described position WRONG. Example: 'Meena says the cat is inside the house. But the cat is sitting on the roof. What is wrong?' Answer must state the correct position."
+        elif _skill_tag == "c1_spatial_thinking":
+            return c1_spatial_ctx + "format: multi_step. Reasoning about spatial positions. Example: 'The ball is inside the box. The box is near the door. Is the ball near or far from the door?' Answer: near."
+        return c1_spatial_ctx
 
     # ── Class 2: Numbers up to 1000 ──
     if _skill_tag in ("c2_place_value_identify", "c2_number_compare", "c2_number_expansion",
@@ -12567,6 +12641,11 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "CRITICAL: ALL questions MUST be about Indian coins ONLY — ₹1, ₹2, ₹5 coins. "
         "NO notes (no ₹10, ₹20, ₹50, ₹100). Total must NEVER exceed ₹20. "
         "Simple counting of coins only. NEVER generate arithmetic beyond simple coin counting.\n"
+    ),
+    "Spatial sense (in/out, near/far) (Class 1)": (
+        "CRITICAL: ALL questions MUST be about spatial relationships — in/out and near/far ONLY. "
+        "NEVER generate addition, subtraction, multiplication, division, or any arithmetic. "
+        "NEVER use numbers for computation. Use simple Class 1 language about positions of objects.\n"
     ),
     "Addition (2-digit with carry)": (
         "CRITICAL: ALL questions MUST be about 2-digit Addition with carrying ONLY. "
