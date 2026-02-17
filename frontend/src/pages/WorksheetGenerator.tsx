@@ -131,6 +131,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [error, setError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [showAnswers, setShowAnswers] = useState(false)
+  const [revealedHints, setRevealedHints] = useState<Set<string>>(new Set())
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
 
   // Curriculum-based state
@@ -1228,6 +1229,24 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                                             <div className="border-b border-border/40 h-8"></div>
                                           </div>
                                         )}
+                                        {/* Hint for thinking/error_detection (Gold-G6) */}
+                                        {question.explanation && (question.role === 'thinking' || question.role === 'error_detection') && (
+                                          <div className="mt-3 print:mt-2">
+                                            {revealedHints.has(question.id) ? (
+                                              <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-lg text-sm text-amber-900 italic print:bg-gray-50 print:border-gray-300 print:text-gray-600">
+                                                <span className="font-semibold not-italic text-amber-700 print:text-gray-700">Hint: </span>
+                                                {question.explanation}
+                                              </div>
+                                            ) : (
+                                              <button
+                                                onClick={() => setRevealedHints(prev => new Set(prev).add(question.id))}
+                                                className="inline-flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700 font-medium transition-colors print:hidden"
+                                              >
+                                                <span>&#128161;</span> Show Hint
+                                              </button>
+                                            )}
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -1266,6 +1285,24 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                                         <div className="border-b border-border/40 h-8"></div>
                                         <div className="border-b border-border/40 h-8"></div>
                                         <div className="border-b border-border/40 h-8"></div>
+                                      </div>
+                                    )}
+                                    {/* Hint for thinking/error_detection (Gold-G6) */}
+                                    {question.explanation && (question.role === 'thinking' || question.role === 'error_detection') && (
+                                      <div className="mt-3 print:mt-2">
+                                        {revealedHints.has(question.id) ? (
+                                          <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-lg text-sm text-amber-900 italic print:bg-gray-50 print:border-gray-300 print:text-gray-600">
+                                            <span className="font-semibold not-italic text-amber-700 print:text-gray-700">Hint: </span>
+                                            {question.explanation}
+                                          </div>
+                                        ) : (
+                                          <button
+                                            onClick={() => setRevealedHints(prev => new Set(prev).add(question.id))}
+                                            className="inline-flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700 font-medium transition-colors print:hidden"
+                                          >
+                                            <span>&#128161;</span> Show Hint
+                                          </button>
+                                        )}
                                       </div>
                                     )}
                                   </div>
