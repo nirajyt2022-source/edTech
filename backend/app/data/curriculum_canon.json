@@ -1,6 +1,9 @@
 {
   "meta": {
-    "version": "2.0"
+    "version": "3.1",
+    "generated_from": "slot_engine.py TOPIC_PROFILES",
+    "description": "Auto-synced curriculum - only topics with working generation logic",
+    "last_synced": "Run: python backend/scripts/sync_curriculum.py"
   },
   "grades": [
     {
@@ -8,14 +11,20 @@
       "stage": "Foundational",
       "subjects": [
         {
-          "name": "Computer",
+          "name": "Maths",
           "region": "Global",
           "skills": [
-            "Parts of Computer",
-            "Using Mouse and Keyboard"
+            "Addition up to 20",
+            "Basic Shapes",
+            "Measurement",
+            "Numbers 1 to 50",
+            "Numbers 51 to 100",
+            "Subtraction within 20"
           ],
           "logic_tags": [
-            "numerical"
+            "numerical",
+            "spatial",
+            "logical"
           ],
           "depth": "core"
         },
@@ -32,20 +41,27 @@
             "Simple Sentences"
           ],
           "logic_tags": [
-            "numerical"
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
           ],
           "depth": "core"
         },
         {
-          "name": "Health",
+          "name": "EVS",
           "region": "Global",
           "skills": [
-            "Basic Physical Activities",
-            "Good Posture",
-            "Personal Hygiene"
+            "Animals Around Us",
+            "Food We Eat",
+            "My Body",
+            "My Family",
+            "Plants Around Us",
+            "Seasons and Weather"
           ],
           "logic_tags": [
-            "numerical"
+            "observation",
+            "environment",
+            "life_science"
           ],
           "depth": "core"
         },
@@ -59,7 +75,36 @@
             "Varnamala Vyanjan"
           ],
           "logic_tags": [
-            "numerical"
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Computer",
+          "region": "Global",
+          "skills": [
+            "Parts of Computer",
+            "Using Mouse and Keyboard"
+          ],
+          "logic_tags": [
+            "procedural",
+            "technology"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Health",
+          "region": "Global",
+          "skills": [
+            "Basic Physical Activities",
+            "Good Posture",
+            "Personal Hygiene"
+          ],
+          "logic_tags": [
+            "observation",
+            "wellness"
           ],
           "depth": "core"
         },
@@ -71,23 +116,8 @@
             "Sharing"
           ],
           "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Science",
-          "region": "Global",
-          "skills": [
-            "Animals Around Us",
-            "Food We Eat",
-            "My Body",
-            "My Family",
-            "Plants Around Us",
-            "Seasons and Weather"
-          ],
-          "logic_tags": [
-            "numerical"
+            "ethical_reasoning",
+            "social_awareness"
           ],
           "depth": "core"
         }
@@ -98,15 +128,15 @@
       "stage": "Foundational",
       "subjects": [
         {
-          "name": "Computer",
+          "name": "Maths",
           "region": "Global",
           "skills": [
-            "Basic Typing",
-            "Desktop and Icons",
-            "Special Keys"
+            "Numbers up to 1000"
           ],
           "logic_tags": [
-            "numerical"
+            "numerical",
+            "spatial",
+            "logical"
           ],
           "depth": "core"
         },
@@ -122,20 +152,27 @@
             "Verbs"
           ],
           "logic_tags": [
-            "numerical"
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
           ],
           "depth": "core"
         },
         {
-          "name": "Health",
+          "name": "EVS",
           "region": "Global",
           "skills": [
-            "Basic Stretching",
-            "Healthy Eating Habits",
-            "Outdoor Play"
+            "Animals and Habitats",
+            "Food and Nutrition",
+            "Our Senses",
+            "Plants",
+            "Shelter",
+            "Water"
           ],
           "logic_tags": [
-            "numerical"
+            "observation",
+            "environment",
+            "life_science"
           ],
           "depth": "core"
         },
@@ -150,7 +187,37 @@
             "Two Letter Words"
           ],
           "logic_tags": [
-            "numerical"
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Computer",
+          "region": "Global",
+          "skills": [
+            "Basic Typing",
+            "Desktop and Icons",
+            "Special Keys"
+          ],
+          "logic_tags": [
+            "procedural",
+            "technology"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Health",
+          "region": "Global",
+          "skills": [
+            "Basic Stretching",
+            "Healthy Eating Habits",
+            "Outdoor Play"
+          ],
+          "logic_tags": [
+            "observation",
+            "wellness"
           ],
           "depth": "core"
         },
@@ -162,23 +229,8 @@
             "Respecting Elders"
           ],
           "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Science",
-          "region": "Global",
-          "skills": [
-            "Animals and Habitats",
-            "Food and Nutrition",
-            "Our Senses",
-            "Plants",
-            "Shelter",
-            "Water"
-          ],
-          "logic_tags": [
-            "numerical"
+            "ethical_reasoning",
+            "social_awareness"
           ],
           "depth": "core"
         }
@@ -188,19 +240,6 @@
       "grade": 3,
       "stage": "Preparatory",
       "subjects": [
-        {
-          "name": "Computer",
-          "region": "Global",
-          "skills": [
-            "Files and Folders",
-            "Keyboard Shortcuts",
-            "MS Paint Basics"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
         {
           "name": "English",
           "region": "Global",
@@ -215,62 +254,9 @@
             "Vocabulary"
           ],
           "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "GK",
-          "region": "Global",
-          "skills": [
-            "Current Awareness",
-            "Famous Landmarks",
-            "National Symbols",
-            "Solar System Basics"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Health",
-          "region": "Global",
-          "skills": [
-            "Balanced Diet",
-            "Safety at Play",
-            "Team Sports Rules"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Hindi",
-          "region": "Global",
-          "skills": [
-            "Kahani Lekhan",
-            "Matras",
-            "Shabd Rachna",
-            "Vakya Rachna",
-            "Varnamala"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Moral Science",
-          "region": "Global",
-          "skills": [
-            "Empathy",
-            "Environmental Care",
-            "Teamwork"
-          ],
-          "logic_tags": [
-            "numerical"
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
           ],
           "depth": "core"
         },
@@ -287,7 +273,83 @@
             "Water"
           ],
           "logic_tags": [
-            "numerical"
+            "observation",
+            "experimentation",
+            "scientific_reasoning"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Hindi",
+          "region": "Global",
+          "skills": [
+            "Kahani Lekhan",
+            "Matras",
+            "Shabd Rachna",
+            "Vakya Rachna",
+            "Varnamala"
+          ],
+          "logic_tags": [
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Computer",
+          "region": "Global",
+          "skills": [
+            "Files and Folders",
+            "Keyboard Shortcuts",
+            "MS Paint Basics"
+          ],
+          "logic_tags": [
+            "procedural",
+            "technology"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "GK",
+          "region": "Global",
+          "skills": [
+            "Current Awareness",
+            "Famous Landmarks",
+            "National Symbols",
+            "Solar System Basics"
+          ],
+          "logic_tags": [
+            "factual_recall",
+            "current_awareness"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Health",
+          "region": "Global",
+          "skills": [
+            "Balanced Diet",
+            "Safety at Play",
+            "Team Sports Rules"
+          ],
+          "logic_tags": [
+            "observation",
+            "wellness"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Moral Science",
+          "region": "Global",
+          "skills": [
+            "Empathy",
+            "Environmental Care",
+            "Teamwork"
+          ],
+          "logic_tags": [
+            "ethical_reasoning",
+            "social_awareness"
           ],
           "depth": "core"
         }
@@ -297,19 +359,6 @@
       "grade": 4,
       "stage": "Preparatory",
       "subjects": [
-        {
-          "name": "Computer",
-          "region": "Global",
-          "skills": [
-            "Internet Safety",
-            "Introduction to Scratch",
-            "MS Word Basics"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
         {
           "name": "English",
           "region": "Global",
@@ -324,60 +373,9 @@
             "Vocabulary"
           ],
           "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "GK",
-          "region": "Global",
-          "skills": [
-            "Continents and Oceans",
-            "Famous Scientists",
-            "Festivals of India",
-            "Sports and Games"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Health",
-          "region": "Global",
-          "skills": [
-            "First Aid Basics",
-            "Importance of Sleep",
-            "Yoga Introduction"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Hindi",
-          "region": "Global",
-          "skills": [
-            "Anusvaar and Visarg",
-            "Comprehension Hindi",
-            "Kaal",
-            "Patra Lekhan",
-            "Vachan and Ling"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Moral Science",
-          "region": "Global",
-          "skills": [
-            "Leadership"
-          ],
-          "logic_tags": [
-            "numerical"
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
           ],
           "depth": "core"
         },
@@ -394,7 +392,81 @@
             "States of Matter"
           ],
           "logic_tags": [
-            "numerical"
+            "observation",
+            "experimentation",
+            "scientific_reasoning"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Hindi",
+          "region": "Global",
+          "skills": [
+            "Anusvaar and Visarg",
+            "Comprehension Hindi",
+            "Kaal",
+            "Patra Lekhan",
+            "Vachan and Ling"
+          ],
+          "logic_tags": [
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Computer",
+          "region": "Global",
+          "skills": [
+            "Internet Safety",
+            "Introduction to Scratch",
+            "MS Word Basics"
+          ],
+          "logic_tags": [
+            "procedural",
+            "technology"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "GK",
+          "region": "Global",
+          "skills": [
+            "Continents and Oceans",
+            "Famous Scientists",
+            "Festivals of India",
+            "Sports and Games"
+          ],
+          "logic_tags": [
+            "factual_recall",
+            "current_awareness"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Health",
+          "region": "Global",
+          "skills": [
+            "First Aid Basics",
+            "Importance of Sleep",
+            "Yoga Introduction"
+          ],
+          "logic_tags": [
+            "observation",
+            "wellness"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Moral Science",
+          "region": "Global",
+          "skills": [
+            "Leadership"
+          ],
+          "logic_tags": [
+            "ethical_reasoning",
+            "social_awareness"
           ],
           "depth": "core"
         }
@@ -405,16 +477,18 @@
       "stage": "Preparatory",
       "subjects": [
         {
-          "name": "Computer",
+          "name": "Maths",
           "region": "Global",
           "skills": [
-            "Digital Citizenship",
-            "Internet Basics",
-            "MS PowerPoint Basics",
-            "Scratch Programming"
+            "Decimals (all operations)",
+            "Fractions (add and subtract)",
+            "Geometry (circles, symmetry)",
+            "Numbers up to 10 lakh"
           ],
           "logic_tags": [
-            "numerical"
+            "numerical",
+            "spatial",
+            "logical"
           ],
           "depth": "core"
         },
@@ -429,65 +503,14 @@
             "Creative Writing",
             "Direct and Indirect Speech",
             "Formal Letter Writing",
+            "Speed distance time",
             "Summary Writing",
             "Synonyms and Antonyms"
           ],
           "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "GK",
-          "region": "Global",
-          "skills": [
-            "Environmental Awareness",
-            "Indian Constitution",
-            "Space Missions",
-            "World Heritage Sites"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Health",
-          "region": "Global",
-          "skills": [
-            "Fitness and Stamina",
-            "Mental Health Awareness",
-            "Nutrition Labels Reading"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Hindi",
-          "region": "Global",
-          "skills": [
-            "Muhavare",
-            "Paryayvachi Shabd",
-            "Samas",
-            "Samvad Lekhan",
-            "Vilom Shabd"
-          ],
-          "logic_tags": [
-            "numerical"
-          ],
-          "depth": "core"
-        },
-        {
-          "name": "Moral Science",
-          "region": "Global",
-          "skills": [
-            "Digital Ethics",
-            "Global Citizenship"
-          ],
-          "logic_tags": [
-            "numerical"
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
           ],
           "depth": "core"
         },
@@ -504,7 +527,83 @@
             "Solar System and Earth"
           ],
           "logic_tags": [
-            "numerical"
+            "observation",
+            "experimentation",
+            "scientific_reasoning"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Hindi",
+          "region": "Global",
+          "skills": [
+            "Muhavare",
+            "Paryayvachi Shabd",
+            "Samas",
+            "Samvad Lekhan",
+            "Vilom Shabd"
+          ],
+          "logic_tags": [
+            "vocabulary",
+            "reading_comprehension",
+            "grammar"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Computer",
+          "region": "Global",
+          "skills": [
+            "Digital Citizenship",
+            "Internet Basics",
+            "MS PowerPoint Basics",
+            "Scratch Programming"
+          ],
+          "logic_tags": [
+            "procedural",
+            "technology"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "GK",
+          "region": "Global",
+          "skills": [
+            "Environmental Awareness",
+            "Indian Constitution",
+            "Space Missions",
+            "World Heritage Sites"
+          ],
+          "logic_tags": [
+            "factual_recall",
+            "current_awareness"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Health",
+          "region": "Global",
+          "skills": [
+            "Fitness and Stamina",
+            "Mental Health Awareness",
+            "Nutrition Labels Reading"
+          ],
+          "logic_tags": [
+            "observation",
+            "wellness"
+          ],
+          "depth": "core"
+        },
+        {
+          "name": "Moral Science",
+          "region": "Global",
+          "skills": [
+            "Digital Ethics",
+            "Global Citizenship"
+          ],
+          "logic_tags": [
+            "ethical_reasoning",
+            "social_awareness"
           ],
           "depth": "core"
         }
