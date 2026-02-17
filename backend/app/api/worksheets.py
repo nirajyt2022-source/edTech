@@ -1470,7 +1470,11 @@ async def generate_worksheet(
                     continue
 
                 worksheet_plan = None
-                if request.mix_recipe or any(kw in skill_topic.lower() for kw in ("3-digit", "3 digit", "addition", "subtraction")):
+                # Only trigger carry/borrow worksheet plan for 3-digit+ topics.
+                # Class 1 and Class 2 topics contain "addition"/"subtraction" but must NOT
+                # use the 3-digit carry plan — they have their own c1_/c2_ skill profiles.
+                _is_class12_topic = any(m in skill_topic.lower() for m in ("class 1", "class 2", "up to 20", "within 20", "2-digit"))
+                if request.mix_recipe or (not _is_class12_topic and any(kw in skill_topic.lower() for kw in ("3-digit", "3 digit", "addition", "subtraction"))):
                     recipe_dicts = [item.model_dump() for item in request.mix_recipe] if request.mix_recipe else None
                     worksheet_plan = build_worksheet_plan(
                         q_count=q_count,
@@ -1586,8 +1590,12 @@ async def generate_worksheet(
             constraints_dict = request.constraints.model_dump()
 
         worksheet_plan = None
+        # Only trigger carry/borrow worksheet plan for 3-digit+ topics.
+        # Guard against Class 1/2 topics which have their own skill profiles.
+        _focus_lower = (focus_skill or "").lower()
+        _is_class12_focus = any(m in _focus_lower for m in ("class 1", "class 2", "up to 20", "within 20", "2-digit"))
         use_plan = request.mix_recipe is not None or (
-            focus_skill and any(kw in (focus_skill or "").lower() for kw in ("3-digit", "3 digit", "addition", "subtraction"))
+            focus_skill and not _is_class12_focus and any(kw in _focus_lower for kw in ("3-digit", "3 digit", "addition", "subtraction"))
         )
         if use_plan:
             recipe_dicts = None

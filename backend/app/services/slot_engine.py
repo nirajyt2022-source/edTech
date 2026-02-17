@@ -7420,10 +7420,17 @@ _TOPIC_ALIASES: dict[str, str] = {
     "c1 addition": "Addition up to 20 (Class 1)",
     "class 1 addition": "Addition up to 20 (Class 1)",
     "add up to 20": "Addition up to 20 (Class 1)",
+    # Explicit aliases for combined topic strings that would otherwise fall through to Class 3
+    "addition and subtraction (up to 20)": "Addition up to 20 (Class 1)",
+    "addition and subtraction up to 20": "Addition up to 20 (Class 1)",
+    "addition & subtraction (up to 20)": "Addition up to 20 (Class 1)",
+    "addition & subtraction up to 20": "Addition up to 20 (Class 1)",
     "subtraction within 20": "Subtraction within 20 (Class 1)",
     "c1 subtraction": "Subtraction within 20 (Class 1)",
     "class 1 subtraction": "Subtraction within 20 (Class 1)",
     "subtract within 20": "Subtraction within 20 (Class 1)",
+    "subtraction up to 20": "Subtraction within 20 (Class 1)",
+    "subtraction (up to 20)": "Subtraction within 20 (Class 1)",
     "basic shapes": "Basic Shapes (Class 1)",
     "c1 shapes": "Basic Shapes (Class 1)",
     "class 1 shapes": "Basic Shapes (Class 1)",
@@ -8100,6 +8107,7 @@ _TOPIC_ALIASES: dict[str, str] = {
 
 
 def get_topic_profile(topic: str) -> dict | None:
+    import re as _re
     normalized = normalize_topic(topic)
     # Exact match first
     profile = TOPIC_PROFILES.get(normalized)
@@ -8110,9 +8118,24 @@ def get_topic_profile(topic: str) -> dict | None:
     if alias_key in _TOPIC_ALIASES:
         return TOPIC_PROFILES.get(_TOPIC_ALIASES[alias_key])
     # Substring match: "Multiplication" should match "Multiplication (tables 2-10)"
+    # SAFETY: If the incoming topic contains a Class marker (e.g. "Class 1"),
+    # only accept profile keys that carry the SAME class number.
+    # This prevents "Addition and subtraction (up to 20)" from matching
+    # "Addition (carries)" just because both start with "addition".
+    _class_marker = _re.search(r"class\s*(\d)", alias_key, _re.IGNORECASE)
+    matches = []
     for key in TOPIC_PROFILES:
-        if key.lower().startswith(alias_key) or alias_key.startswith(key.lower().split("(")[0].strip()):
-            return TOPIC_PROFILES[key]
+        key_lower = key.lower()
+        if key_lower.startswith(alias_key) or alias_key.startswith(key_lower.split("(")[0].strip()):
+            if _class_marker:
+                key_marker = _re.search(r"class\s*(\d)", key_lower, _re.IGNORECASE)
+                if not key_marker or key_marker.group(1) != _class_marker.group(1):
+                    continue  # wrong grade — skip
+            matches.append(key)
+    if matches:
+        # Prefer the most specific (longest) key when multiple remain
+        matches.sort(key=len, reverse=True)
+        return TOPIC_PROFILES[matches[0]]
     return None
 
 
