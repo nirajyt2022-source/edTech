@@ -12301,9 +12301,23 @@ def _build_slot_instruction(
                 "default": f"format: {_dfmt}. Ask a representation question about '{topic}' — complete, label, or organise information.",
             },
             "error_detection": {
-                "english": f"format: error_spot_english. Show a sentence about '{topic}' with a deliberate grammar or spelling error. Ask the student to find and correct it.",
-                "hindi": f"format: error_spot_hindi. '{topic}' पर एक वाक्य में जानबूझकर गलती दें। छात्र को गलती खोजने और सुधारने को कहें।",
-                "default": f"format: error_spot_science. Show a statement about '{topic}' with a factual error. Ask the student to find and correct it.",
+                "english": (
+                    f"format: error_spot_english. Show a sentence about '{topic}' with a deliberate grammar or spelling error. "
+                    "Ask the student to find and correct it. "
+                    "CRITICAL: question_text must contain ONLY the erroneous sentence and the task prompt (e.g. 'Find the error and rewrite the sentence correctly.'). "
+                    "NEVER include the correction or correct sentence inside question_text. "
+                    "Place ONLY the corrected sentence in the answer field."
+                ),
+                "hindi": (
+                    f"format: error_spot_hindi. '{topic}' पर एक वाक्य में जानबूझकर गलती दें। छात्र को गलती खोजने और सुधारने को कहें। "
+                    "CRITICAL: question_text में केवल गलत वाक्य और कार्य-निर्देश लिखें। "
+                    "सही वाक्य question_text में न लिखें — उसे केवल answer field में रखें।"
+                ),
+                "default": (
+                    f"format: error_spot_science. Show a statement about '{topic}' with a factual error. Ask the student to find and correct it. "
+                    "CRITICAL: question_text must contain ONLY the incorrect statement and the task prompt. "
+                    "NEVER include the correction in question_text. Place the correct version in the answer field only."
+                ),
             },
             "thinking": {
                 "english": f"format: explain_why. Ask a thought-provoking question about '{topic}' that requires the student to reason or write creatively.",
@@ -14411,9 +14425,27 @@ def normalize_text_answer(answer: str) -> str:
     return ans
 
 
+# Patterns that indicate the LLM leaked the correction into question_text
+_CORRECTION_LEAK_RE = re.compile(
+    r"\.\s*(It should be|The correct (sentence|version|answer|form) is|Correct[ed]* sentence:|"
+    r"The corrected sentence is|Rewritten correctly:|Answer:|Correction:)\s*.+",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
 def normalize_english_answers(questions: list[dict]) -> None:
-    """Normalize English answers — clean up whitespace and ensure non-empty."""
+    """Normalize English answers — clean up whitespace and strip leaked corrections from question_text."""
     for q in questions:
+        # Strip correction leak from error_detection question_text
+        if q.get("slot_type") == "error_detection":
+            qt = q.get("question_text", "")
+            cleaned_qt = _CORRECTION_LEAK_RE.sub(".", qt).strip()
+            if cleaned_qt != qt:
+                logger.info(
+                    "normalize_english_answers: stripped correction leak from q%s question_text", q.get("id")
+                )
+                q["question_text"] = cleaned_qt
+
         answer = q.get("answer")
         if isinstance(answer, str):
             cleaned = answer.strip()

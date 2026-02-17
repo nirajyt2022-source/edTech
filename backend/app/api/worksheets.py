@@ -1332,6 +1332,13 @@ def _map_visual_fields(q: dict) -> tuple:
     return vtype, {k: v for k, v in spec.items() if k != "model_id"}
 
 
+def _is_text_subject(skill_tag: str) -> bool:
+    """Return True if the question belongs to a text-only subject (English/Science/Hindi/GK/etc)."""
+    if not skill_tag:
+        return False
+    return skill_tag.startswith(("eng_", "sci_", "hin_", "comp_", "gk_", "moral_", "health_"))
+
+
 def _fill_role_explanations(questions: list[Question]) -> None:
     """Add short deterministic explanations for thinking and error_detection roles only."""
     for q in questions:
@@ -1344,29 +1351,53 @@ def _fill_role_explanations(questions: list[Question]) -> None:
 
         text = (q.text or "").lower()
         answer = q.correct_answer or ""
+        is_text = _is_text_subject(q.skill_tag or "")
 
         if q.role == "thinking":
-            # Estimation explanations
-            if "nearest 100" in text or "nearest hundred" in text:
-                q.explanation = f"Round each number to the nearest 100, then add the rounded values. The estimated answer is {answer}."
-            elif "nearest 10" in text or "nearest ten" in text:
-                q.explanation = f"Round each number to the nearest 10, then add the rounded values. The estimated answer is {answer}."
-            elif "closer" in text:
-                q.explanation = f"Add the numbers and check which reference value is nearest. The answer is {answer}."
-            elif "compar" in text:
-                q.explanation = "Compare both methods step by step and check which gives the correct result."
+            if is_text:
+                # Subject-appropriate thinking explanations
+                if "why" in text or "reason" in text:
+                    q.explanation = "Think about the concept and explain your reasoning in full sentences."
+                elif "creative" in text or "write" in text or "compose" in text:
+                    q.explanation = "Use your imagination and write clearly. There is no single correct answer — focus on expressing your ideas."
+                elif "explain" in text:
+                    q.explanation = "Explain using what you know. Support your answer with an example."
+                else:
+                    q.explanation = "Think through the question carefully and write your answer in complete sentences."
             else:
-                q.explanation = f"Think through each step carefully. The answer is {answer}."
+                # Maths estimation explanations
+                if "nearest 100" in text or "nearest hundred" in text:
+                    q.explanation = f"Round each number to the nearest 100, then add the rounded values. The estimated answer is {answer}."
+                elif "nearest 10" in text or "nearest ten" in text:
+                    q.explanation = f"Round each number to the nearest 10, then add the rounded values. The estimated answer is {answer}."
+                elif "closer" in text:
+                    q.explanation = f"Add the numbers and check which reference value is nearest. The answer is {answer}."
+                elif "compar" in text:
+                    q.explanation = "Compare both methods step by step and check which gives the correct result."
+                else:
+                    q.explanation = f"Think through each step carefully. The answer is {answer}."
 
         elif q.role == "error_detection":
-            if "+" in text or "add" in text:
-                q.explanation = f"Re-add column by column with correct carrying. The correct answer is {answer}."
-            elif "-" in text or "subtract" in text:
-                q.explanation = f"Re-subtract column by column with correct borrowing. The correct answer is {answer}."
-            elif "\u00d7" in text or "x " in text or "times" in text:
-                q.explanation = f"Recalculate the product. The correct answer is {answer}."
+            if is_text:
+                # Subject-appropriate error detection explanations
+                tag = q.skill_tag or ""
+                if tag.startswith("hin_"):
+                    q.explanation = f"गलती खोजें और सही वाक्य लिखें। सही उत्तर: {answer}" if answer else "गलती खोजें और वाक्य को सही करके लिखें।"
+                elif tag.startswith("sci_") or tag.startswith("gk_") or tag.startswith("moral_") or tag.startswith("health_") or tag.startswith("comp_"):
+                    q.explanation = f"Identify the incorrect part and write the corrected version. Correct answer: {answer}" if answer else "Identify the error and write the correct statement."
+                else:
+                    # English
+                    q.explanation = f"Find the grammar or spelling error and rewrite the sentence correctly. Correct version: {answer}" if answer else "Find the error and rewrite the sentence correctly."
             else:
-                q.explanation = f"Redo the calculation carefully. The correct answer is {answer}."
+                # Maths arithmetic explanations
+                if "+" in text or "add" in text:
+                    q.explanation = f"Re-add column by column with correct carrying. The correct answer is {answer}."
+                elif "-" in text or "subtract" in text:
+                    q.explanation = f"Re-subtract column by column with correct borrowing. The correct answer is {answer}."
+                elif "\u00d7" in text or "x " in text or "times" in text:
+                    q.explanation = f"Recalculate the product. The correct answer is {answer}."
+                else:
+                    q.explanation = f"Redo the calculation carefully. The correct answer is {answer}."
 
         # Hard cap
         if q.explanation and len(q.explanation) > 160:
