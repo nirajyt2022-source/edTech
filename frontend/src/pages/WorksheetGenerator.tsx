@@ -1367,6 +1367,52 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                     </div>
                   )}
 
+                  {/* Parent Insight Footer (Gold-G7) — screen only */}
+                  {worksheet.mastery_snapshot && (
+                    <div className="mt-10 p-5 border border-primary/15 rounded-xl bg-primary/[0.02] print:hidden">
+                      <p className="font-bold text-primary text-sm mb-3">For Parents: What to Do Next</p>
+                      {worksheet.mastery_snapshot.last_error_type && (
+                        <div className="mb-3">
+                          <p className="text-xs font-semibold text-foreground/60 mb-1">Watch For</p>
+                          <p className="text-sm text-foreground/80">
+                            {worksheet.mastery_snapshot.last_error_type === 'carry_tens' && 'Your child may be forgetting to carry when the tens column adds up to more than 9.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'carry_ones' && 'Your child may be forgetting to carry from the ones column.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'borrow_tens' && 'Your child may struggle with borrowing from the tens column.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'borrow_ones' && 'Your child may be confusing when borrowing is needed.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'place_value_confusion' && 'Your child may be mixing up the value of digits in different places.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'multiplication_facts' && 'Your child needs more practice with multiplication tables.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'wrong_operation' && 'Your child may be confusing which operation to use.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'calculation_error' && 'Your child understands the concept but makes calculation errors.'}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-semibold text-foreground/60 mb-1">Next Step</p>
+                        <p className="text-sm text-foreground/80">
+                          {worksheet.mastery_snapshot.mastery_level === 'mastered' && 'Excellent work! Try a harder difficulty level or move to the next topic.'}
+                          {worksheet.mastery_snapshot.mastery_level === 'improving' && 'Good progress! Keep practising at this level. Consistency is key.'}
+                          {worksheet.mastery_snapshot.mastery_level === 'learning' && 'Keep going! Try reducing to 5 questions and focus on getting them right.'}
+                          {worksheet.mastery_snapshot.mastery_level === 'unknown' && 'This is a new topic. Start with easy difficulty and build confidence.'}
+                        </p>
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              worksheet.mastery_snapshot.mastery_level === 'mastered' ? 'bg-green-500 w-full' :
+                              worksheet.mastery_snapshot.mastery_level === 'improving' ? 'bg-blue-500 w-2/3' :
+                              worksheet.mastery_snapshot.mastery_level === 'learning' ? 'bg-amber-500 w-1/3' :
+                              'bg-gray-400 w-[10%]'
+                            }`}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          Streak: {worksheet.mastery_snapshot.avg_streak.toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Watermark */}
                   <p className="mt-14 text-center text-[10px] text-foreground/[0.04] select-none print:text-black/[0.05]">
                     Generated using PracticeCraft

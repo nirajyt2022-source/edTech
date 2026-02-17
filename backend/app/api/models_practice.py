@@ -41,12 +41,20 @@ class MasteryStateDTO(BaseModel):
     topic: Optional[str] = None
 
 
+class ParentInsight(BaseModel):
+    mastery_level: str = "unknown"
+    streak: int = 0
+    watch_for: str = ""
+    next_step: str = ""
+
+
 class AttemptResponse(BaseModel):
     grade_result: GradeResult
     explanation: Any  # keep flexible: could be list[str] or dict, depending on your contract
     recommendation: dict
     next: NextBlock
     mastery_state: Optional[dict] = None
+    insight: Optional[ParentInsight] = None  # Gold-G7: parent insight footer
 
 
 class SkillSummary(BaseModel):

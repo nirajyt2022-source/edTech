@@ -35,6 +35,67 @@ router = APIRouter(prefix="/api/v1/worksheets", tags=["worksheets-v1"])
 
 
 # ──────────────────────────────────────────────
+# Gold-G7: Parent Insight Messages
+# ──────────────────────────────────────────────
+
+WATCH_FOR_MESSAGES: dict[str, str] = {
+    "carry_tens": "Your child may be forgetting to carry when the tens column adds up to more than 9. Watch for answers that are 10 less than expected.",
+    "carry_ones": "Your child may be forgetting to carry from the ones column. Look for answers where the ones digit is correct but tens are wrong.",
+    "borrow_tens": "Your child may struggle with borrowing from the tens column. They might subtract the smaller digit from the larger in each column instead.",
+    "borrow_ones": "Your child may be confusing when borrowing is needed. Check if they recognise when the top digit is smaller than the bottom.",
+    "place_value_confusion": "Your child may be mixing up the value of digits in different places. Practice reading numbers aloud and identifying hundreds, tens, and ones.",
+    "multiplication_facts": "Your child needs more practice with multiplication tables. Short daily drills (5 minutes) help build automatic recall.",
+    "division_remainder": "Your child may forget about remainders or not understand what they represent. Use sharing problems with physical objects.",
+    "fraction_equivalence": "Your child may not yet see that fractions like 1/2 and 2/4 are the same amount. Cutting paper or folding shapes can help.",
+    "wrong_operation": "Your child may be confusing which operation to use. Help them identify keywords: 'total' and 'altogether' mean add, 'left' and 'remaining' mean subtract.",
+    "calculation_error": "Your child understands the concept but makes calculation errors. Encourage checking work by doing the inverse operation.",
+}
+
+NEXT_STEP_MESSAGES: dict[str, dict[str, str]] = {
+    "mastered": {
+        "default": "Excellent work! Try a harder difficulty level or move to the next topic to keep the challenge going.",
+        "Addition (carries)": "Great mastery of addition with carrying! Try 'Addition and subtraction (3-digit)' for mixed practice.",
+        "Subtraction (borrowing)": "Borrowing is solid! Move on to 'Addition and subtraction (3-digit)' for combined practice.",
+        "Multiplication (tables 2-10)": "Multiplication facts are strong! Try 'Division basics' as the natural next step.",
+        "Division basics": "Division is well understood! Try 'Fractions (halves, quarters)' — division is the foundation of fractions.",
+        "Fractions (halves, quarters)": "Fractions basics mastered! Try 'Fractions' for broader fraction work.",
+    },
+    "improving": {
+        "default": "Good progress! Keep practising at this level. Consistency is more important than speed.",
+    },
+    "learning": {
+        "default": "Keep going — every worksheet builds understanding. Try reducing the number of questions to 5 and focus on getting them right.",
+    },
+    "unknown": {
+        "default": "This is a new topic. Start with 'easy' difficulty and build confidence before moving up.",
+    },
+}
+
+
+def build_parent_insight(mastery_state: dict | None, topic: str = "") -> dict | None:
+    """Build a parent-friendly insight dict from mastery state after grading."""
+    if not mastery_state:
+        return None
+    level = mastery_state.get("mastery_level", "unknown")
+    streak = mastery_state.get("streak", 0)
+    error_type = mastery_state.get("last_error_type")
+
+    watch_for = ""
+    if error_type and error_type in WATCH_FOR_MESSAGES:
+        watch_for = WATCH_FOR_MESSAGES[error_type]
+
+    level_messages = NEXT_STEP_MESSAGES.get(level, NEXT_STEP_MESSAGES["unknown"])
+    next_step = level_messages.get(topic, level_messages["default"])
+
+    return {
+        "mastery_level": level,
+        "streak": streak,
+        "watch_for": watch_for,
+        "next_step": next_step,
+    }
+
+
+# ──────────────────────────────────────────────
 # Request models (v1)
 # ──────────────────────────────────────────────
 
@@ -311,6 +372,14 @@ def attempt_v1(payload: AttemptPayloadV1):
         )
     except Exception as e:
         logger.error(f"[worksheets_v1.attempt_v1] audit_attempt failed: {e}", exc_info=True)
+
+    # Gold-G7: Build parent insight from mastery state after grading
+    mastery_after_for_insight = out.get("mastery_state")
+    if mastery_after_for_insight and isinstance(mastery_after_for_insight, dict):
+        out["insight"] = build_parent_insight(
+            mastery_after_for_insight,
+            topic=payload.topic or "",
+        )
 
     return out
 
