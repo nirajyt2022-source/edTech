@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Nunito:ital,wght@0,300..1000;1,300..1000&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -422,10 +422,10 @@ textarea::placeholder {
   height: 1.25rem;
 }
 
-/* Print styles */
+/* Print styles — Gold-G8 premium layout */
 @page {
   size: A4;
-  margin: 18mm 15mm 18mm 15mm;
+  margin: 20mm;
 }
 
 @media print {
@@ -453,10 +453,10 @@ textarea::placeholder {
     padding-bottom: 0.5rem !important;
   }
 
-  /* Global print resets */
+  /* Global print resets — Nunito for child-friendly readability */
   html, body {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: 14px;
+    font-family: 'Nunito', 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 13px;
     line-height: 1.6;
     color: #000 !important;
     background: #fff !important;
@@ -520,5 +520,14 @@ textarea::placeholder {
   .bg-secondary {
     background-color: #f3f4f6 !important;
     border-color: #d1d5db !important;
+  }
+
+  /* Print footer — branding */
+  @page {
+    @bottom-center {
+      content: "PracticeCraft  |  practicecraft.in";
+      font-size: 7pt;
+      color: #999;
+    }
   }
 }

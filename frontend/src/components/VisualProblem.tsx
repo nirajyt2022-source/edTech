@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRef, useCallback, useMemo } from 'react'
 
 interface VisualProblemProps {
   visualType: string
@@ -283,6 +283,37 @@ interface BaseTenRegroupingProps {
 }
 
 function BaseTenRegroupingVisual({ numbers, operation, studentAnswer, onStudentAnswerChange }: BaseTenRegroupingProps) {
+  // All hooks must be called before any early return
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null])
+
+  // Derive answer digits from the controlled prop — no effect + setState needed
+  const answerDigits = useMemo(() => {
+    if (studentAnswer == null) return ['', '', '']
+    const padded = studentAnswer.padStart(3, ' ')
+    return [
+      padded[padded.length - 3] === ' ' ? '' : padded[padded.length - 3],
+      padded[padded.length - 2] === ' ' ? '' : padded[padded.length - 2],
+      padded[padded.length - 1] === ' ' ? '' : padded[padded.length - 1],
+    ]
+  }, [studentAnswer])
+
+  const handleDigitChange = useCallback((idx: number, value: string) => {
+    if (!onStudentAnswerChange) return
+    const digit = value.replace(/\D/g, '').slice(-1)
+    const next = [...answerDigits]
+    next[idx] = digit
+    onStudentAnswerChange(next.join(''))
+    if (digit && idx < 2) {
+      inputRefs.current[idx + 1]?.focus()
+    }
+  }, [answerDigits, onStudentAnswerChange])
+
+  const handleKeyDown = useCallback((idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !answerDigits[idx] && idx > 0) {
+      inputRefs.current[idx - 1]?.focus()
+    }
+  }, [answerDigits])
+
   if (numbers.length < 2) return null
   const [a, b] = numbers
   const opSymbol = operation === 'addition' ? '+' : '\u2212'
@@ -294,47 +325,6 @@ function BaseTenRegroupingVisual({ numbers, operation, studentAnswer, onStudentA
 
   const dA = digits(a)
   const dB = digits(b)
-
-  // Interactive answer digit state
-  const [answerDigits, setAnswerDigits] = useState<string[]>(['', '', ''])
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null])
-
-  // Sync from prop
-  useEffect(() => {
-    if (studentAnswer != null) {
-      const padded = studentAnswer.padStart(3, ' ')
-      setAnswerDigits([
-        padded[padded.length - 3] === ' ' ? '' : padded[padded.length - 3],
-        padded[padded.length - 2] === ' ' ? '' : padded[padded.length - 2],
-        padded[padded.length - 1] === ' ' ? '' : padded[padded.length - 1],
-      ])
-    }
-  }, [studentAnswer])
-
-  const emitChange = useCallback((newDigits: string[]) => {
-    if (!onStudentAnswerChange) return
-    const composed = newDigits.join('')
-    onStudentAnswerChange(composed)
-  }, [onStudentAnswerChange])
-
-  const handleDigitChange = useCallback((idx: number, value: string) => {
-    const digit = value.replace(/\D/g, '').slice(-1)
-    setAnswerDigits(prev => {
-      const next = [...prev]
-      next[idx] = digit
-      emitChange(next)
-      return next
-    })
-    if (digit && idx < 2) {
-      inputRefs.current[idx + 1]?.focus()
-    }
-  }, [emitChange])
-
-  const handleKeyDown = useCallback((idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !answerDigits[idx] && idx > 0) {
-      inputRefs.current[idx - 1]?.focus()
-    }
-  }, [answerDigits])
 
   const w = 160, svgH = 72
   const cols = [52, 84, 116] // H, T, O x-positions

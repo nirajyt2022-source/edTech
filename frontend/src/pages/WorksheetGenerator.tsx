@@ -53,6 +53,8 @@ interface Question {
   explanation?: string
   visual_type?: string
   visual_data?: Record<string, unknown>
+  role?: string
+  difficulty?: string
 }
 
 interface Worksheet {
@@ -1126,62 +1128,139 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                 </CardHeader>
 
                 <CardContent className="px-10 pb-14 print:px-0 print:pb-0">
+                  {/* Print-only: Name / Date / Score header */}
+                  <div className="hidden print:flex print:justify-between print:items-end print:mb-6 print:pb-3 print:border-b print:border-black/20">
+                    <span className="text-sm">Name: ______________________________</span>
+                    <span className="text-sm">Date: ______________</span>
+                    <span className="text-sm">Score: _____ / {worksheet.questions.length}</span>
+                  </div>
+
                   <div className="mb-10 p-5 bg-secondary/30 border border-border/30 rounded-xl print:border-border print:bg-gray-100 print:rounded-none print:p-4">
                     <p className="font-semibold text-foreground/80 flex items-center gap-2 mb-1 text-xs">
                       Instructions for Student
                     </p>
-                    <p className="text-sm text-muted-foreground">Please read each question carefully and provide your best answer. Show all necessary workings in the space provided. Good luck!</p>
+                    <p className="text-sm text-muted-foreground">Read each question carefully. Show your working in the space provided. Answer all questions.</p>
                   </div>
 
-                  <div className="space-y-12 mt-10">
-                    {worksheet.questions.map((question, index) => (
-                      <div key={question.id} className="relative group stagger-item" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-                        <div className="flex gap-5">
-                          <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold mt-0.5 print:border-black/30 print:text-black/60">
-                            {index + 1}
-                          </span>
-                          <div className="flex-grow space-y-4">
-                            <p className="text-lg font-medium text-foreground leading-snug">
-                              {question.text}
-                            </p>
+                  {/* Tiered question rendering */}
+                  {(() => {
+                    const foundationRoles = new Set(['recognition', 'representation'])
+                    const applicationRoles = new Set(['application'])
+                    const stretchRoles = new Set(['error_detection', 'thinking'])
+                    const tiers: { key: string; label: string; desc: string; stars: string; questions: Question[] }[] = []
 
-                            {question.visual_type && question.visual_data && (
-                              <div className="mt-3">
-                                <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
-                              </div>
-                            )}
+                    const foundationQs = worksheet.questions.filter(q => foundationRoles.has(q.role || ''))
+                    const applicationQs = worksheet.questions.filter(q => applicationRoles.has(q.role || ''))
+                    const stretchQs = worksheet.questions.filter(q => stretchRoles.has(q.role || ''))
 
-                            {question.options && (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                                {question.options.map((option, optIndex) => (
-                                  <div key={optIndex} className="flex items-center gap-3 p-3.5 rounded-lg border border-border/40 bg-white/50 print:bg-transparent print:border-black/20 print:rounded-none print:p-2.5">
-                                    <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">
-                                      {String.fromCharCode(65 + optIndex)}
-                                    </span>
-                                    <span className="text-sm text-foreground">{option}</span>
+                    if (foundationQs.length) tiers.push({ key: 'foundation', label: 'Foundation', desc: 'I can recall and recognise', stars: '\u2605', questions: foundationQs })
+                    if (applicationQs.length) tiers.push({ key: 'application', label: 'Application', desc: 'I can use what I know', stars: '\u2605\u2605', questions: applicationQs })
+                    if (stretchQs.length) tiers.push({ key: 'stretch', label: 'Stretch', desc: 'I can think and reason', stars: '\u2605\u2605\u2605', questions: stretchQs })
+
+                    // Fallback: if no role data, render flat
+                    const hasRoles = tiers.length > 0
+                    const allQuestions = hasRoles
+                      ? tiers.flatMap(t => t.questions)
+                      : worksheet.questions
+
+                    let qNum = 0
+                    return (
+                      <div className="space-y-6 mt-10">
+                        {hasRoles ? tiers.map(tier => (
+                          <div key={tier.key}>
+                            <div className="flex items-baseline gap-3 mb-1 mt-6 print:mt-4">
+                              <span className="text-primary font-semibold text-sm">{tier.stars}</span>
+                              <h4 className="font-serif text-lg font-bold text-primary tracking-tight">{tier.label}</h4>
+                              <span className="text-xs text-muted-foreground italic ml-1">{tier.desc}</span>
+                            </div>
+                            <div className="border-b border-primary/20 mb-6 print:border-black/15" />
+
+                            <div className="space-y-10">
+                              {tier.questions.map((question) => {
+                                qNum++
+                                const idx = qNum
+                                return (
+                                  <div key={question.id} className="relative group stagger-item" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                                    <div className="flex gap-5">
+                                      <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-primary/20 text-primary/70 text-xs font-bold mt-0.5 print:border-black/30 print:text-black/60">
+                                        {idx}
+                                      </span>
+                                      <div className="flex-grow space-y-4">
+                                        <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
+                                        {question.visual_type && question.visual_data && (
+                                          <div className="mt-3">
+                                            <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
+                                          </div>
+                                        )}
+                                        {question.options && (
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                                            {question.options.map((option, optIndex) => (
+                                              <div key={optIndex} className="flex items-center gap-3 p-3.5 rounded-lg border border-border/40 bg-white/50 print:bg-transparent print:border-black/20 print:rounded-none print:p-2.5">
+                                                <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">{String.fromCharCode(65 + optIndex)}</span>
+                                                <span className="text-sm text-foreground">{option}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                        {question.type === 'fill_blank' && (
+                                          <div className="mt-4 pt-4"><div className="border-b-2 border-dotted border-border w-2/3 h-6"></div></div>
+                                        )}
+                                        {question.type === 'short_answer' && (
+                                          <div className="mt-4 space-y-4">
+                                            <div className="border-b border-border/40 h-8"></div>
+                                            <div className="border-b border-border/40 h-8"></div>
+                                            <div className="border-b border-border/40 h-8"></div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {question.type === 'fill_blank' && (
-                              <div className="mt-4 pt-4">
-                                <div className="border-b-2 border-dotted border-border w-2/3 h-6"></div>
-                              </div>
-                            )}
-
-                            {question.type === 'short_answer' && (
-                              <div className="mt-4 space-y-4">
-                                <div className="border-b border-border/40 h-8"></div>
-                                <div className="border-b border-border/40 h-8"></div>
-                                <div className="border-b border-border/40 h-8"></div>
-                              </div>
-                            )}
+                                )
+                              })}
+                            </div>
                           </div>
-                        </div>
+                        )) : (
+                          <div className="space-y-12">
+                            {allQuestions.map((question, index) => (
+                              <div key={question.id} className="relative group stagger-item" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                                <div className="flex gap-5">
+                                  <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold mt-0.5 print:border-black/30 print:text-black/60">{index + 1}</span>
+                                  <div className="flex-grow space-y-4">
+                                    <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
+                                    {question.visual_type && question.visual_data && (
+                                      <div className="mt-3">
+                                        <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
+                                      </div>
+                                    )}
+                                    {question.options && (
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                                        {question.options.map((option, optIndex) => (
+                                          <div key={optIndex} className="flex items-center gap-3 p-3.5 rounded-lg border border-border/40 bg-white/50 print:bg-transparent print:border-black/20 print:rounded-none print:p-2.5">
+                                            <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">{String.fromCharCode(65 + optIndex)}</span>
+                                            <span className="text-sm text-foreground">{option}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {question.type === 'fill_blank' && (
+                                      <div className="mt-4 pt-4"><div className="border-b-2 border-dotted border-border w-2/3 h-6"></div></div>
+                                    )}
+                                    {question.type === 'short_answer' && (
+                                      <div className="mt-4 space-y-4">
+                                        <div className="border-b border-border/40 h-8"></div>
+                                        <div className="border-b border-border/40 h-8"></div>
+                                        <div className="border-b border-border/40 h-8"></div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    )
+                  })()}
 
                   {/* Answer Key Section — visible when showAnswers is true */}
                   {showAnswers && (
