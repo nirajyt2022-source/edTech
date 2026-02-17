@@ -75,6 +75,7 @@ class GenerateRequestV1(BaseModel):
     constraints: WorksheetConstraintsV1 | None = None
     visuals_only: bool = False
     min_visual_ratio: float | None = None
+    child_id: str | None = None  # Gold-G2: mastery-aware slot adjustment
 
 
 class QuestionV1(BaseModel):
@@ -106,6 +107,7 @@ class WorksheetV1(BaseModel):
     common_mistake: str = ""
     parent_tip: str = ""
     learning_objectives: list[str] = []
+    mastery_snapshot: dict | None = None  # Gold-G2: child's mastery state at generation time
 
 
 class PDFExportRequestV1(BaseModel):
@@ -428,6 +430,7 @@ async def _generate_single_worksheet(
         language=language,
         worksheet_plan=worksheet_plan,
         constraints=None,
+        child_id=child_id,
     )
 
     hydrate_visuals(slot_questions, visuals_only=False)
@@ -448,6 +451,7 @@ async def _generate_single_worksheet(
         common_mistake=common_mistakes[0] if common_mistakes else "",
         parent_tip=meta.get("parent_tip", ""),
         learning_objectives=get_learning_objectives(topic),
+        mastery_snapshot=meta.get("mastery_snapshot"),
     )
 
     # Save to database

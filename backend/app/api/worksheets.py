@@ -79,6 +79,7 @@ class WorksheetGenerationRequest(BaseModel):
     constraints: WorksheetConstraints | None = None
     visuals_only: bool = False
     min_visual_ratio: float | None = None
+    child_id: str | None = None  # Gold-G2: mastery-aware slot adjustment
 
 
 # ──────────────────────────────────────────────
@@ -114,6 +115,7 @@ class Worksheet(BaseModel):
     common_mistake: str = ""
     parent_tip: str = ""
     learning_objectives: list[str] = []
+    mastery_snapshot: dict | None = None  # Gold-G2: child's mastery state at generation time
 
 
 class WorksheetGenerationResponse(BaseModel):
@@ -1488,6 +1490,7 @@ async def generate_worksheet(
                     language=request.language,
                     worksheet_plan=worksheet_plan,
                     constraints=constraints_dict,
+                    child_id=request.child_id,
                 )
 
                 # ── Skill purity enforcement ──
@@ -1538,6 +1541,7 @@ async def generate_worksheet(
                     common_mistake=common_mistakes[0] if common_mistakes else "",
                     parent_tip=meta.get("parent_tip", ""),
                     learning_objectives=get_learning_objectives(skill_topic),
+                    mastery_snapshot=meta.get("mastery_snapshot"),
                 )
                 bundled.append(ws)
 
@@ -1612,6 +1616,7 @@ async def generate_worksheet(
             language=request.language,
             worksheet_plan=worksheet_plan,
             constraints=constraints_dict,
+            child_id=request.child_id,
         )
 
         # Safety net: ensure visual hydration ran (idempotent if already done)
@@ -1651,6 +1656,7 @@ async def generate_worksheet(
             common_mistake=common_mistakes[0] if common_mistakes else "",
             parent_tip=meta.get("parent_tip", ""),
             learning_objectives=get_learning_objectives(effective_topic),
+            mastery_snapshot=meta.get("mastery_snapshot"),
         )
 
         end_time = datetime.now()
@@ -2111,6 +2117,7 @@ async def regenerate_worksheet(
             difficulty=difficulty,
             region=region,
             language=original.get("language", "English"),
+            child_id=original.get("child_id"),
         )
 
         # Map slot-engine output → API Question models
@@ -2130,6 +2137,7 @@ async def regenerate_worksheet(
             common_mistake=common_mistakes[0] if common_mistakes else "",
             parent_tip=meta.get("parent_tip", ""),
             learning_objectives=get_learning_objectives(original["topic"]),
+            mastery_snapshot=meta.get("mastery_snapshot"),
         )
 
         # Increment regeneration count on original worksheet

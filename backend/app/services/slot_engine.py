@@ -4195,6 +4195,125 @@ def backfill_format(q: dict, directive: dict | None = None) -> None:
     q["format"] = fmt
 
 
+def _get_mastery_for_topic(child_id: str, topic: str) -> dict | None:
+    """Look up mastery state for a child + topic. Returns summary dict or None."""
+    try:
+        from app.services.mastery_store import get_mastery_store
+        store = get_mastery_store()
+        states = store.list_student(child_id)
+        if not states:
+            return None
+        # Find the most relevant mastery state for this topic
+        # Match by skill_tag prefix from topic profile's allowed_skill_tags
+        profile = get_topic_profile(topic)
+        if not profile:
+            return None
+        allowed_tags = set(profile.get("allowed_skill_tags", []))
+        relevant = [s for s in states if s.skill_tag in allowed_tags]
+        if not relevant:
+            return None
+        # Aggregate: use worst mastery_level, most recent last_error_type, average streak
+        levels = [s.mastery_level for s in relevant]
+        level_priority = {"unknown": 0, "learning": 1, "improving": 2, "mastered": 3}
+        avg_level = sum(level_priority.get(l, 0) for l in levels) / len(levels)
+        if avg_level >= 2.5:
+            agg_level = "mastered"
+        elif avg_level >= 1.5:
+            agg_level = "improving"
+        elif avg_level >= 0.5:
+            agg_level = "learning"
+        else:
+            agg_level = "unknown"
+        # Find most recent error type
+        last_error = None
+        for s in sorted(relevant, key=lambda x: x.updated_at, reverse=True):
+            if s.last_error_type:
+                last_error = s.last_error_type
+                break
+        avg_streak = sum(s.streak for s in relevant) / len(relevant)
+        total_attempts = sum(s.total_attempts for s in relevant)
+        return {
+            "mastery_level": agg_level,
+            "last_error_type": last_error,
+            "avg_streak": avg_streak,
+            "total_attempts": total_attempts,
+        }
+    except Exception as e:
+        logger.warning("[_get_mastery_for_topic] Failed to fetch mastery: %s", e)
+        return None
+
+
+def adjust_slot_plan_for_mastery(
+    plan_directives: list[dict],
+    mastery: dict,
+) -> list[dict]:
+    """Adjust slot plan based on mastery state. Returns modified plan_directives.
+
+    Rules:
+    - mastered: boost thinking by 1, reduce recognition by 1
+    - learning: boost recognition by 1, reduce thinking to minimum (1)
+    - improving / unknown: no change (use default plan)
+    """
+    slot_counts: dict[str, int] = {}
+    for d in plan_directives:
+        st = d["slot_type"]
+        slot_counts[st] = slot_counts.get(st, 0) + 1
+
+    level = mastery.get("mastery_level", "unknown")
+    changed = False
+
+    if level == "mastered" and slot_counts.get("recognition", 0) >= 2:
+        # Boost thinking, reduce recognition
+        slot_counts["recognition"] -= 1
+        slot_counts["thinking"] = slot_counts.get("thinking", 0) + 1
+        changed = True
+        logger.info("[mastery_adjust] mastered: recognition-1, thinking+1")
+
+    elif level == "learning" and slot_counts.get("thinking", 0) >= 2:
+        # Boost recognition, reduce thinking (keep minimum 1)
+        slot_counts["thinking"] -= 1
+        slot_counts["recognition"] = slot_counts.get("recognition", 0) + 1
+        changed = True
+        logger.info("[mastery_adjust] learning: thinking-1, recognition+1")
+
+    if not changed:
+        return plan_directives
+
+    # Rebuild plan_directives with adjusted counts
+    new_directives: list[dict] = []
+    # Group existing directives by slot_type to preserve skill_tags and other metadata
+    by_type: dict[str, list[dict]] = {}
+    for d in plan_directives:
+        by_type.setdefault(d["slot_type"], []).append(d)
+
+    for slot_type in SLOT_ORDER:
+        target = slot_counts.get(slot_type, 0)
+        existing = by_type.get(slot_type, [])
+        if target <= len(existing):
+            new_directives.extend(existing[:target])
+        else:
+            # Need more of this type — duplicate last existing or create generic
+            new_directives.extend(existing)
+            template = existing[-1] if existing else {"slot_type": slot_type}
+            for _ in range(target - len(existing)):
+                new_directives.append(dict(template))
+
+    return new_directives
+
+
+# ── Error-type constraint messages for mastery-aware generation ──
+_ERROR_TYPE_CONSTRAINTS: dict[str, str] = {
+    "carry_tens": "FORCE at least 2 questions that specifically test carrying in the tens column. Use numbers where ones add to 10+.",
+    "carry_ones": "FORCE at least 2 questions that specifically test carrying in the ones column.",
+    "borrow_tens": "FORCE at least 2 questions that specifically test borrowing from the tens column.",
+    "borrow_ones": "FORCE at least 2 questions that specifically test borrowing in the ones column.",
+    "place_value_confusion": "Include questions where students must identify place value correctly. Use numbers with 0 in tens or ones.",
+    "multiplication_facts": "Focus on multiplication facts the student is struggling with. Include table recall questions.",
+    "division_remainder": "Include questions with remainders to test understanding of division completeness.",
+    "fraction_equivalence": "Include questions comparing equivalent fractions. Test if student understands 1/2 = 2/4.",
+}
+
+
 def run_slot_pipeline(
     client,
     grade: str,
@@ -4206,6 +4325,7 @@ def run_slot_pipeline(
     language: str = "English",
     worksheet_plan: list[dict] | None = None,
     constraints: dict | None = None,
+    child_id: str | None = None,
 ) -> tuple[dict, list[dict]]:
     """Full slot-based generation pipeline with controlled variation.
 
@@ -4257,6 +4377,34 @@ def run_slot_pipeline(
             plan_directives = [{"slot_type": st} for st in get_slot_plan(q_count)]
         slot_plan = [d["slot_type"] for d in plan_directives]
     logger.info("Slot plan (%d): %s", len(slot_plan), dict(Counter(slot_plan)))
+
+    # 2b. Mastery-aware slot plan adjustment (Gold-G2)
+    mastery_info = None
+    mastery_constraint = None
+    if child_id:
+        mastery_info = _get_mastery_for_topic(child_id, topic)
+        if mastery_info:
+            logger.info(
+                "Mastery for child=%s topic=%s: level=%s error=%s streak=%.1f attempts=%d",
+                child_id, topic, mastery_info["mastery_level"],
+                mastery_info.get("last_error_type"), mastery_info["avg_streak"],
+                mastery_info["total_attempts"],
+            )
+            plan_directives = adjust_slot_plan_for_mastery(plan_directives, mastery_info)
+            slot_plan = [d["slot_type"] for d in plan_directives]
+            logger.info("Adjusted slot plan (%d): %s", len(slot_plan), dict(Counter(slot_plan)))
+
+            # Build mastery constraint for instruction builder
+            error_type = mastery_info.get("last_error_type")
+            if error_type and error_type in _ERROR_TYPE_CONSTRAINTS:
+                mastery_constraint = _ERROR_TYPE_CONSTRAINTS[error_type]
+                logger.info("Mastery constraint active: %s", error_type)
+        else:
+            logger.info("No mastery data for child=%s topic=%s, using default plan", child_id, topic)
+
+    # Store mastery info in meta for API response
+    if mastery_info:
+        meta["mastery_snapshot"] = mastery_info
 
     # 3. Load history and build avoid state
     history_avoid = get_avoid_state()
@@ -4353,6 +4501,9 @@ def run_slot_pipeline(
         q_difficulty = get_question_difficulty(slot_type, difficulty)
         variant = chosen_variants[i]
         slot_instruction = _build_slot_instruction(slot_type, variant, directive=directive, topic=topic)
+        # Inject mastery constraint for targeted practice
+        if mastery_constraint and slot_type in ("recognition", "application", "representation"):
+            slot_instruction += f"\n\nMASTERY FOCUS: {mastery_constraint}"
 
         generated = False
         for attempt in range(max_attempts):

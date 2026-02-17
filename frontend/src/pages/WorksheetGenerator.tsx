@@ -66,6 +66,12 @@ interface Worksheet {
   language: string
   questions: Question[]
   learning_objectives?: string[]
+  mastery_snapshot?: {
+    mastery_level: string
+    last_error_type: string | null
+    avg_streak: number
+    total_attempts: number
+  } | null
 }
 
 interface GenerateResponse {
@@ -1149,6 +1155,25 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {/* Mastery Badge (Gold-G2) — screen only */}
+                  {worksheet.mastery_snapshot && (
+                    <div className="mb-6 flex items-center gap-3 text-sm print:hidden">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        worksheet.mastery_snapshot.mastery_level === 'mastered' ? 'bg-green-100 text-green-800' :
+                        worksheet.mastery_snapshot.mastery_level === 'improving' ? 'bg-blue-100 text-blue-800' :
+                        worksheet.mastery_snapshot.mastery_level === 'learning' ? 'bg-amber-100 text-amber-800' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {worksheet.mastery_snapshot.mastery_level === 'mastered' ? 'Mastered' :
+                         worksheet.mastery_snapshot.mastery_level === 'improving' ? 'Improving' :
+                         worksheet.mastery_snapshot.mastery_level === 'learning' ? 'Learning' : 'New Topic'}
+                      </span>
+                      <span className="text-muted-foreground">
+                        Personalised based on {worksheet.mastery_snapshot.total_attempts} previous attempts
+                      </span>
                     </div>
                   )}
 
