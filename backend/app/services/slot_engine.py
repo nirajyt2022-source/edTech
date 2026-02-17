@@ -546,6 +546,12 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "eng_c1_simple_fill": ("representation", "complete_sentence"),
     "eng_c1_simple_error": ("error_detection", "error_spot_english"),
     "eng_c1_simple_think": ("thinking", "creative_writing"),
+    # Additional eng_c1_sentence_* tags for Simple Sentences (Class 1) English
+    "eng_c1_sentence_identify": ("recognition", "pick_correct"),
+    "eng_c1_sentence_make": ("application", "rewrite_sentence"),
+    "eng_c1_sentence_complete": ("representation", "complete_sentence"),
+    "eng_c1_sentence_error": ("error_detection", "error_spot_english"),
+    "eng_c1_sentence_thinking": ("thinking", "creative_writing"),
     # Class 2 English
     "eng_noun_identify": ("recognition", "identify_noun"),
     "eng_noun_use": ("application", "fill_in_blank"),
@@ -918,7 +924,7 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "hin_c1_family_complete": ("representation", "complete_word"),
     "hin_c1_family_error": ("error_detection", "error_spot_hindi"),
     "hin_c1_family_thinking": ("thinking", "explain_meaning"),
-    # Simple Sentences (Class 1)
+    # Simple Sentences in Hindi (Class 1)
     "hin_c1_sentence_identify": ("recognition", "pick_correct_hindi"),
     "hin_c1_sentence_use": ("application", "make_sentence_hindi"),
     "hin_c1_sentence_complete": ("representation", "complete_sentence_hindi"),
@@ -2015,7 +2021,7 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Use family words (माँ, पापा, दादी, भाई) in simple sentences",
         "Match family words to pictures and relationships",
     ],
-    "Simple Sentences (Class 1)": [
+    "Simple Sentences in Hindi (Class 1)": [
         "Read and understand very simple Hindi sentences",
         "Identify correct and incorrect simple sentences",
         "Form basic Hindi sentences using given words",
@@ -3298,7 +3304,7 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "writing a card for माँ on Mother's Day", "Meena telling the class about her परिवार",
         "a Hindi rhyme about family members", "labelling family members in a picture during Hindi period",
     ],
-    "Simple Sentences (Class 1)": [
+    "Simple Sentences in Hindi (Class 1)": [
         "Riya reading 'यह गाय है' from the Hindi textbook", "making sentences about classroom objects",
         "Aman writing 'मेरा नाम अमन है' on the board", "reading simple sentences about fruits and animals",
         "a sentence-building game with word cards", "Priya telling the class about her pet in Hindi",
@@ -6207,7 +6213,7 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "hin_c1_family_thinking", "count": 1},
         ],
     },
-    "Simple Sentences (Class 1)": {
+    "Simple Sentences in Hindi (Class 1)": {
         "allowed_skill_tags": [
             "hin_c1_sentence_identify", "hin_c1_sentence_use", "hin_c1_sentence_complete",
             "hin_c1_sentence_error", "hin_c1_sentence_thinking",
@@ -7577,6 +7583,9 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 1 sentences": "Simple Sentences (Class 1)",
     "c1 sentences": "Simple Sentences (Class 1)",
     "class 1 simple sentences": "Simple Sentences (Class 1)",
+    "english simple sentences class 1": "Simple Sentences (Class 1)",
+    "eng c1 sentences": "Simple Sentences (Class 1)",
+    "c1 english sentences": "Simple Sentences (Class 1)",
     # ── Class 2+ English aliases ──
     "nouns": "Nouns (Class 3)",
     "verbs": "Verbs (Class 3)",
@@ -7829,10 +7838,10 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 1 family words": "Family Words (Class 1)",
     "hindi family words": "Family Words (Class 1)",
     "parivar shabd": "Family Words (Class 1)",
-    "simple sentences hindi": "Simple Sentences (Class 1)",
-    "class 1 simple sentences": "Simple Sentences (Class 1)",
-    "hindi simple sentences": "Simple Sentences (Class 1)",
-    "saral vakya": "Simple Sentences (Class 1)",
+    "simple sentences hindi": "Simple Sentences in Hindi (Class 1)",
+    "class 1 simple sentences hindi": "Simple Sentences in Hindi (Class 1)",
+    "hindi simple sentences": "Simple Sentences in Hindi (Class 1)",
+    "saral vakya": "Simple Sentences in Hindi (Class 1)",
     # ── Hindi Class 2 aliases ──
     "matras introduction": "Matras Introduction (Class 2)",
     "class 2 matras": "Matras Introduction (Class 2)",
@@ -8106,34 +8115,74 @@ _TOPIC_ALIASES: dict[str, str] = {
 }
 
 
-def get_topic_profile(topic: str) -> dict | None:
+# Maps frontend subject strings → canonical group matching skill-tag prefixes.
+_SUBJECT_TO_PROFILE_GROUP: dict[str, str] = {
+    "maths": "Maths", "math": "Maths", "mathematics": "Maths",
+    "english": "English",
+    "evs": "Science/EVS", "science": "Science/EVS",
+    "hindi": "Hindi",
+    "computer": "Computer", "computers": "Computer",
+    "gk": "GK", "general knowledge": "GK",
+    "moral science": "Moral", "moral": "Moral",
+    "health": "Health",
+    "health & physical education": "Health",
+    "health and physical education": "Health",
+}
+
+
+def _profile_subject_group(profile: dict) -> str:
+    """Return subject group for a profile based on its skill-tag prefixes."""
+    tags = profile.get("allowed_skill_tags", [])
+    if any(t.startswith("eng_") for t in tags):   return "English"
+    if any(t.startswith("sci_") or t.startswith("evs_") for t in tags): return "Science/EVS"
+    if any(t.startswith("hin_") for t in tags):   return "Hindi"
+    if any(t.startswith("comp_") for t in tags):  return "Computer"
+    if any(t.startswith("gk_") for t in tags):    return "GK"
+    if any(t.startswith("moral_") for t in tags): return "Moral"
+    if any(t.startswith("health_") for t in tags):return "Health"
+    return "Maths"
+
+
+def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
+    """Return the TOPIC_PROFILES entry for topic.
+
+    If subject is given (e.g. "EVS", "English"), reject profiles whose
+    skill-tag prefix belongs to a different subject group.
+    subject=None keeps the original permissive behaviour (backward compatible).
+    """
     import re as _re
+
+    def _ok(profile: dict) -> bool:
+        if not subject:
+            return True
+        expected = _SUBJECT_TO_PROFILE_GROUP.get(subject.lower())
+        return not expected or _profile_subject_group(profile) == expected
+
     normalized = normalize_topic(topic)
-    # Exact match first
     profile = TOPIC_PROFILES.get(normalized)
     if profile:
-        return profile
-    # Try alias (case-insensitive)
+        return profile if _ok(profile) else None
+
     alias_key = normalized.lower()
     if alias_key in _TOPIC_ALIASES:
-        return TOPIC_PROFILES.get(_TOPIC_ALIASES[alias_key])
-    # Substring match: "Multiplication" should match "Multiplication (tables 2-10)"
-    # SAFETY: If the incoming topic contains a Class marker (e.g. "Class 1"),
-    # only accept profile keys that carry the SAME class number.
-    # This prevents "Addition and subtraction (up to 20)" from matching
-    # "Addition (carries)" just because both start with "addition".
+        p = TOPIC_PROFILES.get(_TOPIC_ALIASES[alias_key])
+        if p:
+            return p if _ok(p) else None
+
+    # Substring fallback — guard by class marker AND subject
     _class_marker = _re.search(r"class\s*(\d)", alias_key, _re.IGNORECASE)
     matches = []
     for key in TOPIC_PROFILES:
         key_lower = key.lower()
         if key_lower.startswith(alias_key) or alias_key.startswith(key_lower.split("(")[0].strip()):
             if _class_marker:
-                key_marker = _re.search(r"class\s*(\d)", key_lower, _re.IGNORECASE)
-                if not key_marker or key_marker.group(1) != _class_marker.group(1):
-                    continue  # wrong grade — skip
+                km = _re.search(r"class\s*(\d)", key_lower, _re.IGNORECASE)
+                if not km or km.group(1) != _class_marker.group(1):
+                    continue
+            if not _ok(TOPIC_PROFILES[key]):
+                continue
             matches.append(key)
     if matches:
-        # Prefer the most specific (longest) key when multiple remain
         matches.sort(key=len, reverse=True)
         return TOPIC_PROFILES[matches[0]]
     return None
@@ -9700,6 +9749,27 @@ def _build_slot_instruction(
         }
         return c1_simple_ctx + c1_simple_map.get(_skill_tag, "About simple sentences.")
 
+    # Simple Sentences (Class 1) — eng_c1_sentence_* tags
+    if _skill_tag in ("eng_c1_sentence_identify","eng_c1_sentence_make",
+                       "eng_c1_sentence_complete","eng_c1_sentence_error","eng_c1_sentence_thinking"):
+        c1_sent_ctx = (
+            "Topic: Simple Sentences (Class 1 English). "
+            "Use ONLY simple subject-verb or subject-verb-object sentences (max 5 words). "
+            "Vocabulary: basic Class 1 nouns (ball, cat, tree, sun, book, dog, bird, flower). "
+            "NO complex grammar, NO tenses other than simple present. "
+            "Names: Ravi, Priya, Amma, Bablu, Meena. "
+        )
+        if _skill_tag == "eng_c1_sentence_identify":
+            return c1_sent_ctx + "Show 2 word groups: one is a sentence, one is not. Ask: 'Which is a sentence?' e.g. 'The dog runs.' vs 'runs dog the'. Answer: the correct sentence."
+        elif _skill_tag == "eng_c1_sentence_make":
+            return c1_sent_ctx + "Give 3 words and ask student to arrange them into a sentence. e.g. 'runs / Ravi / fast' → 'Ravi runs fast.' Answer: the correct sentence."
+        elif _skill_tag == "eng_c1_sentence_complete":
+            return c1_sent_ctx + "Fill in the blank: 'The bird ___.' or 'Priya ___ a book.' Answer: one simple word that completes the sentence."
+        elif _skill_tag == "eng_c1_sentence_error":
+            return c1_sent_ctx + "Show a simple sentence with one obvious error. e.g. 'The cat run fast.' Ask what is wrong and give the correct version. Answer: the corrected sentence."
+        elif _skill_tag == "eng_c1_sentence_thinking":
+            return c1_sent_ctx + "Ask student to make their own sentence using a given word (e.g. 'Write a sentence using the word: bird'). Answer: any valid simple sentence using that word."
+
     # ── Class 2+ English instruction builders ──
 
     # Nouns
@@ -10863,7 +10933,7 @@ def _build_slot_instruction(
         }
         return ctx + tag_map.get(_skill_tag, "About Hindi Family Words.")
 
-    # ── Hindi Simple Sentences (Class 1) ──
+    # ── Hindi Simple Sentences in Hindi (Class 1) ──
     if _skill_tag.startswith("hin_c1_sentence_"):
         ctx = (
             "Topic: Simple Sentences (Class 1 Hindi, CBSE). "
@@ -13112,7 +13182,7 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "Keep language VERY simple for Class 1 (age 6). MUST use Devanagari script. "
         "NEVER generate arithmetic, English, or unrelated vocabulary questions.\n"
     ),
-    "Simple Sentences (Class 1)": (
+    "Simple Sentences in Hindi (Class 1)": (
         "CRITICAL: ALL questions MUST be about very simple Hindi sentences ONLY — "
         "'यह ___ है', 'मेरा नाम ___ है', 'मुझे ___ पसंद है'. "
         "ONLY 3-5 word sentences. NO complex grammar. NO compound sentences. "
@@ -15136,7 +15206,7 @@ def run_slot_pipeline(
         meta["difficulty"] = "Medium"
 
     # 2. Get slot plan (plan directives override simple slot_plan)
-    _topic_profile = get_topic_profile(topic)
+    _topic_profile = get_topic_profile(topic, subject=subject)
     # Normalize topic to canonical key so downstream comparisons match
     if _topic_profile:
         for _canon_key, _canon_prof in TOPIC_PROFILES.items():
