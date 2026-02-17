@@ -85,7 +85,7 @@ function AppContent() {
 
   // When role switches, reset to default page for that role
   useEffect(() => {
-    const isTeacherPage = ['dashboard', 'classes'].includes(currentPage)
+    const isTeacherPage = ['dashboard', 'classes', 'generator'].includes(currentPage)
     const isParentPage = ['generator', 'syllabus', 'children', 'progress'].includes(currentPage)
 
     const sharedPages = ['saved', 'history']
