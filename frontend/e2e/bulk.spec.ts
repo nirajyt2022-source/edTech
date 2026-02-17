@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login, navigateToTab } from './helpers';
+import { login } from './helpers';
 
 async function ensureTeacherRole(page: import('@playwright/test').Page) {
   // Check if already in teacher mode (Dashboard tab visible)

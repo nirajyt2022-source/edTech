@@ -7,7 +7,7 @@ import ChildProfiles from './pages/ChildProfiles'
 import TeacherDashboard from './pages/TeacherDashboard'
 import ClassManager from './pages/ClassManager'
 import Auth from './pages/Auth'
-import LandingPage from './pages/LandingPage'
+import Landing from './pages/Landing'
 import History from './pages/History'
 import ParentDashboard from './pages/ParentDashboard'
 import RoleSelector from '@/components/RoleSelector'
@@ -121,7 +121,7 @@ function AppContent() {
       return <Auth defaultMode={authDefaultMode} onBack={() => setShowAuth(false)} />
     }
     return (
-      <LandingPage
+      <Landing
         onGetStarted={() => { setAuthDefaultMode('signup'); setShowAuth(true) }}
         onSignIn={() => { setAuthDefaultMode('login'); setShowAuth(true) }}
       />

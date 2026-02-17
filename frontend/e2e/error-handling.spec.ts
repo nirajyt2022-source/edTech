@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login, navigateToTab, ensureParentRole } from './helpers';
+import { login, navigateToTab } from './helpers';
 
 test.describe('Suite 7: Error Handling (no blank screens)', () => {
   test('generator page renders without errors', async ({ page }) => {
@@ -60,10 +60,6 @@ test.describe('Suite 7: Error Handling (no blank screens)', () => {
 
     const bodyText = await page.textContent('body') || '';
     // Should see either "Credits" badge or "Elite Pro" badge
-    const hasSubscription = bodyText.includes('Credits') ||
-      bodyText.includes('Elite Pro') ||
-      bodyText.includes('Free');
-
     // The page should be functional regardless of subscription state
     expect(bodyText.length).toBeGreaterThan(100);
   });

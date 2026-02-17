@@ -1,4 +1,4 @@
-import { Page, expect, request as playwrightRequest } from '@playwright/test';
+import { Page } from '@playwright/test';
 
 // Test credentials
 export const TEST_EMAIL = process.env.TEST_USER_EMAIL || 'nirajyt2022@gmail.com';
