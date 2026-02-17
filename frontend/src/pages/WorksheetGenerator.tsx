@@ -163,7 +163,11 @@ const HEALTH_TOPICS_BY_GRADE: Record<number, string[]> = {
 
 // Grade-aware Hindi topics (matching backend TOPIC_PROFILES keys)
 const HINDI_TOPICS_BY_GRADE: Record<number, string[]> = {
+  1: ['Varnamala Swar (Class 1)', 'Varnamala Vyanjan (Class 1)', 'Family Words (Class 1)', 'Simple Sentences (Class 1)'],
+  2: ['Matras Introduction (Class 2)', 'Two Letter Words (Class 2)', 'Three Letter Words (Class 2)', 'Rhymes and Poems (Class 2)', 'Nature Vocabulary (Class 2)'],
   3: ['Varnamala (Class 3)', 'Matras (Class 3)', 'Shabd Rachna (Class 3)', 'Vakya Rachna (Class 3)', 'Kahani Lekhan (Class 3)'],
+  4: ['Anusvaar and Visarg (Class 4)', 'Vachan and Ling (Class 4)', 'Kaal (Class 4)', 'Patra Lekhan (Class 4)', 'Comprehension Hindi (Class 4)'],
+  5: ['Muhavare (Class 5)', 'Paryayvachi Shabd (Class 5)', 'Vilom Shabd (Class 5)', 'Samas (Class 5)', 'Samvad Lekhan (Class 5)'],
 }
 
 interface Question {

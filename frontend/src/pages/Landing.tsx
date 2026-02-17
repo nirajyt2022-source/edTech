@@ -94,6 +94,14 @@ const HEALTH_TOPICS: Record<string, string[]> = {
   'Class 5': ['Fitness & Stamina', 'Nutrition Labels', 'Mental Health'],
 }
 
+const HINDI_TOPICS: Record<string, string[]> = {
+  'Class 1': ['Varnamala Swar', 'Varnamala Vyanjan', 'Family Words', 'Simple Sentences'],
+  'Class 2': ['Matras Introduction', 'Two Letter Words', 'Three Letter Words', 'Rhymes & Poems', 'Nature Vocabulary'],
+  'Class 3': ['Varnamala', 'Matras', 'Shabd Rachna', 'Vakya Rachna', 'Kahani Lekhan'],
+  'Class 4': ['Anusvaar & Visarg', 'Vachan & Ling', 'Kaal', 'Patra Lekhan', 'Comprehension'],
+  'Class 5': ['Muhavare', 'Paryayvachi Shabd', 'Vilom Shabd', 'Samas', 'Samvad Lekhan'],
+}
+
 /* ─── Gold Class feature steps ─── */
 const GOLD_STEPS = [
   {
@@ -228,7 +236,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 export default function Landing({ onGetStarted, onSignIn }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Science' | 'Computer' | 'GK' | 'Moral Science' | 'Health'>('Maths')
+  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Hindi' | 'Science' | 'Computer' | 'GK' | 'Moral Science' | 'Health'>('Maths')
   const [activeStep, setActiveStep] = useState(0)
 
   // Sticky nav scroll detection
@@ -256,6 +264,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
     : activeSubject === 'GK' ? GK_TOPICS
     : activeSubject === 'Moral Science' ? MORAL_TOPICS
     : activeSubject === 'Health' ? HEALTH_TOPICS
+    : activeSubject === 'Hindi' ? HINDI_TOPICS
     : SCIENCE_TOPICS
 
   return (
@@ -530,7 +539,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
 
           {/* Subject toggles */}
           <div className="flex justify-center gap-3 mb-10">
-            {(['Maths', 'English', 'Science', 'Computer', 'GK', 'Moral Science', 'Health'] as const).map((subj) => (
+            {(['Maths', 'English', 'Hindi', 'Science', 'Computer', 'GK', 'Moral Science', 'Health'] as const).map((subj) => (
               <button
                 key={subj}
                 onClick={() => setActiveSubject(subj)}

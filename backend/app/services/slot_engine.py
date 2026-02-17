@@ -899,6 +899,124 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "hin_kahani_complete": ("representation", "complete_sentence_hindi"),
     "hin_kahani_error": ("error_detection", "error_spot_hindi"),
     "hin_kahani_thinking": ("thinking", "creative_writing_hindi"),
+    # ── Hindi Class 1 skill tags ──────────────────────────
+    # Varnamala Swar (Class 1)
+    "hin_c1_swar_identify": ("recognition", "identify_letter"),
+    "hin_c1_swar_use": ("application", "fill_matra"),
+    "hin_c1_swar_complete": ("representation", "complete_word"),
+    "hin_c1_swar_error": ("error_detection", "error_spot_hindi"),
+    "hin_c1_swar_thinking": ("thinking", "explain_meaning"),
+    # Varnamala Vyanjan (Class 1)
+    "hin_c1_vyanjan_identify": ("recognition", "identify_letter"),
+    "hin_c1_vyanjan_use": ("application", "fill_matra"),
+    "hin_c1_vyanjan_complete": ("representation", "complete_word"),
+    "hin_c1_vyanjan_error": ("error_detection", "error_spot_hindi"),
+    "hin_c1_vyanjan_thinking": ("thinking", "explain_meaning"),
+    # Family Words (Class 1)
+    "hin_c1_family_identify": ("recognition", "identify_word_type"),
+    "hin_c1_family_use": ("application", "use_in_sentence_hindi"),
+    "hin_c1_family_complete": ("representation", "complete_word"),
+    "hin_c1_family_error": ("error_detection", "error_spot_hindi"),
+    "hin_c1_family_thinking": ("thinking", "explain_meaning"),
+    # Simple Sentences (Class 1)
+    "hin_c1_sentence_identify": ("recognition", "pick_correct_hindi"),
+    "hin_c1_sentence_use": ("application", "make_sentence_hindi"),
+    "hin_c1_sentence_complete": ("representation", "complete_sentence_hindi"),
+    "hin_c1_sentence_error": ("error_detection", "error_spot_hindi"),
+    "hin_c1_sentence_thinking": ("thinking", "creative_writing_hindi"),
+    # ── Hindi Class 2 skill tags ──────────────────────────
+    # Matras Introduction (Class 2)
+    "hin_c2_matra_identify": ("recognition", "identify_matra"),
+    "hin_c2_matra_fill": ("application", "fill_matra"),
+    "hin_c2_matra_complete": ("representation", "complete_word"),
+    "hin_c2_matra_error": ("error_detection", "error_spot_hindi"),
+    "hin_c2_matra_thinking": ("thinking", "explain_meaning"),
+    # Two Letter Words (Class 2)
+    "hin_c2_two_identify": ("recognition", "identify_letter"),
+    "hin_c2_two_use": ("application", "make_word"),
+    "hin_c2_two_complete": ("representation", "complete_word"),
+    "hin_c2_two_error": ("error_detection", "error_spot_hindi"),
+    "hin_c2_two_thinking": ("thinking", "explain_meaning"),
+    # Three Letter Words (Class 2)
+    "hin_c2_three_identify": ("recognition", "identify_letter"),
+    "hin_c2_three_use": ("application", "make_word"),
+    "hin_c2_three_complete": ("representation", "complete_word"),
+    "hin_c2_three_error": ("error_detection", "error_spot_hindi"),
+    "hin_c2_three_thinking": ("thinking", "explain_meaning"),
+    # Rhymes and Poems (Class 2)
+    "hin_c2_rhyme_identify": ("recognition", "pick_correct_hindi"),
+    "hin_c2_rhyme_use": ("application", "use_in_sentence_hindi"),
+    "hin_c2_rhyme_complete": ("representation", "complete_sentence_hindi"),
+    "hin_c2_rhyme_error": ("error_detection", "error_spot_hindi"),
+    "hin_c2_rhyme_thinking": ("thinking", "creative_writing_hindi"),
+    # Nature Vocabulary (Class 2)
+    "hin_c2_nature_identify": ("recognition", "identify_word_type"),
+    "hin_c2_nature_use": ("application", "use_in_sentence_hindi"),
+    "hin_c2_nature_complete": ("representation", "complete_word"),
+    "hin_c2_nature_error": ("error_detection", "error_spot_hindi"),
+    "hin_c2_nature_thinking": ("thinking", "explain_meaning"),
+    # ── Hindi Class 4 skill tags ──────────────────────────
+    # Anusvaar and Visarg (Class 4)
+    "hin_c4_anusvaar_identify": ("recognition", "identify_letter"),
+    "hin_c4_anusvaar_use": ("application", "fill_matra"),
+    "hin_c4_anusvaar_complete": ("representation", "complete_word"),
+    "hin_c4_anusvaar_error": ("error_detection", "error_spot_hindi"),
+    "hin_c4_anusvaar_thinking": ("thinking", "explain_meaning"),
+    # Vachan and Ling (Class 4)
+    "hin_c4_vachan_identify": ("recognition", "identify_word_type"),
+    "hin_c4_vachan_use": ("application", "make_word"),
+    "hin_c4_vachan_complete": ("representation", "word_formation"),
+    "hin_c4_vachan_error": ("error_detection", "error_spot_hindi"),
+    "hin_c4_vachan_thinking": ("thinking", "explain_meaning"),
+    # Kaal (Class 4)
+    "hin_c4_kaal_identify": ("recognition", "pick_correct_hindi"),
+    "hin_c4_kaal_use": ("application", "make_sentence_hindi"),
+    "hin_c4_kaal_complete": ("representation", "complete_sentence_hindi"),
+    "hin_c4_kaal_error": ("error_detection", "error_spot_hindi"),
+    "hin_c4_kaal_thinking": ("thinking", "explain_meaning"),
+    # Patra Lekhan (Class 4)
+    "hin_c4_patra_identify": ("recognition", "pick_correct_hindi"),
+    "hin_c4_patra_use": ("application", "make_sentence_hindi"),
+    "hin_c4_patra_complete": ("representation", "complete_sentence_hindi"),
+    "hin_c4_patra_error": ("error_detection", "error_spot_hindi"),
+    "hin_c4_patra_thinking": ("thinking", "creative_writing_hindi"),
+    # Comprehension Hindi (Class 4)
+    "hin_c4_comprehension_identify": ("recognition", "pick_correct_hindi"),
+    "hin_c4_comprehension_answer": ("application", "word_problem_hindi"),
+    "hin_c4_comprehension_complete": ("representation", "complete_sentence_hindi"),
+    "hin_c4_comprehension_error": ("error_detection", "error_spot_hindi"),
+    "hin_c4_comprehension_thinking": ("thinking", "creative_writing_hindi"),
+    # ── Hindi Class 5 skill tags ──────────────────────────
+    # Muhavare (Class 5)
+    "hin_c5_muhavare_identify": ("recognition", "identify_word_type"),
+    "hin_c5_muhavare_use": ("application", "use_in_sentence_hindi"),
+    "hin_c5_muhavare_complete": ("representation", "complete_sentence_hindi"),
+    "hin_c5_muhavare_error": ("error_detection", "error_spot_hindi"),
+    "hin_c5_muhavare_thinking": ("thinking", "explain_meaning"),
+    # Paryayvachi Shabd (Class 5)
+    "hin_c5_paryay_identify": ("recognition", "identify_word_type"),
+    "hin_c5_paryay_use": ("application", "make_word"),
+    "hin_c5_paryay_complete": ("representation", "word_formation"),
+    "hin_c5_paryay_error": ("error_detection", "error_spot_hindi"),
+    "hin_c5_paryay_thinking": ("thinking", "explain_meaning"),
+    # Vilom Shabd (Class 5)
+    "hin_c5_vilom_identify": ("recognition", "identify_word_type"),
+    "hin_c5_vilom_use": ("application", "make_word"),
+    "hin_c5_vilom_complete": ("representation", "word_formation"),
+    "hin_c5_vilom_error": ("error_detection", "error_spot_hindi"),
+    "hin_c5_vilom_thinking": ("thinking", "explain_meaning"),
+    # Samas (Class 5)
+    "hin_c5_samas_identify": ("recognition", "identify_word_type"),
+    "hin_c5_samas_use": ("application", "make_word"),
+    "hin_c5_samas_complete": ("representation", "word_formation"),
+    "hin_c5_samas_error": ("error_detection", "error_spot_hindi"),
+    "hin_c5_samas_thinking": ("thinking", "explain_meaning"),
+    # Samvad Lekhan (Class 5)
+    "hin_c5_samvad_identify": ("recognition", "pick_correct_hindi"),
+    "hin_c5_samvad_use": ("application", "make_sentence_hindi"),
+    "hin_c5_samvad_complete": ("representation", "complete_sentence_hindi"),
+    "hin_c5_samvad_error": ("error_detection", "error_spot_hindi"),
+    "hin_c5_samvad_thinking": ("thinking", "creative_writing_hindi"),
     # ── Computer Science skill tags ──────────────────────────
     # Parts of Computer (Class 1)
     "comp_c1_parts_identify": ("recognition", "pick_correct_science"),
@@ -1880,6 +1998,105 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Read and understand short Hindi stories and passages",
         "Answer comprehension questions about a Hindi passage",
         "Write a short paragraph or story in Hindi",
+    ],
+    # ── Hindi Class 1 topics ──
+    "Varnamala Swar (Class 1)": [
+        "Recognise and name all Hindi vowels (swar) from अ to अः",
+        "Match vowels to their sounds and trace them correctly",
+        "Identify vowels in simple Hindi words",
+    ],
+    "Varnamala Vyanjan (Class 1)": [
+        "Recognise and name Hindi consonants (vyanjan) from क to ज्ञ",
+        "Match consonants to their sounds and pictures",
+        "Trace and write consonants correctly",
+    ],
+    "Family Words (Class 1)": [
+        "Read and recognise Hindi words for family members",
+        "Use family words (माँ, पापा, दादी, भाई) in simple sentences",
+        "Match family words to pictures and relationships",
+    ],
+    "Simple Sentences (Class 1)": [
+        "Read and understand very simple Hindi sentences",
+        "Identify correct and incorrect simple sentences",
+        "Form basic Hindi sentences using given words",
+    ],
+    # ── Hindi Class 2 topics ──
+    "Matras Introduction (Class 2)": [
+        "Identify basic matras (ा, ि, ी, ु, ू) and their sounds",
+        "Read and write simple words using matras",
+        "Spot and correct matra errors in words",
+    ],
+    "Two Letter Words (Class 2)": [
+        "Read and write two-letter Hindi words (दो अक्षर वाले शब्द)",
+        "Form two-letter words from given letters",
+        "Identify and correct errors in two-letter words",
+    ],
+    "Three Letter Words (Class 2)": [
+        "Read and write three-letter Hindi words (तीन अक्षर वाले शब्द)",
+        "Form three-letter words from given letters and matras",
+        "Use three-letter words in simple sentences",
+    ],
+    "Rhymes and Poems (Class 2)": [
+        "Recite and understand simple Hindi rhymes and poems",
+        "Identify rhyming words in Hindi kavitas",
+        "Complete missing words in familiar Hindi poems",
+    ],
+    "Nature Vocabulary (Class 2)": [
+        "Learn Hindi words for nature: trees, flowers, animals, weather",
+        "Use nature vocabulary in simple Hindi sentences",
+        "Match nature words to pictures and descriptions",
+    ],
+    # ── Hindi Class 4 topics ──
+    "Anusvaar and Visarg (Class 4)": [
+        "Identify anusvaar (ं) and visarg (ः) in Hindi words",
+        "Use anusvaar and visarg correctly while writing words",
+        "Spot and correct anusvaar/visarg errors in sentences",
+    ],
+    "Vachan and Ling (Class 4)": [
+        "Identify singular (ekvachan) and plural (bahuvachan) forms",
+        "Convert nouns between masculine (pulling) and feminine (stree ling)",
+        "Use correct vachan and ling in Hindi sentences",
+    ],
+    "Kaal (Class 4)": [
+        "Identify past (bhoot), present (vartaman), and future (bhavishya) tense",
+        "Convert sentences between different tenses in Hindi",
+        "Use correct tense forms in Hindi writing",
+    ],
+    "Patra Lekhan (Class 4)": [
+        "Write informal Hindi letters with correct format",
+        "Include greeting, body, and closing in Hindi letters",
+        "Express thoughts clearly in letter format",
+    ],
+    "Comprehension Hindi (Class 4)": [
+        "Read and understand Hindi passages of 4-5 sentences",
+        "Answer questions based on a Hindi passage",
+        "Write short summaries of Hindi passages in own words",
+    ],
+    # ── Hindi Class 5 topics ──
+    "Muhavare (Class 5)": [
+        "Identify common Hindi muhavare (idioms) and their meanings",
+        "Use muhavare correctly in Hindi sentences",
+        "Explain the meaning of muhavare with examples",
+    ],
+    "Paryayvachi Shabd (Class 5)": [
+        "Identify paryayvachi shabd (synonyms) for common Hindi words",
+        "Use synonyms to enrich Hindi vocabulary and sentences",
+        "Match words with their correct synonyms",
+    ],
+    "Vilom Shabd (Class 5)": [
+        "Identify vilom shabd (antonyms) for common Hindi words",
+        "Form correct antonym pairs in Hindi",
+        "Use antonyms to understand word meanings in context",
+    ],
+    "Samas (Class 5)": [
+        "Identify samas (compound words) and their component words",
+        "Break compound words into their original parts (vigrah)",
+        "Form new compound words from given word pairs",
+    ],
+    "Samvad Lekhan (Class 5)": [
+        "Write dialogues between two or more characters in Hindi",
+        "Use correct punctuation and format for dialogue writing",
+        "Express different emotions and tones through Hindi dialogues",
     ],
     # ── Computer Science Class 1 (2 topics) ──
     "Parts of Computer (Class 1)": [
@@ -3058,6 +3275,143 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "a story about a kind auto-rickshaw driver", "a tale about sharing tiffin at school",
         "a passage about planting trees on Van Mahotsav", "a story about a brave girl saving a bird",
         "a tale about Diwali preparations at home", "a passage about a visit to the Taj Mahal",
+    ],
+    # ── Hindi Class 1 Context Banks ──
+    "Varnamala Swar (Class 1)": [
+        "learning अ से अनार in a colourful Hindi textbook", "singing swar in morning prayer at school",
+        "tracing vowels on a slate with chalk", "a swar chart on the classroom wall",
+        "matching अ to अनार and आ to आम pictures", "Aarav practising swar at home with Dadi",
+        "a Hindi alphabet puzzle in the school library", "Riya pointing to vowels on a flash card",
+        "singing अ आ इ ई during Hindi period", "writing swar in a new Hindi copy on the first day of school",
+    ],
+    "Varnamala Vyanjan (Class 1)": [
+        "learning क से कबूतर from a picture chart", "tracing vyanjan on a whiteboard in class",
+        "Meena matching consonants to animal pictures", "a vyanjan poster outside the Hindi classroom",
+        "singing ka kha ga gha with the teacher", "Aman writing consonants in his Hindi notebook",
+        "a consonant flash card game during recess", "Priya learning ट ठ ड ढ from the blackboard",
+        "copying vyanjan from a Hindi workbook", "a vyanjan recitation competition on Hindi Diwas",
+    ],
+    "Family Words (Class 1)": [
+        "Arjun drawing his family and labelling माँ, पापा", "a family tree chart on the classroom wall",
+        "Riya writing about her दादी in Hindi class", "matching family photos to Hindi words",
+        "a puppet show about a joint family at school", "Aarav reading a story about भाई and बहन",
+        "writing a card for माँ on Mother's Day", "Meena telling the class about her परिवार",
+        "a Hindi rhyme about family members", "labelling family members in a picture during Hindi period",
+    ],
+    "Simple Sentences (Class 1)": [
+        "Riya reading 'यह गाय है' from the Hindi textbook", "making sentences about classroom objects",
+        "Aman writing 'मेरा नाम अमन है' on the board", "reading simple sentences about fruits and animals",
+        "a sentence-building game with word cards", "Priya telling the class about her pet in Hindi",
+        "reading sentences from a Hindi storybook", "making sentences about Diwali celebrations",
+        "writing 'मुझे आम पसंद है' in the Hindi copy", "reading sentences about a visit to the zoo",
+    ],
+    # ── Hindi Class 2 Context Banks ──
+    "Matras Introduction (Class 2)": [
+        "Aarav learning aa ki matra from signboards at the bazaar", "Riya filling matras in her Hindi workbook",
+        "spelling words on a Rakhi greeting card", "a matra chart on the classroom notice board",
+        "reading Hindi words on a menu at a school canteen", "Meena practising matras on a slate at home",
+        "matching matras to words in a Hindi puzzle", "writing names of fruits with correct matras",
+        "a matra song sung during Hindi period", "labelling pictures with matra words in a notebook",
+    ],
+    "Two Letter Words (Class 2)": [
+        "Aman reading दो अक्षर वाले शब्द from the textbook", "making word cards with two-letter words",
+        "Priya matching जल, फल, बल to their pictures", "a two-letter word game on the classroom board",
+        "writing नल, दल, बल in a Hindi copy", "reading two-letter words from a Hindi chart",
+        "Riya sorting two-letter words by their sounds", "a flash card activity with two-letter words",
+        "finding two-letter words in a Hindi poem", "spelling two-letter words during dictation",
+    ],
+    "Three Letter Words (Class 2)": [
+        "Meena reading कमल, सड़क, नमक from the textbook", "writing three-letter words in a Hindi notebook",
+        "a word-building game with letter tiles", "Arjun matching three-letter words to pictures",
+        "spelling three-letter words during Hindi dictation", "reading three-letter words on a school poster",
+        "Aarav forming words using letter blocks", "filling in missing letters in three-letter words",
+        "a three-letter word chain game in class", "Priya reading a story with three-letter words",
+    ],
+    "Rhymes and Poems (Class 2)": [
+        "singing 'मछली जल की रानी है' in morning assembly", "reciting a poem about rain during Hindi class",
+        "Riya learning a Holi poem for the school function", "completing missing words in 'चंदा मामा दूर के'",
+        "a Hindi kavita competition on Children's Day", "Aman reciting a nature poem in class",
+        "singing a Hindi rhyme about animals", "a poem about the national flag for Republic Day",
+        "Meena drawing pictures for a Hindi poem", "learning a Diwali poem for the school show",
+    ],
+    "Nature Vocabulary (Class 2)": [
+        "Arjun learning names of flowers in the school garden", "labelling trees and plants during a nature walk",
+        "Riya writing about the monsoon in Hindi", "matching animal pictures to Hindi names",
+        "a nature vocabulary chart on the classroom wall", "Aman writing about birds he sees at home",
+        "learning names of fruits and vegetables at the market", "Priya writing about seasons in Hindi",
+        "a picture dictionary of nature words in Hindi", "drawing and labelling nature scenes in the Hindi copy",
+    ],
+    # ── Hindi Class 4 Context Banks ──
+    "Anusvaar and Visarg (Class 4)": [
+        "Riya practising anusvaar words like गंगा, मंदिर in her notebook", "a grammar exercise on anusvaar and visarg in the Hindi textbook",
+        "Aman finding anusvaar words on a temple signboard", "writing visarg words like अतः, प्रातः correctly",
+        "a classroom chart showing anusvaar vs chandrabindu", "Meena correcting anusvaar errors in a paragraph",
+        "reading words with anusvaar in a Hindi newspaper", "Priya sorting words into anusvaar and visarg groups",
+        "a dictation exercise focusing on anusvaar words", "finding anusvaar words in a Hindi poem about rivers",
+    ],
+    "Vachan and Ling (Class 4)": [
+        "Aarav changing लड़का to लड़के in a grammar exercise", "Riya identifying pulling and stree ling in a story",
+        "converting ekvachan to bahuvachan in the Hindi workbook", "a gender and number chart on the board",
+        "Meena writing correct forms of nouns in sentences", "changing कपड़ा to कपड़े in a fill-in-the-blank exercise",
+        "Aman sorting words by ling in a Hindi project", "a vachan conversion game in Hindi class",
+        "Priya correcting vachan errors in a paragraph", "writing masculine and feminine forms of animal names",
+    ],
+    "Kaal (Class 4)": [
+        "Riya converting sentences to bhoot kaal in a grammar exercise", "Aman writing about what he did yesterday using past tense",
+        "changing 'Ram khata hai' to future tense in the textbook", "a tense conversion chart on the classroom wall",
+        "Meena identifying tenses in a Hindi story", "Priya writing a paragraph using all three tenses",
+        "a fill-in-the-blank exercise on kaal in the workbook", "converting Holi celebration sentences to different tenses",
+        "Aarav telling what he will do tomorrow in Hindi", "a kaal identification game during Hindi period",
+    ],
+    "Patra Lekhan (Class 4)": [
+        "Riya writing a letter to her friend about summer holidays", "Aman writing to his grandfather about school day",
+        "a letter to the principal requesting a holiday", "writing a birthday invitation letter in Hindi",
+        "Meena writing to her cousin about Diwali celebrations", "a letter to a friend about a trip to Shimla",
+        "Priya writing to her mother from a school camp", "a postcard to grandmother about the village fair",
+        "writing a thank-you letter to a teacher in Hindi", "Aarav writing to his father about sports day",
+    ],
+    "Comprehension Hindi (Class 4)": [
+        "a passage about Mahatma Gandhi's childhood", "reading a story about a clever monkey in a mango garden",
+        "a passage about Raksha Bandhan celebrations", "reading about a farmer's life in a village near Varanasi",
+        "a passage about the importance of trees on Van Mahotsav", "reading a story about Tenali Raman's wit",
+        "a passage about a school trip to the Red Fort", "reading about Indian festivals and their importance",
+        "a passage about a brave girl who saved her village", "reading about the life of a postman in a small town",
+    ],
+    # ── Hindi Class 5 Context Banks ──
+    "Muhavare (Class 5)": [
+        "Riya using 'आँखों का तारा' to describe her little brother", "Aman explaining 'नौ दो ग्यारह होना' during Hindi class",
+        "a muhavare chart on the school library wall", "Meena using 'दाल में काला' in a story she wrote",
+        "learning 'अंधों में काना राजा' from a Panchatantra tale", "Priya writing sentences with 'हाथ पैर मारना'",
+        "a muhavare quiz competition on Hindi Diwas", "Aarav explaining 'ऊँट के मुँह में जीरा' to friends",
+        "using 'आसमान से गिरे खजूर में अटके' in a composition", "finding muhavare in a Hindi newspaper article",
+    ],
+    "Paryayvachi Shabd (Class 5)": [
+        "Riya finding synonyms for 'जल' in a Hindi poem", "Aman matching paryayvachi shabd in a workbook exercise",
+        "a synonym word wall in the Hindi classroom", "Meena writing sentences using synonyms of 'सूर्य'",
+        "learning paryayvachi for 'पानी' from a river poem", "Priya grouping synonyms in a Hindi project",
+        "a paryayvachi card game during library period", "finding synonyms in a story about nature",
+        "Aarav enriching his essay using paryayvachi shabd", "a synonym quiz in the Hindi grammar workbook",
+    ],
+    "Vilom Shabd (Class 5)": [
+        "Riya matching vilom shabd pairs in a grammar exercise", "Aman writing antonyms of words from a Hindi story",
+        "a vilom shabd chart on the classroom board", "Meena completing antonym pairs in a workbook",
+        "finding opposites in a Hindi poem about seasons", "Priya using antonyms in sentences about day and night",
+        "a vilom shabd quiz during Hindi period", "Aarav sorting word cards into antonym pairs",
+        "writing vilom of words found in a newspaper headline", "a crossword puzzle using vilom shabd",
+    ],
+    "Samas (Class 5)": [
+        "Riya breaking 'विद्यालय' into विद्या + आलय in class", "Aman finding samas in Hindi textbook sentences",
+        "a samas identification exercise in the grammar workbook", "Meena writing vigrah of compound words",
+        "learning samas from words like 'राजपुत्र' and 'देशभक्ति'", "Priya forming compound words in a Hindi project",
+        "a samas word wall in the Hindi classroom", "Aarav explaining samas in a paragraph about festivals",
+        "finding compound words in a Hindi newspaper article", "a samas quiz during the Hindi grammar period",
+    ],
+    "Samvad Lekhan (Class 5)": [
+        "Riya writing a dialogue between a shopkeeper and customer at a mela", "Aman writing a conversation between two friends about cricket",
+        "a dialogue between a teacher and student about homework", "Meena writing a conversation about Diwali plans",
+        "a dialogue between a doctor and patient at a village clinic", "Priya writing a conversation with her grandmother about old stories",
+        "a dialogue between auto-rickshaw driver and passenger", "writing a conversation about planning a school picnic",
+        "a dialogue between siblings about sharing tiffin", "Aarav writing a conversation at a railway station booking counter",
     ],
     # ── Computer Science Class 1 (2 topics) ──
     "Parts of Computer (Class 1)": [
@@ -5801,6 +6155,333 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "hin_kahani_thinking", "count": 1},
         ],
     },
+    # ── Hindi Class 1 topic profiles ──────────────────────────
+    "Varnamala Swar (Class 1)": {
+        "allowed_skill_tags": [
+            "hin_c1_swar_identify", "hin_c1_swar_use", "hin_c1_swar_complete",
+            "hin_c1_swar_error", "hin_c1_swar_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c1_swar_identify", "count": 3},
+            {"skill_tag": "hin_c1_swar_use", "count": 3},
+            {"skill_tag": "hin_c1_swar_complete", "count": 2},
+            {"skill_tag": "hin_c1_swar_error", "count": 1},
+            {"skill_tag": "hin_c1_swar_thinking", "count": 1},
+        ],
+    },
+    "Varnamala Vyanjan (Class 1)": {
+        "allowed_skill_tags": [
+            "hin_c1_vyanjan_identify", "hin_c1_vyanjan_use", "hin_c1_vyanjan_complete",
+            "hin_c1_vyanjan_error", "hin_c1_vyanjan_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c1_vyanjan_identify", "count": 3},
+            {"skill_tag": "hin_c1_vyanjan_use", "count": 3},
+            {"skill_tag": "hin_c1_vyanjan_complete", "count": 2},
+            {"skill_tag": "hin_c1_vyanjan_error", "count": 1},
+            {"skill_tag": "hin_c1_vyanjan_thinking", "count": 1},
+        ],
+    },
+    "Family Words (Class 1)": {
+        "allowed_skill_tags": [
+            "hin_c1_family_identify", "hin_c1_family_use", "hin_c1_family_complete",
+            "hin_c1_family_error", "hin_c1_family_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c1_family_identify", "count": 3},
+            {"skill_tag": "hin_c1_family_use", "count": 3},
+            {"skill_tag": "hin_c1_family_complete", "count": 2},
+            {"skill_tag": "hin_c1_family_error", "count": 1},
+            {"skill_tag": "hin_c1_family_thinking", "count": 1},
+        ],
+    },
+    "Simple Sentences (Class 1)": {
+        "allowed_skill_tags": [
+            "hin_c1_sentence_identify", "hin_c1_sentence_use", "hin_c1_sentence_complete",
+            "hin_c1_sentence_error", "hin_c1_sentence_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c1_sentence_identify", "count": 3},
+            {"skill_tag": "hin_c1_sentence_use", "count": 3},
+            {"skill_tag": "hin_c1_sentence_complete", "count": 2},
+            {"skill_tag": "hin_c1_sentence_error", "count": 1},
+            {"skill_tag": "hin_c1_sentence_thinking", "count": 1},
+        ],
+    },
+    # ── Hindi Class 2 topic profiles ──────────────────────────
+    "Matras Introduction (Class 2)": {
+        "allowed_skill_tags": [
+            "hin_c2_matra_identify", "hin_c2_matra_fill", "hin_c2_matra_complete",
+            "hin_c2_matra_error", "hin_c2_matra_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c2_matra_identify", "count": 3},
+            {"skill_tag": "hin_c2_matra_fill", "count": 3},
+            {"skill_tag": "hin_c2_matra_complete", "count": 2},
+            {"skill_tag": "hin_c2_matra_error", "count": 1},
+            {"skill_tag": "hin_c2_matra_thinking", "count": 1},
+        ],
+    },
+    "Two Letter Words (Class 2)": {
+        "allowed_skill_tags": [
+            "hin_c2_two_identify", "hin_c2_two_use", "hin_c2_two_complete",
+            "hin_c2_two_error", "hin_c2_two_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c2_two_identify", "count": 3},
+            {"skill_tag": "hin_c2_two_use", "count": 3},
+            {"skill_tag": "hin_c2_two_complete", "count": 2},
+            {"skill_tag": "hin_c2_two_error", "count": 1},
+            {"skill_tag": "hin_c2_two_thinking", "count": 1},
+        ],
+    },
+    "Three Letter Words (Class 2)": {
+        "allowed_skill_tags": [
+            "hin_c2_three_identify", "hin_c2_three_use", "hin_c2_three_complete",
+            "hin_c2_three_error", "hin_c2_three_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c2_three_identify", "count": 3},
+            {"skill_tag": "hin_c2_three_use", "count": 3},
+            {"skill_tag": "hin_c2_three_complete", "count": 2},
+            {"skill_tag": "hin_c2_three_error", "count": 1},
+            {"skill_tag": "hin_c2_three_thinking", "count": 1},
+        ],
+    },
+    "Rhymes and Poems (Class 2)": {
+        "allowed_skill_tags": [
+            "hin_c2_rhyme_identify", "hin_c2_rhyme_use", "hin_c2_rhyme_complete",
+            "hin_c2_rhyme_error", "hin_c2_rhyme_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c2_rhyme_identify", "count": 3},
+            {"skill_tag": "hin_c2_rhyme_use", "count": 3},
+            {"skill_tag": "hin_c2_rhyme_complete", "count": 2},
+            {"skill_tag": "hin_c2_rhyme_error", "count": 1},
+            {"skill_tag": "hin_c2_rhyme_thinking", "count": 1},
+        ],
+    },
+    "Nature Vocabulary (Class 2)": {
+        "allowed_skill_tags": [
+            "hin_c2_nature_identify", "hin_c2_nature_use", "hin_c2_nature_complete",
+            "hin_c2_nature_error", "hin_c2_nature_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c2_nature_identify", "count": 3},
+            {"skill_tag": "hin_c2_nature_use", "count": 3},
+            {"skill_tag": "hin_c2_nature_complete", "count": 2},
+            {"skill_tag": "hin_c2_nature_error", "count": 1},
+            {"skill_tag": "hin_c2_nature_thinking", "count": 1},
+        ],
+    },
+    # ── Hindi Class 4 topic profiles ──────────────────────────
+    "Anusvaar and Visarg (Class 4)": {
+        "allowed_skill_tags": [
+            "hin_c4_anusvaar_identify", "hin_c4_anusvaar_use", "hin_c4_anusvaar_complete",
+            "hin_c4_anusvaar_error", "hin_c4_anusvaar_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c4_anusvaar_identify", "count": 3},
+            {"skill_tag": "hin_c4_anusvaar_use", "count": 3},
+            {"skill_tag": "hin_c4_anusvaar_complete", "count": 2},
+            {"skill_tag": "hin_c4_anusvaar_error", "count": 1},
+            {"skill_tag": "hin_c4_anusvaar_thinking", "count": 1},
+        ],
+    },
+    "Vachan and Ling (Class 4)": {
+        "allowed_skill_tags": [
+            "hin_c4_vachan_identify", "hin_c4_vachan_use", "hin_c4_vachan_complete",
+            "hin_c4_vachan_error", "hin_c4_vachan_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c4_vachan_identify", "count": 3},
+            {"skill_tag": "hin_c4_vachan_use", "count": 3},
+            {"skill_tag": "hin_c4_vachan_complete", "count": 2},
+            {"skill_tag": "hin_c4_vachan_error", "count": 1},
+            {"skill_tag": "hin_c4_vachan_thinking", "count": 1},
+        ],
+    },
+    "Kaal (Class 4)": {
+        "allowed_skill_tags": [
+            "hin_c4_kaal_identify", "hin_c4_kaal_use", "hin_c4_kaal_complete",
+            "hin_c4_kaal_error", "hin_c4_kaal_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c4_kaal_identify", "count": 3},
+            {"skill_tag": "hin_c4_kaal_use", "count": 3},
+            {"skill_tag": "hin_c4_kaal_complete", "count": 2},
+            {"skill_tag": "hin_c4_kaal_error", "count": 1},
+            {"skill_tag": "hin_c4_kaal_thinking", "count": 1},
+        ],
+    },
+    "Patra Lekhan (Class 4)": {
+        "allowed_skill_tags": [
+            "hin_c4_patra_identify", "hin_c4_patra_use", "hin_c4_patra_complete",
+            "hin_c4_patra_error", "hin_c4_patra_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c4_patra_identify", "count": 3},
+            {"skill_tag": "hin_c4_patra_use", "count": 3},
+            {"skill_tag": "hin_c4_patra_complete", "count": 2},
+            {"skill_tag": "hin_c4_patra_error", "count": 1},
+            {"skill_tag": "hin_c4_patra_thinking", "count": 1},
+        ],
+    },
+    "Comprehension Hindi (Class 4)": {
+        "allowed_skill_tags": [
+            "hin_c4_comprehension_identify", "hin_c4_comprehension_answer", "hin_c4_comprehension_complete",
+            "hin_c4_comprehension_error", "hin_c4_comprehension_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c4_comprehension_identify", "count": 3},
+            {"skill_tag": "hin_c4_comprehension_answer", "count": 3},
+            {"skill_tag": "hin_c4_comprehension_complete", "count": 2},
+            {"skill_tag": "hin_c4_comprehension_error", "count": 1},
+            {"skill_tag": "hin_c4_comprehension_thinking", "count": 1},
+        ],
+    },
+    # ── Hindi Class 5 topic profiles ──────────────────────────
+    "Muhavare (Class 5)": {
+        "allowed_skill_tags": [
+            "hin_c5_muhavare_identify", "hin_c5_muhavare_use", "hin_c5_muhavare_complete",
+            "hin_c5_muhavare_error", "hin_c5_muhavare_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c5_muhavare_identify", "count": 3},
+            {"skill_tag": "hin_c5_muhavare_use", "count": 3},
+            {"skill_tag": "hin_c5_muhavare_complete", "count": 2},
+            {"skill_tag": "hin_c5_muhavare_error", "count": 1},
+            {"skill_tag": "hin_c5_muhavare_thinking", "count": 1},
+        ],
+    },
+    "Paryayvachi Shabd (Class 5)": {
+        "allowed_skill_tags": [
+            "hin_c5_paryay_identify", "hin_c5_paryay_use", "hin_c5_paryay_complete",
+            "hin_c5_paryay_error", "hin_c5_paryay_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c5_paryay_identify", "count": 3},
+            {"skill_tag": "hin_c5_paryay_use", "count": 3},
+            {"skill_tag": "hin_c5_paryay_complete", "count": 2},
+            {"skill_tag": "hin_c5_paryay_error", "count": 1},
+            {"skill_tag": "hin_c5_paryay_thinking", "count": 1},
+        ],
+    },
+    "Vilom Shabd (Class 5)": {
+        "allowed_skill_tags": [
+            "hin_c5_vilom_identify", "hin_c5_vilom_use", "hin_c5_vilom_complete",
+            "hin_c5_vilom_error", "hin_c5_vilom_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c5_vilom_identify", "count": 3},
+            {"skill_tag": "hin_c5_vilom_use", "count": 3},
+            {"skill_tag": "hin_c5_vilom_complete", "count": 2},
+            {"skill_tag": "hin_c5_vilom_error", "count": 1},
+            {"skill_tag": "hin_c5_vilom_thinking", "count": 1},
+        ],
+    },
+    "Samas (Class 5)": {
+        "allowed_skill_tags": [
+            "hin_c5_samas_identify", "hin_c5_samas_use", "hin_c5_samas_complete",
+            "hin_c5_samas_error", "hin_c5_samas_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c5_samas_identify", "count": 3},
+            {"skill_tag": "hin_c5_samas_use", "count": 3},
+            {"skill_tag": "hin_c5_samas_complete", "count": 2},
+            {"skill_tag": "hin_c5_samas_error", "count": 1},
+            {"skill_tag": "hin_c5_samas_thinking", "count": 1},
+        ],
+    },
+    "Samvad Lekhan (Class 5)": {
+        "allowed_skill_tags": [
+            "hin_c5_samvad_identify", "hin_c5_samvad_use", "hin_c5_samvad_complete",
+            "hin_c5_samvad_error", "hin_c5_samvad_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
+        "disallowed_visual_types": [],
+        "subject": "Hindi",
+        "default_recipe": [
+            {"skill_tag": "hin_c5_samvad_identify", "count": 3},
+            {"skill_tag": "hin_c5_samvad_use", "count": 3},
+            {"skill_tag": "hin_c5_samvad_complete", "count": 2},
+            {"skill_tag": "hin_c5_samvad_error", "count": 1},
+            {"skill_tag": "hin_c5_samvad_thinking", "count": 1},
+        ],
+    },
     # ── Computer Science Class 1 (2 topics) ──────────────────────────
     "Parts of Computer (Class 1)": {
         "allowed_skill_tags": [
@@ -7128,6 +7809,86 @@ _TOPIC_ALIASES: dict[str, str] = {
     "hindi story": "Kahani Lekhan (Class 3)",
     "hindi stories": "Kahani Lekhan (Class 3)",
     "hindi comprehension": "Kahani Lekhan (Class 3)",
+    # ── Hindi Class 1 aliases ──
+    "varnamala swar": "Varnamala Swar (Class 1)",
+    "class 1 varnamala swar": "Varnamala Swar (Class 1)",
+    "hindi vowels": "Varnamala Swar (Class 1)",
+    "swar class 1": "Varnamala Swar (Class 1)",
+    "varnamala vyanjan": "Varnamala Vyanjan (Class 1)",
+    "class 1 varnamala vyanjan": "Varnamala Vyanjan (Class 1)",
+    "hindi consonants": "Varnamala Vyanjan (Class 1)",
+    "vyanjan class 1": "Varnamala Vyanjan (Class 1)",
+    "family words": "Family Words (Class 1)",
+    "class 1 family words": "Family Words (Class 1)",
+    "hindi family words": "Family Words (Class 1)",
+    "parivar shabd": "Family Words (Class 1)",
+    "simple sentences hindi": "Simple Sentences (Class 1)",
+    "class 1 simple sentences": "Simple Sentences (Class 1)",
+    "hindi simple sentences": "Simple Sentences (Class 1)",
+    "saral vakya": "Simple Sentences (Class 1)",
+    # ── Hindi Class 2 aliases ──
+    "matras introduction": "Matras Introduction (Class 2)",
+    "class 2 matras": "Matras Introduction (Class 2)",
+    "c2 matras": "Matras Introduction (Class 2)",
+    "basic matras": "Matras Introduction (Class 2)",
+    "two letter words": "Two Letter Words (Class 2)",
+    "class 2 two letter words": "Two Letter Words (Class 2)",
+    "do akshar shabd": "Two Letter Words (Class 2)",
+    "c2 two letter": "Two Letter Words (Class 2)",
+    "three letter words": "Three Letter Words (Class 2)",
+    "class 2 three letter words": "Three Letter Words (Class 2)",
+    "teen akshar shabd": "Three Letter Words (Class 2)",
+    "c2 three letter": "Three Letter Words (Class 2)",
+    "rhymes and poems": "Rhymes and Poems (Class 2)",
+    "class 2 rhymes": "Rhymes and Poems (Class 2)",
+    "hindi kavita": "Rhymes and Poems (Class 2)",
+    "hindi poems class 2": "Rhymes and Poems (Class 2)",
+    "nature vocabulary": "Nature Vocabulary (Class 2)",
+    "class 2 nature vocabulary": "Nature Vocabulary (Class 2)",
+    "prakriti shabd": "Nature Vocabulary (Class 2)",
+    "hindi nature words": "Nature Vocabulary (Class 2)",
+    # ── Hindi Class 4 aliases ──
+    "anusvaar and visarg": "Anusvaar and Visarg (Class 4)",
+    "class 4 anusvaar": "Anusvaar and Visarg (Class 4)",
+    "anusvaar visarg": "Anusvaar and Visarg (Class 4)",
+    "c4 anusvaar": "Anusvaar and Visarg (Class 4)",
+    "vachan and ling": "Vachan and Ling (Class 4)",
+    "class 4 vachan ling": "Vachan and Ling (Class 4)",
+    "vachan ling": "Vachan and Ling (Class 4)",
+    "c4 vachan ling": "Vachan and Ling (Class 4)",
+    "kaal hindi": "Kaal (Class 4)",
+    "class 4 kaal": "Kaal (Class 4)",
+    "hindi tenses": "Kaal (Class 4)",
+    "c4 kaal": "Kaal (Class 4)",
+    "patra lekhan": "Patra Lekhan (Class 4)",
+    "class 4 patra lekhan": "Patra Lekhan (Class 4)",
+    "hindi letter writing": "Patra Lekhan (Class 4)",
+    "c4 patra lekhan": "Patra Lekhan (Class 4)",
+    "comprehension hindi": "Comprehension Hindi (Class 4)",
+    "class 4 comprehension hindi": "Comprehension Hindi (Class 4)",
+    "hindi comprehension class 4": "Comprehension Hindi (Class 4)",
+    "c4 hindi comprehension": "Comprehension Hindi (Class 4)",
+    # ── Hindi Class 5 aliases ──
+    "muhavare": "Muhavare (Class 5)",
+    "class 5 muhavare": "Muhavare (Class 5)",
+    "hindi idioms": "Muhavare (Class 5)",
+    "c5 muhavare": "Muhavare (Class 5)",
+    "paryayvachi shabd": "Paryayvachi Shabd (Class 5)",
+    "class 5 paryayvachi": "Paryayvachi Shabd (Class 5)",
+    "hindi synonyms": "Paryayvachi Shabd (Class 5)",
+    "c5 paryayvachi": "Paryayvachi Shabd (Class 5)",
+    "vilom shabd": "Vilom Shabd (Class 5)",
+    "class 5 vilom": "Vilom Shabd (Class 5)",
+    "hindi antonyms": "Vilom Shabd (Class 5)",
+    "c5 vilom": "Vilom Shabd (Class 5)",
+    "samas": "Samas (Class 5)",
+    "class 5 samas": "Samas (Class 5)",
+    "hindi compound words": "Samas (Class 5)",
+    "c5 samas": "Samas (Class 5)",
+    "samvad lekhan": "Samvad Lekhan (Class 5)",
+    "class 5 samvad lekhan": "Samvad Lekhan (Class 5)",
+    "hindi dialogue writing": "Samvad Lekhan (Class 5)",
+    "c5 samvad": "Samvad Lekhan (Class 5)",
     # ── Computer Science aliases ──
     "parts of computer": "Parts of Computer (Class 1)",
     "class 1 parts of computer": "Parts of Computer (Class 1)",
@@ -10023,6 +10784,347 @@ def _build_slot_instruction(
         }
         return hin_kahani_ctx + hin_kahani_map.get(_skill_tag, "About Hindi Kahani Lekhan.")
 
+    # ── Hindi Varnamala Swar (Class 1) ──
+    if _skill_tag.startswith("hin_c1_swar_"):
+        ctx = (
+            "Topic: Varnamala Swar (Class 1 Hindi, CBSE). "
+            "Cover Hindi vowels (swar): अ, आ, इ, ई, उ, ऊ, ए, ऐ, ओ, औ, अं, अः. "
+            "Letter recognition, tracing, matching to pictures. "
+            "ONLY use Devanagari vowels. NO grammar rules, NO consonants. "
+            "Keep language VERY simple for Class 1 (age 6). "
+            "MUST use Devanagari script. DO NOT repeat the same vowel. "
+        )
+        tag_map = {
+            "hin_c1_swar_identify": "format: identify_letter. Identify a Hindi vowel. Example: 'इनमें से कौन सा स्वर है? (क) क (ख) आ (ग) म (घ) प' → आ",
+            "hin_c1_swar_use": "format: fill_matra. Use a vowel in a word. Example: 'रिक्त स्थान भरो: ___म (अ/आ/इ/ई)' → आम",
+            "hin_c1_swar_complete": "format: complete_word. Complete a word with a vowel. Example: '___नार (अ/आ/इ)' → अनार",
+            "hin_c1_swar_error": "format: error_spot_hindi. Present a WRONG vowel identification. Example: 'गलती ढूँढो: \"उ\" एक व्यंजन है।' → 'उ' स्वर है, व्यंजन नहीं।",
+            "hin_c1_swar_thinking": "format: explain_meaning. Simple reasoning about vowels. Example: '\"अ\" से शुरू होने वाले दो शब्द बताओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Varnamala Swar.")
+
+    # ── Hindi Varnamala Vyanjan (Class 1) ──
+    if _skill_tag.startswith("hin_c1_vyanjan_"):
+        ctx = (
+            "Topic: Varnamala Vyanjan (Class 1 Hindi, CBSE). "
+            "Cover Hindi consonants (vyanjan): क, ख, ग, घ... to ज्ञ. "
+            "Letter recognition, tracing, matching consonants to pictures. "
+            "ONLY use Devanagari consonants. NO grammar rules, NO matras. "
+            "Keep language VERY simple for Class 1 (age 6). "
+            "MUST use Devanagari script. DO NOT repeat the same consonant. "
+        )
+        tag_map = {
+            "hin_c1_vyanjan_identify": "format: identify_letter. Identify a Hindi consonant. Example: 'इनमें से कौन सा व्यंजन है? (क) अ (ख) ई (ग) क (घ) ऊ' → क",
+            "hin_c1_vyanjan_use": "format: fill_matra. Use a consonant in a word. Example: 'रिक्त स्थान भरो: ___बूतर (क/ख/ग/घ)' → कबूतर",
+            "hin_c1_vyanjan_complete": "format: complete_word. Complete a word with a consonant. Example: '___मल (क/ख/ग)' → कमल",
+            "hin_c1_vyanjan_error": "format: error_spot_hindi. Present a WRONG consonant identification. Example: 'गलती ढूँढो: \"आ\" एक व्यंजन है।' → 'आ' स्वर है, व्यंजन नहीं।",
+            "hin_c1_vyanjan_thinking": "format: explain_meaning. Simple reasoning. Example: '\"क\" से शुरू होने वाले दो शब्द बताओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Varnamala Vyanjan.")
+
+    # ── Hindi Family Words (Class 1) ──
+    if _skill_tag.startswith("hin_c1_family_"):
+        ctx = (
+            "Topic: Family Words (Class 1 Hindi, CBSE). "
+            "Cover Hindi words for family members: माँ, पापा, दादा, दादी, नाना, नानी, भाई, बहन, चाचा, चाची. "
+            "Word recognition, matching to pictures, simple usage. "
+            "Keep language VERY simple for Class 1 (age 6). "
+            "MUST use Devanagari script. DO NOT repeat the same family word. "
+        )
+        tag_map = {
+            "hin_c1_family_identify": "format: identify_word_type. Identify a family word. Example: 'इनमें से कौन सा परिवार का शब्द है? (क) पेड़ (ख) माँ (ग) किताब (घ) गेंद' → माँ",
+            "hin_c1_family_use": "format: use_in_sentence_hindi. Use a family word in a sentence. Example: '\"दादी\" शब्द से एक वाक्य बनाओ।' → मेरी दादी कहानी सुनाती हैं।",
+            "hin_c1_family_complete": "format: complete_word. Complete with a family word. Example: 'मेरे ___ मुझे स्कूल ले जाते हैं। (पापा/किताब/गेंद)' → पापा",
+            "hin_c1_family_error": "format: error_spot_hindi. Present a WRONG family relationship. Example: 'गलती ढूँढो: \"माँ के पापा को दादा कहते हैं।\"' → माँ के पापा को नाना कहते हैं।",
+            "hin_c1_family_thinking": "format: explain_meaning. Simple reasoning. Example: 'तुम्हारे परिवार में कौन-कौन है? दो नाम बताओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Family Words.")
+
+    # ── Hindi Simple Sentences (Class 1) ──
+    if _skill_tag.startswith("hin_c1_sentence_"):
+        ctx = (
+            "Topic: Simple Sentences (Class 1 Hindi, CBSE). "
+            "Cover very basic Hindi sentences: 'यह ___ है', 'मेरा नाम ___ है', 'मुझे ___ पसंद है'. "
+            "Sentence recognition, simple formation. 3-5 word sentences ONLY. "
+            "Keep language VERY simple for Class 1 (age 6). "
+            "MUST use Devanagari script. DO NOT repeat the same sentence pattern. "
+        )
+        tag_map = {
+            "hin_c1_sentence_identify": "format: pick_correct_hindi. Pick the correct sentence. Example: 'कौन सा वाक्य सही है? (क) गाय है यह (ख) यह गाय है (ग) है गाय यह (घ) यह है गाय' → यह गाय है",
+            "hin_c1_sentence_use": "format: make_sentence_hindi. Make a simple sentence. Example: 'इन शब्दों से वाक्य बनाओ: है / यह / फूल' → यह फूल है।",
+            "hin_c1_sentence_complete": "format: complete_sentence_hindi. Complete the sentence. Example: 'यह ___ है। (गाय/खाना/जाना)' → गाय",
+            "hin_c1_sentence_error": "format: error_spot_hindi. Present a WRONG sentence. Example: 'गलती ढूँढो: \"है यह किताब\"' → सही वाक्य: \"यह किताब है।\"",
+            "hin_c1_sentence_thinking": "format: creative_writing_hindi. Simple creative writing. Example: 'अपने बारे में एक वाक्य लिखो।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Simple Sentences.")
+
+    # ── Hindi Matras Introduction (Class 2) ──
+    if _skill_tag.startswith("hin_c2_matra_"):
+        ctx = (
+            "Topic: Matras Introduction (Class 2 Hindi, CBSE). "
+            "Cover basic matras: aa (ा), i (ि), ee (ी), u (ु), oo (ू). "
+            "Reading and writing simple words with these matras. "
+            "ONLY basic 5 matras — NO advanced matras (े, ै, ो, ौ). "
+            "MUST use Devanagari script. DO NOT repeat the same matra or word. "
+        )
+        tag_map = {
+            "hin_c2_matra_identify": "format: identify_matra. Identify the matra. Example: 'शब्द \"काम\" में कौन सी मात्रा है? (क) इ की मात्रा (ख) आ की मात्रा (ग) उ की मात्रा (घ) ई की मात्रा' → आ की मात्रा",
+            "hin_c2_matra_fill": "format: fill_matra. Fill the correct matra. Example: 'सही मात्रा लगाओ: क___ला (ा / ि / ी / ु)' → काला",
+            "hin_c2_matra_complete": "format: complete_word. Complete the word. Example: 'शब्द पूरा करो: ख___ला (ि / ु / ी)' → खिला",
+            "hin_c2_matra_error": "format: error_spot_hindi. Present a word with WRONG matra. Example: 'गलती ढूँढो: \"दूध\" को \"दुध\" लिखा गया है।' → सही: दूध",
+            "hin_c2_matra_thinking": "format: explain_meaning. Reasoning about matras. Example: '\"कल\" में कोई मात्रा है या नहीं? समझाओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Matras Introduction.")
+
+    # ── Hindi Two Letter Words (Class 2) ──
+    if _skill_tag.startswith("hin_c2_two_"):
+        ctx = (
+            "Topic: Two Letter Words (Class 2 Hindi, CBSE). "
+            "Cover दो अक्षर वाले शब्द: जल, फल, बल, दल, नल, घर, चल, मन, etc. "
+            "Reading, writing, and recognising two-letter Hindi words. "
+            "ONLY two-letter words. NO three-letter or longer words. "
+            "MUST use Devanagari script. DO NOT repeat the same word. "
+        )
+        tag_map = {
+            "hin_c2_two_identify": "format: identify_letter. Identify letters in a two-letter word. Example: '\"जल\" में पहला अक्षर कौन सा है? (क) ल (ख) ज (ग) म (घ) न' → ज",
+            "hin_c2_two_use": "format: make_word. Form a two-letter word. Example: 'इन अक्षरों से शब्द बनाओ: ल, फ' → फल",
+            "hin_c2_two_complete": "format: complete_word. Complete the two-letter word. Example: '___ल (ज/क/ब)' → जल",
+            "hin_c2_two_error": "format: error_spot_hindi. Present a WRONG spelling. Example: 'गलती ढूँढो: \"बल\" को \"बाल\" लिखा गया है।' → 'बल' दो अक्षर का शब्द है।",
+            "hin_c2_two_thinking": "format: explain_meaning. Simple reasoning. Example: '\"जल\" का क्या मतलब है? बताओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Two Letter Words.")
+
+    # ── Hindi Three Letter Words (Class 2) ──
+    if _skill_tag.startswith("hin_c2_three_"):
+        ctx = (
+            "Topic: Three Letter Words (Class 2 Hindi, CBSE). "
+            "Cover तीन अक्षर वाले शब्द: कमल, नमक, सड़क, अमन, कलम, etc. "
+            "Reading, writing, and forming three-letter Hindi words. "
+            "ONLY three-letter words. NO two-letter or longer words. "
+            "MUST use Devanagari script. DO NOT repeat the same word. "
+        )
+        tag_map = {
+            "hin_c2_three_identify": "format: identify_letter. Identify letters in a three-letter word. Example: '\"कमल\" में बीच का अक्षर कौन सा है? (क) क (ख) म (ग) ल (घ) न' → म",
+            "hin_c2_three_use": "format: make_word. Form a three-letter word. Example: 'इन अक्षरों से शब्द बनाओ: क, म, ल' → कमल",
+            "hin_c2_three_complete": "format: complete_word. Complete the three-letter word. Example: 'न___क (म/ल/क)' → नमक",
+            "hin_c2_three_error": "format: error_spot_hindi. Present a WRONG spelling. Example: 'गलती ढूँढो: \"कलम\" को \"कमल\" लिखा गया है।' → कलम और कमल अलग शब्द हैं।",
+            "hin_c2_three_thinking": "format: explain_meaning. Simple reasoning. Example: '\"कमल\" और \"कलम\" में अक्षर एक जैसे हैं पर शब्द अलग हैं। क्यों?'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Three Letter Words.")
+
+    # ── Hindi Rhymes and Poems (Class 2) ──
+    if _skill_tag.startswith("hin_c2_rhyme_"):
+        ctx = (
+            "Topic: Rhymes and Poems (Class 2 Hindi, CBSE). "
+            "Cover simple Hindi kavitas and nursery rhymes: rhyming words, poem completion, "
+            "understanding simple poems about nature, animals, family. "
+            "Keep poems age-appropriate for Class 2 (age 7). "
+            "MUST use Devanagari script. DO NOT repeat the same rhyme or poem. "
+        )
+        tag_map = {
+            "hin_c2_rhyme_identify": "format: pick_correct_hindi. Identify rhyming words. Example: '\"काम\" से कौन सा शब्द तुकबंदी करता है? (क) घर (ख) नाम (ग) पेड़ (घ) किताब' → नाम",
+            "hin_c2_rhyme_use": "format: use_in_sentence_hindi. Use a rhyming word in a sentence. Example: '\"चाँद\" से तुकबंदी करने वाला एक शब्द बताओ और उससे वाक्य बनाओ।'",
+            "hin_c2_rhyme_complete": "format: complete_sentence_hindi. Complete the poem line. Example: 'मछली जल की रानी है, जीवन उसका ___ है। (पानी/खाना/गाना)' → पानी",
+            "hin_c2_rhyme_error": "format: error_spot_hindi. Present a poem with a WRONG word. Example: 'गलती ढूँढो: \"मछली जल की रानी है, जीवन उसका खाना है।\"' → सही: पानी",
+            "hin_c2_rhyme_thinking": "format: creative_writing_hindi. Creative writing with rhymes. Example: '\"बादल\" से तुकबंदी करने वाले दो शब्द बताओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Rhymes and Poems.")
+
+    # ── Hindi Nature Vocabulary (Class 2) ──
+    if _skill_tag.startswith("hin_c2_nature_"):
+        ctx = (
+            "Topic: Nature Vocabulary (Class 2 Hindi, CBSE). "
+            "Cover प्रकृति से संबंधित शब्द: पेड़, फूल, पत्ता, नदी, पहाड़, बादल, बारिश, "
+            "सूरज, चाँद, तारे, जानवर (गाय, कुत्ता, बिल्ली, चिड़िया). "
+            "Keep language simple for Class 2 (age 7). "
+            "MUST use Devanagari script. DO NOT repeat the same nature word. "
+        )
+        tag_map = {
+            "hin_c2_nature_identify": "format: identify_word_type. Identify a nature word. Example: 'इनमें से कौन सा प्रकृति का शब्द है? (क) किताब (ख) नदी (ग) कुर्सी (घ) कलम' → नदी",
+            "hin_c2_nature_use": "format: use_in_sentence_hindi. Use a nature word in a sentence. Example: '\"पेड़\" शब्द से एक वाक्य बनाओ।' → पेड़ पर चिड़िया बैठी है।",
+            "hin_c2_nature_complete": "format: complete_word. Complete with a nature word. Example: 'आसमान में ___ चमकता है। (सूरज/किताब/कुर्सी)' → सूरज",
+            "hin_c2_nature_error": "format: error_spot_hindi. Present a WRONG nature fact. Example: 'गलती ढूँढो: \"बारिश सूरज से आती है।\"' → बारिश बादलों से आती है।",
+            "hin_c2_nature_thinking": "format: explain_meaning. Reasoning about nature. Example: 'पेड़ हमारे लिए क्यों ज़रूरी हैं? दो कारण बताओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Nature Vocabulary.")
+
+    # ── Hindi Anusvaar and Visarg (Class 4) ──
+    if _skill_tag.startswith("hin_c4_anusvaar_"):
+        ctx = (
+            "Topic: Anusvaar and Visarg (Class 4 Hindi, CBSE). "
+            "Cover अनुस्वार (ं): गंगा, मंदिर, चंदन, अंगूर and "
+            "विसर्ग (ः): अतः, प्रातः, दुःख, मनःस्थिति. "
+            "Also cover chandrabindu (ँ) vs anusvaar distinction. "
+            "MUST use Devanagari script. DO NOT repeat the same word. "
+        )
+        tag_map = {
+            "hin_c4_anusvaar_identify": "format: identify_letter. Identify anusvaar/visarg. Example: 'इनमें से किस शब्द में अनुस्वार है? (क) किताब (ख) गंगा (ग) कमल (घ) पेड़' → गंगा",
+            "hin_c4_anusvaar_use": "format: fill_matra. Fill anusvaar/visarg correctly. Example: 'सही चिह्न लगाओ: ग___गा (ं / ः)' → गंगा",
+            "hin_c4_anusvaar_complete": "format: complete_word. Complete with anusvaar/visarg. Example: 'शब्द पूरा करो: म___दिर (ं/ः)' → मंदिर",
+            "hin_c4_anusvaar_error": "format: error_spot_hindi. Present WRONG anusvaar/visarg usage. Example: 'गलती ढूँढो: \"गंगा\" में विसर्ग है।' → गंगा में अनुस्वार (ं) है, विसर्ग (ः) नहीं।",
+            "hin_c4_anusvaar_thinking": "format: explain_meaning. Reasoning. Example: 'अनुस्वार (ं) और चंद्रबिंदु (ँ) में क्या अंतर है? उदाहरण दो।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Anusvaar and Visarg.")
+
+    # ── Hindi Vachan and Ling (Class 4) ──
+    if _skill_tag.startswith("hin_c4_vachan_"):
+        ctx = (
+            "Topic: Vachan and Ling (Class 4 Hindi, CBSE). "
+            "Cover वचन (singular/plural): एकवचन → बहुवचन (लड़का→लड़के, किताब→किताबें). "
+            "Cover लिंग (gender): पुल्लिंग → स्त्रीलिंग (लड़का→लड़की, मोर→मोरनी). "
+            "MUST use Devanagari script. DO NOT repeat the same word pair. "
+        )
+        tag_map = {
+            "hin_c4_vachan_identify": "format: identify_word_type. Identify vachan/ling. Example: '\"लड़के\" कौन सा वचन है? (क) एकवचन (ख) बहुवचन' → बहुवचन",
+            "hin_c4_vachan_use": "format: make_word. Convert vachan/ling. Example: '\"लड़का\" का बहुवचन लिखो।' → लड़के",
+            "hin_c4_vachan_complete": "format: word_formation. Complete the conversion. Example: 'एकवचन: किताब → बहुवचन: ___' → किताबें",
+            "hin_c4_vachan_error": "format: error_spot_hindi. Present WRONG vachan/ling. Example: 'गलती ढूँढो: \"लड़का\" का स्त्रीलिंग \"लड़के\" है।' → सही: लड़की",
+            "hin_c4_vachan_thinking": "format: explain_meaning. Reasoning. Example: '\"मोर\" और \"मोरनी\" में क्या अंतर है? समझाओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Vachan and Ling.")
+
+    # ── Hindi Kaal (Class 4) ──
+    if _skill_tag.startswith("hin_c4_kaal_"):
+        ctx = (
+            "Topic: Kaal (Class 4 Hindi, CBSE). "
+            "Cover तीन काल: भूतकाल (past), वर्तमान काल (present), भविष्य काल (future). "
+            "Sentence conversion between tenses, tense identification. "
+            "Examples: 'राम खाता है' (present) → 'राम ने खाया' (past) → 'राम खाएगा' (future). "
+            "MUST use Devanagari script. DO NOT repeat the same sentence. "
+        )
+        tag_map = {
+            "hin_c4_kaal_identify": "format: pick_correct_hindi. Identify the tense. Example: '\"राम ने खाना खाया।\" यह कौन सा काल है? (क) भूतकाल (ख) वर्तमान काल (ग) भविष्य काल' → भूतकाल",
+            "hin_c4_kaal_use": "format: make_sentence_hindi. Convert to a different tense. Example: '\"सीता गाना गाती है\" को भूतकाल में बदलो।' → सीता ने गाना गाया।",
+            "hin_c4_kaal_complete": "format: complete_sentence_hindi. Complete with correct tense. Example: 'कल राम स्कूल ___ (जाएगा/गया/जाता है)' → जाएगा",
+            "hin_c4_kaal_error": "format: error_spot_hindi. Present WRONG tense usage. Example: 'गलती ढूँढो: \"कल मैं स्कूल जाता हूँ।\"' → 'कल' भविष्य काल है, सही: \"कल मैं स्कूल जाऊँगा।\"",
+            "hin_c4_kaal_thinking": "format: explain_meaning. Reasoning. Example: 'भूतकाल और वर्तमान काल में क्या अंतर है? एक-एक उदाहरण दो।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Kaal.")
+
+    # ── Hindi Patra Lekhan (Class 4) ──
+    if _skill_tag.startswith("hin_c4_patra_"):
+        ctx = (
+            "Topic: Patra Lekhan (Class 4 Hindi, CBSE). "
+            "Cover Hindi letter writing: informal/personal letters (अनौपचारिक पत्र). "
+            "Format: दिनांक, संबोधन, विषय, मुख्य भाग, समापन. "
+            "Letters to family, friends about holidays, school events, festivals. "
+            "MUST use Devanagari script. DO NOT repeat the same letter theme. "
+        )
+        tag_map = {
+            "hin_c4_patra_identify": "format: pick_correct_hindi. Identify letter parts. Example: 'पत्र में सबसे पहले क्या लिखते हैं? (क) विषय (ख) दिनांक (ग) नाम (घ) पता' → दिनांक",
+            "hin_c4_patra_use": "format: make_sentence_hindi. Write a part of a letter. Example: 'अपने मित्र को जन्मदिन की बधाई का एक वाक्य लिखो।'",
+            "hin_c4_patra_complete": "format: complete_sentence_hindi. Complete a letter sentence. Example: 'प्रिय मित्र, तुम्हारा पत्र मिला। मैं बहुत ___ हूँ। (खुश/उदास/गुस्सा)' → खुश",
+            "hin_c4_patra_error": "format: error_spot_hindi. Present a letter with WRONG format. Example: 'गलती ढूँढो: पत्र में दिनांक लिखना भूल गए हैं।' → पत्र में सबसे पहले दिनांक लिखना चाहिए।",
+            "hin_c4_patra_thinking": "format: creative_writing_hindi. Write a short letter. Example: 'अपनी दादी को होली की बधाई का एक छोटा पत्र लिखो।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Patra Lekhan.")
+
+    # ── Hindi Comprehension (Class 4) ──
+    if _skill_tag.startswith("hin_c4_comprehension_"):
+        ctx = (
+            "Topic: Comprehension Hindi (Class 4 Hindi, CBSE). "
+            "Cover reading comprehension: short Hindi passages (4-5 sentences), "
+            "answering questions, finding main idea, vocabulary from passage. "
+            "Use Indian stories, folk tales, festival descriptions, nature passages. "
+            "MUST use Devanagari script. DO NOT repeat the same passage theme. "
+        )
+        tag_map = {
+            "hin_c4_comprehension_identify": "format: pick_correct_hindi. MCQ from passage. Example: Provide a 4-5 line passage then ask: 'इस गद्यांश का मुख्य विचार क्या है? (क)... (ख)... (ग)... (घ)...'",
+            "hin_c4_comprehension_answer": "format: word_problem_hindi. Answer from passage. Example: Provide a passage then ask: 'लेखक ने क्या बताया? अपने शब्दों में लिखो।'",
+            "hin_c4_comprehension_complete": "format: complete_sentence_hindi. Complete from passage context. Example: 'गद्यांश के अनुसार, दीवाली पर लोग ___ जलाते हैं।'",
+            "hin_c4_comprehension_error": "format: error_spot_hindi. Present a WRONG fact from passage. Example: 'गलती ढूँढो: गद्यांश के अनुसार होली बरसात में मनाई जाती है।' → होली वसंत में मनाई जाती है।",
+            "hin_c4_comprehension_thinking": "format: creative_writing_hindi. Extended response. Example: 'इस कहानी से तुमने क्या सीखा? अपने शब्दों में लिखो।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Comprehension.")
+
+    # ── Hindi Muhavare (Class 5) ──
+    if _skill_tag.startswith("hin_c5_muhavare_"):
+        ctx = (
+            "Topic: Muhavare (Class 5 Hindi, CBSE). "
+            "Cover Hindi muhavare (idioms): आँखों का तारा, नौ दो ग्यारह होना, "
+            "दाल में काला, हाथ पैर मारना, अंधों में काना राजा, etc. "
+            "Meaning, usage in sentences, identification. "
+            "MUST use Devanagari script. DO NOT repeat the same muhavara. "
+        )
+        tag_map = {
+            "hin_c5_muhavare_identify": "format: identify_word_type. Identify muhavara meaning. Example: '\"आँखों का तारा\" का अर्थ क्या है? (क) बहुत प्यारा (ख) बहुत गुस्सा (ग) बहुत तेज़ (घ) बहुत बड़ा' → बहुत प्यारा",
+            "hin_c5_muhavare_use": "format: use_in_sentence_hindi. Use muhavara in a sentence. Example: '\"नौ दो ग्यारह होना\" मुहावरे का वाक्य में प्रयोग करो।' → चोर पुलिस को देखकर नौ दो ग्यारह हो गया।",
+            "hin_c5_muhavare_complete": "format: complete_sentence_hindi. Complete with correct muhavara. Example: 'पुलिस को देखकर चोर ___ हो गया। (नौ दो ग्यारह/आँखों का तारा)' → नौ दो ग्यारह",
+            "hin_c5_muhavare_error": "format: error_spot_hindi. Present WRONG muhavara meaning. Example: 'गलती ढूँढो: \"आँखों का तारा\" का अर्थ है \"बहुत गुस्सा होना\"।' → सही अर्थ: बहुत प्यारा होना।",
+            "hin_c5_muhavare_thinking": "format: explain_meaning. Explain muhavara. Example: '\"दाल में काला\" का क्या मतलब है? एक कहानी से समझाओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Muhavare.")
+
+    # ── Hindi Paryayvachi Shabd (Class 5) ──
+    if _skill_tag.startswith("hin_c5_paryay_"):
+        ctx = (
+            "Topic: Paryayvachi Shabd (Class 5 Hindi, CBSE). "
+            "Cover पर्यायवाची शब्द (synonyms): जल=पानी=नीर, सूर्य=रवि=दिनकर, "
+            "पुष्प=फूल=कुसुम, वायु=हवा=पवन, अग्नि=आग=अनल. "
+            "MUST use Devanagari script. DO NOT repeat the same synonym group. "
+        )
+        tag_map = {
+            "hin_c5_paryay_identify": "format: identify_word_type. Identify synonym. Example: '\"जल\" का पर्यायवाची शब्द कौन सा है? (क) आग (ख) पानी (ग) हवा (घ) पेड़' → पानी",
+            "hin_c5_paryay_use": "format: make_word. Write synonyms. Example: '\"सूर्य\" के दो पर्यायवाची शब्द लिखो।' → रवि, दिनकर",
+            "hin_c5_paryay_complete": "format: word_formation. Complete synonym group. Example: 'जल, पानी, ___' → नीर",
+            "hin_c5_paryay_error": "format: error_spot_hindi. Present WRONG synonym. Example: 'गलती ढूँढो: \"अग्नि\" का पर्यायवाची \"पानी\" है।' → सही: अग्नि का पर्यायवाची \"आग\" है।",
+            "hin_c5_paryay_thinking": "format: explain_meaning. Reasoning. Example: 'पर्यायवाची शब्द क्यों ज़रूरी हैं? \"जल\" के तीन पर्यायवाची लिखो।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Paryayvachi Shabd.")
+
+    # ── Hindi Vilom Shabd (Class 5) ──
+    if _skill_tag.startswith("hin_c5_vilom_"):
+        ctx = (
+            "Topic: Vilom Shabd (Class 5 Hindi, CBSE). "
+            "Cover विलोम शब्द (antonyms): दिन↔रात, सुख↔दुख, आना↔जाना, "
+            "ऊपर↔नीचे, अंधकार↔प्रकाश, सत्य↔असत्य. "
+            "MUST use Devanagari script. DO NOT repeat the same antonym pair. "
+        )
+        tag_map = {
+            "hin_c5_vilom_identify": "format: identify_word_type. Identify antonym. Example: '\"दिन\" का विलोम शब्द कौन सा है? (क) सुबह (ख) रात (ग) शाम (घ) दोपहर' → रात",
+            "hin_c5_vilom_use": "format: make_word. Write antonym. Example: '\"सुख\" का विलोम शब्द लिखो।' → दुख",
+            "hin_c5_vilom_complete": "format: word_formation. Complete antonym pair. Example: 'आना ↔ ___' → जाना",
+            "hin_c5_vilom_error": "format: error_spot_hindi. Present WRONG antonym. Example: 'गलती ढूँढो: \"दिन\" का विलोम \"सुबह\" है।' → सही: \"दिन\" का विलोम \"रात\" है।",
+            "hin_c5_vilom_thinking": "format: explain_meaning. Reasoning. Example: '\"प्रकाश\" और \"अंधकार\" विलोम हैं। दोनों का वाक्य में प्रयोग करो।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Vilom Shabd.")
+
+    # ── Hindi Samas (Class 5) ──
+    if _skill_tag.startswith("hin_c5_samas_"):
+        ctx = (
+            "Topic: Samas (Class 5 Hindi, CBSE). "
+            "Cover समास (compound words): विद्यालय=विद्या+आलय, राजपुत्र=राजा+पुत्र, "
+            "देशभक्ति=देश+भक्ति, जन्मदिन=जन्म+दिन, नीलकमल=नीला+कमल. "
+            "Vigrah (breaking compounds) and formation. "
+            "MUST use Devanagari script. DO NOT repeat the same compound word. "
+        )
+        tag_map = {
+            "hin_c5_samas_identify": "format: identify_word_type. Identify samas. Example: '\"विद्यालय\" किन दो शब्दों से बना है? (क) विद्या+लय (ख) विद्या+आलय (ग) विद+आलय (घ) वि+द्यालय' → विद्या+आलय",
+            "hin_c5_samas_use": "format: make_word. Form a compound word. Example: 'इन दो शब्दों से एक शब्द बनाओ: राजा + पुत्र' → राजपुत्र",
+            "hin_c5_samas_complete": "format: word_formation. Complete the vigrah. Example: 'देशभक्ति = ___ + ___' → देश + भक्ति",
+            "hin_c5_samas_error": "format: error_spot_hindi. Present WRONG vigrah. Example: 'गलती ढूँढो: \"विद्यालय\" का विग्रह \"विद + यालय\" है।' → सही: विद्या + आलय",
+            "hin_c5_samas_thinking": "format: explain_meaning. Reasoning. Example: '\"जन्मदिन\" शब्द किन दो शब्दों से बना है? ऐसे तीन और शब्द बनाओ।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Samas.")
+
+    # ── Hindi Samvad Lekhan (Class 5) ──
+    if _skill_tag.startswith("hin_c5_samvad_"):
+        ctx = (
+            "Topic: Samvad Lekhan (Class 5 Hindi, CBSE). "
+            "Cover संवाद लेखन (dialogue writing): conversations between 2 characters, "
+            "correct format with character names and colons, natural Hindi speech, "
+            "topics: school, family, festivals, market, sports. "
+            "MUST use Devanagari script. DO NOT repeat the same dialogue theme. "
+        )
+        tag_map = {
+            "hin_c5_samvad_identify": "format: pick_correct_hindi. Identify dialogue format. Example: 'सही संवाद कौन सा है? (क) राम - \"तुम कहाँ जा रहे हो?\" (ख) राम कहाँ जा रहे (ग) \"राम\" तुम कहाँ' → (क)",
+            "hin_c5_samvad_use": "format: make_sentence_hindi. Write a dialogue line. Example: 'दुकानदार और ग्राहक के बीच एक संवाद का वाक्य लिखो।'",
+            "hin_c5_samvad_complete": "format: complete_sentence_hindi. Complete the dialogue. Example: 'राम: \"तुम कहाँ जा रहे हो?\" श्याम: \"मैं ___ जा रहा हूँ।\"'",
+            "hin_c5_samvad_error": "format: error_spot_hindi. Present dialogue with WRONG format. Example: 'गलती ढूँढो: राम बोला तुम कहाँ जा रहे हो' → संवाद में उद्धरण चिह्न (\" \") होने चाहिए।",
+            "hin_c5_samvad_thinking": "format: creative_writing_hindi. Write a short dialogue. Example: 'दो मित्रों के बीच क्रिकेट मैच के बारे में 4 वाक्यों का संवाद लिखो।'",
+        }
+        return ctx + tag_map.get(_skill_tag, "About Hindi Samvad Lekhan.")
+
     # ── Computer Science: Parts of Computer (Class 1) ──
     if _skill_tag.startswith("comp_c1_parts_"):
         comp_parts_ctx = (
@@ -11964,6 +13066,145 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "Use Indian stories: Panchatantra, Birbal, folk tales. "
         "MUST use Devanagari script. "
         "NEVER generate arithmetic or English grammar questions.\n"
+    ),
+    # ── Hindi Class 1 topic constraints ──
+    "Varnamala Swar (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Hindi Swar (vowels) ONLY — "
+        "अ, आ, इ, ई, उ, ऊ, ए, ऐ, ओ, औ, अं, अः. "
+        "ONLY letter recognition, tracing, matching to pictures. NO grammar rules. NO consonants. "
+        "Keep language VERY simple for Class 1 (age 6). MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or consonant questions.\n"
+    ),
+    "Varnamala Vyanjan (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Hindi Vyanjan (consonants) ONLY — "
+        "क to ज्ञ. Letter recognition, tracing, matching consonants to pictures. "
+        "NO grammar rules. NO matras. Keep language VERY simple for Class 1 (age 6). "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or vowel-only questions.\n"
+    ),
+    "Family Words (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Hindi family words ONLY — "
+        "माँ, पापा, दादा, दादी, नाना, नानी, भाई, बहन, चाचा, चाची, मामा, मामी. "
+        "Word recognition, matching to relationships. NO grammar rules. "
+        "Keep language VERY simple for Class 1 (age 6). MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or unrelated vocabulary questions.\n"
+    ),
+    "Simple Sentences (Class 1)": (
+        "CRITICAL: ALL questions MUST be about very simple Hindi sentences ONLY — "
+        "'यह ___ है', 'मेरा नाम ___ है', 'मुझे ___ पसंद है'. "
+        "ONLY 3-5 word sentences. NO complex grammar. NO compound sentences. "
+        "Keep language VERY simple for Class 1 (age 6). MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or complex sentence questions.\n"
+    ),
+    # ── Hindi Class 2 topic constraints ──
+    "Matras Introduction (Class 2)": (
+        "CRITICAL: ALL questions MUST be about basic Hindi Matras ONLY — "
+        "aa (ा), i (ि), ee (ी), u (ु), oo (ू). "
+        "ONLY these 5 basic matras. NO advanced matras (े, ै, ो, ौ). "
+        "Reading and writing words with basic matras. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or advanced matra questions.\n"
+    ),
+    "Two Letter Words (Class 2)": (
+        "CRITICAL: ALL questions MUST be about two-letter Hindi words (दो अक्षर वाले शब्द) ONLY — "
+        "जल, फल, बल, दल, नल, घर, चल, मन, etc. "
+        "ONLY two-letter words. NO three-letter or longer words. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or multi-letter word questions.\n"
+    ),
+    "Three Letter Words (Class 2)": (
+        "CRITICAL: ALL questions MUST be about three-letter Hindi words (तीन अक्षर वाले शब्द) ONLY — "
+        "कमल, नमक, सड़क, कलम, अमन, etc. "
+        "ONLY three-letter words. NO two-letter or longer words. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or non-three-letter word questions.\n"
+    ),
+    "Rhymes and Poems (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Hindi rhymes and poems (kavita) ONLY — "
+        "rhyming words, completing poem lines, understanding simple poems. "
+        "Use age-appropriate Hindi nursery rhymes and nature poems. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or grammar-heavy questions.\n"
+    ),
+    "Nature Vocabulary (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Hindi nature vocabulary ONLY — "
+        "पेड़, फूल, पत्ता, नदी, पहाड़, बादल, बारिश, सूरज, चाँद, तारे, जानवर. "
+        "Word recognition, matching, simple sentences with nature words. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or unrelated vocabulary questions.\n"
+    ),
+    # ── Hindi Class 4 topic constraints ──
+    "Anusvaar and Visarg (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Anusvaar (ं) and Visarg (ः) ONLY — "
+        "anusvaar words: गंगा, मंदिर, चंदन; visarg words: अतः, प्रातः, दुःख. "
+        "Also chandrabindu (ँ) vs anusvaar distinction. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or general grammar questions.\n"
+    ),
+    "Vachan and Ling (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Vachan (number) and Ling (gender) ONLY — "
+        "एकवचन→बहुवचन: लड़का→लड़के, किताब→किताबें. "
+        "पुल्लिंग→स्त्रीलिंग: लड़का→लड़की, मोर→मोरनी. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or tense questions.\n"
+    ),
+    "Kaal (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Hindi Kaal (tenses) ONLY — "
+        "भूतकाल (past), वर्तमान काल (present), भविष्य काल (future). "
+        "Tense identification, conversion, correct usage in sentences. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or vachan/ling questions.\n"
+    ),
+    "Patra Lekhan (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Hindi Patra Lekhan (letter writing) ONLY — "
+        "informal/personal letters: format (दिनांक, संबोधन, विषय, मुख्य भाग, समापन). "
+        "Letters to family and friends about holidays, festivals, school events. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or grammar-only questions.\n"
+    ),
+    "Comprehension Hindi (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Hindi reading comprehension ONLY — "
+        "short passages (4-5 sentences), answering questions from passages, "
+        "main idea, vocabulary in context. "
+        "Use Indian stories, folk tales, festival descriptions. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or standalone grammar questions.\n"
+    ),
+    # ── Hindi Class 5 topic constraints ──
+    "Muhavare (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Hindi Muhavare (idioms) ONLY — "
+        "meaning, usage in sentences, identification of common Hindi idioms. "
+        "Use well-known muhavare: आँखों का तारा, नौ दो ग्यारह, दाल में काला, etc. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or general vocabulary questions.\n"
+    ),
+    "Paryayvachi Shabd (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Paryayvachi Shabd (synonyms) ONLY — "
+        "जल=पानी=नीर, सूर्य=रवि=दिनकर, पुष्प=फूल=कुसुम, वायु=हवा=पवन. "
+        "Synonym identification, matching, usage. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or antonym questions.\n"
+    ),
+    "Vilom Shabd (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Vilom Shabd (antonyms) ONLY — "
+        "दिन↔रात, सुख↔दुख, आना↔जाना, ऊपर↔नीचे, प्रकाश↔अंधकार. "
+        "Antonym identification, matching, usage in sentences. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or synonym questions.\n"
+    ),
+    "Samas (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Hindi Samas (compound words) ONLY — "
+        "विद्यालय=विद्या+आलय, राजपुत्र=राजा+पुत्र, देशभक्ति=देश+भक्ति. "
+        "Compound word formation, vigrah (breaking), identification. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or general word formation questions.\n"
+    ),
+    "Samvad Lekhan (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Hindi Samvad Lekhan (dialogue writing) ONLY — "
+        "conversations between 2 characters, correct format with names and quotation marks, "
+        "natural Hindi speech about school, family, festivals, market. "
+        "MUST use Devanagari script. "
+        "NEVER generate arithmetic, English, or letter writing questions.\n"
     ),
     # ── Computer Science topic constraints ──
     "Parts of Computer (Class 1)": (
