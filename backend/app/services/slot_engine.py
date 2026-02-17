@@ -172,7 +172,7 @@ def get_valid_formats(subject: str = "Mathematics") -> dict[str, set[str]]:
     """Return the VALID_FORMATS dict for the given subject."""
     if subject and subject.lower() == "english":
         return VALID_FORMATS_ENGLISH
-    if subject and subject.lower() in ("science", "computer"):
+    if subject and subject.lower() in ("science", "computer", "gk", "moral science"):
         return VALID_FORMATS_SCIENCE
     if subject and subject.lower() == "hindi":
         return VALID_FORMATS_HINDI
@@ -183,7 +183,7 @@ def get_default_format_by_slot(subject: str = "Mathematics") -> dict[str, str]:
     """Return the DEFAULT_FORMAT_BY_SLOT_TYPE dict for the given subject."""
     if subject and subject.lower() == "english":
         return DEFAULT_FORMAT_BY_SLOT_TYPE_ENGLISH
-    if subject and subject.lower() in ("science", "computer"):
+    if subject and subject.lower() in ("science", "computer", "gk", "moral science"):
         return DEFAULT_FORMAT_BY_SLOT_TYPE_SCIENCE
     if subject and subject.lower() == "hindi":
         return DEFAULT_FORMAT_BY_SLOT_TYPE_HINDI
@@ -990,6 +990,140 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "comp_c5_digital_represent": ("representation", "sequence_steps"),
     "comp_c5_digital_error": ("error_detection", "error_spot_science"),
     "comp_c5_digital_thinking": ("thinking", "thinking_science"),
+    # ── General Knowledge skill tags ──────────────────────────
+    # Famous Landmarks (Class 3)
+    "gk_c3_landmarks_identify": ("recognition", "pick_correct_science"),
+    "gk_c3_landmarks_apply": ("application", "explain_why_science"),
+    "gk_c3_landmarks_represent": ("representation", "sequence_steps"),
+    "gk_c3_landmarks_error": ("error_detection", "error_spot_science"),
+    "gk_c3_landmarks_thinking": ("thinking", "thinking_science"),
+    # National Symbols (Class 3)
+    "gk_c3_symbols_identify": ("recognition", "pick_correct_science"),
+    "gk_c3_symbols_apply": ("application", "give_example"),
+    "gk_c3_symbols_represent": ("representation", "fill_diagram"),
+    "gk_c3_symbols_error": ("error_detection", "error_spot_science"),
+    "gk_c3_symbols_thinking": ("thinking", "thinking_science"),
+    # Solar System Basics (Class 3)
+    "gk_c3_solar_identify": ("recognition", "pick_correct_science"),
+    "gk_c3_solar_apply": ("application", "explain_why_science"),
+    "gk_c3_solar_represent": ("representation", "sequence_steps"),
+    "gk_c3_solar_error": ("error_detection", "error_spot_science"),
+    "gk_c3_solar_thinking": ("thinking", "thinking_science"),
+    # Current Awareness (Class 3)
+    "gk_c3_current_identify": ("recognition", "true_false"),
+    "gk_c3_current_apply": ("application", "give_example"),
+    "gk_c3_current_represent": ("representation", "fill_diagram"),
+    "gk_c3_current_error": ("error_detection", "error_spot_science"),
+    "gk_c3_current_thinking": ("thinking", "thinking_science"),
+    # Continents and Oceans (Class 4)
+    "gk_c4_continents_identify": ("recognition", "pick_correct_science"),
+    "gk_c4_continents_apply": ("application", "explain_why_science"),
+    "gk_c4_continents_represent": ("representation", "fill_diagram"),
+    "gk_c4_continents_error": ("error_detection", "error_spot_science"),
+    "gk_c4_continents_thinking": ("thinking", "thinking_science"),
+    # Famous Scientists (Class 4)
+    "gk_c4_scientists_identify": ("recognition", "pick_correct_science"),
+    "gk_c4_scientists_apply": ("application", "give_example"),
+    "gk_c4_scientists_represent": ("representation", "cause_effect"),
+    "gk_c4_scientists_error": ("error_detection", "error_spot_science"),
+    "gk_c4_scientists_thinking": ("thinking", "thinking_science"),
+    # Festivals of India (Class 4)
+    "gk_c4_festivals_identify": ("recognition", "true_false"),
+    "gk_c4_festivals_apply": ("application", "give_example"),
+    "gk_c4_festivals_represent": ("representation", "fill_diagram"),
+    "gk_c4_festivals_error": ("error_detection", "error_spot_science"),
+    "gk_c4_festivals_thinking": ("thinking", "thinking_science"),
+    # Sports and Games (Class 4)
+    "gk_c4_sports_identify": ("recognition", "pick_correct_science"),
+    "gk_c4_sports_apply": ("application", "explain_why_science"),
+    "gk_c4_sports_represent": ("representation", "cause_effect"),
+    "gk_c4_sports_error": ("error_detection", "error_spot_science"),
+    "gk_c4_sports_thinking": ("thinking", "thinking_science"),
+    # Indian Constitution (Class 5)
+    "gk_c5_constitution_identify": ("recognition", "true_false"),
+    "gk_c5_constitution_apply": ("application", "explain_why_science"),
+    "gk_c5_constitution_represent": ("representation", "cause_effect"),
+    "gk_c5_constitution_error": ("error_detection", "error_spot_science"),
+    "gk_c5_constitution_thinking": ("thinking", "thinking_science"),
+    # World Heritage Sites (Class 5)
+    "gk_c5_heritage_identify": ("recognition", "pick_correct_science"),
+    "gk_c5_heritage_apply": ("application", "give_example"),
+    "gk_c5_heritage_represent": ("representation", "fill_diagram"),
+    "gk_c5_heritage_error": ("error_detection", "error_spot_science"),
+    "gk_c5_heritage_thinking": ("thinking", "thinking_science"),
+    # Space Missions (Class 5)
+    "gk_c5_space_identify": ("recognition", "pick_correct_science"),
+    "gk_c5_space_apply": ("application", "explain_why_science"),
+    "gk_c5_space_represent": ("representation", "sequence_steps"),
+    "gk_c5_space_error": ("error_detection", "error_spot_science"),
+    "gk_c5_space_thinking": ("thinking", "thinking_science"),
+    # Environmental Awareness (Class 5)
+    "gk_c5_environment_identify": ("recognition", "true_false"),
+    "gk_c5_environment_apply": ("application", "explain_why_science"),
+    "gk_c5_environment_represent": ("representation", "cause_effect"),
+    "gk_c5_environment_error": ("error_detection", "error_spot_science"),
+    "gk_c5_environment_thinking": ("thinking", "thinking_science"),
+    # ── Moral Science skill tags ──────────────────────────
+    # Sharing (Class 1)
+    "moral_c1_sharing_identify": ("recognition", "pick_correct_science"),
+    "moral_c1_sharing_apply": ("application", "give_example"),
+    "moral_c1_sharing_represent": ("representation", "sequence_steps"),
+    "moral_c1_sharing_error": ("error_detection", "error_spot_science"),
+    "moral_c1_sharing_thinking": ("thinking", "thinking_science"),
+    # Honesty (Class 1)
+    "moral_c1_honesty_identify": ("recognition", "true_false"),
+    "moral_c1_honesty_apply": ("application", "give_example"),
+    "moral_c1_honesty_represent": ("representation", "sequence_steps"),
+    "moral_c1_honesty_error": ("error_detection", "error_spot_science"),
+    "moral_c1_honesty_thinking": ("thinking", "thinking_science"),
+    # Kindness (Class 2)
+    "moral_c2_kindness_identify": ("recognition", "pick_correct_science"),
+    "moral_c2_kindness_apply": ("application", "give_example"),
+    "moral_c2_kindness_represent": ("representation", "sequence_steps"),
+    "moral_c2_kindness_error": ("error_detection", "error_spot_science"),
+    "moral_c2_kindness_thinking": ("thinking", "thinking_science"),
+    # Respecting Elders (Class 2)
+    "moral_c2_respect_identify": ("recognition", "true_false"),
+    "moral_c2_respect_apply": ("application", "give_example"),
+    "moral_c2_respect_represent": ("representation", "sequence_steps"),
+    "moral_c2_respect_error": ("error_detection", "error_spot_science"),
+    "moral_c2_respect_thinking": ("thinking", "thinking_science"),
+    # Teamwork (Class 3)
+    "moral_c3_teamwork_identify": ("recognition", "pick_correct_science"),
+    "moral_c3_teamwork_apply": ("application", "explain_why_science"),
+    "moral_c3_teamwork_represent": ("representation", "sequence_steps"),
+    "moral_c3_teamwork_error": ("error_detection", "error_spot_science"),
+    "moral_c3_teamwork_thinking": ("thinking", "thinking_science"),
+    # Empathy (Class 3)
+    "moral_c3_empathy_identify": ("recognition", "true_false"),
+    "moral_c3_empathy_apply": ("application", "give_example"),
+    "moral_c3_empathy_represent": ("representation", "cause_effect"),
+    "moral_c3_empathy_error": ("error_detection", "error_spot_science"),
+    "moral_c3_empathy_thinking": ("thinking", "thinking_science"),
+    # Environmental Care (Class 3)
+    "moral_c3_envcare_identify": ("recognition", "pick_correct_science"),
+    "moral_c3_envcare_apply": ("application", "explain_why_science"),
+    "moral_c3_envcare_represent": ("representation", "cause_effect"),
+    "moral_c3_envcare_error": ("error_detection", "error_spot_science"),
+    "moral_c3_envcare_thinking": ("thinking", "thinking_science"),
+    # Leadership (Class 4)
+    "moral_c4_leadership_identify": ("recognition", "pick_correct_science"),
+    "moral_c4_leadership_apply": ("application", "explain_why_science"),
+    "moral_c4_leadership_represent": ("representation", "sequence_steps"),
+    "moral_c4_leadership_error": ("error_detection", "error_spot_science"),
+    "moral_c4_leadership_thinking": ("thinking", "thinking_science"),
+    # Global Citizenship (Class 5)
+    "moral_c5_global_identify": ("recognition", "true_false"),
+    "moral_c5_global_apply": ("application", "explain_why_science"),
+    "moral_c5_global_represent": ("representation", "cause_effect"),
+    "moral_c5_global_error": ("error_detection", "error_spot_science"),
+    "moral_c5_global_thinking": ("thinking", "thinking_science"),
+    # Digital Ethics (Class 5)
+    "moral_c5_digital_identify": ("recognition", "true_false"),
+    "moral_c5_digital_apply": ("application", "explain_why_science"),
+    "moral_c5_digital_represent": ("representation", "sequence_steps"),
+    "moral_c5_digital_error": ("error_detection", "error_spot_science"),
+    "moral_c5_digital_thinking": ("thinking", "thinking_science"),
 }
 
 SLOT_INSTRUCTIONS: dict[str, str] = {
@@ -1735,6 +1869,118 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Practise online etiquette and respectful communication",
         "Understand the concept of digital footprint and privacy",
         "Recognise copyright rules and responsible use of digital content",
+    ],
+    # ── General Knowledge ──────────────────────────
+    "Famous Landmarks (Class 3)": [
+        "Identify famous landmarks of India and the world",
+        "Know the location and significance of major monuments",
+        "Connect landmarks to the country and culture they represent",
+    ],
+    "National Symbols (Class 3)": [
+        "Identify the national symbols of India",
+        "Understand the significance of the flag, emblem, and anthem",
+        "Know India's national animal, bird, flower, and fruit",
+    ],
+    "Solar System Basics (Class 3)": [
+        "Name the planets of our solar system in order",
+        "Understand basic facts about the Sun, Earth, and Moon",
+        "Differentiate between stars, planets, and satellites",
+    ],
+    "Current Awareness (Class 3)": [
+        "Know the major festivals celebrated in India",
+        "Identify the seasons and their characteristics",
+        "Recall important national and international days",
+    ],
+    "Continents and Oceans (Class 4)": [
+        "Name and locate the 7 continents and 5 oceans",
+        "Know major countries on each continent",
+        "Understand basic geography of continents and oceans",
+    ],
+    "Famous Scientists (Class 4)": [
+        "Know the contributions of famous Indian and world scientists",
+        "Match scientists with their key discoveries or inventions",
+        "Appreciate the role of science in everyday life",
+    ],
+    "Festivals of India (Class 4)": [
+        "Know major festivals of different religions in India",
+        "Understand the significance and customs of each festival",
+        "Appreciate the diversity and unity in Indian festivals",
+    ],
+    "Sports and Games (Class 4)": [
+        "Know popular sports played in India and the world",
+        "Identify famous Indian sportspersons and their achievements",
+        "Understand basic rules and facts about major sports",
+    ],
+    "Indian Constitution (Class 5)": [
+        "Understand the basic structure of the Indian Constitution",
+        "Know fundamental rights and duties of Indian citizens",
+        "Appreciate the contributions of Dr B.R. Ambedkar and the Preamble",
+    ],
+    "World Heritage Sites (Class 5)": [
+        "Know UNESCO World Heritage Sites in India",
+        "Identify globally famous heritage sites and their significance",
+        "Understand why heritage conservation is important",
+    ],
+    "Space Missions (Class 5)": [
+        "Know about ISRO and its key missions like Chandrayaan and Mangalyaan",
+        "Understand the purpose of satellites and space exploration",
+        "Compare Indian and global space achievements",
+    ],
+    "Environmental Awareness (Class 5)": [
+        "Understand different types of pollution and their causes",
+        "Know the importance of conservation and recycling",
+        "Appreciate the role of individuals in protecting the environment",
+    ],
+    # ── Moral Science ──────────────────────────
+    "Sharing (Class 1)": [
+        "Understand why sharing is important",
+        "Give examples of sharing in everyday life",
+        "Recognise how sharing makes others feel happy",
+    ],
+    "Honesty (Class 1)": [
+        "Understand why telling the truth is important",
+        "Identify honest and dishonest actions in stories",
+        "Practise being fair and truthful in daily life",
+    ],
+    "Kindness (Class 2)": [
+        "Understand what kindness means in actions and words",
+        "Give examples of being kind to people and animals",
+        "Recognise how kindness helps build friendships",
+    ],
+    "Respecting Elders (Class 2)": [
+        "Understand why we should respect elders",
+        "Practise good manners like greeting and listening",
+        "Know the importance of following instructions from elders",
+    ],
+    "Teamwork (Class 3)": [
+        "Understand the value of working together as a team",
+        "Identify different roles people play in a team",
+        "Practise cooperation and support in group activities",
+    ],
+    "Empathy (Class 3)": [
+        "Understand what empathy means and why it matters",
+        "Identify feelings of others in different situations",
+        "Practise being supportive and understanding",
+    ],
+    "Environmental Care (Class 3)": [
+        "Understand how human actions affect the environment",
+        "Practise reduce, reuse, and recycle in daily life",
+        "Know why protecting nature is everyone's responsibility",
+    ],
+    "Leadership (Class 4)": [
+        "Identify qualities of a good leader",
+        "Understand the importance of responsibility and decision-making",
+        "Give examples of leaders who inspire others",
+    ],
+    "Global Citizenship (Class 5)": [
+        "Understand cultural diversity and respect for all cultures",
+        "Know basic concepts of human rights and world peace",
+        "Appreciate the importance of global cooperation",
+    ],
+    "Digital Ethics (Class 5)": [
+        "Understand responsible behaviour in the digital world",
+        "Know about online privacy and digital footprint",
+        "Practise safe and ethical use of the internet",
     ],
 }
 
@@ -2755,6 +3001,162 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "the teacher explaining Creative Commons licenses", "Kiran reporting a fake account to the school counsellor",
         "Arjun learning responsible use of Wikipedia for projects", "understanding what cyberbullying looks like and how to stop it",
         "a poster-making activity about safe internet use", "discussing respectful comments and replies during IT class",
+    ],
+    # ── General Knowledge ──────────────────────────
+    "Famous Landmarks (Class 3)": [
+        "a school trip to see the Taj Mahal in Agra", "Riya reading about the Qutub Minar in her GK book",
+        "Aman watching a documentary about the Great Wall of China", "a quiz about the Eiffel Tower during morning assembly",
+        "Sneha drawing the India Gate for her project", "learning about the Hawa Mahal in Jaipur during summer camp",
+        "a poster on the Statue of Unity in Gujarat", "the teacher showing photos of the Gateway of India in Mumbai",
+        "Kiran writing about the Red Fort in a GK competition", "a virtual tour of the Mysore Palace in class",
+    ],
+    "National Symbols (Class 3)": [
+        "Republic Day celebrations at school with the Indian flag", "Aman learning about the Ashoka Chakra on the flag",
+        "a class discussion about the national anthem 'Jana Gana Mana'", "Riya drawing the national emblem for her notebook",
+        "the teacher talking about the Bengal tiger as the national animal", "Sneha reading about the Indian peacock in her GK textbook",
+        "learning about the lotus as the national flower", "a quiz on national symbols during Independence Day week",
+        "Kiran making a chart of Indian national symbols", "a class presentation about the mango as the national fruit",
+    ],
+    "Solar System Basics (Class 3)": [
+        "Aman making a model of the solar system for a school exhibition", "Riya learning the names of planets in order",
+        "a planetarium visit during the school's science week", "the teacher explaining why the Sun is a star",
+        "Sneha reading about the Moon's phases in her science book", "Kiran drawing Earth and labelling continents and oceans",
+        "a quiz about which planet is the largest", "learning about why we have day and night",
+        "making a chart showing the distance of planets from the Sun", "a class discussion about satellites orbiting Earth",
+    ],
+    "Current Awareness (Class 3)": [
+        "celebrating Diwali with a rangoli competition at school", "Aman preparing for Republic Day in January",
+        "Riya learning about Children's Day on 14th November", "a class chart showing the six seasons of India",
+        "Sneha writing about Holi in her GK notebook", "the teacher explaining why we celebrate Independence Day",
+        "Kiran talking about Makar Sankranti and kite flying", "preparing for World Environment Day at school",
+        "a quiz about important days in the month of August", "learning about Eid and Christmas celebrations across India",
+    ],
+    "Continents and Oceans (Class 4)": [
+        "Riya labelling continents on a world map in her atlas", "Aman learning about Australia as the smallest continent",
+        "a geography quiz about the Pacific Ocean being the largest", "Sneha marking the Indian Ocean on her map project",
+        "the teacher explaining how many countries are in Africa", "Kiran reading about Antarctica and its ice caps",
+        "a class project on the countries of Asia", "learning about South America and the Amazon rainforest",
+        "a chart comparing the size of different oceans", "a group activity locating India on the world map",
+    ],
+    "Famous Scientists (Class 4)": [
+        "Aman reading about APJ Abdul Kalam in a biography", "Riya learning about Newton discovering gravity",
+        "a class presentation about C.V. Raman and his Nobel Prize", "Sneha writing about Marie Curie for a science project",
+        "the teacher telling the story of Thomas Edison and the light bulb", "Kiran making a chart of Indian scientists and their inventions",
+        "a quiz on who invented the telephone", "learning about Homi Bhabha and India's nuclear programme",
+        "a biography reading week featuring Vikram Sarabhai", "a science day poster about Srinivasa Ramanujan's mathematics",
+    ],
+    "Festivals of India (Class 4)": [
+        "Diwali decorations and rangoli at school", "Aman writing about the story behind Holi",
+        "Riya learning about Eid-ul-Fitr and its significance", "Christmas carol singing during the school's winter festival",
+        "Sneha presenting about Pongal and harvest celebrations", "the teacher explaining Baisakhi and its importance in Punjab",
+        "Kiran making a chart of festivals from different states", "a class discussion about Onam and boat races in Kerala",
+        "learning about Navratri and Durga Puja celebrations", "a school assembly about Guru Nanak Jayanti",
+    ],
+    "Sports and Games (Class 4)": [
+        "Aman watching the cricket World Cup with his family", "Riya reading about PV Sindhu winning a medal at the Olympics",
+        "a sports day at school with races and relay events", "Sneha learning about hockey being India's national game",
+        "the teacher talking about Sachin Tendulkar's records", "Kiran reading about Neeraj Chopra's gold medal in javelin",
+        "a class quiz about football World Cup host countries", "learning about kabaddi and its popularity in India",
+        "a school assembly presentation on the Olympics", "a poster about Mary Kom and her boxing achievements",
+    ],
+    "Indian Constitution (Class 5)": [
+        "Republic Day celebrations and reading the Preamble", "Aman learning about fundamental rights in civics class",
+        "Riya preparing a chart about Dr B.R. Ambedkar", "a class discussion about the Right to Education",
+        "Sneha writing about why India is called a republic", "the teacher explaining fundamental duties of citizens",
+        "Kiran acting in a skit about the Constituent Assembly", "learning about the Indian Parliament in social studies",
+        "a quiz on who was the first President of India", "a debate about children's rights in the Constitution",
+    ],
+    "World Heritage Sites (Class 5)": [
+        "Riya making a project on the Ajanta and Ellora caves", "Aman learning about the Sun Temple at Konark",
+        "a class presentation about Hampi ruins in Karnataka", "Sneha reading about the Great Barrier Reef in Australia",
+        "the teacher explaining why Machu Picchu is a heritage site", "Kiran visiting the Kaziranga National Park during vacation",
+        "a chart comparing Indian and world heritage sites", "learning about the Sundarbans and its mangrove forests",
+        "a school quiz about how many UNESCO sites India has", "a virtual tour of the Khajuraho temples during GK class",
+    ],
+    "Space Missions (Class 5)": [
+        "Aman watching the Chandrayaan-3 landing on TV", "Riya reading about Mangalyaan in her GK textbook",
+        "a class presentation about ISRO and its achievements", "Sneha learning about NASA's Mars rover missions",
+        "the teacher explaining how satellites help with weather forecasting", "Kiran making a timeline of India's space missions",
+        "learning about Rakesh Sharma as the first Indian in space", "a quiz about which country launched the first satellite",
+        "a school science day poster about the International Space Station", "a debate about the benefits of space exploration",
+    ],
+    "Environmental Awareness (Class 5)": [
+        "Riya planting trees during Van Mahotsav at school", "Aman learning about air pollution in Delhi during winter",
+        "a class project on reduce, reuse, and recycle", "Sneha reading about the Ganga cleaning programme",
+        "the teacher explaining climate change and global warming", "Kiran making a poster for World Environment Day",
+        "a school drive to reduce plastic use in the canteen", "learning about renewable energy sources like solar and wind",
+        "a debate about why water conservation matters in India", "a class discussion about composting kitchen waste at home",
+    ],
+    # ── Moral Science ──────────────────────────
+    "Sharing (Class 1)": [
+        "Riya sharing her crayons with a new classmate", "Aman giving half his tiffin to a friend who forgot lunch",
+        "sharing toys during playtime in the school garden", "Sneha sharing her storybook with her younger brother",
+        "the teacher asking children to share art supplies during craft class", "Kiran sharing his umbrella with a friend on a rainy day",
+        "sharing sweets during Diwali celebrations at school", "a story about a little bird sharing food with its friends",
+        "children sharing the swing during recess", "Aman sharing his favourite game with the class",
+    ],
+    "Honesty (Class 1)": [
+        "Riya telling the truth about breaking a flower pot", "Aman returning a pencil he found on the classroom floor",
+        "a story about a boy who told the truth and was praised", "Sneha admitting she forgot to do her homework",
+        "the teacher reading a story about an honest woodcutter", "Kiran telling his mother he ate the last biscuit",
+        "being honest about who spilled the water in class", "a class discussion about why lying makes things worse",
+        "returning extra change to the shopkeeper", "Aman confessing he accidentally tore a library book",
+    ],
+    "Kindness (Class 2)": [
+        "Riya helping a classmate who fell during games period", "Aman being kind to a stray dog near the school gate",
+        "Sneha writing a kind note for her teacher on Teachers' Day", "helping an elderly person carry bags at the market",
+        "Kiran sharing his snack with a friend who was sad", "the teacher reading a story about a kind elephant",
+        "children making get-well cards for a sick classmate", "being kind to the new student on the first day of school",
+        "Aman helping his grandmother water the plants", "a story about a kind farmer who helped everyone in the village",
+    ],
+    "Respecting Elders (Class 2)": [
+        "Riya touching her grandmother's feet during Diwali", "Aman saying 'Namaste' to the principal every morning",
+        "listening quietly when the teacher is explaining a lesson", "Sneha helping her grandfather find his spectacles",
+        "Kiran standing up when an elder enters the classroom", "saying 'thank you' and 'please' to parents and teachers",
+        "not interrupting when elders are talking", "Aman carrying his father's bag when he comes home from work",
+        "a class discussion about why we respect our grandparents", "greeting the school guard every morning with a smile",
+    ],
+    "Teamwork (Class 3)": [
+        "Riya's group working together for the science exhibition", "Aman and his friends cleaning the classroom together",
+        "a cricket team practising cooperation during a school match", "Sneha dividing tasks for a group project on Indian states",
+        "the teacher explaining how ants work as a team", "Kiran helping his team win the relay race by passing the baton well",
+        "children working together to decorate the classroom for Diwali", "a group of friends building a sandcastle together",
+        "working together to organise a charity drive at school", "Aman's team performing a group dance for the annual day",
+    ],
+    "Empathy (Class 3)": [
+        "Riya comforting a friend who lost her water bottle", "Aman understanding why his classmate was feeling sad",
+        "the teacher reading a story about walking in someone else's shoes", "Sneha feeling happy when she helped a younger child find their class",
+        "Kiran noticing his friend was left out and including him in the game", "understanding why a classmate cried when scolded",
+        "a story about a boy who helped a blind man cross the road", "thinking about how the new student feels on their first day",
+        "Aman imagining how he would feel if someone took his lunch", "a class discussion about treating others the way you want to be treated",
+    ],
+    "Environmental Care (Class 3)": [
+        "Riya picking up litter during a school cleanliness drive", "Aman switching off lights when leaving a room",
+        "Sneha making a compost pit in her garden", "a class project on saving water during summer",
+        "Kiran planting a sapling on World Environment Day", "using both sides of paper during art class",
+        "the teacher explaining why plastic bags harm animals", "separating dry and wet waste at the school canteen",
+        "Aman carrying a cloth bag to the market with his mother", "a poster-making competition about saving the Earth",
+    ],
+    "Leadership (Class 4)": [
+        "Riya being elected class monitor and helping maintain discipline", "Aman leading his team to clean up the school garden",
+        "a class discussion about qualities of good leaders like Mahatma Gandhi", "Sneha organising a book donation drive at school",
+        "the teacher explaining how leaders make fair decisions", "Kiran taking responsibility when his team lost the quiz competition",
+        "leading the morning assembly and speaking confidently", "Aman helping resolve a disagreement between two friends",
+        "a story about a student leader who helped improve the school library", "Sneha encouraging shy classmates to participate in the annual day",
+    ],
+    "Global Citizenship (Class 5)": [
+        "Riya learning about different cultures for a school project", "Aman reading about human rights on Human Rights Day",
+        "a class debate about world peace and cooperation between nations", "Sneha understanding why cultural diversity makes the world richer",
+        "the teacher explaining the United Nations and its role", "Kiran making a chart of children's rights around the world",
+        "learning about refugees and how we can help them", "a school assembly about respecting all religions and cultures",
+        "Aman discussing why education is a right for every child", "a poster about saying 'no' to discrimination and inequality",
+    ],
+    "Digital Ethics (Class 5)": [
+        "Riya learning not to share her password with friends online", "Aman understanding why copying homework from the internet is wrong",
+        "a class discussion about cyberbullying at a Delhi school", "Sneha learning about privacy settings on her tablet",
+        "the teacher explaining what a digital footprint is", "Kiran understanding screen time limits set by his parents",
+        "learning about not clicking on unknown links or pop-ups", "Aman asking permission before posting a friend's photo online",
+        "a school poster about being kind in online comments", "a quiz about safe and responsible internet use",
     ],
 }
 
@@ -5386,6 +5788,388 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "comp_c5_digital_thinking", "count": 1},
         ],
     },
+    # ── General Knowledge Class 3 (4 topics) ──────────────────────────
+    "Famous Landmarks (Class 3)": {
+        "allowed_skill_tags": [
+            "gk_c3_landmarks_identify", "gk_c3_landmarks_apply", "gk_c3_landmarks_represent",
+            "gk_c3_landmarks_error", "gk_c3_landmarks_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c3_landmarks_identify", "count": 2},
+            {"skill_tag": "gk_c3_landmarks_apply", "count": 3},
+            {"skill_tag": "gk_c3_landmarks_represent", "count": 2},
+            {"skill_tag": "gk_c3_landmarks_error", "count": 2},
+            {"skill_tag": "gk_c3_landmarks_thinking", "count": 1},
+        ],
+    },
+    "National Symbols (Class 3)": {
+        "allowed_skill_tags": [
+            "gk_c3_symbols_identify", "gk_c3_symbols_apply", "gk_c3_symbols_represent",
+            "gk_c3_symbols_error", "gk_c3_symbols_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c3_symbols_identify", "count": 2},
+            {"skill_tag": "gk_c3_symbols_apply", "count": 3},
+            {"skill_tag": "gk_c3_symbols_represent", "count": 2},
+            {"skill_tag": "gk_c3_symbols_error", "count": 2},
+            {"skill_tag": "gk_c3_symbols_thinking", "count": 1},
+        ],
+    },
+    "Solar System Basics (Class 3)": {
+        "allowed_skill_tags": [
+            "gk_c3_solar_identify", "gk_c3_solar_apply", "gk_c3_solar_represent",
+            "gk_c3_solar_error", "gk_c3_solar_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c3_solar_identify", "count": 2},
+            {"skill_tag": "gk_c3_solar_apply", "count": 3},
+            {"skill_tag": "gk_c3_solar_represent", "count": 2},
+            {"skill_tag": "gk_c3_solar_error", "count": 2},
+            {"skill_tag": "gk_c3_solar_thinking", "count": 1},
+        ],
+    },
+    "Current Awareness (Class 3)": {
+        "allowed_skill_tags": [
+            "gk_c3_current_identify", "gk_c3_current_apply", "gk_c3_current_represent",
+            "gk_c3_current_error", "gk_c3_current_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c3_current_identify", "count": 2},
+            {"skill_tag": "gk_c3_current_apply", "count": 3},
+            {"skill_tag": "gk_c3_current_represent", "count": 2},
+            {"skill_tag": "gk_c3_current_error", "count": 2},
+            {"skill_tag": "gk_c3_current_thinking", "count": 1},
+        ],
+    },
+    # ── General Knowledge Class 4 (4 topics) ──────────────────────────
+    "Continents and Oceans (Class 4)": {
+        "allowed_skill_tags": [
+            "gk_c4_continents_identify", "gk_c4_continents_apply", "gk_c4_continents_represent",
+            "gk_c4_continents_error", "gk_c4_continents_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c4_continents_identify", "count": 2},
+            {"skill_tag": "gk_c4_continents_apply", "count": 3},
+            {"skill_tag": "gk_c4_continents_represent", "count": 2},
+            {"skill_tag": "gk_c4_continents_error", "count": 2},
+            {"skill_tag": "gk_c4_continents_thinking", "count": 1},
+        ],
+    },
+    "Famous Scientists (Class 4)": {
+        "allowed_skill_tags": [
+            "gk_c4_scientists_identify", "gk_c4_scientists_apply", "gk_c4_scientists_represent",
+            "gk_c4_scientists_error", "gk_c4_scientists_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c4_scientists_identify", "count": 2},
+            {"skill_tag": "gk_c4_scientists_apply", "count": 3},
+            {"skill_tag": "gk_c4_scientists_represent", "count": 2},
+            {"skill_tag": "gk_c4_scientists_error", "count": 2},
+            {"skill_tag": "gk_c4_scientists_thinking", "count": 1},
+        ],
+    },
+    "Festivals of India (Class 4)": {
+        "allowed_skill_tags": [
+            "gk_c4_festivals_identify", "gk_c4_festivals_apply", "gk_c4_festivals_represent",
+            "gk_c4_festivals_error", "gk_c4_festivals_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c4_festivals_identify", "count": 2},
+            {"skill_tag": "gk_c4_festivals_apply", "count": 3},
+            {"skill_tag": "gk_c4_festivals_represent", "count": 2},
+            {"skill_tag": "gk_c4_festivals_error", "count": 2},
+            {"skill_tag": "gk_c4_festivals_thinking", "count": 1},
+        ],
+    },
+    "Sports and Games (Class 4)": {
+        "allowed_skill_tags": [
+            "gk_c4_sports_identify", "gk_c4_sports_apply", "gk_c4_sports_represent",
+            "gk_c4_sports_error", "gk_c4_sports_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c4_sports_identify", "count": 2},
+            {"skill_tag": "gk_c4_sports_apply", "count": 3},
+            {"skill_tag": "gk_c4_sports_represent", "count": 2},
+            {"skill_tag": "gk_c4_sports_error", "count": 2},
+            {"skill_tag": "gk_c4_sports_thinking", "count": 1},
+        ],
+    },
+    # ── General Knowledge Class 5 (4 topics) ──────────────────────────
+    "Indian Constitution (Class 5)": {
+        "allowed_skill_tags": [
+            "gk_c5_constitution_identify", "gk_c5_constitution_apply", "gk_c5_constitution_represent",
+            "gk_c5_constitution_error", "gk_c5_constitution_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c5_constitution_identify", "count": 2},
+            {"skill_tag": "gk_c5_constitution_apply", "count": 3},
+            {"skill_tag": "gk_c5_constitution_represent", "count": 2},
+            {"skill_tag": "gk_c5_constitution_error", "count": 2},
+            {"skill_tag": "gk_c5_constitution_thinking", "count": 1},
+        ],
+    },
+    "World Heritage Sites (Class 5)": {
+        "allowed_skill_tags": [
+            "gk_c5_heritage_identify", "gk_c5_heritage_apply", "gk_c5_heritage_represent",
+            "gk_c5_heritage_error", "gk_c5_heritage_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c5_heritage_identify", "count": 2},
+            {"skill_tag": "gk_c5_heritage_apply", "count": 3},
+            {"skill_tag": "gk_c5_heritage_represent", "count": 2},
+            {"skill_tag": "gk_c5_heritage_error", "count": 2},
+            {"skill_tag": "gk_c5_heritage_thinking", "count": 1},
+        ],
+    },
+    "Space Missions (Class 5)": {
+        "allowed_skill_tags": [
+            "gk_c5_space_identify", "gk_c5_space_apply", "gk_c5_space_represent",
+            "gk_c5_space_error", "gk_c5_space_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c5_space_identify", "count": 2},
+            {"skill_tag": "gk_c5_space_apply", "count": 3},
+            {"skill_tag": "gk_c5_space_represent", "count": 2},
+            {"skill_tag": "gk_c5_space_error", "count": 2},
+            {"skill_tag": "gk_c5_space_thinking", "count": 1},
+        ],
+    },
+    "Environmental Awareness (Class 5)": {
+        "allowed_skill_tags": [
+            "gk_c5_environment_identify", "gk_c5_environment_apply", "gk_c5_environment_represent",
+            "gk_c5_environment_error", "gk_c5_environment_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "GK",
+        "default_recipe": [
+            {"skill_tag": "gk_c5_environment_identify", "count": 2},
+            {"skill_tag": "gk_c5_environment_apply", "count": 3},
+            {"skill_tag": "gk_c5_environment_represent", "count": 2},
+            {"skill_tag": "gk_c5_environment_error", "count": 2},
+            {"skill_tag": "gk_c5_environment_thinking", "count": 1},
+        ],
+    },
+    # ── Moral Science Class 1 (2 topics) ──────────────────────────
+    "Sharing (Class 1)": {
+        "allowed_skill_tags": [
+            "moral_c1_sharing_identify", "moral_c1_sharing_apply", "moral_c1_sharing_represent",
+            "moral_c1_sharing_error", "moral_c1_sharing_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c1_sharing_identify", "count": 2},
+            {"skill_tag": "moral_c1_sharing_apply", "count": 3},
+            {"skill_tag": "moral_c1_sharing_represent", "count": 2},
+            {"skill_tag": "moral_c1_sharing_error", "count": 2},
+            {"skill_tag": "moral_c1_sharing_thinking", "count": 1},
+        ],
+    },
+    "Honesty (Class 1)": {
+        "allowed_skill_tags": [
+            "moral_c1_honesty_identify", "moral_c1_honesty_apply", "moral_c1_honesty_represent",
+            "moral_c1_honesty_error", "moral_c1_honesty_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c1_honesty_identify", "count": 2},
+            {"skill_tag": "moral_c1_honesty_apply", "count": 3},
+            {"skill_tag": "moral_c1_honesty_represent", "count": 2},
+            {"skill_tag": "moral_c1_honesty_error", "count": 2},
+            {"skill_tag": "moral_c1_honesty_thinking", "count": 1},
+        ],
+    },
+    # ── Moral Science Class 2 (2 topics) ──────────────────────────
+    "Kindness (Class 2)": {
+        "allowed_skill_tags": [
+            "moral_c2_kindness_identify", "moral_c2_kindness_apply", "moral_c2_kindness_represent",
+            "moral_c2_kindness_error", "moral_c2_kindness_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c2_kindness_identify", "count": 2},
+            {"skill_tag": "moral_c2_kindness_apply", "count": 3},
+            {"skill_tag": "moral_c2_kindness_represent", "count": 2},
+            {"skill_tag": "moral_c2_kindness_error", "count": 2},
+            {"skill_tag": "moral_c2_kindness_thinking", "count": 1},
+        ],
+    },
+    "Respecting Elders (Class 2)": {
+        "allowed_skill_tags": [
+            "moral_c2_respect_identify", "moral_c2_respect_apply", "moral_c2_respect_represent",
+            "moral_c2_respect_error", "moral_c2_respect_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c2_respect_identify", "count": 2},
+            {"skill_tag": "moral_c2_respect_apply", "count": 3},
+            {"skill_tag": "moral_c2_respect_represent", "count": 2},
+            {"skill_tag": "moral_c2_respect_error", "count": 2},
+            {"skill_tag": "moral_c2_respect_thinking", "count": 1},
+        ],
+    },
+    # ── Moral Science Class 3 (3 topics) ──────────────────────────
+    "Teamwork (Class 3)": {
+        "allowed_skill_tags": [
+            "moral_c3_teamwork_identify", "moral_c3_teamwork_apply", "moral_c3_teamwork_represent",
+            "moral_c3_teamwork_error", "moral_c3_teamwork_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c3_teamwork_identify", "count": 2},
+            {"skill_tag": "moral_c3_teamwork_apply", "count": 3},
+            {"skill_tag": "moral_c3_teamwork_represent", "count": 2},
+            {"skill_tag": "moral_c3_teamwork_error", "count": 2},
+            {"skill_tag": "moral_c3_teamwork_thinking", "count": 1},
+        ],
+    },
+    "Empathy (Class 3)": {
+        "allowed_skill_tags": [
+            "moral_c3_empathy_identify", "moral_c3_empathy_apply", "moral_c3_empathy_represent",
+            "moral_c3_empathy_error", "moral_c3_empathy_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c3_empathy_identify", "count": 2},
+            {"skill_tag": "moral_c3_empathy_apply", "count": 3},
+            {"skill_tag": "moral_c3_empathy_represent", "count": 2},
+            {"skill_tag": "moral_c3_empathy_error", "count": 2},
+            {"skill_tag": "moral_c3_empathy_thinking", "count": 1},
+        ],
+    },
+    "Environmental Care (Class 3)": {
+        "allowed_skill_tags": [
+            "moral_c3_envcare_identify", "moral_c3_envcare_apply", "moral_c3_envcare_represent",
+            "moral_c3_envcare_error", "moral_c3_envcare_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c3_envcare_identify", "count": 2},
+            {"skill_tag": "moral_c3_envcare_apply", "count": 3},
+            {"skill_tag": "moral_c3_envcare_represent", "count": 2},
+            {"skill_tag": "moral_c3_envcare_error", "count": 2},
+            {"skill_tag": "moral_c3_envcare_thinking", "count": 1},
+        ],
+    },
+    # ── Moral Science Class 4 (1 topic) ──────────────────────────
+    "Leadership (Class 4)": {
+        "allowed_skill_tags": [
+            "moral_c4_leadership_identify", "moral_c4_leadership_apply", "moral_c4_leadership_represent",
+            "moral_c4_leadership_error", "moral_c4_leadership_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c4_leadership_identify", "count": 2},
+            {"skill_tag": "moral_c4_leadership_apply", "count": 3},
+            {"skill_tag": "moral_c4_leadership_represent", "count": 2},
+            {"skill_tag": "moral_c4_leadership_error", "count": 2},
+            {"skill_tag": "moral_c4_leadership_thinking", "count": 1},
+        ],
+    },
+    # ── Moral Science Class 5 (2 topics) ──────────────────────────
+    "Global Citizenship (Class 5)": {
+        "allowed_skill_tags": [
+            "moral_c5_global_identify", "moral_c5_global_apply", "moral_c5_global_represent",
+            "moral_c5_global_error", "moral_c5_global_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c5_global_identify", "count": 2},
+            {"skill_tag": "moral_c5_global_apply", "count": 3},
+            {"skill_tag": "moral_c5_global_represent", "count": 2},
+            {"skill_tag": "moral_c5_global_error", "count": 2},
+            {"skill_tag": "moral_c5_global_thinking", "count": 1},
+        ],
+    },
+    "Digital Ethics (Class 5)": {
+        "allowed_skill_tags": [
+            "moral_c5_digital_identify", "moral_c5_digital_apply", "moral_c5_digital_represent",
+            "moral_c5_digital_error", "moral_c5_digital_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Moral Science",
+        "default_recipe": [
+            {"skill_tag": "moral_c5_digital_identify", "count": 2},
+            {"skill_tag": "moral_c5_digital_apply", "count": 3},
+            {"skill_tag": "moral_c5_digital_represent", "count": 2},
+            {"skill_tag": "moral_c5_digital_error", "count": 2},
+            {"skill_tag": "moral_c5_digital_thinking", "count": 1},
+        ],
+    },
 }
 
 
@@ -5868,6 +6652,95 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 5 digital citizenship": "Digital Citizenship (Class 5)",
     "digital citizen": "Digital Citizenship (Class 5)",
     "online etiquette": "Digital Citizenship (Class 5)",
+    # ── General Knowledge aliases ──────────────────────────
+    "famous landmarks": "Famous Landmarks (Class 3)",
+    "class 3 landmarks": "Famous Landmarks (Class 3)",
+    "landmarks": "Famous Landmarks (Class 3)",
+    "monuments": "Famous Landmarks (Class 3)",
+    "national symbols": "National Symbols (Class 3)",
+    "class 3 national symbols": "National Symbols (Class 3)",
+    "indian symbols": "National Symbols (Class 3)",
+    "national flag": "National Symbols (Class 3)",
+    "solar system basics": "Solar System Basics (Class 3)",
+    "class 3 solar system": "Solar System Basics (Class 3)",
+    "solar system": "Solar System Basics (Class 3)",
+    "planets": "Solar System Basics (Class 3)",
+    "current awareness": "Current Awareness (Class 3)",
+    "class 3 current awareness": "Current Awareness (Class 3)",
+    "festivals and seasons": "Current Awareness (Class 3)",
+    "important days": "Current Awareness (Class 3)",
+    "continents and oceans": "Continents and Oceans (Class 4)",
+    "class 4 continents": "Continents and Oceans (Class 4)",
+    "continents": "Continents and Oceans (Class 4)",
+    "oceans": "Continents and Oceans (Class 4)",
+    "famous scientists": "Famous Scientists (Class 4)",
+    "class 4 scientists": "Famous Scientists (Class 4)",
+    "scientists": "Famous Scientists (Class 4)",
+    "inventions": "Famous Scientists (Class 4)",
+    "festivals of india": "Festivals of India (Class 4)",
+    "class 4 festivals": "Festivals of India (Class 4)",
+    "indian festivals": "Festivals of India (Class 4)",
+    "sports and games": "Sports and Games (Class 4)",
+    "class 4 sports": "Sports and Games (Class 4)",
+    "sports": "Sports and Games (Class 4)",
+    "indian sports": "Sports and Games (Class 4)",
+    "indian constitution": "Indian Constitution (Class 5)",
+    "class 5 constitution": "Indian Constitution (Class 5)",
+    "constitution": "Indian Constitution (Class 5)",
+    "fundamental rights": "Indian Constitution (Class 5)",
+    "world heritage sites": "World Heritage Sites (Class 5)",
+    "class 5 heritage": "World Heritage Sites (Class 5)",
+    "heritage sites": "World Heritage Sites (Class 5)",
+    "unesco sites": "World Heritage Sites (Class 5)",
+    "space missions": "Space Missions (Class 5)",
+    "class 5 space": "Space Missions (Class 5)",
+    "isro": "Space Missions (Class 5)",
+    "chandrayaan": "Space Missions (Class 5)",
+    "environmental awareness": "Environmental Awareness (Class 5)",
+    "class 5 environment": "Environmental Awareness (Class 5)",
+    "pollution": "Environmental Awareness (Class 5)",
+    "conservation": "Environmental Awareness (Class 5)",
+    # ── Moral Science aliases ──────────────────────────
+    "sharing": "Sharing (Class 1)",
+    "class 1 sharing": "Sharing (Class 1)",
+    "sharing toys": "Sharing (Class 1)",
+    "being generous": "Sharing (Class 1)",
+    "honesty": "Honesty (Class 1)",
+    "class 1 honesty": "Honesty (Class 1)",
+    "telling truth": "Honesty (Class 1)",
+    "being honest": "Honesty (Class 1)",
+    "kindness": "Kindness (Class 2)",
+    "class 2 kindness": "Kindness (Class 2)",
+    "being kind": "Kindness (Class 2)",
+    "helping others": "Kindness (Class 2)",
+    "respecting elders": "Respecting Elders (Class 2)",
+    "class 2 respecting elders": "Respecting Elders (Class 2)",
+    "good manners": "Respecting Elders (Class 2)",
+    "respect elders": "Respecting Elders (Class 2)",
+    "teamwork": "Teamwork (Class 3)",
+    "class 3 teamwork": "Teamwork (Class 3)",
+    "working together": "Teamwork (Class 3)",
+    "cooperation": "Teamwork (Class 3)",
+    "empathy": "Empathy (Class 3)",
+    "class 3 empathy": "Empathy (Class 3)",
+    "understanding feelings": "Empathy (Class 3)",
+    "being supportive": "Empathy (Class 3)",
+    "environmental care": "Environmental Care (Class 3)",
+    "class 3 environmental care": "Environmental Care (Class 3)",
+    "protect nature": "Environmental Care (Class 3)",
+    "reduce reuse recycle": "Environmental Care (Class 3)",
+    "leadership": "Leadership (Class 4)",
+    "class 4 leadership": "Leadership (Class 4)",
+    "good leader": "Leadership (Class 4)",
+    "being a leader": "Leadership (Class 4)",
+    "global citizenship": "Global Citizenship (Class 5)",
+    "class 5 global citizenship": "Global Citizenship (Class 5)",
+    "cultural diversity": "Global Citizenship (Class 5)",
+    "world peace": "Global Citizenship (Class 5)",
+    "digital ethics": "Digital Ethics (Class 5)",
+    "class 5 digital ethics": "Digital Ethics (Class 5)",
+    "online safety": "Digital Ethics (Class 5)",
+    "digital footprint": "Digital Ethics (Class 5)",
 }
 
 
@@ -8847,6 +9720,404 @@ def _build_slot_instruction(
         }
         return comp_digital_ctx + comp_digital_map.get(_skill_tag, "About digital citizenship.")
 
+    # ── General Knowledge: Famous Landmarks (Class 3) ──
+    if _skill_tag.startswith("gk_c3_landmarks_"):
+        gk_landmarks_ctx = (
+            "Topic: Famous Landmarks (Class 3 GK, CBSE). "
+            "Cover: Taj Mahal, Great Wall of China, Eiffel Tower, Qutub Minar, India Gate, Red Fort, "
+            "Gateway of India, Hawa Mahal, Statue of Unity, and other famous monuments. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same landmark. "
+        )
+        gk_landmarks_map = {
+            "gk_c3_landmarks_identify": "format: pick_correct_science. Multiple choice about landmarks. Example: 'Which monument is located in Agra? (a) Red Fort (b) Taj Mahal (c) Qutub Minar (d) India Gate' -> (b) Taj Mahal",
+            "gk_c3_landmarks_apply": "format: explain_why_science. Explain about a landmark. Example: 'Why is the Taj Mahal considered one of the wonders of the world?'",
+            "gk_c3_landmarks_represent": "format: sequence_steps. Match or order landmarks. Example: 'Match the following landmarks with their cities: (a) Taj Mahal — Delhi (b) Red Fort — Agra (c) Hawa Mahal — Jaipur. Write the correct pairs.'",
+            "gk_c3_landmarks_error": "format: error_spot_science. Present a WRONG fact. Example: 'The Eiffel Tower is located in London.' Ask: 'Find the mistake and correct it.'",
+            "gk_c3_landmarks_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think it is important to protect old monuments and landmarks?'",
+        }
+        return gk_landmarks_ctx + gk_landmarks_map.get(_skill_tag, "About famous landmarks.")
+
+    # ── General Knowledge: National Symbols (Class 3) ──
+    if _skill_tag.startswith("gk_c3_symbols_"):
+        gk_symbols_ctx = (
+            "Topic: National Symbols (Class 3 GK, CBSE). "
+            "Cover: Indian flag (tiranga — saffron, white, green, Ashoka Chakra), national emblem, "
+            "national anthem (Jana Gana Mana), national animal (Bengal tiger), national bird (peacock), "
+            "national flower (lotus), national fruit (mango). "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same symbol. "
+        )
+        gk_symbols_map = {
+            "gk_c3_symbols_identify": "format: pick_correct_science. Multiple choice about national symbols. Example: 'What is the national bird of India? (a) Sparrow (b) Parrot (c) Peacock (d) Crow' -> (c) Peacock",
+            "gk_c3_symbols_apply": "format: give_example. Give examples related to national symbols. Example: 'Name the three colours of the Indian flag from top to bottom.'",
+            "gk_c3_symbols_represent": "format: fill_diagram. Fill in information. Example: 'Complete: The national anthem of India is _____ and it was written by _____.'",
+            "gk_c3_symbols_error": "format: error_spot_science. Present a WRONG fact. Example: 'The national animal of India is the lion.' Ask: 'Find the mistake and correct it.'",
+            "gk_c3_symbols_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think the peacock was chosen as the national bird of India?'",
+        }
+        return gk_symbols_ctx + gk_symbols_map.get(_skill_tag, "About national symbols.")
+
+    # ── General Knowledge: Solar System Basics (Class 3) ──
+    if _skill_tag.startswith("gk_c3_solar_"):
+        gk_solar_ctx = (
+            "Topic: Solar System Basics (Class 3 GK, CBSE). "
+            "Cover: Sun as a star, 8 planets in order (Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune), "
+            "Moon, day and night, stars vs planets, satellites. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same planet or concept. "
+        )
+        gk_solar_map = {
+            "gk_c3_solar_identify": "format: pick_correct_science. Multiple choice about the solar system. Example: 'Which planet is closest to the Sun? (a) Earth (b) Mars (c) Mercury (d) Venus' -> (c) Mercury",
+            "gk_c3_solar_apply": "format: explain_why_science. Explain a solar system concept. Example: 'Why do we have day and night on Earth?'",
+            "gk_c3_solar_represent": "format: sequence_steps. Order planets. Example: 'Arrange the planets in order from the Sun: Earth, Mercury, Venus, Mars.'",
+            "gk_c3_solar_error": "format: error_spot_science. Present a WRONG fact. Example: 'The Sun is a planet that gives us light and heat.' Ask: 'Find the mistake and correct it.'",
+            "gk_c3_solar_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think life exists on Earth but not on other planets in our solar system?'",
+        }
+        return gk_solar_ctx + gk_solar_map.get(_skill_tag, "About the solar system.")
+
+    # ── General Knowledge: Current Awareness (Class 3) ──
+    if _skill_tag.startswith("gk_c3_current_"):
+        gk_current_ctx = (
+            "Topic: Current Awareness (Class 3 GK, CBSE). "
+            "Cover: Indian festivals (Diwali, Holi, Eid, Christmas, Pongal), seasons of India, "
+            "important days (Republic Day 26 Jan, Independence Day 15 Aug, Children's Day 14 Nov, Teachers' Day 5 Sep). "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same festival or day. "
+        )
+        gk_current_map = {
+            "gk_c3_current_identify": "format: true_false. True/false about festivals or important days. Example: 'True or False: Republic Day is celebrated on 26th January.' -> True",
+            "gk_c3_current_apply": "format: give_example. Give examples. Example: 'Name two festivals celebrated in the month of October or November in India.'",
+            "gk_c3_current_represent": "format: fill_diagram. Fill in information. Example: 'Complete: Independence Day is celebrated on _____ August every year to remember India's freedom from _____.'",
+            "gk_c3_current_error": "format: error_spot_science. Present a WRONG fact. Example: 'Children's Day is celebrated on 5th September in India.' Ask: 'Find the mistake and correct it.'",
+            "gk_c3_current_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think we celebrate Republic Day and Independence Day as national holidays?'",
+        }
+        return gk_current_ctx + gk_current_map.get(_skill_tag, "About current awareness.")
+
+    # ── General Knowledge: Continents and Oceans (Class 4) ──
+    if _skill_tag.startswith("gk_c4_continents_"):
+        gk_continents_ctx = (
+            "Topic: Continents and Oceans (Class 4 GK, CBSE). "
+            "Cover: 7 continents (Asia, Africa, North America, South America, Antarctica, Europe, Australia/Oceania), "
+            "5 oceans (Pacific, Atlantic, Indian, Southern, Arctic), major countries. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same continent or ocean. "
+        )
+        gk_continents_map = {
+            "gk_c4_continents_identify": "format: pick_correct_science. Multiple choice about continents/oceans. Example: 'Which is the largest continent? (a) Africa (b) Asia (c) Europe (d) Australia' -> (b) Asia",
+            "gk_c4_continents_apply": "format: explain_why_science. Explain a geography fact. Example: 'Why is Antarctica the coldest continent on Earth?'",
+            "gk_c4_continents_represent": "format: fill_diagram. Fill in information. Example: 'Complete: India is located in the continent of _____ and is surrounded by the _____ Ocean.'",
+            "gk_c4_continents_error": "format: error_spot_science. Present a WRONG fact. Example: 'The Atlantic Ocean is the largest ocean in the world.' Ask: 'Find the mistake and correct it.'",
+            "gk_c4_continents_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think Asia is the most populated continent in the world?'",
+        }
+        return gk_continents_ctx + gk_continents_map.get(_skill_tag, "About continents and oceans.")
+
+    # ── General Knowledge: Famous Scientists (Class 4) ──
+    if _skill_tag.startswith("gk_c4_scientists_"):
+        gk_scientists_ctx = (
+            "Topic: Famous Scientists (Class 4 GK, CBSE). "
+            "Cover: Newton (gravity), Edison (light bulb), APJ Abdul Kalam (missiles/President), "
+            "C.V. Raman (Nobel Prize), Marie Curie (radioactivity), Homi Bhabha, Vikram Sarabhai, Ramanujan. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same scientist. "
+        )
+        gk_scientists_map = {
+            "gk_c4_scientists_identify": "format: pick_correct_science. Multiple choice about scientists. Example: 'Who is known as the Missile Man of India? (a) C.V. Raman (b) Homi Bhabha (c) APJ Abdul Kalam (d) Vikram Sarabhai' -> (c) APJ Abdul Kalam",
+            "gk_c4_scientists_apply": "format: give_example. Give examples. Example: 'Name the scientist who discovered gravity and describe how the discovery was made.'",
+            "gk_c4_scientists_represent": "format: cause_effect. Match scientists with discoveries. Example: 'Match: (a) Newton — Light bulb (b) Edison — Gravity (c) C.V. Raman — Raman Effect. Write the correct pairs.'",
+            "gk_c4_scientists_error": "format: error_spot_science. Present a WRONG fact. Example: 'Thomas Edison is famous for discovering gravity when an apple fell on his head.' Ask: 'Find the mistake and correct it.'",
+            "gk_c4_scientists_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think scientists are important for the progress of a country?'",
+        }
+        return gk_scientists_ctx + gk_scientists_map.get(_skill_tag, "About famous scientists.")
+
+    # ── General Knowledge: Festivals of India (Class 4) ──
+    if _skill_tag.startswith("gk_c4_festivals_"):
+        gk_festivals_ctx = (
+            "Topic: Festivals of India (Class 4 GK, CBSE). "
+            "Cover: Diwali, Holi, Eid-ul-Fitr, Christmas, Pongal, Baisakhi, Onam, Navratri, "
+            "Durga Puja, Guru Nanak Jayanti, and other regional festivals. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same festival. "
+        )
+        gk_festivals_map = {
+            "gk_c4_festivals_identify": "format: true_false. True/false about festivals. Example: 'True or False: Pongal is a harvest festival celebrated mainly in Tamil Nadu.' -> True",
+            "gk_c4_festivals_apply": "format: give_example. Give examples. Example: 'Name the festival known as the \"festival of lights\" and describe how it is celebrated.'",
+            "gk_c4_festivals_represent": "format: fill_diagram. Fill in information. Example: 'Complete: Baisakhi is celebrated in the state of _____ to mark the _____.'",
+            "gk_c4_festivals_error": "format: error_spot_science. Present a WRONG fact. Example: 'Onam is a festival celebrated in Gujarat with boat races.' Ask: 'Find the mistake and correct it.'",
+            "gk_c4_festivals_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think India celebrates so many different festivals from different religions?'",
+        }
+        return gk_festivals_ctx + gk_festivals_map.get(_skill_tag, "About festivals of India.")
+
+    # ── General Knowledge: Sports and Games (Class 4) ──
+    if _skill_tag.startswith("gk_c4_sports_"):
+        gk_sports_ctx = (
+            "Topic: Sports and Games (Class 4 GK, CBSE). "
+            "Cover: cricket, hockey (national game), football, Olympics, Sachin Tendulkar, PV Sindhu, "
+            "Neeraj Chopra, Mary Kom, kabaddi, and other sports facts. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same sport or sportsperson. "
+        )
+        gk_sports_map = {
+            "gk_c4_sports_identify": "format: pick_correct_science. Multiple choice about sports. Example: 'Which sport did Neeraj Chopra win a gold medal in at the Olympics? (a) Cricket (b) Javelin throw (c) Boxing (d) Badminton' -> (b) Javelin throw",
+            "gk_c4_sports_apply": "format: explain_why_science. Explain a sports fact. Example: 'Why is hockey considered the national game of India? Name one famous Indian hockey player.'",
+            "gk_c4_sports_represent": "format: cause_effect. Match sportspersons with sports. Example: 'Match: (a) Sachin Tendulkar — Boxing (b) Mary Kom — Cricket (c) PV Sindhu — Badminton. Write the correct pairs.'",
+            "gk_c4_sports_error": "format: error_spot_science. Present a WRONG fact. Example: 'Sachin Tendulkar is famous for his achievements in football.' Ask: 'Find the mistake and correct it.'",
+            "gk_c4_sports_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think playing sports is important for children? Give two reasons.'",
+        }
+        return gk_sports_ctx + gk_sports_map.get(_skill_tag, "About sports and games.")
+
+    # ── General Knowledge: Indian Constitution (Class 5) ──
+    if _skill_tag.startswith("gk_c5_constitution_"):
+        gk_constitution_ctx = (
+            "Topic: Indian Constitution (Class 5 GK, CBSE). "
+            "Cover: fundamental rights (right to equality, right to education), fundamental duties, "
+            "the Preamble, Dr B.R. Ambedkar (father of the Constitution), republic, Parliament, President. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same constitutional concept. "
+        )
+        gk_constitution_map = {
+            "gk_c5_constitution_identify": "format: true_false. True/false about the Constitution. Example: 'True or False: Dr B.R. Ambedkar is known as the Father of the Indian Constitution.' -> True",
+            "gk_c5_constitution_apply": "format: explain_why_science. Explain a constitutional concept. Example: 'What does the Right to Education mean? Why is it important for all children?'",
+            "gk_c5_constitution_represent": "format: cause_effect. Connect concepts. Example: 'Match the following fundamental rights with their meanings: (a) Right to Equality (b) Right to Freedom (c) Right to Education.'",
+            "gk_c5_constitution_error": "format: error_spot_science. Present a WRONG fact. Example: 'The Indian Constitution was written by Mahatma Gandhi in 1947.' Ask: 'Find the mistake and correct it.'",
+            "gk_c5_constitution_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think having a Constitution is important for a country like India?'",
+        }
+        return gk_constitution_ctx + gk_constitution_map.get(_skill_tag, "About the Indian Constitution.")
+
+    # ── General Knowledge: World Heritage Sites (Class 5) ──
+    if _skill_tag.startswith("gk_c5_heritage_"):
+        gk_heritage_ctx = (
+            "Topic: World Heritage Sites (Class 5 GK, CBSE). "
+            "Cover: UNESCO sites in India (Ajanta-Ellora caves, Sun Temple Konark, Hampi, Kaziranga, Sundarbans), "
+            "global sites (Machu Picchu, Great Barrier Reef, Pyramids of Giza). "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same heritage site. "
+        )
+        gk_heritage_map = {
+            "gk_c5_heritage_identify": "format: pick_correct_science. Multiple choice about heritage sites. Example: 'Which of these is a UNESCO World Heritage Site in India? (a) Taj Mahal (b) Eiffel Tower (c) Statue of Liberty (d) Big Ben' -> (a) Taj Mahal",
+            "gk_c5_heritage_apply": "format: give_example. Give examples. Example: 'Name two UNESCO World Heritage Sites in India and explain why they are important.'",
+            "gk_c5_heritage_represent": "format: fill_diagram. Fill in information. Example: 'Complete: The Ajanta and Ellora caves are located in the state of _____ and are famous for their _____.'",
+            "gk_c5_heritage_error": "format: error_spot_science. Present a WRONG fact. Example: 'The Sun Temple at Konark is located in Rajasthan.' Ask: 'Find the mistake and correct it.'",
+            "gk_c5_heritage_thinking": "format: thinking_science. Reasoning question. Example: 'Why is it important to protect World Heritage Sites? What can students do to help?'",
+        }
+        return gk_heritage_ctx + gk_heritage_map.get(_skill_tag, "About world heritage sites.")
+
+    # ── General Knowledge: Space Missions (Class 5) ──
+    if _skill_tag.startswith("gk_c5_space_"):
+        gk_space_ctx = (
+            "Topic: Space Missions (Class 5 GK, CBSE). "
+            "Cover: ISRO (Indian Space Research Organisation), Chandrayaan (Moon mission), "
+            "Mangalyaan (Mars mission), NASA, satellites, Rakesh Sharma (first Indian in space), "
+            "International Space Station. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same space mission or concept. "
+        )
+        gk_space_map = {
+            "gk_c5_space_identify": "format: pick_correct_science. Multiple choice about space. Example: 'Which organisation launched Chandrayaan-3? (a) NASA (b) ISRO (c) ESA (d) JAXA' -> (b) ISRO",
+            "gk_c5_space_apply": "format: explain_why_science. Explain a space concept. Example: 'What was the purpose of India's Mangalyaan mission? Why was it considered a great achievement?'",
+            "gk_c5_space_represent": "format: sequence_steps. Order events. Example: 'Arrange India's space achievements in order: (a) Mangalyaan (b) Chandrayaan-1 (c) Aryabhata satellite (d) Chandrayaan-3.'",
+            "gk_c5_space_error": "format: error_spot_science. Present a WRONG fact. Example: 'Rakesh Sharma was the first Indian to walk on the Moon.' Ask: 'Find the mistake and correct it.'",
+            "gk_c5_space_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think space exploration is important for India and the world?'",
+        }
+        return gk_space_ctx + gk_space_map.get(_skill_tag, "About space missions.")
+
+    # ── General Knowledge: Environmental Awareness (Class 5) ──
+    if _skill_tag.startswith("gk_c5_environment_"):
+        gk_env_ctx = (
+            "Topic: Environmental Awareness (Class 5 GK, CBSE). "
+            "Cover: air/water/soil pollution, conservation, recycling, climate change, global warming, "
+            "renewable energy (solar, wind), deforestation, waste management. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same environmental concept. "
+        )
+        gk_env_map = {
+            "gk_c5_environment_identify": "format: true_false. True/false about the environment. Example: 'True or False: Burning fossil fuels is one of the main causes of air pollution.' -> True",
+            "gk_c5_environment_apply": "format: explain_why_science. Explain an environmental concept. Example: 'Why is it important to recycle paper and plastic? How does it help the environment?'",
+            "gk_c5_environment_represent": "format: cause_effect. Connect causes and effects. Example: 'Match the cause with its effect: (a) Cutting trees — Water pollution (b) Factory waste in rivers — Flooding (c) Burning plastic — Air pollution. Write the correct pairs.'",
+            "gk_c5_environment_error": "format: error_spot_science. Present a WRONG fact. Example: 'Solar energy is a non-renewable source of energy.' Ask: 'Find the mistake and correct it.'",
+            "gk_c5_environment_thinking": "format: thinking_science. Reasoning question. Example: 'What are three things you can do at home and school to help protect the environment?'",
+        }
+        return gk_env_ctx + gk_env_map.get(_skill_tag, "About environmental awareness.")
+
+    # ── Moral Science: Sharing (Class 1) ──
+    if _skill_tag.startswith("moral_c1_sharing_"):
+        moral_sharing_ctx = (
+            "Topic: Sharing (Class 1 Moral Science, CBSE). "
+            "Cover: sharing toys, food, books with friends and family; being generous; "
+            "how sharing makes others happy; taking turns. "
+            "Use very simple language — Class 1 level (age 6). Use Indian names and contexts. "
+            "DO NOT repeat the same sharing scenario. "
+        )
+        moral_sharing_map = {
+            "moral_c1_sharing_identify": "format: pick_correct_science. Multiple choice about sharing. Example: 'Riya has 4 chocolates. She gives 2 to her friend. What is Riya doing? (a) Fighting (b) Sharing (c) Hiding (d) Running' -> (b) Sharing",
+            "moral_c1_sharing_apply": "format: give_example. Give an example. Example: 'Give one example of how you can share something with your friend at school.'",
+            "moral_c1_sharing_represent": "format: sequence_steps. Order actions. Example: 'Put in order: (a) Aman sees his friend has no pencil (b) Aman gives his extra pencil (c) His friend says thank you (d) They both smile.'",
+            "moral_c1_sharing_error": "format: error_spot_science. Present a WRONG behaviour. Example: 'Sneha had many toys but she never let anyone play with them. She said \"These are all mine!\" Is this good behaviour? What should she do instead?'",
+            "moral_c1_sharing_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think sharing makes you and your friends feel happy?'",
+        }
+        return moral_sharing_ctx + moral_sharing_map.get(_skill_tag, "About sharing.")
+
+    # ── Moral Science: Honesty (Class 1) ──
+    if _skill_tag.startswith("moral_c1_honesty_"):
+        moral_honesty_ctx = (
+            "Topic: Honesty (Class 1 Moral Science, CBSE). "
+            "Cover: telling the truth, being fair, returning things that belong to others, "
+            "admitting mistakes, not cheating. "
+            "Use very simple language — Class 1 level (age 6). Use Indian names and contexts. "
+            "DO NOT repeat the same honesty scenario. "
+        )
+        moral_honesty_map = {
+            "moral_c1_honesty_identify": "format: true_false. True/false about honesty. Example: 'True or False: It is always better to tell the truth even if it is hard.' -> True",
+            "moral_c1_honesty_apply": "format: give_example. Give an example. Example: 'Give one example of being honest at school.'",
+            "moral_c1_honesty_represent": "format: sequence_steps. Order actions. Example: 'Put in order: (a) Aman accidentally breaks a toy (b) He feels scared (c) He tells his mother the truth (d) His mother is proud of him.'",
+            "moral_c1_honesty_error": "format: error_spot_science. Present a WRONG behaviour. Example: 'Kiran found a pencil box on the ground. He put it in his bag and did not tell anyone. Is this right? What should he do?'",
+            "moral_c1_honesty_thinking": "format: thinking_science. Reasoning question. Example: 'Why is it important to always tell the truth?'",
+        }
+        return moral_honesty_ctx + moral_honesty_map.get(_skill_tag, "About honesty.")
+
+    # ── Moral Science: Kindness (Class 2) ──
+    if _skill_tag.startswith("moral_c2_kindness_"):
+        moral_kindness_ctx = (
+            "Topic: Kindness (Class 2 Moral Science, CBSE). "
+            "Cover: being kind to people and animals, helping others, saying kind words, "
+            "making others feel better, small acts of kindness. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 2 level. "
+            "DO NOT repeat the same kindness scenario. "
+        )
+        moral_kindness_map = {
+            "moral_c2_kindness_identify": "format: pick_correct_science. Multiple choice about kindness. Example: 'Which of these is an act of kindness? (a) Pushing someone (b) Helping a friend carry books (c) Laughing at someone (d) Ignoring a new student' -> (b) Helping a friend carry books",
+            "moral_c2_kindness_apply": "format: give_example. Give an example. Example: 'Give two examples of how you can be kind to animals.'",
+            "moral_c2_kindness_represent": "format: sequence_steps. Order kind actions. Example: 'Put in order: (a) Riya sees a classmate crying (b) She asks what happened (c) She comforts her friend (d) They go to the teacher together.'",
+            "moral_c2_kindness_error": "format: error_spot_science. Present unkind behaviour. Example: 'A new student joined the class. Nobody talked to him all day. Everyone ignored him. Is this kind behaviour? What should the children do?'",
+            "moral_c2_kindness_thinking": "format: thinking_science. Reasoning question. Example: 'How does being kind to others help make your school a better place?'",
+        }
+        return moral_kindness_ctx + moral_kindness_map.get(_skill_tag, "About kindness.")
+
+    # ── Moral Science: Respecting Elders (Class 2) ──
+    if _skill_tag.startswith("moral_c2_respect_"):
+        moral_respect_ctx = (
+            "Topic: Respecting Elders (Class 2 Moral Science, CBSE). "
+            "Cover: good manners, greeting elders, listening when elders speak, "
+            "saying please and thank you, following instructions. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 2 level. "
+            "DO NOT repeat the same respect scenario. "
+        )
+        moral_respect_map = {
+            "moral_c2_respect_identify": "format: true_false. True/false about respect. Example: 'True or False: We should stand up when our teacher enters the classroom.' -> True",
+            "moral_c2_respect_apply": "format: give_example. Give an example. Example: 'Give two ways you can show respect to your grandparents.'",
+            "moral_c2_respect_represent": "format: sequence_steps. Order respectful actions. Example: 'Put in order: (a) The teacher enters the class (b) Students stand up and say 'Good morning' (c) The teacher smiles and asks them to sit (d) The lesson begins.'",
+            "moral_c2_respect_error": "format: error_spot_science. Present disrespectful behaviour. Example: 'Aman was talking loudly while his grandmother was telling a story. He did not listen at all. Is this respectful? What should he do?'",
+            "moral_c2_respect_thinking": "format: thinking_science. Reasoning question. Example: 'Why is it important to listen carefully when elders are speaking?'",
+        }
+        return moral_respect_ctx + moral_respect_map.get(_skill_tag, "About respecting elders.")
+
+    # ── Moral Science: Teamwork (Class 3) ──
+    if _skill_tag.startswith("moral_c3_teamwork_"):
+        moral_teamwork_ctx = (
+            "Topic: Teamwork (Class 3 Moral Science, CBSE). "
+            "Cover: working together, cooperation, different roles in a team, "
+            "supporting team members, group activities, sharing responsibilities. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same teamwork scenario. "
+        )
+        moral_teamwork_map = {
+            "moral_c3_teamwork_identify": "format: pick_correct_science. Multiple choice about teamwork. Example: 'Which of these is a good example of teamwork? (a) Doing everything alone (b) Working together to clean the class (c) Not helping others (d) Arguing with teammates' -> (b) Working together to clean the class",
+            "moral_c3_teamwork_apply": "format: explain_why_science. Explain about teamwork. Example: 'Why is it important for everyone in a team to do their part? Give an example from school.'",
+            "moral_c3_teamwork_represent": "format: sequence_steps. Order steps. Example: 'Put in order for a group project: (a) Divide tasks among members (b) Decide the topic together (c) Each person does their part (d) Combine and present the project.'",
+            "moral_c3_teamwork_error": "format: error_spot_science. Present poor teamwork. Example: 'In a group project, Sneha did all the work herself and did not let others help. She said she could do it better alone. Is this good teamwork? Why or why not?'",
+            "moral_c3_teamwork_thinking": "format: thinking_science. Reasoning question. Example: 'How is a cricket team an example of good teamwork? What happens if one person does not cooperate?'",
+        }
+        return moral_teamwork_ctx + moral_teamwork_map.get(_skill_tag, "About teamwork.")
+
+    # ── Moral Science: Empathy (Class 3) ──
+    if _skill_tag.startswith("moral_c3_empathy_"):
+        moral_empathy_ctx = (
+            "Topic: Empathy (Class 3 Moral Science, CBSE). "
+            "Cover: understanding others' feelings, being supportive, putting yourself in someone else's shoes, "
+            "caring for others, noticing when someone is sad or left out. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same empathy scenario. "
+        )
+        moral_empathy_map = {
+            "moral_c3_empathy_identify": "format: true_false. True/false about empathy. Example: 'True or False: Empathy means understanding how another person feels.' -> True",
+            "moral_c3_empathy_apply": "format: give_example. Give an example. Example: 'Your friend is crying because she lost her favourite book. How would you show empathy?'",
+            "moral_c3_empathy_represent": "format: cause_effect. Connect situations and feelings. Example: 'Match the situation with how the person might feel: (a) A new student with no friends — Happy (b) A child who won a prize — Lonely (c) A boy who lost his pet — Sad. Write the correct pairs.'",
+            "moral_c3_empathy_error": "format: error_spot_science. Present a lack of empathy. Example: 'Kiran saw his classmate sitting alone at lunch, looking sad. He walked past without saying anything. Is this showing empathy? What should he have done?'",
+            "moral_c3_empathy_thinking": "format: thinking_science. Reasoning question. Example: 'Why is it important to try to understand how others feel, even if you have not experienced the same thing?'",
+        }
+        return moral_empathy_ctx + moral_empathy_map.get(_skill_tag, "About empathy.")
+
+    # ── Moral Science: Environmental Care (Class 3) ──
+    if _skill_tag.startswith("moral_c3_envcare_"):
+        moral_envcare_ctx = (
+            "Topic: Environmental Care (Class 3 Moral Science, CBSE). "
+            "Cover: protecting nature, reduce-reuse-recycle, saving water and electricity, "
+            "planting trees, not littering, keeping surroundings clean. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same environmental care scenario. "
+        )
+        moral_envcare_map = {
+            "moral_c3_envcare_identify": "format: pick_correct_science. Multiple choice about environmental care. Example: 'Which of these helps the environment? (a) Throwing wrappers on the road (b) Using a cloth bag instead of plastic (c) Wasting water (d) Burning leaves' -> (b) Using a cloth bag instead of plastic",
+            "moral_c3_envcare_apply": "format: explain_why_science. Explain environmental care. Example: 'Why should we plant more trees? Give two reasons.'",
+            "moral_c3_envcare_represent": "format: cause_effect. Connect actions and results. Example: 'Match: (a) Turning off lights — Saves paper (b) Using both sides of paper — Saves electricity (c) Closing the tap — Saves water. Write the correct pairs.'",
+            "moral_c3_envcare_error": "format: error_spot_science. Present harmful behaviour. Example: 'Aman threw his empty chips packet out of the car window. He said it was just one small packet. Is this right? What should he do?'",
+            "moral_c3_envcare_thinking": "format: thinking_science. Reasoning question. Example: 'What are three things you can do every day to take care of the environment?'",
+        }
+        return moral_envcare_ctx + moral_envcare_map.get(_skill_tag, "About environmental care.")
+
+    # ── Moral Science: Leadership (Class 4) ──
+    if _skill_tag.startswith("moral_c4_leadership_"):
+        moral_leadership_ctx = (
+            "Topic: Leadership (Class 4 Moral Science, CBSE). "
+            "Cover: qualities of good leaders (honesty, responsibility, fairness), "
+            "decision-making, inspiring others, taking responsibility, being helpful. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same leadership scenario. "
+        )
+        moral_leadership_map = {
+            "moral_c4_leadership_identify": "format: pick_correct_science. Multiple choice about leadership. Example: 'Which of these is a quality of a good leader? (a) Always bossing others (b) Listening to everyone's ideas (c) Doing only what they want (d) Blaming others for mistakes' -> (b) Listening to everyone's ideas",
+            "moral_c4_leadership_apply": "format: explain_why_science. Explain about leadership. Example: 'Why is it important for a class monitor to be fair to everyone?'",
+            "moral_c4_leadership_represent": "format: sequence_steps. Order steps. Example: 'Put in order for solving a problem as a leader: (a) Listen to everyone's ideas (b) Understand the problem (c) Choose the best solution (d) Take action and check results.'",
+            "moral_c4_leadership_error": "format: error_spot_science. Present poor leadership. Example: 'The class monitor always chose only his friends for every activity and ignored other students. Is this good leadership? What should he do differently?'",
+            "moral_c4_leadership_thinking": "format: thinking_science. Reasoning question. Example: 'Think of a leader you admire (from history or your life). What qualities make them a good leader?'",
+        }
+        return moral_leadership_ctx + moral_leadership_map.get(_skill_tag, "About leadership.")
+
+    # ── Moral Science: Global Citizenship (Class 5) ──
+    if _skill_tag.startswith("moral_c5_global_"):
+        moral_global_ctx = (
+            "Topic: Global Citizenship (Class 5 Moral Science, CBSE). "
+            "Cover: cultural diversity, world peace, human rights basics, respecting all cultures, "
+            "global cooperation, United Nations, equality and fairness for all. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same global citizenship concept. "
+        )
+        moral_global_map = {
+            "moral_c5_global_identify": "format: true_false. True/false about global citizenship. Example: 'True or False: Every child in the world has the right to education, food, and shelter.' -> True",
+            "moral_c5_global_apply": "format: explain_why_science. Explain a global citizenship concept. Example: 'Why is it important to respect people from different cultures and religions?'",
+            "moral_c5_global_represent": "format: cause_effect. Connect concepts. Example: 'Match: (a) Cultural diversity — Helping people in need (b) Human rights — Many cultures living together (c) Charity — Rights that every person has. Write the correct pairs.'",
+            "moral_c5_global_error": "format: error_spot_science. Present incorrect thinking. Example: 'Only people who speak the same language as us deserve our respect and friendship. Is this correct? What is wrong with this thinking?'",
+            "moral_c5_global_thinking": "format: thinking_science. Reasoning question. Example: 'How can you be a good global citizen even as a student? Give two examples.'",
+        }
+        return moral_global_ctx + moral_global_map.get(_skill_tag, "About global citizenship.")
+
+    # ── Moral Science: Digital Ethics (Class 5) ──
+    if _skill_tag.startswith("moral_c5_digital_"):
+        moral_digital_ctx = (
+            "Topic: Digital Ethics (Class 5 Moral Science, CBSE). "
+            "Cover: responsible online behaviour, privacy (not sharing personal info), "
+            "digital footprint, cyberbullying, safe internet use, screen time limits, copyright. "
+            "Use Indian school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same digital ethics concept. "
+        )
+        moral_digital_map = {
+            "moral_c5_digital_identify": "format: true_false. True/false about digital ethics. Example: 'True or False: You should never share your password with anyone, even your best friend.' -> True",
+            "moral_c5_digital_apply": "format: explain_why_science. Explain a digital ethics concept. Example: 'Why should you not copy homework or images from the internet and pretend they are yours?'",
+            "moral_c5_digital_represent": "format: sequence_steps. Order steps. Example: 'Put in order if someone is bullying you online: (a) Do not reply to the bully (b) Tell a trusted adult (c) Block the person (d) Save the messages as proof.'",
+            "moral_c5_digital_error": "format: error_spot_science. Present wrong digital behaviour. Example: 'Riya shared her home address and phone number on a public website to win a contest. Is this safe? What should she do instead?'",
+            "moral_c5_digital_thinking": "format: thinking_science. Reasoning question. Example: 'What does \"digital footprint\" mean? Why should you be careful about what you post online?'",
+        }
+        return moral_digital_ctx + moral_digital_map.get(_skill_tag, "About digital ethics.")
+
     # Check if this is a non-arithmetic topic by looking at skill_tag
     _NON_ARITHMETIC_TAGS = {
         "multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank",
@@ -8870,7 +10141,7 @@ def _build_slot_instruction(
     }
     # Include all c2_, c4_, and eng_ prefixed tags as non-arithmetic
     _NON_ARITHMETIC_TAGS.update(
-        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("c5_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_") or tag.startswith("comp_")
+        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("c5_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_") or tag.startswith("comp_") or tag.startswith("gk_") or tag.startswith("moral_")
     )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
@@ -9932,6 +11203,158 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "Keep language appropriate for Class 5. "
         "NEVER generate arithmetic, grammar, or science questions.\n"
     ),
+    # ── General Knowledge constraints ──────────────────────────
+    "Famous Landmarks (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Famous Landmarks ONLY — "
+        "Taj Mahal, Great Wall of China, Eiffel Tower, Qutub Minar, India Gate, Red Fort, "
+        "Gateway of India, Hawa Mahal, Statue of Unity, and other famous monuments. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "National Symbols (Class 3)": (
+        "CRITICAL: ALL questions MUST be about National Symbols of India ONLY — "
+        "the Indian flag (tiranga), national emblem (Ashoka pillar), national anthem (Jana Gana Mana), "
+        "national animal (Bengal tiger), national bird (peacock), national flower (lotus), national fruit (mango). "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Solar System Basics (Class 3)": (
+        "CRITICAL: ALL questions MUST be about the Solar System ONLY — "
+        "the Sun, 8 planets in order, Earth, Moon, stars vs planets, day and night, satellites. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Current Awareness (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Current Awareness ONLY — "
+        "Indian festivals (Diwali, Holi, Eid, Christmas), seasons of India, "
+        "important national days (Republic Day, Independence Day, Children's Day, Teachers' Day). "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Continents and Oceans (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Continents and Oceans ONLY — "
+        "7 continents (Asia, Africa, North America, South America, Antarctica, Europe, Australia), "
+        "5 oceans (Pacific, Atlantic, Indian, Southern, Arctic), major countries. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Famous Scientists (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Famous Scientists ONLY — "
+        "Newton (gravity), Edison (light bulb), APJ Abdul Kalam (missiles), C.V. Raman (Raman effect), "
+        "Marie Curie (radioactivity), Homi Bhabha, Vikram Sarabhai, Srinivasa Ramanujan. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or unrelated science questions.\n"
+    ),
+    "Festivals of India (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Indian Festivals ONLY — "
+        "Diwali, Holi, Eid, Christmas, Pongal, Baisakhi, Onam, Navratri, Durga Puja, "
+        "Guru Nanak Jayanti, and other regional festivals. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Sports and Games (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Sports and Games ONLY — "
+        "cricket, hockey, football, Olympics, Sachin Tendulkar, PV Sindhu, Neeraj Chopra, "
+        "Mary Kom, kabaddi, and other sports facts. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Indian Constitution (Class 5)": (
+        "CRITICAL: ALL questions MUST be about the Indian Constitution ONLY — "
+        "fundamental rights, fundamental duties, the Preamble, Dr B.R. Ambedkar, "
+        "republic, Parliament, President, Right to Education. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "World Heritage Sites (Class 5)": (
+        "CRITICAL: ALL questions MUST be about World Heritage Sites ONLY — "
+        "UNESCO sites in India (Ajanta-Ellora, Konark, Hampi, Kaziranga, Sundarbans), "
+        "global heritage sites (Machu Picchu, Great Barrier Reef, Pyramids). "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Space Missions (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Space Missions ONLY — "
+        "ISRO, Chandrayaan, Mangalyaan, NASA, satellites, Rakesh Sharma, "
+        "International Space Station, space exploration achievements. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Environmental Awareness (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Environmental Awareness ONLY — "
+        "air/water/soil pollution, conservation, recycling, climate change, "
+        "renewable energy, deforestation, waste management. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    # ── Moral Science constraints ──────────────────────────
+    "Sharing (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Sharing ONLY — "
+        "sharing toys, food, books; being generous; how sharing makes others happy. "
+        "Use very simple language appropriate for Class 1 (age 6). "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Honesty (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Honesty ONLY — "
+        "telling the truth, being fair, returning things that belong to others, "
+        "admitting mistakes. Use very simple language appropriate for Class 1 (age 6). "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Kindness (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Kindness ONLY — "
+        "being kind to people and animals, helping others, saying kind words, "
+        "making others feel better. Keep language appropriate for Class 2. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Respecting Elders (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Respecting Elders ONLY — "
+        "good manners, greeting elders, listening when elders speak, "
+        "saying please/thank you, following instructions. "
+        "Keep language appropriate for Class 2. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Teamwork (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Teamwork ONLY — "
+        "working together, cooperation, different roles in a team, "
+        "supporting team members, group activities. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Empathy (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Empathy ONLY — "
+        "understanding others' feelings, being supportive, putting yourself in "
+        "someone else's shoes, caring for others. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Environmental Care (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Environmental Care ONLY — "
+        "protecting nature, reduce-reuse-recycle, saving water and electricity, "
+        "planting trees, keeping surroundings clean. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Leadership (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Leadership ONLY — "
+        "qualities of good leaders, responsibility, decision-making, "
+        "inspiring others, being fair and helpful. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Global Citizenship (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Global Citizenship ONLY — "
+        "cultural diversity, world peace, human rights, respecting all cultures, "
+        "global cooperation, United Nations basics. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Digital Ethics (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Digital Ethics ONLY — "
+        "responsible online behaviour, privacy, digital footprint, "
+        "cyberbullying, safe internet use, screen time, copyright. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
 }
 
 REGION_CONTEXT: dict[str, dict[str, str]] = {
@@ -10016,7 +11439,7 @@ def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> 
     text = q.get("question_text", "")
     answer = q.get("answer")
     is_english = subject and subject.lower() == "english"
-    is_science = subject and subject.lower() in ("science", "computer")
+    is_science = subject and subject.lower() in ("science", "computer", "gk", "moral science")
     is_hindi = subject and subject.lower() == "hindi"
 
     allowed = get_valid_formats(subject).get(slot_type, set())
@@ -11175,7 +12598,7 @@ def generate_question(
     _subj_lower = (subject or "").lower()
     if _subj_lower == "english":
         sys_prompt = QUESTION_SYSTEM_ENGLISH
-    elif _subj_lower in ("science", "computer"):
+    elif _subj_lower in ("science", "computer", "gk", "moral science"):
         sys_prompt = QUESTION_SYSTEM_SCIENCE
     elif _subj_lower == "hindi":
         sys_prompt = QUESTION_SYSTEM_HINDI
@@ -11723,7 +13146,7 @@ def run_slot_pipeline(
 
     # 7a. Normalize answers (deterministic, no LLM)
     _is_english = subject and subject.lower() == "english"
-    _is_science = subject and subject.lower() in ("science", "computer")
+    _is_science = subject and subject.lower() in ("science", "computer", "gk", "moral science")
     _is_hindi = subject and subject.lower() == "hindi"
     _is_text_only = _is_english or _is_science or _is_hindi
     if _is_text_only:

@@ -42,6 +42,8 @@ const DEFAULT_TOPICS: Record<string, string[]> = {
   Hindi: ['Varnamala', 'Matras', 'Shabd Rachna', 'Vakya Rachna', 'Kahani Lekhan'],
   Science: ['Living Things', 'Matter', 'Force and Motion', 'Earth and Space', 'Human Body'],
   Computer: ['Computer Basics', 'Parts of Computer', 'MS Paint', 'MS Word', 'Internet Safety'],
+  GK: ['Landmarks', 'National Symbols', 'Solar System', 'Continents', 'Scientists', 'Sports'],
+  'Moral Science': ['Sharing', 'Honesty', 'Kindness', 'Teamwork', 'Empathy', 'Leadership'],
 }
 
 // Grade-aware Maths topics (matching backend TOPIC_PROFILES keys)
@@ -131,6 +133,22 @@ const COMPUTER_TOPICS_BY_GRADE: Record<number, string[]> = {
   3: ['MS Paint Basics (Class 3)', 'Keyboard Shortcuts (Class 3)', 'Files and Folders (Class 3)'],
   4: ['MS Word Basics (Class 4)', 'Introduction to Scratch (Class 4)', 'Internet Safety (Class 4)'],
   5: ['Scratch Programming (Class 5)', 'Internet Basics (Class 5)', 'MS PowerPoint Basics (Class 5)', 'Digital Citizenship (Class 5)'],
+}
+
+// Grade-aware GK topics (matching backend TOPIC_PROFILES keys)
+const GK_TOPICS_BY_GRADE: Record<number, string[]> = {
+  3: ['Famous Landmarks (Class 3)', 'National Symbols (Class 3)', 'Solar System Basics (Class 3)', 'Current Awareness (Class 3)'],
+  4: ['Continents and Oceans (Class 4)', 'Famous Scientists (Class 4)', 'Festivals of India (Class 4)', 'Sports and Games (Class 4)'],
+  5: ['Indian Constitution (Class 5)', 'World Heritage Sites (Class 5)', 'Space Missions (Class 5)', 'Environmental Awareness (Class 5)'],
+}
+
+// Grade-aware Moral Science topics (matching backend TOPIC_PROFILES keys)
+const MORAL_TOPICS_BY_GRADE: Record<number, string[]> = {
+  1: ['Sharing (Class 1)', 'Honesty (Class 1)'],
+  2: ['Kindness (Class 2)', 'Respecting Elders (Class 2)'],
+  3: ['Teamwork (Class 3)', 'Empathy (Class 3)', 'Environmental Care (Class 3)'],
+  4: ['Leadership (Class 4)'],
+  5: ['Global Citizenship (Class 5)', 'Digital Ethics (Class 5)'],
 }
 
 // Grade-aware Hindi topics (matching backend TOPIC_PROFILES keys)
@@ -461,6 +479,20 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         const gradeNum = parseInt(grade.replace('Class ', ''))
         if (!isNaN(gradeNum) && COMPUTER_TOPICS_BY_GRADE[gradeNum]) {
           return COMPUTER_TOPICS_BY_GRADE[gradeNum]
+        }
+      }
+      // Grade-aware GK topics
+      if (subject === 'GK' && grade) {
+        const gradeNum = parseInt(grade.replace('Class ', ''))
+        if (!isNaN(gradeNum) && GK_TOPICS_BY_GRADE[gradeNum]) {
+          return GK_TOPICS_BY_GRADE[gradeNum]
+        }
+      }
+      // Grade-aware Moral Science topics
+      if (subject === 'Moral Science' && grade) {
+        const gradeNum = parseInt(grade.replace('Class ', ''))
+        if (!isNaN(gradeNum) && MORAL_TOPICS_BY_GRADE[gradeNum]) {
+          return MORAL_TOPICS_BY_GRADE[gradeNum]
         }
       }
       // Grade-aware Hindi topics

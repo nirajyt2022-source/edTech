@@ -72,6 +72,20 @@ const COMPUTER_TOPICS: Record<string, string[]> = {
   'Class 5': ['Scratch Programming', 'Internet Basics', 'MS PowerPoint', 'Digital Citizenship'],
 }
 
+const GK_TOPICS: Record<string, string[]> = {
+  'Class 3': ['Famous Landmarks', 'National Symbols', 'Solar System Basics', 'Current Awareness'],
+  'Class 4': ['Continents & Oceans', 'Famous Scientists', 'Festivals of India', 'Sports & Games'],
+  'Class 5': ['Indian Constitution', 'World Heritage Sites', 'Space Missions', 'Environmental Awareness'],
+}
+
+const MORAL_TOPICS: Record<string, string[]> = {
+  'Class 1': ['Sharing', 'Honesty'],
+  'Class 2': ['Kindness', 'Respecting Elders'],
+  'Class 3': ['Teamwork', 'Empathy', 'Environmental Care'],
+  'Class 4': ['Leadership'],
+  'Class 5': ['Global Citizenship', 'Digital Ethics'],
+}
+
 /* ─── Gold Class feature steps ─── */
 const GOLD_STEPS = [
   {
@@ -206,7 +220,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 export default function Landing({ onGetStarted, onSignIn }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Science' | 'Computer'>('Maths')
+  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Science' | 'Computer' | 'GK' | 'Moral Science'>('Maths')
   const [activeStep, setActiveStep] = useState(0)
 
   // Sticky nav scroll detection
@@ -231,6 +245,8 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
   const subjectData = activeSubject === 'Maths' ? MATHS_TOPICS
     : activeSubject === 'English' ? ENGLISH_TOPICS
     : activeSubject === 'Computer' ? COMPUTER_TOPICS
+    : activeSubject === 'GK' ? GK_TOPICS
+    : activeSubject === 'Moral Science' ? MORAL_TOPICS
     : SCIENCE_TOPICS
 
   return (
@@ -505,7 +521,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
 
           {/* Subject toggles */}
           <div className="flex justify-center gap-3 mb-10">
-            {(['Maths', 'English', 'Science', 'Computer'] as const).map((subj) => (
+            {(['Maths', 'English', 'Science', 'Computer', 'GK', 'Moral Science'] as const).map((subj) => (
               <button
                 key={subj}
                 onClick={() => setActiveSubject(subj)}
