@@ -114,7 +114,17 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 
 # Topic System
 
-## 66 Supported Topics (TOPIC_PROFILES keys)
+## 74 Supported Topics (TOPIC_PROFILES keys)
+
+### Class 1 Maths (8 topics)
+1. Numbers 1 to 50 (Class 1) — counting, comparing, ordering 1-50
+2. Numbers 51 to 100 (Class 1) — counting, comparing, ordering 51-100
+3. Addition up to 20 (Class 1) — sums ≤20, no carrying, horizontal only
+4. Subtraction within 20 (Class 1) — differences within 20, no borrowing
+5. Basic Shapes (Class 1) — circle, square, triangle, rectangle only
+6. Measurement (Class 1) — longer/shorter, heavier/lighter, no standard units
+7. Time (Class 1) — days of week, morning/afternoon/night, no clock reading
+8. Money (Class 1) — ₹1, ₹2, ₹5 coins only, totals ≤₹20
 
 ### Class 2 Maths (10 topics)
 1. Numbers up to 1000 (Class 2) — 3-digit place value
@@ -310,6 +320,7 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - **2026-02-17**: Phase 9 Gold-G3 — Indian Context Word Problems. Added TOPIC_CONTEXT_BANK (32 topics × 10 contexts each) with rich Indian scenarios (cricket, Diwali, mela, auto-rickshaw, etc.). Injected into _build_slot_instruction() for application slots — LLM uses Indian names and contexts instead of generic problems.
 - **2026-02-17**: Phase 9 Gold-G4 — Rich Visual Types. Backend: 5 new hydration rules in hydrate_visuals() for PIE_FRACTION, GRID_SYMMETRY, MONEY_COINS, PATTERN_TILES, ABACUS — mapped by question format. Added to _MODEL_TO_VTYPE. Frontend: 5 new SVG components (PieFractionVisual, GridSymmetryVisual, MoneyCoinsVisual, PatternTilesVisual, AbacusVisual) in VisualProblem.tsx — all print-safe, B&W friendly, accessible.
 - **2026-02-17**: Phase 7 — English Language Engine. Multi-subject support: 22 English topic profiles (6 Class 2, 8 Class 3, 8 Class 4) with VALID_FORMATS_ENGLISH, subject-aware validate_question/enforce_slot_counts/backfill_format, QUESTION_SYSTEM_ENGLISH prompt, 80+ eng_* skill tags, 15 instruction builder blocks, 45 aliases, 22 constraints/objectives/context banks. Frontend: grade-aware English topic selector. Zero Maths regression (709+282 deterministic checks pass).
+- **2026-02-17**: Phase 10A — Maths Class 1 (8 topics). Backend: 8 new topic profiles (Numbers 1-50, Numbers 51-100, Addition up to 20, Subtraction within 20, Basic Shapes, Measurement, Time, Money) with strict grade constraints (sums ≤20, no carry/borrow, no standard units, coins only). 40 skill tags, 30 aliases, 8 constraints, 8×3 learning objectives, 8×10 Indian context bank entries, 8 instruction builder blocks. Frontend: grade-aware Maths topic selector + Class 1 on landing page. QA: test_class1_maths.py (82 checks). verify_topics: 909 passed.
 - **2026-02-17**: Phase 8 — Science Engine. 7 Class 3 Science topic profiles (Plants, Animals, Food and Nutrition, Shelter, Water, Air, Our Body) with VALID_FORMATS_SCIENCE (18 formats), QUESTION_SYSTEM_SCIENCE prompt, 35 sci_* skill tags, 7 instruction builder blocks, 25 aliases, 7 constraints/objectives/context banks (Indian contexts). Frontend: grade-aware Science topic selector. Pipeline: text-only rendering (like English), reuses text answer normalizer. QA: 169-check test suite (28 combinations), zero regression (779+282+169 = 1,230 deterministic checks pass).
 - **2026-02-17**: P2 Growth Features — 3 parallel features. (1) Parent Progress Dashboard: rewrote dashboard_service.py to work without missing DB views (graceful fallback to worksheets table), new ParentDashboard.tsx with stats cards + skill progress table + recent topics, "Progress" tab in parent nav. (2) WhatsApp Share: new share.py router (POST /api/worksheets/{id}/share + GET /api/shared/{token}), share_tokens table, WhatsApp + copy-link buttons in worksheet toolbar, SharedWorksheet.tsx public viewer with no-auth route. (3) Hindi Language Engine: 5 Class 3 Hindi topic profiles (Varnamala, Matras, Shabd Rachna, Vakya Rachna, Kahani Lekhan) with VALID_FORMATS_HINDI (17 formats), QUESTION_SYSTEM_HINDI (Devanagari script), 25 hin_* skill tags, 5 instruction builders, 21 aliases, 5 constraints/objectives/context banks. QA: 138-check test suite, zero regression (829+282+169+138 = 1,418 checks pass).
 - **2026-02-17**: Fixed teacher routing bug (isTeacherPage missing generator) and free tier silent blocking — users now see remaining count and upgrade prompt before generation, generate button replaced with upgrade CTA at limit. E2E test suite: 26/26 pass.

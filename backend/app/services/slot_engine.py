@@ -268,6 +268,55 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "pattern_fill_blank": ("representation", "missing_number"),
     "pattern_error_spot": ("error_detection", "error_spot"),
     "pattern_thinking": ("thinking", "growing_pattern"),
+    # ── Class 1 specific tags ──
+    # Numbers 1 to 50 (Class 1)
+    "c1_count_identify": ("recognition", "simple_identify"),
+    "c1_number_compare": ("application", "comparison_question"),
+    "c1_number_order": ("representation", "missing_number"),
+    "c1_number_error": ("error_detection", "error_spot"),
+    "c1_number_think": ("thinking", "multi_step"),
+    # Numbers 51 to 100 (Class 1)
+    "c1_count_big_identify": ("recognition", "simple_identify"),
+    "c1_number_big_compare": ("application", "comparison_question"),
+    "c1_number_big_order": ("representation", "missing_number"),
+    "c1_number_big_error": ("error_detection", "error_spot"),
+    "c1_number_big_think": ("thinking", "multi_step"),
+    # Addition up to 20 (Class 1)
+    "c1_add_basic": ("recognition", "simple_identify"),
+    "c1_add_word_problem": ("application", "word_problem"),
+    "c1_add_missing": ("representation", "missing_number"),
+    "c1_add_error": ("error_detection", "error_spot"),
+    "c1_add_think": ("thinking", "multi_step"),
+    # Subtraction within 20 (Class 1)
+    "c1_sub_basic": ("recognition", "simple_identify"),
+    "c1_sub_word_problem": ("application", "word_problem"),
+    "c1_sub_missing": ("representation", "missing_number"),
+    "c1_sub_error": ("error_detection", "error_spot"),
+    "c1_sub_think": ("thinking", "multi_step"),
+    # Basic Shapes (Class 1)
+    "c1_shape_identify": ("recognition", "simple_identify"),
+    "c1_shape_match": ("application", "word_problem"),
+    "c1_shape_count": ("representation", "missing_number"),
+    "c1_shape_error": ("error_detection", "error_spot"),
+    "c1_shape_think": ("thinking", "multi_step"),
+    # Measurement (Class 1)
+    "c1_measure_compare": ("recognition", "simple_identify"),
+    "c1_measure_order": ("application", "comparison_question"),
+    "c1_measure_fill": ("representation", "missing_number"),
+    "c1_measure_error": ("error_detection", "error_spot"),
+    "c1_measure_think": ("thinking", "multi_step"),
+    # Time (Class 1)
+    "c1_time_identify": ("recognition", "simple_identify"),
+    "c1_time_sequence": ("application", "word_problem"),
+    "c1_time_fill": ("representation", "missing_number"),
+    "c1_time_error": ("error_detection", "error_spot"),
+    "c1_time_think": ("thinking", "multi_step"),
+    # Money (Class 1)
+    "c1_money_identify": ("recognition", "money_question"),
+    "c1_money_count": ("application", "word_problem"),
+    "c1_money_fill": ("representation", "missing_number"),
+    "c1_money_error": ("error_detection", "error_spot"),
+    "c1_money_think": ("thinking", "multi_step"),
     # ── Class 2 specific tags ──
     # Numbers up to 1000 (Class 2)
     "c2_place_value_identify": ("recognition", "place_value_question"),
@@ -628,6 +677,47 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Identify and extend number and shape patterns",
         "Describe the rule behind a pattern",
         "Create growing and repeating patterns",
+    ],
+    # ── Class 1 topics ──
+    "Numbers 1 to 50 (Class 1)": [
+        "Count objects and write numbers from 1 to 50",
+        "Compare two numbers and say which is greater or smaller",
+        "Put numbers in order from smallest to largest",
+    ],
+    "Numbers 51 to 100 (Class 1)": [
+        "Count objects and write numbers from 51 to 100",
+        "Compare two numbers up to 100",
+        "Find the number that comes before or after a given number",
+    ],
+    "Addition up to 20 (Class 1)": [
+        "Add two small numbers with sums up to 20",
+        "Solve simple addition word problems",
+        "Find the missing number in an addition sentence",
+    ],
+    "Subtraction within 20 (Class 1)": [
+        "Subtract one small number from another within 20",
+        "Solve simple subtraction word problems",
+        "Find the missing number in a subtraction sentence",
+    ],
+    "Basic Shapes (Class 1)": [
+        "Identify circles, squares, triangles, and rectangles",
+        "Count the sides and corners of basic shapes",
+        "Spot shapes in everyday objects around us",
+    ],
+    "Measurement (Class 1)": [
+        "Compare objects by length (longer, shorter)",
+        "Compare objects by weight (heavier, lighter)",
+        "Use words like taller, shorter, heavier, lighter correctly",
+    ],
+    "Time (Class 1)": [
+        "Name the days of the week in order",
+        "Tell the difference between morning, afternoon, and night",
+        "Describe daily routines and when they happen",
+    ],
+    "Money (Class 1)": [
+        "Identify Indian coins of 1, 2, and 5 rupees",
+        "Count a small group of coins up to 20 rupees",
+        "Solve simple problems about buying with coins",
     ],
     # ── Class 2 topics ──
     "Numbers up to 1000 (Class 2)": [
@@ -1009,6 +1099,63 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "number plate sequences on a street", "train coach number patterns",
         "flower garland bead patterns", "floor tile patterns in a temple",
         "embroidery stitch patterns", "day-night cycle counting",
+    ],
+    # Class 1 topics
+    "Numbers 1 to 50 (Class 1)": [
+        "counting crayons in a box", "counting flowers in a garden",
+        "students standing in a line", "birds sitting on a wire",
+        "beads on a necklace", "marbles in a bag",
+        "bangles on Dadi's wrist", "rotis on a plate",
+        "fingers on hands", "toffees in a jar",
+    ],
+    "Numbers 51 to 100 (Class 1)": [
+        "pages in a storybook", "mangoes in a basket",
+        "steps to climb to the terrace", "beads on an abacus",
+        "shells collected at the beach", "stickers in a collection",
+        "seeds in a sunflower", "ants marching in a row",
+        "leaves picked from the garden", "stars drawn on a chart",
+    ],
+    "Addition up to 20 (Class 1)": [
+        "Raju collecting marbles from friends", "Meena picking flowers for Amma",
+        "toffees shared by Bablu and Priya", "birds joining a flock on a tree",
+        "crayons in two pencil boxes", "bananas from two bunches",
+        "Dadi giving rotis to children", "balloons at a birthday party",
+        "toy cars from two shelves", "stickers on two pages",
+    ],
+    "Subtraction within 20 (Class 1)": [
+        "Raju eating toffees from a packet", "birds flying away from a tree",
+        "Meena giving away her bangles", "balloons popping at a party",
+        "marbles lost during a game", "Bablu sharing crayons with friends",
+        "flowers wilting in a garden", "Priya eating fruits from a basket",
+        "Dadi distributing laddoos", "leaves falling from a plant",
+    ],
+    "Basic Shapes (Class 1)": [
+        "shapes of rotis on a plate", "windows and doors in a house",
+        "wheels of a bicycle", "face of a clock",
+        "shape of a samosa", "bangles and coins",
+        "kite flying on Makar Sankranti", "tiles on the kitchen floor",
+        "shape of a chapati board", "traffic signs on the road",
+    ],
+    "Measurement (Class 1)": [
+        "comparing pencils in a pencil box", "ribbons for tying braids",
+        "two friends standing side by side", "a cat and a dog",
+        "a watermelon and a lemon", "Amma's dupatta and Raju's scarf",
+        "a school bag and a lunch box", "a cricket bat and a stump",
+        "Dadi's walking stick and an umbrella", "a chapati roller and a spoon",
+    ],
+    "Time (Class 1)": [
+        "Raju's morning routine before school", "Amma cooking breakfast",
+        "Bablu playing in the park after school", "Priya doing homework in the evening",
+        "Dadi telling a bedtime story", "days of the school week",
+        "Sunday visit to the temple", "morning assembly at school",
+        "lunch break with friends", "Meena's evening prayer time",
+    ],
+    "Money (Class 1)": [
+        "buying a toffee from a shop", "Bablu's piggy bank coins",
+        "Priya buying a pencil from the canteen", "coins in Dadi's purse",
+        "Raju saving one-rupee coins", "buying a balloon at a mela",
+        "Meena counting coins after Diwali", "paying for an ice cream bar",
+        "coins found under the sofa cushion", "buying a eraser at the stationery shop",
     ],
     # Class 2 topics
     "Numbers up to 1000 (Class 2)": [
@@ -1667,6 +1814,158 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "pattern_fill_blank", "count": 2},
             {"skill_tag": "pattern_error_spot", "count": 1},
             {"skill_tag": "pattern_thinking", "count": 1},
+        ],
+    },
+    # ══════════════════════════════════════════════════════════
+    # ══════════════════════════════════════════════════════════
+    # Class 1 Topic Profiles
+    # ══════════════════════════════════════════════════════════
+    # ── Numbers 1 to 50 (Class 1) ──
+    "Numbers 1 to 50 (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_count_identify", "c1_number_compare",
+            "c1_number_order", "c1_number_error", "c1_number_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["multiply", "divide", "fraction", "decimal", "carry", "borrow"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c1_count_identify", "count": 3},
+            {"skill_tag": "c1_number_compare", "count": 3},
+            {"skill_tag": "c1_number_order", "count": 2},
+            {"skill_tag": "c1_number_error", "count": 1},
+            {"skill_tag": "c1_number_think", "count": 1},
+        ],
+    },
+    # ── Numbers 51 to 100 (Class 1) ──
+    "Numbers 51 to 100 (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_count_big_identify", "c1_number_big_compare",
+            "c1_number_big_order", "c1_number_big_error", "c1_number_big_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["multiply", "divide", "fraction", "decimal", "carry", "borrow"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c1_count_big_identify", "count": 3},
+            {"skill_tag": "c1_number_big_compare", "count": 3},
+            {"skill_tag": "c1_number_big_order", "count": 2},
+            {"skill_tag": "c1_number_big_error", "count": 1},
+            {"skill_tag": "c1_number_big_think", "count": 1},
+        ],
+    },
+    # ── Addition up to 20 (Class 1) ──
+    "Addition up to 20 (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_add_basic", "c1_add_word_problem",
+            "c1_add_missing", "c1_add_error", "c1_add_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["multiply", "divide", "fraction", "decimal", "carry", "borrow", "column form"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c1_add_basic", "count": 3},
+            {"skill_tag": "c1_add_word_problem", "count": 3},
+            {"skill_tag": "c1_add_missing", "count": 2},
+            {"skill_tag": "c1_add_error", "count": 1},
+            {"skill_tag": "c1_add_think", "count": 1},
+        ],
+    },
+    # ── Subtraction within 20 (Class 1) ──
+    "Subtraction within 20 (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_sub_basic", "c1_sub_word_problem",
+            "c1_sub_missing", "c1_sub_error", "c1_sub_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["multiply", "divide", "fraction", "decimal", "carry", "borrow", "column form"],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c1_sub_basic", "count": 3},
+            {"skill_tag": "c1_sub_word_problem", "count": 3},
+            {"skill_tag": "c1_sub_missing", "count": 2},
+            {"skill_tag": "c1_sub_error", "count": 1},
+            {"skill_tag": "c1_sub_think", "count": 1},
+        ],
+    },
+    # ── Basic Shapes (Class 1) ──
+    "Basic Shapes (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_shape_identify", "c1_shape_match",
+            "c1_shape_count", "c1_shape_error", "c1_shape_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "add", "subtract", "multiply", "divide", "fraction", "decimal",
+            "carry", "borrow", "plus", "minus", "column",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c1_shape_identify", "count": 3},
+            {"skill_tag": "c1_shape_match", "count": 3},
+            {"skill_tag": "c1_shape_count", "count": 2},
+            {"skill_tag": "c1_shape_error", "count": 1},
+            {"skill_tag": "c1_shape_think", "count": 1},
+        ],
+    },
+    # ── Measurement (Class 1) ──
+    "Measurement (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_measure_compare", "c1_measure_order",
+            "c1_measure_fill", "c1_measure_error", "c1_measure_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "add", "subtract", "multiply", "divide", "fraction", "decimal",
+            "carry", "borrow", "cm", "m", "kg", "g",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "default_recipe": [
+            {"skill_tag": "c1_measure_compare", "count": 3},
+            {"skill_tag": "c1_measure_order", "count": 3},
+            {"skill_tag": "c1_measure_fill", "count": 2},
+            {"skill_tag": "c1_measure_error", "count": 1},
+            {"skill_tag": "c1_measure_think", "count": 1},
+        ],
+    },
+    # ── Time (Class 1) ──
+    "Time (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_time_identify", "c1_time_sequence",
+            "c1_time_fill", "c1_time_error", "c1_time_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "add", "subtract", "multiply", "divide", "fraction", "decimal",
+            "carry", "borrow", "o'clock", "half past", "quarter", "minutes", "hours",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping", "number_line", "clock"],
+        "default_recipe": [
+            {"skill_tag": "c1_time_identify", "count": 3},
+            {"skill_tag": "c1_time_sequence", "count": 3},
+            {"skill_tag": "c1_time_fill", "count": 2},
+            {"skill_tag": "c1_time_error", "count": 1},
+            {"skill_tag": "c1_time_think", "count": 1},
+        ],
+    },
+    # ── Money (Class 1) ──
+    "Money (Class 1)": {
+        "allowed_skill_tags": [
+            "c1_money_identify", "c1_money_count",
+            "c1_money_fill", "c1_money_error", "c1_money_think",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": [
+            "multiply", "divide", "fraction", "decimal",
+            "carry", "borrow", "notes", "bills",
+        ],
+        "disallowed_visual_types": ["base_ten_regrouping"],
+        "default_recipe": [
+            {"skill_tag": "c1_money_identify", "count": 3},
+            {"skill_tag": "c1_money_count", "count": 3},
+            {"skill_tag": "c1_money_fill", "count": 2},
+            {"skill_tag": "c1_money_error", "count": 1},
+            {"skill_tag": "c1_money_think", "count": 1},
         ],
     },
     # ══════════════════════════════════════════════════════════
@@ -2690,6 +2989,38 @@ _TOPIC_ALIASES: dict[str, str] = {
     "patterns": "Patterns and sequences",
     "numbers": "Numbers up to 10000",
     "place value": "Numbers up to 10000",
+    # Class 1 aliases
+    "numbers 1 to 50": "Numbers 1 to 50 (Class 1)",
+    "counting to 50": "Numbers 1 to 50 (Class 1)",
+    "c1 numbers small": "Numbers 1 to 50 (Class 1)",
+    "class 1 numbers small": "Numbers 1 to 50 (Class 1)",
+    "numbers 51 to 100": "Numbers 51 to 100 (Class 1)",
+    "counting to 100": "Numbers 51 to 100 (Class 1)",
+    "c1 numbers big": "Numbers 51 to 100 (Class 1)",
+    "class 1 numbers big": "Numbers 51 to 100 (Class 1)",
+    "addition up to 20": "Addition up to 20 (Class 1)",
+    "c1 addition": "Addition up to 20 (Class 1)",
+    "class 1 addition": "Addition up to 20 (Class 1)",
+    "add up to 20": "Addition up to 20 (Class 1)",
+    "subtraction within 20": "Subtraction within 20 (Class 1)",
+    "c1 subtraction": "Subtraction within 20 (Class 1)",
+    "class 1 subtraction": "Subtraction within 20 (Class 1)",
+    "subtract within 20": "Subtraction within 20 (Class 1)",
+    "basic shapes": "Basic Shapes (Class 1)",
+    "c1 shapes": "Basic Shapes (Class 1)",
+    "class 1 shapes": "Basic Shapes (Class 1)",
+    "measurement class 1": "Measurement (Class 1)",
+    "c1 measurement": "Measurement (Class 1)",
+    "class 1 measurement": "Measurement (Class 1)",
+    "compare lengths": "Measurement (Class 1)",
+    "time class 1": "Time (Class 1)",
+    "c1 time": "Time (Class 1)",
+    "class 1 time": "Time (Class 1)",
+    "day routines": "Time (Class 1)",
+    "money class 1": "Money (Class 1)",
+    "c1 money": "Money (Class 1)",
+    "class 1 money": "Money (Class 1)",
+    "coins": "Money (Class 1)",
     # Class 2 aliases
     "class 2 numbers": "Numbers up to 1000 (Class 2)",
     "class 2 addition": "Addition (2-digit with carry)",
@@ -3716,6 +4047,184 @@ def _build_slot_instruction(
             "DO NOT repeat the same numbers or scenarios. Each question must use DIFFERENT numbers and contexts."
         )
 
+    # ── Class 1: Numbers 1 to 50 ──
+    if _skill_tag in ("c1_count_identify", "c1_number_compare", "c1_number_order",
+                       "c1_number_error", "c1_number_think"):
+        _fmt = (directive or {}).get("format_hint", "simple_identify")
+        c1_num_small = {
+            "c1_count_identify": "Count objects or identify the number shown. Numbers 1-50 only.",
+            "c1_number_compare": "Compare two numbers (1-50). Which is greater? Which is smaller?",
+            "c1_number_order": "Arrange 3-4 numbers (1-50) from smallest to largest or largest to smallest.",
+            "c1_number_error": "Find the mistake in counting or ordering numbers 1-50. Show a student who counted WRONG. Answer must be the correct count.",
+            "c1_number_think": "Reasoning about numbers 1-50. What comes before/after? What is between two numbers?",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Numbers 1 to 50 (Class 1). skill: {_skill_tag}. "
+            f"{c1_num_small.get(_skill_tag, 'About numbers 1-50.')} "
+            "GRADE 1 ONLY: Numbers 1-50. No addition, subtraction, multiplication, division. "
+            "Use simple, child-friendly language. Names: Amma, Dadi, Raju, Meena, Bablu, Priya. "
+            "DO NOT repeat the same numbers or scenarios."
+        )
+
+    # ── Class 1: Numbers 51 to 100 ──
+    if _skill_tag in ("c1_count_big_identify", "c1_number_big_compare", "c1_number_big_order",
+                       "c1_number_big_error", "c1_number_big_think"):
+        _fmt = (directive or {}).get("format_hint", "simple_identify")
+        c1_num_big = {
+            "c1_count_big_identify": "Count objects or identify the number shown. Numbers 51-100 only.",
+            "c1_number_big_compare": "Compare two numbers (51-100). Which is greater? Which is smaller?",
+            "c1_number_big_order": "Arrange 3-4 numbers (51-100) from smallest to largest or largest to smallest.",
+            "c1_number_big_error": "Find the mistake in counting or ordering numbers 51-100. Show a student who counted WRONG. Answer must be the correct count.",
+            "c1_number_big_think": "Reasoning about numbers 51-100. What comes before/after? What is between two numbers?",
+        }
+        return (
+            f"format: {_fmt}. "
+            f"Topic: Numbers 51 to 100 (Class 1). skill: {_skill_tag}. "
+            f"{c1_num_big.get(_skill_tag, 'About numbers 51-100.')} "
+            "GRADE 1 ONLY: Numbers 51-100. No addition, subtraction, multiplication, division. "
+            "Use simple, child-friendly language. Names: Amma, Dadi, Raju, Meena, Bablu, Priya. "
+            "DO NOT repeat the same numbers or scenarios."
+        )
+
+    # ── Class 1: Addition up to 20 ──
+    if _skill_tag in ("c1_add_basic", "c1_add_word_problem", "c1_add_missing",
+                       "c1_add_error", "c1_add_think"):
+        _fmt = (directive or {}).get("format_hint", "simple_identify")
+        c1_add_ctx = (
+            "Topic: Addition up to 20 (Class 1). "
+            "Both numbers must be between 1 and 10. Sum must NEVER exceed 20. "
+            "NO carrying. NO column form. Simple horizontal: 7 + 5 = ___. "
+            "Use simple, child-friendly language. Names: Amma, Dadi, Raju, Meena, Bablu, Priya. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        if _skill_tag == "c1_add_basic":
+            return c1_add_ctx + "Present a simple addition problem. Example: What is 7 + 5? Answer: 12."
+        elif _skill_tag == "c1_add_word_problem":
+            return c1_add_ctx + "format: word_problem. Single-step word problem about adding small numbers. Use toys, animals, fruits, classroom objects."
+        elif _skill_tag == "c1_add_missing":
+            return c1_add_ctx + "format: missing_number. Fill-in-the-blank: '___ + 5 = 12' or '7 + ___ = 13'. Answer is the missing number."
+        elif _skill_tag == "c1_add_error":
+            return c1_add_ctx + "format: error_spot. Show a student who added two small numbers INCORRECTLY. Example: 'Bablu says 8 + 5 = 12. Is he correct?' Answer must be the CORRECT sum."
+        elif _skill_tag == "c1_add_think":
+            return c1_add_ctx + "format: multi_step. Reasoning about addition — e.g., 'Raju has 6 marbles. Meena gives him some more. Now he has 11. How many did Meena give?' NOT pure computation."
+        return c1_add_ctx
+
+    # ── Class 1: Subtraction within 20 ──
+    if _skill_tag in ("c1_sub_basic", "c1_sub_word_problem", "c1_sub_missing",
+                       "c1_sub_error", "c1_sub_think"):
+        _fmt = (directive or {}).get("format_hint", "simple_identify")
+        c1_sub_ctx = (
+            "Topic: Subtraction within 20 (Class 1). "
+            "Both numbers between 1 and 20. Result must NEVER be negative. NO borrowing. NO column form. "
+            "First number must always be LARGER than the second. Simple horizontal: 15 - 7 = ___. "
+            "Use simple, child-friendly language. Names: Amma, Dadi, Raju, Meena, Bablu, Priya. "
+            "DO NOT repeat the same numbers or scenarios. "
+        )
+        if _skill_tag == "c1_sub_basic":
+            return c1_sub_ctx + "Present a simple subtraction problem. Example: What is 15 - 7? Answer: 8."
+        elif _skill_tag == "c1_sub_word_problem":
+            return c1_sub_ctx + "format: word_problem. Single-step word problem about taking away small numbers. Use toys, animals, fruits, classroom objects."
+        elif _skill_tag == "c1_sub_missing":
+            return c1_sub_ctx + "format: missing_number. Fill-in-the-blank: '15 - ___ = 8' or '___ - 7 = 8'. Answer is the missing number."
+        elif _skill_tag == "c1_sub_error":
+            return c1_sub_ctx + "format: error_spot. Show a student who subtracted INCORRECTLY. Example: 'Priya says 14 - 6 = 9. Is she correct?' Answer must be the CORRECT difference."
+        elif _skill_tag == "c1_sub_think":
+            return c1_sub_ctx + "format: multi_step. Reasoning about subtraction — e.g., 'Meena had 18 flowers. She gave some to Dadi. Now she has 11. How many did she give?' NOT pure computation."
+        return c1_sub_ctx
+
+    # ── Class 1: Basic Shapes ──
+    if _skill_tag in ("c1_shape_identify", "c1_shape_match", "c1_shape_count",
+                       "c1_shape_error", "c1_shape_think"):
+        c1_shape_ctx = (
+            "Topic: Basic Shapes (Class 1). "
+            "ONLY use: circle, square, triangle, rectangle. NO 3D shapes (cube, sphere, cone). "
+            "Focus on shape names, counting sides and corners, real-world shape examples. "
+            "NO addition, subtraction, multiplication, division. "
+            "Use simple, child-friendly language. Names: Amma, Dadi, Raju, Meena, Bablu, Priya. "
+            "DO NOT repeat the same shapes or scenarios. "
+        )
+        if _skill_tag == "c1_shape_identify":
+            return c1_shape_ctx + "Identify a shape by its properties. Example: 'I have 3 sides and 3 corners. What shape am I?' Answer: Triangle."
+        elif _skill_tag == "c1_shape_match":
+            return c1_shape_ctx + "format: word_problem. Match a real-world object to its shape. Example: 'A wheel is shaped like a ___.' Answer: Circle."
+        elif _skill_tag == "c1_shape_count":
+            return c1_shape_ctx + "format: missing_number. Fill-in-the-blank about shapes. Example: 'A square has ___ sides.' Answer: 4."
+        elif _skill_tag == "c1_shape_error":
+            return c1_shape_ctx + "format: error_spot. Show a student who made a WRONG claim about a shape. Example: 'Raju says a circle has 2 sides. Is he correct?' Answer must be the correct fact."
+        elif _skill_tag == "c1_shape_think":
+            return c1_shape_ctx + "format: multi_step. Reasoning about shapes. Example: 'How many corners do 2 triangles have in total?' Answer: 6."
+        return c1_shape_ctx
+
+    # ── Class 1: Measurement ──
+    if _skill_tag in ("c1_measure_compare", "c1_measure_order", "c1_measure_fill",
+                       "c1_measure_error", "c1_measure_think"):
+        c1_meas_ctx = (
+            "Topic: Measurement (Class 1). "
+            "Compare objects: longer/shorter, taller/shorter, heavier/lighter. "
+            "NO standard units (no cm, m, kg, g). Use comparison words ONLY. "
+            "NO addition, subtraction, multiplication, division. "
+            "Use simple, child-friendly language. Names: Amma, Dadi, Raju, Meena, Bablu, Priya. "
+            "DO NOT repeat the same objects or scenarios. "
+        )
+        if _skill_tag == "c1_measure_compare":
+            return c1_meas_ctx + "Compare two objects. Example: 'Which is longer: a pencil or a crayon?' Answer: pencil."
+        elif _skill_tag == "c1_measure_order":
+            return c1_meas_ctx + "format: comparison_question. Arrange 3 objects from shortest to tallest, or lightest to heaviest."
+        elif _skill_tag == "c1_measure_fill":
+            return c1_meas_ctx + "format: missing_number. Fill-in-the-blank: 'An elephant is ___ (heavier/lighter) than a cat.' Answer: heavier."
+        elif _skill_tag == "c1_measure_error":
+            return c1_meas_ctx + "format: error_spot. Show a student who compared objects WRONG. Example: 'Bablu says a feather is heavier than a book. Is he correct?' Answer must state the correct comparison."
+        elif _skill_tag == "c1_measure_think":
+            return c1_meas_ctx + "format: multi_step. Reasoning about measurement. Example: 'Raju is taller than Meena. Meena is taller than Bablu. Who is the shortest?' Answer: Bablu."
+        return c1_meas_ctx
+
+    # ── Class 1: Time ──
+    if _skill_tag in ("c1_time_identify", "c1_time_sequence", "c1_time_fill",
+                       "c1_time_error", "c1_time_think"):
+        c1_time_ctx = (
+            "Topic: Time (Class 1). "
+            "Day routines ONLY: morning, afternoon, evening, night. Days of the week. "
+            "NO clock reading. NO hours or minutes. NO numbers for time. "
+            "NO addition, subtraction, multiplication, division. "
+            "Use simple, child-friendly language. Names: Amma, Dadi, Raju, Meena, Bablu, Priya. "
+            "DO NOT repeat the same routines or scenarios. "
+        )
+        if _skill_tag == "c1_time_identify":
+            return c1_time_ctx + "Identify the time of day for an activity. Example: 'We eat breakfast in the ___.' Answer: morning."
+        elif _skill_tag == "c1_time_sequence":
+            return c1_time_ctx + "format: word_problem. Put daily activities in the correct order. Example: 'What comes first — lunch or breakfast?'"
+        elif _skill_tag == "c1_time_fill":
+            return c1_time_ctx + "format: missing_number. Fill-in-the-blank about days or routines. Example: 'The day after Monday is ___.' Answer: Tuesday."
+        elif _skill_tag == "c1_time_error":
+            return c1_time_ctx + "format: error_spot. Show a student who got the order WRONG. Example: 'Meena says we brush our teeth at night before dinner. Is she correct?' Answer must state the correct routine."
+        elif _skill_tag == "c1_time_think":
+            return c1_time_ctx + "format: multi_step. Reasoning about time. Example: 'If today is Wednesday, what day was yesterday? What day will tomorrow be?'"
+        return c1_time_ctx
+
+    # ── Class 1: Money ──
+    if _skill_tag in ("c1_money_identify", "c1_money_count", "c1_money_fill",
+                       "c1_money_error", "c1_money_think"):
+        c1_money_ctx = (
+            "Topic: Money (Class 1). "
+            "Indian coins ONLY: ₹1, ₹2, ₹5. NO notes. Total must NEVER exceed ₹20. "
+            "Simple counting of coins. "
+            "NO multiplication, division, fractions. "
+            "Use simple, child-friendly language. Names: Amma, Dadi, Raju, Meena, Bablu, Priya. "
+            "DO NOT repeat the same amounts or scenarios. "
+        )
+        if _skill_tag == "c1_money_identify":
+            return c1_money_ctx + "Identify coins or count a small group. Example: 'How much money is 3 one-rupee coins?' Answer: ₹3."
+        elif _skill_tag == "c1_money_count":
+            return c1_money_ctx + "format: word_problem. Simple buying scenario with coins. Example: 'Raju has two ₹5 coins. How much money does he have?' Answer: ₹10."
+        elif _skill_tag == "c1_money_fill":
+            return c1_money_ctx + "format: missing_number. Fill-in-the-blank: 'Meena has ₹5 and ₹2 coins. She has ___ rupees in total.' Answer: ₹7."
+        elif _skill_tag == "c1_money_error":
+            return c1_money_ctx + "format: error_spot. Show a student who counted coins WRONG. Example: 'Bablu has three ₹2 coins. He says he has ₹8. Is he correct?' Answer must be the CORRECT total (₹6)."
+        elif _skill_tag == "c1_money_think":
+            return c1_money_ctx + "format: multi_step. Reasoning about money. Example: 'Priya has ₹10. A toffee costs ₹2. Can she buy 4 toffees? Why?' NOT pure computation."
+        return c1_money_ctx
+
     # ── Class 2: Numbers up to 1000 ──
     if _skill_tag in ("c2_place_value_identify", "c2_number_compare", "c2_number_expansion",
                        "c2_number_ordering", "c2_place_value_error", "c2_number_thinking"):
@@ -4708,6 +5217,51 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
     "Division basics": (
         "CRITICAL: ALL questions MUST be about Division ONLY — equal sharing, grouping, "
         "division facts. NEVER generate addition/subtraction questions.\n"
+    ),
+    # ── Class 1 topic constraints ──
+    "Numbers 1 to 50 (Class 1)": (
+        "CRITICAL: Numbers 1-50 ONLY. NEVER use numbers above 50. "
+        "NEVER generate addition, subtraction, multiplication, or division questions. "
+        "Focus on counting, number names, before/after, comparison (greater/smaller), ordering.\n"
+    ),
+    "Numbers 51 to 100 (Class 1)": (
+        "CRITICAL: Numbers 51-100 ONLY. NEVER use numbers above 100. "
+        "NEVER generate addition, subtraction, multiplication, or division questions. "
+        "Focus on counting, number names, before/after, comparison (greater/smaller), ordering.\n"
+    ),
+    "Addition up to 20 (Class 1)": (
+        "CRITICAL: Addition ONLY. Both numbers must be between 1 and 10. "
+        "Sum must NEVER exceed 20. NO carrying EVER. NO column form. "
+        "NO subtraction, multiplication, or division. "
+        "Use simple horizontal format: 7 + 5 = ___\n"
+    ),
+    "Subtraction within 20 (Class 1)": (
+        "CRITICAL: Subtraction ONLY. Both numbers between 1 and 20. "
+        "Result must NEVER be negative or zero. NO borrowing EVER. NO column form. "
+        "The first number must always be larger than the second. "
+        "NO addition, multiplication, or division. "
+        "Use simple horizontal format: 15 - 7 = ___\n"
+    ),
+    "Basic Shapes (Class 1)": (
+        "CRITICAL: ALL questions MUST be about basic 2D shapes ONLY — circle, square, triangle, rectangle. "
+        "NO 3D shapes (cube, sphere, cone). Focus on shape names, sides, corners, real-world examples. "
+        "NEVER generate arithmetic questions (no addition, subtraction, multiplication, division).\n"
+    ),
+    "Measurement (Class 1)": (
+        "CRITICAL: ALL questions MUST be about comparing objects ONLY — longer/shorter, taller/shorter, "
+        "heavier/lighter. NO standard units (no cm, m, kg, g). Use comparison words ONLY. "
+        "NEVER generate arithmetic questions.\n"
+    ),
+    "Time (Class 1)": (
+        "CRITICAL: ALL questions MUST be about daily routines and days of the week ONLY — "
+        "morning, afternoon, evening, night. Days: Monday to Sunday. "
+        "NO clock reading. NO hours or minutes. NO numbers for time. "
+        "NEVER generate arithmetic questions.\n"
+    ),
+    "Money (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Indian coins ONLY — ₹1, ₹2, ₹5 coins. "
+        "NO notes (no ₹10, ₹20, ₹50, ₹100). Total must NEVER exceed ₹20. "
+        "Simple counting of coins only. NEVER generate arithmetic beyond simple coin counting.\n"
     ),
     # ── Class 2 non-arithmetic topic constraints ──
     "Numbers up to 1000 (Class 2)": (

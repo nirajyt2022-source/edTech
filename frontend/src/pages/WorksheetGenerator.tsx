@@ -44,6 +44,36 @@ const DEFAULT_TOPICS: Record<string, string[]> = {
   Computer: ['Computer Basics', 'Parts of Computer', 'MS Paint', 'MS Word', 'Internet Safety'],
 }
 
+// Grade-aware Maths topics (matching backend TOPIC_PROFILES keys)
+const MATHS_TOPICS_BY_GRADE: Record<number, string[]> = {
+  1: [
+    'Numbers 1 to 50 (Class 1)', 'Numbers 51 to 100 (Class 1)',
+    'Addition up to 20 (Class 1)', 'Subtraction within 20 (Class 1)',
+    'Basic Shapes (Class 1)', 'Measurement (Class 1)',
+    'Time (Class 1)', 'Money (Class 1)',
+  ],
+  2: [
+    'Numbers up to 1000 (Class 2)', 'Addition (2-digit with carry)', 'Subtraction (2-digit with borrow)',
+    'Multiplication (tables 2-5)', 'Division (sharing equally)',
+    'Shapes and space (2D)', 'Measurement (length, weight)',
+    'Time (hour, half-hour)', 'Money (coins and notes)', 'Data handling (pictographs)',
+  ],
+  3: [
+    'Addition (carries)', 'Subtraction (borrowing)', 'Addition and subtraction (3-digit)',
+    'Multiplication (tables 2-10)', 'Division basics', 'Numbers up to 10000',
+    'Fractions (halves, quarters)', 'Fractions',
+    'Time (reading clock, calendar)', 'Money (bills and change)',
+    'Symmetry', 'Patterns and sequences',
+  ],
+  4: [
+    'Large numbers (up to 1,00,000)', 'Addition and subtraction (5-digit)',
+    'Multiplication (3-digit × 2-digit)', 'Division (long division)',
+    'Fractions (equivalent, comparison)', 'Decimals (tenths, hundredths)',
+    'Geometry (angles, lines)', 'Perimeter and area',
+    'Time (minutes, 24-hour clock)', 'Money (bills, profit/loss)',
+  ],
+}
+
 // Grade-aware English topics (matching backend TOPIC_PROFILES keys)
 const ENGLISH_TOPICS_BY_GRADE: Record<number, string[]> = {
   2: ['Nouns (Class 2)', 'Verbs (Class 2)', 'Pronouns (Class 2)', 'Sentences (Class 2)', 'Rhyming Words (Class 2)', 'Punctuation (Class 2)'],
@@ -358,6 +388,13 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       return selectedChapter ? selectedChapter.topics.map(t => t.name) : []
     }
     if (!syllabus && subject) {
+      // Grade-aware Maths topics
+      if ((subject === 'Maths' || subject === 'Mathematics') && grade) {
+        const gradeNum = parseInt(grade.replace('Class ', ''))
+        if (!isNaN(gradeNum) && MATHS_TOPICS_BY_GRADE[gradeNum]) {
+          return MATHS_TOPICS_BY_GRADE[gradeNum]
+        }
+      }
       // Grade-aware English topics
       if (subject === 'English' && grade) {
         const gradeNum = parseInt(grade.replace('Class ', ''))

@@ -7,6 +7,10 @@ interface Props {
 
 /* ─── Topic data from CLAUDE.md ─── */
 const MATHS_TOPICS: Record<string, string[]> = {
+  'Class 1': [
+    'Numbers 1-50', 'Numbers 51-100', 'Addition (up to 20)', 'Subtraction (within 20)',
+    'Basic Shapes', 'Measurement', 'Time', 'Money',
+  ],
   'Class 2': [
     'Numbers up to 1000', 'Addition', 'Subtraction', 'Multiplication', 'Division',
     'Shapes & Space', 'Measurement', 'Time', 'Money', 'Data Handling',
