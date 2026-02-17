@@ -794,11 +794,35 @@ def _scale_recipe(recipe: list[dict], target: int) -> list[dict]:
     if total == target:
         return [dict(item) for item in recipe]
 
+    n_items = len(recipe)
+
+    # When target <= number of recipe items, give each 1 and trim excess items.
+    # Prioritize keeping error_detection and thinking slots.
+    if target <= n_items:
+        # Identify which items map to critical slot types
+        critical_indices = set()  # error_detection and thinking
+        other_indices = []
+        for idx, item in enumerate(recipe):
+            mapping = _SKILL_TAG_TO_SLOT.get(item["skill_tag"])
+            slot_type = mapping[0] if mapping else "application"
+            if slot_type in ("error_detection", "thinking"):
+                critical_indices.add(idx)
+            else:
+                other_indices.append(idx)
+        # Keep all critical items, fill remaining from others (preserve order)
+        keep = sorted(critical_indices)
+        remaining = target - len(keep)
+        keep.extend(other_indices[:max(0, remaining)])
+        keep = sorted(keep)[:target]
+        scaled = [{**recipe[i], "count": 1} for i in keep]
+        return scaled
+
+    # Normal proportional scaling (target > n_items, so each gets at least 1)
     scaled = []
     assigned = 0
     for i, item in enumerate(recipe):
         if i == len(recipe) - 1:
-            count = target - assigned
+            count = max(1, target - assigned)
         else:
             count = max(1, round(item.get("count", 1) * target / total))
         scaled.append({**item, "count": count})
@@ -1807,8 +1831,8 @@ def grade_student_answer(question: dict, student_answer: str) -> dict:
     if not question.get("_slots"):
         try:
             question = contract.build_slots(question)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning('[slot_engine.grade_student_answer] build_slots failed for skill_tag=%s: %s', question.get('skill_tag'), e, exc_info=True)
 
     return contract.grade(question, student_answer)
 
@@ -1826,8 +1850,8 @@ def explain_question(question: dict) -> dict:
     if not question.get("_slots"):
         try:
             question = contract.build_slots(question)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning('[slot_engine.explain_question] build_slots failed for skill_tag=%s: %s', question.get('skill_tag'), e, exc_info=True)
 
     return contract.explain(question)
 
@@ -1921,7 +1945,8 @@ def attempt_and_next(payload: dict) -> dict:
                 skill_tag=(question.get("skill_tag") or ""),
                 grade=base.get("grade_result") or {},
             ).to_dict()
-        except Exception:
+        except Exception as e:
+            logger.error(f"[slot_engine.attempt_and_next] mastery update failed for student={student_id}: {e}", exc_info=True)
             mastery = None
 
     # default next block (no chaining)
@@ -2486,7 +2511,8 @@ def _regen_question_for_topic(
                 slot_instruction=slot_instruction,
                 topic=topic,
             )
-        except Exception:
+        except Exception as e:
+            logger.warning('[slot_engine._regen_question_for_topic] generate_question failed for topic=%s, slot_type=%s: %s', topic, directive.get('slot_type', 'application'), e, exc_info=True)
             continue
 
         q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or directive.get("slot_type", "")

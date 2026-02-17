@@ -54,8 +54,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       const response = await api.get('/api/users/profile')
       setProfile(response.data.profile)
     } catch (err) {
-      console.error('Failed to fetch profile:', err)
-      setProfile(null)
+      console.warn('[profile] Failed to fetch profile:', err)
+      // Keep existing profile if available — don't null it out on transient errors
+      setProfile(prev => prev)
     } finally {
       setLoading(false)
     }

@@ -43,7 +43,7 @@ export function EngagementProvider({ children }: { children: ReactNode }) {
       setStats(prev => ({ ...prev, [childId]: engagementStats }))
       return engagementStats
     } catch (err) {
-      console.error('Failed to fetch engagement:', err)
+      console.warn('[engagement] Failed to fetch engagement stats:', err)
       return null
     } finally {
       setLoading(false)
@@ -77,7 +77,7 @@ export function EngagementProvider({ children }: { children: ReactNode }) {
 
       return result
     } catch (err) {
-      console.error('Failed to record completion:', err)
+      console.warn('[engagement] Failed to record completion:', err)
       return null
     }
   }, [])

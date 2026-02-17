@@ -1,6 +1,9 @@
 from dataclasses import dataclass, asdict
 from typing import Optional
+import logging
 import time
+
+logger = logging.getLogger(__name__)
 
 
 def classify_mastery(accuracy: float, attempts: int) -> str:
@@ -158,13 +161,15 @@ def get_mastery_store():
     # lazy import to avoid dependency/testing issues
     try:
         from app.services.supabase_client import get_supabase_client
-    except Exception:
+    except Exception as e:
+        logger.warning("[mastery_store.get_mastery_store] Supabase import failed, falling back to in-memory store. Error: %s", e)
         return MASTERY_STORE
 
     try:
         sb = get_supabase_client()
         return SupabaseMasteryStore(sb)
-    except Exception:
+    except Exception as e:
+        logger.warning("[mastery_store.get_mastery_store] Supabase init failed, falling back to in-memory store. Error: %s", e)
         return MASTERY_STORE
 
 

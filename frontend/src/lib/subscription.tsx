@@ -52,9 +52,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       const response = await api.get('/api/subscription/status')
       setStatus(response.data)
     } catch (err) {
-      // If subscription doesn't exist yet, use default free status
+      console.warn('[subscription] Failed to fetch subscription status:', err)
+      setError('Could not load subscription status. Please refresh the page.')
+      // Fall back to free tier so app remains usable
       setStatus(defaultFreeStatus)
-      console.error('Failed to fetch subscription:', err)
     } finally {
       setLoading(false)
     }

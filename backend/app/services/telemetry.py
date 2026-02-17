@@ -46,8 +46,8 @@ def emit_event(event: str, *, route: str, version: str, student_id: Optional[str
             "latency_ms": latency_ms,
             "ok": ok,
         }).execute()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"[telemetry.emit_event] {e}", exc_info=True)
 
 
 def instrument(route: str, version: str):

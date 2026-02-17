@@ -239,8 +239,8 @@ def attempt_v1(payload: AttemptPayloadV1):
                     "correct_attempts": ms.correct_attempts,
                     "mastery_level": ms.mastery_level,
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"[worksheets_v1.attempt_v1] mastery_before capture failed: {e}", exc_info=True)
 
     out = attempt_and_next(payload.model_dump())
 
@@ -281,8 +281,8 @@ def attempt_v1(payload: AttemptPayloadV1):
             mastery_before=mastery_before,
             mastery_after=mastery_after,
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"[worksheets_v1.attempt_v1] audit_attempt failed: {e}", exc_info=True)
 
     return out
 
