@@ -1383,16 +1383,25 @@ def _slot_to_question(q: dict, idx: int) -> Question:
     q_type = _FORMAT_TO_QTYPE.get(fmt, "short_answer")
     vtype, vdata = _map_visual_fields(q)
 
+    explanation = q.get("explanation")
+    # If correct_answer is None but we have an explanation, use it as sample_answer
+    if answer_str:
+        a_type = "exact"
+        sample = q.get("sample_answer")
+    else:
+        a_type = "example"
+        sample = q.get("sample_answer") or explanation
+
     return Question(
         id=f"q{idx + 1}",
         type=q_type,
         text=text,
         options=None,
         correct_answer=answer_str,
-        explanation=q.get("explanation"),
+        explanation=explanation,
         difficulty=q.get("difficulty"),
-        answer_type="exact" if answer_str else "example",
-        sample_answer=None,
+        answer_type=a_type,
+        sample_answer=sample,
         grading_notes=None,
         visual_type=vtype,
         visual_data=vdata,

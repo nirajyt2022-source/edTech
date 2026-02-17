@@ -14897,7 +14897,7 @@ def generate_meta(
             {"role": "system", "content": META_SYSTEM},
             {"role": "user", "content": user_msg},
         ],
-        temperature=0.5,
+        temperature=0.3,
         max_tokens=512,
     )
     content = _clean_json(response.choices[0].message.content or "")
@@ -14961,7 +14961,7 @@ def generate_question(
             {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_msg},
         ],
-        temperature=0.8,
+        temperature=0.3,
         max_tokens=300,
     )
     content = _clean_json(response.choices[0].message.content or "")

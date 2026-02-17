@@ -278,11 +278,11 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
               <span className="font-['Playfair_Display',Georgia,serif] text-white font-bold text-lg leading-none">P</span>
             </div>
             <span className="font-['Playfair_Display',Georgia,serif] text-xl font-semibold tracking-tight">
-              <span className="text-slate-900">Practice</span><span className="text-indigo-600">Craft</span>
+              <span className="text-slate-900">Practice</span><span className="text-primary">Craft</span>
             </span>
           </div>
 
@@ -302,7 +302,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
             </button>
             <button
               onClick={onGetStarted}
-              className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
             >
               Try Free
             </button>
@@ -334,7 +334,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
               <button onClick={onSignIn} className="flex-1 py-2.5 text-sm text-slate-600 border border-slate-200 rounded-lg bg-transparent cursor-pointer">
                 Log in
               </button>
-              <button onClick={onGetStarted} className="flex-1 py-2.5 text-sm text-white bg-indigo-600 rounded-lg border-none cursor-pointer font-medium">
+              <button onClick={onGetStarted} className="flex-1 py-2.5 text-sm text-white bg-primary rounded-lg border-none cursor-pointer font-medium">
                 Try Free
               </button>
             </div>
@@ -366,7 +366,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
               <button
                 onClick={onGetStarted}
-                className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 text-white text-base font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 border-none cursor-pointer"
+                className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white text-base font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 border-none cursor-pointer"
               >
                 Start Free &mdash; No card needed
               </button>
@@ -401,7 +401,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
                 <div className="p-3 bg-slate-50 rounded-lg">
                   <p className="text-[11px] font-bold text-amber-600 mb-1">{'\u2B50\u2B50\u2B50'} Stretch</p>
                   <p className="text-sm text-slate-700">Q9. &nbsp;[Error Detection]</p>
-                  <button className="mt-1.5 text-xs text-indigo-500 font-medium flex items-center gap-1 bg-transparent border-none cursor-pointer p-0">
+                  <button className="mt-1.5 text-xs text-primary font-medium flex items-center gap-1 bg-transparent border-none cursor-pointer p-0">
                     {'\uD83D\uDCA1'} Hint {'\u25B8'}
                   </button>
                 </div>
@@ -486,7 +486,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
                 onClick={() => setActiveStep(i)}
                 className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all cursor-pointer ${
                   activeStep === i
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20'
+                    ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
                     : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
                 }`}
               >
@@ -520,7 +520,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
                 key={i}
                 onClick={() => setActiveStep(i)}
                 className={`w-2 h-2 rounded-full transition-all border-none cursor-pointer ${
-                  activeStep === i ? 'bg-indigo-600 w-6' : 'bg-slate-300'
+                  activeStep === i ? 'bg-primary w-6' : 'bg-slate-300'
                 }`}
                 aria-label={`Step ${i + 1}`}
               />
@@ -545,7 +545,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
                 onClick={() => setActiveSubject(subj)}
                 className={`px-6 py-2.5 text-sm font-semibold rounded-lg border transition-all cursor-pointer ${
                   activeSubject === subj
-                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    ? 'bg-primary text-white border-primary'
                     : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
                 }`}
               >
@@ -593,14 +593,14 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
               <div className="grid grid-cols-[1fr_1fr_1fr] text-sm font-semibold border-b border-slate-100">
                 <div className="p-4 text-slate-400">Feature</div>
                 <div className="p-4 text-slate-400 border-l border-slate-100">Free Tools</div>
-                <div className="p-4 bg-indigo-50 text-indigo-700 border-l border-slate-100">PracticeCraft</div>
+                <div className="p-4 bg-primary/10 text-primary border-l border-slate-100">PracticeCraft</div>
               </div>
               {/* Rows */}
               {COMPARISON_ROWS.map((row, i) => (
                 <div key={i} className={`grid grid-cols-[1fr_1fr_1fr] text-sm ${i < COMPARISON_ROWS.length - 1 ? 'border-b border-slate-50' : ''}`}>
                   <div className="p-4 font-medium text-slate-700">{row.feature}</div>
                   <div className="p-4 text-red-400 border-l border-slate-100 leading-relaxed">{row.free}</div>
-                  <div className="p-4 text-indigo-700 font-medium border-l border-slate-100 bg-indigo-50/30 leading-relaxed">{row.pc}</div>
+                  <div className="p-4 text-primary font-medium border-l border-slate-100 bg-primary/5 leading-relaxed">{row.pc}</div>
                 </div>
               ))}
             </div>
@@ -621,11 +621,11 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
               <p className="text-3xl mb-4">{'\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67'}</p>
               <h3 className="font-['Playfair_Display',Georgia,serif] text-2xl font-semibold text-slate-900 mb-5">For Parents</h3>
               <ul className="space-y-3 text-sm text-slate-600 leading-relaxed">
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Generate a worksheet in 30 seconds &mdash; pick grade, topic, go</li>
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Every sheet adapts to your child's mastery level automatically</li>
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Clear learning objectives so you know what's being practised</li>
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Parent insight after grading: what to watch for and what to try next</li>
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Share worksheets via WhatsApp with one tap</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Generate a worksheet in 30 seconds &mdash; pick grade, topic, go</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Every sheet adapts to your child's mastery level automatically</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Clear learning objectives so you know what's being practised</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Parent insight after grading: what to watch for and what to try next</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Share worksheets via WhatsApp with one tap</li>
               </ul>
             </div>
           </RevealSection>
@@ -635,11 +635,11 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
               <p className="text-3xl mb-4">{'\uD83C\uDFEB'}</p>
               <h3 className="font-['Playfair_Display',Georgia,serif] text-2xl font-semibold text-slate-900 mb-5">For Teachers</h3>
               <ul className="space-y-3 text-sm text-slate-600 leading-relaxed">
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Bulk generation &mdash; create 5 topic worksheets for a class in one click</li>
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>CBSE-aligned to NCERT &mdash; use as homework, classwork, or revision</li>
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Premium PDF with Name/Date/Score &mdash; print and distribute directly</li>
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Track class-level mastery across topics over time</li>
-                <li className="flex gap-3"><span className="text-indigo-500 font-bold mt-0.5">{'\u2713'}</span>Separate class profiles with dedicated worksheet history</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Bulk generation &mdash; create 5 topic worksheets for a class in one click</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>CBSE-aligned to NCERT &mdash; use as homework, classwork, or revision</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Premium PDF with Name/Date/Score &mdash; print and distribute directly</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Track class-level mastery across topics over time</li>
+                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Separate class profiles with dedicated worksheet history</li>
               </ul>
             </div>
           </RevealSection>
@@ -668,7 +668,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
                 </ul>
                 <button
                   onClick={onGetStarted}
-                  className="w-full py-3 text-sm font-semibold text-indigo-600 border-2 border-indigo-600 rounded-xl hover:bg-indigo-50 transition-colors bg-transparent cursor-pointer"
+                  className="w-full py-3 text-sm font-semibold text-primary border-2 border-primary rounded-xl hover:bg-primary/10 transition-colors bg-transparent cursor-pointer"
                 >
                   Get Started Free
                 </button>
@@ -677,7 +677,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
 
             {/* Paid tier */}
             <RevealSection>
-              <div className="bg-white rounded-2xl border-2 border-indigo-600 shadow-[0_4px_24px_rgba(79,70,229,0.15)] p-8 h-full flex flex-col relative">
+              <div className="bg-white rounded-2xl border-2 border-primary shadow-lg shadow-primary/15 p-8 h-full flex flex-col relative">
                 <span className="absolute -top-3 left-6 px-3 py-1 bg-amber-400 text-amber-900 text-xs font-bold uppercase tracking-wider rounded-full">
                   Most Popular
                 </span>
@@ -686,16 +686,16 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
                 </h3>
                 <p className="text-sm text-slate-400 mb-6">Unlimited worksheets</p>
                 <ul className="space-y-3 text-sm text-slate-600 mb-8 flex-1">
-                  <li className="flex gap-2.5"><span className="text-indigo-500 font-bold">{'\u2713'}</span>Everything in Free, plus:</li>
-                  <li className="flex gap-2.5"><span className="text-indigo-500 font-bold">{'\u2713'}</span>Mastery tracking per child</li>
-                  <li className="flex gap-2.5"><span className="text-indigo-500 font-bold">{'\u2713'}</span>Parent insights after grading</li>
-                  <li className="flex gap-2.5"><span className="text-indigo-500 font-bold">{'\u2713'}</span>Bulk generation (5 topics at once)</li>
-                  <li className="flex gap-2.5"><span className="text-indigo-500 font-bold">{'\u2713'}</span>School branding on PDF</li>
-                  <li className="flex gap-2.5"><span className="text-indigo-500 font-bold">{'\u2713'}</span>Priority support</li>
+                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Everything in Free, plus:</li>
+                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Mastery tracking per child</li>
+                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Parent insights after grading</li>
+                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Bulk generation (5 topics at once)</li>
+                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>School branding on PDF</li>
+                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Priority support</li>
                 </ul>
                 <button
                   onClick={onGetStarted}
-                  className="w-full py-3 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors border-none cursor-pointer shadow-lg shadow-indigo-600/20"
+                  className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors border-none cursor-pointer shadow-lg shadow-primary/20"
                 >
                   Start Free Trial
                 </button>
@@ -763,7 +763,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 text-white text-base font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-600/20 border-none cursor-pointer"
+              className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white text-base font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 border-none cursor-pointer"
             >
               Start Generating Worksheets
             </button>
@@ -781,11 +781,11 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
       <footer className="py-10 px-5 border-t border-slate-100">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
               <span className="font-['Playfair_Display',Georgia,serif] text-white font-bold text-sm leading-none">P</span>
             </div>
             <span className="font-['Playfair_Display',Georgia,serif] text-base font-semibold">
-              Practice<span className="text-indigo-600">Craft</span>
+              Practice<span className="text-primary">Craft</span>
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">

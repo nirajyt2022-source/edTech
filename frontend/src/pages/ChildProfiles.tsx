@@ -11,6 +11,23 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useChildren, type Child } from '@/lib/children'
 import { useSubscription } from '@/lib/subscription'
+import { notify } from '@/lib/toast'
+
+const AVATAR_COLORS = [
+  'bg-primary/15 text-primary',
+  'bg-accent/20 text-amber-700',
+  'bg-blue-100 text-blue-700',
+  'bg-purple-100 text-purple-700',
+]
+
+function ChildAvatar({ name, index }: { name: string; index: number }) {
+  const colorClass = AVATAR_COLORS[index % AVATAR_COLORS.length]
+  return (
+    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-serif text-2xl font-semibold shrink-0 ${colorClass}`}>
+      {name.charAt(0).toUpperCase()}
+    </div>
+  )
+}
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const BOARDS = ['CBSE', 'ICSE', 'State Board']
@@ -82,8 +99,10 @@ export default function ChildProfiles() {
           notes: notes.trim() || undefined,
         })
       }
+      notify.success(editingChild ? 'Profile updated' : 'Profile created')
       resetForm()
     } catch (err) {
+      notify.error('Failed to save profile')
       setFormError('Failed to save child profile')
       console.error(err)
     } finally {
@@ -98,7 +117,9 @@ export default function ChildProfiles() {
 
     try {
       await deleteChild(child.id)
+      notify.success('Profile removed')
     } catch (err) {
+      notify.error('Failed to delete profile')
       console.error('Failed to delete child:', err)
     }
   }
@@ -291,11 +312,7 @@ export default function ChildProfiles() {
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center flex-shrink-0 border border-primary/10 group-hover:scale-105 transition-transform">
-                          <span className="text-2xl font-black text-primary font-jakarta">
-                            {child.name[0].toUpperCase()}
-                          </span>
-                        </div>
+                        <ChildAvatar name={child.name} index={index} />
                         <div className="flex-1 space-y-1.5">
                           <h3 className="font-bold text-xl text-foreground font-jakarta leading-tight">{child.name}</h3>
                           <div className="flex items-center gap-3">

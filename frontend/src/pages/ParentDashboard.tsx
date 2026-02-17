@@ -1,17 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api'
+import { useAuth } from '@/lib/auth'
 import { useChildren } from '@/lib/children'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 
 interface OverallStats {
   total_worksheets: number
@@ -44,8 +39,22 @@ interface DashboardData {
 
 function formatSkillTag(tag: string): string {
   return tag
+    .replace(/^(mth|eng|sci|hin|comp|gk|moral|health)_c\d+_/, '')
     .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .split(' ')
+    .map((w, i) => {
+      if (i === 0) return w.charAt(0).toUpperCase() + w.slice(1)
+      if (['and', 'or', 'of', 'in', 'the', 'a'].includes(w)) return w
+      return w.charAt(0).toUpperCase() + w.slice(1)
+    })
+    .join(' ')
+}
+
+function getGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
 }
 
 function masteryColor(level: string): string {
@@ -142,8 +151,10 @@ function LoadingSkeleton() {
   )
 }
 
-export default function ParentDashboard() {
+export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const { user } = useAuth()
   const { children: childrenList, loading: childrenLoading } = useChildren()
+  const displayName = user?.user_metadata?.name?.split(' ')[0] || 'there'
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null)
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -203,39 +214,42 @@ export default function ParentDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold font-fraunces text-foreground">Progress Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Track your child&apos;s learning journey
-          </p>
-        </div>
-
-        {/* Child selector */}
-        {childrenList.length > 1 && (
-          <Select
-            value={selectedChildId || ''}
-            onValueChange={(val) => setSelectedChildId(val)}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select child" />
-            </SelectTrigger>
-            <SelectContent>
-              {childrenList.map((child) => (
-                <SelectItem key={child.id} value={child.id}>
-                  {child.name} (Class {child.grade})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        {childrenList.length === 1 && selectedChild && (
-          <div className="text-sm font-medium text-muted-foreground">
-            {selectedChild.name} &middot; Class {selectedChild.grade}
-          </div>
-        )}
+      {/* Greeting */}
+      <div>
+        <h1 className="text-2xl font-bold font-fraunces text-foreground">
+          {getGreeting()}, <span className="text-primary">{displayName}</span>
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {selectedChild ? `${selectedChild.name}\u2019s progress` : 'Select a child to see progress'}
+        </p>
       </div>
+
+      {/* Child picker pills */}
+      {childrenList.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {childrenList.map((child) => (
+            <button
+              key={child.id}
+              onClick={() => setSelectedChildId(child.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors border ${
+                selectedChildId === child.id
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-foreground border-border hover:border-primary/50'
+              }`}
+            >
+              <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                {child.name[0].toUpperCase()}
+              </span>
+              {child.name}
+            </button>
+          ))}
+        </div>
+      )}
+      {childrenList.length === 1 && selectedChild && (
+        <div className="text-sm font-medium text-muted-foreground">
+          {selectedChild.name} &middot; Class {selectedChild.grade}
+        </div>
+      )}
 
       {/* Error state */}
       {error && (
@@ -359,6 +373,7 @@ export default function ParentDashboard() {
                         <th className="text-right py-3 px-2 font-medium text-muted-foreground">Accuracy</th>
                         <th className="text-right py-3 px-2 font-medium text-muted-foreground">Streak</th>
                         <th className="text-right py-3 px-2 font-medium text-muted-foreground">Attempts</th>
+                        <th className="py-3 px-2"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -392,6 +407,18 @@ export default function ParentDashboard() {
                             </td>
                             <td className="py-3 px-2 text-right text-muted-foreground">
                               {skill.correct_attempts}/{skill.total_attempts}
+                            </td>
+                            <td className="py-3 px-2 text-right">
+                              {onNavigate && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onNavigate('generator')}
+                                  className="text-primary text-xs font-semibold shrink-0 h-auto py-1 px-2"
+                                >
+                                  Practice &rarr;
+                                </Button>
+                              )}
                             </td>
                           </tr>
                         ))}

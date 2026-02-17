@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Toaster } from 'sonner'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { ChildrenProvider } from '@/lib/children'
 import { ClassesProvider } from '@/lib/classes'
@@ -76,6 +77,7 @@ function UsageBadge() {
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('generator')
+  const [generatorPreFill, setGeneratorPreFill] = useState<{ grade?: string; subject?: string; topic?: string } | null>(null)
   const [syllabus, setSyllabus] = useState<ParsedSyllabus | null>(null)
   const [showAuth, setShowAuth] = useState(false)
   const [authDefaultMode, setAuthDefaultMode] = useState<'login' | 'signup'>('login')
@@ -152,6 +154,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen gradient-bg">
+      <Toaster position="top-right" richColors />
       <RoleSelector />
       {/* Navigation */}
       <nav className="bg-background/80 backdrop-blur-xl border-b border-border/30 sticky top-0 z-50 print:hidden">
@@ -177,7 +180,7 @@ function AppContent() {
                 aria-selected={currentPage === tab.id}
                 onClick={() => setCurrentPage(tab.id)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${currentPage === tab.id
-                  ? 'text-foreground bg-secondary/60'
+                  ? 'text-primary font-semibold bg-primary/8'
                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary/30'
                   }`}
               >
@@ -263,7 +266,7 @@ function AppContent() {
                 aria-selected={currentPage === tab.id}
                 onClick={() => setCurrentPage(tab.id)}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${currentPage === tab.id
-                  ? 'text-foreground bg-secondary/60'
+                  ? 'text-primary font-semibold bg-primary/8'
                   : 'text-muted-foreground'
                   }`}
               >
@@ -275,15 +278,17 @@ function AppContent() {
       </nav>
 
       {/* Page Content */}
-      <main className="animate-in fade-in duration-700">
+      <main className="animate-in fade-in duration-700 pb-20 md:pb-0">
         {currentPage === 'dashboard' && (
           <TeacherDashboard onNavigate={(page) => setCurrentPage(page as Page)} />
         )}
-        {currentPage === 'classes' && <ClassManager />}
+        {currentPage === 'classes' && <ClassManager onNavigate={(page) => setCurrentPage(page as Page)} />}
         {currentPage === 'generator' && (
           <WorksheetGenerator
             syllabus={syllabus}
             onClearSyllabus={() => setSyllabus(null)}
+            preFill={generatorPreFill}
+            onPreFillConsumed={() => setGeneratorPreFill(null)}
           />
         )}
         {currentPage === 'syllabus' && (
@@ -296,9 +301,12 @@ function AppContent() {
         )}
         {currentPage === 'saved' && <SavedWorksheets />}
         {currentPage === 'history' && (
-          <History onNavigateToGenerator={() => setCurrentPage('generator')} />
+          <History onNavigateToGenerator={(preFill) => {
+            if (preFill) setGeneratorPreFill(preFill)
+            setCurrentPage('generator')
+          }} />
         )}
-        {currentPage === 'progress' && <ParentDashboard />}
+        {currentPage === 'progress' && <ParentDashboard onNavigate={(page) => setCurrentPage(page as Page)} />}
         {currentPage === 'children' && <ChildProfiles />}
       </main>
     </div>

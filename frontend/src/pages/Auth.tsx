@@ -1,15 +1,28 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 
 type AuthMode = 'login' | 'signup'
 
 interface Props {
   defaultMode?: AuthMode
   onBack?: () => void
+}
+
+const AUTH_ERRORS: Record<string, string> = {
+  'Invalid login credentials': 'Wrong email or password.',
+  'Email not confirmed': 'Check your inbox for a confirmation email.',
+  'User already registered': 'Account exists. Sign in instead.',
+  'Email rate limit exceeded': 'Too many attempts. Wait 60 seconds.',
+  'Password should be at least 6 characters': 'Password must be at least 6 characters.',
+}
+
+function getReadableError(message: string): string {
+  return AUTH_ERRORS[message] || message
 }
 
 export default function Auth({ defaultMode = 'login', onBack }: Props) {
@@ -32,18 +45,44 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
     if (mode === 'login') {
       const { error } = await signIn(email, password)
       if (error) {
-        setError(error.message)
+        setError(getReadableError(error.message))
       }
     } else {
       const { error } = await signUp(email, password, name)
       if (error) {
-        setError(error.message)
+        setError(getReadableError(error.message))
       } else {
         setMessage('Check your email to confirm your account!')
       }
     }
 
     setLoading(false)
+  }
+
+  const handleGoogleSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/` },
+    })
+    if (error) {
+      setError('Google sign-in failed. Try email instead.')
+    }
+  }
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Enter your email first.')
+      return
+    }
+    setError('')
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) {
+      setError(getReadableError(error.message))
+    } else {
+      setMessage('Reset link sent! Check your inbox.')
+    }
   }
 
   const toggleMode = () => {
@@ -53,8 +92,8 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md animate-fade-in">
+    <div className="min-h-screen gradient-bg flex flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-sm animate-fade-in">
         {/* Back to landing */}
         {onBack && (
           <button
@@ -67,36 +106,60 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             Back
           </button>
         )}
-        {/* Logo and branding */}
+
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary shadow-sm mb-4">
-            <svg className="w-7 h-7 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary shadow-sm mb-4">
+            <svg className="w-6 h-6 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
-          <h1 className="text-3xl font-semibold mb-2">
+          <h1 className="font-serif text-2xl font-semibold mb-0.5">
             <span className="text-foreground">Practice</span>
             <span className="text-primary">Craft</span>
-            <span className="text-foreground"> AI</span>
           </h1>
           <p className="text-muted-foreground text-sm">
             AI-powered worksheets for thoughtful learning
           </p>
         </div>
 
-        <Card className="border-border shadow-sm">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl">
-              {mode === 'login' ? 'Sign In' : 'Get Started'}
-            </CardTitle>
-            <CardDescription>
-              {mode === 'login'
-                ? 'Sign in to access your practice materials'
-                : 'Create an account to start generating worksheets'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
+        <Card className="border-border shadow-lg rounded-2xl">
+          <CardContent className="p-7">
+            {/* Title */}
+            <h2 className="font-serif text-2xl font-semibold text-foreground mb-1">
+              {mode === 'signup' ? 'Create your account' : 'Welcome back'}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              {mode === 'signup' ? 'Start with 5 free worksheets' : 'Sign in to your workspace'}
+            </p>
+
+            {/* Google sign-in */}
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-border rounded-xl hover:bg-secondary/50 transition-colors text-sm font-medium"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 001 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+              </svg>
+              Continue with Google
+            </button>
+
+            {/* Divider */}
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs text-muted-foreground">
+                <span className="bg-card px-2">or continue with email</span>
+              </div>
+            </div>
+
+            {/* Email/password form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'signup' && (
                 <div className="space-y-2 animate-fade-in">
                   <Label htmlFor="name">Name</Label>
@@ -106,6 +169,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
                     placeholder="Your name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    className="rounded-xl"
                   />
                 </div>
               )}
@@ -119,6 +183,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="rounded-xl"
                 />
               </div>
 
@@ -132,7 +197,19 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
+                  className="rounded-xl"
                 />
+                {mode === 'login' && (
+                  <div className="flex justify-end mt-1">
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
               </div>
 
               {error && (
@@ -145,7 +222,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               )}
 
               {message && (
-                <div role="status" className="p-3.5 bg-success/10 border border-success/20 text-success rounded-lg text-sm flex items-start gap-2.5 animate-fade-in">
+                <div role="status" className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm flex items-start gap-2.5 animate-fade-in">
                   <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -155,7 +232,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full rounded-xl"
                 size="lg"
                 disabled={loading}
                 aria-busy={loading}
@@ -171,16 +248,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               </Button>
             </form>
 
-            <div className="relative mt-6 mb-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-card px-3 text-xs text-muted-foreground">or</span>
-              </div>
-            </div>
-
-            <div className="text-center text-sm">
+            <div className="mt-5 text-center text-sm">
               <span className="text-muted-foreground">
                 {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
               </span>
@@ -201,21 +269,21 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
             </svg>
-            <span>Secure & private</span>
+            <span>Secure &amp; private</span>
           </div>
-          <span className="text-border">•</span>
+          <span className="text-border">&bull;</span>
           <div className="flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
               <path d="M10 1l2.928 6.472 6.572.574-4.928 4.428 1.428 6.526L10 15.5l-6 3.5 1.428-6.526L.5 8.046l6.572-.574L10 1z" />
             </svg>
             <span>AI-powered</span>
           </div>
-          <span className="text-border">•</span>
+          <span className="text-border">&bull;</span>
           <div className="flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
             </svg>
-            <span>Free trial</span>
+            <span>5 free worksheets</span>
           </div>
         </div>
       </div>

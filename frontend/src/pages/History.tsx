@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { api, apiV1WithFallback } from '@/lib/api'
 import { useChildren } from '@/lib/children'
 import { useProfile } from '@/lib/profile'
+import { notify } from '@/lib/toast'
 
 interface WorksheetHistoryItem {
   id: string
@@ -35,13 +36,13 @@ interface FullWorksheet {
   topic: string
   difficulty: string
   language: string
-  questions: { id: string; text: string; correct_answer?: string }[]
+  questions: { id: string; text: string; correct_answer?: string; explanation?: string; sample_answer?: string }[]
   created_at: string
 }
 
 const PAGE_SIZE = 20
 
-export default function History({ onNavigateToGenerator }: { onNavigateToGenerator?: () => void }) {
+export default function History({ onNavigateToGenerator }: { onNavigateToGenerator?: (preFill?: { grade?: string; subject?: string; topic?: string }) => void }) {
   const { children } = useChildren()
   const { activeRole } = useProfile()
   const isTeacher = activeRole === 'teacher'
@@ -54,7 +55,9 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
   const [currentPageNum, setCurrentPageNum] = useState(1)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [viewingWorksheet, setViewingWorksheet] = useState<FullWorksheet | null>(null)
+  const [showAnswers, setShowAnswers] = useState(false)
   const [viewLoading, setViewLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const loadWorksheets = useCallback(async () => {
     setLoading(true)
@@ -88,7 +91,7 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPageNum(1)
-  }, [filterChildId, filterTopic])
+  }, [filterChildId, filterTopic, searchQuery])
 
   // Derive unique topics from loaded worksheets
   const uniqueTopics = useMemo(() => {
@@ -99,11 +102,23 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
     return Array.from(topics).sort()
   }, [worksheets])
 
-  // Apply client-side topic filter
+  // Apply client-side topic filter + search
   const filteredWorksheets = useMemo(() => {
-    if (filterTopic === 'all') return worksheets
-    return worksheets.filter((w) => w.topic === filterTopic)
-  }, [worksheets, filterTopic])
+    let result = worksheets
+    if (filterTopic !== 'all') {
+      result = result.filter((w) => w.topic === filterTopic)
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      result = result.filter((w) =>
+        w.topic?.toLowerCase().includes(q) ||
+        w.subject?.toLowerCase().includes(q) ||
+        w.grade?.toLowerCase().includes(q) ||
+        w.title?.toLowerCase().includes(q)
+      )
+    }
+    return result
+  }, [worksheets, filterTopic, searchQuery])
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredWorksheets.length / PAGE_SIZE))
@@ -165,7 +180,9 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+      notify.success('PDF downloaded')
     } catch (err) {
+      notify.error('Failed to download PDF')
       setError('Failed to download PDF.')
       console.warn('Failed to download PDF:', err)
     } finally {
@@ -213,9 +230,23 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
           </div>
           <div className="flex gap-2 shrink-0 print:hidden">
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAnswers(!showAnswers)}
+              className="rounded-xl"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {showAnswers
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                }
+              </svg>
+              {showAnswers ? 'Hide Answers' : 'Show Answers'}
+            </Button>
+            <Button
               variant="ghost"
               size="sm"
-              onClick={() => setViewingWorksheet(null)}
+              onClick={() => { setViewingWorksheet(null); setShowAnswers(false) }}
               className="rounded-xl text-muted-foreground hover:bg-secondary/50"
             >
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -237,26 +268,30 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
           ))}
         </div>
 
-        {/* Answer Key */}
-        <div className="mt-16 pt-10 border-t-2 border-dashed border-border/60">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-accent/10 rounded-xl text-accent shrink-0">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-bold font-jakarta">Answer Key</h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {viewingWorksheet.questions.map((question, index) => (
-              <div key={question.id} className="p-3 rounded-xl bg-secondary/20 border border-border/30 flex justify-between items-center group hover:bg-accent/5 hover:border-accent/20 transition-all">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:text-accent/70">Q{index + 1}</span>
-                <span className="font-bold text-foreground text-sm group-hover:text-accent transition-colors">{question.correct_answer}</span>
+        {/* Answer Key — visible when showAnswers is true */}
+        {showAnswers && (
+          <div className="mt-16 pt-10 border-t-2 border-dashed border-border/60">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 bg-accent/10 rounded-xl text-accent shrink-0">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                </svg>
               </div>
-            ))}
+              <h3 className="text-xl font-bold font-jakarta">Answer Key</h3>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {viewingWorksheet.questions.map((question, index) => (
+                <div key={question.id} className="p-3 rounded-xl bg-secondary/20 border border-border/30 flex justify-between items-center group hover:bg-accent/5 hover:border-accent/20 transition-all">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:text-accent/70">Q{index + 1}</span>
+                  <span className="font-bold text-foreground text-sm group-hover:text-accent transition-colors">
+                    {question.correct_answer || question.explanation || question.sample_answer || <span className="text-muted-foreground text-xs italic">Open-ended</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     )
   }
@@ -285,16 +320,23 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
         </div>
       )}
 
-      {/* Filters */}
+      {/* Search + Filters */}
       {worksheets.length > 0 && (
         <div className="mb-10 animate-in fade-in slide-in-from-top-2 duration-500 print:hidden">
           <div className="inline-flex items-center gap-4 p-2 pl-4 pr-3 bg-secondary/30 border border-border/50 rounded-2xl flex-wrap">
-            <span className="text-sm font-semibold text-foreground/70 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+            {/* Search input */}
+            <div className="relative">
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
-              Filter
-            </span>
+              <input
+                type="text"
+                placeholder="Search topic, subject, grade..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 w-[220px] pl-8 pr-3 bg-background border-none shadow-sm rounded-xl text-sm font-medium placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
 
             {/* Child filter (parent only) */}
             {!isTeacher && children.length > 0 && (
@@ -359,7 +401,7 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
             filterTopic === 'all' && filterChildId === 'all' && onNavigateToGenerator ? (
               <Button
                 size="lg"
-                onClick={onNavigateToGenerator}
+                onClick={() => onNavigateToGenerator()}
                 className="bg-primary text-primary-foreground shadow-sm rounded-xl px-8"
               >
                 Create your first worksheet
@@ -441,6 +483,19 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
                         </>
                       )}
                     </Button>
+                    {onNavigateToGenerator && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onNavigateToGenerator({ grade: worksheet.grade, subject: worksheet.subject, topic: worksheet.topic })}
+                        className="w-full text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-xl py-4 font-bold transition-all"
+                      >
+                        Generate similar
+                        <svg className="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>

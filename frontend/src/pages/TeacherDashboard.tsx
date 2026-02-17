@@ -94,6 +94,22 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         </PageHeader.Subtitle>
       </PageHeader>
 
+      {/* Empty state when no worksheets at all */}
+      {!analyticsLoading && !worksheetsLoading && (analytics?.total_worksheets ?? 0) === 0 && recentWorksheets.length === 0 && (
+        <div className="text-center py-16 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+          </div>
+          <h3 className="font-serif text-xl font-semibold mb-2">Your workspace is ready</h3>
+          <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
+            Generate your first worksheet to see analytics, track topics, and build your library.
+          </p>
+          <Button onClick={() => onNavigate('generator')}>Create first worksheet &rarr;</Button>
+        </div>
+      )}
+
       {/* Quick Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
         {[

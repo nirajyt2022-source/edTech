@@ -18,8 +18,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import TemplateSelector, { type WorksheetTemplate } from '@/components/TemplateSelector'
 import VisualProblem from '@/components/VisualProblem'
 import { useEngagement } from '@/lib/engagement'
+import { notify } from '@/lib/toast'
 
-const BOARDS = ['CBSE']
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
 const LANGUAGES = ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu', 'Kannada', 'Arabic', 'Urdu']
@@ -177,6 +177,7 @@ interface Question {
   options?: string[]
   correct_answer?: string
   explanation?: string
+  sample_answer?: string
   visual_type?: string
   visual_data?: Record<string, unknown>
   role?: string
@@ -230,9 +231,11 @@ interface ParsedSyllabus {
 interface Props {
   syllabus?: ParsedSyllabus | null
   onClearSyllabus?: () => void
+  preFill?: { grade?: string; subject?: string; topic?: string } | null
+  onPreFillConsumed?: () => void
 }
 
-export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props) {
+export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill, onPreFillConsumed }: Props) {
   const { children } = useChildren()
   const { classes } = useClasses()
   const { activeRole, region } = useProfile()
@@ -241,12 +244,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [selectedChildId, setSelectedChildId] = useState('none')
   const [selectedClassId, setSelectedClassId] = useState('none')
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-  const [board, setBoard] = useState('')
+  const [board, setBoard] = useState('CBSE')
   const [grade, setGrade] = useState('')
   const [subject, setSubject] = useState('')
   const [chapter, setChapter] = useState('')
   const [topic, setTopic] = useState('')
-  const [difficulty, setDifficulty] = useState('')
+  const [difficulty, setDifficulty] = useState('Medium')
   const [questionCount, setQuestionCount] = useState('10')
   const [language, setLanguage] = useState('English')
   const [problemStyle, setProblemStyle] = useState('standard')
@@ -268,6 +271,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [showAnswers, setShowAnswers] = useState(false)
   const [revealedHints, setRevealedHints] = useState<Set<string>>(new Set())
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
+  const [showCustomise, setShowCustomise] = useState(false)
 
   // Curriculum-based state
   const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([])
@@ -304,6 +308,17 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Pre-fill from History "Generate similar" button
+  useEffect(() => {
+    if (preFill) {
+      if (preFill.grade) setGrade(preFill.grade)
+      if (preFill.subject) setSubject(preFill.subject)
+      if (preFill.topic) setTopic(preFill.topic)
+      onPreFillConsumed?.()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preFill])
 
   // Selection version guard for async race prevention
   const selectionVersionRef = useRef(0)
@@ -629,6 +644,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       setActiveIdx(0)
       setWorksheet(wsList[0])
       setMobileView('preview')
+      notify.success('Worksheet ready!')
 
       // Track usage for free tier
       await incrementUsage()
@@ -636,6 +652,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       if (selectionVersionRef.current !== requestVersion) return
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate worksheet'
       setError(errorMessage)
+      notify.error(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -676,6 +693,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
     } catch (err) {
       console.error('Failed to download PDF:', err)
       setError('Failed to download PDF')
+      notify.error('Failed to download PDF')
     } finally {
       setDownloadingPdf(false)
       setDownloadingPdfType(null)
@@ -699,10 +717,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         setSavedWorksheetId(saveRes.data.worksheet_id)
       }
       setSaveSuccess(true)
+      notify.success('Saved to your library')
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
       console.error('Failed to save worksheet:', err)
       setError('Failed to save worksheet')
+      notify.error('Failed to save worksheet')
     } finally {
       setSaving(false)
     }
@@ -737,6 +757,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
       try {
         await navigator.clipboard.writeText(url)
         setCopySuccess(true)
+        notify.success('Link copied!')
         setTimeout(() => setCopySuccess(false), 2500)
       } catch (err) {
         console.warn('Clipboard write failed, using fallback:', err)
@@ -891,8 +912,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         <div className={`lg:w-[40%] lg:min-w-0 lg:shrink-0 print:hidden ${mobileView === 'preview' && worksheet ? 'hidden lg:block' : ''}`}>
           {/* Generator Controls */}
           <div className="print:hidden space-y-7">
-            {/* Student Profile — anchored starting context */}
-            {(classes.length > 0 || children.length > 0) && (
+            {/* Student Profile — inside Customise accordion */}
+            {showCustomise && (classes.length > 0 || children.length > 0) && (
               <div className="px-5 py-4 bg-secondary/25 border border-border/30 rounded-xl">
                 <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Student Profile</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -937,24 +958,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
               </div>
             )}
 
-            {/* Skills & Practice Focus */}
+            {/* Primary Fields — always visible */}
             <div>
-              <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Skills & Practice Focus</p>
               <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="board" className="text-sm font-semibold">Board *</Label>
-                    <Select value={board} onValueChange={setBoard}>
-                      <SelectTrigger id="board" className="bg-background">
-                        <SelectValue placeholder="Select board" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {BOARDS.map((b) => (
-                          <SelectItem key={b} value={b}>{b}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="grade" className="text-sm font-semibold">Grade *</Label>
                     <Select value={grade} onValueChange={(val) => { setGrade(val); setSubject(''); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]); setSelectedTopics([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
@@ -972,9 +979,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   {!syllabus && (
                     <div className="space-y-2">
                       <Label htmlFor="subject" className="text-sm font-semibold">Subject *</Label>
-                      <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]); setSelectedTopics([]) }} disabled={isTeacher && selectedClassId !== 'none'}>
+                      <Select value={subject} onValueChange={(val) => { setSubject(val); setTopic(''); setSelectedSkills([]); setSelectedLogicTags([]); setSelectedTopics([]) }} disabled={loadingCurriculum || (isTeacher && selectedClassId !== 'none')}>
                         <SelectTrigger id="subject" className="bg-background">
-                          <SelectValue placeholder={loadingCurriculum ? "Preparing subjects..." : "Select subject"} />
+                          {loadingCurriculum
+                            ? <span className="text-muted-foreground animate-pulse text-sm">Loading subjects...</span>
+                            : <SelectValue placeholder="Select subject" />
+                          }
                         </SelectTrigger>
                         <SelectContent>
                           {useCurriculumFlow
@@ -1074,8 +1084,23 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
               </div>
             </div>
 
-            {/* Practice Settings */}
-            <div>
+            {/* Customise accordion toggle */}
+            <button
+              onClick={() => setShowCustomise(!showCustomise)}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full py-2"
+              type="button"
+            >
+              <svg className={`w-4 h-4 transition-transform ${showCustomise ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+              Customise worksheet
+              {!showCustomise && (difficulty !== 'Medium' || questionCount !== '10' || language !== 'English') && (
+                <span className="text-xs text-primary ml-auto">{difficulty} · {questionCount}Q · {language}</span>
+              )}
+            </button>
+
+            {/* Practice Settings — in Customise accordion */}
+            {showCustomise && (<div>
               <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Practice Settings</p>
               <div className="space-y-5">
                 <TemplateSelector
@@ -1166,7 +1191,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                   />
                 </div>
               </div>
-            </div>
+            </div>)}
 
             {/* Action */}
             <div className="pt-2">
@@ -1593,6 +1618,15 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                                             )}
                                           </div>
                                         )}
+                                        {/* Inline answer when Show Answers is ON */}
+                                        {showAnswers && (question.correct_answer || question.explanation) && (
+                                          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
+                                            <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">Ans:</span>
+                                            <span className="text-sm font-bold text-emerald-900 print:text-gray-900">
+                                              {question.correct_answer || question.explanation}
+                                            </span>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -1651,6 +1685,15 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                                         )}
                                       </div>
                                     )}
+                                    {/* Inline answer when Show Answers is ON */}
+                                    {showAnswers && (question.correct_answer || question.explanation) && (
+                                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
+                                        <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">Ans:</span>
+                                        <span className="text-sm font-bold text-emerald-900 print:text-gray-900">
+                                          {question.correct_answer || question.explanation}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -1660,6 +1703,21 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                       </div>
                     )
                   })()}
+
+                  {/* Second Show/Hide Answer Key button — below last question */}
+                  <div className="mt-10 flex justify-center print:hidden">
+                    <Button
+                      onClick={() => setShowAnswers(!showAnswers)}
+                      variant={showAnswers ? "default" : "outline"}
+                      size="sm"
+                      className={showAnswers ? "bg-primary/90 text-primary-foreground" : ""}
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                      </svg>
+                      {showAnswers ? 'Hide Answer Key' : 'Show Answer Key'}
+                    </Button>
+                  </div>
 
                   {/* Answer Key Section — visible when showAnswers is true */}
                   {showAnswers && (
@@ -1674,7 +1732,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                         {worksheet.questions.map((question, index) => (
                           <div key={question.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg text-sm border border-border/50 print:bg-gray-100 print:border-black/15 print:rounded-none">
                             <span className="font-bold text-primary">Q{index + 1}</span>
-                            <span className="text-foreground font-medium">{question.correct_answer || '---'}</span>
+                            <span className="text-foreground font-medium">
+                              {question.correct_answer
+                                ? question.correct_answer
+                                : question.explanation || question.sample_answer
+                                  ? <span className="italic text-xs text-muted-foreground">{question.explanation || question.sample_answer}</span>
+                                  : <span className="text-muted-foreground/40">&mdash;</span>
+                              }
+                            </span>
                           </div>
                         ))}
                       </div>

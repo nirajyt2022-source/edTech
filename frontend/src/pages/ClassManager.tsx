@@ -12,12 +12,13 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { useClasses, type TeacherClass } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
 import { fetchSubjects, type CurriculumSubject } from '@/lib/curriculum'
+import { notify } from '@/lib/toast'
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const FALLBACK_SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
 const BOARDS = ['CBSE', 'ICSE', 'State Board']
 
-export default function ClassManager() {
+export default function ClassManager({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const { classes, loading, error, createClass, updateClass, deleteClass } = useClasses()
   const { region } = useProfile()
   const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([])
@@ -103,8 +104,10 @@ export default function ClassManager() {
           syllabus_source: 'cbse',
         })
       }
+      notify.success(editingClass ? 'Class updated' : 'Class created')
       resetForm()
     } catch (err) {
+      notify.error('Failed to save class')
       setFormError('Failed to save class')
       console.error(err)
     } finally {
@@ -117,7 +120,9 @@ export default function ClassManager() {
 
     try {
       await deleteClass(cls.id)
+      notify.success('Class deleted')
     } catch (err) {
+      notify.error('Failed to delete class')
       console.error('Failed to delete class:', err)
     }
   }
@@ -125,7 +130,7 @@ export default function ClassManager() {
   // Subject icon colors for visual distinction
   const subjectColor = (sub: string) => {
     const colors: Record<string, string> = {
-      Maths: 'from-blue-500/10 to-indigo-500/5 text-blue-600 border-blue-200/50',
+      Maths: 'from-blue-500/10 to-blue-500/5 text-blue-600 border-blue-200/50',
       English: 'from-amber-500/10 to-orange-500/5 text-amber-600 border-amber-200/50',
       EVS: 'from-emerald-500/10 to-green-500/5 text-emerald-600 border-emerald-200/50',
       Hindi: 'from-rose-500/10 to-pink-500/5 text-rose-600 border-rose-200/50',
@@ -340,6 +345,16 @@ export default function ClassManager() {
                       </div>
 
                       <div className="flex gap-2 self-stretch sm:self-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                        {onNavigate && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onNavigate('generator')}
+                            className="rounded-xl text-xs font-semibold h-11 px-4"
+                          >
+                            Generate worksheet &rarr;
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="ghost"
