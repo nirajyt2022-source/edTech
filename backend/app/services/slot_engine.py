@@ -172,7 +172,7 @@ def get_valid_formats(subject: str = "Mathematics") -> dict[str, set[str]]:
     """Return the VALID_FORMATS dict for the given subject."""
     if subject and subject.lower() == "english":
         return VALID_FORMATS_ENGLISH
-    if subject and subject.lower() in ("science", "computer", "gk", "moral science"):
+    if subject and subject.lower() in ("science", "computer", "gk", "moral science", "health"):
         return VALID_FORMATS_SCIENCE
     if subject and subject.lower() == "hindi":
         return VALID_FORMATS_HINDI
@@ -183,7 +183,7 @@ def get_default_format_by_slot(subject: str = "Mathematics") -> dict[str, str]:
     """Return the DEFAULT_FORMAT_BY_SLOT_TYPE dict for the given subject."""
     if subject and subject.lower() == "english":
         return DEFAULT_FORMAT_BY_SLOT_TYPE_ENGLISH
-    if subject and subject.lower() in ("science", "computer", "gk", "moral science"):
+    if subject and subject.lower() in ("science", "computer", "gk", "moral science", "health"):
         return DEFAULT_FORMAT_BY_SLOT_TYPE_SCIENCE
     if subject and subject.lower() == "hindi":
         return DEFAULT_FORMAT_BY_SLOT_TYPE_HINDI
@@ -1124,6 +1124,97 @@ _SKILL_TAG_TO_SLOT: dict[str, tuple[str, str]] = {
     "moral_c5_digital_represent": ("representation", "sequence_steps"),
     "moral_c5_digital_error": ("error_detection", "error_spot_science"),
     "moral_c5_digital_thinking": ("thinking", "thinking_science"),
+    # ── Health & Physical Education skill tags ──────────────────────────
+    # Personal Hygiene (Class 1)
+    "health_c1_hygiene_identify": ("recognition", "pick_correct_science"),
+    "health_c1_hygiene_apply": ("application", "explain_why_science"),
+    "health_c1_hygiene_represent": ("representation", "sequence_steps"),
+    "health_c1_hygiene_error": ("error_detection", "error_spot_science"),
+    "health_c1_hygiene_thinking": ("thinking", "thinking_science"),
+    # Good Posture (Class 1)
+    "health_c1_posture_identify": ("recognition", "true_false"),
+    "health_c1_posture_apply": ("application", "give_example"),
+    "health_c1_posture_represent": ("representation", "sequence_steps"),
+    "health_c1_posture_error": ("error_detection", "error_spot_science"),
+    "health_c1_posture_thinking": ("thinking", "thinking_science"),
+    # Basic Physical Activities (Class 1)
+    "health_c1_physical_identify": ("recognition", "pick_correct_science"),
+    "health_c1_physical_apply": ("application", "give_example"),
+    "health_c1_physical_represent": ("representation", "sequence_steps"),
+    "health_c1_physical_error": ("error_detection", "error_spot_science"),
+    "health_c1_physical_thinking": ("thinking", "thinking_science"),
+    # Healthy Eating Habits (Class 2)
+    "health_c2_eating_identify": ("recognition", "pick_correct_science"),
+    "health_c2_eating_apply": ("application", "explain_why_science"),
+    "health_c2_eating_represent": ("representation", "sequence_steps"),
+    "health_c2_eating_error": ("error_detection", "error_spot_science"),
+    "health_c2_eating_thinking": ("thinking", "thinking_science"),
+    # Outdoor Play (Class 2)
+    "health_c2_outdoor_identify": ("recognition", "true_false"),
+    "health_c2_outdoor_apply": ("application", "give_example"),
+    "health_c2_outdoor_represent": ("representation", "sequence_steps"),
+    "health_c2_outdoor_error": ("error_detection", "error_spot_science"),
+    "health_c2_outdoor_thinking": ("thinking", "thinking_science"),
+    # Basic Stretching (Class 2)
+    "health_c2_stretching_identify": ("recognition", "pick_correct_science"),
+    "health_c2_stretching_apply": ("application", "give_example"),
+    "health_c2_stretching_represent": ("representation", "sequence_steps"),
+    "health_c2_stretching_error": ("error_detection", "error_spot_science"),
+    "health_c2_stretching_thinking": ("thinking", "thinking_science"),
+    # Balanced Diet (Class 3)
+    "health_c3_diet_identify": ("recognition", "pick_correct_science"),
+    "health_c3_diet_apply": ("application", "explain_why_science"),
+    "health_c3_diet_represent": ("representation", "cause_effect"),
+    "health_c3_diet_error": ("error_detection", "error_spot_science"),
+    "health_c3_diet_thinking": ("thinking", "thinking_science"),
+    # Team Sports Rules (Class 3)
+    "health_c3_sports_identify": ("recognition", "true_false"),
+    "health_c3_sports_apply": ("application", "explain_why_science"),
+    "health_c3_sports_represent": ("representation", "sequence_steps"),
+    "health_c3_sports_error": ("error_detection", "error_spot_science"),
+    "health_c3_sports_thinking": ("thinking", "thinking_science"),
+    # Safety at Play (Class 3)
+    "health_c3_safety_identify": ("recognition", "pick_correct_science"),
+    "health_c3_safety_apply": ("application", "explain_why_science"),
+    "health_c3_safety_represent": ("representation", "sequence_steps"),
+    "health_c3_safety_error": ("error_detection", "error_spot_science"),
+    "health_c3_safety_thinking": ("thinking", "thinking_science"),
+    # First Aid Basics (Class 4)
+    "health_c4_firstaid_identify": ("recognition", "pick_correct_science"),
+    "health_c4_firstaid_apply": ("application", "explain_why_science"),
+    "health_c4_firstaid_represent": ("representation", "sequence_steps"),
+    "health_c4_firstaid_error": ("error_detection", "error_spot_science"),
+    "health_c4_firstaid_thinking": ("thinking", "thinking_science"),
+    # Yoga Introduction (Class 4)
+    "health_c4_yoga_identify": ("recognition", "true_false"),
+    "health_c4_yoga_apply": ("application", "give_example"),
+    "health_c4_yoga_represent": ("representation", "sequence_steps"),
+    "health_c4_yoga_error": ("error_detection", "error_spot_science"),
+    "health_c4_yoga_thinking": ("thinking", "thinking_science"),
+    # Importance of Sleep (Class 4)
+    "health_c4_sleep_identify": ("recognition", "true_false"),
+    "health_c4_sleep_apply": ("application", "explain_why_science"),
+    "health_c4_sleep_represent": ("representation", "cause_effect"),
+    "health_c4_sleep_error": ("error_detection", "error_spot_science"),
+    "health_c4_sleep_thinking": ("thinking", "thinking_science"),
+    # Fitness and Stamina (Class 5)
+    "health_c5_fitness_identify": ("recognition", "pick_correct_science"),
+    "health_c5_fitness_apply": ("application", "explain_why_science"),
+    "health_c5_fitness_represent": ("representation", "sequence_steps"),
+    "health_c5_fitness_error": ("error_detection", "error_spot_science"),
+    "health_c5_fitness_thinking": ("thinking", "thinking_science"),
+    # Nutrition Labels Reading (Class 5)
+    "health_c5_nutrition_identify": ("recognition", "true_false"),
+    "health_c5_nutrition_apply": ("application", "explain_why_science"),
+    "health_c5_nutrition_represent": ("representation", "cause_effect"),
+    "health_c5_nutrition_error": ("error_detection", "error_spot_science"),
+    "health_c5_nutrition_thinking": ("thinking", "thinking_science"),
+    # Mental Health Awareness (Class 5)
+    "health_c5_mental_identify": ("recognition", "pick_correct_science"),
+    "health_c5_mental_apply": ("application", "explain_why_science"),
+    "health_c5_mental_represent": ("representation", "cause_effect"),
+    "health_c5_mental_error": ("error_detection", "error_spot_science"),
+    "health_c5_mental_thinking": ("thinking", "thinking_science"),
 }
 
 SLOT_INSTRUCTIONS: dict[str, str] = {
@@ -1981,6 +2072,82 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
         "Understand responsible behaviour in the digital world",
         "Know about online privacy and digital footprint",
         "Practise safe and ethical use of the internet",
+    ],
+    # ── Health & Physical Education ──────────────────────────
+    "Personal Hygiene (Class 1)": [
+        "Understand the importance of handwashing and brushing teeth",
+        "Know when and how to keep the body clean",
+        "Practise good hygiene habits like bathing and wearing clean clothes",
+    ],
+    "Good Posture (Class 1)": [
+        "Understand why sitting and standing straight is important",
+        "Know the correct way to carry a school bag",
+        "Practise good posture while reading and writing",
+    ],
+    "Basic Physical Activities (Class 1)": [
+        "Identify different physical activities like running, jumping, throwing",
+        "Understand why exercise and active play are important",
+        "Practise basic movements and coordination skills",
+    ],
+    "Healthy Eating Habits (Class 2)": [
+        "Understand why eating fruits and vegetables is important",
+        "Know the importance of drinking enough water every day",
+        "Identify healthy food choices and avoid junk food",
+    ],
+    "Outdoor Play (Class 2)": [
+        "Understand the benefits of playing outside every day",
+        "Identify different types of outdoor games and activities",
+        "Know how outdoor play helps the body and mind",
+    ],
+    "Basic Stretching (Class 2)": [
+        "Know why warming up before exercise is important",
+        "Identify simple stretches for arms, legs, and back",
+        "Practise a basic warm-up routine before physical activity",
+    ],
+    "Balanced Diet (Class 3)": [
+        "Understand the five food groups and their importance",
+        "Know what a balanced Indian thali looks like",
+        "Identify different nutrients and their role in the body",
+    ],
+    "Team Sports Rules (Class 3)": [
+        "Know the basic rules of cricket, football, kabaddi, and kho-kho",
+        "Understand the importance of fair play and sportsmanship",
+        "Identify different positions and roles in team sports",
+    ],
+    "Safety at Play (Class 3)": [
+        "Understand playground safety rules and precautions",
+        "Know what a first aid kit contains and when to use it",
+        "Identify safe and unsafe behaviours during play",
+    ],
+    "First Aid Basics (Class 4)": [
+        "Know how to treat minor cuts, burns, and bruises",
+        "Understand when and how to bandage a wound",
+        "Know when to call an adult or seek medical help",
+    ],
+    "Yoga Introduction (Class 4)": [
+        "Identify basic yoga asanas like Tadasana, Vrikshasana, and Balasana",
+        "Understand the benefits of yoga for body and mind",
+        "Practise basic breathing exercises (pranayama)",
+    ],
+    "Importance of Sleep (Class 4)": [
+        "Understand how many hours of sleep children need",
+        "Know the effects of screen time before bedtime",
+        "Practise good sleep hygiene habits",
+    ],
+    "Fitness and Stamina (Class 5)": [
+        "Understand what physical fitness and stamina mean",
+        "Know different exercises that build strength and endurance",
+        "Learn how to measure basic fitness levels",
+    ],
+    "Nutrition Labels Reading (Class 5)": [
+        "Understand how to read a food label on packaged foods",
+        "Know what calories, protein, fat, and sugar mean on labels",
+        "Make healthier food choices by comparing nutrition labels",
+    ],
+    "Mental Health Awareness (Class 5)": [
+        "Understand what mental health means and why it matters",
+        "Know healthy ways to manage stress and difficult feelings",
+        "Practise mindfulness and talking about emotions",
     ],
 }
 
@@ -3157,6 +3324,112 @@ TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
         "the teacher explaining what a digital footprint is", "Kiran understanding screen time limits set by his parents",
         "learning about not clicking on unknown links or pop-ups", "Aman asking permission before posting a friend's photo online",
         "a school poster about being kind in online comments", "a quiz about safe and responsible internet use",
+    ],
+    # ── Health & Physical Education ──────────────────────────
+    "Personal Hygiene (Class 1)": [
+        "Riya washing her hands before eating tiffin at school", "Aman brushing his teeth every morning and night",
+        "Sneha taking a bath before getting ready for school", "Kiran wearing a clean uniform to school every day",
+        "the teacher showing children how to wash hands with soap", "Arjun keeping his nails trimmed and clean",
+        "Riya covering her mouth when she sneezes during assembly", "Aman learning to comb his hair neatly before school",
+        "a hygiene chart on the classroom wall with gold stars", "Sneha carrying a clean handkerchief in her pocket every day",
+    ],
+    "Good Posture (Class 1)": [
+        "Riya sitting up straight at her desk during class", "Aman learning to carry his school bag on both shoulders",
+        "Sneha standing tall during the national anthem at assembly", "Kiran practising good posture while reading a storybook",
+        "the teacher reminding children not to slouch on the bench", "Arjun bending his knees to pick up his tiffin box from the floor",
+        "Riya keeping her back straight while writing in her notebook", "Aman adjusting his school bag straps to fit properly",
+        "a classroom poster showing correct sitting and standing posture", "Sneha not leaning on one side while sitting on the bench",
+    ],
+    "Basic Physical Activities (Class 1)": [
+        "Riya running in the school ground during games period", "Aman jumping over small hurdles in a relay race",
+        "Sneha throwing a ball to her friend during recess", "Kiran catching a bean bag during a class activity",
+        "the PT teacher asking children to hop on one foot", "Arjun skipping along the school corridor with his friends",
+        "Riya balancing on one leg during a fun exercise", "Aman clapping and marching during the morning warm-up",
+        "children playing catch in the school playground", "Sneha rolling a ball to her partner during sports class",
+    ],
+    "Healthy Eating Habits (Class 2)": [
+        "Riya eating a roti-sabzi tiffin instead of chips at school", "Aman drinking a glass of milk every morning before school",
+        "Sneha choosing fruit over biscuits for her evening snack", "Kiran drinking water from his bottle during recess",
+        "the teacher explaining why junk food is bad for health", "Arjun eating dal-chawal with salad at lunchtime",
+        "Riya's mother packing a healthy tiffin with paratha and curd", "Aman refusing to buy samosa from the canteen every day",
+        "a classroom chart showing healthy vs unhealthy food choices", "Sneha eating seasonal fruits like mango, guava, and banana",
+    ],
+    "Outdoor Play (Class 2)": [
+        "Riya playing kho-kho with her friends during recess", "Aman riding his bicycle in the park every evening",
+        "Sneha playing hopscotch in the school playground", "Kiran flying a kite with his father on Makar Sankranti",
+        "the PT teacher explaining why outdoor play is better than TV", "Arjun playing cricket with neighbourhood friends after school",
+        "Riya running races with her classmates during sports day", "Aman playing hide-and-seek in the society garden",
+        "children skipping rope during the games period", "Sneha playing with a frisbee in the park on Sunday",
+    ],
+    "Basic Stretching (Class 2)": [
+        "Riya stretching her arms above her head before games period", "Aman touching his toes during the morning PT class",
+        "Sneha doing neck rolls before starting exercises", "Kiran stretching his legs on the school ground",
+        "the PT teacher leading a warm-up before the relay race", "Arjun doing side bends with his classmates",
+        "Riya rotating her wrists before writing practice", "Aman learning butterfly stretch during sports class",
+        "children doing jumping jacks as a warm-up exercise", "Sneha stretching her calf muscles before running",
+    ],
+    "Balanced Diet (Class 3)": [
+        "Riya learning about the five food groups from a chart in class", "Aman's mother preparing a balanced thali with dal, roti, sabzi, and curd",
+        "Sneha understanding why proteins from dal and paneer help muscles grow", "Kiran learning that rice and roti give energy (carbohydrates)",
+        "the teacher explaining why a colourful plate is a healthy plate", "Arjun reading about vitamins in fruits like amla, orange, and guava",
+        "Riya eating a mix of cereals, pulses, vegetables, and milk products", "Aman learning that calcium from milk makes bones strong",
+        "a school project on what an ideal Indian lunch plate should look like", "Sneha comparing a balanced tiffin with an unbalanced one",
+    ],
+    "Team Sports Rules (Class 3)": [
+        "Riya learning the rules of kabaddi during PT class", "Aman understanding the LBW rule in cricket",
+        "Sneha playing kho-kho and learning about tagging and chasing", "Kiran understanding offside in football",
+        "the PT teacher explaining fair play and not arguing with the referee", "Arjun learning that each player has a specific role in cricket",
+        "Riya understanding the rules of passing in basketball", "Aman learning about innings and overs during a cricket match",
+        "children practising sportsmanship by shaking hands after a game", "Sneha learning about scoring rules in badminton",
+    ],
+    "Safety at Play (Class 3)": [
+        "Riya wearing proper shoes before going to the playground", "Aman checking the swing for broken parts before sitting on it",
+        "Sneha not pushing others on the slide at school", "Kiran learning what to do if someone falls and gets hurt",
+        "the teacher showing the first aid kit and explaining its contents", "Arjun learning to warm up before running to avoid injuries",
+        "Riya knowing not to play near the road or construction areas", "Aman telling the teacher when a friend scraped her knee",
+        "children following queue rules while using the playground equipment", "Sneha understanding why drinking water during play is important",
+    ],
+    "First Aid Basics (Class 4)": [
+        "Riya learning to clean a small cut with water and apply a bandage", "Aman knowing to put cold water on a minor burn immediately",
+        "Sneha learning the contents of a first aid kit in the school nurse's room", "Kiran knowing to call an adult when someone faints",
+        "the teacher demonstrating how to apply an antiseptic and plaster", "Arjun learning the difference between a sprain and a fracture",
+        "Riya knowing not to touch someone else's wound without gloves", "Aman learning to press a clean cloth on a bleeding nose",
+        "a school drill on what to do if someone gets stung by a bee", "Sneha learning to keep a hurt friend calm and comfortable until help arrives",
+    ],
+    "Yoga Introduction (Class 4)": [
+        "Riya practising Tadasana (Mountain Pose) during the morning assembly", "Aman learning Vrikshasana (Tree Pose) for balance during PT class",
+        "Sneha doing Balasana (Child's Pose) to relax after study time", "Kiran practising deep breathing (pranayama) before an exam",
+        "the yoga teacher explaining the benefits of Surya Namaskar", "Arjun doing Bhujangasana (Cobra Pose) to strengthen his back",
+        "Riya learning Shavasana (Corpse Pose) for relaxation at the end of yoga class", "Aman practising Sukhasana (Easy Pose) for meditation",
+        "a school celebration on International Yoga Day (21 June)", "Sneha learning how yoga helps both body and mind",
+    ],
+    "Importance of Sleep (Class 4)": [
+        "Riya going to bed by 9 PM every school night", "Aman understanding why watching TV before sleep is harmful",
+        "Sneha keeping her phone outside the bedroom at night", "Kiran learning that children need 9-11 hours of sleep",
+        "the teacher explaining how sleep helps the brain learn and remember", "Arjun feeling tired at school because he slept late playing games",
+        "Riya having a fixed bedtime routine — brush, read, sleep", "Aman not drinking cola or tea close to bedtime",
+        "a school poster about good sleep habits for children", "Sneha waking up fresh after a full night's sleep before a test",
+    ],
+    "Fitness and Stamina (Class 5)": [
+        "Riya running laps around the school ground to build stamina", "Aman doing push-ups and sit-ups during the PT period",
+        "Sneha measuring her fitness by timing a 100-metre sprint", "Kiran practising skipping rope to improve endurance",
+        "the PT teacher explaining the difference between strength and stamina", "Arjun jogging every morning in the park near his house",
+        "Riya participating in the school cross-country race", "Aman learning that regular exercise keeps the heart healthy",
+        "a school fitness test measuring running speed, flexibility, and strength", "Sneha setting a personal goal to run without stopping for 10 minutes",
+    ],
+    "Nutrition Labels Reading (Class 5)": [
+        "Riya reading the nutrition label on a packet of biscuits at the shop", "Aman comparing two brands of juice to find which has less sugar",
+        "Sneha checking the expiry date and ingredients on a chips packet", "Kiran learning what 'per serving' means on food labels",
+        "the teacher explaining calories, protein, fat, and sugar on labels", "Arjun discovering that his favourite noodles have very high sodium",
+        "Riya choosing a cereal with less sugar by reading the label", "Aman learning that 'trans fat: 0g' is a healthier choice",
+        "a class activity comparing nutrition labels of packaged foods", "Sneha understanding why preservatives are listed on food packets",
+    ],
+    "Mental Health Awareness (Class 5)": [
+        "Riya talking to her teacher when she felt anxious about exams", "Aman practising deep breathing when he felt angry during a game",
+        "Sneha writing in a feelings journal every evening", "Kiran understanding that it is okay to feel sad sometimes",
+        "the teacher explaining mindfulness and a 5-minute calm exercise", "Arjun learning to take a break when he felt overwhelmed with homework",
+        "Riya telling her parents when she felt worried about something", "Aman being kind to himself after making a mistake in class",
+        "a class discussion about managing stress during exam season", "Sneha supporting a friend who was feeling lonely at school",
     ],
 }
 
@@ -6170,6 +6443,266 @@ TOPIC_PROFILES: dict[str, dict] = {
             {"skill_tag": "moral_c5_digital_thinking", "count": 1},
         ],
     },
+    # ── Health & Physical Education Class 1 (3 topics) ──────────────────────────
+    "Personal Hygiene (Class 1)": {
+        "allowed_skill_tags": [
+            "health_c1_hygiene_identify", "health_c1_hygiene_apply", "health_c1_hygiene_represent",
+            "health_c1_hygiene_error", "health_c1_hygiene_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c1_hygiene_identify", "count": 2},
+            {"skill_tag": "health_c1_hygiene_apply", "count": 3},
+            {"skill_tag": "health_c1_hygiene_represent", "count": 2},
+            {"skill_tag": "health_c1_hygiene_error", "count": 2},
+            {"skill_tag": "health_c1_hygiene_thinking", "count": 1},
+        ],
+    },
+    "Good Posture (Class 1)": {
+        "allowed_skill_tags": [
+            "health_c1_posture_identify", "health_c1_posture_apply", "health_c1_posture_represent",
+            "health_c1_posture_error", "health_c1_posture_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c1_posture_identify", "count": 2},
+            {"skill_tag": "health_c1_posture_apply", "count": 3},
+            {"skill_tag": "health_c1_posture_represent", "count": 2},
+            {"skill_tag": "health_c1_posture_error", "count": 2},
+            {"skill_tag": "health_c1_posture_thinking", "count": 1},
+        ],
+    },
+    "Basic Physical Activities (Class 1)": {
+        "allowed_skill_tags": [
+            "health_c1_physical_identify", "health_c1_physical_apply", "health_c1_physical_represent",
+            "health_c1_physical_error", "health_c1_physical_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c1_physical_identify", "count": 2},
+            {"skill_tag": "health_c1_physical_apply", "count": 3},
+            {"skill_tag": "health_c1_physical_represent", "count": 2},
+            {"skill_tag": "health_c1_physical_error", "count": 2},
+            {"skill_tag": "health_c1_physical_thinking", "count": 1},
+        ],
+    },
+    # ── Health & Physical Education Class 2 (3 topics) ──────────────────────────
+    "Healthy Eating Habits (Class 2)": {
+        "allowed_skill_tags": [
+            "health_c2_eating_identify", "health_c2_eating_apply", "health_c2_eating_represent",
+            "health_c2_eating_error", "health_c2_eating_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c2_eating_identify", "count": 2},
+            {"skill_tag": "health_c2_eating_apply", "count": 3},
+            {"skill_tag": "health_c2_eating_represent", "count": 2},
+            {"skill_tag": "health_c2_eating_error", "count": 2},
+            {"skill_tag": "health_c2_eating_thinking", "count": 1},
+        ],
+    },
+    "Outdoor Play (Class 2)": {
+        "allowed_skill_tags": [
+            "health_c2_outdoor_identify", "health_c2_outdoor_apply", "health_c2_outdoor_represent",
+            "health_c2_outdoor_error", "health_c2_outdoor_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c2_outdoor_identify", "count": 2},
+            {"skill_tag": "health_c2_outdoor_apply", "count": 3},
+            {"skill_tag": "health_c2_outdoor_represent", "count": 2},
+            {"skill_tag": "health_c2_outdoor_error", "count": 2},
+            {"skill_tag": "health_c2_outdoor_thinking", "count": 1},
+        ],
+    },
+    "Basic Stretching (Class 2)": {
+        "allowed_skill_tags": [
+            "health_c2_stretching_identify", "health_c2_stretching_apply", "health_c2_stretching_represent",
+            "health_c2_stretching_error", "health_c2_stretching_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c2_stretching_identify", "count": 2},
+            {"skill_tag": "health_c2_stretching_apply", "count": 3},
+            {"skill_tag": "health_c2_stretching_represent", "count": 2},
+            {"skill_tag": "health_c2_stretching_error", "count": 2},
+            {"skill_tag": "health_c2_stretching_thinking", "count": 1},
+        ],
+    },
+    # ── Health & Physical Education Class 3 (3 topics) ──────────────────────────
+    "Balanced Diet (Class 3)": {
+        "allowed_skill_tags": [
+            "health_c3_diet_identify", "health_c3_diet_apply", "health_c3_diet_represent",
+            "health_c3_diet_error", "health_c3_diet_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c3_diet_identify", "count": 2},
+            {"skill_tag": "health_c3_diet_apply", "count": 3},
+            {"skill_tag": "health_c3_diet_represent", "count": 2},
+            {"skill_tag": "health_c3_diet_error", "count": 2},
+            {"skill_tag": "health_c3_diet_thinking", "count": 1},
+        ],
+    },
+    "Team Sports Rules (Class 3)": {
+        "allowed_skill_tags": [
+            "health_c3_sports_identify", "health_c3_sports_apply", "health_c3_sports_represent",
+            "health_c3_sports_error", "health_c3_sports_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c3_sports_identify", "count": 2},
+            {"skill_tag": "health_c3_sports_apply", "count": 3},
+            {"skill_tag": "health_c3_sports_represent", "count": 2},
+            {"skill_tag": "health_c3_sports_error", "count": 2},
+            {"skill_tag": "health_c3_sports_thinking", "count": 1},
+        ],
+    },
+    "Safety at Play (Class 3)": {
+        "allowed_skill_tags": [
+            "health_c3_safety_identify", "health_c3_safety_apply", "health_c3_safety_represent",
+            "health_c3_safety_error", "health_c3_safety_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c3_safety_identify", "count": 2},
+            {"skill_tag": "health_c3_safety_apply", "count": 3},
+            {"skill_tag": "health_c3_safety_represent", "count": 2},
+            {"skill_tag": "health_c3_safety_error", "count": 2},
+            {"skill_tag": "health_c3_safety_thinking", "count": 1},
+        ],
+    },
+    # ── Health & Physical Education Class 4 (3 topics) ──────────────────────────
+    "First Aid Basics (Class 4)": {
+        "allowed_skill_tags": [
+            "health_c4_firstaid_identify", "health_c4_firstaid_apply", "health_c4_firstaid_represent",
+            "health_c4_firstaid_error", "health_c4_firstaid_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c4_firstaid_identify", "count": 2},
+            {"skill_tag": "health_c4_firstaid_apply", "count": 3},
+            {"skill_tag": "health_c4_firstaid_represent", "count": 2},
+            {"skill_tag": "health_c4_firstaid_error", "count": 2},
+            {"skill_tag": "health_c4_firstaid_thinking", "count": 1},
+        ],
+    },
+    "Yoga Introduction (Class 4)": {
+        "allowed_skill_tags": [
+            "health_c4_yoga_identify", "health_c4_yoga_apply", "health_c4_yoga_represent",
+            "health_c4_yoga_error", "health_c4_yoga_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c4_yoga_identify", "count": 2},
+            {"skill_tag": "health_c4_yoga_apply", "count": 3},
+            {"skill_tag": "health_c4_yoga_represent", "count": 2},
+            {"skill_tag": "health_c4_yoga_error", "count": 2},
+            {"skill_tag": "health_c4_yoga_thinking", "count": 1},
+        ],
+    },
+    "Importance of Sleep (Class 4)": {
+        "allowed_skill_tags": [
+            "health_c4_sleep_identify", "health_c4_sleep_apply", "health_c4_sleep_represent",
+            "health_c4_sleep_error", "health_c4_sleep_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c4_sleep_identify", "count": 2},
+            {"skill_tag": "health_c4_sleep_apply", "count": 3},
+            {"skill_tag": "health_c4_sleep_represent", "count": 2},
+            {"skill_tag": "health_c4_sleep_error", "count": 2},
+            {"skill_tag": "health_c4_sleep_thinking", "count": 1},
+        ],
+    },
+    # ── Health & Physical Education Class 5 (3 topics) ──────────────────────────
+    "Fitness and Stamina (Class 5)": {
+        "allowed_skill_tags": [
+            "health_c5_fitness_identify", "health_c5_fitness_apply", "health_c5_fitness_represent",
+            "health_c5_fitness_error", "health_c5_fitness_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c5_fitness_identify", "count": 2},
+            {"skill_tag": "health_c5_fitness_apply", "count": 3},
+            {"skill_tag": "health_c5_fitness_represent", "count": 2},
+            {"skill_tag": "health_c5_fitness_error", "count": 2},
+            {"skill_tag": "health_c5_fitness_thinking", "count": 1},
+        ],
+    },
+    "Nutrition Labels Reading (Class 5)": {
+        "allowed_skill_tags": [
+            "health_c5_nutrition_identify", "health_c5_nutrition_apply", "health_c5_nutrition_represent",
+            "health_c5_nutrition_error", "health_c5_nutrition_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c5_nutrition_identify", "count": 2},
+            {"skill_tag": "health_c5_nutrition_apply", "count": 3},
+            {"skill_tag": "health_c5_nutrition_represent", "count": 2},
+            {"skill_tag": "health_c5_nutrition_error", "count": 2},
+            {"skill_tag": "health_c5_nutrition_thinking", "count": 1},
+        ],
+    },
+    "Mental Health Awareness (Class 5)": {
+        "allowed_skill_tags": [
+            "health_c5_mental_identify", "health_c5_mental_apply", "health_c5_mental_represent",
+            "health_c5_mental_error", "health_c5_mental_thinking",
+        ],
+        "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
+        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
+        "disallowed_visual_types": [],
+        "subject": "Health",
+        "default_recipe": [
+            {"skill_tag": "health_c5_mental_identify", "count": 2},
+            {"skill_tag": "health_c5_mental_apply", "count": 3},
+            {"skill_tag": "health_c5_mental_represent", "count": 2},
+            {"skill_tag": "health_c5_mental_error", "count": 2},
+            {"skill_tag": "health_c5_mental_thinking", "count": 1},
+        ],
+    },
 }
 
 
@@ -6741,6 +7274,67 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 5 digital ethics": "Digital Ethics (Class 5)",
     "online safety": "Digital Ethics (Class 5)",
     "digital footprint": "Digital Ethics (Class 5)",
+    # ── Health & Physical Education aliases ──────────────────────────
+    "personal hygiene": "Personal Hygiene (Class 1)",
+    "class 1 hygiene": "Personal Hygiene (Class 1)",
+    "c1 hygiene": "Personal Hygiene (Class 1)",
+    "handwashing": "Personal Hygiene (Class 1)",
+    "good posture": "Good Posture (Class 1)",
+    "class 1 posture": "Good Posture (Class 1)",
+    "c1 posture": "Good Posture (Class 1)",
+    "sitting straight": "Good Posture (Class 1)",
+    "basic physical activities": "Basic Physical Activities (Class 1)",
+    "class 1 physical activities": "Basic Physical Activities (Class 1)",
+    "c1 physical": "Basic Physical Activities (Class 1)",
+    "running jumping": "Basic Physical Activities (Class 1)",
+    "healthy eating habits": "Healthy Eating Habits (Class 2)",
+    "class 2 healthy eating": "Healthy Eating Habits (Class 2)",
+    "c2 eating": "Healthy Eating Habits (Class 2)",
+    "healthy food": "Healthy Eating Habits (Class 2)",
+    "outdoor play": "Outdoor Play (Class 2)",
+    "class 2 outdoor play": "Outdoor Play (Class 2)",
+    "c2 outdoor": "Outdoor Play (Class 2)",
+    "playing outside": "Outdoor Play (Class 2)",
+    "basic stretching": "Basic Stretching (Class 2)",
+    "class 2 stretching": "Basic Stretching (Class 2)",
+    "c2 stretching": "Basic Stretching (Class 2)",
+    "warm up exercises": "Basic Stretching (Class 2)",
+    "balanced diet": "Balanced Diet (Class 3)",
+    "class 3 balanced diet": "Balanced Diet (Class 3)",
+    "c3 diet": "Balanced Diet (Class 3)",
+    "food groups": "Balanced Diet (Class 3)",
+    "team sports rules": "Team Sports Rules (Class 3)",
+    "class 3 team sports": "Team Sports Rules (Class 3)",
+    "c3 sports": "Team Sports Rules (Class 3)",
+    "cricket rules": "Team Sports Rules (Class 3)",
+    "safety at play": "Safety at Play (Class 3)",
+    "class 3 safety": "Safety at Play (Class 3)",
+    "c3 safety": "Safety at Play (Class 3)",
+    "playground safety": "Safety at Play (Class 3)",
+    "first aid basics": "First Aid Basics (Class 4)",
+    "class 4 first aid": "First Aid Basics (Class 4)",
+    "c4 first aid": "First Aid Basics (Class 4)",
+    "treating cuts": "First Aid Basics (Class 4)",
+    "yoga introduction": "Yoga Introduction (Class 4)",
+    "class 4 yoga": "Yoga Introduction (Class 4)",
+    "c4 yoga": "Yoga Introduction (Class 4)",
+    "basic yoga": "Yoga Introduction (Class 4)",
+    "importance of sleep": "Importance of Sleep (Class 4)",
+    "class 4 sleep": "Importance of Sleep (Class 4)",
+    "c4 sleep": "Importance of Sleep (Class 4)",
+    "sleep hygiene": "Importance of Sleep (Class 4)",
+    "fitness and stamina": "Fitness and Stamina (Class 5)",
+    "class 5 fitness": "Fitness and Stamina (Class 5)",
+    "c5 fitness": "Fitness and Stamina (Class 5)",
+    "stamina building": "Fitness and Stamina (Class 5)",
+    "nutrition labels reading": "Nutrition Labels Reading (Class 5)",
+    "class 5 nutrition": "Nutrition Labels Reading (Class 5)",
+    "c5 nutrition": "Nutrition Labels Reading (Class 5)",
+    "reading food labels": "Nutrition Labels Reading (Class 5)",
+    "mental health awareness": "Mental Health Awareness (Class 5)",
+    "class 5 mental health": "Mental Health Awareness (Class 5)",
+    "c5 mental health": "Mental Health Awareness (Class 5)",
+    "managing stress": "Mental Health Awareness (Class 5)",
 }
 
 
@@ -10118,6 +10712,274 @@ def _build_slot_instruction(
         }
         return moral_digital_ctx + moral_digital_map.get(_skill_tag, "About digital ethics.")
 
+    # ── Health & PE: Personal Hygiene (Class 1) ──
+    if _skill_tag.startswith("health_c1_hygiene_"):
+        health_hygiene_ctx = (
+            "Topic: Personal Hygiene (Class 1 Health & PE, CBSE). "
+            "Cover: handwashing, brushing teeth, bathing, wearing clean clothes, trimming nails. "
+            "Use very simple language — Class 1 level (age 6). Use Indian names and contexts. "
+            "DO NOT repeat the same hygiene scenario. "
+        )
+        health_hygiene_map = {
+            "health_c1_hygiene_identify": "format: pick_correct_science. Multiple choice about hygiene. Example: 'When should you wash your hands? (a) Only at night (b) Before eating food (c) Never (d) Only on Sundays' -> (b) Before eating food",
+            "health_c1_hygiene_apply": "format: explain_why_science. Explain a hygiene habit. Example: 'Why should you brush your teeth every morning and night?'",
+            "health_c1_hygiene_represent": "format: sequence_steps. Order steps. Example: 'Put in order for washing hands: (a) Dry with a clean towel (b) Wet your hands with water (c) Rub soap on your hands for 20 seconds (d) Rinse off the soap.'",
+            "health_c1_hygiene_error": "format: error_spot_science. Present bad hygiene. Example: 'Aman never washes his hands before eating. He says germs cannot hurt him. Is this correct? What should he do?'",
+            "health_c1_hygiene_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think washing hands with soap is better than washing with just water?'",
+        }
+        return health_hygiene_ctx + health_hygiene_map.get(_skill_tag, "About personal hygiene.")
+
+    # ── Health & PE: Good Posture (Class 1) ──
+    if _skill_tag.startswith("health_c1_posture_"):
+        health_posture_ctx = (
+            "Topic: Good Posture (Class 1 Health & PE, CBSE). "
+            "Cover: sitting straight, standing tall, carrying school bags on both shoulders, "
+            "not slouching while reading or writing. "
+            "Use very simple language — Class 1 level (age 6). Use Indian names and contexts. "
+            "DO NOT repeat the same posture scenario. "
+        )
+        health_posture_map = {
+            "health_c1_posture_identify": "format: true_false. True/false about posture. Example: 'True or False: You should carry your school bag on both shoulders, not just one.' -> True",
+            "health_c1_posture_apply": "format: give_example. Give an example. Example: 'Give one example of good posture when you are sitting in class.'",
+            "health_c1_posture_represent": "format: sequence_steps. Order steps. Example: 'Put in order for sitting correctly: (a) Keep your feet flat on the floor (b) Sit on the chair (c) Keep your back straight (d) Place your hands on the desk.'",
+            "health_c1_posture_error": "format: error_spot_science. Present bad posture. Example: 'Riya always leans to one side while writing and carries her bag on one shoulder. Is this good for her body? What should she do?'",
+            "health_c1_posture_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think sitting straight while studying is important for your body?'",
+        }
+        return health_posture_ctx + health_posture_map.get(_skill_tag, "About good posture.")
+
+    # ── Health & PE: Basic Physical Activities (Class 1) ──
+    if _skill_tag.startswith("health_c1_physical_"):
+        health_physical_ctx = (
+            "Topic: Basic Physical Activities (Class 1 Health & PE, CBSE). "
+            "Cover: running, jumping, throwing, catching, hopping, skipping, balancing. "
+            "Use very simple language — Class 1 level (age 6). Use Indian names and contexts. "
+            "DO NOT repeat the same activity scenario. "
+        )
+        health_physical_map = {
+            "health_c1_physical_identify": "format: pick_correct_science. Multiple choice about activities. Example: 'Which of these is a physical activity? (a) Sleeping (b) Running (c) Watching TV (d) Sitting' -> (b) Running",
+            "health_c1_physical_apply": "format: give_example. Give an example. Example: 'Name two physical activities you can do during recess at school.'",
+            "health_c1_physical_represent": "format: sequence_steps. Order steps. Example: 'Put in order for a relay race: (a) Run to the finish line (b) Stand at the starting line (c) Pass the baton to your friend (d) Wait for the whistle.'",
+            "health_c1_physical_error": "format: error_spot_science. Present wrong idea. Example: 'Kiran says playing video games all day is the same as playing outside. Is this correct? Why or why not?'",
+            "health_c1_physical_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think playing outside is good for your body?'",
+        }
+        return health_physical_ctx + health_physical_map.get(_skill_tag, "About physical activities.")
+
+    # ── Health & PE: Healthy Eating Habits (Class 2) ──
+    if _skill_tag.startswith("health_c2_eating_"):
+        health_eating_ctx = (
+            "Topic: Healthy Eating Habits (Class 2 Health & PE, CBSE). "
+            "Cover: eating fruits and vegetables, drinking water, avoiding junk food, "
+            "choosing healthy snacks, balanced meals. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 2 level. "
+            "DO NOT repeat the same eating scenario. "
+        )
+        health_eating_map = {
+            "health_c2_eating_identify": "format: pick_correct_science. Multiple choice about eating. Example: 'Which is a healthy snack? (a) Chips (b) Apple (c) Chocolate (d) Soft drink' -> (b) Apple",
+            "health_c2_eating_apply": "format: explain_why_science. Explain a healthy habit. Example: 'Why should you eat fruits and vegetables every day?'",
+            "health_c2_eating_represent": "format: sequence_steps. Order steps. Example: 'Put in order for a healthy morning: (a) Eat a healthy breakfast (b) Wake up early (c) Wash hands before eating (d) Drink a glass of water.'",
+            "health_c2_eating_error": "format: error_spot_science. Present unhealthy habit. Example: 'Sneha eats chips and cola for lunch every day. She says it gives her energy. Is this correct? What should she eat instead?'",
+            "health_c2_eating_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think drinking water is better than drinking soft drinks?'",
+        }
+        return health_eating_ctx + health_eating_map.get(_skill_tag, "About healthy eating.")
+
+    # ── Health & PE: Outdoor Play (Class 2) ──
+    if _skill_tag.startswith("health_c2_outdoor_"):
+        health_outdoor_ctx = (
+            "Topic: Outdoor Play (Class 2 Health & PE, CBSE). "
+            "Cover: benefits of playing outside, types of outdoor games (kho-kho, hopscotch, "
+            "cycling, running), why outdoor play is important. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 2 level. "
+            "DO NOT repeat the same outdoor play scenario. "
+        )
+        health_outdoor_map = {
+            "health_c2_outdoor_identify": "format: true_false. True/false about outdoor play. Example: 'True or False: Playing outside helps make your bones and muscles strong.' -> True",
+            "health_c2_outdoor_apply": "format: give_example. Give an example. Example: 'Name three outdoor games you can play with your friends.'",
+            "health_c2_outdoor_represent": "format: sequence_steps. Order steps. Example: 'Put in order before going to play outside: (a) Put on your shoes (b) Drink water (c) Ask permission from your parents (d) Do your homework first.'",
+            "health_c2_outdoor_error": "format: error_spot_science. Present wrong idea. Example: 'Aman says sitting inside and watching cartoons all day is just as good as playing outside. Is this correct? Why or why not?'",
+            "health_c2_outdoor_thinking": "format: thinking_science. Reasoning question. Example: 'How does playing outside with friends help your body and your mind?'",
+        }
+        return health_outdoor_ctx + health_outdoor_map.get(_skill_tag, "About outdoor play.")
+
+    # ── Health & PE: Basic Stretching (Class 2) ──
+    if _skill_tag.startswith("health_c2_stretching_"):
+        health_stretching_ctx = (
+            "Topic: Basic Stretching (Class 2 Health & PE, CBSE). "
+            "Cover: simple stretches (arm stretch, toe touch, neck roll, side bend), "
+            "warming up before exercise, why stretching is important. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 2 level. "
+            "DO NOT repeat the same stretching scenario. "
+        )
+        health_stretching_map = {
+            "health_c2_stretching_identify": "format: pick_correct_science. Multiple choice about stretching. Example: 'When should you stretch? (a) Only before sleeping (b) Before playing or exercising (c) Never (d) Only on holidays' -> (b) Before playing or exercising",
+            "health_c2_stretching_apply": "format: give_example. Give an example. Example: 'Name two stretches you can do before running in the playground.'",
+            "health_c2_stretching_represent": "format: sequence_steps. Order steps. Example: 'Put in order for warming up: (a) Do gentle arm circles (b) Stand in a line on the ground (c) Touch your toes slowly (d) Do jumping jacks.'",
+            "health_c2_stretching_error": "format: error_spot_science. Present wrong idea. Example: 'Kiran started running very fast without warming up first. He says stretching is a waste of time. Is this correct? What could happen?'",
+            "health_c2_stretching_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think it is important to warm up your body before playing a sport?'",
+        }
+        return health_stretching_ctx + health_stretching_map.get(_skill_tag, "About stretching.")
+
+    # ── Health & PE: Balanced Diet (Class 3) ──
+    if _skill_tag.startswith("health_c3_diet_"):
+        health_diet_ctx = (
+            "Topic: Balanced Diet (Class 3 Health & PE, CBSE). "
+            "Cover: five food groups (carbohydrates, proteins, fats, vitamins, minerals), "
+            "nutrients, Indian thali concept, healthy meals. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same diet scenario. "
+        )
+        health_diet_map = {
+            "health_c3_diet_identify": "format: pick_correct_science. Multiple choice about diet. Example: 'Which food group gives us energy? (a) Vitamins (b) Carbohydrates (c) Water (d) Minerals' -> (b) Carbohydrates",
+            "health_c3_diet_apply": "format: explain_why_science. Explain about balanced diet. Example: 'Why should an Indian thali have dal, roti, sabzi, and curd together?'",
+            "health_c3_diet_represent": "format: cause_effect. Connect food and benefit. Example: 'Match: (a) Milk — Energy (b) Rice — Strong bones (c) Spinach — Iron for blood. Write the correct pairs.'",
+            "health_c3_diet_error": "format: error_spot_science. Present wrong diet idea. Example: 'Arjun eats only biscuits and noodles every day. He says he is eating enough food. Is this a balanced diet? What is missing?'",
+            "health_c3_diet_thinking": "format: thinking_science. Reasoning question. Example: 'Design a balanced lunch plate for a Class 3 student. Explain why you chose each food.'",
+        }
+        return health_diet_ctx + health_diet_map.get(_skill_tag, "About balanced diet.")
+
+    # ── Health & PE: Team Sports Rules (Class 3) ──
+    if _skill_tag.startswith("health_c3_sports_"):
+        health_sports_ctx = (
+            "Topic: Team Sports Rules (Class 3 Health & PE, CBSE). "
+            "Cover: basic rules of cricket, football, kabaddi, kho-kho; fair play; "
+            "sportsmanship; different positions and roles in team sports. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same sport or rule. "
+        )
+        health_sports_map = {
+            "health_c3_sports_identify": "format: true_false. True/false about sports rules. Example: 'True or False: In cricket, each team gets a chance to bat and bowl.' -> True",
+            "health_c3_sports_apply": "format: explain_why_science. Explain about sports. Example: 'Why is it important to follow the rules during a game of kabaddi?'",
+            "health_c3_sports_represent": "format: sequence_steps. Order steps. Example: 'Put in order for starting a cricket match: (a) The captain wins the toss (b) The teams warm up (c) The batting team sends two players (d) The bowler bowls the first ball.'",
+            "health_c3_sports_error": "format: error_spot_science. Present poor sportsmanship. Example: 'Sneha's team lost the football match. She refused to shake hands with the other team and said the game was unfair. Is this good sportsmanship? What should she do?'",
+            "health_c3_sports_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think team sports teach us important life skills? Give two examples.'",
+        }
+        return health_sports_ctx + health_sports_map.get(_skill_tag, "About team sports rules.")
+
+    # ── Health & PE: Safety at Play (Class 3) ──
+    if _skill_tag.startswith("health_c3_safety_"):
+        health_safety_ctx = (
+            "Topic: Safety at Play (Class 3 Health & PE, CBSE). "
+            "Cover: playground safety rules, avoiding injuries, first aid kit awareness, "
+            "safe and unsafe behaviours during play, wearing proper shoes. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 3 level. "
+            "DO NOT repeat the same safety scenario. "
+        )
+        health_safety_map = {
+            "health_c3_safety_identify": "format: pick_correct_science. Multiple choice about safety. Example: 'What should you do before using a swing? (a) Push someone off it (b) Check if it is broken (c) Jump on it quickly (d) Run away' -> (b) Check if it is broken",
+            "health_c3_safety_apply": "format: explain_why_science. Explain about safety. Example: 'Why should you wear proper shoes while playing on the ground?'",
+            "health_c3_safety_represent": "format: sequence_steps. Order steps. Example: 'Put in order if a friend falls and scrapes her knee: (a) Help her sit down (b) Tell the teacher (c) Stay calm (d) Get the first aid kit.'",
+            "health_c3_safety_error": "format: error_spot_science. Present unsafe behaviour. Example: 'Riya was running near the swimming pool and pushing other children. She says it is just fun. Is this safe? What could happen?'",
+            "health_c3_safety_thinking": "format: thinking_science. Reasoning question. Example: 'What are three safety rules everyone should follow on a playground?'",
+        }
+        return health_safety_ctx + health_safety_map.get(_skill_tag, "About safety at play.")
+
+    # ── Health & PE: First Aid Basics (Class 4) ──
+    if _skill_tag.startswith("health_c4_firstaid_"):
+        health_firstaid_ctx = (
+            "Topic: First Aid Basics (Class 4 Health & PE, CBSE). "
+            "Cover: treating minor cuts and burns, bandaging, when to call an adult, "
+            "contents of a first aid kit, basic wound care. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same first aid scenario. "
+        )
+        health_firstaid_map = {
+            "health_c4_firstaid_identify": "format: pick_correct_science. Multiple choice about first aid. Example: 'What should you do first if you get a small burn? (a) Put ice directly on it (b) Run cold water over it (c) Ignore it (d) Put toothpaste on it' -> (b) Run cold water over it",
+            "health_c4_firstaid_apply": "format: explain_why_science. Explain first aid. Example: 'Why should you clean a cut with water before putting a bandage on it?'",
+            "health_c4_firstaid_represent": "format: sequence_steps. Order steps. Example: 'Put in order for treating a small cut: (a) Apply an antiseptic cream (b) Wash the cut with clean water (c) Press with a clean cloth if bleeding (d) Cover with a plaster.'",
+            "health_c4_firstaid_error": "format: error_spot_science. Present wrong first aid. Example: 'Aman put butter on his burn and said his grandmother told him to do this. Is this the correct first aid for a burn? What should he do instead?'",
+            "health_c4_firstaid_thinking": "format: thinking_science. Reasoning question. Example: 'Why is it important for every school to have a first aid kit? What should be in it?'",
+        }
+        return health_firstaid_ctx + health_firstaid_map.get(_skill_tag, "About first aid.")
+
+    # ── Health & PE: Yoga Introduction (Class 4) ──
+    if _skill_tag.startswith("health_c4_yoga_"):
+        health_yoga_ctx = (
+            "Topic: Yoga Introduction (Class 4 Health & PE, CBSE). "
+            "Cover: basic asanas (Tadasana, Vrikshasana, Balasana, Bhujangasana, Shavasana), "
+            "breathing exercises (pranayama), benefits of yoga for body and mind. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same yoga asana or concept. "
+        )
+        health_yoga_map = {
+            "health_c4_yoga_identify": "format: true_false. True/false about yoga. Example: 'True or False: Tadasana (Mountain Pose) helps improve balance and posture.' -> True",
+            "health_c4_yoga_apply": "format: give_example. Give an example. Example: 'Name two yoga asanas and describe how they help your body.'",
+            "health_c4_yoga_represent": "format: sequence_steps. Order steps. Example: 'Put in order for doing Surya Namaskar: (a) Stand straight in Tadasana (b) Raise arms overhead (c) Bend forward and touch toes (d) Take a deep breath in.'",
+            "health_c4_yoga_error": "format: error_spot_science. Present wrong yoga practice. Example: 'Sneha does yoga very fast without proper breathing. She says speed is more important. Is this correct? What should she focus on?'",
+            "health_c4_yoga_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think India celebrates International Yoga Day on 21 June? How does yoga help both body and mind?'",
+        }
+        return health_yoga_ctx + health_yoga_map.get(_skill_tag, "About yoga.")
+
+    # ── Health & PE: Importance of Sleep (Class 4) ──
+    if _skill_tag.startswith("health_c4_sleep_"):
+        health_sleep_ctx = (
+            "Topic: Importance of Sleep (Class 4 Health & PE, CBSE). "
+            "Cover: how many hours children need (9-11 hours), effects of screen time before bed, "
+            "good sleep habits, bedtime routines, why sleep matters for learning and growth. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 4 level. "
+            "DO NOT repeat the same sleep concept. "
+        )
+        health_sleep_map = {
+            "health_c4_sleep_identify": "format: true_false. True/false about sleep. Example: 'True or False: Children aged 9-10 should sleep for at least 9 hours every night.' -> True",
+            "health_c4_sleep_apply": "format: explain_why_science. Explain about sleep. Example: 'Why should you avoid watching TV or using a phone just before going to bed?'",
+            "health_c4_sleep_represent": "format: cause_effect. Connect actions and effects. Example: 'Match: (a) Sleeping late — Fresh and alert in class (b) Getting 10 hours of sleep — Feeling tired at school (c) No screen before bed — Falling asleep faster. Write the correct pairs.'",
+            "health_c4_sleep_error": "format: error_spot_science. Present bad sleep habit. Example: 'Kiran watches cartoons on a tablet until midnight every day. He says he can sleep in class if he is tired. Is this correct? What should he do?'",
+            "health_c4_sleep_thinking": "format: thinking_science. Reasoning question. Example: 'Why do you think getting enough sleep helps you do better at school?'",
+        }
+        return health_sleep_ctx + health_sleep_map.get(_skill_tag, "About importance of sleep.")
+
+    # ── Health & PE: Fitness and Stamina (Class 5) ──
+    if _skill_tag.startswith("health_c5_fitness_"):
+        health_fitness_ctx = (
+            "Topic: Fitness and Stamina (Class 5 Health & PE, CBSE). "
+            "Cover: exercises for strength and endurance, measuring fitness, "
+            "running, push-ups, skipping rope, heart health, stamina building. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same fitness concept. "
+        )
+        health_fitness_map = {
+            "health_c5_fitness_identify": "format: pick_correct_science. Multiple choice about fitness. Example: 'Which activity helps build stamina? (a) Watching TV (b) Running laps (c) Sleeping (d) Playing video games' -> (b) Running laps",
+            "health_c5_fitness_apply": "format: explain_why_science. Explain about fitness. Example: 'Why is it important to exercise regularly to keep your heart healthy?'",
+            "health_c5_fitness_represent": "format: sequence_steps. Order steps. Example: 'Put in order for a fitness routine: (a) Cool down with stretching (b) Warm up with light jogging (c) Do the main exercise (running, push-ups) (d) Drink water and rest.'",
+            "health_c5_fitness_error": "format: error_spot_science. Present wrong fitness idea. Example: 'Arjun says exercising once a month is enough to stay fit. He only plays cricket during the annual sports day. Is this correct? How often should he exercise?'",
+            "health_c5_fitness_thinking": "format: thinking_science. Reasoning question. Example: 'Design a one-week fitness plan for a Class 5 student. What activities would you include and why?'",
+        }
+        return health_fitness_ctx + health_fitness_map.get(_skill_tag, "About fitness and stamina.")
+
+    # ── Health & PE: Nutrition Labels Reading (Class 5) ──
+    if _skill_tag.startswith("health_c5_nutrition_"):
+        health_nutrition_ctx = (
+            "Topic: Nutrition Labels Reading (Class 5 Health & PE, CBSE). "
+            "Cover: reading food labels, understanding calories, protein, fat, sugar, "
+            "expiry dates, ingredients list, making healthier food choices. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same nutrition label concept. "
+        )
+        health_nutrition_map = {
+            "health_c5_nutrition_identify": "format: true_false. True/false about labels. Example: 'True or False: The expiry date on a food packet tells you the last date by which you should eat the food.' -> True",
+            "health_c5_nutrition_apply": "format: explain_why_science. Explain about labels. Example: 'Why should you check the sugar content on a juice box before buying it?'",
+            "health_c5_nutrition_represent": "format: cause_effect. Connect labels and choices. Example: 'Match: (a) High sugar — May cause weight gain (b) High protein — Good for muscles (c) High trans fat — Bad for heart health. Write the correct pairs.'",
+            "health_c5_nutrition_error": "format: error_spot_science. Present wrong label reading. Example: 'Riya says a food packet with \"0% fat\" printed in big letters must be completely healthy. She did not check the sugar or sodium content. Is she correct? What else should she check?'",
+            "health_c5_nutrition_thinking": "format: thinking_science. Reasoning question. Example: 'Compare the nutrition labels of a packet of chips and a packet of roasted chana. Which is healthier and why?'",
+        }
+        return health_nutrition_ctx + health_nutrition_map.get(_skill_tag, "About nutrition labels.")
+
+    # ── Health & PE: Mental Health Awareness (Class 5) ──
+    if _skill_tag.startswith("health_c5_mental_"):
+        health_mental_ctx = (
+            "Topic: Mental Health Awareness (Class 5 Health & PE, CBSE). "
+            "Cover: managing stress, talking about feelings, mindfulness, "
+            "coping with difficult emotions, seeking help, self-care, being kind to yourself. "
+            "Use Indian names and school contexts. Keep vocabulary appropriate — Class 5 level. "
+            "DO NOT repeat the same mental health concept. "
+        )
+        health_mental_map = {
+            "health_c5_mental_identify": "format: pick_correct_science. Multiple choice about mental health. Example: 'What is a good way to manage stress before an exam? (a) Skip the exam (b) Take deep breaths and study a little at a time (c) Stay awake all night (d) Argue with your parents' -> (b) Take deep breaths and study a little at a time",
+            "health_c5_mental_apply": "format: explain_why_science. Explain about mental health. Example: 'Why is it important to talk to a trusted adult when you feel very sad or worried?'",
+            "health_c5_mental_represent": "format: cause_effect. Connect actions and feelings. Example: 'Match: (a) Talking to a friend — Feeling calm (b) Deep breathing — Feeling less lonely (c) Writing in a journal — Understanding your feelings better. Write the correct pairs.'",
+            "health_c5_mental_error": "format: error_spot_science. Present wrong mental health idea. Example: 'Aman says real boys never cry or feel sad. He tells his friend to stop being weak. Is this correct? Why or why not?'",
+            "health_c5_mental_thinking": "format: thinking_science. Reasoning question. Example: 'What are three things you can do every day to take care of your mental health?'",
+        }
+        return health_mental_ctx + health_mental_map.get(_skill_tag, "About mental health awareness.")
+
     # Check if this is a non-arithmetic topic by looking at skill_tag
     _NON_ARITHMETIC_TAGS = {
         "multiplication_tables", "multiplication_word_problem", "multiplication_fill_blank",
@@ -10141,7 +11003,7 @@ def _build_slot_instruction(
     }
     # Include all c2_, c4_, and eng_ prefixed tags as non-arithmetic
     _NON_ARITHMETIC_TAGS.update(
-        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("c5_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_") or tag.startswith("comp_") or tag.startswith("gk_") or tag.startswith("moral_")
+        tag for tag in _SKILL_TAG_TO_SLOT if tag.startswith("c2_") or tag.startswith("c4_") or tag.startswith("c5_") or tag.startswith("eng_") or tag.startswith("sci_") or tag.startswith("hin_") or tag.startswith("comp_") or tag.startswith("gk_") or tag.startswith("moral_") or tag.startswith("health_")
     )
     _is_generic_arithmetic = _skill_tag not in _NON_ARITHMETIC_TAGS
 
@@ -11355,6 +12217,107 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "Keep language appropriate for Class 5. "
         "NEVER generate arithmetic, grammar, or science questions.\n"
     ),
+    # ── Health & Physical Education constraints ──────────────────────────
+    "Personal Hygiene (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Personal Hygiene ONLY — "
+        "handwashing, brushing teeth, bathing, wearing clean clothes, trimming nails. "
+        "Use very simple language appropriate for Class 1 (age 6). "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Good Posture (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Good Posture ONLY — "
+        "sitting straight, standing tall, carrying school bags correctly, "
+        "not slouching while reading or writing. "
+        "Use very simple language appropriate for Class 1 (age 6). "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Basic Physical Activities (Class 1)": (
+        "CRITICAL: ALL questions MUST be about Basic Physical Activities ONLY — "
+        "running, jumping, throwing, catching, hopping, skipping, balancing. "
+        "Use very simple language appropriate for Class 1 (age 6). "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Healthy Eating Habits (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Healthy Eating Habits ONLY — "
+        "eating fruits and vegetables, drinking water, avoiding junk food, "
+        "choosing healthy snacks. Keep language appropriate for Class 2. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Outdoor Play (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Outdoor Play ONLY — "
+        "benefits of playing outside, types of outdoor games, "
+        "running, cycling, kho-kho, hopscotch. Keep language appropriate for Class 2. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Basic Stretching (Class 2)": (
+        "CRITICAL: ALL questions MUST be about Basic Stretching ONLY — "
+        "simple stretches, warming up before exercise, arm stretches, "
+        "toe touches, neck rolls, side bends. Keep language appropriate for Class 2. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Balanced Diet (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Balanced Diet ONLY — "
+        "food groups (carbohydrates, proteins, fats, vitamins, minerals), "
+        "nutrients, Indian thali concept, healthy meals. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Team Sports Rules (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Team Sports Rules ONLY — "
+        "rules of cricket, football, kabaddi, kho-kho, fair play, "
+        "sportsmanship, different positions and roles. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Safety at Play (Class 3)": (
+        "CRITICAL: ALL questions MUST be about Safety at Play ONLY — "
+        "playground safety rules, avoiding injuries, first aid kit awareness, "
+        "safe and unsafe behaviours during play. "
+        "Keep language appropriate for Class 3. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "First Aid Basics (Class 4)": (
+        "CRITICAL: ALL questions MUST be about First Aid Basics ONLY — "
+        "treating cuts and burns, bandaging, when to call an adult, "
+        "contents of a first aid kit, basic wound care. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Yoga Introduction (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Yoga ONLY — "
+        "basic asanas (Tadasana, Vrikshasana, Balasana, Bhujangasana), "
+        "breathing exercises (pranayama), benefits of yoga. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Importance of Sleep (Class 4)": (
+        "CRITICAL: ALL questions MUST be about Importance of Sleep ONLY — "
+        "how many hours children need, effects of screen time before bed, "
+        "good sleep habits, bedtime routines, why sleep matters. "
+        "Keep language appropriate for Class 4. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Fitness and Stamina (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Fitness and Stamina ONLY — "
+        "exercises for strength and endurance, measuring fitness, "
+        "running, push-ups, stamina building, heart health. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Nutrition Labels Reading (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Reading Nutrition Labels ONLY — "
+        "reading food labels, understanding calories, protein, fat, sugar, "
+        "expiry dates, ingredients, making healthier food choices. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
+    "Mental Health Awareness (Class 5)": (
+        "CRITICAL: ALL questions MUST be about Mental Health Awareness ONLY — "
+        "managing stress, talking about feelings, mindfulness, "
+        "coping with difficult emotions, seeking help, self-care. "
+        "Keep language appropriate for Class 5. "
+        "NEVER generate arithmetic, grammar, or science questions.\n"
+    ),
 }
 
 REGION_CONTEXT: dict[str, dict[str, str]] = {
@@ -11439,7 +12402,7 @@ def validate_question(q: dict, slot_type: str, subject: str = "Mathematics") -> 
     text = q.get("question_text", "")
     answer = q.get("answer")
     is_english = subject and subject.lower() == "english"
-    is_science = subject and subject.lower() in ("science", "computer", "gk", "moral science")
+    is_science = subject and subject.lower() in ("science", "computer", "gk", "moral science", "health")
     is_hindi = subject and subject.lower() == "hindi"
 
     allowed = get_valid_formats(subject).get(slot_type, set())
@@ -12598,7 +13561,7 @@ def generate_question(
     _subj_lower = (subject or "").lower()
     if _subj_lower == "english":
         sys_prompt = QUESTION_SYSTEM_ENGLISH
-    elif _subj_lower in ("science", "computer", "gk", "moral science"):
+    elif _subj_lower in ("science", "computer", "gk", "moral science", "health"):
         sys_prompt = QUESTION_SYSTEM_SCIENCE
     elif _subj_lower == "hindi":
         sys_prompt = QUESTION_SYSTEM_HINDI
@@ -13146,7 +14109,7 @@ def run_slot_pipeline(
 
     # 7a. Normalize answers (deterministic, no LLM)
     _is_english = subject and subject.lower() == "english"
-    _is_science = subject and subject.lower() in ("science", "computer", "gk", "moral science")
+    _is_science = subject and subject.lower() in ("science", "computer", "gk", "moral science", "health")
     _is_hindi = subject and subject.lower() == "hindi"
     _is_text_only = _is_english or _is_science or _is_hindi
     if _is_text_only:

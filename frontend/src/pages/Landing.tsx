@@ -86,6 +86,14 @@ const MORAL_TOPICS: Record<string, string[]> = {
   'Class 5': ['Global Citizenship', 'Digital Ethics'],
 }
 
+const HEALTH_TOPICS: Record<string, string[]> = {
+  'Class 1': ['Personal Hygiene', 'Good Posture', 'Physical Activities'],
+  'Class 2': ['Healthy Eating', 'Outdoor Play', 'Stretching'],
+  'Class 3': ['Balanced Diet', 'Team Sports', 'Safety at Play'],
+  'Class 4': ['First Aid', 'Yoga', 'Sleep Hygiene'],
+  'Class 5': ['Fitness & Stamina', 'Nutrition Labels', 'Mental Health'],
+}
+
 /* ─── Gold Class feature steps ─── */
 const GOLD_STEPS = [
   {
@@ -220,7 +228,7 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 export default function Landing({ onGetStarted, onSignIn }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Science' | 'Computer' | 'GK' | 'Moral Science'>('Maths')
+  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Science' | 'Computer' | 'GK' | 'Moral Science' | 'Health'>('Maths')
   const [activeStep, setActiveStep] = useState(0)
 
   // Sticky nav scroll detection
@@ -247,6 +255,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
     : activeSubject === 'Computer' ? COMPUTER_TOPICS
     : activeSubject === 'GK' ? GK_TOPICS
     : activeSubject === 'Moral Science' ? MORAL_TOPICS
+    : activeSubject === 'Health' ? HEALTH_TOPICS
     : SCIENCE_TOPICS
 
   return (
@@ -521,7 +530,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
 
           {/* Subject toggles */}
           <div className="flex justify-center gap-3 mb-10">
-            {(['Maths', 'English', 'Science', 'Computer', 'GK', 'Moral Science'] as const).map((subj) => (
+            {(['Maths', 'English', 'Science', 'Computer', 'GK', 'Moral Science', 'Health'] as const).map((subj) => (
               <button
                 key={subj}
                 onClick={() => setActiveSubject(subj)}

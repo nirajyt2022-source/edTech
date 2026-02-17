@@ -44,6 +44,7 @@ const DEFAULT_TOPICS: Record<string, string[]> = {
   Computer: ['Computer Basics', 'Parts of Computer', 'MS Paint', 'MS Word', 'Internet Safety'],
   GK: ['Landmarks', 'National Symbols', 'Solar System', 'Continents', 'Scientists', 'Sports'],
   'Moral Science': ['Sharing', 'Honesty', 'Kindness', 'Teamwork', 'Empathy', 'Leadership'],
+  Health: ['Personal Hygiene', 'Balanced Diet', 'First Aid', 'Yoga', 'Fitness', 'Mental Health'],
 }
 
 // Grade-aware Maths topics (matching backend TOPIC_PROFILES keys)
@@ -149,6 +150,15 @@ const MORAL_TOPICS_BY_GRADE: Record<number, string[]> = {
   3: ['Teamwork (Class 3)', 'Empathy (Class 3)', 'Environmental Care (Class 3)'],
   4: ['Leadership (Class 4)'],
   5: ['Global Citizenship (Class 5)', 'Digital Ethics (Class 5)'],
+}
+
+// Grade-aware Health & PE topics (matching backend TOPIC_PROFILES keys)
+const HEALTH_TOPICS_BY_GRADE: Record<number, string[]> = {
+  1: ['Personal Hygiene (Class 1)', 'Good Posture (Class 1)', 'Basic Physical Activities (Class 1)'],
+  2: ['Healthy Eating Habits (Class 2)', 'Outdoor Play (Class 2)', 'Basic Stretching (Class 2)'],
+  3: ['Balanced Diet (Class 3)', 'Team Sports Rules (Class 3)', 'Safety at Play (Class 3)'],
+  4: ['First Aid Basics (Class 4)', 'Yoga Introduction (Class 4)', 'Importance of Sleep (Class 4)'],
+  5: ['Fitness and Stamina (Class 5)', 'Nutrition Labels Reading (Class 5)', 'Mental Health Awareness (Class 5)'],
 }
 
 // Grade-aware Hindi topics (matching backend TOPIC_PROFILES keys)
@@ -493,6 +503,13 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
         const gradeNum = parseInt(grade.replace('Class ', ''))
         if (!isNaN(gradeNum) && MORAL_TOPICS_BY_GRADE[gradeNum]) {
           return MORAL_TOPICS_BY_GRADE[gradeNum]
+        }
+      }
+      // Grade-aware Health & PE topics
+      if (subject === 'Health' && grade) {
+        const gradeNum = parseInt(grade.replace('Class ', ''))
+        if (!isNaN(gradeNum) && HEALTH_TOPICS_BY_GRADE[gradeNum]) {
+          return HEALTH_TOPICS_BY_GRADE[gradeNum]
         }
       }
       // Grade-aware Hindi topics

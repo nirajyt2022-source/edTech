@@ -114,7 +114,7 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 
 # Topic System
 
-## 163 Supported Topics (TOPIC_PROFILES keys)
+## 178 Supported Topics (TOPIC_PROFILES keys)
 
 ### Class 1 Maths (8 topics)
 1. Numbers 1 to 50 (Class 1) — counting, comparing, ordering 1-50
@@ -248,12 +248,24 @@ Subject-aware lookups: `get_valid_formats(subject)`, `get_default_format_by_slot
 ### Class 5 Moral Science (2 topics)
 154. Global Citizenship (Class 5), 155. Digital Ethics (Class 5)
 
+### Class 1 Health & PE (3 topics)
+156. Personal Hygiene (Class 1), 157. Good Posture (Class 1), 158. Basic Physical Activities (Class 1)
+### Class 2 Health & PE (3 topics)
+159. Healthy Eating Habits (Class 2), 160. Outdoor Play (Class 2), 161. Basic Stretching (Class 2)
+### Class 3 Health & PE (3 topics)
+162. Balanced Diet (Class 3), 163. Team Sports Rules (Class 3), 164. Safety at Play (Class 3)
+### Class 4 Health & PE (3 topics)
+165. First Aid Basics (Class 4), 166. Yoga Introduction (Class 4), 167. Importance of Sleep (Class 4)
+### Class 5 Health & PE (3 topics)
+168. Fitness and Stamina (Class 5), 169. Nutrition Labels Reading (Class 5), 170. Mental Health Awareness (Class 5)
+
 Each Maths profile has: `allowed_skill_tags`, `allowed_slot_types`, `disallowed_keywords`, `disallowed_visual_types`, `default_recipe`, optional `recipes_by_count`.
 Each English profile additionally has: `subject: "English"`. English topics use `VALID_FORMATS_ENGLISH` and skip visual hydration (text-only).
 Each Science profile additionally has: `subject: "Science"`. Science topics use `VALID_FORMATS_SCIENCE` and skip visual hydration (text-only).
 Each Hindi profile additionally has: `subject: "Hindi"`. Hindi topics use `VALID_FORMATS_HINDI` and skip visual hydration (text-only). Questions use Devanagari script.
 Each GK profile additionally has: `subject: "GK"`. GK topics use `VALID_FORMATS_SCIENCE` and skip visual hydration (text-only).
 Each Moral Science profile additionally has: `subject: "Moral Science"`. Moral Science topics use `VALID_FORMATS_SCIENCE` and skip visual hydration (text-only).
+Each Health profile additionally has: `subject: "Health"`. Health topics use `VALID_FORMATS_SCIENCE` and skip visual hydration (text-only).
 
 ## Topic Alias Resolution
 `get_topic_profile()` resolves frontend short names → canonical profile keys via `_TOPIC_ALIASES` + fuzzy matching. Key aliases: "Addition" → "Addition (carries)", "Multiplication" → "Multiplication (tables 2-10)", "Numbers"/"Place Value" → "Numbers up to 10000", "add/sub" → "Addition and subtraction (3-digit)".
@@ -403,3 +415,4 @@ In `run_slot_pipeline()`, the topic is canonicalized early so downstream lookups
 - **2026-02-17**: Phase 12B — Science Class 4 & 5 (14 topics). Backend: 14 new Science topic profiles (7 Class 4: Living Things, Human Body, States of Matter, Force and Motion, Simple Machines, Photosynthesis, Animal Adaptation; 7 Class 5: Circulatory System, Respiratory and Nervous System, Reproduction in Plants and Animals, Physical and Chemical Changes, Forms of Energy, Solar System and Earth, Ecosystem and Food Chains). 70 sci_c4_*/sci_c5_* skill tags, 67 aliases, 14 constraints, 42 learning objectives, 140 Indian context bank entries, 14 instruction builder blocks. Frontend: Science Class 4 & 5 in grade selector + landing page. QA: test_class45_science.py (154 checks). verify_topics: 1429 passed. Total: 126 topic profiles.
 - **2026-02-17**: Phase 13 — Computer Science (15 topics, Class 1-5). Backend: 15 new Computer topic profiles (2 Class 1: Parts of Computer, Mouse and Keyboard; 3 Class 2: Desktop and Icons, Basic Typing, Special Keys; 3 Class 3: MS Paint, Keyboard Shortcuts, Files and Folders; 3 Class 4: MS Word, Scratch Intro, Internet Safety; 4 Class 5: Scratch Programming, Internet Basics, MS PowerPoint, Digital Citizenship). Subject="Computer" with Science format reuse, subject-aware lookups updated. 75 comp_* skill tags, 58 aliases, 15 constraints, 45 learning objectives, 150 Indian context bank entries, 15 instruction builder blocks. Frontend: Computer in grade selectors + landing page subject tabs. QA: test_computer.py (165 checks). verify_topics: 1579 passed. Total: 141 topic profiles.
 - **2026-02-17**: Phase 14+15 — GK (12 topics) + Moral Science (10 topics). Backend: 12 GK topic profiles (4 Class 3: Famous Landmarks, National Symbols, Solar System Basics, Current Awareness; 4 Class 4: Continents and Oceans, Famous Scientists, Festivals of India, Sports and Games; 4 Class 5: Indian Constitution, World Heritage Sites, Space Missions, Environmental Awareness) + 10 Moral Science topic profiles (2 Class 1: Sharing, Honesty; 2 Class 2: Kindness, Respecting Elders; 3 Class 3: Teamwork, Empathy, Environmental Care; 1 Class 4: Leadership; 2 Class 5: Global Citizenship, Digital Ethics). Subject="GK"/"Moral Science" with Science format reuse, subject-aware lookups updated. 110 gk_*/moral_* skill tags, 88 aliases, 22 constraints, 66 learning objectives, 220 Indian context bank entries, 22 instruction builder blocks. Frontend: GK + Moral Science in grade selectors + landing page subject tabs. QA: test_gk.py (132 checks) + test_moral_science.py (110 checks). verify_topics: 1799 passed. Total: 163 topic profiles.
+- **2026-02-17**: Phase 16 — Health & Physical Education (15 topics, Class 1-5). Backend: 15 new Health topic profiles (3 Class 1: Personal Hygiene, Good Posture, Basic Physical Activities; 3 Class 2: Healthy Eating Habits, Outdoor Play, Basic Stretching; 3 Class 3: Balanced Diet, Team Sports Rules, Safety at Play; 3 Class 4: First Aid Basics, Yoga Introduction, Importance of Sleep; 3 Class 5: Fitness and Stamina, Nutrition Labels Reading, Mental Health Awareness). Subject="Health" with Science format reuse, subject-aware lookups updated. 75 health_* skill tags, 58 aliases, 15 constraints, 45 learning objectives, 150 Indian context bank entries, 15 instruction builder blocks. Frontend: Health in grade selectors + landing page subject tabs. QA: test_health.py (165 checks). verify_topics: 1949 passed. Total: 178 topic profiles.
