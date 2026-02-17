@@ -127,6 +127,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
   const [activeIdx, setActiveIdx] = useState(0)
   const [error, setError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [showAnswers, setShowAnswers] = useState(false)
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
 
   // Curriculum-based state
@@ -1038,6 +1039,30 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                         )}
                       </Button>
 
+                      <Button
+                        onClick={() => setShowAnswers(!showAnswers)}
+                        variant={showAnswers ? "default" : "outline"}
+                        size="sm"
+                        className={showAnswers ? "bg-primary/90 text-primary-foreground" : ""}
+                      >
+                        {showAnswers ? (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Hide Answers
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                            </svg>
+                            Show Answers
+                          </>
+                        )}
+                      </Button>
+
                       <div className="h-8 w-px bg-border/50 mx-1 hidden sm:block" />
 
                       {isTeacher ? (
@@ -1074,7 +1099,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                           </Button>
                         </>
                       ) : (
-                        <Button onClick={() => handleDownloadPdf('full')} disabled={downloadingPdf} size="sm" className="bg-primary text-primary-foreground shadow-sm">
+                        <Button onClick={() => handleDownloadPdf(showAnswers ? 'full' : 'student')} disabled={downloadingPdf} size="sm" className="bg-primary text-primary-foreground shadow-sm">
                           {downloadingPdf ? (
                             <>
                               <span className="spinner !w-3.5 !h-3.5 mr-2 !border-primary-foreground/30 !border-t-primary-foreground" />
@@ -1085,7 +1110,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                               </svg>
-                              Print or save
+                              {showAnswers ? 'PDF with Answers' : 'Print or save'}
                             </>
                           )}
                         </Button>
@@ -1158,8 +1183,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                     ))}
                   </div>
 
-                  {/* Answer Key Section (hidden for teachers — they use Answer Key PDF) */}
-                  {!isTeacher && (
+                  {/* Answer Key Section — visible when showAnswers is true */}
+                  {showAnswers && (
                     <div className="mt-16 pt-10 border-t border-border/30 print:break-before-page print:mt-0 print:pt-0 print:border-none">
                       <h3 className="font-serif text-2xl mb-6 flex items-center gap-2 text-foreground/80">
                         <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1171,7 +1196,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus }: Props)
                         {worksheet.questions.map((question, index) => (
                           <div key={question.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg text-sm border border-border/50 print:bg-gray-100 print:border-black/15 print:rounded-none">
                             <span className="font-bold text-primary">Q{index + 1}</span>
-                            <span className="text-foreground font-medium">{question.correct_answer}</span>
+                            <span className="text-foreground font-medium">{question.correct_answer || '---'}</span>
                           </div>
                         ))}
                       </div>

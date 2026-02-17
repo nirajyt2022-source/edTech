@@ -1,4 +1,7 @@
+import asyncio
 import logging
+import uuid
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Header, Response
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, field_validator
@@ -345,3 +348,245 @@ def mastery_recent_attempts_v1(student_id: str, limit: int = 50):
         .execute()
     )
     return result.data
+
+
+# ──────────────────────────────────────────────
+# Bulk generation models
+# ──────────────────────────────────────────────
+
+class BulkGenerationRequest(BaseModel):
+    topics: list[str]
+    num_questions: int = 10
+    grade: str = "Class 3"
+    count_per_topic: int = 1
+    difficulty: str = "medium"
+    language: str = "English"
+    board: str = "CBSE"
+    child_id: str | None = None
+
+
+class BulkGenerationResponse(BaseModel):
+    worksheets: list[dict]
+    failed: list[dict]
+    total_generated: int
+    total_failed: int
+
+
+# ──────────────────────────────────────────────
+# Bulk generation endpoint
+# ──────────────────────────────────────────────
+
+VALID_NUM_QUESTIONS = {5, 10, 15, 20}
+
+
+async def _generate_single_worksheet(
+    topic: str,
+    num_questions: int,
+    difficulty: str,
+    grade: str,
+    language: str,
+    board: str,
+    region: str,
+    user_id: str,
+    child_id: str | None,
+) -> dict:
+    """Generate a single worksheet and save it to the database.
+
+    Returns the worksheet dict on success; raises on failure.
+    """
+    from app.api.worksheets import (
+        client, supabase, _slot_to_question, _fill_role_explanations,
+        Worksheet,
+    )
+    from app.services.slot_engine import (
+        run_slot_pipeline, hydrate_visuals, build_worksheet_plan,
+    )
+
+    # Build worksheet plan for arithmetic topics
+    worksheet_plan = None
+    if any(kw in topic.lower() for kw in ("3-digit", "3 digit", "addition", "subtraction")):
+        worksheet_plan = build_worksheet_plan(
+            q_count=num_questions,
+            mix_recipe=None,
+            constraints=None,
+            topic=topic,
+        )
+
+    # run_slot_pipeline is synchronous (makes LLM calls); wrap in thread
+    # so asyncio.gather can run multiple generations in parallel.
+    meta, slot_questions = await asyncio.to_thread(
+        run_slot_pipeline,
+        client=client,
+        grade=grade,
+        subject="Mathematics",
+        topic=topic,
+        q_count=num_questions,
+        difficulty=difficulty,
+        region=region,
+        language=language,
+        worksheet_plan=worksheet_plan,
+        constraints=None,
+    )
+
+    hydrate_visuals(slot_questions, visuals_only=False)
+
+    questions = [_slot_to_question(q, i) for i, q in enumerate(slot_questions)]
+    _fill_role_explanations(questions)
+
+    common_mistakes = meta.get("common_mistakes") or []
+    worksheet = Worksheet(
+        title=f"{meta.get('micro_skill', topic)} - Practice",
+        grade=grade,
+        subject="Mathematics",
+        topic=topic,
+        difficulty=meta.get("difficulty", difficulty).capitalize(),
+        language=language,
+        questions=questions,
+        skill_focus=meta.get("skill_focus", ""),
+        common_mistake=common_mistakes[0] if common_mistakes else "",
+        parent_tip=meta.get("parent_tip", ""),
+    )
+
+    # Save to database
+    questions_data = [q.model_dump() for q in worksheet.questions]
+    save_result = supabase.table("worksheets").insert({
+        "user_id": user_id,
+        "title": worksheet.title,
+        "board": board,
+        "grade": grade,
+        "subject": "Mathematics",
+        "topic": topic,
+        "difficulty": worksheet.difficulty,
+        "language": language,
+        "questions": questions_data,
+        "child_id": child_id,
+        "region": region,
+    }).execute()
+
+    ws_dict = jsonable_encoder(worksheet.model_dump())
+    if save_result.data:
+        ws_dict["worksheet_id"] = save_result.data[0]["id"]
+    else:
+        logger.warning("Bulk: worksheet save returned no data for topic=%s", topic)
+
+    return ws_dict
+
+
+@router.post("/bulk", response_model=BulkGenerationResponse)
+@instrument(route="/api/v1/worksheets/bulk", version="v1")
+async def bulk_generate_v1(
+    request: BulkGenerationRequest,
+    authorization: str = Header(None),
+):
+    """Generate multiple worksheets across topics in parallel. Paid tier only."""
+
+    # ── 1. Auth check ──
+    from app.api.worksheets import get_user_id_from_token, supabase
+
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header is required")
+    user_id = get_user_id_from_token(authorization)
+
+    # ── 2. Subscription check — paid tier only ──
+    try:
+        sub_result = supabase.table("user_subscriptions") \
+            .select("tier") \
+            .eq("user_id", user_id) \
+            .execute()
+
+        tier = "free"
+        if sub_result.data:
+            tier = sub_result.data[0].get("tier", "free")
+
+        if tier != "paid":
+            raise HTTPException(
+                status_code=402,
+                detail="Bulk generation is available for paid users only.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning("Bulk: subscription tier check failed for user %s: %s", user_id, e)
+        # Fail closed for bulk — require paid confirmation
+        raise HTTPException(
+            status_code=402,
+            detail="Bulk generation is available for paid users only.",
+        )
+
+    # ── 3. Validate limits ──
+    if request.num_questions not in VALID_NUM_QUESTIONS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"num_questions must be one of {sorted(VALID_NUM_QUESTIONS)}",
+        )
+
+    if len(request.topics) > 5:
+        raise HTTPException(status_code=422, detail="Maximum 5 topics per bulk request")
+
+    if len(request.topics) == 0:
+        raise HTTPException(status_code=422, detail="At least 1 topic is required")
+
+    if request.count_per_topic > 3:
+        raise HTTPException(status_code=422, detail="Maximum 3 worksheets per topic")
+
+    if request.count_per_topic < 1:
+        raise HTTPException(status_code=422, detail="count_per_topic must be at least 1")
+
+    total_worksheets = len(request.topics) * request.count_per_topic
+    if total_worksheets > 15:
+        raise HTTPException(status_code=422, detail="Maximum 15 worksheets per bulk request")
+
+    # ── 4. Generate worksheets in parallel ──
+    tasks = []
+    task_topics = []  # Track which topic each task corresponds to
+    for topic in request.topics:
+        for _ in range(request.count_per_topic):
+            task_topics.append(topic)
+            tasks.append(
+                _generate_single_worksheet(
+                    topic=topic,
+                    num_questions=request.num_questions,
+                    difficulty=request.difficulty,
+                    grade=request.grade,
+                    language=request.language,
+                    board=request.board,
+                    region="India",
+                    user_id=user_id,
+                    child_id=request.child_id,
+                )
+            )
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # ── 5. Separate successes from failures ──
+    worksheets = []
+    failed = []
+    for i, result in enumerate(results):
+        topic = task_topics[i]
+        if isinstance(result, Exception):
+            logger.error("Bulk: generation failed for topic=%s: %s", topic, result, exc_info=result)
+            failed.append({"topic": topic, "error": str(result)})
+        else:
+            worksheets.append(result)
+
+    # ── 6. Increment subscription usage for successful generations ──
+    if worksheets:
+        try:
+            from app.services.subscription_check import check_and_increment_usage
+            # Increment once per successful worksheet
+            for _ in worksheets:
+                await check_and_increment_usage(user_id, supabase)
+        except Exception as e:
+            logger.error("Bulk: failed to increment usage for user %s: %s", user_id, e)
+
+    logger.info(
+        "Bulk generation complete: user=%s generated=%d failed=%d topics=%s",
+        user_id, len(worksheets), len(failed), request.topics,
+    )
+
+    return BulkGenerationResponse(
+        worksheets=worksheets,
+        failed=failed,
+        total_generated=len(worksheets),
+        total_failed=len(failed),
+    )
