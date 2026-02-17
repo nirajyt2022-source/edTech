@@ -1295,6 +1295,11 @@ _FORMAT_TO_QTYPE: dict[str, str] = {
 _MODEL_TO_VTYPE: dict[str, str] = {
     "NUMBER_LINE": "number_line",
     "BASE_TEN_REGROUPING": "base_ten_regrouping",
+    "PIE_FRACTION": "pie_fraction",
+    "GRID_SYMMETRY": "grid_symmetry",
+    "MONEY_COINS": "money_coins",
+    "PATTERN_TILES": "pattern_tiles",
+    "ABACUS": "abacus",
 }
 
 

@@ -485,6 +485,252 @@ def get_learning_objectives(topic: str) -> list[str]:
     return LEARNING_OBJECTIVES.get(topic, [])
 
 
+# ── Topic Context Bank (Gold-G3) ────────────────────────────
+# Rich Indian contexts for word problems, keyed by canonical topic name.
+# Note: CONTEXT_BANK is already used as the application variant picker (list).
+# This dict is named TOPIC_CONTEXT_BANK and exposed as get_context_bank().
+
+TOPIC_CONTEXT_BANK: dict[str, list[str]] = {
+    # Class 3 topics
+    "Addition (carries)": [
+        "cricket runs scored across overs", "mango picking in an orchard",
+        "stamp collection counting", "marbles game tally",
+        "rangoli dots pattern", "school library books",
+        "train passengers boarding", "Diwali gift money from relatives",
+        "school canteen sales", "kite festival string lengths",
+    ],
+    "Subtraction (borrowing)": [
+        "bus passengers getting off at stops", "remaining rotis after dinner",
+        "rakhi money spent on gifts", "water tank draining litres",
+        "cricket runs needed to win", "sweets left after distribution",
+        "pages left to read in a storybook", "distance left on a road trip",
+        "coins spent at a mela stall", "marbles lost in a game",
+    ],
+    "Addition and subtraction (3-digit)": [
+        "school attendance across days", "shop sales and returns",
+        "cricket match run chase", "Diwali cracker budget spent and saved",
+        "bus passengers boarding and alighting", "pocket money earned and spent",
+        "library books borrowed and returned", "mela ticket sales",
+        "harvest baskets filled and emptied", "stamp album additions and trades",
+    ],
+    "Multiplication (tables 2-10)": [
+        "rows of diyas in Diwali decoration", "legs of animals in a farm",
+        "packets of biscuits for a class party", "seating rows in a cinema hall",
+        "wheels on auto-rickshaws in a stand", "petals on flowers in a garden",
+        "pages read per day over a week", "cricket overs and balls",
+        "bangles in sets for Diwali", "idli plates served at breakfast",
+    ],
+    "Division basics": [
+        "sharing laddoos equally among friends", "splitting auto fare among riders",
+        "distributing sweets on birthday", "dividing marbles into equal groups",
+        "sharing mangoes from a tree", "splitting pocket money across days",
+        "equal rows of students in assembly", "distributing notebooks in class",
+        "sharing rotis at a family meal", "dividing Diwali crackers among siblings",
+    ],
+    "Numbers up to 10000": [
+        "population of a small village", "distance between two Indian cities in km",
+        "price of a bicycle in rupees", "number of students in a big school",
+        "railway station daily passengers", "library total book count",
+        "village panchayat election votes", "mela daily footfall",
+        "school annual day audience count", "pin codes of nearby areas",
+    ],
+    "Fractions (halves, quarters)": [
+        "cutting a paratha into halves", "sharing a pizza with family",
+        "dividing a rangoli design", "half-time in a cricket match",
+        "quarter of a watermelon", "folding a dupatta in half",
+        "half a glass of lassi", "quarter turn on a playground roundabout",
+        "sharing a bar of chocolate", "half the length of a cricket pitch",
+    ],
+    "Fractions": [
+        "slicing a cake at a birthday party", "portions of a thali plate",
+        "fraction of students wearing white", "part of a garden with flowers",
+        "fraction of a day spent in school", "piece of sugarcane shared",
+        "portion of rangoli pattern coloured", "fraction of pocket money saved",
+        "part of a book read this week", "share of chores done by siblings",
+    ],
+    "Time (reading clock, calendar)": [
+        "school bell timings", "cricket match overs and breaks",
+        "train departure from station", "prayer assembly time",
+        "lunch break duration", "festival dates on calendar",
+        "morning walk routine", "cartoon show timing on TV",
+        "exam schedule across days", "bus arrival intervals",
+    ],
+    "Money (bills and change)": [
+        "auto-rickshaw fares in the city", "chai stall change calculation",
+        "mela shopping for toys and snacks", "Diwali gift money budgeting",
+        "school canteen lunch buying", "buying notebooks at a stationery shop",
+        "paying for ice cream from a cart", "saving in a piggy bank",
+        "buying fruits from a sabzi mandi", "ticket price at a local cinema",
+    ],
+    "Symmetry": [
+        "rangoli design with fold line", "butterfly wing patterns",
+        "mehendi design on both hands", "temple gopuram architecture",
+        "kolam pattern symmetry", "Indian flag layout",
+        "peacock feather eye pattern", "diya lamp shape",
+        "lotus flower petals", "kite shape for Makar Sankranti",
+    ],
+    "Patterns and sequences": [
+        "kolam dot patterns on the ground", "bangle colour sequences",
+        "rangoli border tile patterns", "clapping rhythm in a song",
+        "number plate sequences on a street", "train coach number patterns",
+        "flower garland bead patterns", "floor tile patterns in a temple",
+        "embroidery stitch patterns", "day-night cycle counting",
+    ],
+    # Class 2 topics
+    "Numbers up to 1000 (Class 2)": [
+        "houses in a colony", "beads on an abacus",
+        "pages in a thick storybook", "steps walked to school",
+        "grains of rice in a handful", "blocks in a building set",
+        "stickers in a collection", "ants in a line near the kitchen",
+        "leaves on a small plant branch", "people at a village fair",
+    ],
+    "Addition (2-digit with carry)": [
+        "toffees collected at a birthday party", "runs scored in a gully cricket match",
+        "stickers traded between friends", "flowers picked for puja",
+        "steps climbed in a temple", "birds counted in the morning",
+        "shells collected at the beach", "pages of drawing done this month",
+        "chapatis made for a family meal", "toy cars in two boxes combined",
+    ],
+    "Subtraction (2-digit with borrow)": [
+        "balloons that burst at a party", "toffees eaten from a pack",
+        "pages torn from an old notebook", "birds that flew away from a tree",
+        "beads fallen off a necklace", "cookies eaten from a jar",
+        "crayons broken in a box", "stickers given to a friend",
+        "leaves fallen from a plant", "samosas eaten at tea time",
+    ],
+    "Multiplication (tables 2-5)": [
+        "pairs of shoes in a family", "wheels on cycles in a parking stand",
+        "eyes of children in a group", "legs of chairs in a classroom",
+        "petals on simple flowers", "fingers on hands of friends",
+        "packets of chips for a party", "rows of desks in class",
+        "rotis on each plate at dinner", "pencils in sets at a shop",
+    ],
+    "Division (sharing equally)": [
+        "sharing toffees among classmates", "dividing crayons into equal groups",
+        "splitting chapatis for family members", "sharing toys between siblings",
+        "equal groups for a relay race", "distributing laddu at prasad",
+        "sharing colour pencils in art class", "equal piles of building blocks",
+        "dividing fruits for tiffin boxes", "sharing stickers with friends",
+    ],
+    "Shapes and space (2D)": [
+        "shapes of rotis and parathas", "wheels of vehicles on the road",
+        "windows and doors of a house", "tiles on the kitchen floor",
+        "rangoli shapes drawn at Diwali", "shape of a cricket ground",
+        "kite shapes flying at Makar Sankranti", "traffic signs on the road",
+        "shapes of Indian sweets", "patterns on a bedsheet",
+    ],
+    "Measurement (length, weight)": [
+        "height of friends in class", "length of a school corridor",
+        "weight of fruit bags at a sabzi mandi", "length of a dupatta or saree",
+        "distance from home to school", "weight of a school bag",
+        "height of a coconut tree", "length of a train platform",
+        "weight of a watermelon", "distance of a running race in school",
+    ],
+    "Time (hour, half-hour)": [
+        "school start and end time", "cartoon show on TV",
+        "morning prayer assembly", "lunch time at home",
+        "evening play time", "bed time routine",
+        "weekend temple visit", "half-hour bus ride to grandma's house",
+        "birthday party start time", "daily milk delivery time",
+    ],
+    "Money (coins and notes)": [
+        "buying a pencil from the school stall", "ice cream from the cart",
+        "coins in a piggy bank", "pocket money for the week",
+        "paying for auto-rickshaw to school", "buying a balloon at a fair",
+        "saving coins for a toy", "buying snacks at the canteen",
+        "change from a 10-rupee note", "counting coins after Diwali",
+    ],
+    "Data handling (pictographs)": [
+        "favourite fruits survey in class", "vehicles passing the school gate",
+        "birds spotted in the garden", "favourite colours of classmates",
+        "pets owned by students", "favourite games in the class",
+        "types of trees in the school garden", "lunch box items survey",
+        "modes of transport to school", "favourite festivals of classmates",
+    ],
+    # Class 4 topics
+    "Large numbers (up to 1,00,000)": [
+        "population of a town", "cost of a second-hand car in rupees",
+        "annual visitors to a national park", "seats in a cricket stadium",
+        "distance between major Indian cities", "monthly electricity units in a building",
+        "books in a city library", "votes in a local election",
+        "daily newspaper circulation", "annual rainfall in millimetres",
+    ],
+    "Addition and subtraction (5-digit)": [
+        "school fundraiser totals across branches", "train passengers across stations",
+        "city population growth over years", "annual school fee calculations",
+        "distance covered in a road trip", "factory production units per month",
+        "event ticket revenue", "hospital patient counts across months",
+        "village water supply litres", "government scheme beneficiaries",
+    ],
+    "Multiplication (3-digit × 2-digit)": [
+        "cost of chairs for a school hall", "notebooks needed for all students in a school",
+        "tiles needed to floor a room", "daily bus passengers over a month",
+        "packets produced in a factory per day", "cost of uniforms for an entire school",
+        "bricks needed to build a wall", "seeds planted in rows in a farm",
+        "pages printed by a press in a week", "rice bags supplied to ration shops",
+    ],
+    "Division (long division)": [
+        "distributing textbooks equally to classrooms", "splitting harvest produce into bags",
+        "equal installments for a bicycle purchase", "dividing sweets for a school event",
+        "sharing prize money among team members", "distributing saplings to villages",
+        "equal portions of cloth for uniforms", "splitting fuel cost on a group trip",
+        "pages to read per day to finish a book", "dividing budget across school departments",
+    ],
+    "Fractions (equivalent, comparison)": [
+        "comparing slices of different sized cakes", "fraction of a cricket pitch length",
+        "portion of a wall painted by two workers", "share of a farm's harvest",
+        "fraction of students present on different days", "comparing fuel tank fill levels",
+        "portion of homework done by evening", "share of chores between siblings",
+        "fraction of a garden with vegetables vs flowers", "comparing distances walked on two days",
+    ],
+    "Decimals (tenths, hundredths)": [
+        "measuring height in metres and centimetres", "price tags in a supermarket",
+        "cricket batting averages", "temperature readings at a weather station",
+        "race timings in seconds at sports day", "measuring fabric at a tailor shop",
+        "weighing gold at a jewellery shop", "petrol pump meter readings",
+        "measuring medicine doses in ml", "school exam marks as percentages",
+    ],
+    "Geometry (angles, lines)": [
+        "corners of a carrom board", "clock hands forming angles",
+        "railway tracks as parallel lines", "corners of a cricket field boundary",
+        "ladder leaning against a wall", "edges of an Indian kite",
+        "angles in rangoli star patterns", "road intersections in a city grid",
+        "roof slopes of different houses", "angles of a temple gopuram",
+    ],
+    "Perimeter and area": [
+        "fencing a school playground", "tiling a kitchen floor",
+        "border wire for a picture frame", "area of a classroom for new carpet",
+        "perimeter of a cricket pitch", "fencing a vegetable garden",
+        "painting a wall of a room", "area of a table top for a cover",
+        "border for a rangoli square", "land area of a house plot",
+    ],
+    "Time (minutes, 24-hour clock)": [
+        "railway timetable departures", "school period durations",
+        "cooking time for different dishes", "cricket innings duration",
+        "bus route schedule across the city", "flight departure in 24-hour format",
+        "exam time allocation per section", "TV show schedule in 24-hour clock",
+        "factory shift timings", "hospital visiting hours",
+    ],
+    "Money (bills, profit/loss)": [
+        "shopkeeper buying and selling notebooks", "auto-rickshaw daily earnings and fuel cost",
+        "fruit vendor profit at a mandi", "school canteen monthly expenses and income",
+        "buying wholesale and selling retail sweets", "craft fair stall earnings",
+        "farmer selling crops at market", "tailor's cloth cost vs stitching charge",
+        "mobile recharge shop profit", "Diwali gift hamper business",
+    ],
+}
+
+
+def get_context_bank(topic: str) -> list[str]:
+    """Return Indian context bank entries for a topic, resolving aliases."""
+    profile = get_topic_profile(topic)
+    if profile:
+        for key, prof in TOPIC_PROFILES.items():
+            if prof is profile:
+                return TOPIC_CONTEXT_BANK.get(key, [])
+    return TOPIC_CONTEXT_BANK.get(topic, [])
+
+
 # ── Topic Profiles ──────────────────────────────────────────
 
 TOPIC_PROFILES: dict[str, dict] = {
@@ -1489,7 +1735,7 @@ def _make_seed(grade: str, topic: str, q_count: int, history_count: int) -> int:
 
 
 def pick_context(rng: random.Random, avoid_contexts: list[str]) -> dict:
-    """Pick a context from CONTEXT_BANK, avoiding recently used ones."""
+    """Pick a word problem context, avoiding recently used ones."""
     avoid_set = set(avoid_contexts)
     candidates = [c for c in CONTEXT_BANK if c["item"] not in avoid_set]
     if not candidates:
@@ -1719,11 +1965,13 @@ def _build_slot_instruction(
     slot_type: str,
     chosen_variant: dict | None,
     directive: dict | None = None,
+    topic: str = "",
 ) -> str:
     """Build backend-chosen specific instructions for a slot question.
 
     chosen_variant contains the picked context/error/style for this slot.
     directive (optional) carries plan-level overrides (carry_required, format_hint, etc).
+    topic (optional) is the canonical topic name used to look up CONTEXT_BANK for word problems.
     """
     # Topic-specific short instructions (token-efficient)
     _skill_tag = (directive or {}).get("skill_tag", "")
@@ -2423,7 +2671,6 @@ def _build_slot_instruction(
                     f"Item: {ctx.get('item', 'things')}. "
                     f"Exact numerical answer required."
                 )
-
     elif slot_type == "representation":
         if _is_generic_arithmetic:
             base = (
@@ -2482,6 +2729,20 @@ def _build_slot_instruction(
             )
         if extras:
             base += "\n" + " ".join(extras)
+
+    # ── Indian Context Bank injection (Gold-G3) ──
+    # Append Indian context guidance for application (word_problem) slots.
+    # This covers all paths that set `base` (i.e., did not early-return).
+    if slot_type == "application" and topic:
+        _ctx_bank = get_context_bank(topic)
+        if _ctx_bank:
+            base += (
+                f"\nChoose ONE context from this list for the word problem: {_ctx_bank}. "
+                "Use Indian names: Priya, Arjun, Meera, Ravi, Kavya, Dadi, Chacha, Aarav, Ananya, Rohan. "
+                "Make the problem feel real to an Indian child. "
+                "DO NOT use generic 'Ram and Shyam' or generic fruit/animal problems. "
+                "DO NOT reuse a context already used in this worksheet."
+            )
 
     return base
 
@@ -2857,6 +3118,74 @@ def hydrate_visuals(questions: list[dict], visuals_only: bool = False) -> list[d
         if _is_time_skill:
             q["representation"] = "TEXT_ONLY"
             continue
+
+        # ── Gold-G4: Format-based visual hydration for new visual types ──
+        _q_format = q.get("format", "")
+
+        # Fractions → PIE_FRACTION
+        if _q_format in ("fraction_number",):
+            _frac_match = re.search(r"(\d+)\s*/\s*(\d+)", text)
+            if _frac_match:
+                _num, _den = int(_frac_match.group(1)), int(_frac_match.group(2))
+                if 1 <= _den <= 12:
+                    q["representation"] = "PICTORIAL_MODEL"
+                    q["visual_spec"] = {
+                        "model_id": "PIE_FRACTION",
+                        "numerator": _num,
+                        "denominator": _den,
+                    }
+                    q["visual_model_ref"] = "PIE_FRACTION"
+                    continue
+
+        # Symmetry → GRID_SYMMETRY
+        if _q_format in ("symmetry_question", "symmetry_complete"):
+            q["representation"] = "PICTORIAL_MODEL"
+            q["visual_spec"] = {
+                "model_id": "GRID_SYMMETRY",
+                "grid_size": 6,
+                "filled_cells": [[1, 1], [1, 2], [2, 1], [2, 2], [3, 1]],
+                "fold_axis": "vertical",
+            }
+            q["visual_model_ref"] = "GRID_SYMMETRY"
+            continue
+
+        # Money → MONEY_COINS
+        if _q_format in ("money_question",):
+            _coin_matches = re.findall(r"(?:Rs\.?|₹)\s*(\d+)", text)
+            if _coin_matches:
+                _coins = [{"value": int(v), "count": 1} for v in _coin_matches[:5]]
+                q["representation"] = "PICTORIAL_MODEL"
+                q["visual_spec"] = {
+                    "model_id": "MONEY_COINS",
+                    "coins": _coins,
+                }
+                q["visual_model_ref"] = "MONEY_COINS"
+                continue
+
+        # Pattern → PATTERN_TILES
+        if _q_format in ("shape_pattern", "pattern_question", "growing_pattern"):
+            q["representation"] = "PICTORIAL_MODEL"
+            q["visual_spec"] = {
+                "model_id": "PATTERN_TILES",
+                "tiles": ["A", "B", "A", "B", "A", "?"],
+                "blank_position": 5,
+            }
+            q["visual_model_ref"] = "PATTERN_TILES"
+            continue
+
+        # Place value → ABACUS (only for non-arithmetic place value questions)
+        if _q_format in ("place_value", "place_value_question"):
+            if len(nums_2to4) >= 1:
+                _pv_num = nums_2to4[0]
+                q["representation"] = "PICTORIAL_MODEL"
+                q["visual_spec"] = {
+                    "model_id": "ABACUS",
+                    "hundreds": (_pv_num // 100) % 10,
+                    "tens": (_pv_num // 10) % 10,
+                    "ones": _pv_num % 10,
+                }
+                q["visual_model_ref"] = "ABACUS"
+                continue
 
         # Rule C: missing number (blank marker + two known values) → NUMBER_LINE
         if _HYDRATE_MISSING.search(text) and len(nums_2to4) >= 2:
@@ -3770,7 +4099,7 @@ def _extract_avoid_items(q: dict) -> list[str]:
     for n in all_nums:
         items.append(f"num:{n}")
 
-    # Track context items from CONTEXT_BANK
+    # Track context items from word problem contexts
     text_lower = text.lower()
     for ctx in CONTEXT_BANK:
         if ctx["item"] in text_lower:
@@ -3810,6 +4139,7 @@ def _regen_question_for_topic(
     for _ in range(max_attempts):
         slot_instruction = _build_slot_instruction(
             directive.get("slot_type", "application"), chosen_variant=None, directive=directive,
+            topic=topic,
         )
         try:
             q = generate_question(
@@ -4022,7 +4352,7 @@ def run_slot_pipeline(
         directive = plan_directives[i]
         q_difficulty = get_question_difficulty(slot_type, difficulty)
         variant = chosen_variants[i]
-        slot_instruction = _build_slot_instruction(slot_type, variant, directive=directive)
+        slot_instruction = _build_slot_instruction(slot_type, variant, directive=directive, topic=topic)
 
         generated = False
         for attempt in range(max_attempts):

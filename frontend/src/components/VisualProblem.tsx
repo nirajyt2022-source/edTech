@@ -21,6 +21,16 @@ export default function VisualProblem({ visualType, visualData, colorMode = 'mon
       return <NumberLineVisual start={Number(visualData.start) || 0} end={Number(visualData.end) || 20} step={Number(visualData.step) || 2} highlight={visualData.highlight != null ? Number(visualData.highlight) : undefined} useColor={useColor} />
     case 'base_ten_regrouping':
       return <BaseTenRegroupingVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'addition')} studentAnswer={studentAnswer} onStudentAnswerChange={onStudentAnswerChange} />
+    case 'pie_fraction':
+      return <PieFractionVisual numerator={Number(visualData.numerator) || 1} denominator={Number(visualData.denominator) || 2} />
+    case 'grid_symmetry':
+      return <GridSymmetryVisual gridSize={Number(visualData.grid_size) || 6} filledCells={(visualData.filled_cells as number[][]) || []} foldAxis={(visualData.fold_axis as 'vertical' | 'horizontal') || 'vertical'} />
+    case 'money_coins':
+      return <MoneyCoinsVisual coins={(visualData.coins as { value: number; count: number }[]) || []} />
+    case 'pattern_tiles':
+      return <PatternTilesVisual tiles={(visualData.tiles as string[]) || []} blankPosition={visualData.blank_position != null ? Number(visualData.blank_position) : -1} />
+    case 'abacus':
+      return <AbacusVisual hundreds={Number(visualData.hundreds) || 0} tens={Number(visualData.tens) || 0} ones={Number(visualData.ones) || 0} />
     default:
       return null
   }
@@ -396,6 +406,283 @@ function NumberLineVisual({ start, end, step, highlight, useColor }: { start: nu
       {highlight != null && highlight >= start && highlight <= end && (
         <circle cx={toX(highlight)} cy={lineY} r="4" fill={useColor ? '#88a0b8' : 'none'} className={useColor ? 'token-cf' : undefined} stroke="currentColor" strokeWidth="2" />
       )}
+    </svg>
+  )
+}
+
+/* ── Pie Fraction ── */
+
+function PieFractionVisual({ numerator, denominator }: { numerator: number; denominator: number }) {
+  const cx = 60, cy = 60, r = 48
+  const clampedNum = Math.max(0, Math.min(numerator, denominator))
+  const clampedDen = Math.max(1, denominator)
+
+  const wedges = Array.from({ length: clampedDen }, (_, i) => {
+    const startAngle = (i / clampedDen) * 2 * Math.PI - Math.PI / 2
+    const endAngle = ((i + 1) / clampedDen) * 2 * Math.PI - Math.PI / 2
+    const x1 = cx + Math.cos(startAngle) * r
+    const y1 = cy + Math.sin(startAngle) * r
+    const x2 = cx + Math.cos(endAngle) * r
+    const y2 = cy + Math.sin(endAngle) * r
+    const largeArc = clampedDen === 1 ? 1 : 0
+    const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`
+    return { d, shaded: i < clampedNum }
+  })
+
+  return (
+    <svg viewBox="0 0 120 140" className="w-28 h-32 text-foreground print:text-black" role="img" aria-label={`Fraction ${clampedNum} out of ${clampedDen}: ${clampedNum}/${clampedDen} of a circle shaded`}>
+      {wedges.map((w, i) => (
+        <path
+          key={i}
+          d={w.d}
+          fill={w.shaded ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          strokeWidth="1"
+          opacity={w.shaded ? 0.25 : 1}
+        />
+      ))}
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <text x={cx} y={cy + r + 20} textAnchor="middle" fontSize="12" fill="currentColor" fontWeight="600">
+        {clampedNum}/{clampedDen}
+      </text>
+    </svg>
+  )
+}
+
+/* ── Grid Symmetry ── */
+
+function GridSymmetryVisual({ gridSize, filledCells, foldAxis }: { gridSize: number; filledCells: number[][]; foldAxis: 'vertical' | 'horizontal' }) {
+  const size = 150
+  const pad = 10
+  const cellSize = (size - 2 * pad) / Math.max(gridSize, 1)
+  const filledSet = new Set(filledCells.map(([r, c]) => `${r},${c}`))
+
+  const midIndex = gridSize / 2
+  const foldCoord = pad + midIndex * cellSize
+
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-36 h-36 text-foreground print:text-black" role="img" aria-label={`${gridSize}x${gridSize} symmetry grid with ${foldAxis} fold line`}>
+      {/* Dot grid */}
+      {Array.from({ length: gridSize + 1 }, (_, row) =>
+        Array.from({ length: gridSize + 1 }, (_, col) => (
+          <circle
+            key={`dot-${row}-${col}`}
+            cx={pad + col * cellSize}
+            cy={pad + row * cellSize}
+            r="1.2"
+            fill="currentColor"
+            opacity="0.35"
+          />
+        ))
+      )}
+      {/* Filled cells */}
+      {Array.from({ length: gridSize }, (_, row) =>
+        Array.from({ length: gridSize }, (_, col) =>
+          filledSet.has(`${row},${col}`) ? (
+            <rect
+              key={`cell-${row}-${col}`}
+              x={pad + col * cellSize + 1}
+              y={pad + row * cellSize + 1}
+              width={cellSize - 2}
+              height={cellSize - 2}
+              fill="currentColor"
+              opacity="0.22"
+              rx="1"
+            />
+          ) : null
+        )
+      )}
+      {/* Fold line */}
+      {foldAxis === 'vertical' ? (
+        <line
+          x1={foldCoord}
+          y1={pad}
+          x2={foldCoord}
+          y2={size - pad}
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeDasharray="5 3"
+          opacity="0.7"
+        />
+      ) : (
+        <line
+          x1={pad}
+          y1={foldCoord}
+          x2={size - pad}
+          y2={foldCoord}
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeDasharray="5 3"
+          opacity="0.7"
+        />
+      )}
+    </svg>
+  )
+}
+
+/* ── Money Coins ── */
+
+function MoneyCoinsVisual({ coins }: { coins: { value: number; count: number }[] }) {
+  if (!coins.length) return null
+
+  const itemW = 52
+  const h = 80
+  const totalW = Math.max(250, coins.length * itemW + 20)
+
+  return (
+    <svg
+      viewBox={`0 0 ${totalW} ${h}`}
+      className="w-full max-w-[300px] text-foreground print:text-black"
+      role="img"
+      aria-label={coins.map(c => `${c.count} x ₹${c.value}`).join(', ')}
+    >
+      {coins.map((coin, i) => {
+        const cx = 26 + i * itemW
+        const isCoin = coin.value <= 10
+        return (
+          <g key={i}>
+            {isCoin ? (
+              /* Coin: circle */
+              <>
+                <circle cx={cx} cy={30} r={18} fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx={cx} cy={30} r={14} fill="none" stroke="currentColor" strokeWidth="0.6" />
+                <text x={cx} y={28} textAnchor="middle" fontSize="7" fill="currentColor">&#8377;</text>
+                <text x={cx} y={38} textAnchor="middle" fontSize="9" fill="currentColor" fontWeight="600">{coin.value}</text>
+              </>
+            ) : (
+              /* Note: rectangle */
+              <>
+                <rect x={cx - 18} y={14} width={36} height={22} rx="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <rect x={cx - 14} y={17} width={28} height={16} rx="2" fill="none" stroke="currentColor" strokeWidth="0.6" />
+                <text x={cx} y={26} textAnchor="middle" fontSize="7" fill="currentColor">&#8377;</text>
+                <text x={cx} y={34} textAnchor="middle" fontSize="7" fill="currentColor" fontWeight="600">{coin.value}</text>
+              </>
+            )}
+            {/* Count label */}
+            <text x={cx} y={62} textAnchor="middle" fontSize="8" fill="currentColor" opacity="0.7">
+              x{coin.count}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+/* ── Pattern Tiles ── */
+
+function PatternTilesVisual({ tiles, blankPosition }: { tiles: string[]; blankPosition: number }) {
+  if (!tiles.length) return null
+
+  const tileW = 40, tileH = 40, gap = 6, pad = 8
+  const totalW = Math.max(250, tiles.length * (tileW + gap) - gap + 2 * pad)
+  const totalH = 60
+
+  return (
+    <svg
+      viewBox={`0 0 ${totalW} ${totalH}`}
+      className="w-full max-w-[300px] text-foreground print:text-black"
+      role="img"
+      aria-label={`Pattern sequence: ${tiles.join(', ')}${blankPosition >= 0 ? `, blank at position ${blankPosition + 1}` : ''}`}
+    >
+      {tiles.map((label, i) => {
+        const x = pad + i * (tileW + gap)
+        const y = (totalH - tileH) / 2
+        const isBlank = i === blankPosition
+        const isEven = i % 2 === 0
+
+        return (
+          <g key={i}>
+            <rect
+              x={x}
+              y={y}
+              width={tileW}
+              height={tileH}
+              rx="4"
+              fill={isBlank ? 'none' : isEven ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth={isBlank ? 1.5 : 1}
+              strokeDasharray={isBlank ? '4 3' : undefined}
+              opacity={isEven && !isBlank ? 0.15 : 1}
+            />
+            {/* Slightly darker border for even filled tiles */}
+            {!isBlank && isEven && (
+              <rect x={x} y={y} width={tileW} height={tileH} rx="4" fill="none" stroke="currentColor" strokeWidth="1" />
+            )}
+            <text
+              x={x + tileW / 2}
+              y={y + tileH / 2 + 1}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={isBlank ? '14' : '13'}
+              fill="currentColor"
+              fontWeight="600"
+            >
+              {label}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+/* ── Abacus ── */
+
+function AbacusVisual({ hundreds, tens, ones }: { hundreds: number; ones: number; tens: number }) {
+  const w = 160, h = 120
+  const frameX = 16, frameY = 10, frameW = 128, frameH = 90
+  const rodXs = [52, 80, 108]
+  const rodLabels = ['H', 'T', 'O']
+  const rodValues = [Math.max(0, Math.min(hundreds, 9)), Math.max(0, Math.min(tens, 9)), Math.max(0, Math.min(ones, 9))]
+  const rodTop = frameY + 8
+  const rodBottom = frameY + frameH - 8
+  const beadR = 5
+  const beadSpacing = 12
+  const maxBeads = 9
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-40 h-28 text-foreground print:text-black" role="img" aria-label={`Abacus: ${hundreds} hundreds, ${tens} tens, ${ones} ones`}>
+      {/* Frame */}
+      <rect x={frameX} y={frameY} width={frameW} height={frameH} rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
+      {/* Top and bottom bars */}
+      <line x1={frameX} y1={frameY + 14} x2={frameX + frameW} y2={frameY + 14} stroke="currentColor" strokeWidth="1.5" />
+      <line x1={frameX} y1={frameY + frameH - 14} x2={frameX + frameW} y2={frameY + frameH - 14} stroke="currentColor" strokeWidth="1.5" />
+
+      {rodXs.map((rx, ri) => {
+        const count = rodValues[ri]
+        const beadAreaTop = rodTop + 14
+        const beadAreaBottom = rodBottom - 14
+        const beadAreaH = beadAreaBottom - beadAreaTop
+        const startY = beadAreaBottom - beadR
+
+        return (
+          <g key={ri}>
+            {/* Rod */}
+            <line x1={rx} y1={rodTop} x2={rx} y2={rodBottom} stroke="currentColor" strokeWidth="1.2" opacity="0.4" />
+            {/* Beads */}
+            {Array.from({ length: Math.min(count, maxBeads) }, (_, bi) => {
+              const beadY = startY - bi * Math.min(beadSpacing, beadAreaH / maxBeads)
+              return (
+                <circle
+                  key={bi}
+                  cx={rx}
+                  cy={beadY}
+                  r={beadR}
+                  fill="currentColor"
+                  opacity="0.25"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                />
+              )
+            })}
+            {/* Column label */}
+            <text x={rx} y={frameY + frameH + 14} textAnchor="middle" fontSize="10" fill="currentColor" fontWeight="600">
+              {rodLabels[ri]}
+            </text>
+          </g>
+        )
+      })}
     </svg>
   )
 }
