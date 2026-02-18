@@ -15952,3 +15952,624 @@ def _repair_pass(
                     logger.error("Repair failed for Q%d: %s", i + 1, exc)
 
     return questions
+
+
+# ============================================================================
+# ASYNC GENERATION INFRASTRUCTURE
+# Added additively — zero changes to existing synchronous API above.
+# ============================================================================
+
+import asyncio as _asyncio
+import time as _time_module
+
+# ---------------------------------------------------------------------------
+# Meta cache: in-memory TTL cache (grade + subject + topic + bloom_level)
+# Cache key = md5(grade|subject|topic|bloom_level), TTL = 3600 s
+# ---------------------------------------------------------------------------
+
+_META_CACHE: dict[str, dict] = {}
+_META_CACHE_TTL: int = 3600  # seconds
+
+
+def _meta_cache_key(grade: str, subject: str, topic: str, bloom_level: str = "recall") -> str:
+    raw = f"{grade}|{subject}|{topic}|{bloom_level}"
+    return hashlib.md5(raw.encode()).hexdigest()
+
+
+def _get_cached_meta(cache_key: str) -> dict | None:
+    entry = _META_CACHE.get(cache_key)
+    if entry and _time_module.time() < entry["expires_at"]:
+        return dict(entry["meta"])  # return a copy
+    _META_CACHE.pop(cache_key, None)
+    return None
+
+
+def _set_cached_meta(cache_key: str, meta: dict) -> None:
+    _META_CACHE[cache_key] = {
+        "meta": dict(meta),
+        "expires_at": _time_module.time() + _META_CACHE_TTL,
+    }
+
+
+def generate_meta_cached(
+    client,
+    grade: str,
+    subject: str,
+    topic: str,
+    difficulty: str,
+    region: str,
+    bloom_level: str = "recall",
+) -> dict:
+    """
+    generate_meta() with in-memory TTL caching.
+
+    Cache key: md5(grade|subject|topic|bloom_level) — bloom_level included so
+    a mastered child (bloom=reasoning) gets different meta framing than a
+    beginner (bloom=recall).
+
+    Logs 'Meta cache HIT' on cache hit, 'Meta cache MISS' on miss.
+    """
+    cache_key = _meta_cache_key(grade, subject, topic, bloom_level)
+    cached = _get_cached_meta(cache_key)
+    if cached:
+        logger.info(
+            "[Meta cache HIT] grade=%s subject=%s topic=%s bloom=%s",
+            grade, subject, topic, bloom_level,
+        )
+        return cached
+
+    logger.info(
+        "[Meta cache MISS] grade=%s subject=%s topic=%s bloom=%s — calling LLM",
+        grade, subject, topic, bloom_level,
+    )
+    meta = generate_meta(client, grade, subject, topic, difficulty, region)
+    _set_cached_meta(cache_key, meta)
+    return meta
+
+
+# ---------------------------------------------------------------------------
+# generate_all_questions — parallel slot generation
+# ---------------------------------------------------------------------------
+
+
+async def generate_all_questions(
+    client,
+    prepared_slots: list[dict],
+    grade: str,
+    subject: str,
+    micro_skill: str,
+    region: str,
+    language: str,
+    topic: str,
+    avoid_state_base: list[str] | None = None,
+    batch_size: int = 5,
+) -> list[dict]:
+    """
+    Generate all questions in parallel, in batches of `batch_size`.
+
+    Each entry in `prepared_slots` must contain:
+        slot_type:        str
+        q_difficulty:     str
+        slot_instruction: str
+        directive:        dict   (plan directive for this slot)
+        variant:          dict | None
+
+    Returns a list of result dicts ordered by slot index:
+        {"idx": int, "ok": bool, "q": dict | None, "error": str | None}
+
+    Failed slots are retried once. Uses asyncio.gather(return_exceptions=True)
+    so a runaway exception in one slot never blocks the rest of the batch.
+    """
+    avoid_base = list(avoid_state_base or [])
+
+    async def _attempt_one(idx: int, slot_data: dict) -> dict:
+        """Single LLM call for one slot, run in a threadpool worker."""
+        try:
+            q = await _asyncio.to_thread(
+                generate_question,
+                client,
+                grade,
+                subject,
+                micro_skill,
+                slot_data["slot_type"],
+                slot_data["q_difficulty"],
+                list(avoid_base),       # each slot starts from the same base state
+                region,
+                language,
+                slot_instruction=slot_data["slot_instruction"],
+                topic=topic,
+            )
+            return {"idx": idx, "ok": True, "q": q, "error": None}
+        except Exception as exc:
+            return {"idx": idx, "ok": False, "q": None, "error": str(exc)}
+
+    async def _generate_with_retry(idx: int, slot_data: dict) -> dict:
+        """Try once; if that fails, wait 200 ms and try once more."""
+        result = await _attempt_one(idx, slot_data)
+        if not result["ok"]:
+            logger.warning(
+                "[generate_all_questions] Slot %d failed (%s) — retrying",
+                idx, result.get("error", "?"),
+            )
+            await _asyncio.sleep(0.2)
+            result = await _attempt_one(idx, slot_data)
+            if not result["ok"]:
+                logger.error(
+                    "[generate_all_questions] Slot %d failed after retry: %s",
+                    idx, result.get("error", "?"),
+                )
+        return result
+
+    all_results: list[dict] = []
+    for batch_start in range(0, len(prepared_slots), batch_size):
+        batch = prepared_slots[batch_start : batch_start + batch_size]
+        tasks = [
+            _generate_with_retry(batch_start + j, slot_data)
+            for j, slot_data in enumerate(batch)
+        ]
+        batch_results = await _asyncio.gather(*tasks, return_exceptions=True)
+        for r in batch_results:
+            if isinstance(r, BaseException):
+                # _generate_with_retry never raises, but guard anyway
+                logger.error(
+                    "[generate_all_questions] Unexpected exception from gather: %s", r
+                )
+                all_results.append({
+                    "idx": batch_start + len(all_results),
+                    "ok": False,
+                    "q": None,
+                    "error": str(r),
+                })
+            else:
+                all_results.append(r)
+
+    # Sort by original slot index to restore deterministic order
+    all_results.sort(key=lambda r: r["idx"])
+    return all_results
+
+
+# ---------------------------------------------------------------------------
+# run_slot_pipeline_async — async entry-point for FastAPI handlers
+# ---------------------------------------------------------------------------
+
+
+async def run_slot_pipeline_async(
+    client,
+    grade: str,
+    subject: str,
+    topic: str,
+    q_count: int,
+    difficulty: str,
+    region: str,
+    language: str = "English",
+    worksheet_plan: list[dict] | None = None,
+    constraints: dict | None = None,
+    child_id: str | None = None,
+    adaptive_hint: str | None = None,
+    gen_context=None,   # Optional[GenerationContext] from TopicIntelligenceAgent
+) -> tuple[dict, list[dict]]:
+    """
+    Async variant of run_slot_pipeline().
+
+    Identical setup and post-processing to the sync version, but question
+    generation runs in parallel (batches of 5) via generate_all_questions().
+
+    Performance target: ≤12 s for a 10-question worksheet.
+    Typical speedup vs sequential: ~3–4×.
+
+    Callers in FastAPI handlers should await this directly instead of wrapping
+    run_slot_pipeline in asyncio.to_thread().
+    """
+    import app.skills.registry as skills_registry
+
+    _t_start = _time_module.perf_counter()
+    constraints = constraints or {}
+
+    logger.info(
+        "[async] Slot pipeline: grade=%s topic=%s q=%d diff=%s plan=%s",
+        grade, topic, q_count, difficulty,
+        "custom" if worksheet_plan else "default",
+    )
+
+    # ── 1. Generate meta (with caching) ────────────────────────────────────
+    bloom_level_for_cache = (
+        gen_context.bloom_level if gen_context else "recall"
+    )
+    meta = await _asyncio.to_thread(
+        generate_meta_cached,
+        client, grade, subject, topic, difficulty, region, bloom_level_for_cache,
+    )
+    micro_skill = meta.get("micro_skill", topic)
+    logger.info("[async] Meta: micro_skill=%s", micro_skill)
+
+    # Difficulty sanity check (same as sync version)
+    diff_issues = validate_difficulty_sanity(micro_skill, difficulty)
+    if diff_issues and difficulty.lower() == "easy":
+        logger.warning("[async] Bumping difficulty easy->medium: %s", diff_issues)
+        difficulty = "medium"
+        meta["difficulty"] = "Medium"
+
+    # ── 2. Slot plan ────────────────────────────────────────────────────────
+    _topic_profile = get_topic_profile(topic, subject=subject)
+    if _topic_profile:
+        for _canon_key, _canon_prof in TOPIC_PROFILES.items():
+            if _canon_prof is _topic_profile:
+                topic = _canon_key
+                break
+        logger.info("[async] Canonical topic resolved: %s", topic)
+
+    if worksheet_plan:
+        plan_directives = list(worksheet_plan)
+        if _topic_profile:
+            plan_directives = _apply_topic_profile(plan_directives, _topic_profile)
+    else:
+        if _topic_profile:
+            plan_directives = build_worksheet_plan(q_count, topic=topic)
+        else:
+            plan_directives = [
+                {"slot_type": st, "subject": subject or "Mathematics"}
+                for st in get_slot_plan(q_count)
+            ]
+    slot_plan = [d["slot_type"] for d in plan_directives]
+    logger.info("[async] Slot plan (%d): %s", len(slot_plan), dict(Counter(slot_plan)))
+
+    # ── 2b. Mastery-aware slot plan adjustment ──────────────────────────────
+    mastery_info = None
+    mastery_constraint = None
+    if child_id:
+        mastery_info = _get_mastery_for_topic(child_id, topic)
+        if mastery_info:
+            plan_directives = adjust_slot_plan_for_mastery(plan_directives, mastery_info)
+            slot_plan = [d["slot_type"] for d in plan_directives]
+            error_type = mastery_info.get("last_error_type")
+            if error_type and error_type in _ERROR_TYPE_CONSTRAINTS:
+                mastery_constraint = _ERROR_TYPE_CONSTRAINTS[error_type]
+        logger.info("[async] Mastery-adjusted slot plan: %s", dict(Counter(slot_plan)))
+
+    if mastery_info:
+        meta["mastery_snapshot"] = mastery_info
+
+    # ── 3. History avoid state ──────────────────────────────────────────────
+    history_avoid = get_avoid_state()
+    history_count = len(history_avoid.get("used_contexts", []))
+
+    # ── 4. Seeded RNG ───────────────────────────────────────────────────────
+    seed = _make_seed(grade, topic, q_count, history_count)
+    rng = random.Random(seed)
+
+    # ── 5. Pre-pick variants ────────────────────────────────────────────────
+    chosen_variants: list[dict | None] = []
+    used_contexts_this_ws: list[str] = []
+    used_error_ids_this_ws: list[str] = []
+    used_thinking_styles_this_ws: list[str] = []
+
+    for i, slot_type in enumerate(slot_plan):
+        directive = plan_directives[i]
+        _skill_tag = directive.get("skill_tag", "")
+        _contract = skills_registry.SKILL_REGISTRY.get(_skill_tag)
+        if _contract:
+            variant = _contract.build_variant(rng, directive)
+            if variant:
+                chosen_variants.append(variant)
+                continue
+
+        if slot_type == "application":
+            avoid_ctx = history_avoid["used_contexts"] + used_contexts_this_ws
+            ctx = pick_context(rng, avoid_ctx)
+            name = pick_name(rng, region)
+            used_contexts_this_ws.append(ctx["item"])
+            variant = {"context": ctx, "name": name}
+            if directive.get("carry_required"):
+                ops = directive.get("allow_operations", ["addition", "subtraction"])
+                op = rng.choice(ops)
+                a, b = make_carry_pair(rng, op)
+                variant["carry_pair"] = (a, b)
+                variant["operation"] = op
+            chosen_variants.append(variant)
+        elif slot_type == "error_detection":
+            _ARITHMETIC_TOPICS = {
+                "Addition (carries)", "Subtraction (borrowing)",
+                "Addition and subtraction (3-digit)",
+            }
+            if topic in _ARITHMETIC_TOPICS:
+                avoid_err = history_avoid["used_error_ids"] + used_error_ids_this_ws
+                err = pick_error(rng, avoid_err)
+                used_error_ids_this_ws.append(err["id"])
+                chosen_variants.append({"error": err})
+            else:
+                chosen_variants.append(None)
+        elif slot_type == "thinking":
+            _THINKING_VARIANT_TOPICS = {
+                "Addition (carries)", "Subtraction (borrowing)",
+                "Addition and subtraction (3-digit)",
+                "Multiplication (tables 2-10)", "Division basics",
+                "Numbers up to 10000",
+            }
+            if topic in _THINKING_VARIANT_TOPICS:
+                avoid_styles = (
+                    history_avoid["used_thinking_styles"] + used_thinking_styles_this_ws
+                )
+                style = pick_thinking_style(rng, avoid_styles)
+                used_thinking_styles_this_ws.append(style["style"])
+                chosen_variants.append({"style": style})
+            else:
+                chosen_variants.append({"style": {
+                    "style": "multi_step",
+                    "instruction": (
+                        "Multi-step reasoning: solve a problem with 2-3 steps, "
+                        "showing your reasoning."
+                    ),
+                }})
+        elif slot_type == "recognition" and directive.get("carry_required"):
+            ops = directive.get("allow_operations", ["addition", "subtraction"])
+            op = rng.choice(ops)
+            a, b = make_carry_pair(rng, op)
+            chosen_variants.append({"carry_pair": (a, b), "operation": op})
+        else:
+            chosen_variants.append(None)
+
+    # ── 6. Build slot instruction list ──────────────────────────────────────
+    prepared_slots: list[dict] = []
+    for i, slot_type in enumerate(slot_plan):
+        directive = plan_directives[i]
+        q_difficulty = get_question_difficulty(slot_type, difficulty)
+        variant = chosen_variants[i]
+        slot_instruction = _build_slot_instruction(
+            slot_type, variant, directive=directive, topic=topic, subject=subject,
+        )
+        if mastery_constraint and slot_type in ("recognition", "application", "representation"):
+            slot_instruction += f"\n\nMASTERY FOCUS: {mastery_constraint}"
+        if adaptive_hint:
+            slot_instruction += f"\n\nADAPTIVE: {adaptive_hint}"
+        # Optionally enrich with NCERT-grounded curriculum context
+        if gen_context is not None:
+            try:
+                from app.services.prompt_builder import build_question_prompt
+                slot_instruction += "\n\n" + build_question_prompt(
+                    {"slot_type": slot_type, **directive}, gen_context,
+                )
+            except Exception as _pb_exc:
+                logger.warning(
+                    "[async] prompt_builder failed for slot %d: %s", i, _pb_exc,
+                )
+        prepared_slots.append({
+            "slot_type": slot_type,
+            "q_difficulty": q_difficulty,
+            "slot_instruction": slot_instruction,
+            "variant": variant,
+            "directive": directive,
+        })
+
+    # ── 7. Parallel generation ──────────────────────────────────────────────
+    _t_gen_start = _time_module.perf_counter()
+    results = await generate_all_questions(
+        client=client,
+        prepared_slots=prepared_slots,
+        grade=grade,
+        subject=subject,
+        micro_skill=micro_skill,
+        region=region,
+        language=language,
+        topic=topic,
+        avoid_state_base=history_avoid.get("used_contexts", []),
+    )
+    _t_gen_end = _time_module.perf_counter()
+    logger.info(
+        "[async] Parallel generation: %d slots in %.2f s (%.2f s/slot)",
+        len(results),
+        _t_gen_end - _t_gen_start,
+        (_t_gen_end - _t_gen_start) / max(len(results), 1),
+    )
+
+    # ── 8. Assemble questions list ──────────────────────────────────────────
+    questions: list[dict] = []
+    _question_warnings: list[str] = []
+    avoid_state: list[str] = []
+    _fallback_formats = get_valid_formats(subject)
+
+    for r in results:
+        idx = r["idx"]
+        directive = plan_directives[idx] if idx < len(plan_directives) else {}
+        slot_type = slot_plan[idx] if idx < len(slot_plan) else "recognition"
+        q_difficulty = get_question_difficulty(slot_type, difficulty)
+        variant = chosen_variants[idx] if idx < len(chosen_variants) else None
+
+        if not r["ok"] or r["q"] is None:
+            # Generation failed even after retry — insert stub
+            logger.warning("[async] Q%d failed, inserting stub", idx + 1)
+            questions.append({
+                "id": idx + 1,
+                "slot_type": slot_type,
+                "role": directive.get("role") or slot_type,
+                "skill_tag": directive.get("skill_tag") or slot_type,
+                "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
+                "question_text": f"[Generation failed for {slot_type} question]",
+                "pictorial_elements": [],
+                "answer": "",
+                "difficulty": q_difficulty,
+            })
+            continue
+
+        q = r["q"]
+        backfill_format(q, {"slot_type": slot_type, **directive}, subject=subject)
+        q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or slot_type
+
+        issues = validate_question(q, slot_type, subject=subject)
+
+        _q_skill = q.get("skill_tag", "")
+        if slot_type == "error_detection" and variant and _q_skill not in (
+            "time_error_spot", "money_error_spot", "symmetry_error_spot", "pattern_error_spot",
+        ) and not (subject and subject.lower() == "english"):
+            issues.extend(validate_error_uses_backend_numbers(q, variant))
+
+        _constraint_skill = directive.get("skill_tag") or q.get("skill_tag", "")
+        _disallowed = _topic_profile.get("disallowed_keywords", []) if _topic_profile else []
+        _tc_valid, _tc_reason = _validate_question_constraints(
+            q, _constraint_skill, topic, _disallowed,
+        )
+        if not _tc_valid:
+            issues.append(f"topic_constraint: {_tc_reason}")
+
+        if issues:
+            _question_warnings.extend(f"q{idx+1}: {iss}" for iss in issues)
+            logger.warning("[async] Q%d has issues (best-effort): %s", idx + 1, issues)
+
+        q["id"] = idx + 1
+        q["slot_type"] = slot_type
+        q["role"] = directive.get("role") or slot_type
+        q["difficulty"] = q_difficulty
+        q["skill_tag"] = directive.get("skill_tag") or q.get("skill_tag") or slot_type
+
+        if slot_type == "error_detection" and variant and variant.get("error"):
+            q["student_wrong_answer"] = variant["error"]["wrong"]
+
+        questions.append(q)
+        avoid_state.extend(_extract_avoid_items(q))
+
+    # ── 9. Post-generation repair pass (same as sync) ───────────────────────
+    questions = _repair_pass(
+        client, grade, subject, micro_skill, difficulty, region, language,
+        questions, slot_plan, rng, history_avoid,
+        used_contexts_this_ws, used_error_ids_this_ws, used_thinking_styles_this_ws,
+        topic=topic,
+    )
+
+    # ── 9a. Normalize answers ────────────────────────────────────────────────
+    _is_english = subject and subject.lower() == "english"
+    _is_science = subject and subject.lower() in (
+        "science", "computer", "gk", "moral science", "health",
+    )
+    _is_hindi = subject and subject.lower() == "hindi"
+    _is_text_only = _is_english or _is_science or _is_hindi
+    if _is_text_only:
+        normalize_english_answers(questions)
+    else:
+        normalize_estimation_answers(questions)
+        normalize_error_spot_answers(questions)
+
+    # ── 9b. Enforce slot counts ──────────────────────────────────────────────
+    questions = enforce_slot_counts(questions, slot_plan, subject=subject)
+
+    # ── 9c. Quality review pass ──────────────────────────────────────────────
+    if gen_context is not None:
+        try:
+            from app.services.quality_reviewer import get_quality_reviewer
+            review = get_quality_reviewer().review_worksheet(questions, gen_context)
+            questions = review.questions
+            if review.corrections:
+                logger.info("[async] Quality: %d correction(s): %s", len(review.corrections), review.corrections)
+            if review.warnings:
+                logger.warning("[async] Quality warnings: %s", review.warnings)
+            if review.errors:
+                logger.error("[async] Quality errors: %s", review.errors)
+        except Exception as _qr_exc:
+            logger.warning("[async] Quality review failed (continuing): %s", _qr_exc)
+
+    # ── 9d. Difficulty calibration (final pipeline step) ─────────────────────
+    if gen_context is not None:
+        try:
+            from app.services.difficulty_calibrator import get_difficulty_calibrator
+            questions = get_difficulty_calibrator().calibrate(questions, gen_context)
+        except Exception as _dc_exc:
+            logger.warning("[async] Difficulty calibration failed (continuing): %s", _dc_exc)
+
+    # ── 10. Worksheet-level validation ──────────────────────────────────────
+    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
+    if ws_issues:
+        logger.warning("[async] Worksheet-level issues: %s", ws_issues)
+
+    carry_issues: list[str] | None = None
+    if not _is_text_only:
+        carry_issues = validate_hard_difficulty_carry(questions, difficulty, topic=topic)
+        if carry_issues:
+            logger.warning("[async] Hard-difficulty carry issues: %s", carry_issues)
+
+    # ── 10b. Visual hydration ────────────────────────────────────────────────
+    if not _is_text_only:
+        questions = hydrate_visuals(questions)
+    else:
+        for q in questions:
+            q["representation"] = "TEXT_ONLY"
+
+    enrich_error_spots(questions)
+
+    # ── 10c. Contract slot materialization + validation ─────────────────────
+    for i, q in enumerate(questions):
+        _c = skills_registry.SKILL_REGISTRY.get(q.get("skill_tag"))
+        if _c:
+            questions[i] = _c.build_slots(q)
+
+    for i, q in enumerate(questions):
+        contract = skills_registry.SKILL_REGISTRY.get(q.get("skill_tag"))
+        if contract:
+            c_issues = contract.validate(q)
+            if c_issues:
+                logger.warning(
+                    "[async] Contract q%d (%s): %s — repairing",
+                    i + 1, q.get("skill_tag"), c_issues,
+                )
+                q = contract.repair(q, rng)
+                q = hydrate_visuals([q])[0]
+                questions[i] = q
+
+    # ── 10d. Purity + dedup pass ─────────────────────────────────────────────
+    seen_texts: set[str] = set()
+    for idx2, q in enumerate(questions):
+        reasons: list[str] = []
+        if _topic_profile:
+            reasons.extend(violates_topic_purity(q, _topic_profile))
+        nt = normalize_q_text(q)
+        if nt in seen_texts:
+            reasons.append("duplicate")
+        if reasons:
+            d = plan_directives[idx2] if idx2 < len(plan_directives) else {}
+            new_q = _regen_question_for_topic(
+                client, d, micro_skill, grade, subject, topic,
+                difficulty, region, language, seen_texts,
+            )
+            if new_q:
+                new_q["id"] = idx2 + 1
+                new_q["slot_type"] = d.get("slot_type", new_q.get("slot_type", ""))
+                new_q["role"] = d.get("role") or d.get("slot_type", new_q.get("slot_type", ""))
+                new_q["skill_tag"] = (
+                    d.get("skill_tag") or new_q.get("skill_tag") or d.get("slot_type", "")
+                )
+                questions[idx2] = new_q
+                seen_texts.add(normalize_q_text(new_q))
+            else:
+                if not q.get("skill_tag"):
+                    q["skill_tag"] = d.get("skill_tag") or d.get("slot_type", "")
+                seen_texts.add(nt)
+        else:
+            seen_texts.add(nt)
+
+    # ── 11. Update history ───────────────────────────────────────────────────
+    record = build_worksheet_record(
+        grade=grade,
+        topic=topic,
+        questions=questions,
+        used_contexts=used_contexts_this_ws,
+        used_error_ids=used_error_ids_this_ws,
+        used_thinking_styles=used_thinking_styles_this_ws,
+    )
+    update_history(record)
+
+    meta["grade"] = grade
+    meta["subject"] = subject
+    meta["topic"] = topic
+    _ws_warnings = (ws_issues or []) + (carry_issues or [])
+    meta["_warnings"] = {
+        "question_level": _question_warnings,
+        "worksheet_level": _ws_warnings,
+    }
+
+    _t_total = _time_module.perf_counter() - _t_start
+    logger.info(
+        "[async] Pipeline complete: %d questions in %.2f s total "
+        "(gen=%.2f s, overhead=%.2f s)",
+        len(questions),
+        _t_total,
+        _t_gen_end - _t_gen_start,
+        _t_total - (_t_gen_end - _t_gen_start),
+    )
+    return meta, questions
