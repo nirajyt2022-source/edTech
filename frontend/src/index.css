@@ -1,29 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Nunito:ital,wght@0,300..1000;1,300..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Nunito:ital,wght@0,300..1000;1,300..1000&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Neutral Base */
-  --color-background: hsl(0 0% 99%);
-  --color-foreground: hsl(222 25% 12%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(222 25% 12%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(222 25% 12%);
+  /* Warm Scholar Palette */
+  --color-background: hsl(38 33% 97%);
+  --color-foreground: hsl(20 14% 10%);
+  --color-card: hsl(38 25% 99%);
+  --color-card-foreground: hsl(20 14% 10%);
+  --color-popover: hsl(38 25% 99%);
+  --color-popover-foreground: hsl(20 14% 10%);
 
-  /* Brand Colors — Professional Blue */
-  --color-primary: hsl(221 83% 50%);
+  /* Brand Colors — Deep Forest Green */
+  --color-primary: hsl(151 55% 18%);
   --color-primary-foreground: hsl(0 0% 100%);
 
-  /* Neutral secondary */
-  --color-secondary: hsl(214 20% 96%);
-  --color-secondary-foreground: hsl(222 25% 12%);
+  /* Warm secondary */
+  --color-secondary: hsl(38 20% 91%);
+  --color-secondary-foreground: hsl(20 14% 25%);
 
-  --color-muted: hsl(214 20% 96%);
-  --color-muted-foreground: hsl(215 16% 47%);
+  --color-muted: hsl(38 20% 93%);
+  --color-muted-foreground: hsl(20 8% 48%);
 
-  /* Warm amber accent — contrast against blue */
-  --color-accent: hsl(42 90% 52%);
-  --color-accent-foreground: hsl(222 25% 12%);
+  /* Warm amber accent */
+  --color-accent: hsl(38 85% 47%);
+  --color-accent-foreground: hsl(0 0% 100%);
 
   --color-destructive: hsl(0 72% 51%);
   --color-destructive-foreground: hsl(0 0% 100%);
@@ -31,17 +31,17 @@
   /* Semantic colors */
   --color-success: hsl(142 76% 36%);
   --color-success-foreground: hsl(0 0% 100%);
-  --color-warning: hsl(38 92% 50%);
-  --color-warning-foreground: hsl(222 25% 12%);
+  --color-warning: hsl(38 85% 47%);
+  --color-warning-foreground: hsl(0 0% 100%);
   --color-error: hsl(0 72% 51%);
   --color-error-foreground: hsl(0 0% 100%);
-  --color-info: hsl(221 83% 50%);
+  --color-info: hsl(217 91% 60%);
   --color-info-foreground: hsl(0 0% 100%);
 
   /* Borders */
-  --color-border: hsl(214 20% 90%);
-  --color-input: hsl(214 20% 90%);
-  --color-ring: hsl(221 83% 62%);
+  --color-border: hsl(38 18% 87%);
+  --color-input: hsl(38 18% 87%);
+  --color-ring: hsl(151 55% 18%);
 
   --radius: 0.5rem;
 }
@@ -68,11 +68,11 @@ body {
 /* Typography Hierarchy */
 h1,
 h2 {
-  font-family: 'Lora', Georgia, serif;
-  font-weight: 600;
-  line-height: 1.2;
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  line-height: 1.15;
   color: var(--color-foreground);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 h3,

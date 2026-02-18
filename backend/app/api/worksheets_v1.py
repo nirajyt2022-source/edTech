@@ -602,7 +602,7 @@ async def _generate_single_worksheet(
         Worksheet,
     )
     from app.services.slot_engine import (
-        run_slot_pipeline, hydrate_visuals, build_worksheet_plan,
+        run_slot_pipeline_async, hydrate_visuals, build_worksheet_plan,
         get_learning_objectives,
     )
 
@@ -620,10 +620,17 @@ async def _generate_single_worksheet(
     from app.api.worksheets import _build_adaptive_hint
     adaptive_hint = _build_adaptive_hint(child_id, topic)
 
-    # run_slot_pipeline is synchronous (makes LLM calls); wrap in thread
-    # so asyncio.gather can run multiple generations in parallel.
-    meta, slot_questions = await asyncio.to_thread(
-        run_slot_pipeline,
+    # GenerationContext always non-None — safe defaults used on failure
+    from app.api.worksheets import _build_gen_context
+    _gen_ctx = await _build_gen_context(
+        topic_slug=topic,
+        subject="Mathematics",
+        grade=grade,
+        child_id=child_id,
+    )
+
+    # run_slot_pipeline_async is native async — no thread wrapping needed.
+    meta, slot_questions = await run_slot_pipeline_async(
         client=client,
         grade=grade,
         subject="Mathematics",
@@ -636,6 +643,7 @@ async def _generate_single_worksheet(
         constraints=None,
         child_id=child_id,
         adaptive_hint=adaptive_hint,
+        gen_context=_gen_ctx,
     )
 
     hydrate_visuals(slot_questions, visuals_only=False)

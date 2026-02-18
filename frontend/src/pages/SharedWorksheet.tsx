@@ -14,6 +14,7 @@ interface Question {
   visual_data?: Record<string, unknown>
   role?: string
   difficulty?: string
+  is_bonus?: boolean
 }
 
 interface SharedWorksheetData {
@@ -192,7 +193,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
 
           {/* Questions */}
           <div className="px-6 sm:px-10 py-8 space-y-6">
-            {worksheet.questions.map((q, idx) => (
+            {worksheet.questions.filter(q => !q.is_bonus).map((q, idx, arr) => (
               <div key={q.id || idx} className="group">
                 <div className="flex items-start gap-4">
                   {/* Question number */}
@@ -234,11 +235,37 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
                 </div>
 
                 {/* Divider between questions */}
-                {idx < worksheet.questions.length - 1 && (
+                {idx < arr.length - 1 && (
                   <hr className="mt-6 border-stone-100" />
                 )}
               </div>
             ))}
+
+            {/* Bonus Challenge Questions */}
+            {worksheet.questions.some(q => q.is_bonus) && (
+              <div className="mt-8 pt-6 border-t-2 border-dashed border-amber-200/60">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-amber-500 text-lg">&#9733;</span>
+                  <h4 className="font-semibold text-amber-700 text-sm uppercase tracking-wider">Bonus Challenge</h4>
+                  <span className="text-xs text-stone-400 italic">Optional</span>
+                </div>
+                {worksheet.questions.filter(q => q.is_bonus).map((q, idx) => (
+                  <div key={q.id || idx} className="border-2 border-dashed border-amber-300/50 rounded-xl p-5 bg-amber-50/40 mb-4">
+                    <p className="text-stone-800 text-sm leading-relaxed whitespace-pre-wrap">{q.text}</p>
+                    <div className="mt-3 space-y-2">
+                      <div className="border-b border-stone-200 h-7"></div>
+                      <div className="border-b border-stone-200 h-7"></div>
+                    </div>
+                    {showAnswers && q.correct_answer && (
+                      <div className="mt-3 px-4 py-2.5 rounded-lg bg-emerald-50 border border-emerald-200/60">
+                        <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Answer: </span>
+                        <span className="text-sm text-emerald-900">{q.correct_answer}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

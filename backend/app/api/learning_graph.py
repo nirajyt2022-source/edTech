@@ -7,7 +7,12 @@ from fastapi import APIRouter, HTTPException, Header, Query
 from supabase import create_client
 
 from app.core.config import get_settings
-from app.services.learning_graph import get_learning_graph_service
+from app.services.learning_graph import (
+    get_learning_graph_service,
+    _clean_topic_name,
+    _build_recommendation_reason,
+    _build_report_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -212,96 +217,63 @@ def get_child_graph_report(
     child_id: str,
     authorization: str = Header(None),
 ):
-    """Return a plain-English parent-friendly progress report."""
+    """Return a plain-English parent-friendly progress report.
+
+    No LLM calls — all text is built from deterministic string templates.
+    Response shape:
+        { child_name, report_text,
+          recommendation: { topic_slug, topic_name, reason, subject } | null }
+    """
     user_id = _get_user_id(authorization)
     child = _verify_ownership(child_id, user_id)
     child_name: str = child.get("name", "Your child")
 
-    # Fetch summary
+    # ── 1. Fetch mastery summary (mastered / improving lists) ────────────
     try:
         svc = get_learning_graph_service()
         summary = svc.get_child_summary(child_id)
     except Exception as exc:
         logger.error(
-            "[learning_graph.get_child_graph_report] Summary error for child %s: %s", child_id, exc
+            "[learning_graph.get_child_graph_report] Summary error for child %s: %s",
+            child_id, exc,
         )
         raise HTTPException(status_code=500, detail="Failed to load summary")
 
-    # Fetch recommendation (reuse _pick_recommendation logic)
-    rec_topic: Optional[str] = None
+    mastered: list = summary.get("mastered_topics") or []
+    improving: list = summary.get("improving_topics") or []
+
+    # ── 2. Build report_text (pure templates — no slugs, no underscores) ─
+    report_text = _build_report_text(child_name, mastered, improving)
+
+    # ── 3. Build recommendation ───────────────────────────────────────────
+    recommendation: Optional[dict] = None
     try:
         r = (
             supabase.table("topic_mastery")
-            .select("topic_slug, subject, mastery_level, last_practiced_at")
+            .select(
+                "topic_slug, subject, mastery_level, "
+                "streak, sessions_total, last_practiced_at"
+            )
             .eq("child_id", child_id)
             .execute()
         )
         mastery_rows = getattr(r, "data", None) or []
         best = _pick_recommendation(mastery_rows)
         if best:
-            rec_topic = best.get("topic_slug")
+            slug: str = best.get("topic_slug") or ""
+            recommendation = {
+                "topic_slug": slug,
+                "topic_name": _clean_topic_name(slug),
+                "reason": _build_recommendation_reason(best),
+                "subject": best.get("subject") or "",
+            }
     except Exception as exc:
-        logger.warning("[learning_graph.get_child_graph_report] Recommendation lookup failed: %s", exc)
-
-    mastered = summary.get("mastered_topics", [])
-    improving = summary.get("improving_topics", [])
-    needs_attention = summary.get("needs_attention", [])
-    total_sessions = summary.get("total_sessions", 0)
-    overall_accuracy = summary.get("overall_accuracy", 0)
-
-    # Build report text
-    parts: list[str] = []
-
-    if total_sessions == 0:
-        parts.append(
-            f"{child_name} hasn't completed any practice worksheets yet. "
-            "Start with any topic to begin building their learning graph!"
+        logger.warning(
+            "[learning_graph.get_child_graph_report] Recommendation lookup failed: %s", exc
         )
-    else:
-        session_word = "session" if total_sessions == 1 else "sessions"
-        parts.append(
-            f"{child_name} has completed {total_sessions} practice {session_word} "
-            f"with an overall accuracy of {overall_accuracy}%."
-        )
-
-        if mastered:
-            topics_str = ", ".join(mastered[:3])
-            extra = f" and {len(mastered) - 3} more" if len(mastered) > 3 else ""
-            topic_word = "topic" if len(mastered) == 1 else "topics"
-            parts.append(
-                f"They have mastered {len(mastered)} {topic_word}: {topics_str}{extra}."
-            )
-        else:
-            parts.append("They haven't mastered any topics yet — keep practising!")
-
-        if improving:
-            improving_str = ", ".join(improving[:2])
-            ellipsis = "..." if len(improving) > 2 else ""
-            verb = "is" if len(improving) == 1 else "are"
-            topic_word = "topic" if len(improving) == 1 else "topics"
-            parts.append(
-                f"{len(improving)} {topic_word} {verb} progressing well: {improving_str}{ellipsis}."
-            )
-
-        if needs_attention:
-            topic_word = "topic" if len(needs_attention) == 1 else "topics"
-            need_word = "needs" if len(needs_attention) == 1 else "need"
-            parts.append(
-                f"{len(needs_attention)} {topic_word} still {need_word} more practice."
-            )
-
-        if rec_topic:
-            parts.append(f'We recommend practising "{rec_topic}" next.')
 
     return {
-        "child_id": child_id,
         "child_name": child_name,
-        "report": " ".join(parts),
-        "summary": {
-            "mastered_count": len(mastered),
-            "improving_count": len(improving),
-            "needs_attention_count": len(needs_attention),
-            "total_sessions": total_sessions,
-            "overall_accuracy": overall_accuracy,
-        },
+        "report_text": report_text,
+        "recommendation": recommendation,
     }

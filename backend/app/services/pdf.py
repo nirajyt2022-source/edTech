@@ -91,17 +91,19 @@ def _group_questions_by_tier(questions: list) -> list[tuple[str, str, str, list]
     """Group questions into Foundation / Application / Stretch tiers.
 
     Returns list of (tier_key, tier_label, tier_desc, questions) tuples.
-    Only includes tiers that have questions.
+    Only includes tiers that have questions. Bonus questions are excluded —
+    they are rendered separately by _build_questions().
     """
+    normal_questions = [q for q in questions if not q.get("is_bonus") and not q.get("_is_bonus")]
     tiers = []
     for tier_key, roles, label, desc in _TIER_CONFIG:
-        tier_qs = [q for q in questions if q.get("role", "") in roles]
+        tier_qs = [q for q in normal_questions if q.get("role", "") in roles]
         if tier_qs:
             tiers.append((tier_key, label, desc, tier_qs))
 
-    # If no role data, return all questions as a single unnamed tier
+    # If no role data, return all normal questions as a single unnamed tier
     if not tiers:
-        return [("all", "", "", questions)]
+        return [("all", "", "", normal_questions)]
 
     return tiers
 
@@ -411,6 +413,27 @@ class PDFService:
                 story.append(Spacer(1, 10))
                 q_number += 1
 
+        # ── Bonus Challenge questions ──
+        bonus_questions = [q for q in questions if q.get("is_bonus") or q.get("_is_bonus")]
+        if bonus_questions:
+            story.append(Spacer(1, 8))
+            story.append(HRFlowable(
+                width="100%", thickness=1.0, color=_ACCENT,
+                spaceBefore=4, spaceAfter=8,
+            ))
+            story.append(Paragraph(
+                f"*  Bonus Challenge",
+                self.styles['TierHeader']
+            ))
+            story.append(Paragraph(
+                "Optional — stretch your thinking!",
+                self.styles['TierDesc']
+            ))
+            for question in bonus_questions:
+                elements = self._build_bonus_question(question)
+                story.append(KeepTogether(elements))
+                story.append(Spacer(1, 10))
+
     def _build_header_fields(self, story: list, worksheet: dict, questions: list) -> None:
         """Build Name / Date / Score fields as a table row."""
         num_q = len(questions)
@@ -541,6 +564,42 @@ class PDFService:
                 self.styles['HintText']
             ))
 
+        return elements
+
+    def _build_bonus_question(self, question: dict) -> list:
+        """Build elements for a bonus challenge question with a framed box."""
+        elements = []
+        q_text = _sanitize_text(question.get('text', ''))
+
+        # Question text paragraph
+        q_para = Paragraph(
+            f"<b><font color='#{_ACCENT.hexval()[2:]}'>BONUS:</font></b>  {q_text}",
+            self.styles['QuestionText']
+        )
+
+        # Three answer lines
+        answer_lines = [Spacer(1, 6)]
+        for _ in range(3):
+            answer_lines.append(HRFlowable(
+                width="85%", thickness=0.3, color=_RULE,
+                spaceBefore=10, spaceAfter=0,
+                hAlign='LEFT',
+            ))
+        answer_lines.append(Spacer(1, 4))
+
+        # Wrap in a Table with a dashed-style amber border
+        page_width = A4[0] - 4.0 * cm
+        inner = [q_para] + answer_lines
+        box_table = Table([[inner]], colWidths=[page_width])
+        box_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 1.2, _ACCENT),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.Color(1.0, 0.97, 0.88)),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ]))
+        elements.append(box_table)
         return elements
 
     # ──────────────────────────────────────────

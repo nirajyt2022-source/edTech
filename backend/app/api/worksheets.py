@@ -12,7 +12,7 @@ from supabase import create_client
 from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
 from app.services.slot_engine import (
-    run_slot_pipeline, hydrate_visuals, enforce_visuals_only,
+    run_slot_pipeline, run_slot_pipeline_async, hydrate_visuals, enforce_visuals_only,
     build_worksheet_plan, enrich_error_spots, grade_student_answer,
     explain_question, recommend_next_step, chain_drill_session,
     attempt_and_next, get_learning_objectives,
@@ -101,6 +101,7 @@ class Question(BaseModel):
     visual_data: dict | None = None
     role: str | None = None  # Phase 4: pedagogical role
     skill_tag: str | None = None  # Phase 5: skill diagnostic tag
+    is_bonus: bool = False  # Phase 2: bonus challenge question flag
 
 
 class Worksheet(BaseModel):
@@ -1438,6 +1439,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
         visual_data=vdata,
         role=q.get("slot_type"),
         skill_tag=q.get("skill_tag") or fmt,
+        is_bonus=bool(q.get("_is_bonus", False)),
     )
 
 
@@ -1499,6 +1501,52 @@ def _build_adaptive_hint(child_id: str | None, topic: str) -> str | None:
         parts.append("Make questions more challenging with multi-step problems.")
 
     return "\n".join(parts) if parts else None
+
+
+async def _build_gen_context(
+    topic_slug: str,
+    subject: str,
+    grade: int | str,
+    child_id: str | None = None,
+):
+    """
+    Build a GenerationContext for the given topic + child.
+
+    ALWAYS returns a valid GenerationContext — never None.
+    If TopicIntelligenceAgent.build_context() fails for any reason,
+    falls back to a safe-default context so QualityReviewer and
+    DifficultyCalibrator always run.
+    """
+    from app.services.topic_intelligence import (
+        get_topic_intelligence_agent, GenerationContext,
+        _DEFAULT_BLOOM, _DEFAULT_FORMAT_MIX, _DEFAULT_SCAFFOLDING, _DEFAULT_CHALLENGE,
+    )
+    try:
+        return await get_topic_intelligence_agent().build_context(
+            child_id=child_id,
+            topic_slug=topic_slug,
+            subject=subject,
+            grade=int(grade),
+        )
+    except Exception as exc:
+        logger.warning(
+            "[_build_gen_context] build_context failed for topic=%r subject=%r grade=%s "
+            "— using safe defaults. Error: %s",
+            topic_slug, subject, grade, exc,
+        )
+        return GenerationContext(
+            topic_slug=topic_slug,
+            subject=subject,
+            grade=int(grade),
+            ncert_chapter=topic_slug,       # fallback: topic name is the chapter
+            ncert_subtopics=[],
+            bloom_level=_DEFAULT_BLOOM,
+            format_mix=dict(_DEFAULT_FORMAT_MIX),
+            scaffolding=_DEFAULT_SCAFFOLDING,
+            challenge_mode=_DEFAULT_CHALLENGE,
+            valid_skill_tags=[],            # unknown topic — no tag constraint
+            child_context={},
+        )
 
 
 # ──────────────────────────────────────────────
@@ -1586,7 +1634,15 @@ async def generate_worksheet(
                 # Adaptive difficulty: personalise prompt for this child+topic
                 adaptive_hint = _build_adaptive_hint(request.child_id, original_skill)
 
-                meta, slot_questions = run_slot_pipeline(
+                # GenerationContext always non-None — safe defaults used on failure
+                _gen_ctx_multi = await _build_gen_context(
+                    topic_slug=original_skill,
+                    subject=request.subject,
+                    grade=request.grade_level,
+                    child_id=request.child_id,
+                )
+
+                meta, slot_questions = await run_slot_pipeline_async(
                     client=client,
                     grade=request.grade_level,
                     subject=request.subject,
@@ -1599,6 +1655,7 @@ async def generate_worksheet(
                     constraints=constraints_dict,
                     child_id=request.child_id,
                     adaptive_hint=adaptive_hint,
+                    gen_context=_gen_ctx_multi,
                 )
 
                 # ── Skill purity enforcement ──
@@ -1720,7 +1777,15 @@ async def generate_worksheet(
         # Adaptive difficulty: personalise prompt for this child+topic
         adaptive_hint = _build_adaptive_hint(request.child_id, effective_topic)
 
-        meta, slot_questions = run_slot_pipeline(
+        # GenerationContext always non-None — safe defaults used on failure
+        _gen_ctx = await _build_gen_context(
+            topic_slug=effective_topic,
+            subject=request.subject,
+            grade=request.grade_level,
+            child_id=request.child_id,
+        )
+
+        meta, slot_questions = await run_slot_pipeline_async(
             client=client,
             grade=request.grade_level,
             subject=request.subject,
@@ -1733,6 +1798,7 @@ async def generate_worksheet(
             constraints=constraints_dict,
             child_id=request.child_id,
             adaptive_hint=adaptive_hint,
+            gen_context=_gen_ctx,
         )
 
         # Safety net: ensure visual hydration ran (idempotent if already done)
@@ -2224,7 +2290,15 @@ async def regenerate_worksheet(
         num_questions = len(original["questions"])
         difficulty = original["difficulty"].lower()
 
-        meta, slot_questions = run_slot_pipeline(
+        # GenerationContext always non-None — safe defaults used on failure
+        _regen_ctx = await _build_gen_context(
+            topic_slug=original["topic"],
+            subject=original["subject"],
+            grade=original["grade"],
+            child_id=original.get("child_id"),
+        )
+
+        meta, slot_questions = await run_slot_pipeline_async(
             client=client,
             grade=original["grade"],
             subject=original["subject"],
@@ -2234,6 +2308,7 @@ async def regenerate_worksheet(
             region=region,
             language=original.get("language", "English"),
             child_id=original.get("child_id"),
+            gen_context=_regen_ctx,
         )
 
         # Map slot-engine output → API Question models

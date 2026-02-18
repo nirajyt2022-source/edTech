@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -137,6 +138,92 @@ def _parse_ts(ts_str: Optional[str]) -> Optional[datetime]:
     except (ValueError, AttributeError) as exc:
         logger.warning("[learning_graph._parse_ts] Could not parse timestamp %r: %s", ts_str, exc)
         return None
+
+
+# ---------------------------------------------------------------------------
+# Report helpers (pure — no DB, no LLM, fully testable offline)
+# ---------------------------------------------------------------------------
+
+# Strips " (Class 1)" / " (Class 2-EVS)" suffixes from canonical topic slugs.
+_SLUG_CLEANUP_RE = re.compile(r"\s*\(Class \d+(?:-[A-Z]+)?\)\s*$", re.IGNORECASE)
+
+
+def _clean_topic_name(slug: str) -> str:
+    """Return a human-readable display name from a topic slug.
+
+    Examples:
+      "Numbers 1 to 50 (Class 1)"  → "Numbers 1 to 50"
+      "Plants (Class 2-EVS)"       → "Plants"
+      "Addition (carries)"         → "Addition (carries)"  (unchanged)
+    """
+    return _SLUG_CLEANUP_RE.sub("", slug).strip()
+
+
+def _build_recommendation_reason(row: dict) -> str:
+    """Return a one-sentence plain-English reason to practise *row*'s topic.
+
+    Uses only mastery_level, streak, sessions_total, last_practiced_at.
+    No LLM call — all logic is pure string templates.
+    """
+    level = row.get("mastery_level") or "unknown"
+    streak = int(row.get("streak") or 0)
+    sessions_total = int(row.get("sessions_total") or 0)
+    last_str: Optional[str] = row.get("last_practiced_at")
+
+    days_idle: Optional[int] = None
+    if last_str:
+        try:
+            last_dt = datetime.fromisoformat(last_str.replace("Z", "+00:00"))
+            if last_dt.tzinfo is None:
+                last_dt = last_dt.replace(tzinfo=timezone.utc)
+            days_idle = (datetime.now(timezone.utc) - last_dt).days
+        except Exception:
+            days_idle = None
+
+    if level in ("unknown", None) or sessions_total == 0:
+        return "never been practiced yet — a great place to start"
+
+    if level == "learning":
+        if days_idle is not None and days_idle >= 5:
+            return f"not practiced in {days_idle} days — good time to revisit"
+        return "still building confidence — a little more practice will help a lot"
+
+    if level == "improving":
+        if streak >= 3:
+            return "close to mastering it — one more good session should do it"
+        if days_idle is not None and days_idle >= 3:
+            return f"making great progress but not practiced in {days_idle} days"
+        return "making good progress — keep going to reach mastery"
+
+    if level == "mastered":
+        if days_idle is not None and days_idle >= 7:
+            return f"already mastered — not reviewed in {days_idle} days, worth a quick look"
+        return "already mastered — a quick review will keep it fresh"
+
+    return "a good topic to practice next"
+
+
+def _build_report_text(child_name: str, mastered: list, improving: list) -> str:
+    """Build 1–2 plain-English sentences summarising a child's learning state.
+
+    Uses only human-readable topic names (run slugs through _clean_topic_name first).
+    No underscores or raw slugs will appear in the output.
+    """
+    sentences: list[str] = []
+
+    # Sentence 1 — strength or getting started
+    if mastered:
+        topic_name = _clean_topic_name(mastered[0])
+        sentences.append(f"{child_name} has mastered {topic_name}.")
+    else:
+        sentences.append(f"{child_name} is just getting started on their learning journey.")
+
+    # Sentence 2 — working on (optional)
+    if improving:
+        topic_name = _clean_topic_name(improving[0])
+        sentences.append(f"Currently working on {topic_name}.")
+
+    return " ".join(sentences)
 
 
 # ---------------------------------------------------------------------------

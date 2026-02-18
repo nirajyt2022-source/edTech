@@ -37,6 +37,7 @@ interface Question {
   options?: string[]
   correct_answer?: string
   explanation?: string
+  is_bonus?: boolean
 }
 
 interface FullWorksheet {
@@ -492,7 +493,7 @@ export default function SavedWorksheets() {
               </div>
 
               <div className="space-y-10">
-                {selectedWorksheet.questions.map((question, index) => (
+                {selectedWorksheet.questions.filter(q => !q.is_bonus).map((question, index) => (
                   <div key={question.id} className="relative pl-12">
                     <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-secondary/50 border border-border/50 flex items-center justify-center font-bold text-sm text-foreground/70">
                       {index + 1}
@@ -515,6 +516,26 @@ export default function SavedWorksheets() {
                     </div>
                   </div>
                 ))}
+
+                {/* Bonus Challenge Questions */}
+                {selectedWorksheet.questions.some(q => q.is_bonus) && (
+                  <div className="mt-10 pt-6 border-t border-amber-200/60">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-amber-500 text-lg">&#9733;</span>
+                      <h4 className="font-semibold text-amber-600 font-jakarta">Bonus Challenge</h4>
+                      <span className="text-xs text-muted-foreground italic">Optional</span>
+                    </div>
+                    {selectedWorksheet.questions.filter(q => q.is_bonus).map((question) => (
+                      <div key={question.id} className="relative border-2 border-dashed border-amber-300/60 rounded-xl p-5 bg-amber-50/30">
+                        <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
+                        <div className="mt-3 space-y-3">
+                          <div className="border-b border-border/40 h-8"></div>
+                          <div className="border-b border-border/40 h-8"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Answer Key — visible when showAnswers is true */}

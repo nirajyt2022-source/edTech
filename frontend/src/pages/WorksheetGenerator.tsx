@@ -182,6 +182,7 @@ interface Question {
   visual_data?: Record<string, unknown>
   role?: string
   difficulty?: string
+  is_bonus?: boolean
 }
 
 interface Worksheet {
@@ -296,14 +297,24 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     const params = new URLSearchParams(window.location.search)
     const paramGrade = params.get('grade')
     const paramSubject = params.get('subject')
-    const paramTopic = params.get('topic')
+    // topic_slug (from QuickPracticeButton) is the canonical topic key — treat as topic
+    const paramTopic = params.get('topic') ?? params.get('topic_slug')
+    const paramChildId = params.get('child_id')
+    const paramAutoGenerate = params.get('auto_generate') === 'true'
 
     if (paramGrade) setGrade(paramGrade)
     if (paramSubject) setSubject(paramSubject)
-    if (paramTopic) setTopic(paramTopic)
+    if (paramTopic) {
+      setTopic(paramTopic)
+      // Pre-fill selectedTopics too, so the CBSE advanced-selection path also works
+      setSelectedTopics([paramTopic])
+    }
+    // child_id is applied later once the children list has loaded
+    if (paramChildId) pendingChildIdRef.current = paramChildId
+    if (paramAutoGenerate) autoGeneratePendingRef.current = true
 
     // Clean up URL params after reading so they don't persist on refresh
-    if (paramGrade || paramSubject || paramTopic) {
+    if (paramGrade || paramSubject || paramTopic || paramChildId || paramAutoGenerate) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -322,6 +333,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
 
   // Selection version guard for async race prevention
   const selectionVersionRef = useRef(0)
+
+  // Quick-practice deep-link refs (set from URL params, consumed asynchronously)
+  const pendingChildIdRef = useRef<string | null>(null)
+  const autoGeneratePendingRef = useRef(false)
   useEffect(() => {
     selectionVersionRef.current += 1
   }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, problemStyle, visualTheme, customInstructions])
@@ -657,6 +672,33 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       setLoading(false)
     }
   }
+
+  // Apply child_id from URL params once the children list is available
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!pendingChildIdRef.current || children.length === 0) return
+    handleChildSelect(pendingChildIdRef.current)
+    pendingChildIdRef.current = null
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [children])
+
+  // Auto-trigger generation once all required fields are ready (QuickPracticeButton flow)
+  useEffect(() => {
+    if (!autoGeneratePendingRef.current) return
+    if (!grade || !subject || !board || !difficulty) return
+    // Mirror the same guard logic used in handleGenerate
+    const isAdvancedPath = !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
+    if (useCurriculumFlow && selectedSkills.length === 0) return
+    if (!useCurriculumFlow && isAdvancedPath && selectedTopics.length === 0) return
+    if (!useCurriculumFlow && !isAdvancedPath && !topic) return
+
+    autoGeneratePendingRef.current = false
+    const timer = setTimeout(() => void handleGenerate(), 600)
+    return () => clearTimeout(timer)
+  // handleGenerate is intentionally omitted: it's not stable (no useCallback) but
+  // its closure is always current when the timer fires.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [grade, subject, board, topic, difficulty, useCurriculumFlow, selectedSkills.length, cbseSyllabus.length, selectedTopics.length, syllabus])
 
   const handlePrint = () => {
     window.print()
@@ -1526,14 +1568,17 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
 
                   {/* Tiered question rendering */}
                   {(() => {
+                    const normalQuestions = worksheet.questions.filter(q => !q.is_bonus)
+                    const bonusQuestions = worksheet.questions.filter(q => q.is_bonus)
+
                     const foundationRoles = new Set(['recognition', 'representation'])
                     const applicationRoles = new Set(['application'])
                     const stretchRoles = new Set(['error_detection', 'thinking'])
                     const tiers: { key: string; label: string; desc: string; stars: string; questions: Question[] }[] = []
 
-                    const foundationQs = worksheet.questions.filter(q => foundationRoles.has(q.role || ''))
-                    const applicationQs = worksheet.questions.filter(q => applicationRoles.has(q.role || ''))
-                    const stretchQs = worksheet.questions.filter(q => stretchRoles.has(q.role || ''))
+                    const foundationQs = normalQuestions.filter(q => foundationRoles.has(q.role || ''))
+                    const applicationQs = normalQuestions.filter(q => applicationRoles.has(q.role || ''))
+                    const stretchQs = normalQuestions.filter(q => stretchRoles.has(q.role || ''))
 
                     if (foundationQs.length) tiers.push({ key: 'foundation', label: 'Foundation', desc: 'I can recall and recognise', stars: '\u2605', questions: foundationQs })
                     if (applicationQs.length) tiers.push({ key: 'application', label: 'Application', desc: 'I can use what I know', stars: '\u2605\u2605', questions: applicationQs })
@@ -1543,7 +1588,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     const hasRoles = tiers.length > 0
                     const allQuestions = hasRoles
                       ? tiers.flatMap(t => t.questions)
-                      : worksheet.questions
+                      : normalQuestions
 
                     let qNum = 0
                     return (
@@ -1698,6 +1743,45 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                 </div>
                               </div>
                             ))}
+                          </div>
+                        )}
+
+                        {/* Bonus Challenge Questions */}
+                        {bonusQuestions.length > 0 && (
+                          <div className="mt-10">
+                            <div className="flex items-baseline gap-3 mb-1 mt-6 print:mt-4">
+                              <span className="text-amber-500 font-semibold text-sm">&#9733;</span>
+                              <h4 className="font-serif text-lg font-bold text-amber-600 tracking-tight print:text-black">Bonus Challenge</h4>
+                              <span className="text-xs text-muted-foreground italic ml-1">Optional — stretch your thinking!</span>
+                            </div>
+                            <div className="border-b border-amber-300/40 mb-6 print:border-black/15" />
+                            <div className="space-y-10">
+                              {bonusQuestions.map((question) => (
+                                <div key={question.id} className="relative group border-2 border-dashed border-amber-300/60 rounded-xl p-5 bg-amber-50/30 print:border-black/30 print:bg-transparent" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                                  <div className="flex gap-5">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-amber-400/50 text-amber-500 text-sm font-bold print:border-black/30 print:text-black/60">
+                                        &#9733;
+                                      </span>
+                                    </div>
+                                    <div className="flex-grow space-y-4">
+                                      <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
+                                      <div className="mt-4 space-y-3">
+                                        <div className="border-b border-border/40 h-8"></div>
+                                        <div className="border-b border-border/40 h-8"></div>
+                                        <div className="border-b border-border/40 h-8"></div>
+                                      </div>
+                                      {showAnswers && question.correct_answer && (
+                                        <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
+                                          <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">Ans:</span>
+                                          <span className="text-sm font-bold text-emerald-900 print:text-gray-900">{question.correct_answer}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

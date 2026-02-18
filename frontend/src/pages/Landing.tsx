@@ -1,815 +1,1018 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface Props {
   onGetStarted: () => void
   onSignIn: () => void
 }
 
-/* ─── Topic data from CLAUDE.md ─── */
-const MATHS_TOPICS: Record<string, string[]> = {
-  'Class 1': [
-    'Numbers 1-50', 'Numbers 51-100', 'Addition (up to 20)', 'Subtraction (within 20)',
-    'Basic Shapes', 'Measurement', 'Time', 'Money',
-  ],
-  'Class 2': [
-    'Numbers up to 1000', 'Addition', 'Subtraction', 'Multiplication', 'Division',
-    'Shapes & Space', 'Measurement', 'Time', 'Money', 'Data Handling',
-  ],
-  'Class 3': [
-    'Addition (carries)', 'Subtraction (borrowing)', 'Add & Subtract (3-digit)',
-    'Multiplication (tables 2-10)', 'Division basics', 'Numbers up to 10000',
-    'Fractions (halves, quarters)', 'Fractions', 'Time (clock, calendar)',
-    'Money (bills & change)', 'Symmetry', 'Patterns & sequences',
-  ],
-  'Class 4': [
-    'Large numbers (1,00,000)', 'Addition & Subtraction (5-digit)',
-    'Multiplication (3-digit)', 'Division (long division)', 'Fractions (equivalent)',
-    'Decimals (tenths)', 'Geometry (angles)', 'Perimeter & Area',
-    'Time (24-hour clock)', 'Money (profit/loss)',
-  ],
-  'Class 5': [
-    'Numbers up to 10 lakh', 'Factors & Multiples', 'HCF & LCM',
-    'Fractions (add & subtract)', 'Decimals (all operations)', 'Percentage',
-    'Area & Volume', 'Geometry (circles)', 'Data handling (pie charts)',
-    'Speed, Distance & Time',
-  ],
-}
+// ── Subject / Topic Data ──────────────────────────────────────────────────────
+const SUBJECTS = [
+  {
+    key: 'maths', label: 'Mathematics', symbol: '∑',
+    description: 'Number sense to speed-distance-time across all five classes.',
+    classes: {
+      'Class 1': ['Numbers 1–50', 'Numbers 51–100', 'Addition ≤20', 'Subtraction ≤20', 'Basic Shapes', 'Measurement', 'Time', 'Money'],
+      'Class 2': ['Numbers ≤1000', 'Addition (carry)', 'Subtraction (borrow)', 'Multiplication ×2–5', 'Division', 'Shapes & Space', 'Measurement', 'Time', 'Money', 'Data Handling'],
+      'Class 3': ['Addition (carries)', 'Subtraction (borrow)', 'Add & Subtract (3-digit)', 'Multiplication ×2–10', 'Division', 'Numbers ≤10,000', 'Fractions', 'Time', 'Money', 'Symmetry', 'Patterns & Sequences'],
+      'Class 4': ['Large Numbers ≤1,00,000', 'Add & Subtract (5-digit)', 'Multiplication 3d×2d', 'Long Division', 'Equivalent Fractions', 'Decimals', 'Angles & Lines', 'Perimeter & Area', 'Time (24-hr)', 'Money & Profit'],
+      'Class 5': ['Numbers ≤10 lakh', 'Factors & Multiples', 'HCF & LCM', 'Fractions (add/sub)', 'Decimals (all ops)', 'Percentage', 'Area & Volume', 'Geometry', 'Data Handling (pie charts)', 'Speed Distance Time'],
+    },
+  },
+  {
+    key: 'english', label: 'English', symbol: 'A',
+    description: 'Grammar, writing, comprehension — from phonics to clauses.',
+    classes: {
+      'Class 1': ['Alphabet', 'Phonics', 'Family Vocabulary', 'Animals & Food', 'Greetings', 'Seasons', 'Simple Sentences'],
+      'Class 2': ['Nouns', 'Verbs', 'Pronouns', 'Sentences', 'Rhyming Words', 'Punctuation'],
+      'Class 3': ['Nouns', 'Verbs', 'Adjectives', 'Pronouns', 'Tenses', 'Punctuation', 'Vocabulary', 'Comprehension'],
+      'Class 4': ['Tenses', 'Sentence Types', 'Conjunctions', 'Prepositions', 'Adverbs', 'Prefixes & Suffixes', 'Vocabulary', 'Comprehension'],
+      'Class 5': ['Active & Passive Voice', 'Direct & Indirect Speech', 'Complex Sentences', 'Summary Writing', 'Comprehension', 'Synonyms & Antonyms', 'Letter Writing', 'Creative Writing', 'Clauses'],
+    },
+  },
+  {
+    key: 'science', label: 'Science', symbol: '⚗',
+    description: 'EVS in Classes 1–2, structured Science from Class 3 onwards.',
+    classes: {
+      'Class 1 (EVS)': ['My Family', 'My Body', 'Plants Around Us', 'Animals Around Us', 'Food We Eat', 'Seasons & Weather'],
+      'Class 2 (EVS)': ['Plants', 'Animals & Habitats', 'Food & Nutrition', 'Water', 'Shelter', 'Our Senses'],
+      'Class 3': ['Plants', 'Animals', 'Food & Nutrition', 'Shelter', 'Water', 'Air', 'Our Body'],
+      'Class 4': ['Living Things', 'Human Body', 'States of Matter', 'Force & Motion', 'Simple Machines', 'Photosynthesis', 'Animal Adaptation'],
+      'Class 5': ['Circulatory System', 'Respiratory & Nervous System', 'Reproduction', 'Physical & Chemical Changes', 'Forms of Energy', 'Solar System', 'Ecosystem & Food Chains'],
+    },
+  },
+  {
+    key: 'hindi', label: 'Hindi', symbol: 'अ',
+    description: 'Varnamala to creative writing in Devanagari script.',
+    classes: {
+      'Class 1': ['Varnamala Swar', 'Varnamala Vyanjan', 'Family Words', 'Simple Sentences'],
+      'Class 2': ['Matras Introduction', 'Two Letter Words', 'Three Letter Words', 'Rhymes & Poems', 'Nature Vocabulary'],
+      'Class 3': ['Varnamala', 'Matras', 'Shabd Rachna', 'Vakya Rachna', 'Kahani Lekhan'],
+      'Class 4': ['Anusvaar & Visarg', 'Vachan & Ling', 'Kaal', 'Patra Lekhan', 'Comprehension Hindi'],
+      'Class 5': ['Muhavare', 'Paryayvachi Shabd', 'Vilom Shabd', 'Samas', 'Samvad Lekhan'],
+    },
+  },
+  {
+    key: 'computer', label: 'Computer', symbol: '⌨',
+    description: 'Digital literacy from mouse clicks to Scratch programming.',
+    classes: {
+      'Class 1': ['Parts of Computer', 'Mouse & Keyboard'],
+      'Class 2': ['Desktop & Icons', 'Basic Typing', 'Special Keys'],
+      'Class 3': ['MS Paint Basics', 'Keyboard Shortcuts', 'Files & Folders'],
+      'Class 4': ['MS Word Basics', 'Introduction to Scratch', 'Internet Safety'],
+      'Class 5': ['Scratch Programming', 'Internet Basics', 'MS PowerPoint', 'Digital Citizenship'],
+    },
+  },
+  {
+    key: 'gk', label: 'GK', symbol: '🌍',
+    description: 'World knowledge, India, science, and current awareness.',
+    classes: {
+      'Class 3': ['Famous Landmarks', 'National Symbols', 'Solar System Basics', 'Current Awareness'],
+      'Class 4': ['Continents & Oceans', 'Famous Scientists', 'Festivals of India', 'Sports & Games'],
+      'Class 5': ['Indian Constitution', 'World Heritage Sites', 'Space Missions', 'Environmental Awareness'],
+    },
+  },
+  {
+    key: 'moral', label: 'Moral Science', symbol: '♡',
+    description: 'Values, empathy, leadership and character building.',
+    classes: {
+      'Class 1': ['Sharing', 'Honesty'],
+      'Class 2': ['Kindness', 'Respecting Elders'],
+      'Class 3': ['Teamwork', 'Empathy', 'Environmental Care'],
+      'Class 4': ['Leadership'],
+      'Class 5': ['Global Citizenship', 'Digital Ethics'],
+    },
+  },
+  {
+    key: 'health', label: 'Health & PE', symbol: '◎',
+    description: 'Wellness, fitness, nutrition and healthy habits.',
+    classes: {
+      'Class 1': ['Personal Hygiene', 'Good Posture', 'Basic Physical Activities'],
+      'Class 2': ['Healthy Eating Habits', 'Outdoor Play', 'Basic Stretching'],
+      'Class 3': ['Balanced Diet', 'Team Sports Rules', 'Safety at Play'],
+      'Class 4': ['First Aid Basics', 'Yoga Introduction', 'Importance of Sleep'],
+      'Class 5': ['Fitness & Stamina', 'Nutrition Labels', 'Mental Health Awareness'],
+    },
+  },
+]
 
-const ENGLISH_TOPICS: Record<string, string[]> = {
-  'Class 1': [
-    'Alphabet', 'Phonics', 'Family Vocabulary', 'Animals & Food',
-    'Greetings', 'Seasons', 'Simple Sentences',
-  ],
-  'Class 2': ['Nouns', 'Verbs', 'Pronouns', 'Sentences', 'Rhyming Words', 'Punctuation'],
-  'Class 3': [
-    'Nouns', 'Verbs', 'Adjectives', 'Pronouns', 'Tenses',
-    'Punctuation', 'Vocabulary', 'Reading Comprehension',
-  ],
-  'Class 4': [
-    'Tenses', 'Sentence Types', 'Conjunctions', 'Prepositions',
-    'Adverbs', 'Prefixes & Suffixes', 'Vocabulary', 'Reading Comprehension',
-  ],
-  'Class 5': [
-    'Active & Passive Voice', 'Direct & Indirect Speech', 'Complex Sentences',
-    'Summary Writing', 'Comprehension', 'Synonyms & Antonyms',
-    'Formal Letter Writing', 'Creative Writing', 'Clauses',
-  ],
-}
-
-const SCIENCE_TOPICS: Record<string, string[]> = {
-  'Class 1 (EVS)': ['My Family', 'My Body', 'Plants Around Us', 'Animals Around Us', 'Food We Eat', 'Seasons & Weather'],
-  'Class 2 (EVS)': ['Plants', 'Animals & Habitats', 'Food & Nutrition', 'Water', 'Shelter', 'Our Senses'],
-  'Class 3': ['Plants', 'Animals', 'Food & Nutrition', 'Shelter', 'Water', 'Air', 'Our Body'],
-  'Class 4': ['Living Things', 'Human Body', 'States of Matter', 'Force & Motion', 'Simple Machines', 'Photosynthesis', 'Animal Adaptation'],
-  'Class 5': ['Circulatory System', 'Respiratory & Nervous System', 'Reproduction', 'Physical & Chemical Changes', 'Forms of Energy', 'Solar System & Earth', 'Ecosystem & Food Chains'],
-}
-
-const COMPUTER_TOPICS: Record<string, string[]> = {
-  'Class 1': ['Parts of Computer', 'Mouse & Keyboard'],
-  'Class 2': ['Desktop & Icons', 'Basic Typing', 'Special Keys'],
-  'Class 3': ['MS Paint', 'Keyboard Shortcuts', 'Files & Folders'],
-  'Class 4': ['MS Word', 'Scratch', 'Internet Safety'],
-  'Class 5': ['Scratch Programming', 'Internet Basics', 'MS PowerPoint', 'Digital Citizenship'],
-}
-
-const GK_TOPICS: Record<string, string[]> = {
-  'Class 3': ['Famous Landmarks', 'National Symbols', 'Solar System Basics', 'Current Awareness'],
-  'Class 4': ['Continents & Oceans', 'Famous Scientists', 'Festivals of India', 'Sports & Games'],
-  'Class 5': ['Indian Constitution', 'World Heritage Sites', 'Space Missions', 'Environmental Awareness'],
-}
-
-const MORAL_TOPICS: Record<string, string[]> = {
-  'Class 1': ['Sharing', 'Honesty'],
-  'Class 2': ['Kindness', 'Respecting Elders'],
-  'Class 3': ['Teamwork', 'Empathy', 'Environmental Care'],
-  'Class 4': ['Leadership'],
-  'Class 5': ['Global Citizenship', 'Digital Ethics'],
-}
-
-const HEALTH_TOPICS: Record<string, string[]> = {
-  'Class 1': ['Personal Hygiene', 'Good Posture', 'Physical Activities'],
-  'Class 2': ['Healthy Eating', 'Outdoor Play', 'Stretching'],
-  'Class 3': ['Balanced Diet', 'Team Sports', 'Safety at Play'],
-  'Class 4': ['First Aid', 'Yoga', 'Sleep Hygiene'],
-  'Class 5': ['Fitness & Stamina', 'Nutrition Labels', 'Mental Health'],
-}
-
-const HINDI_TOPICS: Record<string, string[]> = {
-  'Class 1': ['Varnamala Swar', 'Varnamala Vyanjan', 'Family Words', 'Simple Sentences'],
-  'Class 2': ['Matras Introduction', 'Two Letter Words', 'Three Letter Words', 'Rhymes & Poems', 'Nature Vocabulary'],
-  'Class 3': ['Varnamala', 'Matras', 'Shabd Rachna', 'Vakya Rachna', 'Kahani Lekhan'],
-  'Class 4': ['Anusvaar & Visarg', 'Vachan & Ling', 'Kaal', 'Patra Lekhan', 'Comprehension'],
-  'Class 5': ['Muhavare', 'Paryayvachi Shabd', 'Vilom Shabd', 'Samas', 'Samvad Lekhan'],
-}
-
-/* ─── Gold Class feature steps ─── */
 const GOLD_STEPS = [
   {
-    num: '01',
-    icon: '\u2B50\u2B50\u2B50',
-    title: 'Tiered Difficulty',
-    desc: 'Foundation \u2192 Application \u2192 Stretch on every single sheet. Every child can start with confidence, and every child is challenged to think deeper. Star badges show the tier visually.',
-    example: '\u2B50 Foundation: Q1. 347 + 256 = ___\n\u2B50\u2B50 Application: Q5. Priya earned \u20B9478 at the mela\u2026\n\u2B50\u2B50\u2B50 Stretch: Q9. Find the error in this calculation\u2026',
+    number: '01', title: 'Tiered Difficulty',
+    subtitle: 'Foundation → Application → Stretch',
+    desc: 'Every worksheet automatically groups questions into three tiers. Foundation builds confidence, Application checks understanding, Stretch reveals the ceiling — without the child ever feeling overwhelmed.',
+    example: '★ Add 456 + 327  ·  ★★ Priya\'s word problem  ·  ★★★ Find Rahul\'s carry error',
   },
   {
-    num: '02',
-    icon: '\uD83C\uDFAF',
-    title: 'Mastery-Personalised',
-    desc: 'Tracks your child\'s mastery level \u2014 learning \u2192 improving \u2192 mastered. The next worksheet automatically adjusts: more practice on weak spots, harder questions where they\'re strong.',
-    example: 'Child mastered basic addition \u2192 next sheet boosts Thinking questions and reduces Recognition. Struggling with carries \u2192 extra carry-focused practice injected.',
+    number: '02', title: 'Mastery-Personalised',
+    subtitle: 'Adapts to your child\'s history',
+    desc: 'The slot engine reads your child\'s mastery state and automatically shifts the question mix — more Recognition practice when struggling, more Thinking challenges when they\'re excelling.',
+    example: 'Low mastery → 60% Recognition  ·  High mastery → 40% Thinking questions',
   },
   {
-    num: '03',
-    icon: '\uD83D\uDCA1',
-    title: 'Hints on Stretch',
-    desc: 'Thinking and error detection questions include a collapsible hint \u2014 a metacognitive nudge, not the answer. Teaches strategy, not shortcuts.',
-    example: '\uD83D\uDCA1 Hint: "Think about what happens when the ones column adds up to more than 9. Where does the extra go?"',
+    number: '03', title: 'Hints on Stretch',
+    subtitle: 'Collapsible scaffolding, always optional',
+    desc: 'Thinking and Error-Detection questions include a hidden hint. Reveal it only when stuck — this teaches children to attempt independently before seeking help.',
+    example: '💡 Show Hint: "What happens to the tens digit when you carry?"',
   },
   {
-    num: '04',
-    icon: '\uD83D\uDCCA',
-    title: 'Parent Insight',
-    desc: 'After grading, you get actionable guidance: what your child may be confusing, what to practise next, and a mastery progress bar with streak tracking.',
-    example: '"Your child may be confusing tens and ones when carrying. Next: try the Place Value worksheet. Mastery: Improving (streak: 3 \u2713)"',
+    number: '04', title: 'Parent Insight Footer',
+    subtitle: 'After every graded attempt',
+    desc: 'After grading, each worksheet returns a specific watch-for warning and a clear next-step — written for parents, not educators. No tutoring degree required.',
+    example: 'Watch for: Tens-digit carry errors  ·  Next step: Try 4-digit addition',
   },
   {
-    num: '05',
-    icon: '\uD83D\uDCCB',
-    title: 'Learning Objective',
-    desc: 'Every worksheet states its goal clearly so parents and teachers know exactly what skill is being practised \u2014 not just "Class 3 Maths".',
-    example: '\u2713 Add 3-digit numbers where carrying is needed\n\u2713 Spot common addition mistakes and fix them\n\u2713 Solve real-life addition word problems',
+    number: '05', title: 'Learning Objective Header',
+    subtitle: 'Printed on every worksheet',
+    desc: 'Three clear checkpoints at the top of every worksheet tell the child and parent what success looks like before the first question is attempted.',
+    example: '✓ Add 3-digit numbers with carry  ✓ Solve word problems  ✓ Spot errors',
   },
   {
-    num: '06',
-    icon: '\uD83D\uDDA8\uFE0F',
-    title: 'Premium PDF',
-    desc: 'Name \u00B7 Date \u00B7 Score fields. Tier section headers. Answer key toggle. Looks like a Pearson workbook, prints beautifully on A4. No branding clutter.',
-    example: 'Professional layout with Foundation / Application / Stretch sections, ruled answer lines, and a clean toggle for showing or hiding the answer key.',
+    number: '06', title: 'Premium Print PDF',
+    subtitle: 'A4, margin-safe, B&W friendly',
+    desc: 'Export a print-ready PDF with name/date header, tiered sections, difficulty star badges, and a complete answer key on a separate page. School-ready in one click.',
+    example: 'Objective box · 3 Tier sections · Star badges · Full answer key on page 2',
   },
 ]
 
-/* ─── Comparison table data ─── */
-const COMPARISON_ROWS = [
-  {
-    feature: 'Skill consistency',
-    free: 'Random question types. No guaranteed mix of recall, application, and reasoning.',
-    pc: 'Every sheet has 5 cognitive slots: Recognition, Application, Representation, Error Detection, Thinking.',
-  },
-  {
-    feature: 'Curriculum alignment',
-    free: 'Loosely tagged to chapters. Questions often off-syllabus or wrong grade level.',
-    pc: 'Every topic mapped to NCERT. 196 topic profiles with per-grade constraints.',
-  },
-  {
-    feature: 'Difficulty tiering',
-    free: 'All questions at one difficulty. Struggling kids give up at Q1.',
-    pc: 'Foundation \u2192 Application \u2192 Stretch on every sheet. Star badges show the tier.',
-  },
-  {
-    feature: 'Mastery personalisation',
-    free: 'Same worksheet for every child, regardless of what they know.',
-    pc: 'Tracks mastery level per skill. Next worksheet adapts automatically.',
-  },
-  {
-    feature: 'Indian context problems',
-    free: '"Ram has 5 apples" \u2014 generic, repeated, culturally flat.',
-    pc: 'Auto-rickshaw fares, Diwali diyas, mela shopping, cricket overs \u2014 320+ Indian contexts.',
-  },
-  {
-    feature: 'Hints on hard questions',
-    free: 'No hints. Child is stuck. Parent guesses. Frustration.',
-    pc: 'Collapsible hint on every Stretch question \u2014 a nudge, not the answer.',
-  },
-  {
-    feature: 'Parent insight after grading',
-    free: 'Worksheet ends. No feedback. No next step.',
-    pc: '"Watch for carry errors. Next: Place Value worksheet." Mastery bar + streak.',
-  },
-  {
-    feature: 'Print quality',
-    free: 'Web-page printout with ads, headers, broken formatting.',
-    pc: 'Premium A4 PDF. Name/Date/Score fields. Tier headers. Answer key toggle.',
-  },
+const COMPARISON = [
+  { feature: 'CBSE-aligned skill progression', us: true, free: false },
+  { feature: 'Tiered difficulty (Foundation / Application / Stretch)', us: true, free: false },
+  { feature: 'Mastery-aware question mix', us: true, free: false },
+  { feature: 'Indian-context word problems', us: true, free: false },
+  { feature: 'Collapsible hints for stretch questions', us: true, free: false },
+  { feature: 'Parent insight after grading', us: true, free: false },
+  { feature: 'Print-ready PDF with answer key', us: true, free: 'partial' },
+  { feature: 'No repeated questions (dedup guard)', us: true, free: false },
 ]
 
-/* ─── Scroll-reveal component ─── */
-function RevealSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+// ── Scroll Reveal ─────────────────────────────────────────────────────────────
+function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [visible, setVisible] = useState(false)
-
+  const [show, setShow] = useState(false)
   useEffect(() => {
-    const node = ref.current
-    if (!node) return
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true) },
-      { threshold: 0.12 }
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setShow(true) }, { threshold: 0.08 })
+    if (ref.current) obs.observe(ref.current)
+    return () => obs.disconnect()
   }, [])
-
   return (
-    <div ref={ref} className={`transition-all duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}>
+    <div ref={ref} className={className} style={{ opacity: show ? 1 : 0, transform: show ? 'none' : 'translateY(22px)', transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms` }}>
       {children}
     </div>
   )
 }
 
-/* ─── Reusable UI atoms ─── */
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-xs font-medium tracking-[0.2em] uppercase text-slate-400 mb-4">
-      {children}
-    </p>
-  )
-}
-
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="font-['Lora',Georgia,serif] text-3xl sm:text-4xl md:text-[2.75rem] font-semibold leading-[1.15] tracking-tight text-slate-900 mb-4">
-      {children}
-    </h2>
-  )
-}
-
-/* ─── Main landing page ─── */
+// ── Component ─────────────────────────────────────────────────────────────────
 export default function Landing({ onGetStarted, onSignIn }: Props) {
   const [scrolled, setScrolled] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeSubject, setActiveSubject] = useState<'Maths' | 'English' | 'Hindi' | 'Science' | 'Computer' | 'GK' | 'Moral Science' | 'Health'>('Maths')
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [activeSubject, setActiveSubject] = useState(0)
+  const [activeClass, setActiveClass] = useState('Class 3')
   const [activeStep, setActiveStep] = useState(0)
 
-  // Sticky nav scroll detection
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    const fn = () => setScrolled(window.scrollY > 24)
+    window.addEventListener('scroll', fn, { passive: true })
+    return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  const scrollTo = useCallback((id: string) => {
+  useEffect(() => {
+    const classes = Object.keys(SUBJECTS[activeSubject].classes)
+    if (!classes.includes(activeClass)) setActiveClass(classes[0])
+  }, [activeSubject])
+
+  const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-    setMobileMenuOpen(false)
-  }, [])
+    setMobileOpen(false)
+  }
 
-  const navLinks = [
-    { label: 'How It Works', id: 'how-it-works' },
-    { label: 'Subjects', id: 'subjects' },
-    { label: 'Why Us', id: 'why-us' },
-    { label: 'Pricing', id: 'pricing' },
-  ]
-
-  const subjectData = activeSubject === 'Maths' ? MATHS_TOPICS
-    : activeSubject === 'English' ? ENGLISH_TOPICS
-    : activeSubject === 'Computer' ? COMPUTER_TOPICS
-    : activeSubject === 'GK' ? GK_TOPICS
-    : activeSubject === 'Moral Science' ? MORAL_TOPICS
-    : activeSubject === 'Health' ? HEALTH_TOPICS
-    : activeSubject === 'Hindi' ? HINDI_TOPICS
-    : SCIENCE_TOPICS
+  const subj = SUBJECTS[activeSubject]
+  const topics = (subj.classes as unknown as Record<string, string[]>)[activeClass] ?? []
+  const availClasses = Object.keys(subj.classes)
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      {/* ───────── 1. STICKY NAV ───────── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm'
-          : 'bg-transparent'
-      }`}>
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <span className="font-['Lora',Georgia,serif] text-white font-bold text-lg leading-none">P</span>
-            </div>
-            <span className="font-['Lora',Georgia,serif] text-xl font-semibold tracking-tight">
-              <span className="text-slate-900">Practice</span><span className="text-primary">Craft</span>
-            </span>
-          </div>
+    <div className="lr">
 
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((l) => (
-              <button key={l.id} onClick={() => scrollTo(l.id)} className="text-sm text-slate-500 hover:text-slate-900 transition-colors bg-transparent border-none cursor-pointer">
-                {l.label}
-              </button>
-            ))}
+      {/* ── NAV ── */}
+      <nav className={`ln ${scrolled ? 'ln-s' : ''}`}>
+        <div className="ln-i">
+          <button className="ll" onClick={() => scrollTo('hero')}>
+            <span className="ll-mark">◆</span>
+            <span className="ll-name">PracticeCraft</span>
+          </button>
+          <div className="ln-links">
+            <button onClick={() => scrollTo('how')}>How it works</button>
+            <button onClick={() => scrollTo('subjects')}>Subjects</button>
+            <button onClick={() => scrollTo('pricing')}>Pricing</button>
           </div>
-
-          {/* Right CTA */}
-          <div className="hidden md:flex items-center gap-4">
-            <button onClick={onSignIn} className="text-sm text-slate-600 hover:text-slate-900 bg-transparent border-none cursor-pointer">
-              Log in
-            </button>
-            <button
-              onClick={onGetStarted}
-              className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
-            >
-              Try Free
-            </button>
+          <div className="ln-ctas">
+            <button className="b-ghost" onClick={onSignIn}>Sign in</button>
+            <button className="b-green" onClick={onGetStarted}>Start free</button>
           </div>
-
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden p-2 text-slate-600 bg-transparent border-none cursor-pointer"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              {mobileMenuOpen
-                ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
-            </svg>
+          <button className="ham" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">
+            <span /><span /><span />
           </button>
         </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-slate-100 px-5 pb-4">
-            {navLinks.map((l) => (
-              <button key={l.id} onClick={() => scrollTo(l.id)} className="block w-full text-left py-2.5 text-sm text-slate-600 hover:text-slate-900 bg-transparent border-none cursor-pointer">
-                {l.label}
-              </button>
-            ))}
-            <div className="flex gap-3 pt-3 border-t border-slate-100 mt-2">
-              <button onClick={onSignIn} className="flex-1 py-2.5 text-sm text-slate-600 border border-slate-200 rounded-lg bg-transparent cursor-pointer">
-                Log in
-              </button>
-              <button onClick={onGetStarted} className="flex-1 py-2.5 text-sm text-white bg-primary rounded-lg border-none cursor-pointer font-medium">
-                Try Free
-              </button>
+        {mobileOpen && (
+          <div className="mm">
+            <button onClick={() => scrollTo('how')}>How it works</button>
+            <button onClick={() => scrollTo('subjects')}>Subjects</button>
+            <button onClick={() => scrollTo('pricing')}>Pricing</button>
+            <div className="mm-row">
+              <button className="b-ghost" onClick={onSignIn}>Sign in</button>
+              <button className="b-green" onClick={onGetStarted}>Start free →</button>
             </div>
           </div>
         )}
       </nav>
 
-      {/* ───────── 2. HERO ───────── */}
-      <section className="pt-28 sm:pt-36 pb-16 sm:pb-24 px-5">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl mx-auto text-center">
-            <p className="text-xs font-medium tracking-[0.2em] uppercase text-slate-400 mb-6">
-              CBSE Classes 1–5 &nbsp;&middot;&nbsp; 8 Subjects &nbsp;&middot;&nbsp; 196 Topics
-            </p>
+      {/* ── HERO ── */}
+      <section id="hero" className="hero">
+        <div className="hero-i">
 
-            <h1 className="font-['Lora',Georgia,serif] text-[2.75rem] sm:text-6xl md:text-7xl font-semibold leading-[1.08] tracking-tight text-slate-900 mb-6">
-              Worksheets that{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10">know your child.</span>
-                <span className="absolute bottom-1 sm:bottom-2 left-0 right-0 h-3 sm:h-4 bg-amber-300/40 -z-0 rounded-sm animate-[underline-grow_1s_ease-out_0.5s_forwards] origin-left scale-x-0" />
-              </span>
+          {/* Left */}
+          <div className="hero-l">
+            <span className="eyebrow">
+              <span className="eyebrow-dot" />
+              Curriculum-Aligned Practice Engine
+            </span>
+            <h1 className="hero-h">
+              Worksheets that<br />
+              <em className="hero-em">know your child.</em>
             </h1>
-
-            <p className="text-lg sm:text-xl text-slate-500 leading-relaxed max-w-2xl mx-auto mb-10">
-              Not random. Not generic. Gold Class CBSE practice sheets personalised
-              to your child's mastery level &mdash; concept by concept, skill by skill.
+            <p className="hero-p">
+              Generate CBSE-aligned worksheets for Classes 1–5 across 8 subjects.
+              Mastery-aware, difficulty-tiered, Indian-contextual. Track skill gaps. Build lasting understanding.
             </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
-              <button
-                onClick={onGetStarted}
-                className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white text-base font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 border-none cursor-pointer"
-              >
-                Start Free &mdash; No card needed
+            <div className="hero-btns">
+              <button className="b-green b-lg" onClick={onGetStarted}>
+                Generate Worksheet <span className="b-arr">→</span>
               </button>
-              <button
-                onClick={() => scrollTo('how-it-works')}
-                className="w-full sm:w-auto px-8 py-3.5 bg-transparent text-slate-600 text-base font-medium rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                See how it works &darr;
+              <button className="b-outline b-lg" onClick={() => scrollTo('how')}>
+                See how it works
               </button>
             </div>
-          </div>
-
-          {/* Floating worksheet preview */}
-          <div className="max-w-md mx-auto">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 animate-[float_6s_ease-in-out_infinite]">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-base">{'\uD83D\uDCCB'}</span>
-                <div>
-                  <p className="text-xs font-medium tracking-wide uppercase text-slate-400">Today's Goal</p>
-                  <p className="text-sm font-semibold text-slate-800">Addition with Carrying &middot; Class 3</p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <p className="text-[11px] font-bold text-amber-600 mb-1">{'\u2B50'} Foundation</p>
-                  <p className="text-sm text-slate-700">Q1. &nbsp;347 + 256 = ___</p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <p className="text-[11px] font-bold text-amber-600 mb-1">{'\u2B50\u2B50'} Application</p>
-                  <p className="text-sm text-slate-700">Q5. &nbsp;Priya had {'\u20B9'}478. She earned {'\u20B9'}256 more at the mela&hellip;</p>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <p className="text-[11px] font-bold text-amber-600 mb-1">{'\u2B50\u2B50\u2B50'} Stretch</p>
-                  <p className="text-sm text-slate-700">Q9. &nbsp;[Error Detection]</p>
-                  <button className="mt-1.5 text-xs text-primary font-medium flex items-center gap-1 bg-transparent border-none cursor-pointer p-0">
-                    {'\uD83D\uDCA1'} Hint {'\u25B8'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── 3. SOCIAL PROOF BAR ───────── */}
-      <section className="py-8 bg-slate-50 border-y border-slate-100">
-        <div className="max-w-4xl mx-auto px-5 text-center">
-          <p className="text-sm text-slate-400 mb-3">Trusted by parents and teachers across India</p>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold text-slate-600">
-            <span>196 Topics</span>
-            <span className="text-slate-300">&middot;</span>
-            <span>8 Subjects</span>
-            <span className="text-slate-300">&middot;</span>
-            <span>Class 1–5</span>
-            <span className="text-slate-300">&middot;</span>
-            <span>CBSE / NCERT Aligned</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── 4. THE PROBLEM ───────── */}
-      <section id="why-us" className="py-20 sm:py-28 px-5">
-        <div className="max-w-6xl mx-auto">
-          <RevealSection className="text-center mb-14">
-            <Eyebrow>The Problem</Eyebrow>
-            <SectionHeading>Every free worksheet tool has the same flaw.</SectionHeading>
-          </RevealSection>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                title: 'Same sheet for every child',
-                desc: 'A child who has mastered addition gets the same worksheet as one just starting. No personalisation, no adaptation.',
-              },
-              {
-                title: 'All questions at one difficulty',
-                desc: 'Struggling children hit Q1 and give up. Advanced children finish in 5 minutes and learn nothing new.',
-              },
-              {
-                title: 'No guidance after it\'s done',
-                desc: 'Parents don\'t know if their child did well, what they got wrong, or what to practise next.',
-              },
-            ].map((card, i) => (
-              <RevealSection key={i}>
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-6 h-full border-l-4 border-l-red-400">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">{card.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
-                </div>
-              </RevealSection>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── 5. GOLD CLASS FEATURES (dot-grid bg) ───────── */}
-      <section id="how-it-works" className="py-20 sm:py-28 px-5 relative overflow-hidden">
-        {/* Academic dot grid */}
-        <div className="absolute inset-0" style={{
-          backgroundColor: '#fafafa',
-          backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-white/90 to-white" />
-
-        <div className="relative max-w-6xl mx-auto">
-          <RevealSection className="text-center mb-14">
-            <Eyebrow>Gold Class</Eyebrow>
-            <SectionHeading>The only CBSE worksheet that adapts to your child.</SectionHeading>
-            <p className="text-slate-500 text-lg">Six deliberate dimensions. Zero randomness.</p>
-          </RevealSection>
-
-          {/* Tab navigation */}
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
-            {GOLD_STEPS.map((step, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveStep(i)}
-                className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all cursor-pointer ${
-                  activeStep === i
-                    ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
-                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300 hover:text-slate-700'
-                }`}
-              >
-                <span className="hidden sm:inline">{step.num} </span>{step.title}
-              </button>
-            ))}
-          </div>
-
-          {/* Active step content */}
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-8 sm:p-10 transition-all duration-500">
-              <p className="text-4xl mb-4">{GOLD_STEPS[activeStep].icon}</p>
-              <p className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-2">
-                {GOLD_STEPS[activeStep].num}
-              </p>
-              <h3 className="font-['Lora',Georgia,serif] text-2xl sm:text-3xl font-semibold text-slate-900 mb-4">
-                {GOLD_STEPS[activeStep].title}
-              </h3>
-              <p className="text-slate-500 leading-relaxed mb-6">{GOLD_STEPS[activeStep].desc}</p>
-              <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
-                <p className="text-xs font-bold tracking-wide uppercase text-slate-400 mb-2">Example</p>
-                <p className="text-sm text-slate-600 whitespace-pre-line leading-relaxed">{GOLD_STEPS[activeStep].example}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Dot indicators */}
-          <div className="flex justify-center gap-2 mt-8">
-            {GOLD_STEPS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveStep(i)}
-                className={`w-2 h-2 rounded-full transition-all border-none cursor-pointer ${
-                  activeStep === i ? 'bg-primary w-6' : 'bg-slate-300'
-                }`}
-                aria-label={`Step ${i + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── 6. SUBJECTS SECTION ───────── */}
-      <section id="subjects" className="py-20 sm:py-28 px-5">
-        <div className="max-w-6xl mx-auto">
-          <RevealSection className="text-center mb-14">
-            <Eyebrow>Built on NCERT</Eyebrow>
-            <SectionHeading>Covers what your child actually studies.</SectionHeading>
-          </RevealSection>
-
-          {/* Subject toggles */}
-          <div className="flex justify-center gap-3 mb-10">
-            {(['Maths', 'English', 'Hindi', 'Science', 'Computer', 'GK', 'Moral Science', 'Health'] as const).map((subj) => (
-              <button
-                key={subj}
-                onClick={() => setActiveSubject(subj)}
-                className={`px-6 py-2.5 text-sm font-semibold rounded-lg border transition-all cursor-pointer ${
-                  activeSubject === subj
-                    ? 'bg-primary text-white border-primary'
-                    : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                {subj}
-              </button>
-            ))}
-          </div>
-
-          {/* Topic pills */}
-          <div className="max-w-4xl mx-auto transition-opacity duration-300">
-            {Object.entries(subjectData).map(([grade, topics]) => (
-              <div key={grade} className="mb-8">
-                <p className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">{grade}</p>
-                <div className="flex flex-wrap gap-2">
-                  {topics.map((t) => (
-                    <span key={t} className="px-3.5 py-1.5 bg-slate-100 text-slate-700 text-sm rounded-full">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── 7. COMPARISON TABLE (dot-grid bg) ───────── */}
-      <section className="py-20 sm:py-28 px-5 relative overflow-hidden">
-        <div className="absolute inset-0" style={{
-          backgroundColor: '#fafafa',
-          backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-white/90 to-white" />
-
-        <div className="relative max-w-5xl mx-auto">
-          <RevealSection className="text-center mb-14">
-            <Eyebrow>The Difference</Eyebrow>
-            <SectionHeading>Why not just use a free tool?</SectionHeading>
-          </RevealSection>
-
-          <RevealSection>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden">
-              {/* Table header */}
-              <div className="grid grid-cols-[1fr_1fr_1fr] text-sm font-semibold border-b border-slate-100">
-                <div className="p-4 text-slate-400">Feature</div>
-                <div className="p-4 text-slate-400 border-l border-slate-100">Free Tools</div>
-                <div className="p-4 bg-primary/10 text-primary border-l border-slate-100">PracticeCraft</div>
-              </div>
-              {/* Rows */}
-              {COMPARISON_ROWS.map((row, i) => (
-                <div key={i} className={`grid grid-cols-[1fr_1fr_1fr] text-sm ${i < COMPARISON_ROWS.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                  <div className="p-4 font-medium text-slate-700">{row.feature}</div>
-                  <div className="p-4 text-red-400 border-l border-slate-100 leading-relaxed">{row.free}</div>
-                  <div className="p-4 text-primary font-medium border-l border-slate-100 bg-primary/5 leading-relaxed">{row.pc}</div>
-                </div>
+            <div className="trust-row">
+              {[
+                { icon: '🎓', label: 'No card needed' },
+                { icon: '📚', label: '196 topics' },
+                { icon: '🇮🇳', label: 'CBSE aligned' },
+              ].map(t => (
+                <span key={t.label} className="trust-chip">{t.icon} {t.label}</span>
               ))}
             </div>
-          </RevealSection>
-
-          {/* Mobile-friendly stacked view */}
-          <div className="md:hidden mt-6">
-            <p className="text-xs text-slate-400 text-center">Scroll horizontally to compare &rarr;</p>
           </div>
-        </div>
-      </section>
 
-      {/* ───────── 8. FOR PARENTS / FOR TEACHERS ───────── */}
-      <section className="py-20 sm:py-28 px-5">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
-          <RevealSection>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-8 h-full">
-              <p className="text-3xl mb-4">{'\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67'}</p>
-              <h3 className="font-['Lora',Georgia,serif] text-2xl font-semibold text-slate-900 mb-5">For Parents</h3>
-              <ul className="space-y-3 text-sm text-slate-600 leading-relaxed">
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Generate a worksheet in 30 seconds &mdash; pick grade, topic, go</li>
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Every sheet adapts to your child's mastery level automatically</li>
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Clear learning objectives so you know what's being practised</li>
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Parent insight after grading: what to watch for and what to try next</li>
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Share worksheets via WhatsApp with one tap</li>
-              </ul>
-            </div>
-          </RevealSection>
-
-          <RevealSection>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-8 h-full">
-              <p className="text-3xl mb-4">{'\uD83C\uDFEB'}</p>
-              <h3 className="font-['Lora',Georgia,serif] text-2xl font-semibold text-slate-900 mb-5">For Teachers</h3>
-              <ul className="space-y-3 text-sm text-slate-600 leading-relaxed">
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Bulk generation &mdash; create 5 topic worksheets for a class in one click</li>
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>CBSE-aligned to NCERT &mdash; use as homework, classwork, or revision</li>
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Premium PDF with Name/Date/Score &mdash; print and distribute directly</li>
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Track class-level mastery across topics over time</li>
-                <li className="flex gap-3"><span className="text-primary font-bold mt-0.5">{'\u2713'}</span>Separate class profiles with dedicated worksheet history</li>
-              </ul>
-            </div>
-          </RevealSection>
-        </div>
-      </section>
-
-      {/* ───────── 9. PRICING ───────── */}
-      <section id="pricing" className="py-20 sm:py-28 px-5 bg-slate-50">
-        <div className="max-w-6xl mx-auto">
-          <RevealSection className="text-center mb-14">
-            <Eyebrow>Simple Pricing</Eyebrow>
-            <SectionHeading>Start free. Upgrade when ready.</SectionHeading>
-          </RevealSection>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {/* Free tier */}
-            <RevealSection>
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-8 h-full flex flex-col">
-                <h3 className="font-['Lora',Georgia,serif] text-3xl font-semibold text-slate-900 mb-1">Free</h3>
-                <p className="text-sm text-slate-400 mb-6">10 worksheets / month</p>
-                <ul className="space-y-3 text-sm text-slate-600 mb-8 flex-1">
-                  <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>All 4 subjects &mdash; Maths, English, Science, Hindi</li>
-                  <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>All grades — Class 1 to Class 5</li>
-                  <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>Basic PDF with answer key</li>
-                  <li className="flex gap-2.5"><span className="text-slate-400">{'\u2713'}</span>Generate in 30 seconds</li>
-                </ul>
-                <button
-                  onClick={onGetStarted}
-                  className="w-full py-3 text-sm font-semibold text-primary border-2 border-primary rounded-xl hover:bg-primary/10 transition-colors bg-transparent cursor-pointer"
-                >
-                  Get Started Free
-                </button>
-              </div>
-            </RevealSection>
-
-            {/* Paid tier */}
-            <RevealSection>
-              <div className="bg-white rounded-2xl border-2 border-primary shadow-lg shadow-primary/15 p-8 h-full flex flex-col relative">
-                <span className="absolute -top-3 left-6 px-3 py-1 bg-amber-400 text-amber-900 text-xs font-bold uppercase tracking-wider rounded-full">
-                  Most Popular
-                </span>
-                <h3 className="font-['Lora',Georgia,serif] text-3xl font-semibold text-slate-900 mb-1">
-                  {'\u20B9'}299<span className="text-lg font-normal text-slate-400"> / month</span>
-                </h3>
-                <p className="text-sm text-slate-400 mb-6">Unlimited worksheets</p>
-                <ul className="space-y-3 text-sm text-slate-600 mb-8 flex-1">
-                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Everything in Free, plus:</li>
-                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Mastery tracking per child</li>
-                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Parent insights after grading</li>
-                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Bulk generation (5 topics at once)</li>
-                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>School branding on PDF</li>
-                  <li className="flex gap-2.5"><span className="text-primary font-bold">{'\u2713'}</span>Priority support</li>
-                </ul>
-                <button
-                  onClick={onGetStarted}
-                  className="w-full py-3 text-sm font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors border-none cursor-pointer shadow-lg shadow-primary/20"
-                >
-                  Start Free Trial
-                </button>
-              </div>
-            </RevealSection>
-          </div>
-        </div>
-      </section>
-
-      {/* ───────── 10. PHILOSOPHY (dot-grid bg) ───────── */}
-      <section className="py-20 sm:py-28 px-5 relative overflow-hidden">
-        <div className="absolute inset-0" style={{
-          backgroundColor: '#fafafa',
-          backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-white/90 to-white" />
-
-        <div className="relative max-w-6xl mx-auto">
-          <RevealSection className="text-center mb-14">
-            <Eyebrow>Our Philosophy</Eyebrow>
-            <SectionHeading>Built for long-term mastery.</SectionHeading>
-            <p className="text-slate-500 text-lg max-w-2xl mx-auto">
-              PracticeCraft doesn't generate worksheets &mdash; it engineers learning paths.
-            </p>
-          </RevealSection>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                num: '01',
-                title: 'Depth-First Curriculum',
-                desc: 'Each skill is practised until foundational strength is established. No jumping between topics until the building blocks are solid.',
-              },
-              {
-                num: '02',
-                title: 'Structured Progression',
-                desc: 'Foundation \u2192 Application \u2192 Stretch mirrors how effective classrooms build reasoning. Every worksheet follows this arc.',
-              },
-              {
-                num: '03',
-                title: 'Educational Integrity',
-                desc: 'No AI hallucinations. Every question is pedagogically validated and deterministically sound. 196 topic profiles, each hand-crafted.',
-              },
-            ].map((card, i) => (
-              <RevealSection key={i}>
-                <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-7">
-                  <p className="text-xs font-bold tracking-[0.2em] uppercase text-amber-500 mb-3">{card.num}</p>
-                  <h3 className="font-['Lora',Georgia,serif] text-xl font-semibold text-slate-900 mb-3">{card.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
+          {/* Worksheet mockup */}
+          <div className="hero-r">
+            <div className="ws">
+              <div className="ws-hd">
+                <div className="ws-badge">CBSE · Class 3 · Mathematics</div>
+                <div className="ws-name-row">
+                  <span>Name: <span className="ws-line" /></span>
+                  <span>Date: <span className="ws-line ws-line-s" /></span>
                 </div>
-              </RevealSection>
-            ))}
+                <h3 className="ws-title">Addition with Carrying</h3>
+                <div className="ws-objs">
+                  <div>✓ Add 3-digit numbers with carry</div>
+                  <div>✓ Solve real-life word problems</div>
+                  <div>✓ Identify errors in calculations</div>
+                </div>
+              </div>
+              <div className="ws-bar" />
+              <div className="ws-body">
+                <div className="ws-q">
+                  <div className="ws-ql">
+                    <span className="ws-num">1</span>
+                    <div className="ws-col">
+                      <div>&#8194;4 7 3</div>
+                      <div className="ws-op">+ 2 8 9</div>
+                      <div className="ws-ans">_______</div>
+                      <div className="ws-box">□ □ □</div>
+                    </div>
+                  </div>
+                  <span className="ws-tier ws-f">★ Foundation</span>
+                </div>
+                <div className="ws-q">
+                  <div className="ws-ql">
+                    <span className="ws-num">2</span>
+                    <p className="ws-qt">Priya sold <strong>347</strong> books at the school mela. Rohan sold <strong>258</strong> more. How many in all?</p>
+                  </div>
+                  <span className="ws-tier ws-a">★★ Application</span>
+                </div>
+                <div className="ws-q ws-last">
+                  <div className="ws-ql">
+                    <span className="ws-num">3</span>
+                    <p className="ws-qt"><span className="ws-err">Spot the error:</span> Rahul says 456 + 278 = 724. What mistake did he make?</p>
+                  </div>
+                  <span className="ws-tier ws-s">★★★ Stretch</span>
+                </div>
+              </div>
+              <div className="ws-ft">
+                <span>PracticeCraft</span>
+                <span>📄 Answer key on next page</span>
+              </div>
+            </div>
+
+            <div className="fb fb1">
+              <span className="fb-icon">🎯</span>
+              <div>
+                <div className="fb-lbl">Mastery Progress</div>
+                <div className="fb-bar"><div className="fb-fill" /></div>
+              </div>
+              <span className="fb-pct">72%</span>
+            </div>
+            <div className="fb fb2">💡 Hint available on Q3</div>
           </div>
         </div>
       </section>
 
-      {/* ───────── 11. FINAL CTA ───────── */}
-      <section className="py-20 sm:py-28 px-5">
-        <RevealSection className="text-center max-w-2xl mx-auto">
-          <SectionHeading>Ready to build real mastery?</SectionHeading>
-          <p className="text-lg text-slate-500 mb-10">
-            Your child's first personalised worksheet is free.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 py-3.5 bg-primary text-white text-base font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 border-none cursor-pointer"
-            >
-              Start Generating Worksheets
-            </button>
-            <button
-              onClick={() => window.open('mailto:hello@practicecraft.in', '_blank')}
-              className="w-full sm:w-auto px-8 py-3.5 bg-transparent text-slate-600 text-base font-medium rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
-            >
-              Talk to Our Team
-            </button>
-          </div>
-        </RevealSection>
+      {/* ── STATS BAR ── */}
+      <section className="stats">
+        <div className="stats-i">
+          {[
+            { n: '196', l: 'Topics' },
+            { n: '8', l: 'Subjects' },
+            { n: '5', l: 'Classes' },
+            { n: '5', l: 'Question Types' },
+            { n: '∞', l: 'Variations' },
+          ].map(s => (
+            <div key={s.l} className="stat">
+              <span className="stat-n">{s.n}</span>
+              <span className="stat-l">{s.l}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
-      {/* ───────── 12. FOOTER ───────── */}
-      <footer className="py-10 px-5 border-t border-slate-100">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <span className="font-['Lora',Georgia,serif] text-white font-bold text-sm leading-none">P</span>
-            </div>
-            <span className="font-['Lora',Georgia,serif] text-base font-semibold">
-              Practice<span className="text-primary">Craft</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-400">
-            {navLinks.map((l) => (
-              <button key={l.id} onClick={() => scrollTo(l.id)} className="hover:text-slate-600 transition-colors bg-transparent border-none cursor-pointer text-sm text-slate-400">
-                {l.label}
+      {/* ── PROBLEM ── */}
+      <section className="prob">
+        <Reveal>
+          <div className="sec-ew">The Problem</div>
+          <h2 className="sec-h">Free tools leave real gaps.</h2>
+          <p className="sec-sub">Printable worksheets don't know your child's history. Random generators ignore the CBSE curriculum. The result: busy work that builds false confidence, not mastery.</p>
+        </Reveal>
+        <div className="prob-cards">
+          {[
+            { icon: '🎲', t: 'Random, not Structured', d: 'Generic PDFs skip the CBSE learning ladder. Children end up with questions that are either too easy or completely disconnected from this week\'s topic.' },
+            { icon: '📊', t: 'No Skill Tracking', d: 'Without mastery data, parents and tutors can\'t know whether the carry problem is actually fixed — or just temporarily avoided.' },
+            { icon: '🖨️', t: 'Print ≠ Real Practice', d: 'A 50-question drill on one operation is busywork. Real practice needs Recognition → Application → Stretch in every single session.' },
+          ].map((c, i) => (
+            <Reveal key={i} delay={i * 80} className="prob-card">
+              <span className="prob-icon">{c.icon}</span>
+              <h3>{c.t}</h3>
+              <p>{c.d}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section id="how" className="how">
+        <Reveal>
+          <div className="sec-ew">Gold Class Features</div>
+          <h2 className="sec-h">Six things that make it different.</h2>
+        </Reveal>
+        <div className="how-layout">
+          <div className="how-list">
+            {GOLD_STEPS.map((s, i) => (
+              <button key={i} className={`how-item ${activeStep === i ? 'how-active' : ''}`} onClick={() => setActiveStep(i)}>
+                <span className="how-n">{s.number}</span>
+                <div>
+                  <div className="how-t">{s.title}</div>
+                  <div className="how-sub">{s.subtitle}</div>
+                </div>
               </button>
             ))}
           </div>
-          <p className="text-xs text-slate-400 text-center sm:text-right">
-            &copy; 2026 PracticeCraft &middot; Built for Indian families, aligned to CBSE/NCERT
-          </p>
+          <div className="how-detail">
+            <div className="how-bg-n">{GOLD_STEPS[activeStep].number}</div>
+            <h3 className="how-dt">{GOLD_STEPS[activeStep].title}</h3>
+            <p className="how-ds">{GOLD_STEPS[activeStep].subtitle}</p>
+            <p className="how-dd">{GOLD_STEPS[activeStep].desc}</p>
+            <div className="how-ex">{GOLD_STEPS[activeStep].example}</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SUBJECTS ── */}
+      <section id="subjects" className="subjs">
+        <Reveal>
+          <div className="sec-ew">Subject Coverage</div>
+          <h2 className="sec-h">Eight subjects. 196 topics. All CBSE.</h2>
+        </Reveal>
+        <div className="subj-tabs">
+          {SUBJECTS.map((s, i) => (
+            <button key={s.key} className={`subj-tab ${activeSubject === i ? 'subj-on' : ''}`} onClick={() => setActiveSubject(i)}>
+              <span className="st-sym">{s.symbol}</span>
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <div className="cls-tabs">
+          {availClasses.map(c => (
+            <button key={c} className={`cls-tab ${activeClass === c ? 'cls-on' : ''}`} onClick={() => setActiveClass(c)}>{c}</button>
+          ))}
+        </div>
+        <div className="topic-grid">
+          {topics.map((t, i) => (
+            <Reveal key={`${activeSubject}-${activeClass}-${i}`} delay={i * 25} className="topic-pill">
+              {t}
+            </Reveal>
+          ))}
+        </div>
+        <p className="subj-desc">{subj.symbol} {subj.description}</p>
+      </section>
+
+      {/* ── COMPARISON ── */}
+      <section className="comp">
+        <Reveal>
+          <div className="sec-ew">Why PracticeCraft</div>
+          <h2 className="sec-h">vs free tools &amp; generic PDFs</h2>
+        </Reveal>
+        <div className="comp-wrap">
+          <table className="comp-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th className="th-us">PracticeCraft</th>
+                <th>Free Tools</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARISON.map((r, i) => (
+                <tr key={i}>
+                  <td>{r.feature}</td>
+                  <td className="td-us"><span className="ck-y">✓</span></td>
+                  <td>{r.free === true ? <span className="ck-y">✓</span> : r.free === 'partial' ? <span className="ck-p">~</span> : <span className="ck-n">✗</span>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ── PERSONA CARDS ── */}
+      <section className="persona">
+        <div className="persona-grid">
+          <Reveal className="pc pc-parent">
+            <div className="pc-lbl">For Parents</div>
+            <h3>Know exactly where your child stands.</h3>
+            <ul>
+              <li>Generate a focused worksheet in 30 seconds</li>
+              <li>Choose the right topic for tonight's practice</li>
+              <li>See mastery progress improve over time</li>
+              <li>Understand what went wrong — no tutoring degree needed</li>
+              <li>Print-ready A4 PDF, no formatting hassle</li>
+            </ul>
+            <button className="b-green" onClick={onGetStarted}>Start as Parent →</button>
+          </Reveal>
+          <Reveal className="pc pc-teacher" delay={120}>
+            <div className="pc-lbl">For Teachers</div>
+            <h3>Differentiated practice, at scale.</h3>
+            <ul>
+              <li>Generate topic-wise worksheets for the whole class</li>
+              <li>Bulk generate across 5 topics in one click (paid)</li>
+              <li>Share instantly via WhatsApp or print batches</li>
+              <li>Track class-wide mastery and skill gaps</li>
+              <li>CBSE chapter progression, already mapped</li>
+            </ul>
+            <button className="b-outline" onClick={onGetStarted}>Start as Teacher →</button>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── PRICING ── */}
+      <section id="pricing" className="pricing">
+        <Reveal>
+          <div className="sec-ew">Simple Pricing</div>
+          <h2 className="sec-h">Start free. Upgrade when ready.</h2>
+        </Reveal>
+        <div className="pr-grid">
+          <Reveal className="pr-card pr-free">
+            <div className="pr-lbl">Free</div>
+            <div className="pr-amt">₹0 <span>/month</span></div>
+            <div className="pr-desc">No credit card required</div>
+            <ul className="pr-feats">
+              <li className="pr-yes">10 worksheets per month</li>
+              <li className="pr-yes">All 8 subjects</li>
+              <li className="pr-yes">PDF download</li>
+              <li className="pr-yes">5 or 10 questions</li>
+              <li className="pr-no">Mastery tracking</li>
+              <li className="pr-no">Bulk generation</li>
+              <li className="pr-no">Parent insights after grading</li>
+            </ul>
+            <button className="b-outline b-full" onClick={onGetStarted}>Get started free</button>
+          </Reveal>
+          <Reveal className="pr-card pr-paid" delay={100}>
+            <div className="pr-badge">Most Popular</div>
+            <div className="pr-lbl">Scholar</div>
+            <div className="pr-amt">₹299 <span>/month</span></div>
+            <div className="pr-desc">Everything a child needs to excel</div>
+            <ul className="pr-feats">
+              <li className="pr-yes">Unlimited worksheets</li>
+              <li className="pr-yes">All 8 subjects</li>
+              <li className="pr-yes">Premium tiered PDF + answer key</li>
+              <li className="pr-yes">5, 10, 15 or 20 questions</li>
+              <li className="pr-yes">Mastery tracking per skill</li>
+              <li className="pr-yes">Bulk generation (up to 5 topics)</li>
+              <li className="pr-yes">Parent insight after every attempt</li>
+            </ul>
+            <button className="b-amber b-full" onClick={onGetStarted}>Start 14-day trial</button>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── PHILOSOPHY ── */}
+      <section className="phil">
+        <Reveal>
+          <div className="sec-ew">Our Approach</div>
+          <h2 className="sec-h">Built on one principle: real understanding, not rote practice.</h2>
+        </Reveal>
+        <div className="phil-grid">
+          {[
+            { n: 'I', t: 'Depth before breadth', d: 'One topic practised in five different ways is worth more than five topics practised once each. Our slot engine enforces this structure on every worksheet it generates.' },
+            { n: 'II', t: 'Structured progression', d: 'Recognition → Application → Representation → Error Detection → Thinking. Every worksheet follows this arc, in every subject, at every class level.' },
+            { n: 'III', t: 'Indian context, always', d: 'Priya at the mela. Rahul\'s cricket runs. Diwali lamps. Word problems a child in Bengaluru or Bhopal can picture immediately — not abstract fictions.' },
+          ].map((p, i) => (
+            <Reveal key={i} delay={i * 80} className="phil-card">
+              <div className="phil-n">{p.n}</div>
+              <h3>{p.t}</h3>
+              <p>{p.d}</p>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="cta">
+        <Reveal>
+          <h2 className="cta-h">Ready to build real mastery?</h2>
+          <p className="cta-sub">Start with 10 free worksheets. No card, no commitment.</p>
+          <button className="b-amber b-xl" onClick={onGetStarted}>
+            Generate your first worksheet →
+          </button>
+          <p className="cta-contact">Questions? Write to us at <a href="mailto:hello@practicecraft.in">hello@practicecraft.in</a></p>
+        </Reveal>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="lf">
+        <div className="lf-i">
+          <div className="ll" style={{ cursor: 'default' }}>
+            <span className="ll-mark">◆</span>
+            <span className="ll-name" style={{ color: 'rgba(255,255,255,0.88)' }}>PracticeCraft</span>
+          </div>
+          <nav className="lf-nav">
+            <button onClick={() => scrollTo('how')}>How it works</button>
+            <button onClick={() => scrollTo('subjects')}>Subjects</button>
+            <button onClick={() => scrollTo('pricing')}>Pricing</button>
+            <a href="mailto:hello@practicecraft.in">Contact</a>
+          </nav>
+          <p className="lf-copy">© 2025 PracticeCraft · CBSE Classes 1–5</p>
         </div>
       </footer>
 
-      {/* ───────── CSS keyframes ───────── */}
+      {/* ══════════════════════════════════════════════════════════
+          Warm Scholar Styles
+          Deep Forest Green #1B4332 · Amber #D97706 · Parchment #FAF7F2
+      ══════════════════════════════════════════════════════════ */}
       <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+        .lr {
+          --g:  #1B4332;
+          --g2: #2D6A4F;
+          --a:  #B45309;
+          --a2: #D97706;
+          --a3: #F59E0B;
+          --pc: #FAF7F2;
+          --sf: #F2ECE2;
+          --wb: #E8DECA;
+          --tx: #1C1917;
+          --mt: #78716C;
+          font-family: 'DM Sans', system-ui, sans-serif;
+          background: var(--pc);
+          color: var(--tx);
+          overflow-x: hidden;
         }
-        @keyframes underline-grow {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
+
+        /* NAV */
+        .ln {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+          background: var(--pc);
+          border-bottom: 1px solid transparent;
+          transition: border-color .3s, box-shadow .3s;
+        }
+        .ln-s { border-bottom-color: var(--wb); box-shadow: 0 1px 14px rgba(27,67,50,.07); }
+        .ln-i {
+          max-width: 1200px; margin: 0 auto;
+          padding: 0 24px; height: 68px;
+          display: flex; align-items: center; gap: 32px;
+        }
+        .ll {
+          display: flex; align-items: center; gap: 9px;
+          background: none; border: none; cursor: pointer; padding: 0; flex-shrink: 0;
+        }
+        .ll-mark {
+          width: 30px; height: 30px; background: var(--g); color: #fff;
+          display: flex; align-items: center; justify-content: center;
+          border-radius: 7px; font-size: 13px;
+        }
+        .ll-name {
+          font-family: 'Fraunces', Georgia, serif;
+          font-weight: 600; font-size: 19px; color: var(--g); letter-spacing: -.01em;
+        }
+        .ln-links { display: flex; gap: 2px; flex: 1; }
+        .ln-links button {
+          background: none; border: none; cursor: pointer;
+          font-size: 14px; color: var(--mt); padding: 8px 14px; border-radius: 7px;
+          transition: color .2s, background .2s; font-family: 'DM Sans', sans-serif;
+        }
+        .ln-links button:hover { color: var(--g); background: rgba(27,67,50,.07); }
+        .ln-ctas { display: flex; gap: 8px; align-items: center; }
+
+        /* Buttons */
+        .b-ghost {
+          background: none; border: none; cursor: pointer; font-size: 14px; color: var(--mt);
+          padding: 8px 14px; border-radius: 7px; transition: color .2s, background .2s;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .b-ghost:hover { color: var(--g); background: rgba(27,67,50,.07); }
+        .b-green {
+          background: var(--g); color: #fff; border: none; cursor: pointer;
+          font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 8px;
+          transition: background .2s, transform .1s; font-family: 'DM Sans', sans-serif;
+          display: inline-flex; align-items: center; gap: 6px;
+        }
+        .b-green:hover { background: var(--g2); }
+        .b-green:active { transform: scale(.98); }
+        .b-amber {
+          background: var(--a2); color: #fff; border: none; cursor: pointer;
+          font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 8px;
+          transition: background .2s, transform .1s; font-family: 'DM Sans', sans-serif;
+          display: inline-flex; align-items: center; gap: 6px;
+        }
+        .b-amber:hover { background: var(--a); }
+        .b-amber:active { transform: scale(.98); }
+        .b-outline {
+          background: transparent; color: var(--g); border: 1.5px solid var(--g);
+          cursor: pointer; font-size: 14px; font-weight: 600; padding: 10px 20px;
+          border-radius: 8px; transition: background .2s; font-family: 'DM Sans', sans-serif;
+          display: inline-flex; align-items: center; gap: 6px;
+        }
+        .b-outline:hover { background: rgba(27,67,50,.07); }
+        .b-lg { padding: 14px 28px; font-size: 16px; border-radius: 10px; }
+        .b-xl { padding: 18px 38px; font-size: 17px; border-radius: 12px; }
+        .b-full { width: 100%; justify-content: center; }
+        .b-arr { transition: transform .2s; }
+        .b-green:hover .b-arr { transform: translateX(3px); }
+
+        /* Hamburger */
+        .ham {
+          display: none; flex-direction: column; gap: 5px;
+          background: none; border: none; cursor: pointer; padding: 8px; margin-left: auto;
+        }
+        .ham span { display: block; width: 22px; height: 2px; background: var(--tx); border-radius: 2px; }
+        .mm {
+          background: var(--pc); border-top: 1px solid var(--wb);
+          padding: 10px 24px 20px; display: flex; flex-direction: column; gap: 2px;
+        }
+        .mm button {
+          background: none; border: none; cursor: pointer; font-size: 16px; color: var(--tx);
+          padding: 10px 0; text-align: left; font-family: 'DM Sans', sans-serif;
+        }
+        .mm-row { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+
+        /* HERO */
+        .hero {
+          padding: 124px 24px 80px; min-height: 100vh;
+          display: flex; align-items: center;
+          background: radial-gradient(ellipse 90% 60% at 55% 0%, rgba(27,67,50,.055) 0%, transparent 60%), var(--pc);
+          position: relative;
+        }
+        .hero::before {
+          content: ''; position: absolute; inset: 0;
+          background-image: radial-gradient(circle, rgba(27,67,50,.11) 1px, transparent 1px);
+          background-size: 26px 26px; pointer-events: none; z-index: 0;
+        }
+        .hero-i {
+          max-width: 1200px; margin: 0 auto;
+          display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+          position: relative; z-index: 1;
+        }
+        .hero-l { display: flex; flex-direction: column; gap: 24px; }
+        .eyebrow {
+          display: inline-flex; align-items: center; gap: 8px;
+          font-size: 12.5px; font-weight: 700; color: var(--g);
+          text-transform: uppercase; letter-spacing: .09em;
+          background: rgba(27,67,50,.09); border: 1px solid rgba(27,67,50,.16);
+          padding: 6px 14px; border-radius: 100px; width: fit-content;
+        }
+        .eyebrow-dot {
+          width: 6px; height: 6px; border-radius: 50%; background: var(--g);
+          animation: pdot 2.2s ease-in-out infinite;
+        }
+        .hero-h {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: clamp(40px, 5.5vw, 68px); font-weight: 700;
+          line-height: 1.07; letter-spacing: -.025em; color: var(--tx); margin: 0;
+        }
+        .hero-em {
+          color: var(--g); font-style: italic;
+          position: relative; display: inline-block;
+        }
+        .hero-em::after {
+          content: ''; position: absolute; bottom: 4px; left: 0; right: 0;
+          height: 4px; background: var(--a3); border-radius: 2px;
+          transform: scaleX(0); transform-origin: left;
+          animation: uline .9s ease .7s forwards;
+        }
+        .hero-p { font-size: 16px; line-height: 1.72; color: var(--mt); max-width: 480px; margin: 0; }
+        .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+        .trust-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .trust-chip {
+          font-size: 12.5px; color: var(--mt);
+          background: var(--sf); border: 1px solid var(--wb);
+          padding: 5px 13px; border-radius: 100px;
+        }
+
+        /* Worksheet Mockup */
+        .hero-r { position: relative; display: flex; align-items: center; justify-content: center; }
+        .ws {
+          background: #fff; border: 1px solid var(--wb); border-radius: 14px;
+          box-shadow: 0 4px 6px rgba(0,0,0,.04), 0 20px 56px rgba(27,67,50,.11), 0 36px 90px rgba(27,67,50,.06);
+          width: 100%; max-width: 440px; overflow: hidden; font-size: 13px;
+          animation: fws 7s ease-in-out infinite;
+        }
+        .ws-hd { background: var(--g); color: #fff; padding: 18px 22px; }
+        .ws-badge {
+          font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+          background: rgba(255,255,255,.16); padding: 3px 10px; border-radius: 100px;
+          width: fit-content; margin-bottom: 10px; color: rgba(255,255,255,.9);
+        }
+        .ws-name-row { display: flex; gap: 16px; font-size: 11px; color: rgba(255,255,255,.72); margin-bottom: 10px; }
+        .ws-line { display: inline-block; width: 76px; border-bottom: 1px solid rgba(255,255,255,.45); vertical-align: bottom; }
+        .ws-line-s { width: 48px; }
+        .ws-title {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: 18px; font-weight: 600; margin: 0 0 10px; letter-spacing: -.01em; color: #fff; line-height: 1.2;
+        }
+        .ws-objs { display: flex; flex-direction: column; gap: 4px; }
+        .ws-objs div { font-size: 11px; color: rgba(255,255,255,.78); }
+        .ws-bar { height: 3px; background: linear-gradient(90deg, var(--a2) 0%, var(--a3) 50%, transparent 100%); }
+        .ws-body { padding: 14px 22px; display: flex; flex-direction: column; gap: 12px; }
+        .ws-q {
+          display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+          padding-bottom: 12px; border-bottom: 1px solid #F0EBE3;
+        }
+        .ws-last { border-bottom: none; padding-bottom: 0; }
+        .ws-ql { display: flex; gap: 10px; align-items: flex-start; flex: 1; }
+        .ws-num {
+          width: 22px; height: 22px; border-radius: 50%; background: var(--g); color: #fff;
+          font-size: 11px; font-weight: 700; display: flex; align-items: center;
+          justify-content: center; flex-shrink: 0; margin-top: 1px;
+        }
+        .ws-col { font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.65; color: var(--tx); }
+        .ws-op { border-bottom: 1px solid var(--tx); }
+        .ws-ans { color: transparent; border-bottom: 1px solid #CBD5E1; }
+        .ws-box { color: var(--mt); letter-spacing: 4px; }
+        .ws-qt { font-size: 12.5px; line-height: 1.55; color: var(--tx); margin: 0; }
+        .ws-err { font-weight: 700; color: #DC2626; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; }
+        .ws-tier { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 100px; white-space: nowrap; flex-shrink: 0; }
+        .ws-f { background: #DCFCE7; color: #166534; }
+        .ws-a { background: #FEF3C7; color: #92400E; }
+        .ws-s { background: #FCE7F3; color: #9D174D; }
+        .ws-ft {
+          background: #F8F4EE; border-top: 1px solid var(--wb);
+          padding: 8px 22px; display: flex; justify-content: space-between; font-size: 10px; color: var(--mt);
+        }
+
+        /* Floating badges */
+        .fb {
+          position: absolute; background: #fff; border: 1px solid var(--wb);
+          border-radius: 10px; padding: 10px 14px;
+          box-shadow: 0 4px 18px rgba(0,0,0,.09);
+          display: flex; align-items: center; gap: 10px;
+          font-size: 12px; font-weight: 600; color: var(--tx);
+          animation: fbadge 4.5s ease-in-out infinite;
+        }
+        .fb1 { top: -18px; right: -18px; animation-delay: .4s; }
+        .fb2 {
+          bottom: 18px; right: -28px; animation-delay: 1.8s;
+          font-size: 11px; background: #FFFBEB; border-color: #FDE68A; color: #92400E;
+        }
+        .fb-icon { font-size: 20px; }
+        .fb-lbl { font-size: 10px; color: var(--mt); font-weight: 400; margin-bottom: 4px; }
+        .fb-bar { width: 80px; height: 4px; background: #E5E7EB; border-radius: 2px; overflow: hidden; }
+        .fb-fill { height: 100%; width: 72%; background: var(--g); border-radius: 2px; animation: gbar 1.6s ease .9s both; }
+        .fb-pct { font-size: 16px; font-weight: 700; color: var(--g); }
+
+        /* STATS */
+        .stats { background: var(--g); padding: 22px 24px; }
+        .stats-i { max-width: 1200px; margin: 0 auto; display: flex; justify-content: center; gap: 52px; flex-wrap: wrap; }
+        .stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .stat-n { font-family: 'Fraunces', Georgia, serif; font-size: 30px; font-weight: 700; color: #fff; line-height: 1; }
+        .stat-l { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.6); font-weight: 600; }
+
+        /* Section commons */
+        .sec-ew { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--a); margin-bottom: 10px; }
+        .sec-h {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: clamp(28px, 4vw, 44px); font-weight: 700;
+          line-height: 1.1; letter-spacing: -.02em; color: var(--tx); margin: 0 0 14px;
+        }
+        .sec-sub { font-size: 16px; line-height: 1.68; color: var(--mt); max-width: 620px; margin: 0; }
+
+        /* PROBLEM */
+        .prob { padding: 88px 24px; background: var(--sf); text-align: center; }
+        .prob .sec-ew, .prob .sec-h, .prob .sec-sub { margin-left: auto; margin-right: auto; }
+        .prob-cards { max-width: 1100px; margin: 52px auto 0; display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+        .prob-card {
+          background: #fff; border: 1px solid var(--wb); border-radius: 12px;
+          padding: 30px 26px; text-align: left; border-left: 3px solid var(--a2);
+        }
+        .prob-icon { font-size: 28px; display: block; margin-bottom: 14px; }
+        .prob-card h3 {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: 18px; font-weight: 600; margin: 0 0 10px; color: var(--tx);
+        }
+        .prob-card p { font-size: 14px; line-height: 1.68; color: var(--mt); margin: 0; }
+
+        /* HOW */
+        .how { padding: 88px 24px; background: var(--pc); }
+        .how .sec-ew, .how .sec-h { max-width: 1200px; margin-left: auto; margin-right: auto; }
+        .how-layout { max-width: 1200px; margin: 52px auto 0; display: grid; grid-template-columns: 320px 1fr; gap: 28px; align-items: start; }
+        .how-list { display: flex; flex-direction: column; gap: 3px; }
+        .how-item {
+          display: flex; align-items: center; gap: 16px; padding: 14px 16px;
+          background: none; border: 1px solid transparent; border-radius: 10px;
+          cursor: pointer; text-align: left; transition: all .2s; width: 100%;
+        }
+        .how-item:hover { background: var(--sf); border-color: var(--wb); }
+        .how-active { background: #fff !important; border-color: var(--wb) !important; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+        .how-n {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: 24px; font-weight: 700; color: var(--g);
+          opacity: .28; width: 42px; transition: opacity .2s; flex-shrink: 0;
+        }
+        .how-active .how-n { opacity: 1; }
+        .how-t { font-weight: 600; font-size: 14px; color: var(--tx); margin-bottom: 2px; }
+        .how-sub { font-size: 12px; color: var(--mt); }
+        .how-detail { background: #fff; border: 1px solid var(--wb); border-radius: 14px; padding: 38px; position: sticky; top: 88px; }
+        .how-bg-n {
+          font-family: 'Fraunces', Georgia, serif;
+          font-size: 80px; font-weight: 700; color: var(--g);
+          opacity: .07; line-height: 1; margin-bottom: -22px;
+        }
+        .how-dt { font-family: 'Fraunces', Georgia, serif; font-size: 28px; font-weight: 700; color: var(--tx); margin: 0 0 6px; letter-spacing: -.01em; }
+        .how-ds { font-size: 12px; font-weight: 700; color: var(--a); text-transform: uppercase; letter-spacing: .05em; margin: 0 0 18px; }
+        .how-dd { font-size: 15px; line-height: 1.72; color: var(--mt); margin: 0 0 26px; }
+        .how-ex {
+          background: var(--sf); border: 1px solid var(--wb); border-left: 3px solid var(--g);
+          border-radius: 8px; padding: 14px 18px;
+          font-size: 13px; color: var(--tx); font-family: 'Courier New', monospace; line-height: 1.65;
+        }
+
+        /* SUBJECTS */
+        .subjs { padding: 88px 24px; background: var(--sf); }
+        .subjs .sec-ew, .subjs .sec-h { max-width: 1200px; margin-left: auto; margin-right: auto; }
+        .subj-tabs { max-width: 1200px; margin: 32px auto 0; display: flex; gap: 8px; flex-wrap: wrap; }
+        .subj-tab {
+          display: flex; align-items: center; gap: 7px;
+          background: #fff; border: 1px solid var(--wb); border-radius: 100px;
+          padding: 8px 18px; font-size: 13.5px; font-weight: 600;
+          cursor: pointer; transition: all .2s; color: var(--mt); font-family: 'DM Sans', sans-serif;
+        }
+        .subj-tab:hover { border-color: var(--g); color: var(--g); }
+        .subj-on { background: var(--g) !important; color: #fff !important; border-color: var(--g) !important; }
+        .st-sym { font-size: 16px; }
+        .cls-tabs { max-width: 1200px; margin: 16px auto 0; display: flex; gap: 6px; flex-wrap: wrap; }
+        .cls-tab {
+          background: none; border: 1px solid var(--wb); border-radius: 6px;
+          padding: 5px 14px; font-size: 13px; cursor: pointer; color: var(--mt);
+          transition: all .2s; font-family: 'DM Sans', sans-serif;
+        }
+        .cls-tab:hover { color: var(--g); border-color: var(--g); }
+        .cls-on { background: #fff; color: var(--g); border-color: var(--g); font-weight: 600; }
+        .topic-grid { max-width: 1200px; margin: 20px auto 0; display: flex; flex-wrap: wrap; gap: 8px; min-height: 72px; }
+        .topic-pill {
+          background: #fff; border: 1px solid var(--wb); border-radius: 100px;
+          padding: 6px 16px; font-size: 13px; color: var(--tx); transition: border-color .2s, color .2s;
+        }
+        .topic-pill:hover { border-color: var(--g); color: var(--g); }
+        .subj-desc { max-width: 1200px; margin: 22px auto 0; font-size: 14px; color: var(--mt); }
+
+        /* COMPARISON */
+        .comp { padding: 88px 24px; background: var(--pc); text-align: center; }
+        .comp .sec-ew, .comp .sec-h { margin-left: auto; margin-right: auto; }
+        .comp-wrap { max-width: 680px; margin: 44px auto 0; overflow: auto; }
+        .comp-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .comp-table th { padding: 12px 16px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--mt); border-bottom: 2px solid var(--wb); }
+        .th-us { color: var(--g) !important; }
+        .comp-table td { padding: 13px 16px; border-bottom: 1px solid #F0EBE3; color: var(--tx); }
+        .comp-table tr:last-child td { border-bottom: none; }
+        .td-us { background: rgba(27,67,50,.04); }
+        .ck-y { color: var(--g); font-weight: 700; font-size: 15px; }
+        .ck-n { color: #EF4444; font-size: 15px; }
+        .ck-p { color: var(--a2); font-size: 15px; font-weight: 700; }
+
+        /* PERSONA */
+        .persona { padding: 88px 24px; background: var(--sf); }
+        .persona-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .pc { background: #fff; border: 1px solid var(--wb); border-radius: 16px; padding: 36px; }
+        .pc-parent { border-top: 4px solid var(--g); }
+        .pc-teacher { border-top: 4px solid var(--a2); }
+        .pc-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--mt); margin-bottom: 12px; }
+        .pc h3 { font-family: 'Fraunces', Georgia, serif; font-size: 22px; font-weight: 600; margin: 0 0 20px; line-height: 1.25; color: var(--tx); }
+        .pc ul { list-style: none; padding: 0; margin: 0 0 24px; display: flex; flex-direction: column; gap: 10px; }
+        .pc li { font-size: 14px; color: var(--mt); line-height: 1.5; padding-left: 18px; position: relative; }
+        .pc li::before { content: '✓'; color: var(--g); font-weight: 700; position: absolute; left: 0; }
+
+        /* PRICING */
+        .pricing { padding: 88px 24px; background: var(--pc); text-align: center; }
+        .pricing .sec-ew, .pricing .sec-h { margin-left: auto; margin-right: auto; }
+        .pr-grid { max-width: 760px; margin: 52px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+        .pr-card { background: #fff; border: 1px solid var(--wb); border-radius: 16px; padding: 32px; text-align: left; position: relative; }
+        .pr-paid { background: var(--g); border-color: var(--g); }
+        .pr-badge {
+          position: absolute; top: -13px; right: 22px;
+          background: var(--a2); color: #fff; font-size: 10.5px; font-weight: 700;
+          padding: 4px 12px; border-radius: 100px; text-transform: uppercase; letter-spacing: .06em;
+        }
+        .pr-lbl { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--mt); margin-bottom: 8px; }
+        .pr-paid .pr-lbl { color: rgba(255,255,255,.6); }
+        .pr-amt { font-family: 'Fraunces', Georgia, serif; font-size: 44px; font-weight: 700; color: var(--tx); line-height: 1; margin-bottom: 6px; }
+        .pr-paid .pr-amt { color: #fff; }
+        .pr-amt span { font-size: 16px; font-weight: 400; color: var(--mt); }
+        .pr-paid .pr-amt span { color: rgba(255,255,255,.6); }
+        .pr-desc { font-size: 13px; color: var(--mt); margin-bottom: 26px; }
+        .pr-paid .pr-desc { color: rgba(255,255,255,.65); }
+        .pr-feats { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 10px; }
+        .pr-feats li { font-size: 13.5px; display: flex; gap: 8px; align-items: flex-start; }
+        .pr-yes { color: var(--tx); }
+        .pr-yes::before { content: '✓'; color: var(--g); font-weight: 700; }
+        .pr-no { color: var(--mt); opacity: .6; }
+        .pr-no::before { content: '✗'; color: var(--mt); }
+        .pr-paid .pr-yes { color: rgba(255,255,255,.88); }
+        .pr-paid .pr-yes::before { color: var(--a3); }
+        .pr-paid .b-outline { border-color: rgba(255,255,255,.4); color: #fff; }
+        .pr-paid .b-amber { background: #fff; color: var(--g); }
+        .pr-paid .b-amber:hover { background: rgba(255,255,255,.9); }
+
+        /* PHILOSOPHY */
+        .phil { padding: 88px 24px; background: var(--sf); }
+        .phil .sec-ew, .phil .sec-h { max-width: 1200px; margin-left: auto; margin-right: auto; }
+        .phil-grid { max-width: 1200px; margin: 52px auto 0; display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+        .phil-card { background: #fff; border: 1px solid var(--wb); border-radius: 12px; padding: 32px; }
+        .phil-n { font-family: 'Fraunces', Georgia, serif; font-size: 52px; font-weight: 700; color: var(--g); opacity: .12; line-height: 1; margin-bottom: 14px; }
+        .phil-card h3 { font-family: 'Fraunces', Georgia, serif; font-size: 20px; font-weight: 600; color: var(--tx); margin: 0 0 12px; }
+        .phil-card p { font-size: 14px; line-height: 1.72; color: var(--mt); margin: 0; }
+
+        /* CTA */
+        .cta { padding: 100px 24px; background: var(--g); text-align: center; }
+        .cta-h { font-family: 'Fraunces', Georgia, serif; font-size: clamp(30px, 5vw, 52px); font-weight: 700; color: #fff; margin: 0 0 16px; letter-spacing: -.02em; }
+        .cta-sub { font-size: 16px; color: rgba(255,255,255,.7); margin: 0 0 38px; }
+        .cta-contact { margin-top: 22px; font-size: 13px; color: rgba(255,255,255,.5); }
+        .cta-contact a { color: rgba(255,255,255,.78); text-decoration: none; }
+        .cta-contact a:hover { color: #fff; }
+
+        /* FOOTER */
+        .lf { background: #0F2419; padding: 30px 24px; }
+        .lf-i { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+        .lf .ll-mark { background: var(--g2); }
+        .lf-nav { display: flex; gap: 2px; flex-wrap: wrap; }
+        .lf-nav button, .lf-nav a {
+          background: none; border: none; cursor: pointer;
+          font-size: 13px; color: rgba(255,255,255,.48); padding: 6px 10px;
+          text-decoration: none; transition: color .2s; font-family: 'DM Sans', sans-serif;
+        }
+        .lf-nav button:hover, .lf-nav a:hover { color: #fff; }
+        .lf-copy { font-size: 12px; color: rgba(255,255,255,.32); margin: 0; }
+
+        /* ANIMATIONS */
+        @keyframes fws { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes fbadge { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes uline { to { transform: scaleX(1); } }
+        @keyframes pdot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(1.3); } }
+        @keyframes gbar { from { width: 0; } to { width: 72%; } }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+          .hero-i { grid-template-columns: 1fr; gap: 48px; }
+          .hero-r { order: -1; }
+          .ws { max-width: 480px; margin: 0 auto; }
+          .fb { display: none; }
+          .how-layout { grid-template-columns: 1fr; }
+          .how-detail { position: static; }
+          .ln-links, .ln-ctas { display: none; }
+          .ham { display: flex; }
+        }
+        @media (max-width: 768px) {
+          .hero { padding: 100px 20px 60px; }
+          .prob-cards { grid-template-columns: 1fr; }
+          .phil-grid { grid-template-columns: 1fr; }
+          .pr-grid { grid-template-columns: 1fr; }
+          .persona-grid { grid-template-columns: 1fr; }
+          .stats-i { gap: 28px; }
+          .how-detail { padding: 26px; }
         }
       `}</style>
     </div>

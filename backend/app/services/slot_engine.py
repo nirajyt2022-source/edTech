@@ -15965,6 +15965,12 @@ import time as _time_module
 # ---------------------------------------------------------------------------
 # Meta cache: in-memory TTL cache (grade + subject + topic + bloom_level)
 # Cache key = md5(grade|subject|topic|bloom_level), TTL = 3600 s
+#
+# IN-PROCESS CACHE — Resets on server restart.
+# Works correctly for single-process Railway deployment.
+# If you ever switch to multiple workers or multiple Railway services,
+# replace this with Redis using: pip install redis
+# and change the cache to: redis_client.setex(key, TTL, json.dumps(meta))
 # ---------------------------------------------------------------------------
 
 _META_CACHE: dict[str, dict] = {}

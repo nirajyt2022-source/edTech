@@ -2,11 +2,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import { useChildren } from '@/lib/children'
+import { getTopicName } from '@/lib/curriculum'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ProgressTimeline, type TimelineSession } from '@/components/ProgressTimeline'
+import { StreakCard } from '@/components/StreakCard'
+import { InsightCard } from '@/components/InsightCard'
+
+// ─── Interfaces ──────────────────────────────────────────────────────────────
 
 interface OverallStats {
   total_worksheets: number
@@ -37,6 +43,28 @@ interface DashboardData {
   recent_topics: RecentTopic[]
 }
 
+interface GraphTopicData {
+  mastery_level: 'unknown' | 'learning' | 'improving' | 'mastered'
+  streak: number
+  last_practiced_at: string | null
+}
+
+interface GraphSummary {
+  child_id: string
+  mastered_topics: string[]
+  improving_topics: string[]
+  needs_attention: string[]
+  strongest_subject: string | null
+  weakest_subject: string | null
+  total_sessions: number
+  total_questions: number
+  overall_accuracy: number
+  learning_velocity: string
+  last_updated_at: string | null
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 function formatSkillTag(tag: string): string {
   return tag
     .replace(/^(mth|eng|sci|hin|comp|gk|moral|health)_c\d+_/, '')
@@ -59,56 +87,42 @@ function getGreeting(): string {
 
 function masteryColor(level: string): string {
   switch (level) {
-    case 'mastered':
-      return 'bg-emerald-100 text-emerald-800 border-emerald-200'
-    case 'improving':
-      return 'bg-blue-100 text-blue-800 border-blue-200'
-    case 'learning':
-      return 'bg-amber-100 text-amber-800 border-amber-200'
-    case 'unknown':
-      return 'bg-gray-100 text-gray-600 border-gray-200'
-    default:
-      return 'bg-gray-100 text-gray-600 border-gray-200'
+    case 'mastered': return 'bg-emerald-100 text-emerald-800 border-emerald-200'
+    case 'improving': return 'bg-blue-100 text-blue-800 border-blue-200'
+    case 'learning':  return 'bg-amber-100 text-amber-800 border-amber-200'
+    default:          return 'bg-gray-100 text-gray-600 border-gray-200'
   }
 }
 
 function masteryLabel(level: string): string {
   switch (level) {
-    case 'mastered':
-      return 'Mastered'
-    case 'improving':
-      return 'Improving'
-    case 'learning':
-      return 'Learning'
-    case 'unknown':
-      return 'Not Started'
-    default:
-      return level.charAt(0).toUpperCase() + level.slice(1)
+    case 'mastered': return 'Mastered'
+    case 'improving': return 'Improving'
+    case 'learning':  return 'Learning'
+    case 'unknown':   return 'Not Started'
+    default: return level.charAt(0).toUpperCase() + level.slice(1)
   }
 }
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function MasteryDistribution({ skills }: { skills: SkillProgress[] }) {
   const counts = { mastered: 0, improving: 0, learning: 0, unknown: 0 }
   for (const s of skills) {
     const level = s.mastery_level as keyof typeof counts
-    if (level in counts) {
-      counts[level]++
-    } else {
-      counts.unknown++
-    }
+    if (level in counts) counts[level]++
+    else counts.unknown++
   }
   const total = skills.length || 1
-
   const segments = [
-    { label: 'Mastered', count: counts.mastered, color: 'bg-emerald-500' },
-    { label: 'Improving', count: counts.improving, color: 'bg-blue-500' },
-    { label: 'Learning', count: counts.learning, color: 'bg-amber-500' },
-    { label: 'Not Started', count: counts.unknown, color: 'bg-gray-300' },
+    { label: 'Mastered',     count: counts.mastered,  color: 'bg-emerald-500' },
+    { label: 'Improving',    count: counts.improving, color: 'bg-blue-500' },
+    { label: 'Learning',     count: counts.learning,  color: 'bg-amber-500' },
+    { label: 'Not Started',  count: counts.unknown,   color: 'bg-gray-300' },
   ]
 
   return (
     <div className="space-y-3">
-      {/* Progress bar */}
       <div className="h-3 rounded-full bg-gray-100 overflow-hidden flex">
         {segments.map((seg) =>
           seg.count > 0 ? (
@@ -120,7 +134,6 @@ function MasteryDistribution({ skills }: { skills: SkillProgress[] }) {
           ) : null
         )}
       </div>
-      {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {segments.map((seg) => (
           <div key={seg.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -134,6 +147,194 @@ function MasteryDistribution({ skills }: { skills: SkillProgress[] }) {
   )
 }
 
+// Learning Health Card — three-bucket summary
+function LearningHealthCard({ summary }: { summary: GraphSummary }) {
+  const sections = [
+    {
+      count: summary.mastered_topics.length,
+      label: 'Mastered',
+      textColor: 'text-emerald-700',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      dot: 'bg-emerald-500',
+    },
+    {
+      count: summary.improving_topics.length,
+      label: 'Working On',
+      textColor: 'text-amber-700',
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      dot: 'bg-amber-500',
+    },
+    {
+      count: summary.needs_attention.length,
+      label: 'Needs Practice',
+      textColor: 'text-red-700',
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+      dot: 'bg-red-500',
+    },
+  ]
+
+  const totalTopics = sections.reduce((s, x) => s + x.count, 0)
+
+  if (totalTopics === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-fraunces">Learning Progress</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-4">
+            Complete a worksheet to see progress here.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-fraunces">Learning Progress</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-3 gap-3">
+          {sections.map((s) => (
+            <div
+              key={s.label}
+              className={`${s.bg} ${s.border} border rounded-xl p-4 text-center flex flex-col items-center justify-center gap-1.5 min-h-[88px]`}
+            >
+              <span className={`text-3xl font-bold font-fraunces ${s.textColor}`}>
+                {s.count}
+              </span>
+              <div className="flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-full ${s.dot}`} />
+                <span className={`text-xs font-medium ${s.textColor}`}>{s.label}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Subject grid — expandable per-subject topic list
+function SubjectGrid({
+  graph,
+}: {
+  graph: Record<string, Record<string, GraphTopicData>>
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null)
+
+  const subjects = Object.entries(graph).filter(
+    ([, topics]) => Object.keys(topics).length > 0
+  )
+
+  if (subjects.length === 0) return null
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-fraunces">Progress by Subject</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {subjects.map(([subject, topics]) => {
+            const topicList = Object.entries(topics)
+            const masteredCount = topicList.filter(
+              ([, t]) => t.mastery_level === 'mastered'
+            ).length
+            const isOpen = expanded === subject
+
+            return (
+              <div
+                key={subject}
+                className="border border-border/30 rounded-xl overflow-hidden"
+              >
+                {/* Subject row — always visible */}
+                <button
+                  onClick={() => setExpanded(isOpen ? null : subject)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-secondary/20 active:bg-secondary/40 transition-colors min-h-[52px]"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="font-semibold text-foreground">{subject}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {masteredCount}/{topicList.length}
+                    </span>
+                  </div>
+                  {/* Mini progress bar */}
+                  <div className="flex items-center gap-3">
+                    <div className="hidden sm:block w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                      {masteredCount > 0 && (
+                        <div
+                          className="h-full bg-emerald-500 rounded-full transition-all"
+                          style={{ width: `${(masteredCount / topicList.length) * 100}%` }}
+                        />
+                      )}
+                    </div>
+                    <svg
+                      className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+
+                {/* Topic list — shown when expanded */}
+                {isOpen && (
+                  <div className="border-t border-border/20 divide-y divide-border/10">
+                    {topicList.map(([topicSlug, topicData]) => {
+                      const level = topicData.mastery_level
+                      const dotColor =
+                        level === 'mastered'  ? 'bg-emerald-500' :
+                        level === 'improving' ? 'bg-amber-500'   :
+                        'bg-red-400'
+                      const badgeClass =
+                        level === 'mastered'  ? 'text-emerald-700 bg-emerald-50' :
+                        level === 'improving' ? 'text-amber-700 bg-amber-50'     :
+                        'text-red-700 bg-red-50'
+                      const label =
+                        level === 'mastered'  ? 'Mastered'       :
+                        level === 'improving' ? 'Working On'     :
+                        'Needs Practice'
+
+                      return (
+                        <div
+                          key={topicSlug}
+                          className="flex items-center justify-between px-4 py-3 min-h-[52px]"
+                        >
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColor}`} />
+                            <span className="text-sm text-foreground truncate">
+                              {getTopicName(topicSlug)}
+                            </span>
+                          </div>
+                          <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ml-2 ${badgeClass}`}
+                          >
+                            {label}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// Shimmer skeletons for the initial load
 function LoadingSkeleton() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
@@ -146,18 +347,36 @@ function LoadingSkeleton() {
           <Skeleton key={i} className="h-28 rounded-xl" />
         ))}
       </div>
+      <Skeleton className="h-40 rounded-xl" />
       <Skeleton className="h-64 rounded-xl" />
     </div>
   )
 }
 
+// Shimmer for the learning graph section only
+function LearningGraphSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-40 rounded-xl" />
+      <Skeleton className="h-52 rounded-xl" />
+    </div>
+  )
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const { user } = useAuth()
   const { children: childrenList, loading: childrenLoading } = useChildren()
   const displayName = user?.user_metadata?.name?.split(' ')[0] || 'there'
+
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null)
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+  const [graphSummary, setGraphSummary] = useState<GraphSummary | null>(null)
+  const [graph, setGraph] = useState<Record<string, Record<string, GraphTopicData>> | null>(null)
+  const [sessions, setSessions] = useState<TimelineSession[]>([])
   const [loading, setLoading] = useState(false)
+  const [graphLoading, setGraphLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Auto-select first child
@@ -184,15 +403,47 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
     }
   }, [])
 
+  const fetchLearningGraph = useCallback(async (childId: string) => {
+    setGraphLoading(true)
+    // Use allSettled so a failure in one endpoint doesn't block the others
+    const [summaryResult, graphResult, historyResult] = await Promise.allSettled([
+      api.get(`/api/children/${childId}/graph/summary`),
+      api.get(`/api/children/${childId}/graph`),
+      api.get(`/api/children/${childId}/graph/history?limit=30`),
+    ])
+
+    if (summaryResult.status === 'fulfilled') {
+      setGraphSummary(summaryResult.value.data)
+    } else {
+      console.warn('[ParentDashboard] Graph summary failed:', summaryResult.reason)
+      setGraphSummary(null)
+    }
+
+    if (graphResult.status === 'fulfilled') {
+      setGraph(graphResult.value.data?.graph ?? {})
+    } else {
+      console.warn('[ParentDashboard] Graph data failed:', graphResult.reason)
+      setGraph(null)
+    }
+
+    if (historyResult.status === 'fulfilled') {
+      setSessions(historyResult.value.data?.sessions ?? [])
+    } else {
+      console.warn('[ParentDashboard] Graph history failed:', historyResult.reason)
+      setSessions([])
+    }
+
+    setGraphLoading(false)
+  }, [])
+
   useEffect(() => {
     if (selectedChildId) {
       fetchDashboard(selectedChildId)
+      fetchLearningGraph(selectedChildId)
     }
-  }, [selectedChildId, fetchDashboard])
+  }, [selectedChildId, fetchDashboard, fetchLearningGraph])
 
-  if (childrenLoading) {
-    return <LoadingSkeleton />
-  }
+  if (childrenLoading) return <LoadingSkeleton />
 
   if (childrenList.length === 0) {
     return (
@@ -274,7 +525,6 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
         <>
           {/* Stats cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Total Worksheets */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -295,7 +545,6 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
               </CardContent>
             </Card>
 
-            {/* Current Streak */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -319,7 +568,6 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
               </CardContent>
             </Card>
 
-            {/* Total Stars */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -340,7 +588,6 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
               </CardContent>
             </Card>
 
-            {/* Mastery Overview */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -356,6 +603,30 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
               </CardContent>
             </Card>
           </div>
+
+          {/* Insight Card — plain-English report + today's recommendation */}
+          <InsightCard
+            childId={selectedChildId ?? ''}
+            onNavigate={onNavigate ? () => onNavigate('generator') : undefined}
+          />
+
+          {/* Learning Health Card */}
+          {graphLoading ? (
+            <LearningGraphSkeleton />
+          ) : graphSummary ? (
+            <LearningHealthCard summary={graphSummary} />
+          ) : null}
+
+          {/* Streak card — fetches engagement independently */}
+          <StreakCard childId={selectedChildId ?? ''} sessions={sessions} />
+
+          {/* 30-day activity timeline */}
+          <ProgressTimeline sessions={sessions} loading={graphLoading} />
+
+          {/* Subject deep dive — only after graph data loaded */}
+          {!graphLoading && graph && Object.keys(graph).length > 0 && (
+            <SubjectGrid graph={graph} />
+          )}
 
           {/* Skills Table */}
           {dashboard.skills.length > 0 && (
@@ -385,26 +656,19 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
                               {formatSkillTag(skill.skill_tag)}
                             </td>
                             <td className="py-3 px-2">
-                              <Badge
-                                variant="outline"
-                                className={masteryColor(skill.mastery_level)}
-                              >
+                              <Badge variant="outline" className={masteryColor(skill.mastery_level)}>
                                 {masteryLabel(skill.mastery_level)}
                               </Badge>
                             </td>
                             <td className="py-3 px-2 text-right">
-                              <span className={`font-semibold ${skill.accuracy >= 80
-                                ? 'text-emerald-600'
-                                : skill.accuracy >= 60
-                                  ? 'text-amber-600'
-                                  : 'text-red-500'
-                                }`}>
+                              <span className={`font-semibold ${
+                                skill.accuracy >= 80 ? 'text-emerald-600' :
+                                skill.accuracy >= 60 ? 'text-amber-600' : 'text-red-500'
+                              }`}>
                                 {skill.accuracy}%
                               </span>
                             </td>
-                            <td className="py-3 px-2 text-right text-foreground">
-                              {skill.streak}
-                            </td>
+                            <td className="py-3 px-2 text-right text-foreground">{skill.streak}</td>
                             <td className="py-3 px-2 text-right text-muted-foreground">
                               {skill.correct_attempts}/{skill.total_attempts}
                             </td>
@@ -463,18 +727,17 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
           )}
 
           {/* Empty state when no data at all */}
-          {dashboard.overall_stats.total_worksheets === 0 &&
-            dashboard.skills.length === 0 && (
-              <EmptyState
-                icon={
-                  <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                  </svg>
-                }
-                title="No progress yet"
-                description="Generate your first worksheet to get started! Progress will appear here as your child completes worksheets."
-              />
-            )}
+          {dashboard.overall_stats.total_worksheets === 0 && dashboard.skills.length === 0 && (
+            <EmptyState
+              icon={
+                <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                </svg>
+              }
+              title="No progress yet"
+              description="Complete a worksheet to see progress here."
+            />
+          )}
         </>
       )}
     </div>
