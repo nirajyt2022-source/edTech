@@ -1442,6 +1442,66 @@ def _slot_to_question(q: dict, idx: int) -> Question:
 
 
 # ──────────────────────────────────────────────
+# Adaptive difficulty helper (Phase 1 — Learning Graph)
+# ──────────────────────────────────────────────
+
+_ADAPTIVE_DEFAULTS: dict = {
+    "bloom_level": "recall",
+    "scaffolding": True,
+    "challenge_mode": False,
+    "format_mix": {"mcq": 40, "fill_blank": 30, "word_problem": 30},
+}
+
+
+def _build_adaptive_hint(child_id: str | None, topic: str) -> str | None:
+    """Fetch adaptive difficulty config for this child+topic and return a prompt hint string.
+
+    Always returns safely — falls back to defaults on any error.
+    Returns None when defaults are active and no child personalisation applies.
+    """
+    config = dict(_ADAPTIVE_DEFAULTS)
+
+    if child_id:
+        try:
+            from app.services.learning_graph import get_learning_graph_service
+            svc = get_learning_graph_service()
+            config = svc.get_adaptive_difficulty(child_id, topic)
+            logger.info(
+                "[adaptive] child=%s topic=%s bloom=%s scaffolding=%s challenge=%s",
+                child_id, topic,
+                config.get("bloom_level"), config.get("scaffolding"), config.get("challenge_mode"),
+            )
+        except Exception as exc:
+            logger.warning(
+                "[_build_adaptive_hint] get_adaptive_difficulty failed "
+                "(child=%s topic=%s), using defaults. Error: %s",
+                child_id, topic, exc,
+            )
+
+    parts: list[str] = []
+
+    bloom = config.get("bloom_level", "recall")
+    parts.append(
+        f"COGNITIVE LEVEL: Target {bloom}-level questions "
+        "(recall = simple recognition; application = using skill in context; "
+        "reasoning = multi-step or analytical)."
+    )
+
+    fmt_mix = config.get("format_mix") or {}
+    if fmt_mix:
+        mix_str = ", ".join(f"{k} {v}%" for k, v in fmt_mix.items())
+        parts.append(f"QUESTION TYPE MIX (guideline only): {mix_str}.")
+
+    if config.get("scaffolding"):
+        parts.append("Include helpful hints and examples for each question.")
+
+    if config.get("challenge_mode"):
+        parts.append("Make questions more challenging with multi-step problems.")
+
+    return "\n".join(parts) if parts else None
+
+
+# ──────────────────────────────────────────────
 # Generation endpoints
 # ──────────────────────────────────────────────
 
@@ -1523,6 +1583,9 @@ async def generate_worksheet(
                         topic=original_skill,
                     )
 
+                # Adaptive difficulty: personalise prompt for this child+topic
+                adaptive_hint = _build_adaptive_hint(request.child_id, original_skill)
+
                 meta, slot_questions = run_slot_pipeline(
                     client=client,
                     grade=request.grade_level,
@@ -1535,6 +1598,7 @@ async def generate_worksheet(
                     worksheet_plan=worksheet_plan,
                     constraints=constraints_dict,
                     child_id=request.child_id,
+                    adaptive_hint=adaptive_hint,
                 )
 
                 # ── Skill purity enforcement ──
@@ -1653,6 +1717,9 @@ async def generate_worksheet(
                 "custom" if request.mix_recipe else "default",
             )
 
+        # Adaptive difficulty: personalise prompt for this child+topic
+        adaptive_hint = _build_adaptive_hint(request.child_id, effective_topic)
+
         meta, slot_questions = run_slot_pipeline(
             client=client,
             grade=request.grade_level,
@@ -1665,6 +1732,7 @@ async def generate_worksheet(
             worksheet_plan=worksheet_plan,
             constraints=constraints_dict,
             child_id=request.child_id,
+            adaptive_hint=adaptive_hint,
         )
 
         # Safety net: ensure visual hydration ran (idempotent if already done)

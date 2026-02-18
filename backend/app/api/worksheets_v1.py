@@ -203,6 +203,7 @@ class ChainRequestV1(BaseModel):
 
 class AttemptPayloadV1(BaseModel):
     student_id: Optional[str] = None
+    child_id: Optional[str] = None   # Learning Graph: child profile ID (Phase 1)
     question: dict
     student_answer: str
     mode: str = "single"
@@ -211,6 +212,38 @@ class AttemptPayloadV1(BaseModel):
     grade: Optional[str] = None
     subject: Optional[str] = None
     topic: Optional[str] = None
+
+
+# ── Worksheet submission models (Phase 1 — Learning Graph) ──
+
+class WorksheetAnswerItem(BaseModel):
+    question_id: str
+    student_answer: str
+
+
+class WorksheetSubmitRequest(BaseModel):
+    """Submit all answers for a completed worksheet in one call.
+    This is the trigger for a Learning Graph session record.
+    """
+    child_id: Optional[str] = None
+    worksheet_id: Optional[str] = None
+    topic: str
+    subject: str
+    grade: int
+    bloom_level: str = "recall"
+    questions: list[dict]           # full question dicts from the worksheet
+    answers: dict[str, str]         # question_id → student_answer
+
+
+class WorksheetSubmitResponse(BaseModel):
+    score_pct: int
+    questions_total: int
+    questions_correct: int
+    format_results: dict
+    error_tags: list[str]
+    mastery_level: str
+    mastery_changed: bool
+    streak: int
 
 
 class MasteryResetRequestV1(BaseModel):
@@ -384,6 +417,104 @@ def attempt_v1(payload: AttemptPayloadV1):
     return out
 
 
+@router.post("/submit", response_model=WorksheetSubmitResponse)
+@instrument(route="/api/v1/worksheets/submit", version="v1")
+def submit_worksheet_v1(req: WorksheetSubmitRequest):
+    """
+    Submit all answers for a completed worksheet in one call.
+    Grades every question, then records a Learning Graph session if child_id is provided.
+    The Learning Graph write is best-effort — it never breaks the grading response.
+    """
+    from app.services.slot_engine import grade_student_answer
+
+    # ── 1. Grade every answer and accumulate format_results ──
+    questions_total = len(req.questions)
+    questions_correct = 0
+    had_wrong = False
+    format_results: dict[str, dict] = {}
+
+    for q in req.questions:
+        q_id = str(q.get("id", ""))
+        student_ans = req.answers.get(q_id, "")
+
+        # Use 'format' first (slot engine), then 'type' (legacy), then 'role', fallback 'unknown'
+        fmt: str = q.get("format") or q.get("type") or q.get("role") or "unknown"
+
+        grade_result = grade_student_answer(q, student_ans)
+        is_correct: bool = bool(grade_result.get("is_correct", False))
+
+        if is_correct:
+            questions_correct += 1
+        else:
+            had_wrong = True
+
+        if fmt not in format_results:
+            format_results[fmt] = {"correct": 0, "total": 0}
+        format_results[fmt]["total"] += 1
+        if is_correct:
+            format_results[fmt]["correct"] += 1
+
+    score_pct = round(questions_correct / questions_total * 100) if questions_total else 0
+
+    # ── 2. Compute error_tags ──
+    error_tags: list[str] = []
+    if had_wrong:
+        subject_lower = (req.subject or "").lower()
+        if any(kw in subject_lower for kw in ("math", "maths", "mathematics")):
+            error_tags = ["calculation_error"]
+        else:
+            error_tags = ["answer_error"]
+
+    # ── 3. Record Learning Graph session (best-effort — never breaks grading) ──
+    mastery_level = "unknown"
+    mastery_changed = False
+    streak = 0
+
+    if req.child_id:
+        try:
+            from app.services.learning_graph import get_learning_graph_service
+            svc = get_learning_graph_service()
+            session = svc.record_session(
+                child_id=req.child_id,
+                topic_slug=req.topic,
+                subject=req.subject,
+                grade=req.grade,
+                bloom_level=req.bloom_level,
+                format_results=format_results,
+                error_tags=error_tags,
+                score_pct=score_pct,
+                questions_total=questions_total,
+                questions_correct=questions_correct,
+                worksheet_id=req.worksheet_id,
+            )
+            mastery_level = session["mastery_after"]
+            mastery_changed = session["mastery_changed"]
+            streak = session["new_streak"]
+            logger.info(
+                "[submit] child=%s topic=%s score=%d%% mastery %s→%s streak=%d",
+                req.child_id, req.topic, score_pct,
+                session["mastery_before"], mastery_level, streak,
+            )
+        except Exception as exc:
+            logger.error(
+                "[submit_worksheet_v1] Learning Graph record_session failed "
+                "(child=%s topic=%s): %s",
+                req.child_id, req.topic, exc,
+            )
+            # mastery_level/mastery_changed/streak stay as safe defaults
+
+    return WorksheetSubmitResponse(
+        score_pct=score_pct,
+        questions_total=questions_total,
+        questions_correct=questions_correct,
+        format_results=format_results,
+        error_tags=error_tags,
+        mastery_level=mastery_level,
+        mastery_changed=mastery_changed,
+        streak=streak,
+    )
+
+
 @router.get("/mastery/get", response_model=MasteryGetResponse)
 @instrument(route="/api/v1/worksheets/mastery/get", version="v1")
 def mastery_get_v1(student_id: str):
@@ -485,6 +616,10 @@ async def _generate_single_worksheet(
             topic=topic,
         )
 
+    # Adaptive difficulty hint for this child+topic
+    from app.api.worksheets import _build_adaptive_hint
+    adaptive_hint = _build_adaptive_hint(child_id, topic)
+
     # run_slot_pipeline is synchronous (makes LLM calls); wrap in thread
     # so asyncio.gather can run multiple generations in parallel.
     meta, slot_questions = await asyncio.to_thread(
@@ -500,6 +635,7 @@ async def _generate_single_worksheet(
         worksheet_plan=worksheet_plan,
         constraints=None,
         child_id=child_id,
+        adaptive_hint=adaptive_hint,
     )
 
     hydrate_visuals(slot_questions, visuals_only=False)

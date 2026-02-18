@@ -233,3 +233,84 @@ ALTER TABLE worksheets
 ADD COLUMN IF NOT EXISTS class_id UUID REFERENCES teacher_classes(id) ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS idx_worksheets_class_id ON worksheets(class_id);
+
+-- ============================================================
+-- PHASE 1: CHILD LEARNING GRAPH TABLES
+-- These are purely additive. Do not modify existing tables.
+-- ============================================================
+
+-- TABLE 1: Every worksheet attempt by every child
+CREATE TABLE IF NOT EXISTS learning_sessions (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at        TIMESTAMPTZ DEFAULT now() NOT NULL,
+  child_id          UUID REFERENCES children(id) ON DELETE CASCADE,
+  worksheet_id      UUID REFERENCES worksheets(id) ON DELETE SET NULL,
+  topic_slug        TEXT NOT NULL,
+  subject           TEXT NOT NULL,
+  grade             INTEGER NOT NULL,
+  bloom_level       TEXT NOT NULL DEFAULT 'recall',
+  score_pct         INTEGER,
+  questions_total   INTEGER DEFAULT 0,
+  questions_correct INTEGER DEFAULT 0,
+  duration_seconds  INTEGER,
+  format_results    JSONB DEFAULT '{}',
+  error_tags        TEXT[] DEFAULT '{}',
+  mastery_before    TEXT,
+  mastery_after     TEXT
+);
+
+-- TABLE 2: Current mastery state per child per topic
+CREATE TABLE IF NOT EXISTS topic_mastery (
+  id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  child_id          UUID REFERENCES children(id) ON DELETE CASCADE,
+  topic_slug        TEXT NOT NULL,
+  subject           TEXT NOT NULL,
+  grade             INTEGER NOT NULL,
+  mastery_level     TEXT NOT NULL DEFAULT 'unknown',
+  streak            INTEGER DEFAULT 0,
+  sessions_total    INTEGER DEFAULT 0,
+  sessions_correct  INTEGER DEFAULT 0,
+  last_practiced_at TIMESTAMPTZ,
+  last_error_type   TEXT,
+  format_weakness   TEXT,
+  bloom_ceiling     TEXT DEFAULT 'recall',
+  revision_due_at   TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ DEFAULT now() NOT NULL,
+  updated_at        TIMESTAMPTZ DEFAULT now() NOT NULL,
+  UNIQUE(child_id, topic_slug)
+);
+
+-- TABLE 3: Summary per child (used by parent dashboard)
+CREATE TABLE IF NOT EXISTS child_learning_summary (
+  child_id          UUID REFERENCES children(id) ON DELETE CASCADE PRIMARY KEY,
+  mastered_topics   TEXT[] DEFAULT '{}',
+  improving_topics  TEXT[] DEFAULT '{}',
+  needs_attention   TEXT[] DEFAULT '{}',
+  strongest_subject TEXT,
+  weakest_subject   TEXT,
+  total_sessions    INTEGER DEFAULT 0,
+  total_questions   INTEGER DEFAULT 0,
+  overall_accuracy  INTEGER DEFAULT 0,
+  learning_velocity TEXT DEFAULT 'normal',
+  last_updated_at   TIMESTAMPTZ DEFAULT now()
+);
+
+-- INDEXES
+CREATE INDEX IF NOT EXISTS idx_ls_child ON learning_sessions(child_id);
+CREATE INDEX IF NOT EXISTS idx_ls_child_topic ON learning_sessions(child_id, topic_slug);
+CREATE INDEX IF NOT EXISTS idx_tm_child ON topic_mastery(child_id);
+CREATE INDEX IF NOT EXISTS idx_tm_child_slug ON topic_mastery(child_id, topic_slug);
+
+-- RLS POLICIES (users only see their own children's data)
+ALTER TABLE learning_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE topic_mastery ENABLE ROW LEVEL SECURITY;
+ALTER TABLE child_learning_summary ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "users_see_own_child_sessions" ON learning_sessions
+  FOR ALL USING (child_id IN (SELECT id FROM children WHERE user_id = auth.uid()));
+
+CREATE POLICY "users_see_own_topic_mastery" ON topic_mastery
+  FOR ALL USING (child_id IN (SELECT id FROM children WHERE user_id = auth.uid()));
+
+CREATE POLICY "users_see_own_summary" ON child_learning_summary
+  FOR ALL USING (child_id IN (SELECT id FROM children WHERE user_id = auth.uid()));

@@ -15464,6 +15464,7 @@ def run_slot_pipeline(
     worksheet_plan: list[dict] | None = None,
     constraints: dict | None = None,
     child_id: str | None = None,
+    adaptive_hint: str | None = None,
 ) -> tuple[dict, list[dict]]:
     """Full slot-based generation pipeline with controlled variation.
 
@@ -15642,6 +15643,9 @@ def run_slot_pipeline(
         # Inject mastery constraint for targeted practice
         if mastery_constraint and slot_type in ("recognition", "application", "representation"):
             slot_instruction += f"\n\nMASTERY FOCUS: {mastery_constraint}"
+        # Inject adaptive difficulty hint from Learning Graph (Phase 1)
+        if adaptive_hint:
+            slot_instruction += f"\n\nADAPTIVE: {adaptive_hint}"
 
         generated = False
         for attempt in range(max_attempts):
