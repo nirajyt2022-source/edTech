@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: str
 
+    # Resend (email delivery)
+    resend_api_key: str = ""
+    resend_from_email: str = "onboarding@resend.dev"
+
     # CORS
     frontend_url: str = "http://localhost:5173"
 

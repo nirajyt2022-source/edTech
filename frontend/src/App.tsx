@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import SharedWorksheet from './pages/SharedWorksheet'
+import ClassReport from './pages/ClassReport'
 import WorksheetGenerator from './pages/WorksheetGenerator'
 import SyllabusUpload from './pages/SyllabusUpload'
 import SavedWorksheets from './pages/SavedWorksheets'
@@ -320,9 +321,20 @@ function App() {
     return match ? match[1] : null
   }, [])
 
+  // Check if we're on a public /report/:token route (no auth required)
+  const reportToken = useMemo(() => {
+    const match = window.location.pathname.match(/^\/report\/([A-Za-z0-9_-]+)$/)
+    return match ? match[1] : null
+  }, [])
+
   // Public shared worksheet route — no auth providers needed
   if (sharedWorksheetId) {
     return <SharedWorksheet worksheetId={sharedWorksheetId} />
+  }
+
+  // Public class report route — no auth providers needed
+  if (reportToken) {
+    return <ClassReport token={reportToken} />
   }
 
   return (
