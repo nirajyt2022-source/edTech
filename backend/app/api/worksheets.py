@@ -1521,12 +1521,17 @@ async def _build_gen_context(
         get_topic_intelligence_agent, GenerationContext,
         _DEFAULT_BLOOM, _DEFAULT_FORMAT_MIX, _DEFAULT_SCAFFOLDING, _DEFAULT_CHALLENGE,
     )
+    # Normalise grade: accept "Class 5", "5", or int 5 → int 5
+    grade_int: int = (
+        grade if isinstance(grade, int)
+        else int(str(grade).replace("Class", "").strip())
+    )
     try:
         return await get_topic_intelligence_agent().build_context(
             child_id=child_id,
             topic_slug=topic_slug,
             subject=subject,
-            grade=int(grade),
+            grade=grade_int,
         )
     except Exception as exc:
         logger.warning(
@@ -1537,7 +1542,7 @@ async def _build_gen_context(
         return GenerationContext(
             topic_slug=topic_slug,
             subject=subject,
-            grade=int(grade),
+            grade=grade_int,
             ncert_chapter=topic_slug,       # fallback: topic name is the chapter
             ncert_subtopics=[],
             bloom_level=_DEFAULT_BLOOM,
