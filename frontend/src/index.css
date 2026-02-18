@@ -357,6 +357,86 @@ textarea::placeholder {
 .skeleton-text-sm { height: 0.875rem; }
 .skeleton-text-lg { height: 1.25rem; }
 
+/* ===== Landing Page ===== */
+
+.lp-hero {
+  background-color: #080F1E;
+}
+
+.lp-dot-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+.lp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(99, 179, 237, 0.28);
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(147, 197, 253);
+  letter-spacing: 0.01em;
+}
+
+.lp-hero-h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(2.5rem, 5vw, 3.75rem);
+  line-height: 1.1;
+  color: white;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+
+.lp-hero-h1 em {
+  font-style: italic;
+  color: hsl(199, 89%, 72%);
+}
+
+.lp-preview-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow:
+    0 30px 60px -20px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  transform: perspective(1000px) rotateY(-6deg) rotateX(3deg) translateZ(0);
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
+}
+
+.lp-preview-card:hover {
+  transform: perspective(1000px) rotateY(-1deg) rotateX(0.5deg) translateZ(0);
+}
+
+.lp-hero-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  background: linear-gradient(to bottom, transparent, white);
+}
+
+.lp-cta-section {
+  background-color: #080F1E;
+}
+
+.lp-stats-number {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: hsl(221, 83%, 53%);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
 /* Print styles */
 @page {
   size: A4;
