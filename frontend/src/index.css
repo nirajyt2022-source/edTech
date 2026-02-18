@@ -1,28 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Nunito:ital,wght@0,300..1000;1,300..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300..900;1,300..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Warm Scholar Palette */
-  --color-background: hsl(38 33% 97%);
-  --color-foreground: hsl(20 14% 10%);
-  --color-card: hsl(38 25% 99%);
-  --color-card-foreground: hsl(20 14% 10%);
-  --color-popover: hsl(38 25% 99%);
-  --color-popover-foreground: hsl(20 14% 10%);
+  /* Blue & White Theme */
+  --color-background: hsl(210 40% 98%);
+  --color-foreground: hsl(222 47% 11%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222 47% 11%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(222 47% 11%);
 
-  /* Brand Colors — Deep Forest Green */
-  --color-primary: hsl(151 55% 18%);
+  /* Brand Colors — Royal Blue */
+  --color-primary: hsl(221 83% 53%);
   --color-primary-foreground: hsl(0 0% 100%);
 
-  /* Warm secondary */
-  --color-secondary: hsl(38 20% 91%);
-  --color-secondary-foreground: hsl(20 14% 25%);
+  /* Light blue secondary */
+  --color-secondary: hsl(214 32% 91%);
+  --color-secondary-foreground: hsl(222 47% 20%);
 
-  --color-muted: hsl(38 20% 93%);
-  --color-muted-foreground: hsl(20 8% 48%);
+  --color-muted: hsl(214 25% 94%);
+  --color-muted-foreground: hsl(215 16% 47%);
 
-  /* Warm amber accent */
-  --color-accent: hsl(38 85% 47%);
+  /* Sky blue accent */
+  --color-accent: hsl(199 89% 48%);
   --color-accent-foreground: hsl(0 0% 100%);
 
   --color-destructive: hsl(0 72% 51%);
@@ -39,9 +39,13 @@
   --color-info-foreground: hsl(0 0% 100%);
 
   /* Borders */
-  --color-border: hsl(38 18% 87%);
-  --color-input: hsl(38 18% 87%);
-  --color-ring: hsl(151 55% 18%);
+  --color-border: hsl(214 32% 88%);
+  --color-input: hsl(214 32% 88%);
+  --color-ring: hsl(221 83% 53%);
+
+  /* Font families — customer-friendly */
+  --font-jakarta: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-fraunces: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   --radius: 0.5rem;
 }
@@ -56,7 +60,7 @@ html {
 }
 
 body {
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Nunito', system-ui, sans-serif;
   background-color: var(--color-background);
   color: var(--color-foreground);
   line-height: 1.6;
@@ -68,7 +72,7 @@ body {
 /* Typography Hierarchy */
 h1,
 h2 {
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 700;
   line-height: 1.15;
   color: var(--color-foreground);
@@ -79,7 +83,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 600;
   line-height: 1.3;
   color: var(--color-foreground);
@@ -368,7 +372,7 @@ textarea::placeholder {
   .print\:pb-2 { padding-bottom: 0.5rem !important; }
 
   html, body {
-    font-family: 'Nunito', 'DM Sans', system-ui, sans-serif;
+    font-family: 'Nunito', 'Plus Jakarta Sans', system-ui, sans-serif;
     font-size: 13px;
     line-height: 1.6;
     color: #000 !important;
