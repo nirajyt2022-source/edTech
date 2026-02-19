@@ -154,4 +154,27 @@ def build_question_prompt(slot: dict, context: GenerationContext) -> str:
             f"Stay strictly within the NCERT chapter '{context.ncert_chapter}'."
         )
 
+    # Hindi: inject Devanagari script anchor from profile
+    if context.subject.lower() == "hindi":
+        try:
+            from app.services.slot_engine import get_topic_profile as _gtp  # lazy — avoids circular import
+            _profile = _gtp(context.topic_slug)
+            _deva = (_profile or {}).get("devanagari_examples", [])
+        except Exception:
+            _deva = []
+        if _deva:
+            examples_str = "  ".join(_deva[:8])
+            parts.append(
+                "HINDI SCRIPT REQUIREMENT: Generate ALL question content in Devanagari "
+                f"script. Use these example words as reference: {examples_str}. "
+                "NEVER use transliterated Hindi (Roman script for Hindi words). "
+                "All Hindi words must use proper Devanagari Unicode characters."
+            )
+        else:
+            parts.append(
+                "HINDI SCRIPT REQUIREMENT: Generate ALL question content in Devanagari "
+                "script. NEVER use transliterated Hindi (Roman script for Hindi words). "
+                "All Hindi words must use proper Devanagari Unicode characters."
+            )
+
     return "\n".join(parts)

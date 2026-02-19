@@ -256,6 +256,12 @@ a:hover {
   border-radius: 2px;
 }
 
+/* Devanagari script rendering */
+.devanagari {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+  line-height: 1.8;
+}
+
 .decorative-dots::before {
   content: '• • •';
   color: hsl(221 60% 70%);

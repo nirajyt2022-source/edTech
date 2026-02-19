@@ -52,7 +52,7 @@ const MATHS_TOPICS_BY_GRADE: Record<number, string[]> = {
   1: [
     'Numbers 1 to 50 (Class 1)', 'Numbers 51 to 100 (Class 1)',
     'Addition up to 20 (Class 1)', 'Subtraction within 20 (Class 1)',
-    'Basic Shapes (Class 1)', 'Measurement (Class 1)',
+    'Basic Shapes (Class 1)', 'Spatial sense (in/out, near/far) (Class 1)', 'Measurement (Class 1)',
     'Time (Class 1)', 'Money (Class 1)',
   ],
   2: [
@@ -163,12 +163,15 @@ const HEALTH_TOPICS_BY_GRADE: Record<number, string[]> = {
 
 // Grade-aware Hindi topics (matching backend TOPIC_PROFILES keys)
 const HINDI_TOPICS_BY_GRADE: Record<number, string[]> = {
-  1: ['Varnamala Swar (Class 1)', 'Varnamala Vyanjan (Class 1)', 'Family Words (Class 1)', 'Simple Sentences (Class 1)'],
+  1: ['Varnamala Swar (Class 1)', 'Varnamala Vyanjan (Class 1)', 'Family Words (Class 1)', 'Simple Sentences in Hindi (Class 1)'],
   2: ['Matras Introduction (Class 2)', 'Two Letter Words (Class 2)', 'Three Letter Words (Class 2)', 'Rhymes and Poems (Class 2)', 'Nature Vocabulary (Class 2)'],
   3: ['Varnamala (Class 3)', 'Matras (Class 3)', 'Shabd Rachna (Class 3)', 'Vakya Rachna (Class 3)', 'Kahani Lekhan (Class 3)'],
   4: ['Anusvaar and Visarg (Class 4)', 'Vachan and Ling (Class 4)', 'Kaal (Class 4)', 'Patra Lekhan (Class 4)', 'Comprehension Hindi (Class 4)'],
   5: ['Muhavare (Class 5)', 'Paryayvachi Shabd (Class 5)', 'Vilom Shabd (Class 5)', 'Samas (Class 5)', 'Samvad Lekhan (Class 5)'],
 }
+
+/** Returns true when the string contains at least one Devanagari character. */
+const hasDevanagari = (text: string) => /[\u0900-\u097F]/.test(text)
 
 interface Question {
   id: string
@@ -1619,7 +1622,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                         </span>
                                       </div>
                                       <div className="flex-grow space-y-4">
-                                        <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
+                                        <p className={`text-lg font-medium text-foreground leading-snug${hasDevanagari(question.text ?? '') ? ' devanagari' : ''}`}>{question.text}</p>
                                         {question.visual_type && question.visual_data && (
                                           <div className="mt-3">
                                             <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
@@ -1686,7 +1689,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                 <div className="flex gap-5">
                                   <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold mt-0.5 print:border-black/30 print:text-black/60">{index + 1}</span>
                                   <div className="flex-grow space-y-4">
-                                    <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
+                                    <p className={`text-lg font-medium text-foreground leading-snug${hasDevanagari(question.text ?? '') ? ' devanagari' : ''}`}>{question.text}</p>
                                     {question.visual_type && question.visual_data && (
                                       <div className="mt-3">
                                         <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
@@ -1765,7 +1768,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                       </span>
                                     </div>
                                     <div className="flex-grow space-y-4">
-                                      <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
+                                      <p className={`text-lg font-medium text-foreground leading-snug${hasDevanagari(question.text ?? '') ? ' devanagari' : ''}`}>{question.text}</p>
                                       <div className="mt-4 space-y-3">
                                         <div className="border-b border-border/40 h-8"></div>
                                         <div className="border-b border-border/40 h-8"></div>

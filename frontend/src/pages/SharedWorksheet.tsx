@@ -3,6 +3,9 @@ import axios from 'axios'
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+/** Returns true when the string contains at least one Devanagari character. */
+const hasDevanagari = (text: string) => /[\u0900-\u097F]/.test(text)
+
 interface Question {
   id: string
   type: string
@@ -203,7 +206,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
 
                   <div className="flex-1 min-w-0">
                     {/* Question text */}
-                    <p className="text-stone-800 text-sm leading-relaxed whitespace-pre-wrap">
+                    <p className={`text-stone-800 text-sm leading-relaxed whitespace-pre-wrap${hasDevanagari(q.text ?? '') ? ' devanagari' : ''}`}>
                       {q.text}
                     </p>
 
@@ -251,7 +254,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
                 </div>
                 {worksheet.questions.filter(q => q.is_bonus).map((q, idx) => (
                   <div key={q.id || idx} className="border-2 border-dashed border-amber-300/50 rounded-xl p-5 bg-amber-50/40 mb-4">
-                    <p className="text-stone-800 text-sm leading-relaxed whitespace-pre-wrap">{q.text}</p>
+                    <p className={`text-stone-800 text-sm leading-relaxed whitespace-pre-wrap${hasDevanagari(q.text ?? '') ? ' devanagari' : ''}`}>{q.text}</p>
                     <div className="mt-3 space-y-2">
                       <div className="border-b border-stone-200 h-7"></div>
                       <div className="border-b border-stone-200 h-7"></div>

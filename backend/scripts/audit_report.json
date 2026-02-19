@@ -1,0 +1,15 @@
+{
+  "summary": {
+    "total_ui_topics_checked": 198,
+    "total_profile_keys_in_slot_engine": 198,
+    "clean_topics": 198,
+    "missing_profiles": 0,
+    "subject_contaminations": 0,
+    "grade_mismatches": 0,
+    "missing_curriculum_entries": 0,
+    "answer_validator_gaps": 0,
+    "hindi_encoding_errors": 0,
+    "orphaned_profiles": 0
+  },
+  "issues": []
+}

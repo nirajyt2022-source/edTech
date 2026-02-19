@@ -1,15 +1,33 @@
+import json as _json
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from app.api import health, worksheets, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum, analytics, dashboard, share, learning_graph, reports
 from app.api.worksheets_v1 import router as worksheets_v1_router
 from app.core.config import get_settings
 
 settings = get_settings()
 
+
+class UnicodeJSONResponse(JSONResponse):
+    """JSONResponse that serialises with ensure_ascii=False so Devanagari
+    (and all other non-ASCII Unicode) is sent as real UTF-8 characters
+    rather than \\uXXXX escape sequences."""
+
+    def render(self, content: object) -> bytes:
+        return _json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+
+
 app = FastAPI(
     title=settings.app_name,
     description="AI-powered worksheet generation platform for educators",
     version="0.1.0",
+    default_response_class=UnicodeJSONResponse,
 )
 
 # Configure CORS

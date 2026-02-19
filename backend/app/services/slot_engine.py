@@ -6126,6 +6126,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["क", "ख", "ग", "घ", "ङ", "च", "छ", "ज", "झ", "ञ", "ट", "ठ"],
         "default_recipe": [
             {"skill_tag": "hin_varna_identify", "count": 3},
             {"skill_tag": "hin_varna_use", "count": 3},
@@ -6143,6 +6144,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["कान", "खीर", "गुड़", "घोड़ा", "चाय", "छाता", "जीत", "झील"],
         "default_recipe": [
             {"skill_tag": "hin_matra_identify", "count": 3},
             {"skill_tag": "hin_matra_fill", "count": 3},
@@ -6160,6 +6162,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["किताब", "कलम", "मेज", "कुर्सी", "दरवाज़ा", "खिड़की", "स्कूल"],
         "default_recipe": [
             {"skill_tag": "hin_shabd_identify", "count": 3},
             {"skill_tag": "hin_shabd_make", "count": 3},
@@ -6177,6 +6180,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["राम खाना खाता है।", "सीता स्कूल जाती है।", "वह अच्छा लड़का है।"],
         "default_recipe": [
             {"skill_tag": "hin_vakya_identify", "count": 3},
             {"skill_tag": "hin_vakya_make", "count": 3},
@@ -6194,6 +6198,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["एक बार", "जंगल में", "राजा ने कहा", "अंत में", "सबक मिला"],
         "default_recipe": [
             {"skill_tag": "hin_kahani_identify", "count": 3},
             {"skill_tag": "hin_kahani_answer", "count": 3},
@@ -6212,6 +6217,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["अ", "आ", "इ", "ई", "उ", "ऊ", "ए", "ऐ", "ओ", "औ", "अं", "अः"],
         "default_recipe": [
             {"skill_tag": "hin_c1_swar_identify", "count": 3},
             {"skill_tag": "hin_c1_swar_use", "count": 3},
@@ -6229,6 +6235,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["क", "ख", "ग", "घ", "च", "छ", "ज", "झ", "ट", "ठ", "ड", "ढ"],
         "default_recipe": [
             {"skill_tag": "hin_c1_vyanjan_identify", "count": 3},
             {"skill_tag": "hin_c1_vyanjan_use", "count": 3},
@@ -6246,6 +6253,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["माँ", "पापा", "दादा", "दादी", "नाना", "नानी", "भाई", "बहन"],
         "default_recipe": [
             {"skill_tag": "hin_c1_family_identify", "count": 3},
             {"skill_tag": "hin_c1_family_use", "count": 3},
@@ -6263,6 +6271,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["यह मेरा घर है।", "वह अच्छा लड़का है।", "मुझे आम पसंद है।", "सीता स्कूल जाती है।"],
         "default_recipe": [
             {"skill_tag": "hin_c1_sentence_identify", "count": 3},
             {"skill_tag": "hin_c1_sentence_use", "count": 3},
@@ -6281,6 +6290,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["का", "कि", "की", "कु", "कू", "के", "कै", "को", "कौ"],
         "default_recipe": [
             {"skill_tag": "hin_c2_matra_identify", "count": 3},
             {"skill_tag": "hin_c2_matra_fill", "count": 3},
@@ -6298,6 +6308,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["नल", "कल", "फल", "जल", "घर", "डर", "मन", "वन"],
         "default_recipe": [
             {"skill_tag": "hin_c2_two_identify", "count": 3},
             {"skill_tag": "hin_c2_two_use", "count": 3},
@@ -6315,6 +6326,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["कमल", "नमक", "सड़क", "बादल", "जंगल", "बच्चा"],
         "default_recipe": [
             {"skill_tag": "hin_c2_three_identify", "count": 3},
             {"skill_tag": "hin_c2_three_use", "count": 3},
@@ -6332,6 +6344,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["आम", "जाम", "काम", "नाम", "धाम", "दाम", "राम", "श्याम"],
         "default_recipe": [
             {"skill_tag": "hin_c2_rhyme_identify", "count": 3},
             {"skill_tag": "hin_c2_rhyme_use", "count": 3},
@@ -6349,6 +6362,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["सूरज", "चाँद", "तारा", "नदी", "पहाड़", "जंगल", "फूल", "पत्ता"],
         "default_recipe": [
             {"skill_tag": "hin_c2_nature_identify", "count": 3},
             {"skill_tag": "hin_c2_nature_use", "count": 3},
@@ -6367,6 +6381,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["अंगूर", "रंग", "संग", "मंदिर", "दुःख", "अतः", "प्रातः"],
         "default_recipe": [
             {"skill_tag": "hin_c4_anusvaar_identify", "count": 3},
             {"skill_tag": "hin_c4_anusvaar_use", "count": 3},
@@ -6384,6 +6399,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["लड़का-लड़की", "गाय-बैल", "राजा-रानी", "नेता-नेत्री", "पुस्तक-पुस्तकें"],
         "default_recipe": [
             {"skill_tag": "hin_c4_vachan_identify", "count": 3},
             {"skill_tag": "hin_c4_vachan_use", "count": 3},
@@ -6401,6 +6417,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["मैं जाता हूँ।", "मैं गया था।", "मैं जाऊँगा।", "वह खाती है।", "वह खाएगी।"],
         "default_recipe": [
             {"skill_tag": "hin_c4_kaal_identify", "count": 3},
             {"skill_tag": "hin_c4_kaal_use", "count": 3},
@@ -6418,6 +6435,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["प्रिय मित्र", "सादर प्रणाम", "आपका प्रिय", "तुम्हारा दोस्त", "शुभकामनाएँ"],
         "default_recipe": [
             {"skill_tag": "hin_c4_patra_identify", "count": 3},
             {"skill_tag": "hin_c4_patra_use", "count": 3},
@@ -6435,6 +6453,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["प्रश्न", "उत्तर", "अनुच्छेद", "शब्द अर्थ", "सही-गलत", "रिक्त स्थान"],
         "default_recipe": [
             {"skill_tag": "hin_c4_comprehension_identify", "count": 3},
             {"skill_tag": "hin_c4_comprehension_answer", "count": 3},
@@ -6453,6 +6472,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["आँखें खुलना", "हाथ-पाँव फूलना", "दाँत खट्टे करना", "नौ-दो ग्यारह होना"],
         "default_recipe": [
             {"skill_tag": "hin_c5_muhavare_identify", "count": 3},
             {"skill_tag": "hin_c5_muhavare_use", "count": 3},
@@ -6470,6 +6490,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["सूर्य-रवि-दिनकर", "पानी-जल-नीर", "घर-गृह-निवास", "आँख-नेत्र-नयन"],
         "default_recipe": [
             {"skill_tag": "hin_c5_paryay_identify", "count": 3},
             {"skill_tag": "hin_c5_paryay_use", "count": 3},
@@ -6487,6 +6508,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["दिन-रात", "सुख-दुख", "अच्छा-बुरा", "ऊपर-नीचे", "आना-जाना"],
         "default_recipe": [
             {"skill_tag": "hin_c5_vilom_identify", "count": 3},
             {"skill_tag": "hin_c5_vilom_use", "count": 3},
@@ -6504,6 +6526,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["राजपुत्र", "देशभक्त", "नीलकमल", "चतुर्भुज", "प्रतिदिन", "यथाशक्ति"],
         "default_recipe": [
             {"skill_tag": "hin_c5_samas_identify", "count": 3},
             {"skill_tag": "hin_c5_samas_use", "count": 3},
@@ -6521,6 +6544,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
         "disallowed_visual_types": [],
         "subject": "Hindi",
+        "devanagari_examples": ["नमस्ते", "क्या आप ठीक हैं?", "हाँ, मैं ठीक हूँ।", "धन्यवाद।", "कोई बात नहीं।"],
         "default_recipe": [
             {"skill_tag": "hin_c5_samvad_identify", "count": 3},
             {"skill_tag": "hin_c5_samvad_use", "count": 3},

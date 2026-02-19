@@ -16,10 +16,13 @@
           "skills": [
             "Addition up to 20",
             "Basic Shapes",
+            "Spatial sense (in/out, near/far)",
             "Measurement",
+            "Money",
             "Numbers 1 to 50",
             "Numbers 51 to 100",
-            "Subtraction within 20"
+            "Subtraction within 20",
+            "Time"
           ],
           "logic_tags": [
             "numerical",
@@ -131,7 +134,16 @@
           "name": "Maths",
           "region": "Global",
           "skills": [
-            "Numbers up to 1000"
+            "Addition (2-digit with carry)",
+            "Data handling (pictographs)",
+            "Division (sharing equally)",
+            "Measurement (length, weight)",
+            "Money (coins and notes)",
+            "Multiplication (tables 2-5)",
+            "Numbers up to 1000",
+            "Shapes and space (2D)",
+            "Subtraction (2-digit with borrow)",
+            "Time (hour, half-hour)"
           ],
           "logic_tags": [
             "numerical",
@@ -244,14 +256,21 @@
           "name": "Maths",
           "region": "Global",
           "skills": [
+            "Addition (carries)",
             "Addition and subtraction (3-digit)",
-            "Multiplication tables (2-5)",
             "Division basics",
-            "Fractions (halves and quarters)",
-            "Time (reading clock, calendar)",
-            "Money (bills and change)",
+            "Fractions",
+            "Fractions (halves, quarters)",
             "Measurement (length)",
-            "Measurement (weight)"
+            "Measurement (weight)",
+            "Money (bills and change)",
+            "Multiplication (tables 2-10)",
+            "Multiplication tables (2-5)",
+            "Numbers up to 10000",
+            "Patterns and sequences",
+            "Subtraction (borrowing)",
+            "Symmetry",
+            "Time (reading clock, calendar)"
           ],
           "logic_tags": [
             "numerical",
@@ -384,12 +403,21 @@
           "region": "Global",
           "skills": [
             "Addition and subtraction (4-digit)",
-            "Multiplication (2-digit by 1-digit)",
-            "Division (2-digit by 1-digit)",
-            "Fractions (addition and subtraction)",
+            "Addition and subtraction (5-digit)",
+            "Decimals (tenths, hundredths)",
             "Decimals introduction",
-            "Time (minutes, 24-hour clock)",
-            "Money (word problems)"
+            "Division (2-digit by 1-digit)",
+            "Division (long division)",
+            "Fractions (addition and subtraction)",
+            "Fractions (equivalent, comparison)",
+            "Geometry (angles, lines)",
+            "Large numbers (up to 1,00,000)",
+            "Money (bills, profit/loss)",
+            "Money (word problems)",
+            "Multiplication (2-digit by 1-digit)",
+            "Multiplication (3-digit × 2-digit)",
+            "Perimeter and area",
+            "Time (minutes, 24-hour clock)"
           ],
           "logic_tags": [
             "numerical",
@@ -519,10 +547,16 @@
           "name": "Maths",
           "region": "Global",
           "skills": [
+            "Area and volume",
+            "Data handling (pie charts)",
             "Decimals (all operations)",
+            "Factors and multiples",
             "Fractions (add and subtract)",
             "Geometry (circles, symmetry)",
-            "Numbers up to 10 lakh"
+            "HCF and LCM",
+            "Numbers up to 10 lakh",
+            "Percentage",
+            "Speed distance time"
           ],
           "logic_tags": [
             "numerical",
