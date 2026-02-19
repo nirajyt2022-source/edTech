@@ -4226,6 +4226,8 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": [
             "add", "subtract", "multiply", "divide", "fraction", "decimal",
             "carry", "borrow", "o'clock", "half past", "quarter", "minutes", "hours",
+            "duration", "elapsed", "how long", "how many hours", "how many minutes",
+            "calculate", "total time", "seconds",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line", "clock"],
         "default_recipe": [
@@ -8706,6 +8708,46 @@ def build_worksheet_plan(
 # F) Slot Instructions (backend builds per-question instructions)
 # ════════════════════════════════════════════════════════════
 
+
+def get_class_guardrails(grade: str) -> str:
+    """Return grade-specific prompt guardrails to inject into every slot.
+
+    Grades 1-2 have the most restrictions; Grades 4-5 have none.
+    Returns an empty string for unknown or unrestricted grades.
+    """
+    try:
+        grade_num = int(str(grade).replace("class", "").replace(" ", "").strip())
+    except (ValueError, TypeError):
+        return ""
+
+    if grade_num == 1:
+        return (
+            "CLASS 1 GUARDRAILS (children aged 6-7 — STRICT):\n"
+            "- Answers must be 1–5 words or a single number maximum.\n"
+            "- NEVER ask students to 'explain', 'describe why', or write sentences.\n"
+            "- NEVER ask for duration calculations (e.g. 'how long from X to Y').\n"
+            "- NEVER use error-detection metacognition ('what mistake did the student make?').\n"
+            "- Use only vocabulary a 6-year-old knows: simple, familiar, everyday words.\n"
+            "- MCQ must have exactly 3 choices (A, B, C) — no more.\n"
+            "- Contexts: home, school, playground, animals, food, simple shapes only.\n"
+        )
+    if grade_num == 2:
+        return (
+            "CLASS 2 GUARDRAILS (children aged 7-8):\n"
+            "- Answers should be 1–15 words.\n"
+            "- Short answers are fine; avoid multi-sentence explanations.\n"
+            "- NEVER ask for multi-step duration calculations.\n"
+            "- Error-detection questions are too advanced — avoid.\n"
+        )
+    if grade_num == 3:
+        return (
+            "CLASS 3 GUARDRAILS (children aged 8-9):\n"
+            "- Avoid abstract proofs or multi-paragraph explanations.\n"
+            "- Keep word problems to a single calculation step where possible.\n"
+        )
+    return ""
+
+
 def _build_slot_instruction(
     slot_type: str,
     chosen_variant: dict | None,
@@ -9273,7 +9315,13 @@ def _build_slot_instruction(
         elif _skill_tag == "c1_time_error":
             return c1_time_ctx + "format: error_spot. Show a student who got the order WRONG. Example: 'Meena says we brush our teeth at night before dinner. Is she correct?' Answer must state the correct routine."
         elif _skill_tag == "c1_time_think":
-            return c1_time_ctx + "format: multi_step. Reasoning about time. Example: 'If today is Wednesday, what day was yesterday? What day will tomorrow be?'"
+            return (
+                c1_time_ctx
+                + "format: multi_step. Reasoning about day/week sequences ONLY. "
+                "Example: 'If today is Wednesday, what day was yesterday? What day will tomorrow be?' "
+                "DO NOT ask about duration, elapsed time, how many hours/minutes/seconds. "
+                "NO arithmetic. NO clock times. Only day-of-week or routine sequencing."
+            )
         return c1_time_ctx
 
     # ── Class 1: Money ──
@@ -12544,7 +12592,13 @@ QUESTION_SYSTEM = (
     '- Q6: "56 ÷ 8" and Q7: "56 ÷ 8" (same numbers) → Use different numbers\n'
     "\n"
     "Do not repeat any question already in this worksheet. "
-    "Each question must use different numbers, names, and scenarios."
+    "Each question must use different numbers, names, and scenarios.\n"
+    "\n"
+    "HINT PROHIBITION:\n"
+    "- NEVER include 'Hint:', 'Think:', 'Note:', 'Remember:', 'Tip:', '(Hint', '[Hint' "
+    "or any guidance phrases inside question_text.\n"
+    "- question_text must be a clean question only — no coaching, no hints, no clues.\n"
+    "- Hints belong to the teacher, NOT to the printed question."
 )
 
 QUESTION_SYSTEM_ENGLISH = (
@@ -12565,7 +12619,12 @@ QUESTION_SYSTEM_ENGLISH = (
     "- Vary sentence structures and vocabulary\n"
     "\n"
     "Do not repeat any question already in this worksheet. "
-    "Each question must use different numbers, names, and scenarios."
+    "Each question must use different numbers, names, and scenarios.\n"
+    "\n"
+    "HINT PROHIBITION:\n"
+    "- NEVER include 'Hint:', 'Think:', 'Note:', 'Remember:', 'Tip:', '(Hint', '[Hint' "
+    "or any guidance phrases inside question_text.\n"
+    "- question_text must be a clean question only — no coaching, no hints, no clues."
 )
 
 QUESTION_SYSTEM_SCIENCE = (
@@ -12587,7 +12646,12 @@ QUESTION_SYSTEM_SCIENCE = (
     "- Vary contexts, examples, and question styles\n"
     "\n"
     "Do not repeat any question already in this worksheet. "
-    "Each question must use different numbers, names, and scenarios."
+    "Each question must use different numbers, names, and scenarios.\n"
+    "\n"
+    "HINT PROHIBITION:\n"
+    "- NEVER include 'Hint:', 'Think:', 'Note:', 'Remember:', 'Tip:', '(Hint', '[Hint' "
+    "or any guidance phrases inside question_text.\n"
+    "- question_text must be a clean question only — no coaching, no hints, no clues."
 )
 
 QUESTION_SYSTEM_HINDI = (
@@ -12612,7 +12676,12 @@ QUESTION_SYSTEM_HINDI = (
     "- Vary vocabulary and sentence structures\n"
     "\n"
     "Do not repeat any question already in this worksheet. "
-    "Each question must use different numbers, names, and scenarios."
+    "Each question must use different numbers, names, and scenarios.\n"
+    "\n"
+    "HINT PROHIBITION:\n"
+    "- NEVER include 'Hint:', 'Think:', 'Note:', 'Remember:', 'Tip:', '(Hint', '[Hint' "
+    "or any guidance phrases inside question_text.\n"
+    "- question_text must be a clean question only — no coaching, no hints, no clues."
 )
 
 QUESTION_USER_TEMPLATE = (
@@ -12622,7 +12691,7 @@ QUESTION_USER_TEMPLATE = (
     "Avoid reusing: {avoid}\n"
     "{slot_instruction}\n"
     "{language_instruction}"
-    '{{"format":"","question_text":"","pictorial_elements":[],"answer":""}}'
+    '{{"format":"","question_text":"","pictorial_elements":[],"answer":"","hint":null}}'
 )
 
 # Topic-specific constraints injected into the LLM prompt
@@ -15183,6 +15252,7 @@ def generate_question(
     q.setdefault("question_text", "")
     q.setdefault("pictorial_elements", [])
     q.setdefault("answer", "")
+    q.setdefault("hint", None)
     q["pictorial_elements"] = []
 
     return q
@@ -15733,6 +15803,10 @@ def run_slot_pipeline(
         q_difficulty = get_question_difficulty(slot_type, difficulty)
         variant = chosen_variants[i]
         slot_instruction = _build_slot_instruction(slot_type, variant, directive=directive, topic=topic, subject=subject)
+        # Grade-level guardrails (Class 1-3 only; empty string for Class 4-5)
+        _guardrails = get_class_guardrails(grade)
+        if _guardrails:
+            slot_instruction = _guardrails + "\n" + slot_instruction
         # Inject mastery constraint for targeted practice
         if mastery_constraint and slot_type in ("recognition", "application", "representation"):
             slot_instruction += f"\n\nMASTERY FOCUS: {mastery_constraint}"
@@ -15852,6 +15926,12 @@ def run_slot_pipeline(
 
     # 7b-ii. Similarity-based deduplication (same logic as async path)
     questions = deduplicate_questions(questions)
+    # Restore count if dedup dropped any questions
+    if len(questions) != len(slot_plan):
+        questions = enforce_slot_counts(questions, slot_plan, subject=subject)
+
+    # 7b-iii. Strip LLM-injected hint phrases from question_text
+    strip_hint_phrases(questions)
 
     # 8. Validate whole worksheet (against the actual plan, not SLOT_PLANS)
     ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
@@ -15927,14 +16007,18 @@ def run_slot_pipeline(
                         q = newq
                 questions[i] = q
 
-    # 8e. Topic purity enforcement + duplicate removal
+    # 8e. Topic purity enforcement + duplicate removal + stub regeneration
     seen_texts: set[str] = set()
     for idx2, q in enumerate(questions):
         reasons: list[str] = []
-        if _topic_profile:
+        # Regenerate enforce_slot_counts stubs (created when dedup removed questions)
+        _qt = q.get("question_text", "")
+        if _qt.startswith("[Slot fill") or _qt.startswith("[Generation failed"):
+            reasons.append("stub")
+        if not reasons and _topic_profile:
             reasons.extend(violates_topic_purity(q, _topic_profile))
         nt = normalize_q_text(q)
-        if nt in seen_texts:
+        if not reasons and nt in seen_texts:
             reasons.append("duplicate")
         if reasons:
             logger.warning("Purity/dedup q%d: %s — regenerating", idx2 + 1, reasons)
@@ -16135,17 +16219,54 @@ def generate_meta_cached(
 
 _DEDUP_STRIP_RE = re.compile(r"[^a-z0-9 ]")
 
+# Hint-phrase strip: matches parenthesised/bracketed hints OR leading hint labels
+_HINT_STRIP_PARENS_RE = re.compile(
+    r"\s*[\(\[]\s*(?:Hint|Think|Note|Remember|Tip|Clue)\s*:.*?[\)\]]",
+    re.IGNORECASE | re.DOTALL,
+)
+_HINT_STRIP_LABEL_RE = re.compile(
+    r"^(?:Hint|Think about|Think|Note|Remember|Tip|Clue)\s*:\s*.+?(?:\.|$)",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def strip_hint_phrases(questions: list) -> list:
+    """Remove any LLM-injected hint/coaching phrases from question_text.
+
+    Catches two patterns:
+      1. Parenthesised/bracketed: "... (Hint: count the sides)"
+      2. Leading label: "Hint: A triangle has 3 sides. How many corners...?"
+    Mutates in place, returns the same list.
+    """
+    for q in questions:
+        text = q.get("question_text", "")
+        if not text:
+            continue
+        cleaned = _HINT_STRIP_PARENS_RE.sub("", text)
+        cleaned = _HINT_STRIP_LABEL_RE.sub("", cleaned).strip()
+        if cleaned and cleaned != text:
+            logger.warning(
+                "strip_hint_phrases: removed hint phrase from Q%s: %.60s",
+                q.get("id", "?"), text,
+            )
+            q["question_text"] = cleaned
+    return questions
+
 
 def _normalise_for_dedup(text: str) -> str:
     return _DEDUP_STRIP_RE.sub("", text.lower())[:80].strip()
 
 
 def deduplicate_questions(questions: list) -> list:
-    """Remove near-duplicate questions using Jaccard similarity (threshold 0.72).
+    """Remove near-duplicate questions using Jaccard similarity (threshold 0.65).
 
     Runs after enforce_slot_counts and before quality review.  When a duplicate
-    is detected the later question is dropped and a warning is logged so the
-    validator can regenerate it if needed.
+    is detected the later question is dropped and a warning is logged.
+    The caller must re-run enforce_slot_counts after this to restore the count.
+
+    Threshold 0.65 (lowered from 0.72) catches scenario-level duplication
+    where the same object/context appears in differently-worded questions
+    (e.g. three consecutive pizza-triangle questions).
     """
     seen: list[str] = []
     unique: list = []
@@ -16158,7 +16279,7 @@ def deduplicate_questions(questions: list) -> list:
             if not a_words:
                 continue
             overlap = len(a_words & b_words) / len(a_words | b_words)
-            if overlap > 0.72:
+            if overlap > 0.65:
                 logger.warning(
                     "Duplicate question removed (%.0f%% similar): %.60s",
                     overlap * 100, key,
@@ -16491,6 +16612,10 @@ async def run_slot_pipeline_async(
             slot_instruction += f"\n\nMASTERY FOCUS: {mastery_constraint}"
         if adaptive_hint:
             slot_instruction += f"\n\nADAPTIVE: {adaptive_hint}"
+        # Grade-level guardrails (Class 1-3 only; empty string for Class 4-5)
+        _guardrails = get_class_guardrails(grade)
+        if _guardrails:
+            slot_instruction = _guardrails + "\n" + slot_instruction
         # Optionally enrich with NCERT-grounded curriculum context
         if gen_context is not None:
             try:
@@ -16641,6 +16766,12 @@ async def run_slot_pipeline_async(
 
     # ── 9b-ii. Similarity-based deduplication ────────────────────────────────
     questions = deduplicate_questions(questions)
+    # Restore count if dedup dropped any questions
+    if len(questions) != len(slot_plan):
+        questions = enforce_slot_counts(questions, slot_plan, subject=subject)
+
+    # ── 9b-iii. Strip LLM-injected hint phrases from question_text ───────────
+    strip_hint_phrases(questions)
 
     # ── 9c. Quality review pass ──────────────────────────────────────────────
     if gen_context is not None:
@@ -16704,14 +16835,18 @@ async def run_slot_pipeline_async(
                 q = hydrate_visuals([q])[0]
                 questions[i] = q
 
-    # ── 10d. Purity + dedup pass ─────────────────────────────────────────────
+    # ── 10d. Purity + dedup pass (including stub regeneration) ──────────────
     seen_texts: set[str] = set()
     for idx2, q in enumerate(questions):
         reasons: list[str] = []
-        if _topic_profile:
+        # Regenerate enforce_slot_counts stubs (created when dedup removed questions)
+        _qt = q.get("question_text", "")
+        if _qt.startswith("[Slot fill") or _qt.startswith("[Generation failed"):
+            reasons.append("stub")
+        if not reasons and _topic_profile:
             reasons.extend(violates_topic_purity(q, _topic_profile))
         nt = normalize_q_text(q)
-        if nt in seen_texts:
+        if not reasons and nt in seen_texts:
             reasons.append("duplicate")
         if reasons:
             d = plan_directives[idx2] if idx2 < len(plan_directives) else {}

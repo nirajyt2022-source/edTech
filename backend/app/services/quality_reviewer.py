@@ -296,6 +296,82 @@ def _validate_error_detection_answer(question_text: str, answer: str) -> Optiona
 
 
 # ---------------------------------------------------------------------------
+# CHECK 5 — Time fact validator
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Hint answer-leakage detector (used in CHECK 6)
+# ---------------------------------------------------------------------------
+
+_REVEALS_ANSWER_RE = re.compile(r"the\s+(?:correct\s+)?answer\s+is", re.IGNORECASE)
+
+
+def _hint_leaks_answer(hint: str, answer: str) -> bool:
+    """
+    Return True when the hint effectively gives away the answer.
+
+    Catches two patterns:
+      1. Explicit "the answer is …" phrase in the hint.
+      2. The hint contains a 3-consecutive-word run that also appears in the
+         answer string (answer phrases embedded verbatim in the hint).
+    """
+    if not hint or not answer:
+        return False
+    hint_lower = hint.lower()
+    # Pattern 1 — "the answer is" / "the correct answer is"
+    if _REVEALS_ANSWER_RE.search(hint_lower):
+        return True
+    # Pattern 2 — 3-word overlap window
+    answer_words = answer.lower().split()
+    for i in range(len(answer_words) - 2):
+        phrase = " ".join(answer_words[i : i + 3])
+        if phrase in hint_lower:
+            return True
+    return False
+
+# Map (question pattern) → correct string answer for common factual time blanks.
+# Each entry: (compiled regex to match question_text, correct answer string)
+_TIME_FACT_MAP: list[tuple] = [
+    (re.compile(r"seconds?\s+in\s+(?:a\s+)?(?:1\s+)?minute", re.I), "60"),
+    (re.compile(r"minutes?\s+in\s+(?:a\s+)?(?:1\s+)?hour", re.I), "60"),
+    (re.compile(r"hours?\s+in\s+(?:a\s+)?(?:1\s+)?day", re.I), "24"),
+    (re.compile(r"days?\s+in\s+(?:a\s+)?(?:1\s+)?week", re.I), "7"),
+    (re.compile(r"months?\s+in\s+(?:a\s+)?(?:1\s+)?year", re.I), "12"),
+    (re.compile(r"days?\s+in\s+(?:a\s+)?(?:1\s+)?year", re.I), "365"),
+    (re.compile(r"weeks?\s+in\s+(?:a\s+)?(?:1\s+)?year", re.I), "52"),
+]
+
+
+def _check_time_fact(question_text: str, answer: str) -> Optional[str]:
+    """
+    Return the correct answer if the stored answer contradicts a known time fact,
+    or None if no correction is needed.
+
+    Only fires for fill-in-the-blank questions (question contains '_').
+    Only corrects when the stored answer is a plain number that differs from
+    the expected value.
+    """
+    # Only fill-in-the-blank questions are relevant
+    if "_" not in question_text:
+        return None
+
+    for pattern, expected in _TIME_FACT_MAP:
+        if not pattern.search(question_text):
+            continue
+        # Answer matches expected — all good
+        stored_clean = str(answer).strip().lstrip("0") or "0"
+        if stored_clean == expected:
+            return None
+        # Answer is a non-empty number that differs — correct it
+        try:
+            float(str(answer).strip())  # parseable as number
+            return expected
+        except (ValueError, TypeError):
+            pass  # non-numeric answer (e.g. "sixty") — leave it alone
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Word-count limits by grade
 # ---------------------------------------------------------------------------
 
@@ -450,6 +526,41 @@ class QualityReviewerAgent:
                     logger.debug(
                         "[quality_reviewer] Check 4 skipped for Q%s: %s", q_id, exc
                     )
+
+            # ── CHECK 5: Time fact answer validation ─────────────────────
+            try:
+                stored_answer = q.get("answer", "")
+                tf_correction = _check_time_fact(question_text, stored_answer)
+                if tf_correction is not None:
+                    msg = (
+                        f"Q{q_id}: time-fact answer corrected "
+                        f"('{stored_answer}' → '{tf_correction}')"
+                    )
+                    logger.warning("[quality_reviewer] %s", msg)
+                    q["answer"] = tf_correction
+                    q["_answer_corrected"] = True
+                    result.corrections.append(msg)
+            except Exception as exc:
+                logger.debug(
+                    "[quality_reviewer] Check 5 skipped for Q%s: %s", q_id, exc
+                )
+
+            # ── CHECK 6: Hint answer-leakage detection ────────────────────
+            try:
+                hint = q.get("hint") or ""
+                answer_for_leak = q.get("answer") or q.get("correct_answer") or ""
+                if hint and _hint_leaks_answer(hint, answer_for_leak):
+                    msg = (
+                        f"Q{q_id}: hint reveals answer — nulled "
+                        f"(hint='{hint[:60]}')"
+                    )
+                    logger.warning("[quality_reviewer] %s", msg)
+                    q["hint"] = None
+                    result.warnings.append(msg)
+            except Exception as exc:
+                logger.debug(
+                    "[quality_reviewer] Check 6 skipped for Q%s: %s", q_id, exc
+                )
 
         total = len(result.corrections)
         logger.info(

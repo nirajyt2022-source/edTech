@@ -628,6 +628,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     setWorksheet(null)
     setWorksheets(null)
     setActiveIdx(0)
+    setShowAnswers(false)
+    setRevealedHints(new Set())
 
     const requestVersion = selectionVersionRef.current
 
@@ -684,6 +686,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     pendingChildIdRef.current = null
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children])
+
+  // Reset answer-reveal state whenever the active worksheet changes identity
+  useEffect(() => {
+    setShowAnswers(false)
+    setRevealedHints(new Set())
+  }, [worksheet?.title, worksheet?.topic, worksheet?.grade])
 
   // Auto-trigger generation once all required fields are ready (QuickPracticeButton flow)
   useEffect(() => {

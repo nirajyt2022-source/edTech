@@ -103,6 +103,7 @@ class Question(BaseModel):
     role: str | None = None  # Phase 4: pedagogical role
     skill_tag: str | None = None  # Phase 5: skill diagnostic tag
     is_bonus: bool = False  # Phase 2: bonus challenge question flag
+    hint: str | None = None  # Optional hint (separate from question_text)
 
 
 class Worksheet(BaseModel):
@@ -415,6 +416,7 @@ def parse_question(q: dict, index: int, fallback_difficulty: str) -> Question:
         visual_data=q.get("visual_data"),
         role=q.get("role"),
         skill_tag=q.get("skill_tag"),
+        hint=q.get("hint") or None,
     )
 
 
