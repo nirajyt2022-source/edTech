@@ -1,5 +1,53 @@
 import { useState, useEffect, useRef } from 'react'
 
+// ── SVG Icons (no external dependency) ───────────────────────────────────────
+const IcShuffle = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+    <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+  </svg>
+)
+const IcChart = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+    <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+  </svg>
+)
+const IcPrinter = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 6 2 18 2 18 9"/>
+    <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+    <rect x="6" y="14" width="12" height="8"/>
+  </svg>
+)
+const IcTarget = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+  </svg>
+)
+const IcLightbulb = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21h6M12 3a6 6 0 016 6c0 2-.9 3.8-2.3 5L15 16H9l-.7-2C6.9 12.8 6 11 6 9a6 6 0 016-6z"/>
+  </svg>
+)
+const IcGradCap = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+  </svg>
+)
+const IcBook = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+  </svg>
+)
+const IcFlag = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+    <line x1="4" y1="22" x2="4" y2="15"/>
+  </svg>
+)
+
 interface Props {
   onGetStarted: () => void
   onSignIn: () => void
@@ -30,7 +78,7 @@ const SUBJECTS = [
     },
   },
   {
-    key: 'science', label: 'Science', symbol: '⚗',
+    key: 'science', label: 'Science', symbol: 'Sc',
     description: 'EVS in Classes 1–2, structured Science from Class 3 onwards.',
     classes: {
       'Class 1 (EVS)': ['My Family', 'My Body', 'Plants Around Us', 'Animals Around Us', 'Food We Eat', 'Seasons & Weather'],
@@ -52,7 +100,7 @@ const SUBJECTS = [
     },
   },
   {
-    key: 'computer', label: 'Computer', symbol: '⌨',
+    key: 'computer', label: 'Computer', symbol: '</>',
     description: 'Digital literacy from mouse clicks to Scratch programming.',
     classes: {
       'Class 1': ['Parts of Computer', 'Mouse & Keyboard'],
@@ -63,7 +111,7 @@ const SUBJECTS = [
     },
   },
   {
-    key: 'gk', label: 'GK', symbol: '🌍',
+    key: 'gk', label: 'GK', symbol: '★',
     description: 'World knowledge, India, science, and current awareness.',
     classes: {
       'Class 3': ['Famous Landmarks', 'National Symbols', 'Solar System Basics', 'Current Awareness'],
@@ -112,7 +160,7 @@ const GOLD_STEPS = [
     number: '03', title: 'Hints on Stretch',
     subtitle: 'Collapsible scaffolding, always optional',
     desc: 'Thinking and Error-Detection questions include a hidden hint. Reveal it only when stuck — this teaches children to attempt independently before seeking help.',
-    example: '💡 Show Hint: "What happens to the tens digit when you carry?"',
+    example: '→ Show Hint: "What happens to the tens digit when you carry?"',
   },
   {
     number: '04', title: 'Parent Insight Footer',
@@ -253,9 +301,9 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
             </div>
             <div className="trust-row">
               {[
-                { icon: '🎓', label: 'No card needed' },
-                { icon: '📚', label: '196 topics' },
-                { icon: '🇮🇳', label: 'CBSE aligned' },
+                { icon: <IcGradCap />, label: 'No card needed' },
+                { icon: <IcBook />, label: '196 topics' },
+                { icon: <IcFlag />, label: 'CBSE aligned' },
               ].map(t => (
                 <span key={t.label} className="trust-chip">{t.icon} {t.label}</span>
               ))}
@@ -314,14 +362,14 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
             </div>
 
             <div className="fb fb1">
-              <span className="fb-icon">🎯</span>
+              <span className="fb-icon"><IcTarget /></span>
               <div>
                 <div className="fb-lbl">Mastery Progress</div>
                 <div className="fb-bar"><div className="fb-fill" /></div>
               </div>
               <span className="fb-pct">72%</span>
             </div>
-            <div className="fb fb2">💡 Hint available on Q3</div>
+            <div className="fb fb2"><IcLightbulb /> Hint available on Q3</div>
           </div>
         </div>
       </section>
@@ -353,9 +401,9 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         </Reveal>
         <div className="prob-cards">
           {[
-            { icon: '🎲', t: 'Random, not Structured', d: 'Generic PDFs skip the CBSE learning ladder. Children end up with questions that are either too easy or completely disconnected from this week\'s topic.' },
-            { icon: '📊', t: 'No Skill Tracking', d: 'Without mastery data, parents and tutors can\'t know whether the carry problem is actually fixed — or just temporarily avoided.' },
-            { icon: '🖨️', t: 'Print ≠ Real Practice', d: 'A 50-question drill on one operation is busywork. Real practice needs Recognition → Application → Stretch in every single session.' },
+            { icon: <IcShuffle />, t: 'Random, not Structured', d: 'Generic PDFs skip the CBSE learning ladder. Children end up with questions that are either too easy or completely disconnected from this week\'s topic.' },
+            { icon: <IcChart />, t: 'No Skill Tracking', d: 'Without mastery data, parents and tutors can\'t know whether the carry problem is actually fixed — or just temporarily avoided.' },
+            { icon: <IcPrinter />, t: 'Print ≠ Real Practice', d: 'A 50-question drill on one operation is busywork. Real practice needs Recognition → Application → Stretch in every single session.' },
           ].map((c, i) => (
             <Reveal key={i} delay={i * 80} className="prob-card">
               <span className="prob-icon">{c.icon}</span>
@@ -448,6 +496,33 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* ── SOCIAL PROOF ── */}
+      <section className="social">
+        <Reveal>
+          <div className="sec-ew">Trusted by Educators</div>
+          <h2 className="sec-h">What parents &amp; teachers say.</h2>
+        </Reveal>
+        <div className="testi-grid">
+          {[
+            { quote: "Finally, a tool that actually understands the CBSE curriculum. My daughter\'s carry addition improved in just two weeks of focused practice.", name: 'Priya S.', role: 'Parent, Bengaluru', initials: 'PS' },
+            { quote: "I generate topic-wise worksheets for 32 students every week. It saves me 3 hours of prep time — and the question quality is genuinely impressive.", name: 'Rekha Sharma', role: 'Maths Teacher, Delhi', initials: 'RS' },
+            { quote: "The mastery tracking pinpointed exactly where my son was struggling. We focused on fractions for 10 days and his test score jumped 18 marks.", name: 'Arjun M.', role: 'Parent, Mumbai', initials: 'AM' },
+          ].map((t, i) => (
+            <Reveal key={i} delay={i * 80} className="testi-card">
+              <div className="testi-stars">★★★★★</div>
+              <p className="testi-q">"{t.quote}"</p>
+              <div className="testi-author">
+                <div className="testi-avatar">{t.initials}</div>
+                <div>
+                  <div className="testi-name">{t.name}</div>
+                  <div className="testi-role">{t.role}</div>
+                </div>
+              </div>
+            </Reveal>
+          ))}
         </div>
       </section>
 
@@ -732,6 +807,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           font-size: 12.5px; color: var(--mt);
           background: var(--sf); border: 1px solid var(--wb);
           padding: 5px 13px; border-radius: 100px;
+          display: inline-flex; align-items: center; gap: 6px;
         }
 
         /* Worksheet Mockup */
@@ -798,8 +874,9 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .fb2 {
           bottom: 18px; right: -28px; animation-delay: 1.8s;
           font-size: 11px; background: #FFFBEB; border-color: #FDE68A; color: #92400E;
+          display: flex; align-items: center; gap: 7px;
         }
-        .fb-icon { font-size: 20px; }
+        .fb-icon { display: flex; align-items: center; justify-content: center; color: var(--g); }
         .fb-lbl { font-size: 10px; color: var(--mt); font-weight: 400; margin-bottom: 4px; }
         .fb-bar { width: 80px; height: 4px; background: #E5E7EB; border-radius: 2px; overflow: hidden; }
         .fb-fill { height: 100%; width: 72%; background: var(--g); border-radius: 2px; animation: gbar 1.6s ease .9s both; }
@@ -829,7 +906,12 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           background: #fff; border: 1px solid var(--wb); border-radius: 12px;
           padding: 30px 26px; text-align: left; border-left: 3px solid var(--a2);
         }
-        .prob-icon { font-size: 28px; display: block; margin-bottom: 14px; }
+        .prob-icon {
+          width: 48px; height: 48px; border-radius: 12px;
+          background: rgba(27,67,50,.09); color: var(--g);
+          display: flex; align-items: center; justify-content: center;
+          margin-bottom: 16px; flex-shrink: 0;
+        }
         .prob-card h3 {
           font-family: 'Fraunces', Georgia, serif;
           font-size: 18px; font-weight: 600; margin: 0 0 10px; color: var(--tx);
@@ -896,6 +978,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .topic-pill {
           background: #fff; border: 1px solid var(--wb); border-radius: 100px;
           padding: 6px 16px; font-size: 13px; color: var(--tx); transition: border-color .2s, color .2s;
+          cursor: pointer;
         }
         .topic-pill:hover { border-color: var(--g); color: var(--g); }
         .subj-desc { max-width: 1200px; margin: 22px auto 0; font-size: 14px; color: var(--mt); }
@@ -994,6 +1077,33 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         @keyframes pdot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(1.3); } }
         @keyframes gbar { from { width: 0; } to { width: 72%; } }
 
+        /* SOCIAL PROOF */
+        .social { padding: 88px 24px; background: var(--sf); text-align: center; }
+        .social .sec-ew, .social .sec-h { margin-left: auto; margin-right: auto; }
+        .testi-grid { max-width: 1100px; margin: 52px auto 0; display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+        .testi-card {
+          background: #fff; border: 1px solid var(--wb); border-radius: 16px; padding: 28px;
+          text-align: left; display: flex; flex-direction: column; gap: 16px;
+          border-top: 3px solid var(--g);
+        }
+        .testi-stars { color: var(--a2); font-size: 13px; letter-spacing: 2px; }
+        .testi-q { font-size: 14px; line-height: 1.75; color: var(--tx); margin: 0; font-style: italic; flex: 1; }
+        .testi-author { display: flex; align-items: center; gap: 12px; }
+        .testi-avatar {
+          width: 40px; height: 40px; border-radius: 50%; background: var(--g);
+          color: #fff; font-size: 12px; font-weight: 700;
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .testi-name { font-size: 13.5px; font-weight: 600; color: var(--tx); margin-bottom: 2px; }
+        .testi-role { font-size: 12px; color: var(--mt); }
+
+        /* REDUCED MOTION */
+        @media (prefers-reduced-motion: reduce) {
+          .ws, .fb, .eyebrow-dot, .hero-em::after, .fb-fill { animation: none !important; }
+          .ws { transform: none !important; }
+          * { transition-duration: 0.01ms !important; }
+        }
+
         /* RESPONSIVE */
         @media (max-width: 1024px) {
           .hero-i { grid-template-columns: 1fr; gap: 48px; }
@@ -1011,6 +1121,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           .phil-grid { grid-template-columns: 1fr; }
           .pr-grid { grid-template-columns: 1fr; }
           .persona-grid { grid-template-columns: 1fr; }
+          .testi-grid { grid-template-columns: 1fr; }
           .stats-i { gap: 28px; }
           .how-detail { padding: 26px; }
         }

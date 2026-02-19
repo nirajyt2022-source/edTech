@@ -99,13 +99,16 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
   }
 
   return (
-    <div className="min-h-screen gradient-bg flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen gradient-bg flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Subtle decorative circles */}
+      <div className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary/5" />
+      <div className="pointer-events-none absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-accent/5" />
       <div className="w-full max-w-sm animate-fade-in">
         {/* Back to landing */}
         {onBack && (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -137,14 +140,14 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               {mode === 'signup' ? 'Create your account' : 'Welcome back'}
             </h2>
             <p className="text-sm text-muted-foreground mb-6">
-              {mode === 'signup' ? 'Start with 5 free worksheets' : 'Sign in to your workspace'}
+              {mode === 'signup' ? 'Start with 10 free worksheets — no card needed' : 'Sign in to your workspace'}
             </p>
 
             {/* Google sign-in */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-border rounded-xl hover:bg-secondary/50 transition-colors text-sm font-medium"
+              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-border rounded-xl hover:bg-secondary/50 transition-colors text-sm font-medium cursor-pointer"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -211,7 +214,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
                     <button
                       type="button"
                       onClick={handleForgotPassword}
-                      className="text-xs text-primary hover:underline"
+                      className="text-xs text-primary hover:underline cursor-pointer"
                     >
                       Forgot password?
                     </button>
@@ -262,7 +265,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               <button
                 type="button"
                 onClick={toggleMode}
-                className="text-primary hover:text-primary/80 font-medium transition-colors"
+                className="text-primary hover:text-primary/80 font-medium transition-colors cursor-pointer"
               >
                 {mode === 'login' ? 'Sign up' : 'Sign in'}
               </button>
@@ -290,7 +293,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
             </svg>
-            <span>5 free worksheets</span>
+            <span>10 free worksheets</span>
           </div>
         </div>
       </div>
