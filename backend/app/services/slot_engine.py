@@ -8763,7 +8763,7 @@ def get_class_guardrails(grade: str) -> str:
     Delegates to build_grade_guardrail_prompt() for the actual content.
     """
     try:
-        grade_num = int(str(grade).replace("class", "").replace(" ", "").strip())
+        grade_num = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
     except (ValueError, TypeError):
         return ""
     return build_grade_guardrail_prompt(grade_num)
@@ -15249,6 +15249,16 @@ def generate_question(
     else:
         sys_prompt = QUESTION_SYSTEM
 
+    # ── Grade guardrail at the TOP of system message (highest LLM authority) ──
+    # Must be first — LLMs weight the beginning of the system prompt most heavily.
+    try:
+        _grade_num = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
+        _guardrail = build_grade_guardrail_prompt(_grade_num)
+        if _guardrail:
+            sys_prompt = _guardrail + "\n\n" + sys_prompt
+    except (ValueError, TypeError):
+        pass  # unparseable grade string — no guardrail prepended
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -16809,27 +16819,6 @@ async def run_slot_pipeline_async(
         except Exception as _qr_exc:
             logger.warning("[async] Quality review failed (continuing): %s", _qr_exc)
 
-    # ── 9c-ii. Grade-appropriateness filter ──────────────────────────────────
-    try:
-        from app.services.quality_reviewer import validate_grade_appropriateness
-        _grade_num = int(str(grade).replace("class", "").replace(" ", "").strip())
-        _valid_qs, _rejected_qs = validate_grade_appropriateness(questions, _grade_num)
-        if _rejected_qs:
-            logger.warning(
-                "[async] Grade %d guardrail rejected %d question(s): %s",
-                _grade_num,
-                len(_rejected_qs),
-                [
-                    {"role": r.get("role"), "reasons": r.get("_rejection_reasons")}
-                    for r in _rejected_qs
-                ],
-            )
-            questions = _valid_qs
-    except (ValueError, TypeError):
-        pass  # grade string not parseable — skip filter
-    except Exception as _ga_exc:
-        logger.warning("[async] Grade-appropriateness filter failed (continuing): %s", _ga_exc)
-
     # ── 9d. Difficulty calibration (final pipeline step) ─────────────────────
     if gen_context is not None:
         try:
@@ -16911,6 +16900,31 @@ async def run_slot_pipeline_async(
                 seen_texts.add(nt)
         else:
             seen_texts.add(nt)
+
+    # ── 10e. Grade-appropriateness filter (final pass — after all regen) ──────
+    # Must run AFTER 10d so plan_directives alignment is preserved during
+    # the purity/dedup pass.  Any question still violating the grade profile
+    # at this point is silently dropped; the worksheet may be shorter than
+    # requested but will never contain age-inappropriate content.
+    try:
+        from app.services.quality_reviewer import validate_grade_appropriateness
+        _grade_num = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
+        _valid_qs, _rejected_qs = validate_grade_appropriateness(questions, _grade_num)
+        if _rejected_qs:
+            logger.warning(
+                "[async] Grade %d guardrail (10e) rejected %d question(s): %s",
+                _grade_num,
+                len(_rejected_qs),
+                [
+                    {"slot_type": r.get("slot_type"), "reasons": r.get("_rejection_reasons")}
+                    for r in _rejected_qs
+                ],
+            )
+            questions = _valid_qs
+    except (ValueError, TypeError):
+        pass  # grade string not parseable — skip filter
+    except Exception as _ga_exc:
+        logger.warning("[async] Grade-appropriateness filter failed (continuing): %s", _ga_exc)
 
     # ── 11. Update history ───────────────────────────────────────────────────
     record = build_worksheet_record(

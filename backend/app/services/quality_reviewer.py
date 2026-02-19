@@ -629,13 +629,15 @@ def validate_grade_appropriateness(
 
     for q in questions:
         reasons: list[str] = []
-        role = q.get("role", "")
-        answer = str(q.get("correct_answer", ""))
-        q_text = (q.get("question") or q.get("text") or "").lower()
+        # slot_type is always set by the backend pipeline; role is a legacy alias
+        # used in tests and some older code paths — check both.
+        role = q.get("slot_type") or q.get("role", "")
+        answer = str(q.get("correct_answer", "") or q.get("answer", ""))
+        q_text = (q.get("question") or q.get("question_text") or q.get("text") or "").lower()
 
         # Rule 1: forbidden question type for this grade
         if role in forbidden:
-            reasons.append(f"role='{role}' forbidden for Class {grade_num}")
+            reasons.append(f"slot_type='{role}' forbidden for Class {grade_num}")
 
         # Rule 2: answer exceeds max word count
         word_count = len(answer.split())
