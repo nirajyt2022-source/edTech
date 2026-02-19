@@ -284,6 +284,59 @@ def check_grade_vocabulary(q_text: str, grade_num: int) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# CHECK 2b — Grade cognitive-demand appropriateness
+# ---------------------------------------------------------------------------
+
+# Load grade profiles for slot-type and text-level checks
+_AUDIT_GRADE_PROFILES_PATH = Path(__file__).parent.parent / "app" / "data" / "grade_profiles.json"
+try:
+    _AUDIT_GRADE_PROFILES: dict = json.loads(_AUDIT_GRADE_PROFILES_PATH.read_text(encoding="utf-8"))
+except FileNotFoundError:
+    _AUDIT_GRADE_PROFILES = {}
+
+# Text-level regex signals for forbidden cognitive demand (fallback when slot_type absent)
+_GRADE_COGNITIVE_RE: dict[int, re.Pattern] = {
+    1: re.compile(
+        r"\b(explain\s+why|explain\s+how|justify|spot the (mistake|error)|"
+        r"find the (error|mistake)|why is|how long did|duration)\b",
+        re.IGNORECASE,
+    ),
+    2: re.compile(
+        r"\b(explain\s+why|explain\s+how|justify|spot the (mistake|error)|"
+        r"find the (error|mistake)|why is)\b",
+        re.IGNORECASE,
+    ),
+}
+
+
+def check_grade_appropriateness(questions: list[dict], grade_num: int) -> list[str]:
+    """Return GRADE_COGNITIVE issues for questions that exceed the grade's cognitive ceiling."""
+    issues: list[str] = []
+    profile = _AUDIT_GRADE_PROFILES.get(str(grade_num), {})
+    forbidden_types = set(profile.get("forbidden_question_types", []))
+    cognitive_re = _GRADE_COGNITIVE_RE.get(grade_num)
+
+    for q in questions:
+        slot_type = q.get("slot_type") or q.get("role") or ""
+        q_text = q.get("question") or q.get("text") or ""
+
+        # Slot-type check (structural)
+        if slot_type and slot_type in forbidden_types:
+            issues.append(
+                f"GRADE_COGNITIVE: slot_type='{slot_type}' forbidden for Class {grade_num}"
+            )
+
+        # Text-level pattern check (catches missing/wrong slot_type)
+        if cognitive_re and cognitive_re.search(q_text):
+            issues.append(
+                f"GRADE_COGNITIVE: Forbidden cognitive pattern in Class {grade_num} "
+                f"question: {q_text[:80]}"
+            )
+
+    return issues
+
+
+# ---------------------------------------------------------------------------
 # CHECK 3 — Answer key integrity (Maths only)
 # ---------------------------------------------------------------------------
 
@@ -616,6 +669,7 @@ def run_audit(auth_token: str, start_from: int = 0) -> dict:
             topic_issues += check_grade_vocabulary(q_text, topic_entry["grade_num"])
             topic_issues += check_answer_integrity(q_text, q_answer, topic_entry["subject"])
 
+        topic_issues += check_grade_appropriateness(questions, topic_entry["grade_num"])
         topic_issues += check_duplicates(questions)
         topic_issues += check_topic_relevance(questions, topic_entry, canon_index)
 
@@ -646,7 +700,8 @@ def run_audit(auth_token: str, start_from: int = 0) -> dict:
     # Build report
     issue_keys = [
         "SUBJECT_CONTAMINATION", "TOPIC_DRIFT", "HINDI_NO_DEVANAGARI",
-        "GRADE_VOCAB", "WRONG_ANSWER", "DUPLICATE", "OFF_TOPIC", "GENERATION_FAILURE",
+        "GRADE_VOCAB", "GRADE_COGNITIVE", "WRONG_ANSWER", "DUPLICATE", "OFF_TOPIC",
+        "GENERATION_FAILURE",
     ]
     report = {
         "summary": {

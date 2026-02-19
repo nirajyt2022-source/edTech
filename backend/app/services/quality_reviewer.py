@@ -32,13 +32,21 @@ so that generation is never blocked by the review layer.
 from __future__ import annotations
 
 import ast
+import json
 import logging
 import operator
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 from app.services.topic_intelligence import GenerationContext
+
+# ---------------------------------------------------------------------------
+# Grade profiles — loaded once at module start (avoids circular import)
+# ---------------------------------------------------------------------------
+_GRADE_PROFILES_PATH = Path(__file__).parent.parent / "data" / "grade_profiles.json"
+GRADE_PROFILES: dict = json.loads(_GRADE_PROFILES_PATH.read_text(encoding="utf-8"))
 
 logger = logging.getLogger(__name__)
 
@@ -587,3 +595,64 @@ def get_quality_reviewer() -> QualityReviewerAgent:
     if _REVIEWER is None:
         _REVIEWER = QualityReviewerAgent()
     return _REVIEWER
+
+
+# ---------------------------------------------------------------------------
+# Grade-appropriateness validator (Step 4 — post-generation filter)
+# ---------------------------------------------------------------------------
+
+# Patterns that signal explanation/justification requests (forbidden ≤ Class 2)
+_EXPLAIN_RE = re.compile(r"\b(explain|why|justify|prove|describe how)\b", re.IGNORECASE)
+
+
+def validate_grade_appropriateness(
+    questions: list[dict],
+    grade_num: int,
+) -> tuple[list, list]:
+    """Filter questions that violate grade-level cognitive guardrails.
+
+    Args:
+        questions: List of question dicts (each may have 'role', 'correct_answer',
+                   'question' / 'text' keys).
+        grade_num: Integer grade level (1-5). Unknown grades are permissive.
+
+    Returns:
+        (valid_questions, rejected_questions) where each rejected question has
+        an extra '_rejection_reasons' key listing what was violated.
+    """
+    profile = GRADE_PROFILES.get(str(grade_num), {})
+    forbidden = set(profile.get("forbidden_question_types", []))
+    max_words = profile.get("answer_constraints", {}).get("max_words", 999)
+
+    valid: list[dict] = []
+    rejected: list[dict] = []
+
+    for q in questions:
+        reasons: list[str] = []
+        role = q.get("role", "")
+        answer = str(q.get("correct_answer", ""))
+        q_text = (q.get("question") or q.get("text") or "").lower()
+
+        # Rule 1: forbidden question type for this grade
+        if role in forbidden:
+            reasons.append(f"role='{role}' forbidden for Class {grade_num}")
+
+        # Rule 2: answer exceeds max word count
+        word_count = len(answer.split())
+        if word_count > max_words:
+            reasons.append(
+                f"answer too long ({word_count} words, max {max_words})"
+            )
+
+        # Rule 3: explanation requests forbidden for Class 1-2
+        if grade_num <= 2 and _EXPLAIN_RE.search(q_text):
+            reasons.append(
+                f"question asks for explanation — forbidden for Class {grade_num}"
+            )
+
+        if reasons:
+            rejected.append({**q, "_rejection_reasons": reasons})
+        else:
+            valid.append(q)
+
+    return valid, rejected

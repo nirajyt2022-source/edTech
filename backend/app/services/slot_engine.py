@@ -27,6 +27,7 @@ import random
 import re
 from collections import Counter
 from datetime import date
+from pathlib import Path
 
 from app.services.history_store import (
     get_avoid_state,
@@ -34,6 +35,10 @@ from app.services.history_store import (
     build_worksheet_record,
 )
 logger = logging.getLogger("practicecraft.slot_engine")
+
+# ── Grade Profile System ──────────────────────────────────────────────────────
+_GRADE_PROFILES_PATH = Path(__file__).parent.parent / "data" / "grade_profiles.json"
+GRADE_PROFILES: dict = json.loads(_GRADE_PROFILES_PATH.read_text(encoding="utf-8"))
 
 
 # ════════════════════════════════════════════════════════════
@@ -8709,43 +8714,59 @@ def build_worksheet_plan(
 # ════════════════════════════════════════════════════════════
 
 
-def get_class_guardrails(grade: str) -> str:
-    """Return grade-specific prompt guardrails to inject into every slot.
+def build_grade_guardrail_prompt(grade_num: int) -> str:
+    """Build a structured guardrail block from grade_profiles.json.
 
-    Grades 1-2 have the most restrictions; Grades 4-5 have none.
-    Returns an empty string for unknown or unrestricted grades.
+    Replaces the old hand-coded get_class_guardrails().
+    Returns an empty string for unknown grade numbers.
+    """
+    profile = GRADE_PROFILES.get(str(grade_num))
+    if not profile:
+        return ""
+
+    allowed   = ", ".join(profile["allowed_question_types"])
+    forbidden = profile["forbidden_question_types"]
+    tier      = profile["tier_rules"]
+    max_words = profile["answer_constraints"]["max_words"]
+
+    forbidden_lines = "\n".join(f"  - {f}" for f in forbidden)
+
+    return (
+        f"╔══════════════════════════════════════════════════╗\n"
+        f"║  CLASS {grade_num} GUARDRAILS — MANDATORY, DO NOT OVERRIDE  ║\n"
+        f"╚══════════════════════════════════════════════════╝\n"
+        f"This worksheet is for a child aged {profile['age_range']}.\n"
+        f"Cognitive ceiling: {profile['cognitive_ceiling']}\n\n"
+        f"ALLOWED question types:\n"
+        f"  {allowed}\n\n"
+        f"FORBIDDEN question types — DO NOT USE ANY OF THESE:\n"
+        f"{forbidden_lines}\n\n"
+        f"ANSWER LENGTH: Maximum {max_words} words per answer.\n\n"
+        f"TIER RULES:\n"
+        f"  * Foundation  : {tier['foundation']}\n"
+        f"  ** Application: {tier['application']}\n"
+        f"  *** Stretch   : {tier['stretch']}\n\n"
+        f"CONTEXT: {profile['context_must_be']}\n"
+        f"DO NOT USE: {profile['context_forbidden']}\n\n"
+        f"SELF-CHECK before writing each question:\n"
+        f"  1. Is this question type in the ALLOWED list above?\n"
+        f"  2. Can a {profile['age_range']} year old answer this in {max_words} words?\n"
+        f"  3. Does this match the TIER RULE?\n"
+        f"══════════════════════════════════════════════════\n"
+    )
+
+
+def get_class_guardrails(grade: str) -> str:
+    """Return grade-specific prompt guardrails — now driven by grade_profiles.json.
+
+    Accepts the same string grade format as before ("class 1", "3", "Class 4").
+    Delegates to build_grade_guardrail_prompt() for the actual content.
     """
     try:
         grade_num = int(str(grade).replace("class", "").replace(" ", "").strip())
     except (ValueError, TypeError):
         return ""
-
-    if grade_num == 1:
-        return (
-            "CLASS 1 GUARDRAILS (children aged 6-7 — STRICT):\n"
-            "- Answers must be 1–5 words or a single number maximum.\n"
-            "- NEVER ask students to 'explain', 'describe why', or write sentences.\n"
-            "- NEVER ask for duration calculations (e.g. 'how long from X to Y').\n"
-            "- NEVER use error-detection metacognition ('what mistake did the student make?').\n"
-            "- Use only vocabulary a 6-year-old knows: simple, familiar, everyday words.\n"
-            "- MCQ must have exactly 3 choices (A, B, C) — no more.\n"
-            "- Contexts: home, school, playground, animals, food, simple shapes only.\n"
-        )
-    if grade_num == 2:
-        return (
-            "CLASS 2 GUARDRAILS (children aged 7-8):\n"
-            "- Answers should be 1–15 words.\n"
-            "- Short answers are fine; avoid multi-sentence explanations.\n"
-            "- NEVER ask for multi-step duration calculations.\n"
-            "- Error-detection questions are too advanced — avoid.\n"
-        )
-    if grade_num == 3:
-        return (
-            "CLASS 3 GUARDRAILS (children aged 8-9):\n"
-            "- Avoid abstract proofs or multi-paragraph explanations.\n"
-            "- Keep word problems to a single calculation step where possible.\n"
-        )
-    return ""
+    return build_grade_guardrail_prompt(grade_num)
 
 
 def _build_slot_instruction(
@@ -16787,6 +16808,27 @@ async def run_slot_pipeline_async(
                 logger.error("[async] Quality errors: %s", review.errors)
         except Exception as _qr_exc:
             logger.warning("[async] Quality review failed (continuing): %s", _qr_exc)
+
+    # ── 9c-ii. Grade-appropriateness filter ──────────────────────────────────
+    try:
+        from app.services.quality_reviewer import validate_grade_appropriateness
+        _grade_num = int(str(grade).replace("class", "").replace(" ", "").strip())
+        _valid_qs, _rejected_qs = validate_grade_appropriateness(questions, _grade_num)
+        if _rejected_qs:
+            logger.warning(
+                "[async] Grade %d guardrail rejected %d question(s): %s",
+                _grade_num,
+                len(_rejected_qs),
+                [
+                    {"role": r.get("role"), "reasons": r.get("_rejection_reasons")}
+                    for r in _rejected_qs
+                ],
+            )
+            questions = _valid_qs
+    except (ValueError, TypeError):
+        pass  # grade string not parseable — skip filter
+    except Exception as _ga_exc:
+        logger.warning("[async] Grade-appropriateness filter failed (continuing): %s", _ga_exc)
 
     # ── 9d. Difficulty calibration (final pipeline step) ─────────────────────
     if gen_context is not None:

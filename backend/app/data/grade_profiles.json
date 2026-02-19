@@ -1,0 +1,114 @@
+{
+  "1": {
+    "age_range": "6-7",
+    "cognitive_ceiling": "recognition_and_recall",
+    "allowed_question_types": [
+      "recognition", "fill_blank", "mcq_2choice", "mcq_3choice",
+      "true_false", "ordering", "matching", "draw_or_label"
+    ],
+    "forbidden_question_types": [
+      "error_detection", "duration_calculation", "explain_why",
+      "prove_or_justify", "multi_step_reasoning", "compare_and_contrast_written"
+    ],
+    "answer_constraints": {
+      "max_words": 5,
+      "allowed_formats": ["single_word", "number", "one_phrase", "mcq_letter"],
+      "forbidden_formats": ["full_sentence_explanation", "multi_sentence", "paragraph"]
+    },
+    "tier_rules": {
+      "foundation": "Read, name, or identify something shown directly",
+      "application": "Apply one simple rule to a new example. NO multi-step.",
+      "stretch": "Harder version of same task — draw instead of read, order instead of name. Still NO explanation or error detection."
+    },
+    "context_must_be": "Familiar: food, animals, toys, family, classroom objects, home",
+    "context_forbidden": "Train schedules, financial transactions, multi-day planning, abstract scenarios"
+  },
+
+  "2": {
+    "age_range": "7-8",
+    "cognitive_ceiling": "simple_application",
+    "allowed_question_types": [
+      "recognition", "fill_blank", "mcq_3choice", "mcq_4choice",
+      "ordering", "matching", "simple_one_step_word_problem", "true_false"
+    ],
+    "forbidden_question_types": [
+      "error_detection", "prove_or_justify", "multi_step_reasoning",
+      "duration_spanning_multiple_hours", "explain_why_written"
+    ],
+    "answer_constraints": {
+      "max_words": 10,
+      "allowed_formats": ["single_word", "number", "one_phrase", "short_sentence"],
+      "forbidden_formats": ["multi_sentence_explanation", "paragraph"]
+    },
+    "tier_rules": {
+      "foundation": "Recall or recognise directly from memory",
+      "application": "Apply one rule to a simple word problem. One step only.",
+      "stretch": "Two-step problem OR one simple observation sentence max"
+    },
+    "context_must_be": "School, home, local market, sports playground",
+    "context_forbidden": "Train timetables, international settings, business/financial"
+  },
+
+  "3": {
+    "age_range": "8-9",
+    "cognitive_ceiling": "application_and_simple_analysis",
+    "allowed_question_types": [
+      "recognition", "fill_blank", "mcq_4choice", "short_answer",
+      "one_step_word_problem", "two_step_word_problem",
+      "error_detection", "simple_explanation"
+    ],
+    "forbidden_question_types": [
+      "prove_or_justify", "multi_paragraph_response", "abstract_generalisation"
+    ],
+    "answer_constraints": {
+      "max_words": 25,
+      "allowed_formats": ["number", "phrase", "one_sentence", "mcq_letter"]
+    },
+    "tier_rules": {
+      "foundation": "Recall and apply a single rule",
+      "application": "Two-step word problem or duration calculation",
+      "stretch": "Error detection OR explain a mistake in one sentence OR multi-step problem"
+    },
+    "context_must_be": "School, local transport, sports, simple market problems",
+    "context_forbidden": "Abstract algebra, international settings, technical jargon"
+  },
+
+  "4": {
+    "age_range": "9-10",
+    "cognitive_ceiling": "analysis_and_multi_step",
+    "allowed_question_types": [
+      "all_standard_types", "error_detection", "multi_step_word_problem",
+      "explain_why", "compare_and_contrast", "conversion"
+    ],
+    "forbidden_question_types": ["formal_proof"],
+    "answer_constraints": {
+      "max_words": 50,
+      "allowed_formats": ["any_clear_format"]
+    },
+    "tier_rules": {
+      "foundation": "Direct recall or single-step application",
+      "application": "Multi-step problem with real-world context",
+      "stretch": "Analysis, explanation, conversion, or pattern finding"
+    },
+    "context_must_be": "Real-world: transport, planning, measurement, simple finance",
+    "context_forbidden": "Formal proof, university-level abstraction"
+  },
+
+  "5": {
+    "age_range": "10-11",
+    "cognitive_ceiling": "synthesis_and_reasoning",
+    "allowed_question_types": ["all_types_including_multi_step_reasoning"],
+    "forbidden_question_types": ["formal_mathematical_proof"],
+    "answer_constraints": {
+      "max_words": 100,
+      "allowed_formats": ["any"]
+    },
+    "tier_rules": {
+      "foundation": "Recall with slight variation",
+      "application": "Complex multi-step real-world problems",
+      "stretch": "Synthesis, estimation, pattern generalisation, multi-concept problems"
+    },
+    "context_must_be": "Rich real-world: travel, science, data analysis, environment",
+    "context_forbidden": "None"
+  }
+}
