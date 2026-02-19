@@ -275,6 +275,10 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
 
       {/* ── HERO ── */}
       <section id="hero" className="hero">
+        {/* Glowing orbs */}
+        <div style={{position:'absolute',top:'-80px',left:'-120px',width:'600px',height:'600px',borderRadius:'9999px',background:'radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}} />
+        <div style={{position:'absolute',bottom:'0',right:'-80px',width:'400px',height:'400px',borderRadius:'9999px',background:'radial-gradient(circle, rgba(245,158,11,0.28) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}} />
+        <div style={{position:'absolute',top:'30%',right:'25%',width:'300px',height:'300px',borderRadius:'9999px',background:'radial-gradient(circle, rgba(167,139,250,0.3) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}} />
         <div className="hero-i">
 
           {/* Left */}
@@ -653,17 +657,17 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
       ══════════════════════════════════════════════════════════ */}
       <style>{`
         .lr {
-          --g:  #1B4332;
-          --g2: #2D6A4F;
+          --g:  #3730A3;
+          --g2: #4338CA;
           --a:  #B45309;
           --a2: #D97706;
           --a3: #F59E0B;
-          --pc: #FAF7F2;
-          --sf: #F2ECE2;
-          --wb: #E8DECA;
-          --tx: #1C1917;
-          --mt: #78716C;
-          font-family: 'DM Sans', system-ui, sans-serif;
+          --pc: #ffffff;
+          --sf: #F5F3FF;
+          --wb: #E0E7FF;
+          --tx: #1E1B4B;
+          --mt: #6B7280;
+          font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
           background: var(--pc);
           color: var(--tx);
           overflow-x: hidden;
@@ -676,7 +680,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           border-bottom: 1px solid transparent;
           transition: border-color .3s, box-shadow .3s;
         }
-        .ln-s { border-bottom-color: var(--wb); box-shadow: 0 1px 14px rgba(27,67,50,.07); }
+        .ln-s { border-bottom-color: var(--wb); box-shadow: 0 1px 14px rgba(55,48,163,.07); }
         .ln-i {
           max-width: 1200px; margin: 0 auto;
           padding: 0 24px; height: 68px;
@@ -699,22 +703,22 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .ln-links button {
           background: none; border: none; cursor: pointer;
           font-size: 14px; color: var(--mt); padding: 8px 14px; border-radius: 7px;
-          transition: color .2s, background .2s; font-family: 'DM Sans', sans-serif;
+          transition: color .2s, background .2s; font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        .ln-links button:hover { color: var(--g); background: rgba(27,67,50,.07); }
+        .ln-links button:hover { color: var(--g); background: rgba(55,48,163,.07); }
         .ln-ctas { display: flex; gap: 8px; align-items: center; }
 
         /* Buttons */
         .b-ghost {
           background: none; border: none; cursor: pointer; font-size: 14px; color: var(--mt);
           padding: 8px 14px; border-radius: 7px; transition: color .2s, background .2s;
-          font-family: 'DM Sans', sans-serif;
+          font-family: 'Plus Jakarta Sans', sans-serif;
         }
-        .b-ghost:hover { color: var(--g); background: rgba(27,67,50,.07); }
+        .b-ghost:hover { color: var(--g); background: rgba(55,48,163,.07); }
         .b-green {
           background: var(--g); color: #fff; border: none; cursor: pointer;
           font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 8px;
-          transition: background .2s, transform .1s; font-family: 'DM Sans', sans-serif;
+          transition: background .2s, transform .1s; font-family: 'Plus Jakarta Sans', sans-serif;
           display: inline-flex; align-items: center; gap: 6px;
         }
         .b-green:hover { background: var(--g2); }
@@ -722,7 +726,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .b-amber {
           background: var(--a2); color: #fff; border: none; cursor: pointer;
           font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 8px;
-          transition: background .2s, transform .1s; font-family: 'DM Sans', sans-serif;
+          transition: background .2s, transform .1s; font-family: 'Plus Jakarta Sans', sans-serif;
           display: inline-flex; align-items: center; gap: 6px;
         }
         .b-amber:hover { background: var(--a); }
@@ -730,10 +734,10 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .b-outline {
           background: transparent; color: var(--g); border: 1.5px solid var(--g);
           cursor: pointer; font-size: 14px; font-weight: 600; padding: 10px 20px;
-          border-radius: 8px; transition: background .2s; font-family: 'DM Sans', sans-serif;
+          border-radius: 8px; transition: background .2s; font-family: 'Plus Jakarta Sans', sans-serif;
           display: inline-flex; align-items: center; gap: 6px;
         }
-        .b-outline:hover { background: rgba(27,67,50,.07); }
+        .b-outline:hover { background: rgba(55,48,163,.07); }
         .b-lg { padding: 14px 28px; font-size: 16px; border-radius: 10px; }
         .b-xl { padding: 18px 38px; font-size: 17px; border-radius: 12px; }
         .b-full { width: 100%; justify-content: center; }
@@ -752,7 +756,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         }
         .mm button {
           background: none; border: none; cursor: pointer; font-size: 16px; color: var(--tx);
-          padding: 10px 0; text-align: left; font-family: 'DM Sans', sans-serif;
+          padding: 10px 0; text-align: left; font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .mm-row { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 
@@ -760,12 +764,12 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .hero {
           padding: 124px 24px 80px; min-height: 100vh;
           display: flex; align-items: center;
-          background: radial-gradient(ellipse 90% 60% at 55% 0%, rgba(27,67,50,.055) 0%, transparent 60%), var(--pc);
+          background: linear-gradient(135deg, #1E1B4B 0%, #312E81 50%, #1E1B4B 100%);
           position: relative;
         }
         .hero::before {
           content: ''; position: absolute; inset: 0;
-          background-image: radial-gradient(circle, rgba(27,67,50,.11) 1px, transparent 1px);
+          background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
           background-size: 26px 26px; pointer-events: none; z-index: 0;
         }
         .hero-i {
@@ -776,36 +780,36 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .hero-l { display: flex; flex-direction: column; gap: 24px; }
         .eyebrow {
           display: inline-flex; align-items: center; gap: 8px;
-          font-size: 12.5px; font-weight: 700; color: var(--g);
+          font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,.9);
           text-transform: uppercase; letter-spacing: .09em;
-          background: rgba(27,67,50,.09); border: 1px solid rgba(27,67,50,.16);
+          background: rgba(129,140,248,.18); border: 1px solid rgba(129,140,248,.35);
           padding: 6px 14px; border-radius: 100px; width: fit-content;
         }
         .eyebrow-dot {
-          width: 6px; height: 6px; border-radius: 50%; background: var(--g);
+          width: 6px; height: 6px; border-radius: 50%; background: #818CF8;
           animation: pdot 2.2s ease-in-out infinite;
         }
         .hero-h {
           font-family: 'Fraunces', Georgia, serif;
           font-size: clamp(40px, 5.5vw, 68px); font-weight: 700;
-          line-height: 1.07; letter-spacing: -.025em; color: var(--tx); margin: 0;
+          line-height: 1.07; letter-spacing: -.025em; color: #fff; margin: 0;
         }
         .hero-em {
-          color: var(--g); font-style: italic;
+          color: #FCD34D; font-style: italic;
           position: relative; display: inline-block;
         }
         .hero-em::after {
           content: ''; position: absolute; bottom: 4px; left: 0; right: 0;
-          height: 4px; background: var(--a3); border-radius: 2px;
+          height: 4px; background: #F59E0B; border-radius: 2px;
           transform: scaleX(0); transform-origin: left;
           animation: uline .9s ease .7s forwards;
         }
-        .hero-p { font-size: 16px; line-height: 1.72; color: var(--mt); max-width: 480px; margin: 0; }
+        .hero-p { font-size: 16px; line-height: 1.72; color: rgba(255,255,255,.7); max-width: 480px; margin: 0; }
         .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
         .trust-row { display: flex; gap: 8px; flex-wrap: wrap; }
         .trust-chip {
-          font-size: 12.5px; color: var(--mt);
-          background: var(--sf); border: 1px solid var(--wb);
+          font-size: 12.5px; color: rgba(255,255,255,.65);
+          background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
           padding: 5px 13px; border-radius: 100px;
           display: inline-flex; align-items: center; gap: 6px;
         }
@@ -813,8 +817,8 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         /* Worksheet Mockup */
         .hero-r { position: relative; display: flex; align-items: center; justify-content: center; }
         .ws {
-          background: #fff; border: 1px solid var(--wb); border-radius: 14px;
-          box-shadow: 0 4px 6px rgba(0,0,0,.04), 0 20px 56px rgba(27,67,50,.11), 0 36px 90px rgba(27,67,50,.06);
+          background: #fff; border: 1px solid rgba(255,255,255,.15); border-radius: 14px;
+          box-shadow: 0 4px 6px rgba(0,0,0,.08), 0 20px 56px rgba(30,27,75,.45), 0 36px 90px rgba(30,27,75,.25);
           width: 100%; max-width: 440px; overflow: hidden; font-size: 13px;
           animation: fws 7s ease-in-out infinite;
         }
@@ -908,7 +912,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         }
         .prob-icon {
           width: 48px; height: 48px; border-radius: 12px;
-          background: rgba(27,67,50,.09); color: var(--g);
+          background: rgba(55,48,163,.09); color: var(--g);
           display: flex; align-items: center; justify-content: center;
           margin-bottom: 16px; flex-shrink: 0;
         }
@@ -928,7 +932,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           background: none; border: 1px solid transparent; border-radius: 10px;
           cursor: pointer; text-align: left; transition: all .2s; width: 100%;
         }
-        .how-item:hover { background: var(--sf); border-color: var(--wb); }
+        .how-item:hover { background: var(--sf); border-color: var(--wb); box-shadow: 0 2px 8px rgba(55,48,163,.06); }
         .how-active { background: #fff !important; border-color: var(--wb) !important; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
         .how-n {
           font-family: 'Fraunces', Georgia, serif;
@@ -961,7 +965,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
           display: flex; align-items: center; gap: 7px;
           background: #fff; border: 1px solid var(--wb); border-radius: 100px;
           padding: 8px 18px; font-size: 13.5px; font-weight: 600;
-          cursor: pointer; transition: all .2s; color: var(--mt); font-family: 'DM Sans', sans-serif;
+          cursor: pointer; transition: all .2s; color: var(--mt); font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .subj-tab:hover { border-color: var(--g); color: var(--g); }
         .subj-on { background: var(--g) !important; color: #fff !important; border-color: var(--g) !important; }
@@ -970,7 +974,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .cls-tab {
           background: none; border: 1px solid var(--wb); border-radius: 6px;
           padding: 5px 14px; font-size: 13px; cursor: pointer; color: var(--mt);
-          transition: all .2s; font-family: 'DM Sans', sans-serif;
+          transition: all .2s; font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .cls-tab:hover { color: var(--g); border-color: var(--g); }
         .cls-on { background: #fff; color: var(--g); border-color: var(--g); font-weight: 600; }
@@ -992,7 +996,7 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .th-us { color: var(--g) !important; }
         .comp-table td { padding: 13px 16px; border-bottom: 1px solid #F0EBE3; color: var(--tx); }
         .comp-table tr:last-child td { border-bottom: none; }
-        .td-us { background: rgba(27,67,50,.04); }
+        .td-us { background: rgba(55,48,163,.04); }
         .ck-y { color: var(--g); font-weight: 700; font-size: 15px; }
         .ck-n { color: #EF4444; font-size: 15px; }
         .ck-p { color: var(--a2); font-size: 15px; font-weight: 700; }
@@ -1058,14 +1062,14 @@ export default function Landing({ onGetStarted, onSignIn }: Props) {
         .cta-contact a:hover { color: #fff; }
 
         /* FOOTER */
-        .lf { background: #0F2419; padding: 30px 24px; }
+        .lf { background: #0F0E27; padding: 30px 24px; }
         .lf-i { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
         .lf .ll-mark { background: var(--g2); }
         .lf-nav { display: flex; gap: 2px; flex-wrap: wrap; }
         .lf-nav button, .lf-nav a {
           background: none; border: none; cursor: pointer;
           font-size: 13px; color: rgba(255,255,255,.48); padding: 6px 10px;
-          text-decoration: none; transition: color .2s; font-family: 'DM Sans', sans-serif;
+          text-decoration: none; transition: color .2s; font-family: 'Plus Jakarta Sans', sans-serif;
         }
         .lf-nav button:hover, .lf-nav a:hover { color: #fff; }
         .lf-copy { font-size: 12px; color: rgba(255,255,255,.32); margin: 0; }
