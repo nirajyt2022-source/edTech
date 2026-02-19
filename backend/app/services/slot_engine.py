@@ -15056,7 +15056,34 @@ def generate_meta(
         max_tokens=512,
     )
     content = _clean_json(response.choices[0].message.content or "")
-    meta = json.loads(content)
+    try:
+        meta = json.loads(content)
+    except json.JSONDecodeError:
+        logger.warning(
+            "generate_meta JSON parse failed on first attempt — retrying with temperature=0. "
+            "grade=%s subject=%s topic=%s. Raw (first 200): %.200s",
+            grade, subject, topic, content,
+        )
+        # Retry once with temperature=0 for a more deterministic output
+        response2 = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": META_SYSTEM},
+                {"role": "user", "content": user_msg},
+            ],
+            temperature=0,
+            max_tokens=512,
+        )
+        content2 = _clean_json(response2.choices[0].message.content or "")
+        try:
+            meta = json.loads(content2)
+        except json.JSONDecodeError:
+            logger.error(
+                "generate_meta JSON parse failed after retry — using safe fallback. "
+                "grade=%s subject=%s topic=%s. Raw (first 200): %.200s",
+                grade, subject, topic, content2,
+            )
+            meta = {}
 
     for key in ("micro_skill", "skill_focus", "learning_objective",
                 "parent_tip", "teaching_script"):
@@ -15134,7 +15161,15 @@ def generate_question(
         max_tokens=300,
     )
     content = _clean_json(response.choices[0].message.content or "")
-    q = json.loads(content)
+    try:
+        q = json.loads(content)
+    except json.JSONDecodeError as exc:
+        logger.warning(
+            "generate_question JSON parse failed — will retry via outer loop. "
+            "slot_type=%s grade=%s subject=%s. Raw (first 200): %.200s. Error: %s",
+            slot_type, grade, subject, content, exc,
+        )
+        raise
 
     q.setdefault("format", "")
     q.setdefault("question_text", "")
@@ -15807,6 +15842,9 @@ def run_slot_pipeline(
     # 7b. Enforce slot counts — trim extras, fill gaps
     questions = enforce_slot_counts(questions, slot_plan, subject=subject)
 
+    # 7b-ii. Similarity-based deduplication (same logic as async path)
+    questions = deduplicate_questions(questions)
+
     # 8. Validate whole worksheet (against the actual plan, not SLOT_PLANS)
     ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
     if ws_issues:
@@ -16430,6 +16468,21 @@ async def run_slot_pipeline_async(
                 logger.warning(
                     "[async] prompt_builder failed for slot %d: %s", i, _pb_exc,
                 )
+        # Anti-repeat diversity hint — parallel slots of the same type get identical
+        # prompts and the LLM has no cross-slot context, so we must differentiate them.
+        _same_type_before = sum(1 for j in range(i) if slot_plan[j] == slot_type)
+        if _same_type_before > 0:
+            slot_instruction += (
+                f"\n\nIMPORTANT: This is {slot_type} question #{_same_type_before + 1} "
+                f"in this worksheet. Use COMPLETELY different data, numbers, items, "
+                f"and scenarios from the other {slot_type} questions. "
+                f"No two questions in this worksheet may share the same context or wording."
+            )
+        else:
+            slot_instruction += (
+                "\n\nIMPORTANT: Do not repeat any question already generated in this "
+                "worksheet. Each question must use different data, numbers, and scenarios."
+            )
         prepared_slots.append({
             "slot_type": slot_type,
             "q_difficulty": q_difficulty,

@@ -304,14 +304,56 @@ def _safe_compute(expr: str):
     return int(result) if result == int(result) else round(result, 4)
 
 
+# Question patterns that cannot be validated by simple regex — skip these
+_SKIP_VALIDATION_RE = re.compile(
+    r"which is (greater|larger|smaller|less|more)|"
+    r"explain your reasoning|"
+    r"estimate|round(ed|ing)?|"
+    r"wrote.*answer|student.*(calculated|got|wrote)|"
+    r"closer to|more or less|what mistake|"
+    r"is (the answer|it) more|simplified|"
+    r"equivalent to|who has (more|less)|"
+    r"same as|error|mistake|"
+    r"\d+/\d+",   # any fraction in question — too complex for regex
+    re.IGNORECASE
+)
+
+# Only validate this exact simple pattern: "X op Y = ?"
+_SIMPLE_ARITH_RE = re.compile(
+    r"^\s*(?:what is|find|calculate|solve|work out)?\s*"
+    r"(\d+(?:\.\d+)?)\s*([+\-×÷*/])\s*(\d+(?:\.\d+)?)\s*[=?]",
+    re.IGNORECASE
+)
+
+
 def check_answer_integrity(q_text: str, answer: str, subject: str) -> list[str]:
     issues: list[str] = []
     if subject != "Maths":
         return issues
-    computed = _safe_compute(q_text)
-    if computed is None:
-        return issues
-    ans_m = re.search(r"[\d.]+", str(answer))
+
+    # Skip complex question types the regex cannot handle
+    if _SKIP_VALIDATION_RE.search(q_text):
+        return []
+
+    # Only validate simple direct-answer questions
+    m = _SIMPLE_ARITH_RE.match(q_text.strip())
+    if not m:
+        return []
+
+    a, op_sym, b = float(m.group(1)), m.group(2), float(m.group(3))
+    ops = {"+": operator.add, "-": operator.sub,
+           "×": operator.mul, "*": operator.mul,
+           "÷": operator.truediv, "/": operator.truediv}
+    if op_sym not in ops:
+        return []
+    if op_sym in ("÷", "/") and b == 0:
+        return []
+
+    computed = ops[op_sym](a, b)
+    computed = int(computed) if computed == int(computed) else round(computed, 4)
+
+    # Extract answer — must start with digits
+    ans_m = re.match(r"[\d.]+", str(answer).strip())
     if ans_m:
         try:
             given = float(ans_m.group())
@@ -410,24 +452,46 @@ def _strip_class_suffix(name: str) -> str:
     return re.sub(r"\s*\(Class \d\)", "", name, flags=re.IGNORECASE).strip()
 
 
+# Subject-level content signals — broad enough to avoid false positives
+_SUBJECT_SIGNALS: dict[str, list[str]] = {
+    "Maths":         [r"\d", r"[+\-×÷*/=]", "how many", "calculate", "find",
+                      "solve", "near", "far", "inside", "outside", "above", "below",
+                      "pattern", "shape", "circle", "square", "triangle", "more", "less"],
+    "English":       ["word", "sentence", "letter", "write", "read", "meaning",
+                      "plural", "verb", "noun", "tense", "fill", "choose",
+                      "passage", "paragraph", "answer", "hello", "please", "thank"],
+    "EVS":           ["animal", "plant", "food", "body", "family", "water",
+                      "weather", "shelter", "season", "living", "nature",
+                      "eye", "ear", "nose", "hand", "part"],
+    "Science":       ["plant", "animal", "body", "water", "air", "energy",
+                      "force", "matter", "system", "change", "living",
+                      "machine", "lever", "pulley", "reproduce", "seed", "flower"],
+    "Hindi":         [r"[\u0900-\u097F]"],   # any Devanagari = Hindi content
+    "Computer":      ["computer", "keyboard", "mouse", "file", "folder",
+                      "click", "type", "screen", "program", "internet",
+                      "paint", "draw", "colour", "brush", "scratch", "block"],
+    "GK":            ["india", "world", "national", "country", "famous",
+                      "capital", "symbol", "sport", "scientist", "landmark"],
+    "Moral Science": ["honest", "kind", "respect", "help", "share", "team",
+                      "care", "empathy", "leader", "right", "wrong", "value"],
+    "Health":        ["health", "body", "food", "exercise", "clean", "hygiene",
+                      "sleep", "diet", "fitness", "safe", "yoga", "posture"],
+}
+
+
 def check_topic_relevance(
     questions: list[dict],
     topic_entry: dict,
-    canon_index: dict[tuple, set[str]],
+    canon_index: dict[tuple, set[str]],   # kept for signature compatibility
 ) -> list[str]:
     """
-    Improved OFF_TOPIC check.
-
-    Instead of looking for the topic NAME inside question text (a near-certain
-    false positive — questions about Alphabet show letters, not the word
-    "alphabet"; questions about Addition show numbers, not the word "addition"),
-    this check looks for SUBJECT-LEVEL content signals.
-
-    A single matching signal anywhere across all three questions is enough to
-    clear the topic.  Only a complete absence of subject-appropriate content
-    fires the OFF_TOPIC flag.
+    Checks for subject-level content signals instead of topic-name keywords.
+    Eliminates false positives like looking for 'alphabet' in alphabet questions.
     """
     subject = topic_entry["subject"]
+    signals = _SUBJECT_SIGNALS.get(subject)
+    if not signals:
+        return []
 
     all_text = " ".join(
         (q.get("question") or q.get("text") or "").lower()
@@ -435,44 +499,14 @@ def check_topic_relevance(
     ).strip()
 
     if not all_text:
-        return ["OFF_TOPIC: No question text generated at all"]
+        return [f"OFF_TOPIC: No question text generated at all"]
 
-    # Subject-level content signals — deliberately broad so they only
-    # fire on a true blank / completely wrong subject, not a vocab miss.
-    SUBJECT_SIGNALS: dict[str, list[str]] = {
-        "Maths":         [r"\d", r"[+\-×÷*/=]", "how many", "calculate",
-                          "find", "solve"],
-        "English":       ["word", "sentence", "letter", "write", "read",
-                          "meaning", "plural", "verb", "noun", "tense",
-                          "fill", "choose"],
-        "EVS":           ["animal", "plant", "food", "body", "family",
-                          "water", "weather", "shelter", "season",
-                          "living", "nature"],
-        "Science":       ["plant", "animal", "body", "water", "air",
-                          "energy", "force", "matter", "system",
-                          "change", "living"],
-        "Hindi":         [r"[\u0900-\u097F]"],   # any Devanagari = Hindi content
-        "Computer":      ["computer", "keyboard", "mouse", "file", "folder",
-                          "click", "type", "screen", "program", "internet"],
-        "GK":            ["india", "world", "national", "country", "famous",
-                          "capital", "symbol", "sport", "scientist"],
-        "Moral Science": ["honest", "kind", "respect", "help", "share",
-                          "team", "care", "empathy", "leader", "right",
-                          "wrong"],
-        "Health":        ["health", "body", "food", "exercise", "clean",
-                          "hygiene", "sleep", "diet", "fitness", "safe",
-                          "yoga"],
-    }
-
-    signals = SUBJECT_SIGNALS.get(subject, [])
-    if not signals:
-        return []  # no signals defined for this subject — skip check
-
+    import re as _re
     for signal in signals:
         try:
-            if re.search(signal, all_text):
-                return []  # found a subject signal — content is on-topic
-        except re.error:
+            if _re.search(signal, all_text):
+                return []  # found a subject signal — not off-topic
+        except Exception:
             if signal in all_text:
                 return []
 
@@ -540,18 +574,20 @@ def _extract_questions(worksheet: dict) -> list[dict]:
 # Main audit loop
 # ---------------------------------------------------------------------------
 
-def run_audit(auth_token: str) -> dict:
+def run_audit(auth_token: str, start_from: int = 0) -> dict:
     canon_index = _load_canon_index(CANON_PATH)
 
     results: list[dict]  = []
     summary: dict        = defaultdict(int)
     issues_by_type: dict = defaultdict(list)
 
-    print(f"PracticeCraft Content Audit — {len(TOPICS)} topics × {QUESTIONS_PER_TOPIC} questions")
+    topics_to_run_count = len(TOPICS) - start_from
+    print(f"PracticeCraft Content Audit — {topics_to_run_count} topics × {QUESTIONS_PER_TOPIC} questions (topics {start_from+1}–{len(TOPICS)})")
     print(f"API: {PROD_API_BASE}")
-    print(f"Estimated time: ~{int(len(TOPICS) * RATE_LIMIT_SECONDS / 60) + 1} minutes\n")
+    print(f"Estimated time: ~{int(topics_to_run_count * RATE_LIMIT_SECONDS / 60) + 1} minutes\n")
 
-    for i, topic_entry in enumerate(TOPICS):
+    topics_to_run = TOPICS[start_from:]
+    for i, topic_entry in enumerate(topics_to_run, start=start_from):
         label = (
             f"{topic_entry['subject']} Class {topic_entry['grade_num']} "
             f"— {topic_entry['topic']}"
@@ -656,10 +692,23 @@ def run_audit(auth_token: str) -> dict:
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(__doc__)
-        print("Usage: python scripts/content_audit.py <auth_token>")
+        print("Usage:")
+        print("  python scripts/content_audit.py <token>              # full run")
+        print("  python scripts/content_audit.py <token> --start 100  # resume from topic 100")
         print()
-        print("Get token from browser:")
-        print("  DevTools → Application → Local Storage → sb-*-auth-token → access_token")
+        print("Get token from browser console:")
+        print("  const key = Object.keys(localStorage).find(k => k.startswith(\'sb-\'));")
+        print("  console.log(JSON.parse(localStorage[key]).access_token);")
         sys.exit(1)
 
-    run_audit(sys.argv[1])
+    auth_token = sys.argv[1]
+
+    # Parse optional --start N argument
+    start_from = 0
+    if "--start" in sys.argv:
+        idx = sys.argv.index("--start")
+        if idx + 1 < len(sys.argv):
+            start_from = int(sys.argv[idx + 1]) - 1  # convert to 0-based
+            print(f"Resuming from topic {start_from + 1}/{len(TOPICS)}")
+
+    run_audit(auth_token, start_from=start_from)
