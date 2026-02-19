@@ -12533,7 +12533,10 @@ QUESTION_SYSTEM = (
     "Example violations to avoid:\n"
     '- Q1: "half of 8" and Q2: "half of 16" (same operation) → Use different operations\n'
     '- Q4: "pizza cut into 4" and Q5: "cake cut into 4" (same context) → Use different food or different divisions\n'
-    '- Q6: "56 ÷ 8" and Q7: "56 ÷ 8" (same numbers) → Use different numbers'
+    '- Q6: "56 ÷ 8" and Q7: "56 ÷ 8" (same numbers) → Use different numbers\n'
+    "\n"
+    "Do not repeat any question already in this worksheet. "
+    "Each question must use different numbers, names, and scenarios."
 )
 
 QUESTION_SYSTEM_ENGLISH = (
@@ -12552,6 +12555,9 @@ QUESTION_SYSTEM_ENGLISH = (
     "- DO NOT repeat the same grammar concept in consecutive questions\n"
     "- Each question must test a UNIQUE aspect of the topic\n"
     "- Vary sentence structures and vocabulary\n"
+    "\n"
+    "Do not repeat any question already in this worksheet. "
+    "Each question must use different numbers, names, and scenarios."
 )
 
 QUESTION_SYSTEM_SCIENCE = (
@@ -12571,6 +12577,9 @@ QUESTION_SYSTEM_SCIENCE = (
     "- DO NOT repeat the same question pattern in consecutive questions\n"
     "- Each question must test a UNIQUE aspect of the topic\n"
     "- Vary contexts, examples, and question styles\n"
+    "\n"
+    "Do not repeat any question already in this worksheet. "
+    "Each question must use different numbers, names, and scenarios."
 )
 
 QUESTION_SYSTEM_HINDI = (
@@ -12593,6 +12602,9 @@ QUESTION_SYSTEM_HINDI = (
     "- DO NOT repeat the same concept in consecutive questions\n"
     "- Each question must test a UNIQUE aspect of the topic\n"
     "- Vary vocabulary and sentence structures\n"
+    "\n"
+    "Do not repeat any question already in this worksheet. "
+    "Each question must use different numbers, names, and scenarios."
 )
 
 QUESTION_USER_TEMPLATE = (
@@ -15076,6 +15088,20 @@ def generate_question(
 
     topic_constraint = _TOPIC_CONSTRAINTS.get(topic, "")
 
+    # Fraction topic enforcement — applies to ALL difficulty tiers
+    if "fraction" in (topic or "").lower():
+        topic_constraint += (
+            "CRITICAL RULE: This is a Fractions worksheet. "
+            "Every single question MUST directly involve fractions. "
+            "Every question must contain a fraction (e.g. 3/8, 1/2, 5/6). "
+            "Do NOT write questions about whole number arithmetic, rounding, "
+            "or estimation unless they are part of a fraction calculation. "
+            "A question without a fraction symbol on a Fractions worksheet is WRONG.\n"
+            "FRACTION ANSWER FORMAT: When the answer is a fraction, write it as A/B "
+            "(e.g. 5/8, not 5.0). When the answer is a decimal, write it as 0.X "
+            "(e.g. 0.3, not 3.0). Never write a fraction answer as a whole number.\n"
+        )
+
     user_msg = QUESTION_USER_TEMPLATE.format(
         grade=grade,
         subject=subject,
@@ -16058,6 +16084,48 @@ def generate_meta_cached(
 
 
 # ---------------------------------------------------------------------------
+# Similarity-based deduplication helpers
+# ---------------------------------------------------------------------------
+
+_DEDUP_STRIP_RE = re.compile(r"[^a-z0-9 ]")
+
+
+def _normalise_for_dedup(text: str) -> str:
+    return _DEDUP_STRIP_RE.sub("", text.lower())[:80].strip()
+
+
+def deduplicate_questions(questions: list) -> list:
+    """Remove near-duplicate questions using Jaccard similarity (threshold 0.72).
+
+    Runs after enforce_slot_counts and before quality review.  When a duplicate
+    is detected the later question is dropped and a warning is logged so the
+    validator can regenerate it if needed.
+    """
+    seen: list[str] = []
+    unique: list = []
+    for q in questions:
+        key = _normalise_for_dedup(q.get("question_text") or q.get("question") or q.get("text") or "")
+        is_dup = False
+        for prev in seen:
+            a_words = set(key.split())
+            b_words = set(prev.split())
+            if not a_words:
+                continue
+            overlap = len(a_words & b_words) / len(a_words | b_words)
+            if overlap > 0.72:
+                logger.warning(
+                    "Duplicate question removed (%.0f%% similar): %.60s",
+                    overlap * 100, key,
+                )
+                is_dup = True
+                break
+        if not is_dup:
+            seen.append(key)
+            unique.append(q)
+    return unique
+
+
+# ---------------------------------------------------------------------------
 # generate_all_questions — parallel slot generation
 # ---------------------------------------------------------------------------
 
@@ -16479,6 +16547,9 @@ async def run_slot_pipeline_async(
 
     # ── 9b. Enforce slot counts ──────────────────────────────────────────────
     questions = enforce_slot_counts(questions, slot_plan, subject=subject)
+
+    # ── 9b-ii. Similarity-based deduplication ────────────────────────────────
+    questions = deduplicate_questions(questions)
 
     # ── 9c. Quality review pass ──────────────────────────────────────────────
     if gen_context is not None:

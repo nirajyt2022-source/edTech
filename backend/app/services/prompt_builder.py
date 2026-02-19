@@ -154,6 +154,15 @@ def build_question_prompt(slot: dict, context: GenerationContext) -> str:
             f"Stay strictly within the NCERT chapter '{context.ncert_chapter}'."
         )
 
+    # Fraction topic enforcement — fires for every slot, every difficulty tier
+    if "fraction" in (context.topic_slug or "").lower():
+        parts.append(
+            "FRACTIONS CONSTRAINT: This worksheet is specifically about Fractions. "
+            "Every question you generate MUST contain a fraction (e.g. 1/2, 3/4, 5/8). "
+            "Do NOT generate whole-number arithmetic, rounding, or estimation questions. "
+            "A question with no fraction symbol is incorrect for this worksheet."
+        )
+
     # Hindi: inject Devanagari script anchor from profile
     if context.subject.lower() == "hindi":
         try:

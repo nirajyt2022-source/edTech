@@ -1,7 +1,7 @@
 """
 Quality Reviewer Agent — Agent 3 of 4 in the generation pipeline.
 
-Runs three deterministic checks on the assembled question list, in order:
+Runs four deterministic checks on the assembled question list, in order:
 
   CHECK 1 — Maths arithmetic validation (Maths subject only)
     Extracts simple A op B expressions from question text, computes the
@@ -18,6 +18,13 @@ Runs three deterministic checks on the assembled question list, in order:
     Class 1–2 : flags questions with > 15 words.
     Class 3–5 : flags questions with > 25 words.
     Logs a warning but never auto-corrects language.
+
+  CHECK 4 — Fraction and decimal answer format (Maths subject only)
+    Catches three known LLM failure modes:
+    A) Fraction addition stored as decimal float ("5.0" → "5/8")
+    B) Fraction-to-decimal conversion stored with wrong magnitude ("3.0" → "0.3")
+    C) error_detection answer agrees with the shown wrong answer instead of
+       computing the real one ("334.0" → "434" for "289 + 145 = 334")
 
 All checks are fail-open: an exception in any check is logged and skipped
 so that generation is never blocked by the review layer.
@@ -156,6 +163,139 @@ def _answers_match(stored: str, computed: float) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# CHECK 4 — Fraction / decimal answer format validators
+# ---------------------------------------------------------------------------
+
+# A/B [+-] C/D  — same or different denominators
+_FRAC_ADD_SUB_RE = re.compile(
+    r"(\d+)/(\d+)\s*([+\-])\s*(\d+)/(\d+)"
+)
+
+# "A/B as a decimal" — fraction-to-decimal conversion questions
+_FRAC_AS_DEC_RE = re.compile(
+    r"(\d+)/(\d+)\s+as\s+a\s+decimal",
+    re.IGNORECASE,
+)
+
+# "A op B = WRONG_ANSWER" — error_detection question pattern
+_ERROR_DETECT_EXPR_RE = re.compile(
+    r"(\d+)\s*([+\-×÷*/])\s*(\d+)\s*=\s*(\d+)"
+)
+
+_OP_NORMALISE_4 = str.maketrans({"×": "*", "÷": "/"})
+
+
+def _fraction_str(numerator: int, denominator: int) -> str:
+    """Return a reduced fraction string 'N/D' or whole number 'N'."""
+    from math import gcd
+    g = gcd(abs(numerator), abs(denominator))
+    n, d = numerator // g, denominator // g
+    return str(n) if d == 1 else f"{n}/{d}"
+
+
+def _validate_fraction_answer(question_text: str, answer: str) -> Optional[str]:
+    """
+    For fraction addition/subtraction questions, ensure answer is in fraction form.
+
+    Returns corrected answer string, or None if no correction is needed.
+    Bug A: "3/8 + 2/8" → answer "5.0" should be "5/8".
+    """
+    m = _FRAC_ADD_SUB_RE.search(question_text)
+    if not m:
+        return None
+
+    a, b, op, c, d = (
+        int(m.group(1)), int(m.group(2)), m.group(3),
+        int(m.group(4)), int(m.group(5)),
+    )
+    # Common denominator arithmetic
+    if b == d:
+        num = (a + c) if op == "+" else (a - c)
+        correct = _fraction_str(num, b)
+    else:
+        # Cross-multiply
+        num = (a * d + c * b) if op == "+" else (a * d - c * b)
+        correct = _fraction_str(num, b * d)
+
+    current = str(answer).strip()
+    if current == correct:
+        return None
+
+    # Also accept if stored already equals the numeric value (right value, wrong format)
+    # — in that case we still want fraction notation, so always return correct
+    return correct
+
+
+def _validate_fraction_to_decimal(question_text: str, answer: str) -> Optional[str]:
+    """
+    For fraction-to-decimal questions, ensure the decimal is correct.
+
+    Returns corrected answer string, or None if no correction is needed.
+    Bug B: "3/10 as a decimal" → answer "3.0" should be "0.3".
+    """
+    m = _FRAC_AS_DEC_RE.search(question_text)
+    if not m:
+        return None
+
+    numerator, denominator = int(m.group(1)), int(m.group(2))
+    if denominator == 0:
+        return None
+
+    result = numerator / denominator
+    # Format: strip trailing zeros but keep at least one decimal place
+    correct = f"{result:.10f}".rstrip("0")
+    if correct.endswith("."):
+        correct += "0"
+
+    try:
+        if abs(float(str(answer).strip()) - result) < 1e-9:
+            return None  # already the right value
+    except (ValueError, TypeError):
+        pass
+
+    return correct
+
+
+def _validate_error_detection_answer(question_text: str, answer: str) -> Optional[str]:
+    """
+    For error_detection questions showing "A op B = WRONG", ensure the stored
+    answer is the CORRECT computed value, not the wrong one from the question.
+
+    Returns corrected answer string, or None if no correction is needed.
+    Bug C: "289 + 145 = 334. What is the correct answer?" → "334.0" should be "434".
+    """
+    m = _ERROR_DETECT_EXPR_RE.search(question_text)
+    if not m:
+        return None
+
+    expr = f"{m.group(1)} {m.group(2)} {m.group(3)}".translate(_OP_NORMALISE_4)
+    result = _safe_eval(expr)
+    if result is None:
+        return None
+
+    wrong_in_question = float(m.group(4))
+
+    try:
+        stored = float(str(answer).strip().replace(",", ""))
+    except (ValueError, TypeError):
+        return None
+
+    # If stored already equals the computed correct answer → no fix needed
+    if abs(stored - result) < 0.01:
+        return None
+
+    # If stored matches the wrong answer shown in the question → fix it
+    if abs(stored - wrong_in_question) < 0.01:
+        correct_str = (
+            str(int(result)) if result == int(result)
+            else f"{result:.4f}".rstrip("0").rstrip(".")
+        )
+        return correct_str
+
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Word-count limits by grade
 # ---------------------------------------------------------------------------
 
@@ -274,6 +414,42 @@ class QualityReviewerAgent:
                 logger.debug(
                     "[quality_reviewer] Check 3 skipped for Q%s: %s", q_id, exc
                 )
+
+            # ── CHECK 4: Fraction and decimal answer format ───────────────
+            if is_maths:
+                try:
+                    stored_answer = q.get("answer", "")
+                    correction: Optional[str] = None
+
+                    if slot_type == "error_detection":
+                        # Bug C: LLM agrees with the wrong answer shown in Q
+                        correction = _validate_error_detection_answer(
+                            question_text, stored_answer
+                        )
+                    else:
+                        # Bug A: fraction addition stored as decimal float
+                        correction = _validate_fraction_answer(
+                            question_text, stored_answer
+                        )
+                        # Bug B: fraction-to-decimal stored with wrong magnitude
+                        if correction is None:
+                            correction = _validate_fraction_to_decimal(
+                                question_text, stored_answer
+                            )
+
+                    if correction is not None:
+                        msg = (
+                            f"Q{q_id}: answer format corrected "
+                            f"('{stored_answer}' → '{correction}')"
+                        )
+                        logger.warning("[quality_reviewer] %s", msg)
+                        q["answer"] = correction
+                        q["_answer_corrected"] = True
+                        result.corrections.append(msg)
+                except Exception as exc:
+                    logger.debug(
+                        "[quality_reviewer] Check 4 skipped for Q%s: %s", q_id, exc
+                    )
 
         total = len(result.corrections)
         logger.info(

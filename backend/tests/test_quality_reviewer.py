@@ -181,17 +181,20 @@ class TestCheck1ArithmeticCorrection:
         assert result.questions[0].get("_answer_corrected") is None
 
     def test_error_detection_slot_skipped(self):
-        """error_detection questions (intentionally wrong) must NOT be auto-corrected."""
+        """CHECK 1 skips error_detection, but CHECK 4 corrects the stored answer
+        to the true computed value ('answer' must be the correct answer; the wrong
+        value shown in the question lives in 'student_wrong_answer')."""
         reviewer = QualityReviewerAgent()
         q = _make_q(
             slot_type="error_detection",
             question_text="Spot the error: 5 + 7 = 11",
-            answer="11",  # wrong answer is intentional
+            answer="11",  # LLM agreed with the wrong value — CHECK 4 fixes this
         )
         result = reviewer.review_worksheet([q], _DEFAULT_CTX)
 
-        assert len(result.corrections) == 0
-        assert result.questions[0]["answer"] == "11"
+        # CHECK 4 corrects the stored answer to the real computed value
+        assert len(result.corrections) == 1
+        assert result.questions[0]["answer"] == "12"
 
     def test_word_problem_not_corrected(self):
         """Word problems (narrative words) are skipped by CHECK 1."""
