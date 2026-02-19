@@ -5433,6 +5433,8 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
         "disallowed_visual_types": [],
         "subject": "English",
+        "max_questions": 5,
+        "sequential_generation": True,
         "default_recipe": [
             {"skill_tag": "eng_c5_complex_identify", "count": 3},
             {"skill_tag": "eng_c5_complex_rewrite", "count": 3},
@@ -5502,6 +5504,8 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
         "disallowed_visual_types": [],
         "subject": "English",
+        "max_questions": 5,
+        "sequential_generation": True,
         "default_recipe": [
             {"skill_tag": "eng_c5_letter_identify", "count": 3},
             {"skill_tag": "eng_c5_letter_write", "count": 3},
@@ -5519,6 +5523,8 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
         "disallowed_visual_types": [],
         "subject": "English",
+        "max_questions": 5,
+        "sequential_generation": True,
         "default_recipe": [
             {"skill_tag": "eng_c5_creative_identify", "count": 3},
             {"skill_tag": "eng_c5_creative_use", "count": 3},
@@ -6108,6 +6114,8 @@ TOPIC_PROFILES: dict[str, dict] = {
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
         "disallowed_visual_types": [],
         "subject": "Science",
+        "max_questions": 5,
+        "sequential_generation": True,
         "default_recipe": [
             {"skill_tag": "sci_c5_ecosystem_identify", "count": 2},
             {"skill_tag": "sci_c5_ecosystem_apply", "count": 3},
@@ -16179,6 +16187,7 @@ async def generate_all_questions(
     topic: str,
     avoid_state_base: list[str] | None = None,
     batch_size: int = 5,
+    sequential: bool = False,
 ) -> list[dict]:
     """
     Generate all questions in parallel, in batches of `batch_size`.
@@ -16201,21 +16210,30 @@ async def generate_all_questions(
     async def _attempt_one(idx: int, slot_data: dict) -> dict:
         """Single LLM call for one slot, run in a threadpool worker."""
         try:
-            q = await _asyncio.to_thread(
-                generate_question,
-                client,
-                grade,
-                subject,
-                micro_skill,
-                slot_data["slot_type"],
-                slot_data["q_difficulty"],
-                list(avoid_base),       # each slot starts from the same base state
-                region,
-                language,
-                slot_instruction=slot_data["slot_instruction"],
-                topic=topic,
+            q = await _asyncio.wait_for(
+                _asyncio.to_thread(
+                    generate_question,
+                    client,
+                    grade,
+                    subject,
+                    micro_skill,
+                    slot_data["slot_type"],
+                    slot_data["q_difficulty"],
+                    list(avoid_base),       # each slot starts from the same base state
+                    region,
+                    language,
+                    slot_instruction=slot_data["slot_instruction"],
+                    topic=topic,
+                ),
+                timeout=30,
             )
             return {"idx": idx, "ok": True, "q": q, "error": None}
+        except _asyncio.TimeoutError:
+            logger.error(
+                "[generate_all_questions] Slot %d timed out (30s): topic=%s slot_type=%s",
+                idx, topic, slot_data.get("slot_type"),
+            )
+            return {"idx": idx, "ok": False, "q": None, "error": "slot_timeout"}
         except Exception as exc:
             return {"idx": idx, "ok": False, "q": None, "error": str(exc)}
 
@@ -16237,6 +16255,14 @@ async def generate_all_questions(
         return result
 
     all_results: list[dict] = []
+    if sequential:
+        # Sequential path: one slot at a time — used for long-form topics (writing,
+        # complex sentences) where concurrent LLM calls breach Railway's 60s limit.
+        for j, slot_data in enumerate(prepared_slots):
+            result = await _generate_with_retry(j, slot_data)
+            all_results.append(result)
+        return all_results
+
     for batch_start in range(0, len(prepared_slots), batch_size):
         batch = prepared_slots[batch_start : batch_start + batch_size]
         tasks = [
@@ -16333,6 +16359,14 @@ async def run_slot_pipeline_async(
                 topic = _canon_key
                 break
         logger.info("[async] Canonical topic resolved: %s", topic)
+        # Respect per-profile question cap (prevents Railway timeout on heavy topics)
+        _max_q = _topic_profile.get("max_questions")
+        if _max_q and q_count > _max_q:
+            logger.info(
+                "[async] Capping q_count %d→%d for topic=%s (max_questions)",
+                q_count, _max_q, topic,
+            )
+            q_count = _max_q
 
     if worksheet_plan:
         plan_directives = list(worksheet_plan)
@@ -16493,6 +16527,9 @@ async def run_slot_pipeline_async(
 
     # ── 7. Parallel generation ──────────────────────────────────────────────
     _t_gen_start = _time_module.perf_counter()
+    _sequential = bool(_topic_profile and _topic_profile.get("sequential_generation"))
+    if _sequential:
+        logger.info("[async] Sequential generation mode for topic=%s", topic)
     results = await generate_all_questions(
         client=client,
         prepared_slots=prepared_slots,
@@ -16503,6 +16540,7 @@ async def run_slot_pipeline_async(
         language=language,
         topic=topic,
         avoid_state_base=history_avoid.get("used_contexts", []),
+        sequential=_sequential,
     )
     _t_gen_end = _time_module.perf_counter()
     logger.info(

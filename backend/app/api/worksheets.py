@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Header, Response
 from pydantic import BaseModel
 from typing import Literal
+import asyncio
 import json
 import logging
 import re
@@ -1647,20 +1648,23 @@ async def generate_worksheet(
                     child_id=request.child_id,
                 )
 
-                meta, slot_questions = await run_slot_pipeline_async(
-                    client=client,
-                    grade=request.grade_level,
-                    subject=request.subject,
-                    topic=original_skill,
-                    q_count=q_count,
-                    difficulty=request.difficulty,
-                    region=request.region,
-                    language=request.language,
-                    worksheet_plan=worksheet_plan,
-                    constraints=constraints_dict,
-                    child_id=request.child_id,
-                    adaptive_hint=adaptive_hint,
-                    gen_context=_gen_ctx_multi,
+                meta, slot_questions = await asyncio.wait_for(
+                    run_slot_pipeline_async(
+                        client=client,
+                        grade=request.grade_level,
+                        subject=request.subject,
+                        topic=original_skill,
+                        q_count=q_count,
+                        difficulty=request.difficulty,
+                        region=request.region,
+                        language=request.language,
+                        worksheet_plan=worksheet_plan,
+                        constraints=constraints_dict,
+                        child_id=request.child_id,
+                        adaptive_hint=adaptive_hint,
+                        gen_context=_gen_ctx_multi,
+                    ),
+                    timeout=50,
                 )
 
                 # ── Skill purity enforcement ──
@@ -1790,20 +1794,23 @@ async def generate_worksheet(
             child_id=request.child_id,
         )
 
-        meta, slot_questions = await run_slot_pipeline_async(
-            client=client,
-            grade=request.grade_level,
-            subject=request.subject,
-            topic=effective_topic,
-            q_count=request.num_questions,
-            difficulty=request.difficulty,
-            region=request.region,
-            language=request.language,
-            worksheet_plan=worksheet_plan,
-            constraints=constraints_dict,
-            child_id=request.child_id,
-            adaptive_hint=adaptive_hint,
-            gen_context=_gen_ctx,
+        meta, slot_questions = await asyncio.wait_for(
+            run_slot_pipeline_async(
+                client=client,
+                grade=request.grade_level,
+                subject=request.subject,
+                topic=effective_topic,
+                q_count=request.num_questions,
+                difficulty=request.difficulty,
+                region=request.region,
+                language=request.language,
+                worksheet_plan=worksheet_plan,
+                constraints=constraints_dict,
+                child_id=request.child_id,
+                adaptive_hint=adaptive_hint,
+                gen_context=_gen_ctx,
+            ),
+            timeout=50,
         )
 
         # Safety net: ensure visual hydration ran (idempotent if already done)
@@ -1864,6 +1871,17 @@ async def generate_worksheet(
 
     except HTTPException:
         raise
+    except asyncio.TimeoutError:
+        logger.error(
+            "Worksheet generation timed out (50s): topic=%s grade=%s subject=%s",
+            getattr(request, "topic", "?"),
+            getattr(request, "grade_level", "?"),
+            getattr(request, "subject", "?"),
+        )
+        raise HTTPException(
+            status_code=503,
+            detail=f"Generation timed out. Please try again or reduce the number of questions.",
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to generate worksheet: {str(e)}"
@@ -2303,17 +2321,20 @@ async def regenerate_worksheet(
             child_id=original.get("child_id"),
         )
 
-        meta, slot_questions = await run_slot_pipeline_async(
-            client=client,
-            grade=original["grade"],
-            subject=original["subject"],
-            topic=original["topic"],
-            q_count=num_questions,
-            difficulty=difficulty,
-            region=region,
-            language=original.get("language", "English"),
-            child_id=original.get("child_id"),
-            gen_context=_regen_ctx,
+        meta, slot_questions = await asyncio.wait_for(
+            run_slot_pipeline_async(
+                client=client,
+                grade=original["grade"],
+                subject=original["subject"],
+                topic=original["topic"],
+                q_count=num_questions,
+                difficulty=difficulty,
+                region=region,
+                language=original.get("language", "English"),
+                child_id=original.get("child_id"),
+                gen_context=_regen_ctx,
+            ),
+            timeout=50,
         )
 
         # Map slot-engine output → API Question models
@@ -2360,6 +2381,14 @@ async def regenerate_worksheet(
 
     except HTTPException:
         raise
+    except asyncio.TimeoutError:
+        logger.error(
+            "Worksheet regeneration timed out (50s): topic=%s", original.get("topic", "?")
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="Generation timed out. Please try again.",
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to regenerate worksheet: {str(e)}"
