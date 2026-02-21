@@ -81,3 +81,4 @@ cd frontend && npm run lint
 The hook auto-appends file paths to `# Update Log` in `docs/CHANGELOG.md`. **Replace the path list with a human-readable summary before finalising the commit.**
 - **2026-02-18**: Changes in agents, docs
 - **2026-02-19**: Changes in backend/app/services, backend/scripts, backend/tests
+- **2026-02-21**: Changes in backend/app/data/scenario_pools, backend/app/services, backend/app/utils, backend/tests

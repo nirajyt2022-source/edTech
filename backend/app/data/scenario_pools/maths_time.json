@@ -1,0 +1,73 @@
+{
+  "class_1": {
+    "note": "Class 1: O'clock and half-past only. No duration questions.",
+    "clock_read": [
+      {"h": 3,  "m": 12, "answer": "3:00"},
+      {"h": 6,  "m": 12, "answer": "6:00"},
+      {"h": 9,  "m": 12, "answer": "9:00"},
+      {"h": 12, "m": 12, "answer": "12:00"},
+      {"h": 2,  "m":  6, "answer": "2:30"},
+      {"h": 4,  "m":  6, "answer": "4:30"},
+      {"h": 7,  "m":  6, "answer": "7:30"},
+      {"h": 11, "m":  6, "answer": "11:30"},
+      {"h": 1,  "m": 12, "answer": "1:00"},
+      {"h": 5,  "m": 12, "answer": "5:00"},
+      {"h": 8,  "m":  6, "answer": "8:30"},
+      {"h": 10, "m": 12, "answer": "10:00"}
+    ],
+    "duration": [],
+    "names": ["Ravi","Priya","Arjun","Meera","Kiran","Anita","Deepa","Suresh"],
+    "contexts": ["school","home","park","library","kitchen","garden","temple","market"]
+  },
+  "class_2": {
+    "note": "Class 2: O'clock, half-past, quarter-past, quarter-to. No duration.",
+    "clock_read": [
+      {"h": 3,  "m": 12, "answer": "3:00"},
+      {"h": 7,  "m": 12, "answer": "7:00"},
+      {"h": 2,  "m":  6, "answer": "2:30"},
+      {"h": 9,  "m":  6, "answer": "9:30"},
+      {"h": 4,  "m":  3, "answer": "4:15"},
+      {"h": 11, "m":  3, "answer": "11:15"},
+      {"h": 6,  "m":  9, "answer": "6:45"},
+      {"h": 1,  "m":  9, "answer": "1:45"},
+      {"h": 5,  "m": 12, "answer": "5:00"},
+      {"h": 8,  "m":  6, "answer": "8:30"},
+      {"h": 10, "m":  3, "answer": "10:15"},
+      {"h": 3,  "m":  9, "answer": "3:45"}
+    ],
+    "duration": [],
+    "names": ["Ravi","Priya","Arjun","Meera","Kiran","Anita","Deepa","Suresh","Rahul","Sunita"],
+    "contexts": ["school","home","park","library","kitchen","garden","temple","market","farm"]
+  },
+  "class_3": {
+    "note": "Class 3: Any 5-minute interval. Duration up to 60 min within same AM/PM session.",
+    "clock_read": [
+      {"h": 4,  "m":  7, "answer": "4:35"},
+      {"h": 11, "m":  3, "answer": "11:15"},
+      {"h": 7,  "m":  9, "answer": "7:45"},
+      {"h": 2,  "m": 11, "answer": "2:55"},
+      {"h": 6,  "m":  1, "answer": "6:05"},
+      {"h": 9,  "m":  8, "answer": "9:40"},
+      {"h": 1,  "m":  4, "answer": "1:20"},
+      {"h": 5,  "m":  2, "answer": "5:10"},
+      {"h": 3,  "m": 10, "answer": "3:50"},
+      {"h": 8,  "m":  6, "answer": "8:30"},
+      {"h": 12, "m":  5, "answer": "12:25"},
+      {"h": 10, "m":  7, "answer": "10:35"}
+    ],
+    "duration": [
+      {"start": "4:15 PM",  "end": "5:00 PM",  "dur": "45 minutes"},
+      {"start": "10:20 AM", "end": "11:05 AM", "dur": "45 minutes"},
+      {"start": "2:10 PM",  "end": "3:00 PM",  "dur": "50 minutes"},
+      {"start": "9:15 AM",  "end": "10:00 AM", "dur": "45 minutes"},
+      {"start": "3:40 PM",  "end": "4:25 PM",  "dur": "45 minutes"},
+      {"start": "11:30 AM", "end": "12:10 PM", "dur": "40 minutes"},
+      {"start": "1:05 PM",  "end": "2:00 PM",  "dur": "55 minutes"},
+      {"start": "6:20 PM",  "end": "7:00 PM",  "dur": "40 minutes"},
+      {"start": "8:00 AM",  "end": "8:45 AM",  "dur": "45 minutes"},
+      {"start": "3:00 PM",  "end": "3:30 PM",  "dur": "30 minutes"}
+    ],
+    "names": ["Ravi","Priya","Arjun","Meera","Kiran","Anita","Deepa","Suresh","Rahul","Sunita","Kavya","Mohan"],
+    "contexts": ["cricket practice","art class","library visit","swimming lesson","music class","science club","birthday party","market trip","football practice","dance class","cooking class","drawing class"]
+  }
+}

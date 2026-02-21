@@ -25,9 +25,12 @@ import json
 import logging
 import random
 import re
+import uuid
 from collections import Counter
 from datetime import date
 from pathlib import Path
+
+from app.utils.answer_computer import clock_time as _compute_clock_time
 
 from app.services.history_store import (
     get_avoid_state,
@@ -8769,6 +8772,67 @@ def get_class_guardrails(grade: str) -> str:
     return build_grade_guardrail_prompt(grade_num)
 
 
+# Fallback chain: if a slot type is forbidden, use this replacement (in order).
+# Recognition is always allowed for every grade.
+_SLOT_FALLBACK_CHAIN: list[str] = [
+    "recognition", "representation", "application",
+]
+
+
+def _remap_slot_for_grade(slot_type: str, grade_num: int) -> str:
+    """Return a grade-safe slot type, replacing forbidden ones with an allowed fallback.
+
+    The LLM user message explicitly names the slot type (e.g. "Slot: error_detection").
+    If that type is forbidden for the grade, the guardrail in the system prompt cannot
+    override the explicit task instruction — the LLM will generate the forbidden type
+    anyway.  Remapping at the source (before the LLM call) eliminates the conflict.
+
+    Remapping is silent; the backend's slot plan is authoritative and the substituted
+    slot is still tagged with the original role for QualityReview logging.
+    """
+    profile = GRADE_PROFILES.get(str(grade_num), {})
+    forbidden: set[str] = set(profile.get("forbidden_question_types", []))
+    if slot_type not in forbidden:
+        return slot_type
+    for candidate in _SLOT_FALLBACK_CHAIN:
+        if candidate not in forbidden:
+            return candidate
+    return "recognition"  # absolute last resort
+
+
+# ── Scenario pool helpers — Time topic, Maths subject ─────────────────────────
+
+_SCENARIO_POOL_DIR = Path(__file__).parent.parent / "data" / "scenario_pools"
+
+
+def _load_time_scenario_pool(grade_num: int) -> dict:
+    """Load maths_time.json and return the pool for this grade.
+
+    Grades 4-5 use the class_3 pool (same clock complexity, duration allowed).
+    Returns {} if the file is missing or the grade key is not found.
+    """
+    pool_path = _SCENARIO_POOL_DIR / "maths_time.json"
+    try:
+        all_pools = json.loads(pool_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("_load_time_scenario_pool: cannot load pool: %s", exc)
+        return {}
+    key = f"class_{min(grade_num, 3)}"
+    return all_pools.get(key, {})
+
+
+def _pick_scenario(pool: list, used_indices: set, rng: random.Random) -> tuple[dict, int]:
+    """Pick an unused scenario from pool, cycling when all entries are exhausted."""
+    if not pool:
+        return {}, -1
+    available = [i for i in range(len(pool)) if i not in used_indices]
+    if not available:
+        used_indices.clear()
+        available = list(range(len(pool)))
+    idx = rng.choice(available)
+    return pool[idx], idx
+
+
 def _build_slot_instruction(
     slot_type: str,
     chosen_variant: dict | None,
@@ -15829,8 +15893,44 @@ def run_slot_pipeline(
     max_attempts = 3
     _question_warnings: list[str] = []
 
+    # Parse grade number once for grade-aware slot remapping (no repeated try/except in loop)
+    try:
+        _sync_grade_num = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
+    except (ValueError, TypeError):
+        _sync_grade_num = 0  # unknown grade — no remapping
+
+    # ── Time topic scenario pool (Maths only) ─────────────────────────────────
+    # Detects "Time" in topic name; loads the curriculum-controlled scenario
+    # pool so Python sets every clock/duration answer — never the LLM.
+    _is_time_maths = (
+        "time" in (topic or "").lower()
+        and (subject or "").lower() in ("mathematics", "maths", "math")
+    )
+    _time_pool: dict = {}
+    _used_clock_read_idx: set = set()
+    _used_duration_idx: set = set()
+    if _is_time_maths and _sync_grade_num > 0:
+        _time_pool = _load_time_scenario_pool(_sync_grade_num)
+        if _time_pool:
+            logger.info("[sync] Time scenario pool loaded for grade %d", _sync_grade_num)
+
     for i, slot_type in enumerate(slot_plan):
         directive = plan_directives[i]
+
+        # ── Grade-aware slot remapping ────────────────────────────────────────
+        # The user message to the LLM explicitly names the slot type (e.g.
+        # "Slot: error_detection").  The system-prompt guardrail says that type
+        # is FORBIDDEN, but the explicit task instruction wins.  Remapping here
+        # eliminates the conflict before the LLM is ever called.
+        _original_slot = slot_type
+        slot_type = _remap_slot_for_grade(slot_type, _sync_grade_num)
+        if slot_type != _original_slot:
+            logger.info(
+                "[sync] Grade %d guardrail: remapped slot '%s' → '%s' (forbidden for this grade)",
+                _sync_grade_num, _original_slot, slot_type,
+            )
+            directive = {**directive, "slot_type": slot_type, "role": slot_type}
+
         q_difficulty = get_question_difficulty(slot_type, difficulty)
         variant = chosen_variants[i]
         slot_instruction = _build_slot_instruction(slot_type, variant, directive=directive, topic=topic, subject=subject)
@@ -15844,6 +15944,50 @@ def run_slot_pipeline(
         # Inject adaptive difficulty hint from Learning Graph (Phase 1)
         if adaptive_hint:
             slot_instruction += f"\n\nADAPTIVE: {adaptive_hint}"
+
+        # ── Time scenario selection (Maths/Time only) ─────────────────────────
+        # Pick an unused scenario from the curriculum pool and inject its
+        # parameters into the slot_instruction so the LLM writes question
+        # wording around a fixed clock reading or duration pair.
+        _time_scenario: dict = {}
+        _time_scenario_type: str = ""
+        if _is_time_maths and _time_pool:
+            _use_duration = (
+                slot_type in ("application", "thinking")
+                and _sync_grade_num >= 3
+                and _time_pool.get("duration")
+            )
+            if _use_duration:
+                _time_scenario, _dur_idx = _pick_scenario(
+                    _time_pool["duration"], _used_duration_idx, rng
+                )
+                if _dur_idx >= 0:
+                    _used_duration_idx.add(_dur_idx)
+                    _time_scenario_type = "duration"
+            else:
+                _time_scenario, _cr_idx = _pick_scenario(
+                    _time_pool.get("clock_read", []), _used_clock_read_idx, rng
+                )
+                if _cr_idx >= 0:
+                    _used_clock_read_idx.add(_cr_idx)
+                    _time_scenario_type = "clock_read"
+
+        if _time_scenario:
+            if _time_scenario_type == "clock_read":
+                slot_instruction += (
+                    f"\n\nTIME SCENARIO (MANDATORY — do not change):\n"
+                    f"Hour hand at {_time_scenario['h']}, minute hand at position "
+                    f"{_time_scenario['m']} on the clock face.\n"
+                    f"Write question wording only. Ask the student to read or identify "
+                    f"this time. Do NOT invent a different time."
+                )
+            elif _time_scenario_type == "duration":
+                slot_instruction += (
+                    f"\n\nTIME SCENARIO (MANDATORY — do not change):\n"
+                    f"Start: {_time_scenario['start']}, End: {_time_scenario['end']}.\n"
+                    f"Write question wording only. Ask the student to find how long the "
+                    f"activity took. Do NOT invent different times."
+                )
 
         generated = False
         for attempt in range(max_attempts):
@@ -15895,7 +16039,26 @@ def run_slot_pipeline(
                     )
                     _question_warnings.extend(f"q{i+1}: {iss}" for iss in issues)
 
+                # ── Time answer override (Python is authoritative) ─────────
+                # Must run AFTER validation so validators see the LLM's answer,
+                # then we replace it with the Python-computed correct value.
+                if _time_scenario:
+                    if _time_scenario_type == "clock_read":
+                        _ans = _compute_clock_time(
+                            _time_scenario["h"], _time_scenario["m"]
+                        )
+                        q["answer"] = _ans
+                        q["correct_answer"] = _ans
+                        q["_scenario_h"] = _time_scenario["h"]
+                        q["_scenario_m"] = _time_scenario["m"]
+                        q["_scenario_type"] = "clock_read"
+                    elif _time_scenario_type == "duration":
+                        q["answer"] = _time_scenario["dur"]
+                        q["correct_answer"] = _time_scenario["dur"]
+                        q["_scenario_type"] = "duration"
+
                 q["id"] = i + 1
+                q["_uuid"] = str(uuid.uuid4())
                 q["slot_type"] = slot_type
                 q["role"] = directive.get("role") or slot_type
                 q["difficulty"] = q_difficulty
@@ -15918,6 +16081,7 @@ def run_slot_pipeline(
             _fallback_formats = get_valid_formats(subject)
             questions.append({
                 "id": i + 1,
+                "_uuid": str(uuid.uuid4()),
                 "slot_type": slot_type,
                 "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
@@ -15963,6 +16127,28 @@ def run_slot_pipeline(
 
     # 7b-iii. Strip LLM-injected hint phrases from question_text
     strip_hint_phrases(questions)
+
+    # 7c. Grade-appropriateness filter (sync path — mirrors async step 10e)
+    # Catches any questions whose content still violates grade guardrails even
+    # after slot remapping (e.g. LLM hallucinated forbidden vocabulary).
+    try:
+        from app.services.quality_reviewer import validate_grade_appropriateness as _vga_sync
+        _valid_qs_sync, _rejected_qs_sync = _vga_sync(questions, _sync_grade_num)
+        if _rejected_qs_sync:
+            logger.warning(
+                "[sync] Grade %d guardrail (7c) rejected %d question(s): %s",
+                _sync_grade_num,
+                len(_rejected_qs_sync),
+                [
+                    {"slot_type": r.get("slot_type"), "reasons": r.get("_rejection_reasons")}
+                    for r in _rejected_qs_sync
+                ],
+            )
+            questions = _valid_qs_sync
+    except (ValueError, TypeError):
+        pass  # grade string not parseable — skip filter
+    except Exception as _ga_exc_sync:
+        logger.warning("[sync] Grade-appropriateness filter failed (continuing): %s", _ga_exc_sync)
 
     # 8. Validate whole worksheet (against the actual plan, not SLOT_PLANS)
     ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
@@ -16631,9 +16817,39 @@ async def run_slot_pipeline_async(
             chosen_variants.append(None)
 
     # ── 6. Build slot instruction list ──────────────────────────────────────
+    # Parse grade number once for grade-aware slot remapping
+    try:
+        _async_grade_num = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
+    except (ValueError, TypeError):
+        _async_grade_num = 0  # unknown grade — no remapping
+
+    # Time topic scenario pool (async path mirrors sync path)
+    _is_time_maths_async = (
+        "time" in (topic or "").lower()
+        and (subject or "").lower() in ("mathematics", "maths", "math")
+    )
+    _time_pool_async: dict = {}
+    _used_clock_read_idx_async: set = set()
+    _used_duration_idx_async: set = set()
+    if _is_time_maths_async and _async_grade_num > 0:
+        _time_pool_async = _load_time_scenario_pool(_async_grade_num)
+        if _time_pool_async:
+            logger.info("[async] Time scenario pool loaded for grade %d", _async_grade_num)
+
     prepared_slots: list[dict] = []
     for i, slot_type in enumerate(slot_plan):
         directive = plan_directives[i]
+
+        # ── Grade-aware slot remapping (same logic as sync path) ─────────────
+        _original_slot_async = slot_type
+        slot_type = _remap_slot_for_grade(slot_type, _async_grade_num)
+        if slot_type != _original_slot_async:
+            logger.info(
+                "[async] Grade %d guardrail: remapped slot '%s' → '%s' (forbidden for this grade)",
+                _async_grade_num, _original_slot_async, slot_type,
+            )
+            directive = {**directive, "slot_type": slot_type, "role": slot_type}
+
         q_difficulty = get_question_difficulty(slot_type, difficulty)
         variant = chosen_variants[i]
         slot_instruction = _build_slot_instruction(
@@ -16673,12 +16889,55 @@ async def run_slot_pipeline_async(
                 "\n\nIMPORTANT: Do not repeat any question already generated in this "
                 "worksheet. Each question must use different data, numbers, and scenarios."
             )
+        # ── Time scenario selection (async path) ──────────────────────────
+        _time_scenario_async: dict = {}
+        _time_scenario_type_async: str = ""
+        if _is_time_maths_async and _time_pool_async:
+            _use_dur_async = (
+                slot_type in ("application", "thinking")
+                and _async_grade_num >= 3
+                and _time_pool_async.get("duration")
+            )
+            if _use_dur_async:
+                _time_scenario_async, _dur_idx_a = _pick_scenario(
+                    _time_pool_async["duration"], _used_duration_idx_async, rng
+                )
+                if _dur_idx_a >= 0:
+                    _used_duration_idx_async.add(_dur_idx_a)
+                    _time_scenario_type_async = "duration"
+            else:
+                _time_scenario_async, _cr_idx_a = _pick_scenario(
+                    _time_pool_async.get("clock_read", []), _used_clock_read_idx_async, rng
+                )
+                if _cr_idx_a >= 0:
+                    _used_clock_read_idx_async.add(_cr_idx_a)
+                    _time_scenario_type_async = "clock_read"
+
+        if _time_scenario_async:
+            if _time_scenario_type_async == "clock_read":
+                slot_instruction += (
+                    f"\n\nTIME SCENARIO (MANDATORY — do not change):\n"
+                    f"Hour hand at {_time_scenario_async['h']}, minute hand at position "
+                    f"{_time_scenario_async['m']} on the clock face.\n"
+                    f"Write question wording only. Ask the student to read or identify "
+                    f"this time. Do NOT invent a different time."
+                )
+            elif _time_scenario_type_async == "duration":
+                slot_instruction += (
+                    f"\n\nTIME SCENARIO (MANDATORY — do not change):\n"
+                    f"Start: {_time_scenario_async['start']}, End: {_time_scenario_async['end']}.\n"
+                    f"Write question wording only. Ask the student to find how long the "
+                    f"activity took. Do NOT invent different times."
+                )
+
         prepared_slots.append({
             "slot_type": slot_type,
             "q_difficulty": q_difficulty,
             "slot_instruction": slot_instruction,
             "variant": variant,
             "directive": directive,
+            "_time_scenario": _time_scenario_async,
+            "_time_scenario_type": _time_scenario_type_async,
         })
 
     # ── 7. Parallel generation ──────────────────────────────────────────────
@@ -16718,12 +16977,16 @@ async def run_slot_pipeline_async(
         slot_type = slot_plan[idx] if idx < len(slot_plan) else "recognition"
         q_difficulty = get_question_difficulty(slot_type, difficulty)
         variant = chosen_variants[idx] if idx < len(chosen_variants) else None
+        _ps = prepared_slots[idx] if idx < len(prepared_slots) else {}
+        _r_scenario = _ps.get("_time_scenario", {})
+        _r_scenario_type = _ps.get("_time_scenario_type", "")
 
         if not r["ok"] or r["q"] is None:
             # Generation failed even after retry — insert stub
             logger.warning("[async] Q%d failed, inserting stub", idx + 1)
             questions.append({
                 "id": idx + 1,
+                "_uuid": str(uuid.uuid4()),
                 "slot_type": slot_type,
                 "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
@@ -16759,7 +17022,22 @@ async def run_slot_pipeline_async(
             _question_warnings.extend(f"q{idx+1}: {iss}" for iss in issues)
             logger.warning("[async] Q%d has issues (best-effort): %s", idx + 1, issues)
 
+        # ── Time answer override (async path) ─────────────────────────────
+        if _r_scenario:
+            if _r_scenario_type == "clock_read":
+                _ans_a = _compute_clock_time(_r_scenario["h"], _r_scenario["m"])
+                q["answer"] = _ans_a
+                q["correct_answer"] = _ans_a
+                q["_scenario_h"] = _r_scenario["h"]
+                q["_scenario_m"] = _r_scenario["m"]
+                q["_scenario_type"] = "clock_read"
+            elif _r_scenario_type == "duration":
+                q["answer"] = _r_scenario["dur"]
+                q["correct_answer"] = _r_scenario["dur"]
+                q["_scenario_type"] = "duration"
+
         q["id"] = idx + 1
+        q["_uuid"] = str(uuid.uuid4())
         q["slot_type"] = slot_type
         q["role"] = directive.get("role") or slot_type
         q["difficulty"] = q_difficulty

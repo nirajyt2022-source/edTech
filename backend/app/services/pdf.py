@@ -108,6 +108,26 @@ def _group_questions_by_tier(questions: list) -> list[tuple[str, str, str, list]
     return tiers
 
 
+def _flatten_tier_order(questions: list) -> list:
+    """Return questions in the same display order that _build_questions() uses.
+
+    Order: Foundation (recognition/representation) → Application → Stretch
+    (error_detection/thinking), with bonus questions appended last (they are
+    rendered without a Q-number so they must not be counted in the answer key).
+
+    Passing this list to both _build_questions() and _build_answer_key()
+    guarantees that Q1 in the answer key matches Q1 printed on the worksheet.
+    """
+    tiers = _group_questions_by_tier(questions)
+    result: list = []
+    for _, _, _, tier_qs in tiers:
+        result.extend(tier_qs)
+    # Bonus questions are displayed without a number — keep them last
+    bonus = [q for q in questions if q.get("is_bonus") or q.get("_is_bonus")]
+    result.extend(bonus)
+    return result
+
+
 class PDFService:
     """Service for generating premium PDF worksheets."""
 
@@ -293,13 +313,18 @@ class PDFService:
         story = []
         questions = worksheet.get('questions', [])
 
+        # Compute display order once — tier-sorted (Foundation → Application →
+        # Stretch), bonus last.  Both _build_questions and _build_answer_key
+        # must iterate the *same* list so Q-numbers stay in sync.
+        display_questions = _flatten_tier_order(questions)
+
         if pdf_type == "answer_key":
-            self._build_answer_key(story, worksheet, questions)
+            self._build_answer_key(story, worksheet, display_questions)
         else:
-            self._build_questions(story, worksheet, questions)
-            if pdf_type == "full" and questions:
+            self._build_questions(story, worksheet, display_questions)
+            if pdf_type == "full" and display_questions:
                 story.append(PageBreak())
-                self._build_answer_key(story, worksheet, questions)
+                self._build_answer_key(story, worksheet, display_questions)
 
         doc.build(
             story,
