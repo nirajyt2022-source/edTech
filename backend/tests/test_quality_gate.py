@@ -368,6 +368,47 @@ class TestMCQIntegrity:
         passed, issues = run_quality_gate(_worksheet([q]))
         assert not any("MCQ_BROKEN" in i for i in issues), issues
 
+    def test_options_present_non_mcq_format_flagged(self):
+        # Direction 1 safety net: options exist but format isn't MCQ
+        # (auto-correct should have fixed this in slot_engine; gate catches anything it missed)
+        q = {
+            "display_number": 7,
+            "question": "What is the capital of India?",
+            "correct_answer": "A",
+            "format": "short_answer",
+            "options": ["Delhi", "Mumbai", "Kolkata"],
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("OPTIONS_FORMAT_MISMATCH" in i for i in issues), issues
+        assert any("3" in i for i in issues)
+        assert any("short_answer" in i for i in issues)
+
+    def test_options_with_mcq_format_no_mismatch(self):
+        # Correct pairing: mcq_3 format + 3 options → no OPTIONS_FORMAT_MISMATCH
+        q = {
+            "display_number": 8,
+            "question": "What is the capital of France?",
+            "correct_answer": "B",
+            "format": "mcq_3",
+            "options": ["Berlin", "Paris", "Madrid"],
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("OPTIONS_FORMAT_MISMATCH" in i for i in issues), issues
+
+    def test_fill_blank_no_options_no_mismatch(self):
+        # Non-MCQ format + no options → neither OPTIONS_FORMAT_MISMATCH nor MCQ_BROKEN
+        q = {
+            "display_number": 9,
+            "question": "The sky is ___.",
+            "correct_answer": "blue",
+            "format": "fill_blank",
+            "options": None,
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("OPTIONS_FORMAT_MISMATCH" in i for i in issues), issues
+        assert not any("MCQ_BROKEN" in i for i in issues), issues
+
 
 # ── Check 8: Empty question text ─────────────────────────────────────────────
 

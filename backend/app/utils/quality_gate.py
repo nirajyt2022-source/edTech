@@ -177,16 +177,29 @@ def run_quality_gate(worksheet: dict) -> Tuple[bool, List[str]]:
             )
 
     # ── Check 7: MCQ integrity ─────────────────────────────────────────────
-    # Three sub-checks for multiple-choice questions:
-    #   a) options must be non-null when format is mcq_3 / mcq_4
+    # Four sub-checks covering both sync directions:
+    #   a) MCQ format but options is null/empty
     #   b) options must not contain duplicates
     #   c) if correct_answer is a letter (A/B/C/D) the matching option must exist
+    #   d) Safety net: options present but format is NOT an MCQ type
+    #      (catches cases the auto-correct in slot_engine didn't reach)
     for i, q in enumerate(questions, 1):
         fmt = (q.get("format") or "").lower()
-        if fmt not in ("mcq_3", "mcq_4", "multiple_choice"):
-            continue
         n = _q_number(q, i)
         opts = q.get("options") or []
+        is_mcq_fmt = fmt in ("mcq_3", "mcq_4", "multiple_choice")
+
+        # d) options present but format is not MCQ
+        if opts and not is_mcq_fmt:
+            failures.append(
+                f"OPTIONS_FORMAT_MISMATCH: Q{n} has {len(opts)} option(s) "
+                f"but format='{fmt}'"
+            )
+
+        if not is_mcq_fmt:
+            continue  # remaining checks only apply to MCQ formats
+
+        # a) MCQ format but no options
         if not opts:
             failures.append(
                 f"MCQ_BROKEN: Q{n} format={fmt} but options is null/empty"

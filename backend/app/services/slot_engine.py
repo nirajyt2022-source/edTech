@@ -16270,6 +16270,18 @@ def run_slot_pipeline(
                 # Prevents "3 + ___ = 10" from rendering as vertical_sum.
                 if "___" in q.get("question_text", "") and q["render_format"] != "fill_blank":
                     q["render_format"] = "fill_blank"
+                # MCQ options ↔ render_format sync (Direction 1).
+                # If the LLM returned options but the pre-computed render_format isn't
+                # MCQ, snap it to the appropriate MCQ type so the PDF renderer shows
+                # the choices instead of a blank answer box.
+                _q_opts = q.get("options") or []
+                if _q_opts and q["render_format"] not in ("mcq_3", "mcq_4", "multiple_choice"):
+                    _corrected = "mcq_4" if len(_q_opts) >= 4 else "mcq_3"
+                    logger.info(
+                        "[sync] Q%d MCQ format auto-corrected: %d options → %s",
+                        i + 1, len(_q_opts), _corrected,
+                    )
+                    q["render_format"] = _corrected
 
                 q["id"] = i + 1
                 q["_uuid"] = str(uuid.uuid4())
@@ -17312,6 +17324,15 @@ async def run_slot_pipeline_async(
         # Fix B: if question text contains ___, force fill_blank.
         if "___" in q.get("question_text", "") and q["render_format"] != "fill_blank":
             q["render_format"] = "fill_blank"
+        # MCQ options ↔ render_format sync (Direction 1, async path).
+        _q_opts_a = q.get("options") or []
+        if _q_opts_a and q["render_format"] not in ("mcq_3", "mcq_4", "multiple_choice"):
+            _corrected_a = "mcq_4" if len(_q_opts_a) >= 4 else "mcq_3"
+            logger.info(
+                "[async] Q%d MCQ format auto-corrected: %d options → %s",
+                idx + 1, len(_q_opts_a), _corrected_a,
+            )
+            q["render_format"] = _corrected_a
 
         q["id"] = idx + 1
         q["_uuid"] = str(uuid.uuid4())
