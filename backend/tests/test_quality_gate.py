@@ -1,6 +1,8 @@
-"""Tests for quality_gate.run_quality_gate() — all 5 checks."""
+"""Tests for quality_gate.run_quality_gate() — all 9 checks."""
 import pytest
-from app.utils.quality_gate import run_quality_gate, jaccard, extract_times
+from app.utils.quality_gate import (
+    run_quality_gate, jaccard, extract_times, _content_words,
+)
 
 
 # ── Helper builders ───────────────────────────────────────────────────────────
@@ -91,7 +93,7 @@ class TestDuplicates:
         assert issues == []
 
     def test_near_identical_questions_fail(self):
-        # Same sentence with only one word changed → jaccard > 0.6
+        # Same sentence — jaccard = 1.0 > 0.50
         qs = [
             _make_q(1, "What is the sum of 47 and 35?", "82"),
             _make_q(2, "What is the sum of 47 and 35?", "82"),
@@ -100,11 +102,11 @@ class TestDuplicates:
         assert passed is False
         assert any("DUPLICATE" in i for i in issues), issues
 
-    def test_jaccard_boundary(self):
-        # Exactly at the boundary — just under 0.60 should pass
+    def test_jaccard_threshold_is_050(self):
+        # 5/7 ≈ 0.71 — well above the 0.50 threshold, should still fail
         a = "dog cat bird fish whale shark"       # 6 unique words
-        b = "dog cat bird fish whale eagle"       # 5 shared, 1 different → 5/7 ≈ 0.71 > 0.6
-        assert jaccard(a, b) > 0.6
+        b = "dog cat bird fish whale eagle"       # 5 shared, 1 different → 5/7 ≈ 0.71
+        assert jaccard(a, b) > 0.50
         qs = [_make_q(1, a, "x"), _make_q(2, b, "y")]
         passed, issues = run_quality_gate(_worksheet(qs))
         assert passed is False
@@ -119,6 +121,37 @@ class TestDuplicates:
         assert passed is False
         # Either DUPLICATE (jaccard) or DUPLICATE_TIMES should fire
         assert any("DUPLICATE" in i for i in issues), issues
+
+    def test_concept_duplicate_same_keyword(self):
+        # Different phrasing but same content word "कुर्सी" (a chair in Hindi) — jaccard < 0.50
+        qs = [
+            _make_q(1, "कुर्सी का रंग क्या है?", "भूरा"),
+            _make_q(2, "यह कुर्सी किस चीज़ से बनी है?", "लकड़ी"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert passed is False
+        assert any("CONCEPT_DUPLICATE" in i for i in issues), issues
+
+    def test_concept_duplicate_english_content_word(self):
+        # Both questions reference "rectangle" — same concept, different aspects
+        qs = [
+            _make_q(1, "What is the perimeter of a rectangle with sides 3 and 5?", "16"),
+            _make_q(2, "Find the area of a rectangle whose length is 6 and width is 4.", "24"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert passed is False
+        assert any("CONCEPT_DUPLICATE" in i for i in issues), issues
+        assert any("rectangle" in i for i in issues)
+
+    def test_short_common_words_do_not_trigger_concept_duplicate(self):
+        # Words like "many", "does", "have" are 4 chars — below the > 4 threshold
+        qs = [
+            _make_q(1, "How many legs does a dog have?", "4"),
+            _make_q(2, "How many days are there in one week?", "7"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        # No CONCEPT_DUPLICATE — "many" is 4 chars, not > 4
+        assert not any("CONCEPT_DUPLICATE" in i for i in issues), issues
 
 
 # ── Check 4: Grade appropriateness ───────────────────────────────────────────
@@ -242,6 +275,176 @@ class TestFallbackStub:
         assert len(fallback_issues) == 3, f"Expected 3 FALLBACK issues, got: {issues}"
 
 
+# ── Check 7: MCQ integrity ────────────────────────────────────────────────────
+
+class TestMCQIntegrity:
+    def test_valid_mcq_passes(self):
+        q = {
+            "display_number": 1,
+            "question": "Which animal is a mammal?",
+            "correct_answer": "B",
+            "format": "mcq_3",
+            "options": ["Fish", "Whale", "Eagle"],
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("MCQ_BROKEN" in i for i in issues), issues
+
+    def test_null_options_fails(self):
+        q = {
+            "display_number": 1,
+            "question": "Which planet is closest to the Sun?",
+            "correct_answer": "A",
+            "format": "mcq_3",
+            "options": None,
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("MCQ_BROKEN" in i for i in issues), issues
+        assert any("null" in i or "empty" in i for i in issues)
+
+    def test_empty_options_list_fails(self):
+        q = {
+            "display_number": 2,
+            "question": "Which planet is largest?",
+            "correct_answer": "A",
+            "format": "mcq_4",
+            "options": [],
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("MCQ_BROKEN" in i for i in issues), issues
+
+    def test_duplicate_options_fail(self):
+        q = {
+            "display_number": 3,
+            "question": "What colour is the sky?",
+            "correct_answer": "A",
+            "format": "mcq_3",
+            "options": ["Blue", "Blue", "Green"],   # Blue duplicated
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("MCQ_BROKEN" in i for i in issues), issues
+        assert any("duplicate" in i for i in issues)
+        assert any("'Blue'" in i for i in issues)
+
+    def test_letter_answer_out_of_range_fails(self):
+        # correct_answer=C but only 2 options (A, B)
+        q = {
+            "display_number": 4,
+            "question": "Pick the correct answer.",
+            "correct_answer": "C",
+            "format": "mcq_3",
+            "options": ["Red", "Blue"],
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("MCQ_BROKEN" in i for i in issues), issues
+        assert any("'C'" in i for i in issues)
+        assert any("2" in i for i in issues)
+
+    def test_non_letter_answer_not_checked(self):
+        # correct_answer is the full text, not a letter — no MCQ_BROKEN
+        q = {
+            "display_number": 5,
+            "question": "What is 3 + 4?",
+            "correct_answer": "Seven",
+            "format": "mcq_3",
+            "options": ["Five", "Six", "Seven"],
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("MCQ_BROKEN" in i for i in issues), issues
+
+    def test_non_mcq_format_skipped(self):
+        # fill_blank format — options check should not apply
+        q = {
+            "display_number": 6,
+            "question": "3 + ___ = 10",
+            "correct_answer": "7",
+            "format": "fill_blank",
+            "options": None,
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("MCQ_BROKEN" in i for i in issues), issues
+
+
+# ── Check 8: Empty question text ─────────────────────────────────────────────
+
+class TestEmptyQuestion:
+    def test_empty_string_fails(self):
+        q = {"display_number": 1, "question": "", "correct_answer": "7"}
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("EMPTY_QUESTION" in i for i in issues), issues
+        assert any("Q1" in i for i in issues)
+
+    def test_whitespace_only_fails(self):
+        q = {"display_number": 2, "question": "   ", "correct_answer": "7"}
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("EMPTY_QUESTION" in i for i in issues), issues
+
+    def test_none_text_fails(self):
+        # All text fields absent — _q_text returns ""
+        q = {"display_number": 3, "correct_answer": "7"}
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("EMPTY_QUESTION" in i for i in issues), issues
+
+    def test_normal_question_passes(self):
+        q = _make_q(1, "What is 3 + 4?", "7")
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("EMPTY_QUESTION" in i for i in issues)
+
+    def test_empty_catches_regardless_of_is_fallback(self):
+        """EMPTY_QUESTION fires even when is_fallback is False."""
+        q = {"display_number": 4, "question": "", "correct_answer": "", "is_fallback": False}
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert any("EMPTY_QUESTION" in i for i in issues), issues
+
+
+# ── Check 9: Explanation leak ─────────────────────────────────────────────────
+
+class TestExplanationLeak:
+    def test_explanation_contains_answer_fails(self):
+        q = {
+            "display_number": 1,
+            "question": "What is 6 x 7?",
+            "correct_answer": "420",
+            "explanation": "Think through carefully. The answer is 420.",
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("EXPLANATION_LEAK" in i for i in issues), issues
+        assert any("'420'" in i for i in issues)
+
+    def test_clean_explanation_passes(self):
+        q = {
+            "display_number": 2,
+            "question": "What is 6 x 7?",
+            "correct_answer": "420",
+            "explanation": "Multiply 6 by 7 step by step.",
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("EXPLANATION_LEAK" in i for i in issues), issues
+
+    def test_short_answer_not_flagged(self):
+        # Answer <= 2 chars ("A") — same guard as hint leak
+        q = {
+            "display_number": 3,
+            "question": "Which option?",
+            "correct_answer": "A",
+            "explanation": "Option A is correct because it is the right one.",
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("EXPLANATION_LEAK" in i for i in issues)
+
+    def test_no_explanation_not_flagged(self):
+        q = _make_q(1, "What is 3 + 4?", "700")
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("EXPLANATION_LEAK" in i for i in issues)
+
+
 # ── Composite: worksheet that passes ALL checks ───────────────────────────────
 
 class TestFullPassingWorksheet:
@@ -280,6 +483,26 @@ class TestHelpers:
 
     def test_extract_times_empty(self):
         assert extract_times("No times here.") == frozenset()
+
+    def test_content_words_filters_short(self):
+        # Words with <= 4 chars should be excluded
+        words = _content_words("What does many have legs")
+        assert "what" not in words
+        assert "does" not in words
+        assert "many" not in words
+        assert "have" not in words
+        assert "legs" not in words
+
+    def test_content_words_keeps_long(self):
+        words = _content_words("rectangle triangle spider")
+        assert "rectangle" in words
+        assert "triangle" in words
+        assert "spider" in words
+
+    def test_content_words_no_digits(self):
+        # Numbers like "47" should not appear
+        words = _content_words("47 plus 35 equals 82")
+        assert not any(w.isdigit() for w in words)
 
     def test_q_text_fallback_fields(self):
         from app.utils.quality_gate import _q_text
