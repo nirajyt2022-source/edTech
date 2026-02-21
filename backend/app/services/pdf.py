@@ -520,8 +520,10 @@ class PDFService:
 
     def _build_single_question(self, question: dict, number: int, tier_key: str = "all") -> list:
         """Build elements for a single question. Returns list of flowables."""
+        import re as _re
         elements = []
-        q_type = question.get('type', 'short_answer')
+        # Prefer the render format field; fall back to legacy type field
+        q_type = question.get('format', question.get('type', 'short_answer'))
         q_text = _sanitize_text(question.get('text', ''))
 
         # Star badge based on tier
@@ -534,27 +536,107 @@ class PDFService:
             star_badge = " ***"
 
         # Question text with number + star badge
-        elements.append(Paragraph(
-            f"<b><font color='#{_PRIMARY.hexval()[2:]}'>{number}.</font></b>"
-            f"<font size='7' color='#{_ACCENT.hexval()[2:]}'>{star_badge}</font>  {q_text}",
-            self.styles['QuestionText']
-        ))
+        # For vertical_sum, suppress the question text header and render the sum directly
+        if q_type != 'vertical_sum':
+            elements.append(Paragraph(
+                f"<b><font color='#{_PRIMARY.hexval()[2:]}'>{number}.</font></b>"
+                f"<font size='7' color='#{_ACCENT.hexval()[2:]}'>{star_badge}</font>  {q_text}",
+                self.styles['QuestionText']
+            ))
 
-        # Answer area based on type
-        if q_type == 'multiple_choice' and question.get('options'):
+        # ── Answer area by render format ──────────────────────────────────────
+
+        if q_type in ('mcq_3', 'mcq_4', 'multiple_choice') and question.get('options'):
+            # Options list
             for j, option in enumerate(question['options']):
-                letter = chr(65 + j)
                 elements.append(Paragraph(
-                    f"<font color='#{_PRIMARY.hexval()[2:]}'>{letter})</font>  "
+                    f"<font color='#{_PRIMARY.hexval()[2:]}'></font>  "
                     f"{_sanitize_text(str(option))}",
                     self.styles['OptionText']
                 ))
             elements.append(Spacer(1, 6))
 
+        elif q_type in ('mcq_3', 'mcq_4'):
+            # MCQ requested but options not in question dict — render a blank choice area
+            num_opts = 4 if q_type == 'mcq_4' else 3
+            for j in range(num_opts):
+                letter = chr(65 + j)
+                elements.append(Paragraph(
+                    f"<font color='#{_PRIMARY.hexval()[2:]}'>{letter})</font>  "
+                    "______________________________",
+                    self.styles['OptionText']
+                ))
+            elements.append(Spacer(1, 6))
+
+        elif q_type == 'vertical_sum':
+            # ── Stacked column arithmetic layout ─────────────────────────────
+            # Parse "47 + 35" or "84 - 29" or "6 x 7" from question_text
+            _vs_match = _re.search(
+                r'(\d+)\s*([+\-\u00d7\u00f7x])\s*(\d+)',
+                q_text,
+            )
+            _px = _PRIMARY.hexval()[2:]
+            _ac = _ACCENT.hexval()[2:]
+            if _vs_match:
+                _a = _vs_match.group(1)
+                _op = _vs_match.group(2)
+                _b = _vs_match.group(3)
+            else:
+                # Fallback: show the raw question text and ruled lines
+                elements.append(Paragraph(
+                    f"<b><font color='#{_px}'>{number}.</font></b>"
+                    f"<font size='7' color='#{_ac}'>{star_badge}</font>  {q_text}",
+                    self.styles['QuestionText']
+                ))
+                elements.append(Spacer(1, 6))
+                for _ in range(2):
+                    elements.append(HRFlowable(
+                        width="40%", thickness=0.3, color=_RULE,
+                        spaceBefore=10, spaceAfter=0, hAlign='LEFT',
+                    ))
+                elements.append(Spacer(1, 4))
+                return elements
+
+            # Build question header with number badge
+            elements.append(Paragraph(
+                f"<b><font color='#{_px}'>{number}.</font></b>"
+                f"<font size='7' color='#{_ac}'>{star_badge}</font>",
+                self.styles['QuestionNumber']
+            ))
+
+            # Stacked sum using a narrow right-aligned Table
+            from reportlab.lib.styles import ParagraphStyle as _PS
+            from reportlab.lib.enums import TA_RIGHT as _TA_RIGHT
+            _vs_style = _PS(
+                'VSNum', fontName='Helvetica-Bold', fontSize=14,
+                leading=18, alignment=_TA_RIGHT,
+            )
+            _col_w = 3.5 * cm
+            _vs_table = Table(
+                [
+                    [Paragraph(f"  {_a}", _vs_style)],
+                    [Paragraph(f"{_op} {_b}", _vs_style)],
+                ],
+                colWidths=[_col_w],
+            )
+            _vs_table.setStyle(TableStyle([
+                ('LINEBELOW', (0, 1), (-1, 1), 1.2, colors.black),
+                ('TOPPADDING', (0, 0), (-1, -1), 2),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ]))
+            elements.append(_vs_table)
+            # Answer blank below the rule
+            elements.append(HRFlowable(
+                width=f"{_col_w}",
+                thickness=0.3, color=_RULE,
+                spaceBefore=8, spaceAfter=0, hAlign='LEFT',
+            ))
+            elements.append(Spacer(1, 6))
+
         elif q_type == 'true_false':
             elements.append(Paragraph(
-                "<font color='#{0}'>A)</font>  True      "
-                "<font color='#{0}'>B)</font>  False".format(_PRIMARY.hexval()[2:]),
+                "  <u>True</u>  /  <u>False</u>",
                 self.styles['OptionText']
             ))
             elements.append(Spacer(1, 6))
@@ -569,7 +651,7 @@ class PDFService:
             elements.append(Spacer(1, 6))
 
         else:
-            # Short answer — 3 ruled lines for adequate writing space
+            # short_answer — 3 ruled lines for adequate writing space
             elements.append(Spacer(1, 6))
             for _ in range(3):
                 elements.append(HRFlowable(

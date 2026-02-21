@@ -104,6 +104,7 @@ class Question(BaseModel):
     skill_tag: str | None = None  # Phase 5: skill diagnostic tag
     is_bonus: bool = False  # Phase 2: bonus challenge question flag
     hint: str | None = None  # Optional hint (separate from question_text)
+    format: str = "short_answer"  # PDF render format: fill_blank|mcq_3|mcq_4|vertical_sum|true_false|short_answer
 
 
 class Worksheet(BaseModel):
@@ -1431,7 +1432,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
         id=f"q{idx + 1}",
         type=q_type,
         text=text,
-        options=None,
+        options=q.get("options") or None,
         correct_answer=answer_str,
         explanation=explanation,
         difficulty=q.get("difficulty"),
@@ -1443,6 +1444,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
         role=q.get("slot_type"),
         skill_tag=q.get("skill_tag") or fmt,
         is_bonus=bool(q.get("_is_bonus", False)),
+        format=q.get("render_format", "short_answer"),
     )
 
 

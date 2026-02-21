@@ -8800,6 +8800,149 @@ def _remap_slot_for_grade(slot_type: str, grade_num: int) -> str:
     return "recognition"  # absolute last resort
 
 
+# ── PDF render format map — (subject_norm, slot_type, grade_num) → render_fmt ──
+# These are the format names the PDF renderer recognises:
+#   fill_blank | mcq_3 | mcq_4 | vertical_sum | true_false | short_answer
+# Any (subject, slot, grade) combination not listed defaults to "short_answer".
+
+FORMAT_MAP: dict[tuple, str] = {
+    # ── Maths Classes 1-2 ────────────────────────────────────────────────────
+    ("maths", "recognition",    1): "fill_blank",
+    ("maths", "recognition",    2): "fill_blank",
+    ("maths", "representation", 1): "vertical_sum",
+    ("maths", "representation", 2): "vertical_sum",
+    ("maths", "application",    1): "mcq_3",
+    ("maths", "application",    2): "mcq_3",
+    ("maths", "error_detection",1): "mcq_3",
+    ("maths", "error_detection",2): "mcq_3",
+    ("maths", "thinking",       1): "mcq_3",
+    ("maths", "thinking",       2): "mcq_3",
+    # ── Maths Classes 3-5 ────────────────────────────────────────────────────
+    ("maths", "recognition",    3): "fill_blank",
+    ("maths", "recognition",    4): "fill_blank",
+    ("maths", "recognition",    5): "fill_blank",
+    ("maths", "representation", 3): "fill_blank",
+    ("maths", "representation", 4): "fill_blank",
+    ("maths", "representation", 5): "fill_blank",
+    ("maths", "application",    3): "mcq_4",
+    ("maths", "application",    4): "mcq_4",
+    ("maths", "application",    5): "mcq_4",
+    ("maths", "error_detection",3): "mcq_4",
+    ("maths", "error_detection",4): "mcq_4",
+    ("maths", "error_detection",5): "mcq_4",
+    ("maths", "thinking",       3): "short_answer",
+    ("maths", "thinking",       4): "short_answer",
+    ("maths", "thinking",       5): "short_answer",
+    # ── English all classes ───────────────────────────────────────────────────
+    ("english", "recognition",   1): "fill_blank",
+    ("english", "recognition",   2): "fill_blank",
+    ("english", "recognition",   3): "fill_blank",
+    ("english", "recognition",   4): "fill_blank",
+    ("english", "recognition",   5): "fill_blank",
+    ("english", "representation",1): "fill_blank",
+    ("english", "representation",2): "fill_blank",
+    ("english", "representation",3): "fill_blank",
+    ("english", "application",   1): "mcq_3",
+    ("english", "application",   2): "mcq_3",
+    ("english", "application",   3): "mcq_4",
+    ("english", "application",   4): "mcq_4",
+    ("english", "application",   5): "mcq_4",
+    ("english", "error_detection",1): "mcq_3",
+    ("english", "error_detection",2): "mcq_3",
+    ("english", "error_detection",3): "mcq_4",
+    ("english", "thinking",      1): "true_false",
+    ("english", "thinking",      2): "true_false",
+    ("english", "thinking",      3): "short_answer",
+    ("english", "thinking",      4): "short_answer",
+    ("english", "thinking",      5): "short_answer",
+    # ── EVS / Science all classes ─────────────────────────────────────────────
+    ("evs", "recognition",   1): "mcq_3",
+    ("evs", "recognition",   2): "mcq_3",
+    ("evs", "recognition",   3): "mcq_4",
+    ("evs", "recognition",   4): "mcq_4",
+    ("evs", "recognition",   5): "mcq_4",
+    ("evs", "representation",1): "true_false",
+    ("evs", "representation",2): "true_false",
+    ("evs", "representation",3): "short_answer",
+    ("evs", "application",   1): "true_false",
+    ("evs", "application",   2): "true_false",
+    ("evs", "application",   3): "mcq_4",
+    ("evs", "application",   4): "mcq_4",
+    ("evs", "application",   5): "mcq_4",
+    ("evs", "thinking",      1): "short_answer",
+    ("evs", "thinking",      2): "short_answer",
+    ("evs", "thinking",      3): "short_answer",
+    # ── Hindi all classes ─────────────────────────────────────────────────────
+    ("hindi", "recognition",   1): "fill_blank",
+    ("hindi", "recognition",   2): "fill_blank",
+    ("hindi", "recognition",   3): "fill_blank",
+    ("hindi", "recognition",   4): "fill_blank",
+    ("hindi", "recognition",   5): "fill_blank",
+    ("hindi", "representation",1): "fill_blank",
+    ("hindi", "representation",2): "fill_blank",
+    ("hindi", "application",   1): "mcq_3",
+    ("hindi", "application",   2): "mcq_3",
+    ("hindi", "application",   3): "mcq_4",
+    ("hindi", "application",   4): "mcq_4",
+    ("hindi", "application",   5): "mcq_4",
+    ("hindi", "thinking",      1): "short_answer",
+    ("hindi", "thinking",      2): "short_answer",
+    ("hindi", "thinking",      3): "short_answer",
+}
+
+_FORMAT_INSTRUCTIONS: dict[str, str] = {
+    "fill_blank": (
+        "Format: fill-in-the-blank. Use ___ for the blank in question_text. "
+        "The answer field must contain only the word(s) or number that fill the blank."
+    ),
+    "mcq_3": (
+        "Format: multiple choice with exactly 3 options. "
+        "Write the question in question_text. "
+        "Populate the 'options' array with exactly 3 strings: "
+        '["A) option1", "B) option2", "C) option3"]. '
+        "The answer field must be exactly 'A', 'B', or 'C'."
+    ),
+    "mcq_4": (
+        "Format: multiple choice with exactly 4 options. "
+        "Write the question in question_text. "
+        "Populate the 'options' array with exactly 4 strings: "
+        '["A) option1", "B) option2", "C) option3", "D) option4"]. '
+        "The answer field must be exactly 'A', 'B', 'C', or 'D'."
+    ),
+    "true_false": (
+        "Format: true-or-false statement. "
+        "Write a factual declarative statement in question_text (no question mark). "
+        "The answer field must be exactly 'True' or 'False'."
+    ),
+    "vertical_sum": (
+        "Format: column arithmetic. "
+        "Write the arithmetic expression as 'NUMBER OPERATOR NUMBER' in question_text "
+        "(e.g. '47 + 35' or '84 - 29'). "
+        "Use only digits and one operator symbol (+, -, x). "
+        "The answer must be the numeric result."
+    ),
+    "short_answer": (
+        "Format: written answer. Write a clear question in question_text. "
+        "The answer field should contain a complete, concise answer."
+    ),
+}
+
+
+def get_format(subject: str, slot_type: str, grade_num: int) -> str:
+    """Return the PDF render format for a (subject, slot_type, grade) combination.
+
+    Returns one of: fill_blank | mcq_3 | mcq_4 | vertical_sum | true_false | short_answer.
+    Falls back to "short_answer" for any combination not in FORMAT_MAP.
+    """
+    norm = (subject or "").lower()
+    if norm in ("mathematics", "maths", "math"):
+        norm = "maths"
+    elif norm in ("science", "evs", "computer", "gk", "moral science", "health", "evs/science"):
+        norm = "evs"
+    key = (norm, slot_type, grade_num)
+    return FORMAT_MAP.get(key, "short_answer")
+
+
 # ── Scenario pool helpers — Time topic, Maths subject ─────────────────────────
 
 _SCENARIO_POOL_DIR = Path(__file__).parent.parent / "data" / "scenario_pools"
@@ -12776,7 +12919,7 @@ QUESTION_USER_TEMPLATE = (
     "Avoid reusing: {avoid}\n"
     "{slot_instruction}\n"
     "{language_instruction}"
-    '{{"format":"","question_text":"","pictorial_elements":[],"answer":"","hint":null}}'
+    '{{"format":"","question_text":"","pictorial_elements":[],"answer":"","hint":null,"options":null}}'
 )
 
 # Topic-specific constraints injected into the LLM prompt
@@ -15989,6 +16132,12 @@ def run_slot_pipeline(
                     f"activity took. Do NOT invent different times."
                 )
 
+        # ── Render format instruction ─────────────────────────────────────────
+        # Computed before the LLM call so the instruction is in slot_instruction.
+        # The actual q["render_format"] stamp happens after validation (below).
+        _render_fmt = get_format(subject, slot_type, _sync_grade_num)
+        slot_instruction += "\n\n" + _FORMAT_INSTRUCTIONS[_render_fmt]
+
         generated = False
         for attempt in range(max_attempts):
             try:
@@ -16056,6 +16205,10 @@ def run_slot_pipeline(
                         q["answer"] = _time_scenario["dur"]
                         q["correct_answer"] = _time_scenario["dur"]
                         q["_scenario_type"] = "duration"
+
+                # Stamp render format — overrides internal format for PDF rendering.
+                # Set AFTER validators (which check the internal format) so they are unaffected.
+                q["render_format"] = _render_fmt
 
                 q["id"] = i + 1
                 q["_uuid"] = str(uuid.uuid4())
@@ -16930,6 +17083,10 @@ async def run_slot_pipeline_async(
                     f"activity took. Do NOT invent different times."
                 )
 
+        # ── Render format instruction (async) ────────────────────────────────
+        _render_fmt_async = get_format(subject, slot_type, _async_grade_num)
+        slot_instruction += "\n\n" + _FORMAT_INSTRUCTIONS[_render_fmt_async]
+
         prepared_slots.append({
             "slot_type": slot_type,
             "q_difficulty": q_difficulty,
@@ -16938,6 +17095,7 @@ async def run_slot_pipeline_async(
             "directive": directive,
             "_time_scenario": _time_scenario_async,
             "_time_scenario_type": _time_scenario_type_async,
+            "_render_fmt": _render_fmt_async,
         })
 
     # ── 7. Parallel generation ──────────────────────────────────────────────
@@ -17035,6 +17193,9 @@ async def run_slot_pipeline_async(
                 q["answer"] = _r_scenario["dur"]
                 q["correct_answer"] = _r_scenario["dur"]
                 q["_scenario_type"] = "duration"
+
+        # Stamp render format — set AFTER validators so they see internal format
+        q["render_format"] = _ps.get("_render_fmt", "short_answer")
 
         q["id"] = idx + 1
         q["_uuid"] = str(uuid.uuid4())
