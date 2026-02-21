@@ -28,6 +28,13 @@ _MCQ_LETTERS = {"A", "B", "C", "D"}
 _LETTER_INDEX = {"A": 0, "B": 1, "C": 2, "D": 3}
 
 
+def _is_mcq_letter(answer: str) -> bool:
+    """Return True for bare single MCQ choice letters (A/B/C/D, case-insensitive).
+    These are expected to repeat and are excluded from flood/consecutive checks.
+    """
+    return len(answer.strip()) == 1 and answer.strip().upper() in _MCQ_LETTERS
+
+
 def jaccard(a: str, b: str) -> float:
     a_words = set(a.lower().split())
     b_words = set(b.lower().split())
@@ -219,6 +226,60 @@ def run_quality_gate(worksheet: dict) -> Tuple[bool, List[str]]:
             n = _q_number(q, i)
             failures.append(
                 f"EXPLANATION_LEAK: Q{n} explanation contains answer '{answer}'"
+            )
+
+    # ── Check 10: Consecutive same answers ────────────────────────────────────
+    # Three or more questions in a row with the same answer signals a tenses-
+    # style error (LLM locked onto one answer for a whole slot group).
+    # Single-letter MCQ choices (A/B/C/D) are exempt — they repeat by design.
+    _cur_run: list = []   # [(q_number, answer)]
+    _all_runs: list = []
+    for i, q in enumerate(questions, 1):
+        ans = str(q.get("correct_answer") or q.get("answer") or "").strip()
+        n = _q_number(q, i)
+        if not ans or _is_mcq_letter(ans):
+            if _cur_run:
+                _all_runs.append(_cur_run)
+                _cur_run = []
+            continue
+        if _cur_run and _cur_run[-1][1].lower() == ans.lower():
+            _cur_run.append((n, ans))
+        else:
+            if _cur_run:
+                _all_runs.append(_cur_run)
+            _cur_run = [(n, ans)]
+    if _cur_run:
+        _all_runs.append(_cur_run)
+
+    for run in _all_runs:
+        if len(run) >= 3:
+            n_start, ans_display = run[0]
+            n_end = run[-1][0]
+            failures.append(
+                f"CONSECUTIVE_ANSWERS: Q{n_start}–Q{n_end} all answer "
+                f"'{ans_display}' ({len(run)} in a row)"
+            )
+
+    # ── Check 11: Answer flood ─────────────────────────────────────────────────
+    # Same meaningful answer appearing 3+ times anywhere in the worksheet.
+    # Single-letter MCQ choices (A/B/C/D) are exempt — they repeat by design.
+    _ans_map: dict = {}   # answer_lower → [(q_number, original_answer)]
+    for i, q in enumerate(questions, 1):
+        ans = str(q.get("correct_answer") or q.get("answer") or "").strip()
+        n = _q_number(q, i)
+        if not ans or _is_mcq_letter(ans):
+            continue
+        key = ans.lower()
+        if key not in _ans_map:
+            _ans_map[key] = []
+        _ans_map[key].append((n, ans))
+
+    for key, occurrences in _ans_map.items():
+        if len(occurrences) >= 3:
+            nums = ", ".join(f"Q{n}" for n, _ in occurrences)
+            ans_display = occurrences[0][1]
+            failures.append(
+                f"ANSWER_FLOOD: '{ans_display}' appears {len(occurrences)}x ({nums})"
             )
 
     return len(failures) == 0, failures

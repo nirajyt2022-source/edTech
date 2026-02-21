@@ -1,7 +1,7 @@
-"""Tests for quality_gate.run_quality_gate() — all 9 checks."""
+"""Tests for quality_gate.run_quality_gate() — all 11 checks."""
 import pytest
 from app.utils.quality_gate import (
-    run_quality_gate, jaccard, extract_times, _content_words,
+    run_quality_gate, jaccard, extract_times, _content_words, _is_mcq_letter,
 )
 
 
@@ -516,3 +516,170 @@ class TestHelpers:
         assert _q_number({"display_number": 3}) == 3
         assert _q_number({"id": "q5"}) == 5
         assert _q_number({}, fallback=7) == 7
+
+    def test_is_mcq_letter_true(self):
+        assert _is_mcq_letter("A") is True
+        assert _is_mcq_letter("b") is True   # case-insensitive
+        assert _is_mcq_letter("C") is True
+        assert _is_mcq_letter("d") is True
+
+    def test_is_mcq_letter_false(self):
+        assert _is_mcq_letter("E") is False          # not in A-D
+        assert _is_mcq_letter("AB") is False         # two chars
+        assert _is_mcq_letter("True") is False       # full word
+        assert _is_mcq_letter("") is False           # empty
+
+
+# ── Check 10: Consecutive same answers ───────────────────────────────────────
+
+class TestConsecutiveAnswers:
+    def test_distinct_answers_pass(self):
+        qs = [
+            _make_q(1, "Priya has some apples in her bag.", "python"),
+            _make_q(2, "Ravi drinks fresh juice every morning.", "turtle"),
+            _make_q(3, "The school library has many shelves.", "rabbit"),
+            _make_q(4, "Birds chirp loudly at sunrise.", "giraffe"),
+            _make_q(5, "Kiran drew a landscape picture.", "dolphin"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert not any("CONSECUTIVE_ANSWERS" in i for i in issues), issues
+
+    def test_two_consecutive_passes(self):
+        # Run of 2 is fine — threshold is 3
+        qs = [
+            _make_q(1, "Priya has some apples in her bag.", "white"),
+            _make_q(2, "Ravi drinks fresh juice every morning.", "white"),
+            _make_q(3, "The school library has many shelves.", "green"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert not any("CONSECUTIVE_ANSWERS" in i for i in issues), issues
+
+    def test_three_consecutive_fails(self):
+        # Classic tenses problem: LLM locks onto one answer for entire slot group
+        qs = [
+            _make_q(1, "Ravi speaks Hindi every day.", "Simple present tense"),
+            _make_q(2, "The students walk to school.", "Simple present tense"),
+            _make_q(3, "She reads a book before sleeping.", "Simple present tense"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert passed is False
+        assert any("CONSECUTIVE_ANSWERS" in i for i in issues), issues
+        assert any("Simple present tense" in i for i in issues)
+        assert any("3 in a row" in i for i in issues)
+        assert any("Q1" in i and "Q3" in i for i in issues)
+
+    def test_five_consecutive_single_flag(self):
+        # Five in a row should produce exactly one CONSECUTIVE_ANSWERS flag
+        qs = [
+            _make_q(1, "Ravi speaks Hindi every day.", "Simple present tense"),
+            _make_q(2, "The students walk to school.", "Simple present tense"),
+            _make_q(3, "She reads a book before sleeping.", "Simple present tense"),
+            _make_q(4, "Birds chirp loudly at sunrise.", "Simple present tense"),
+            _make_q(5, "Priya cooks delicious meals daily.", "Simple present tense"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        consecutive = [i for i in issues if "CONSECUTIVE_ANSWERS" in i]
+        assert len(consecutive) == 1, f"Expected 1 CONSECUTIVE_ANSWERS, got: {issues}"
+        assert "5 in a row" in consecutive[0]
+        assert "Q1" in consecutive[0] and "Q5" in consecutive[0]
+
+    def test_mcq_letters_excluded(self):
+        # A,A,A,B,B,B — all single MCQ letters, exempt from the check
+        qs = [
+            _make_q(1, "A mammal that swims.", "A"),
+            _make_q(2, "A bird with colourful feathers.", "A"),
+            _make_q(3, "An insect with a hard shell.", "A"),
+            _make_q(4, "The largest ocean creature.", "B"),
+            _make_q(5, "The speediest bird alive.", "B"),
+            _make_q(6, "An underwater breathing creature.", "B"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert not any("CONSECUTIVE_ANSWERS" in i for i in issues), issues
+
+    def test_resets_after_break(self):
+        # X, X, break, X, X — two separate runs of 2, never reaches 3
+        qs = [
+            _make_q(1, "Priya has some apples in her bag.", "white"),
+            _make_q(2, "Ravi drinks fresh juice every morning.", "white"),
+            _make_q(3, "The school library has many shelves.", "green"),
+            _make_q(4, "Birds chirp loudly at sunrise.", "white"),
+            _make_q(5, "Kiran drew a landscape picture.", "white"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert not any("CONSECUTIVE_ANSWERS" in i for i in issues), issues
+
+
+# ── Check 11: Answer flood ────────────────────────────────────────────────────
+
+class TestAnswerFlood:
+    def test_two_same_answers_passes(self):
+        # Exactly 2 occurrences of the same answer — below threshold
+        qs = [
+            _make_q(1, "Priya has some apples in her bag.", "Paneer"),
+            _make_q(2, "Ravi drinks fresh juice every morning.", "Wheat"),
+            _make_q(3, "The school library has many shelves.", "Paneer"),
+            _make_q(4, "Birds chirp loudly at sunrise.", "Mango"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert not any("ANSWER_FLOOD" in i for i in issues), issues
+
+    def test_three_same_answers_fails(self):
+        # Non-consecutive: same answer at Q1, Q3, Q5
+        qs = [
+            _make_q(1, "Ravi speaks Hindi every day.", "Simple present tense"),
+            _make_q(2, "The school library has many shelves.", "past tense"),
+            _make_q(3, "Birds chirp loudly at sunrise.", "Simple present tense"),
+            _make_q(4, "Kiran drew a landscape picture.", "future tense"),
+            _make_q(5, "Priya cooks delicious meals daily.", "Simple present tense"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert passed is False
+        assert any("ANSWER_FLOOD" in i for i in issues), issues
+        assert any("Simple present tense" in i for i in issues)
+        assert any("3x" in i for i in issues)
+
+    def test_four_occurrences_evs_paneer(self):
+        # Real-world EVS example: 4 questions all answering "Paneer"
+        qs = [
+            _make_q(1, "A dairy product used in Indian cooking.", "Paneer"),
+            _make_q(2, "Name a cereal grain from Punjab fields.", "Wheat"),
+            _make_q(3, "Ravi bought this for the curry dish.", "Paneer"),
+            _make_q(4, "Name a popular tropical yellow fruit.", "Mango"),
+            _make_q(5, "Which soft ingredient adds protein to meals?", "Paneer"),
+            _make_q(6, "Name a popular street food with bread.", "Vada"),
+            _make_q(7, "Priya made dinner using this soft block.", "Paneer"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert passed is False
+        flood = [i for i in issues if "ANSWER_FLOOD" in i]
+        assert len(flood) == 1, f"Expected 1 ANSWER_FLOOD, got: {issues}"
+        assert "Paneer" in flood[0]
+        assert "4x" in flood[0]
+        assert "Q1" in flood[0]
+        assert "Q3" in flood[0]
+        assert "Q5" in flood[0]
+        assert "Q7" in flood[0]
+
+    def test_mcq_letters_excluded_from_flood(self):
+        # "A" appears 5 times but is a bare MCQ letter — exempt
+        qs = [
+            _make_q(1, "Name a planet that spins fastest.", "A"),
+            _make_q(2, "Which fruit grows underground?", "A"),
+            _make_q(3, "What insect builds complex tunnels?", "A"),
+            _make_q(4, "Identify a bird with bright colours.", "A"),
+            _make_q(5, "Name a country in South America.", "A"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert not any("ANSWER_FLOOD" in i for i in issues), issues
+
+    def test_flood_case_insensitive(self):
+        # "paneer" and "Paneer" are the same answer — should count as 3 total
+        qs = [
+            _make_q(1, "A dairy product used in Indian cooking.", "Paneer"),
+            _make_q(2, "Ravi bought this for the curry dish.", "paneer"),
+            _make_q(3, "Priya made dinner using this soft block.", "PANEER"),
+            _make_q(4, "Name a popular tropical yellow fruit.", "Mango"),
+        ]
+        passed, issues = run_quality_gate(_worksheet(qs))
+        assert any("ANSWER_FLOOD" in i for i in issues), issues
+        assert any("3x" in i for i in issues)
