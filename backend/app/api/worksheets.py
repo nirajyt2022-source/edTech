@@ -1996,6 +1996,51 @@ async def export_worksheet_pdf(request: PDFExportRequest):
         # Convert Pydantic model to dict
         worksheet_dict = request.worksheet.model_dump()
 
+        # ── Quality gate (log-only — never blocks PDF generation) ─────────
+        # Runs on the fully assembled worksheet just before PDF rendering so
+        # every parent-facing PDF has been inspected.  After one week of log
+        # review, replace the warning block with a retry-on-failure strategy.
+        try:
+            from app.utils.quality_gate import run_quality_gate as _run_qg
+            # Bridge API field names → gate field names for question text/number
+            _gate_qs = []
+            for _i, _q in enumerate(worksheet_dict.get("questions", []), 1):
+                _gq = dict(_q)
+                if "question" not in _gq:
+                    _gq["question"] = _gq.get("text", "")
+                if _gq.get("display_number") is None and _gq.get("number") is None:
+                    try:
+                        _gq["display_number"] = int(
+                            str(_gq.get("id", _i)).lower().replace("q", "").strip()
+                        )
+                    except (ValueError, TypeError):
+                        _gq["display_number"] = _i
+                _gate_qs.append(_gq)
+            _gate_ws = {
+                **worksheet_dict,
+                "questions": _gate_qs,
+                "requested_count": len(_gate_qs),
+                # answer_key is absent in Worksheet model — skip Check 2 entirely
+            }
+            _qg_passed, _qg_issues = _run_qg(_gate_ws)
+            if not _qg_passed:
+                logger.warning(
+                    "Quality gate: %d issue(s) for %s %s %s — %s",
+                    len(_qg_issues),
+                    worksheet_dict.get("grade"),
+                    worksheet_dict.get("subject"),
+                    worksheet_dict.get("topic"),
+                    _qg_issues,
+                )
+                worksheet_dict["_quality_issues"] = _qg_issues
+                worksheet_dict["_quality_passed"] = False
+            else:
+                worksheet_dict["_quality_passed"] = True
+                worksheet_dict["_quality_issues"] = []
+        except Exception as _qg_exc:
+            logger.warning("Quality gate skipped due to error: %s", _qg_exc)
+        # ── end quality gate ───────────────────────────────────────────────
+
         # Generate PDF
         pdf_bytes = pdf_service.generate_worksheet_pdf(
             worksheet_dict,
