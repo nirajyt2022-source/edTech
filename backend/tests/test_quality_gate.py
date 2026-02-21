@@ -1,7 +1,8 @@
-"""Tests for quality_gate.run_quality_gate() — all 11 checks."""
+"""Tests for quality_gate.run_quality_gate() — all 12 checks."""
 import pytest
 from app.utils.quality_gate import (
     run_quality_gate, jaccard, extract_times, _content_words, _is_mcq_letter,
+    _OCLOCK_RE,
 )
 
 
@@ -683,3 +684,65 @@ class TestAnswerFlood:
         passed, issues = run_quality_gate(_worksheet(qs))
         assert any("ANSWER_FLOOD" in i for i in issues), issues
         assert any("3x" in i for i in issues)
+
+
+# ── Check 12: O'clock wording contradiction ───────────────────────────────────
+
+class TestOClockMismatch:
+    def test_exact_hour_with_oclock_passes(self):
+        # minute_hand_pos=12 → answer "3:00" → o'clock IS correct wording
+        q = _make_q(1, "The clock shows 3 o'clock. What time is it?", "3:00")
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("OCLOCK_MISMATCH" in i for i in issues), issues
+
+    def test_non_hour_with_oclock_fails(self):
+        # LLM writes "10 o'clock" but Python-computed answer is "10:35"
+        q = _make_q(1, "The clock shows 10 o'clock. What time does it show?", "10:35")
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("OCLOCK_MISMATCH" in i for i in issues), issues
+        assert any("10:35" in i for i in issues)
+        assert any("Q1" in i for i in issues)
+
+    def test_half_past_with_oclock_fails(self):
+        # Answer "3:30" is half-past — writing "3 o'clock" is wrong
+        q = _make_q(1, "Priya's lesson starts at 3 o'clock thirty minutes.", "3:30")
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("OCLOCK_MISMATCH" in i for i in issues), issues
+        assert any("3:30" in i for i in issues)
+
+    def test_smart_quote_variant_caught(self):
+        # o\u2019clock (smart/right single quote) — still caught by _OCLOCK_RE
+        q = _make_q(1, "The clock shows 10 o\u2019clock. What time is it?", "10:35")
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert any("OCLOCK_MISMATCH" in i for i in issues), issues
+
+    def test_no_oclock_non_hour_passes(self):
+        # Answer "10:35" but question never says o'clock — no flag
+        q = _make_q(
+            1,
+            "The hour hand is at 10 and the minute hand is at 7. What time is it?",
+            "10:35",
+        )
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("OCLOCK_MISMATCH" in i for i in issues), issues
+
+
+# ── Helpers: _OCLOCK_RE pattern ───────────────────────────────────────────────
+
+class TestOClockRegex:
+    def test_standard_apostrophe(self):
+        assert _OCLOCK_RE.search("3 o'clock")
+
+    def test_smart_quote(self):
+        assert _OCLOCK_RE.search("3 o\u2019clock")
+
+    def test_space_variant(self):
+        assert _OCLOCK_RE.search("3 o clock")
+
+    def test_case_insensitive(self):
+        assert _OCLOCK_RE.search("O'CLOCK")
+
+    def test_no_match_on_unrelated(self):
+        assert not _OCLOCK_RE.search("half past three")

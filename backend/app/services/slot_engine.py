@@ -16148,10 +16148,16 @@ def run_slot_pipeline(
 
         if _time_scenario:
             if _time_scenario_type == "clock_read":
+                _oclock_note = (
+                    "The time shown is an exact hour — writing 'X o'clock' is correct."
+                    if _time_scenario["m"] == 12
+                    else "The time shown is NOT an exact hour — NEVER use 'o'clock' in your wording."
+                )
                 slot_instruction += (
                     f"\n\nTIME SCENARIO (MANDATORY — do not change):\n"
                     f"Hour hand at {_time_scenario['h']}, minute hand at position "
                     f"{_time_scenario['m']} on the clock face.\n"
+                    f"{_oclock_note}\n"
                     f"Write question wording only. Ask the student to read or identify "
                     f"this time. Do NOT invent a different time."
                 )
@@ -17142,10 +17148,16 @@ async def run_slot_pipeline_async(
 
         if _time_scenario_async:
             if _time_scenario_type_async == "clock_read":
+                _oclock_note_async = (
+                    "The time shown is an exact hour — writing 'X o'clock' is correct."
+                    if _time_scenario_async["m"] == 12
+                    else "The time shown is NOT an exact hour — NEVER use 'o'clock' in your wording."
+                )
                 slot_instruction += (
                     f"\n\nTIME SCENARIO (MANDATORY — do not change):\n"
                     f"Hour hand at {_time_scenario_async['h']}, minute hand at position "
                     f"{_time_scenario_async['m']} on the clock face.\n"
+                    f"{_oclock_note_async}\n"
                     f"Write question wording only. Ask the student to read or identify "
                     f"this time. Do NOT invent a different time."
                 )

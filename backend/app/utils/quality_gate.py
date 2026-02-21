@@ -27,6 +27,10 @@ _MCQ_LETTERS = {"A", "B", "C", "D"}
 # Index each letter maps to in the options list
 _LETTER_INDEX = {"A": 0, "B": 1, "C": 2, "D": 3}
 
+# Matches "o'clock" with standard apostrophe (U+0027), smart quote (U+2019),
+# or a space — all common LLM spelling variants.
+_OCLOCK_RE = re.compile(r"o['\u2019\s]?clock", re.IGNORECASE)
+
 
 def _is_mcq_letter(answer: str) -> bool:
     """Return True for bare single MCQ choice letters (A/B/C/D, case-insensitive).
@@ -280,6 +284,19 @@ def run_quality_gate(worksheet: dict) -> Tuple[bool, List[str]]:
             ans_display = occurrences[0][1]
             failures.append(
                 f"ANSWER_FLOOD: '{ans_display}' appears {len(occurrences)}x ({nums})"
+            )
+
+    # ── Check 12: O'clock wording contradiction ────────────────────────────────
+    # "o'clock" is only valid when the answer is an exact hour (contains ":00").
+    # If the LLM writes "o'clock" for a non-hour time like 10:35, it contradicts
+    # the Python-computed answer that will be stamped over it.
+    for i, q in enumerate(questions, 1):
+        text = _q_text(q)
+        answer = str(q.get("correct_answer") or q.get("answer") or "")
+        if answer and _OCLOCK_RE.search(text) and ":00" not in answer:
+            n = _q_number(q, i)
+            failures.append(
+                f"OCLOCK_MISMATCH: Q{n} says o'clock but answer is '{answer}' (not a whole hour)"
             )
 
     return len(failures) == 0, failures
