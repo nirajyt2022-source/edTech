@@ -1,0 +1,36 @@
+{
+  "class_1": {
+    "note": "Class 1: Single-digit addends, sums 10-17. Python sets correct_answer — never the LLM.",
+    "pairs": [
+      {"a": 7, "b": 8, "sum": 15},
+      {"a": 9, "b": 6, "sum": 15},
+      {"a": 8, "b": 5, "sum": 13},
+      {"a": 6, "b": 7, "sum": 13},
+      {"a": 9, "b": 4, "sum": 13},
+      {"a": 8, "b": 9, "sum": 17},
+      {"a": 5, "b": 8, "sum": 13},
+      {"a": 6, "b": 9, "sum": 15},
+      {"a": 4, "b": 8, "sum": 12},
+      {"a": 7, "b": 5, "sum": 12}
+    ],
+    "names": ["Ravi","Priya","Arjun","Meera","Kiran","Anita","Deepa","Suresh"],
+    "contexts": ["apples","mangoes","books","crayons","marbles","pencils","flowers","chocolates"]
+  },
+  "class_2": {
+    "note": "Class 2: Two-digit addends (no carrying), sums 37-79. Python sets correct_answer.",
+    "pairs": [
+      {"a": 23, "b": 14, "sum": 37},
+      {"a": 41, "b": 35, "sum": 76},
+      {"a": 52, "b": 27, "sum": 79},
+      {"a": 18, "b": 31, "sum": 49},
+      {"a": 45, "b": 24, "sum": 69},
+      {"a": 12, "b": 34, "sum": 46},
+      {"a": 53, "b": 22, "sum": 75},
+      {"a": 16, "b": 43, "sum": 59},
+      {"a": 34, "b": 28, "sum": 62},
+      {"a": 47, "b": 31, "sum": 78}
+    ],
+    "names": ["Ravi","Priya","Arjun","Meera","Kiran","Anita","Deepa","Suresh"],
+    "contexts": ["stamps","stickers","marbles","books","beads","coins","flowers","cards"]
+  }
+}

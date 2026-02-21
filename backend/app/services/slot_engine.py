@@ -8964,6 +8964,22 @@ def _load_time_scenario_pool(grade_num: int) -> dict:
     return all_pools.get(key, {})
 
 
+def _load_addition_scenario_pool(grade_num: int) -> list:
+    """Load maths_addition.json and return the pairs list for this grade.
+
+    Grades 3+ use class_2 pool (two-digit pairs).
+    Returns [] if the file is missing or the grade key is not found.
+    """
+    pool_path = _SCENARIO_POOL_DIR / "maths_addition.json"
+    try:
+        all_pools = json.loads(pool_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("_load_addition_scenario_pool: cannot load pool: %s", exc)
+        return []
+    key = f"class_{min(grade_num, 2)}"
+    return all_pools.get(key, {}).get("pairs", [])
+
+
 def _pick_scenario(pool: list, used_indices: set, rng: random.Random) -> tuple[dict, int]:
     """Pick an unused scenario from pool, cycling when all entries are exhausted."""
     if not pool:
@@ -16057,6 +16073,21 @@ def run_slot_pipeline(
         if _time_pool:
             logger.info("[sync] Time scenario pool loaded for grade %d", _sync_grade_num)
 
+    # ── Addition topic scenario pool (Maths, Classes 1-2 only) ────────────────
+    # Detects "addition" in topic name; Python sets correct_answer from the pool
+    # so the LLM never invents addend pairs or computes sums.
+    _is_addition_maths = (
+        "addition" in (topic or "").lower()
+        and (subject or "").lower() in ("mathematics", "maths", "math")
+        and _sync_grade_num in (1, 2)
+    )
+    _addition_pool: list = []
+    _used_addition_idx: set = set()
+    if _is_addition_maths:
+        _addition_pool = _load_addition_scenario_pool(_sync_grade_num)
+        if _addition_pool:
+            logger.info("[sync] Addition scenario pool loaded for grade %d (%d pairs)", _sync_grade_num, len(_addition_pool))
+
     for i, slot_type in enumerate(slot_plan):
         directive = plan_directives[i]
 
@@ -16130,6 +16161,19 @@ def run_slot_pipeline(
                     f"Start: {_time_scenario['start']}, End: {_time_scenario['end']}.\n"
                     f"Write question wording only. Ask the student to find how long the "
                     f"activity took. Do NOT invent different times."
+                )
+
+        # ── Addition scenario selection (Maths/Addition, Class 1-2 only) ─────────
+        _addition_pair: dict = {}
+        if _is_addition_maths and _addition_pool:
+            _addition_pair, _add_idx = _pick_scenario(_addition_pool, _used_addition_idx, rng)
+            if _add_idx >= 0:
+                _used_addition_idx.add(_add_idx)
+                slot_instruction += (
+                    f"\n\nADDITION SCENARIO (MANDATORY — do not change the numbers):\n"
+                    f"Use exactly {_addition_pair['a']} + {_addition_pair['b']}.\n"
+                    f"Write a short word problem or fill-in question using these two addends. "
+                    f"Do NOT invent different numbers."
                 )
 
         # ── Render format instruction ─────────────────────────────────────────
@@ -16206,9 +16250,20 @@ def run_slot_pipeline(
                         q["correct_answer"] = _time_scenario["dur"]
                         q["_scenario_type"] = "duration"
 
+                # ── Addition answer override (Python is authoritative) ──────
+                if _addition_pair:
+                    _add_sum = str(_addition_pair["sum"])
+                    q["answer"] = _add_sum
+                    q["correct_answer"] = _add_sum
+                    q["_scenario_type"] = "addition_pair"
+
                 # Stamp render format — overrides internal format for PDF rendering.
                 # Set AFTER validators (which check the internal format) so they are unaffected.
                 q["render_format"] = _render_fmt
+                # Fix B: if question text contains ___, force fill_blank.
+                # Prevents "3 + ___ = 10" from rendering as vertical_sum.
+                if "___" in q.get("question_text", "") and q["render_format"] != "fill_blank":
+                    q["render_format"] = "fill_blank"
 
                 q["id"] = i + 1
                 q["_uuid"] = str(uuid.uuid4())
@@ -16239,6 +16294,7 @@ def run_slot_pipeline(
                 "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
                 "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
+                "render_format": _render_fmt,  # Fix A: ensure render_format on fallback stubs
                 "question_text": f"[Generation failed for {slot_type} question]",
                 "pictorial_elements": [],
                 "answer": "",
@@ -16989,6 +17045,19 @@ async def run_slot_pipeline_async(
         if _time_pool_async:
             logger.info("[async] Time scenario pool loaded for grade %d", _async_grade_num)
 
+    # Addition topic scenario pool (async mirrors sync)
+    _is_addition_maths_async = (
+        "addition" in (topic or "").lower()
+        and (subject or "").lower() in ("mathematics", "maths", "math")
+        and _async_grade_num in (1, 2)
+    )
+    _addition_pool_async: list = []
+    _used_addition_idx_async: set = set()
+    if _is_addition_maths_async:
+        _addition_pool_async = _load_addition_scenario_pool(_async_grade_num)
+        if _addition_pool_async:
+            logger.info("[async] Addition scenario pool loaded for grade %d (%d pairs)", _async_grade_num, len(_addition_pool_async))
+
     prepared_slots: list[dict] = []
     for i, slot_type in enumerate(slot_plan):
         directive = plan_directives[i]
@@ -17083,6 +17152,19 @@ async def run_slot_pipeline_async(
                     f"activity took. Do NOT invent different times."
                 )
 
+        # ── Addition scenario selection (async) ────────────────────────────────
+        _addition_pair_async: dict = {}
+        if _is_addition_maths_async and _addition_pool_async:
+            _addition_pair_async, _add_idx_a = _pick_scenario(_addition_pool_async, _used_addition_idx_async, rng)
+            if _add_idx_a >= 0:
+                _used_addition_idx_async.add(_add_idx_a)
+                slot_instruction += (
+                    f"\n\nADDITION SCENARIO (MANDATORY — do not change the numbers):\n"
+                    f"Use exactly {_addition_pair_async['a']} + {_addition_pair_async['b']}.\n"
+                    f"Write a short word problem or fill-in question using these two addends. "
+                    f"Do NOT invent different numbers."
+                )
+
         # ── Render format instruction (async) ────────────────────────────────
         _render_fmt_async = get_format(subject, slot_type, _async_grade_num)
         slot_instruction += "\n\n" + _FORMAT_INSTRUCTIONS[_render_fmt_async]
@@ -17096,6 +17178,7 @@ async def run_slot_pipeline_async(
             "_time_scenario": _time_scenario_async,
             "_time_scenario_type": _time_scenario_type_async,
             "_render_fmt": _render_fmt_async,
+            "_addition_pair": _addition_pair_async,
         })
 
     # ── 7. Parallel generation ──────────────────────────────────────────────
@@ -17149,6 +17232,7 @@ async def run_slot_pipeline_async(
                 "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
                 "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
+                "render_format": _ps.get("_render_fmt", "short_answer"),  # Fix A
                 "question_text": f"[Generation failed for {slot_type} question]",
                 "pictorial_elements": [],
                 "answer": "",
@@ -17194,8 +17278,19 @@ async def run_slot_pipeline_async(
                 q["correct_answer"] = _r_scenario["dur"]
                 q["_scenario_type"] = "duration"
 
+        # ── Addition answer override (async, Python is authoritative) ─────────
+        _add_pair_r = _ps.get("_addition_pair", {})
+        if _add_pair_r:
+            _add_sum_r = str(_add_pair_r["sum"])
+            q["answer"] = _add_sum_r
+            q["correct_answer"] = _add_sum_r
+            q["_scenario_type"] = "addition_pair"
+
         # Stamp render format — set AFTER validators so they see internal format
         q["render_format"] = _ps.get("_render_fmt", "short_answer")
+        # Fix B: if question text contains ___, force fill_blank.
+        if "___" in q.get("question_text", "") and q["render_format"] != "fill_blank":
+            q["render_format"] = "fill_blank"
 
         q["id"] = idx + 1
         q["_uuid"] = str(uuid.uuid4())
