@@ -103,6 +103,7 @@ class Question(BaseModel):
     role: str | None = None  # Phase 4: pedagogical role
     skill_tag: str | None = None  # Phase 5: skill diagnostic tag
     is_bonus: bool = False  # Phase 2: bonus challenge question flag
+    is_fallback: bool = False  # True when LLM failed all generation attempts and a stub was inserted
     hint: str | None = None  # Optional hint (separate from question_text)
     format: str = "short_answer"  # PDF render format: fill_blank|mcq_3|mcq_4|vertical_sum|true_false|short_answer
 
@@ -1444,6 +1445,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
         role=q.get("slot_type"),
         skill_tag=q.get("skill_tag") or fmt,
         is_bonus=bool(q.get("_is_bonus", False)),
+        is_fallback=bool(q.get("_is_fallback", False)),
         format=q.get("render_format", "short_answer"),
     )
 

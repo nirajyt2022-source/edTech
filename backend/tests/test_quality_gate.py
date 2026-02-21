@@ -199,6 +199,49 @@ class TestHintLeak:
         assert issues == []
 
 
+# ── Check 6: Fallback stubs ───────────────────────────────────────────────────
+
+class TestFallbackStub:
+    def test_stub_question_fails(self):
+        q = {
+            "display_number": 1,
+            "question": "[Generation failed for recognition question]",
+            "correct_answer": "",
+            "is_fallback": True,
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert passed is False
+        assert any("FALLBACK" in i for i in issues), issues
+        assert any("Q1" in i for i in issues)
+        assert any("stub" in i for i in issues)
+
+    def test_normal_question_not_flagged(self):
+        q = _make_q(1, "What is 3 + 4?", "7")
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("FALLBACK" in i for i in issues)
+
+    def test_fallback_false_not_flagged(self):
+        """Explicit is_fallback=False must not trigger the check."""
+        q = {
+            "display_number": 2,
+            "question": "What is 5 + 3?",
+            "correct_answer": "8",
+            "is_fallback": False,
+        }
+        passed, issues = run_quality_gate(_worksheet([q]))
+        assert not any("FALLBACK" in i for i in issues)
+
+    def test_multiple_stubs_all_reported(self):
+        stubs = [
+            {"display_number": i, "question": f"[stub {i}]", "correct_answer": "", "is_fallback": True}
+            for i in range(1, 4)
+        ]
+        passed, issues = run_quality_gate(_worksheet(stubs))
+        assert passed is False
+        fallback_issues = [i for i in issues if "FALLBACK" in i]
+        assert len(fallback_issues) == 3, f"Expected 3 FALLBACK issues, got: {issues}"
+
+
 # ── Composite: worksheet that passes ALL checks ───────────────────────────────
 
 class TestFullPassingWorksheet:

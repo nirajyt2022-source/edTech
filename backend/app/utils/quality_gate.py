@@ -8,6 +8,7 @@ Field conventions understood:
   question number→ q["display_number"] | q["number"]
   answer         → q["correct_answer"] | q["answer"]
   hint           → q["hint"]
+  fallback flag  → q["is_fallback"]  (bool — set when LLM failed all attempts)
 """
 import re
 from typing import List, Tuple
@@ -118,6 +119,14 @@ def run_quality_gate(worksheet: dict) -> Tuple[bool, List[str]]:
             n = _q_number(q, i)
             failures.append(
                 f"HINT_LEAK: Q{n} hint contains answer '{answer}'"
+            )
+
+    # ── Check 6: Stub questions (LLM failed all attempts) ─────────────────
+    for i, q in enumerate(questions, 1):
+        if q.get("is_fallback"):
+            n = _q_number(q, i)
+            failures.append(
+                f"FALLBACK: Q{n} is a stub — LLM failed all 3 attempts"
             )
 
     return len(failures) == 0, failures

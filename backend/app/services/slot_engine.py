@@ -16286,6 +16286,10 @@ def run_slot_pipeline(
                 logger.error("Q%d/%d attempt %d error: %s", i + 1, len(slot_plan), attempt + 1, exc)
 
         if not generated:
+            logger.warning(
+                "[sync] Q%d/%d ALL attempts failed — inserting stub (slot=%s, topic=%s)",
+                i + 1, len(slot_plan), slot_type, topic,
+            )
             _fallback_formats = get_valid_formats(subject)
             questions.append({
                 "id": i + 1,
@@ -16294,7 +16298,8 @@ def run_slot_pipeline(
                 "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
                 "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
-                "render_format": _render_fmt,  # Fix A: ensure render_format on fallback stubs
+                "render_format": _render_fmt,
+                "_is_fallback": True,
                 "question_text": f"[Generation failed for {slot_type} question]",
                 "pictorial_elements": [],
                 "answer": "",
@@ -17224,7 +17229,10 @@ async def run_slot_pipeline_async(
 
         if not r["ok"] or r["q"] is None:
             # Generation failed even after retry — insert stub
-            logger.warning("[async] Q%d failed, inserting stub", idx + 1)
+            logger.warning(
+                "[async] Q%d ALL attempts failed — inserting stub (slot=%s, topic=%s)",
+                idx + 1, slot_type, topic,
+            )
             questions.append({
                 "id": idx + 1,
                 "_uuid": str(uuid.uuid4()),
@@ -17232,7 +17240,8 @@ async def run_slot_pipeline_async(
                 "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
                 "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
-                "render_format": _ps.get("_render_fmt", "short_answer"),  # Fix A
+                "render_format": _ps.get("_render_fmt", "short_answer"),
+                "_is_fallback": True,
                 "question_text": f"[Generation failed for {slot_type} question]",
                 "pictorial_elements": [],
                 "answer": "",
