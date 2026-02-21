@@ -3,15 +3,15 @@ from pydantic import BaseModel
 import json
 import uuid
 from datetime import datetime
-from openai import OpenAI
 from PyPDF2 import PdfReader
 import io
 from app.core.config import get_settings
+from app.core.deps import get_llm_client
 
 router = APIRouter(prefix="/api/syllabus", tags=["syllabus"])
 
 settings = get_settings()
-client = OpenAI(api_key=settings.openai_api_key)
+client = get_llm_client(settings)
 
 
 class SyllabusTopic(BaseModel):
@@ -88,45 +88,33 @@ async def extract_text_from_pdf(file_content: bytes) -> str:
 
 
 async def extract_text_from_image(file_content: bytes, filename: str) -> str:
-    """Use OpenAI Vision to extract text from an image."""
-    import base64
-
-    # Determine MIME type
+    """Use Gemini Vision to extract text from an image."""
     ext = filename.lower().split('.')[-1]
     mime_types = {
         'jpg': 'image/jpeg',
         'jpeg': 'image/jpeg',
         'png': 'image/png',
         'gif': 'image/gif',
-        'webp': 'image/webp'
+        'webp': 'image/webp',
     }
     mime_type = mime_types.get(ext, 'image/jpeg')
 
-    base64_image = base64.b64encode(file_content).decode('utf-8')
-
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "Extract all text from this syllabus image. Preserve the structure (chapters, topics, etc.) as much as possible. Return only the extracted text."
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime_type};base64,{base64_image}"
-                            }
-                        }
-                    ]
-                }
+        from google import genai
+        from google.genai import types as gtypes
+        vision_client = genai.Client(api_key=settings.gemini_api_key)
+        response = vision_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                gtypes.Part.from_text(
+                    "Extract all text from this syllabus image. "
+                    "Preserve the structure (chapters, topics, etc.) as much as possible. "
+                    "Return only the extracted text."
+                ),
+                gtypes.Part.from_bytes(data=file_content, mime_type=mime_type),
             ],
-            max_tokens=4096
         )
-        return response.choices[0].message.content or ""
+        return response.text or ""
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process image: {str(e)}")
 

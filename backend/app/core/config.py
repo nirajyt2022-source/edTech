@@ -11,8 +11,12 @@ class Settings(BaseSettings):
     supabase_url: str
     supabase_service_key: str
 
-    # OpenAI
-    openai_api_key: str
+    # OpenAI (kept for fallback)
+    openai_api_key: str = ""
+
+    # Gemini
+    gemini_api_key: str = ""
+    llm_provider: str = "gemini"
 
     # Resend (email delivery)
     resend_api_key: str = ""

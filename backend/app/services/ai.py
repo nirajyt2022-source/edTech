@@ -1,10 +1,11 @@
-from openai import OpenAI
-from app.core.deps import get_openai_client
+from app.core.config import get_settings
+from app.core.deps import get_llm_client
 
 
 class AIService:
     def __init__(self):
-        self.client: OpenAI = get_openai_client()
+        settings = get_settings()
+        self.client = get_llm_client(settings)
 
     async def generate_completion(
         self,

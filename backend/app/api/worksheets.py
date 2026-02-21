@@ -8,9 +8,9 @@ import re
 import uuid
 from math import ceil
 from datetime import datetime
-from openai import OpenAI
 from supabase import create_client
 from app.core.config import get_settings
+from app.core.deps import get_llm_client
 from app.services.pdf import get_pdf_service
 from app.services.slot_engine import (
     run_slot_pipeline, run_slot_pipeline_async, hydrate_visuals, enforce_visuals_only,
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/api/worksheets", tags=["worksheets"])
 pdf_service = get_pdf_service()
 
 settings = get_settings()
-client = OpenAI(api_key=settings.openai_api_key)
+client = get_llm_client(settings)
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
 logger = logging.getLogger("practicecraft.worksheets")
