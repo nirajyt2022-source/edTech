@@ -16382,6 +16382,15 @@ def run_slot_pipeline(
     except Exception as _ga_exc_sync:
         logger.warning("[sync] Grade-appropriateness filter failed (continuing): %s", _ga_exc_sync)
 
+    # 7c-restore. If grade filter dropped questions, refill with stubs so the
+    # requested count is always delivered (mirrors dedup restore at 7b-ii).
+    if len(questions) != len(slot_plan):
+        logger.warning(
+            "[sync] Grade filter left %d questions; refilling to %d",
+            len(questions), len(slot_plan),
+        )
+        questions = enforce_slot_counts(questions, slot_plan, subject=subject)
+
     # 8. Validate whole worksheet (against the actual plan, not SLOT_PLANS)
     ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
     if ws_issues:
@@ -17480,8 +17489,8 @@ async def run_slot_pipeline_async(
     # ── 10e. Grade-appropriateness filter (final pass — after all regen) ──────
     # Must run AFTER 10d so plan_directives alignment is preserved during
     # the purity/dedup pass.  Any question still violating the grade profile
-    # at this point is silently dropped; the worksheet may be shorter than
-    # requested but will never contain age-inappropriate content.
+    # is replaced with a stub stub via enforce_slot_counts (10e-restore below)
+    # so the requested count is always delivered.
     try:
         from app.services.quality_reviewer import validate_grade_appropriateness
         _grade_num = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
@@ -17501,6 +17510,15 @@ async def run_slot_pipeline_async(
         pass  # grade string not parseable — skip filter
     except Exception as _ga_exc:
         logger.warning("[async] Grade-appropriateness filter failed (continuing): %s", _ga_exc)
+
+    # 10e-restore. If grade filter dropped questions, refill with stubs so the
+    # requested count is always delivered (mirrors dedup restore).
+    if len(questions) != len(slot_plan):
+        logger.warning(
+            "[async] Grade filter left %d questions; refilling to %d",
+            len(questions), len(slot_plan),
+        )
+        questions = enforce_slot_counts(questions, slot_plan, subject=subject)
 
     # ── 11. Update history ───────────────────────────────────────────────────
     record = build_worksheet_record(
