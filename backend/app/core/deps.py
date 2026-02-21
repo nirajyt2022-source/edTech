@@ -1,7 +1,11 @@
+import logging
+import os
 from functools import lru_cache
 from supabase import create_client, Client
 from openai import OpenAI
 from app.core.config import get_settings
+
+_prompt_logger = logging.getLogger("practicecraft.gemini_prompts")
 
 
 @lru_cache
@@ -56,6 +60,22 @@ class _FakeCompletions:
 
         system_instruction = "\n\n".join(system_parts) or None
         user_prompt = "\n\n".join(user_parts)
+
+        if os.environ.get("DEBUG_LLM_PROMPTS", "").lower() in ("1", "true"):
+            _prompt_logger.warning(
+                "\n\n%s\n"
+                "── SYSTEM ──────────────────────────────────────────────\n%s\n"
+                "── USER ────────────────────────────────────────────────\n%s\n"
+                "── CONFIG ──────────────────────────────────────────────\n"
+                "  model=gemini-2.5-flash  temp=%s  max_tokens=%s\n"
+                "%s",
+                "=" * 60,
+                system_instruction or "(none)",
+                user_prompt,
+                temperature,
+                max_tokens or 2048,
+                "=" * 60,
+            )
 
         client = genai.Client(api_key=_gemini_api_key)
 
