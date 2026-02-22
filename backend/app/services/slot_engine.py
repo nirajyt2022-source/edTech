@@ -57,11 +57,12 @@ SLOT_PLANS: dict[int, dict[str, int]] = {
 
 SLOT_ORDER = ["recognition", "application", "representation", "error_detection", "thinking"]
 
-# Map common Gemini-invented format aliases → canonical contract values
-_FORMAT_ALIASES: dict[str, str] = {
+# Map common Gemini-invented format aliases → canonical contract values (general slots)
+_GENERAL_ALIASES: dict[str, str] = {
     "fill_blank": "simple_identify",
     "fill-blank": "simple_identify",
     "fill_in_blank": "simple_identify",
+    "fill_in_the_blank": "simple_identify",
     "multiple_choice": "mcq_4",
     "mcq_3choice": "mcq_3",
     "mcq_4choice": "mcq_4",
@@ -72,6 +73,20 @@ _FORMAT_ALIASES: dict[str, str] = {
     "written_answer": "short_answer",
     "open_ended": "short_answer",
 }
+
+# For error_detection slots: fill_blank-family → error_spot (not simple_identify)
+_ERROR_DETECTION_ALIASES: dict[str, str] = {
+    "fill_blank": "error_spot",
+    "fill-blank": "error_spot",
+    "fill_in_blank": "error_spot",
+    "fill_in_the_blank": "error_spot",
+    "short_answer": "error_spot",
+    "written_answer": "error_spot",
+    "open_ended": "error_spot",
+}
+
+# Kept for backward compatibility — module-level name still resolves
+_FORMAT_ALIASES = _GENERAL_ALIASES
 
 VALID_FORMATS: dict[str, set[str]] = {
     "recognition": {
@@ -15558,9 +15573,15 @@ def generate_question(
 
     q.setdefault("format", "")
 
-    # Normalise Gemini-invented format aliases to canonical contract values
-    if q.get("format") in _FORMAT_ALIASES:
-        q["format"] = _FORMAT_ALIASES[q["format"]]
+    # Normalise Gemini-invented format aliases — slot-type aware
+    _alias_map = _ERROR_DETECTION_ALIASES if slot_type == "error_detection" else _GENERAL_ALIASES
+    if q.get("format") in _alias_map:
+        original_fmt = q["format"]
+        q["format"] = _alias_map[original_fmt]
+        logger.debug(
+            "generate_question: normalised format %r → %r (slot_type=%s)",
+            original_fmt, q["format"], slot_type,
+        )
     q.setdefault("question_text", "")
     q.setdefault("pictorial_elements", [])
     q.setdefault("answer", "")
@@ -16019,6 +16040,28 @@ def run_slot_pipeline(
     # Store mastery info in meta for API response
     if mastery_info:
         meta["mastery_snapshot"] = mastery_info
+
+    # 2c. Remove slot types forbidden by grade profile
+    try:
+        _sync_grade_num = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
+        _sync_forbidden = set(
+            GRADE_PROFILES.get(str(_sync_grade_num), {}).get("forbidden_question_types", [])
+        )
+        if _sync_forbidden:
+            _before = len(plan_directives)
+            plan_directives = [d for d in plan_directives if d.get("slot_type") not in _sync_forbidden]
+            _removed = _before - len(plan_directives)
+            if _removed:
+                logger.info(
+                    "[sync] Removed %d forbidden slot(s) for Class %d — refilling with recognition",
+                    _removed, _sync_grade_num,
+                )
+                _base_directive = {"slot_type": "recognition", "subject": subject or "Mathematics"}
+                while len(plan_directives) < q_count:
+                    plan_directives.append(dict(_base_directive))
+            slot_plan = [d["slot_type"] for d in plan_directives]
+    except Exception as _gp_exc:
+        logger.debug("[sync] Grade-profile slot filter skipped: %s", _gp_exc)
 
     # 3. Load history and build avoid state
     history_avoid = get_avoid_state()
@@ -17088,6 +17131,28 @@ async def run_slot_pipeline_async(
 
     if mastery_info:
         meta["mastery_snapshot"] = mastery_info
+
+    # ── 2c. Remove slot types forbidden by grade profile ────────────────────
+    try:
+        _async_grade_num = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
+        _async_forbidden = set(
+            GRADE_PROFILES.get(str(_async_grade_num), {}).get("forbidden_question_types", [])
+        )
+        if _async_forbidden:
+            _before = len(plan_directives)
+            plan_directives = [d for d in plan_directives if d.get("slot_type") not in _async_forbidden]
+            _removed = _before - len(plan_directives)
+            if _removed:
+                logger.info(
+                    "[async] Removed %d forbidden slot(s) for Class %d — refilling with recognition",
+                    _removed, _async_grade_num,
+                )
+                _base_directive = {"slot_type": "recognition", "subject": subject or "Mathematics"}
+                while len(plan_directives) < q_count:
+                    plan_directives.append(dict(_base_directive))
+            slot_plan = [d["slot_type"] for d in plan_directives]
+    except Exception as _gp_exc:
+        logger.debug("[async] Grade-profile slot filter skipped: %s", _gp_exc)
 
     # ── 3. History avoid state ──────────────────────────────────────────────
     history_avoid = get_avoid_state()
