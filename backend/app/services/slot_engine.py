@@ -105,6 +105,41 @@ _THINKING_ALIASES: dict[str, str] = {
 # Kept for backward compatibility — module-level name still resolves
 _FORMAT_ALIASES = _GENERAL_ALIASES
 
+# Maps keyword substrings → subject domain label.
+# Used by violates_topic_purity() to accept Gemini's generic skill_tags
+# when they belong to the same domain as the topic profile.
+_DOMAIN_KEYWORDS: list[tuple[str, str]] = [
+    ("time", "time"), ("clock", "time"), ("oclock", "time"),
+    ("add", "addition"), ("sum", "addition"),
+    ("subtract", "subtraction"),
+    ("fraction", "fractions"), ("numerator", "fractions"), ("denominator", "fractions"),
+    ("shape", "shapes"), ("geometr", "shapes"), ("symmetr", "shapes"),
+    ("money", "money"), ("coin", "money"), ("rupee", "money"),
+    ("noun", "grammar"), ("verb", "grammar"), ("tense", "grammar"),
+    ("pronoun", "grammar"), ("adjective", "grammar"), ("punctuation", "grammar"),
+    ("number", "numbers"), ("place_value", "numbers"), ("count", "numbers"),
+    ("measur", "measurement"), ("length", "measurement"), ("weight", "measurement"),
+    ("multipl", "multiplication"),
+    ("divis", "division"), ("sharing", "division"),
+    ("pattern", "patterns"), ("sequence", "patterns"),
+    ("spatial", "spatial"), ("position", "spatial"),
+    ("comprehension", "comprehension"), ("passage", "comprehension"),
+    ("plant", "science"), ("animal", "science"), ("photosynthes", "science"),
+    ("food_chain", "science"), ("ecosystem", "science"),
+    ("hindi", "hindi"), ("matra", "hindi"), ("kaal", "hindi"),
+    ("evs", "evs"), ("environment", "evs"),
+]
+
+
+def _tag_domain(text: str) -> str | None:
+    """Return the subject domain for a skill_tag or topic name, or None."""
+    t = text.lower()
+    for keyword, domain in _DOMAIN_KEYWORDS:
+        if keyword in t:
+            return domain
+    return None
+
+
 VALID_FORMATS: dict[str, set[str]] = {
     "recognition": {
         "column_setup", "place_value", "simple_identify",
@@ -14452,21 +14487,20 @@ def violates_topic_purity(q: dict, profile: dict) -> list[str]:
     else:
         allowed = set(profile.get("allowed_skill_tags", []))
         if allowed and st not in allowed:
-            # Token-level stem match: strip grade prefix (c1_, c2_, …) then
-            # split by "_" and check for any shared word between the returned
-            # tag and any allowed tag.
-            # e.g. "clock_reading" → {"clock","reading"} ∩ "c1_time_identify"
-            #       → {"time","identify"} — no common token → rejected.
-            # e.g. "c1_time_reading" → {"time","reading"} ∩ "c1_time_identify"
-            #       → {"time","identify"} — "time" shared → accepted.
-            _pfx_re = re.compile(r'^c\d_')
-            def _tok(tag: str) -> set[str]:
-                return set(_pfx_re.sub("", tag).lower().split("_")) - {""}
-            st_tok = _tok(st)
-            stem_match = any(bool(st_tok & _tok(a)) for a in allowed)
-            if not stem_match:
+            # Domain match: accept if skill_tag and topic name share a domain.
+            # e.g. "clock_reading" → domain "time"; topic "Time (Class 1)" → domain "time"
+            # → same domain → silently accepted.
+            topic_name = profile.get("_topic_name", "")
+            tag_domain = _tag_domain(st)
+            topic_domain = _tag_domain(topic_name)
+            domain_match = (
+                tag_domain is not None
+                and topic_domain is not None
+                and tag_domain == topic_domain
+            )
+            if not domain_match:
                 reasons.append(f"skill_tag_not_allowed:{st}")
-            # stem_match: silently accept — the tag shares a topic root
+            # domain_match: silently accept — Gemini's tag belongs to the right subject
 
     return reasons
 
@@ -15901,7 +15935,8 @@ def _regen_question_for_topic(
         hydrate_visuals([q])
 
         if profile:
-            reasons = violates_topic_purity(q, profile)
+            _profile_with_name = {**profile, "_topic_name": topic}
+            reasons = violates_topic_purity(q, _profile_with_name)
             if reasons:
                 continue
 
@@ -16723,7 +16758,8 @@ def run_slot_pipeline(
         if _qt.startswith("[Slot fill") or _qt.startswith("[Generation failed"):
             reasons.append("stub")
         if not reasons and _topic_profile:
-            reasons.extend(violates_topic_purity(q, _topic_profile))
+            _profile_with_name = {**_topic_profile, "_topic_name": topic}
+            reasons.extend(violates_topic_purity(q, _profile_with_name))
         nt = normalize_q_text(q)
         if not reasons and nt in seen_texts:
             reasons.append("duplicate")
@@ -17851,7 +17887,8 @@ async def run_slot_pipeline_async(
         if not reasons and q.get("_needs_regen"):
             reasons.append("contradictory answer")
         if not reasons and _topic_profile:
-            reasons.extend(violates_topic_purity(q, _topic_profile))
+            _profile_with_name = {**_topic_profile, "_topic_name": topic}
+            reasons.extend(violates_topic_purity(q, _profile_with_name))
         nt = normalize_q_text(q)
         if not reasons and nt in seen_texts:
             reasons.append("duplicate")
