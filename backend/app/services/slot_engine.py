@@ -4523,6 +4523,7 @@ TOPIC_PROFILES: dict[str, dict] = {
             "round", "estimate", "hundred", "thousand",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "max_questions": 10,
         "default_recipe": [
             {"skill_tag": "c2_clock_reading", "count": 3},
             {"skill_tag": "c2_time_word_problem", "count": 3},
