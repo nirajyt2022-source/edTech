@@ -143,6 +143,7 @@ class WorksheetGenerationResponse(BaseModel):
     warnings: dict | None = None
     verdict: str = "ok"
     worksheets: list[Worksheet] | None = None
+    capped_q_count: int | None = None  # Set if q_count was reduced due to topic limit
 
 
 class GradeRequest(BaseModel):
@@ -1729,6 +1730,8 @@ async def generate_worksheet(
             if request.visual_theme:
                 constraints_dict["visual_theme"] = request.visual_theme
             visuals_only = request.visuals_only or request.problem_style == "visual"
+            if visuals_only:
+                constraints_dict["visuals_only"] = True
             min_visual_ratio = request.min_visual_ratio
             if min_visual_ratio is None and visuals_only:
                 min_visual_ratio = 0.8
@@ -1876,6 +1879,8 @@ async def generate_worksheet(
         constraints_dict = request.constraints.model_dump() if request.constraints else {}
         if request.visual_theme:
             constraints_dict["visual_theme"] = request.visual_theme
+        if request.visuals_only or request.problem_style == "visual":
+            constraints_dict["visuals_only"] = True
 
         worksheet_plan = None
         # Only trigger carry/borrow worksheet plan for 3-digit+ topics.
@@ -1985,6 +1990,7 @@ async def generate_worksheet(
             generation_time_ms=generation_time_ms,
             warnings={"question_level": q_warns, "worksheet_level": ws_warns} if has_warnings else None,
             verdict="best_effort" if has_warnings else "ok",
+            capped_q_count=meta.get("_capped_q_count"),
         )
 
     except HTTPException:
@@ -2100,6 +2106,7 @@ def mastery_reset(req: MasteryResetRequest, response: Response):
 class PDFExportRequest(BaseModel):
     worksheet: Worksheet
     pdf_type: Literal["full", "student", "answer_key"] = "full"
+    visual_theme: str | None = None  # "color" | "black_and_white" | "minimal"
 
 
 @router.post("/export-pdf")
@@ -2156,6 +2163,7 @@ async def export_worksheet_pdf(request: PDFExportRequest):
         # ── end quality gate ───────────────────────────────────────────────
 
         # Generate PDF
+        worksheet_dict["visual_theme"] = request.visual_theme or "color"
         pdf_bytes = pdf_service.generate_worksheet_pdf(
             worksheet_dict,
             pdf_type=request.pdf_type

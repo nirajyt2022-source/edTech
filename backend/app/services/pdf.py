@@ -313,6 +313,23 @@ class PDFService:
         story = []
         questions = worksheet.get('questions', [])
 
+        # Switch colour palette based on visual_theme
+        global _PRIMARY, _ACCENT, _LIGHT_BG
+        _theme = (worksheet.get("visual_theme") or "color").lower()
+        if _theme == "black_and_white":
+            _PRIMARY  = colors.Color(0.1, 0.1, 0.1)
+            _ACCENT   = colors.Color(0.3, 0.3, 0.3)
+            _LIGHT_BG = colors.white
+        elif _theme == "minimal":
+            _PRIMARY  = colors.Color(0.2, 0.2, 0.2)
+            _ACCENT   = colors.Color(0.4, 0.4, 0.4)
+            _LIGHT_BG = colors.white
+        else:
+            # Restore warm scholar defaults in case a prior call changed them
+            _PRIMARY  = colors.Color(0.15, 0.32, 0.22)
+            _ACCENT   = colors.Color(0.80, 0.60, 0.15)
+            _LIGHT_BG = colors.Color(0.96, 0.96, 0.94)
+
         # Compute display order once — tier-sorted (Foundation → Application →
         # Stretch), bonus last.  Both _build_questions and _build_answer_key
         # must iterate the *same* list so Q-numbers stay in sync.

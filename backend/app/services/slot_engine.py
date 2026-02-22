@@ -8361,6 +8361,14 @@ def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
     if matches:
         matches.sort(key=len, reverse=True)
         return TOPIC_PROFILES[matches[0]]
+    # Fuzzy fallback: find profile whose key contains the topic stem.
+    # Handles frontend sending "Time" when key is "Time (Class 1)".
+    if topic:
+        _t_lower = topic.lower()
+        for _k, _v in TOPIC_PROFILES.items():
+            if _t_lower in _k.lower() or _k.lower().startswith(_t_lower):
+                if _ok(_v):
+                    return _v
     return None
 
 
@@ -14248,6 +14256,21 @@ _TOPIC_CONSTRAINTS: dict[str, str] = {
         "Keep language appropriate for Class 5. "
         "NEVER generate arithmetic, grammar, or science questions.\n"
     ),
+    "Addition (carries)": (
+        "CRITICAL: ALL questions MUST be about Addition with carrying ONLY. "
+        "Use 2-3 digit numbers. Show column addition with carry. "
+        "NEVER generate subtraction, multiplication, or non-addition questions.\n"
+    ),
+    "Subtraction (borrowing)": (
+        "CRITICAL: ALL questions MUST be about Subtraction with borrowing ONLY. "
+        "Use 2-3 digit numbers. Show column subtraction with borrowing. "
+        "NEVER generate addition, multiplication, or non-subtraction questions.\n"
+    ),
+    "Addition and subtraction (3-digit)": (
+        "CRITICAL: ALL questions MUST be about 3-digit Addition and Subtraction ONLY. "
+        "Use numbers between 100 and 999. Mix addition and subtraction. "
+        "NEVER generate multiplication, division, or non-arithmetic questions.\n"
+    ),
 }
 
 REGION_CONTEXT: dict[str, dict[str, str]] = {
@@ -15570,9 +15593,20 @@ def generate_question(
     slot_instruction: str = "",
     topic: str = "",
     allowed_formats: list[str] | None = None,
+    visual_theme: str | None = None,
 ) -> dict:
     """Generate a single question via LLM."""
     avoid_str = ", ".join(avoid_state[-20:]) if avoid_state else "none"
+
+    if visual_theme:
+        _theme_map = {
+            "color": "Use colorful, vibrant descriptions. Reference colors in scenarios.",
+            "black_and_white": "Keep all descriptions simple and monochrome. No color references.",
+            "minimal": "Keep questions extremely brief and clean. No decorative language.",
+        }
+        _theme_hint = _theme_map.get(visual_theme.lower(), "")
+        if _theme_hint:
+            slot_instruction = slot_instruction + f"\nVISUAL STYLE: {_theme_hint}"
 
     lang_instruction = ""
     if language != "English":
@@ -17143,6 +17177,7 @@ async def generate_all_questions(
                     slot_instruction=slot_data["slot_instruction"],
                     topic=topic,
                     allowed_formats=_allowed,
+                    visual_theme=slot_data.get("visual_theme"),
                 ),
                 timeout=30,
             )
@@ -17252,6 +17287,16 @@ async def run_slot_pipeline_async(
 
     _t_start = _time_module.perf_counter()
     constraints = constraints or {}
+    visual_theme = constraints.get("visual_theme")
+    _visuals_only_pipeline = bool(constraints.get("visuals_only", False))
+    _visual_prompt_hint = ""
+    if _visuals_only_pipeline:
+        _visual_prompt_hint = (
+            "VISUAL REQUIREMENT: Every question MUST include a visual element. "
+            "Use number lines, bar models, shapes, clock faces, or pictorial scenarios. "
+            "question_text must describe or reference a visual. "
+            "Set visual_type in your response.\n"
+        )
 
     logger.info(
         "[async] Slot pipeline: grade=%s topic=%s q=%d diff=%s plan=%s",
@@ -17293,6 +17338,7 @@ async def run_slot_pipeline_async(
                 q_count, _max_q, topic,
             )
             q_count = _max_q
+            meta["_capped_q_count"] = _max_q  # Surface cap to API response
 
     if worksheet_plan:
         plan_directives = list(worksheet_plan)
@@ -17576,6 +17622,8 @@ async def run_slot_pipeline_async(
         _render_fmt_async = get_format(subject, slot_type, _async_grade_num)
         slot_instruction += "\n\n" + _FORMAT_INSTRUCTIONS[_render_fmt_async]
 
+        if _visual_prompt_hint:
+            slot_instruction = _visual_prompt_hint + slot_instruction
         prepared_slots.append({
             "slot_type": slot_type,
             "q_difficulty": q_difficulty,
@@ -17586,6 +17634,7 @@ async def run_slot_pipeline_async(
             "_time_scenario_type": _time_scenario_type_async,
             "_render_fmt": _render_fmt_async,
             "_addition_pair": _addition_pair_async,
+            "visual_theme": visual_theme,
         })
 
     # ── 7. Parallel generation ──────────────────────────────────────────────
@@ -17664,6 +17713,7 @@ async def run_slot_pipeline_async(
                         slot_instruction=_fallback_instr,
                         topic=topic,
                         allowed_formats=_fb_allowed,
+                        visual_theme=visual_theme,
                     )
                     _fb_q["slot_type"] = "recognition"
                     _fb_q["role"] = "recognition"
