@@ -17143,6 +17143,160 @@ def deduplicate_questions(questions: list) -> list:
 
 
 # ---------------------------------------------------------------------------
+
+# ── Batch question generator ─────────────────────────────────────────────────
+# Generates ALL questions in ONE Gemini call using a clear worksheet-level prompt.
+# Avoids per-question overhead and Gemini's tendency to default to arithmetic
+# when given isolated single-question prompts without worksheet context.
+
+_BATCH_SYSTEM = (
+    "Expert CBSE primary school worksheet generator. "
+    "Output a JSON array of exactly the requested number of question objects. "
+    "No markdown. No extra text. Valid JSON only.\n"
+    "Each question object must have these exact keys: "
+    "id, type, text, options, correct_answer, explanation, difficulty, skill_tag, format\n"
+    "- options: array like [\"A) ...\", \"B) ...\"] or [] for short_answer/fill_blank\n"
+    "- correct_answer: \"A\"/\"B\"/\"C\" for MCQ, or the actual answer text otherwise\n"
+    "- format: one of mcq_2, mcq_3, short_answer, fill_blank"
+)
+
+def _build_batch_user_prompt(
+    topic: str, grade: str, subject: str, difficulty: str,
+    n: int, constraint: str, skill_distribution: str,
+) -> str:
+    mcq2 = max(1, n // 4)
+    mcq3 = max(1, n // 5)
+    fill = max(1, n // 5)
+    short = n - mcq2 - mcq3 - fill
+    return (
+        f"Grade: {grade}\n"
+        f"Subject: {subject}\n"
+        f"Topic: {topic}\n"
+        f"Difficulty: {difficulty}\n"
+        f"Number of questions: {n}\n"
+        f"\nTOPIC RULES:\n{constraint}\n"
+        f"\nSKILL DISTRIBUTION across {n} questions:\n{skill_distribution}\n"
+        f"\nQUESTION TYPE MIX:\n"
+        f"- {mcq2}x mcq_2 (2 options)\n"
+        f"- {mcq3}x mcq_3 (3 options)\n"
+        f"- {fill}x fill_blank\n"
+        f"- {short}x short_answer\n"
+        f"\nSTRICT RULES:\n"
+        f"- ALL questions must be about {topic} only\n"
+        f"- No arithmetic unless the topic requires it\n"
+        f"- Age-appropriate for {grade} students (simple, clear language)\n"
+        f"- Every answer must be factually correct\n"
+        f"- No duplicate questions\n"
+        f"- MCQ options must be meaningful {topic}-related choices, not arithmetic answers\n"
+    )
+
+
+def generate_batch_questions(
+    client,
+    topic: str,
+    grade: str,
+    subject: str,
+    difficulty: str,
+    n: int,
+    region: str = "India",
+    language: str = "English",
+) -> list[dict] | None:
+    """Generate all N questions in one Gemini call.
+    
+    Returns a list of question dicts on success, or None on failure.
+    Falls back to per-question generation if this returns None.
+    """
+    # Resolve topic constraint
+    constraint = _TOPIC_CONSTRAINTS.get(topic, "")
+    if not constraint and topic:
+        _rp = get_topic_profile(topic, subject=subject)
+        if _rp:
+            _rk = next((k for k, v in TOPIC_PROFILES.items() if v is _rp), None)
+            if _rk:
+                constraint = _TOPIC_CONSTRAINTS.get(_rk, "")
+    if not constraint:
+        constraint = f"ALL questions must be about {topic} only."
+
+    # Build skill distribution from profile
+    profile = get_topic_profile(topic, subject=subject)
+    skill_tags = profile.get("allowed_skill_tags", []) if profile else []
+    recipe = profile.get("default_recipe", []) if profile else []
+    
+    if recipe:
+        total = sum(r["count"] for r in recipe)
+        lines = []
+        remaining = n
+        for i, r in enumerate(recipe):
+            count = round(r["count"] / total * n)
+            if i == len(recipe) - 1:
+                count = remaining
+            remaining -= count
+            if count > 0:
+                lines.append(f"- {count}x {r['skill_tag']}")
+        skill_distribution = "\n".join(lines)
+    elif skill_tags:
+        per = max(1, n // len(skill_tags))
+        skill_distribution = "\n".join(f"- {per}x {tag}" for tag in skill_tags[:n])
+    else:
+        skill_distribution = f"- {n}x {topic.lower().replace(' ', '_')}"
+
+    user_msg = _build_batch_user_prompt(
+        topic=topic, grade=grade, subject=subject,
+        difficulty=difficulty, n=n,
+        constraint=constraint,
+        skill_distribution=skill_distribution,
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gemini-2.5-flash",
+            messages=[
+                {"role": "system", "content": _BATCH_SYSTEM},
+                {"role": "user", "content": user_msg},
+            ],
+            temperature=0.4,
+            max_tokens=n * 250,
+        )
+        raw = response.choices[0].message.content or ""
+        raw = _clean_json(raw)
+        questions = json.loads(raw)
+        if not isinstance(questions, list):
+            logger.warning("[batch] Response was not a list: %s", type(questions))
+            return None
+
+        # Normalise each question to the format the rest of the pipeline expects
+        out = []
+        for i, q in enumerate(questions[:n]):
+            if not isinstance(q, dict) or not q.get("text"):
+                continue
+            q["id"] = i + 1
+            q["_uuid"] = str(uuid.uuid4())
+            q["question_text"] = q.pop("text", "")
+            q["answer"] = q.pop("correct_answer", "")
+            q["hint"] = q.get("hint")
+            q["options"] = q.get("options") or []
+            q["pictorial_elements"] = []
+            q["difficulty"] = q.get("difficulty", difficulty)
+            q["skill_tag"] = q.get("skill_tag", topic.lower().replace(" ", "_"))
+            q["slot_type"] = "recognition"
+            q["role"] = q.get("skill_tag", "recognition")
+            q["is_bonus"] = False
+            q["is_fallback"] = False
+            q["visual_type"] = None
+            q["visual_data"] = None
+            q["answer_type"] = "exact"
+            q["type"] = q.get("format", q.get("type", "short_answer"))
+            q["format"] = q.get("format", "short_answer")
+            out.append(q)
+
+        logger.info("[batch] Generated %d/%d questions for topic=%s grade=%s", len(out), n, topic, grade)
+        return out if len(out) >= max(1, n // 2) else None
+
+    except Exception as exc:
+        logger.warning("[batch] Batch generation failed for topic=%s: %s", topic, exc)
+        return None
+
+
 # generate_all_questions — parallel slot generation
 # ---------------------------------------------------------------------------
 
@@ -17663,18 +17817,33 @@ async def run_slot_pipeline_async(
     _sequential = bool(_topic_profile and _topic_profile.get("sequential_generation"))
     if _sequential:
         logger.info("[async] Sequential generation mode for topic=%s", topic)
-    results = await generate_all_questions(
-        client=client,
-        prepared_slots=prepared_slots,
-        grade=grade,
-        subject=subject,
-        micro_skill=micro_skill,
-        region=region,
-        language=language,
-        topic=topic,
-        avoid_state_base=history_avoid.get("used_contexts", []),
-        sequential=_sequential,
+
+    # ── 7a. Try batch generation first (one Gemini call for all questions) ──
+    # This is more reliable than per-question calls for non-arithmetic topics
+    # because Gemini has full worksheet context and doesn't default to arithmetic.
+    _batch_qs = await _asyncio.to_thread(
+        generate_batch_questions,
+        client, topic, grade, subject, difficulty, q_count,
+        region, language,
     )
+    if _batch_qs:
+        logger.info("[async] Batch generation succeeded: %d questions for topic=%s", len(_batch_qs), topic)
+        # Format batch results as the same structure as generate_all_questions returns
+        results = [{"idx": i, "ok": True, "q": q, "error": None} for i, q in enumerate(_batch_qs)]
+    else:
+        logger.info("[async] Batch generation failed/skipped, using per-question generation for topic=%s", topic)
+        results = await generate_all_questions(
+            client=client,
+            prepared_slots=prepared_slots,
+            grade=grade,
+            subject=subject,
+            micro_skill=micro_skill,
+            region=region,
+            language=language,
+            topic=topic,
+            avoid_state_base=history_avoid.get("used_contexts", []),
+            sequential=_sequential,
+        )
     _t_gen_end = _time_module.perf_counter()
     logger.info(
         "[async] Parallel generation: %d slots in %.2f s (%.2f s/slot)",
