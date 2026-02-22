@@ -15613,6 +15613,14 @@ def generate_question(
         lang_instruction = f"Write question_text in {language}.\n"
 
     topic_constraint = _TOPIC_CONSTRAINTS.get(topic, "")
+    if not topic_constraint and topic:
+        # Frontend sends short names like "Time" but keys are "Time (Class 1)".
+        # Resolve via get_topic_profile which is already grade+subject aware.
+        _rp = get_topic_profile(topic, subject=subject)
+        if _rp:
+            _rk = next((k for k, v in TOPIC_PROFILES.items() if v is _rp), None)
+            if _rk:
+                topic_constraint = _TOPIC_CONSTRAINTS.get(_rk, "")
 
     # Fraction topic enforcement — applies to ALL difficulty tiers
     if "fraction" in (topic or "").lower():
