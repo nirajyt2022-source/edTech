@@ -283,17 +283,68 @@ async def generate_v1(request: GenerateRequestV1, authorization: str = Header(No
             logger.warning("Subscription check failed (fail-open): %s", e)
 
     try:
-        legacy_req = WorksheetGenerationRequest(**request.model_dump())
-        result = await _legacy_generate(legacy_req, authorization=None)
-        ws = result.worksheet
-        logger.debug(
-            "v1 /generate serializing worksheet type=%s questions=%d",
-            type(ws).__name__, len(getattr(ws, "questions", [])),
+        from app.core.deps import get_llm_client
+        from app.core.config import get_settings
+        from app.services.worksheet_generator import generate_worksheet
+
+        _client = get_llm_client(get_settings())
+        data, elapsed_ms, warnings = generate_worksheet(
+            client=_client,
+            board=request.board,
+            grade_level=request.grade_level,
+            subject=request.subject,
+            topic=request.topic,
+            difficulty=request.difficulty,
+            num_questions=request.num_questions,
+            language=request.language,
+            problem_style=request.problem_style or "standard",
+            custom_instructions=request.custom_instructions,
         )
-        ws_dict = jsonable_encoder(ws.model_dump() if hasattr(ws, "model_dump") else ws)
+
+        # Map to v1 Question shape
+        questions = []
+        for i, q in enumerate(data.get("questions", [])):
+            q_type = q.get("type", "short_answer")
+            options = q.get("options")
+            if q_type == "mcq":
+                fmt = "mcq_4" if options and len(options) >= 4 else "mcq_3"
+            elif q_type == "fill_blank":
+                fmt = "fill_blank"
+            elif q_type == "true_false":
+                fmt = "true_false"
+            else:
+                fmt = "short_answer"
+            questions.append({
+                "id": q.get("id", f"q{i + 1}"),
+                "type": q_type,
+                "text": q.get("text", ""),
+                "options": options,
+                "correct_answer": q.get("correct_answer"),
+                "explanation": q.get("explanation"),
+                "difficulty": q.get("difficulty"),
+                "hint": q.get("hint"),
+                "visual_type": q.get("visual_type"),
+                "visual_data": q.get("visual_data"),
+                "format": fmt,
+            })
+
+        ws_dict = {
+            "title": data.get("title", f"Worksheet: {request.topic}"),
+            "grade": request.grade_level,
+            "subject": request.subject,
+            "topic": request.topic,
+            "difficulty": request.difficulty,
+            "language": request.language,
+            "questions": questions,
+            "skill_focus": data.get("skill_focus", ""),
+            "common_mistake": data.get("common_mistake", ""),
+            "parent_tip": data.get("parent_tip", ""),
+            "learning_objectives": data.get("learning_objectives", []),
+        }
+
         return GenerateResponse(
             worksheet=ws_dict,
-            generation_time_ms=result.generation_time_ms,
+            generation_time_ms=elapsed_ms,
         )
     except Exception as e:
         logger.exception("v1 /generate failed for topic=%s", request.topic)
