@@ -681,10 +681,14 @@ def validate_grade_appropriateness(
             reasons.append(f"slot_type='{role}' forbidden for Class {grade_num}")
 
         # Rule 2: answer exceeds max word count
+        # error_detection answers are structurally longer — they must explain
+        # the mistake AND state the correction, so double the cap for them.
         word_count = len(answer.split())
-        if word_count > max_words:
+        is_error_detection = role in ("error_detection", "error_spot")
+        effective_max = max_words * 2 if is_error_detection else max_words
+        if word_count > effective_max:
             reasons.append(
-                f"answer too long ({word_count} words, max {max_words})"
+                f"answer too long ({word_count} words, max {effective_max})"
             )
 
         # Rule 3: explanation requests forbidden for Class 1-2

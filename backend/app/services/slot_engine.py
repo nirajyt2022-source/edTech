@@ -15669,14 +15669,15 @@ def _validate_question_matches_topic(q: dict, skill_tag: str, disallowed_keyword
             return (False, "Shape question contains arithmetic")
     
     if "time" in skill_tag.lower():
+        import re as _re_tv
         time_words = [
             "clock", "hour", "minute", "morning", "afternoon", "evening",
             "day", "week", "o'clock", " am", " pm", "a.m", "p.m",
-            "started", "finished", "arrives", "departs", "leaves", "takes",
-            "duration", "long", "earlier", "later", "before", "after",
+            "started", "finished", "arrives", "departs", "leaves",
+            "duration", "long", "earlier", "later",
         ]
         has_time_word = any(w in text for w in time_words)
-        has_time_pattern = bool(re.search(r'\d{1,2}:\d{2}', text))
+        has_time_pattern = bool(_re_tv.search(r'\d{1,2}:\d{2}', text))
         if not has_time_word and not has_time_pattern:
             return (False, "Time question missing time vocabulary")
     
@@ -16955,6 +16956,33 @@ def _normalise_for_dedup(text: str) -> frozenset[str]:
     return frozenset(tokens - _DEDUP_STOPWORDS)
 
 
+def _dedup_number_pairs(questions: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Remove questions that reuse the same (A, B) number pair as an earlier question.
+
+    Returns (kept, removed). Representation slots are skipped because they may
+    intentionally reuse operands from recognition questions (e.g. missing-number
+    based on the same addition).
+    """
+    seen_pairs: set[tuple] = set()
+    kept: list[dict] = []
+    removed: list[dict] = []
+    for q in questions:
+        slot = q.get("slot_type", q.get("role", ""))
+        if slot in ("representation",):
+            kept.append(q)
+            continue
+        text = q.get("question_text", "")
+        nums = re.findall(r'\b(\d{2,3})\b', text)
+        if len(nums) >= 2:
+            pair = (min(int(nums[0]), int(nums[1])), max(int(nums[0]), int(nums[1])))
+            if pair in seen_pairs:
+                removed.append(q)
+                continue
+            seen_pairs.add(pair)
+        kept.append(q)
+    return kept, removed
+
+
 def deduplicate_questions(questions: list) -> list:
     """Remove near-duplicate questions using Jaccard similarity.
 
@@ -17716,7 +17744,18 @@ async def run_slot_pipeline_async(
     if len(questions) != len(slot_plan):
         questions = enforce_slot_counts(questions, slot_plan, subject=subject)
 
-    # ── 9b-iii. Strip LLM-injected hint phrases from question_text ───────────
+    # ── 9b-iii. Number-pair dedup (post-generation, catches parallel duplicates) ─
+    questions, _np_dupes = _dedup_number_pairs(questions)
+    if _np_dupes:
+        logger.info(
+            "[async] number-pair dedup removed %d question(s): %s",
+            len(_np_dupes),
+            [q.get("question_text", "")[:40] for q in _np_dupes],
+        )
+    if len(questions) != len(slot_plan):
+        questions = enforce_slot_counts(questions, slot_plan, subject=subject)
+
+    # ── 9b-iv. Strip LLM-injected hint phrases from question_text ────────────
     strip_hint_phrases(questions)
 
     # ── 9c. Quality review pass ──────────────────────────────────────────────
