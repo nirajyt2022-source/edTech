@@ -4052,7 +4052,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
             "thirds", "third", "eighths", "decimals", "percentage",
-            "improper fraction", "mixed number", "add fractions", "subtract fractions",
+            "improper fraction", "mixed number",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "clock_face"],
         "allowed_visual_types": [None, "fraction_circle", "fraction_rectangle"],
@@ -4244,6 +4244,7 @@ TOPIC_PROFILES: dict[str, dict] = {
             "carry", "borrow", "plus", "minus", "column",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "max_questions": 10,
         "default_recipe": [
             {"skill_tag": "c1_shape_identify", "count": 3},
             {"skill_tag": "c1_shape_match", "count": 3},
@@ -4281,11 +4282,11 @@ TOPIC_PROFILES: dict[str, dict] = {
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
             "add", "subtract", "multiply", "divide", "fraction", "decimal",
-            "carry", "borrow", "o'clock", "half past", "quarter", "minutes", "hours",
-            "duration", "elapsed", "how long", "how many hours", "how many minutes",
-            "calculate", "total time", "seconds",
+            "carry", "borrow", "column form", "regroup", "base ten",
+            "place value", "perimeter", "area", "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line", "clock"],
+        "max_questions": 10,
         "default_recipe": [
             {"skill_tag": "c1_time_identify", "count": 3},
             {"skill_tag": "c1_time_sequence", "count": 3},
@@ -4306,6 +4307,7 @@ TOPIC_PROFILES: dict[str, dict] = {
             "carry", "borrow", "notes", "bills",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "max_questions": 10,
         "default_recipe": [
             {"skill_tag": "c1_money_identify", "count": 3},
             {"skill_tag": "c1_money_count", "count": 3},
@@ -4327,6 +4329,7 @@ TOPIC_PROFILES: dict[str, dict] = {
             "carry", "borrow", "sum", "difference", "product",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "max_questions": 10,
         "default_recipe": [
             {"skill_tag": "c1_spatial_in_out_identify", "count": 2},
             {"skill_tag": "c1_spatial_near_far_identify", "count": 1},
@@ -8610,7 +8613,9 @@ def get_slot_plan(q_count: int) -> list[str]:
 def get_question_difficulty(slot_type: str, worksheet_difficulty: str) -> str:
     """Determine per-question difficulty from slot type + worksheet level."""
     if slot_type == "recognition":
-        return "easy"
+        # Hard worksheets use "medium" for recognition — harder vocab, less
+        # obvious answers, more complex clock faces — while staying approachable.
+        return "medium" if worksheet_difficulty.lower() == "hard" else "easy"
     if slot_type == "error_detection":
         return "medium" if worksheet_difficulty in ("easy", "medium") else "hard"
     if slot_type == "thinking":
@@ -14447,7 +14452,21 @@ def violates_topic_purity(q: dict, profile: dict) -> list[str]:
     else:
         allowed = set(profile.get("allowed_skill_tags", []))
         if allowed and st not in allowed:
-            reasons.append(f"skill_tag_not_allowed:{st}")
+            # Token-level stem match: strip grade prefix (c1_, c2_, …) then
+            # split by "_" and check for any shared word between the returned
+            # tag and any allowed tag.
+            # e.g. "clock_reading" → {"clock","reading"} ∩ "c1_time_identify"
+            #       → {"time","identify"} — no common token → rejected.
+            # e.g. "c1_time_reading" → {"time","reading"} ∩ "c1_time_identify"
+            #       → {"time","identify"} — "time" shared → accepted.
+            _pfx_re = re.compile(r'^c\d_')
+            def _tok(tag: str) -> set[str]:
+                return set(_pfx_re.sub("", tag).lower().split("_")) - {""}
+            st_tok = _tok(st)
+            stem_match = any(bool(st_tok & _tok(a)) for a in allowed)
+            if not stem_match:
+                reasons.append(f"skill_tag_not_allowed:{st}")
+            # stem_match: silently accept — the tag shares a topic root
 
     return reasons
 

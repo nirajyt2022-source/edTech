@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Header, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from typing import Literal
 import asyncio
 import json
@@ -81,6 +81,20 @@ class WorksheetGenerationRequest(BaseModel):
     visuals_only: bool = False
     min_visual_ratio: float | None = None
     child_id: str | None = None  # Gold-G2: mastery-aware slot adjustment
+    # Frontend selections previously silently dropped
+    problem_type: str | None = None   # "visual only" | "standard" | "mixed"
+    visual_theme: str | None = None   # "color" | "black_and_white" | "minimal"
+
+    @model_validator(mode="after")
+    def _map_problem_type(self) -> "WorksheetGenerationRequest":
+        if self.problem_type:
+            pt = self.problem_type.lower().strip()
+            if "visual" in pt and "only" in pt:
+                self.visuals_only = True
+                self.problem_style = "visual"
+            elif "mixed" in pt:
+                self.problem_style = "mixed"
+        return self
 
 
 # ──────────────────────────────────────────────
@@ -1711,7 +1725,9 @@ async def generate_worksheet(
             base, rem = divmod(n, k)
             per_skill = [base + (1 if i < rem else 0) for i in range(k)]
 
-            constraints_dict = request.constraints.model_dump() if request.constraints else None
+            constraints_dict = request.constraints.model_dump() if request.constraints else {}
+            if request.visual_theme:
+                constraints_dict["visual_theme"] = request.visual_theme
             visuals_only = request.visuals_only or request.problem_style == "visual"
             min_visual_ratio = request.min_visual_ratio
             if min_visual_ratio is None and visuals_only:
@@ -1857,9 +1873,9 @@ async def generate_worksheet(
             logger.info("Narrowing %d skills to focus=%s", len(request.skills), focus_skill)
 
         # ── Build worksheet plan (v7.0) ──
-        constraints_dict = None
-        if request.constraints:
-            constraints_dict = request.constraints.model_dump()
+        constraints_dict = request.constraints.model_dump() if request.constraints else {}
+        if request.visual_theme:
+            constraints_dict["visual_theme"] = request.visual_theme
 
         worksheet_plan = None
         # Only trigger carry/borrow worksheet plan for 3-digit+ topics.
