@@ -13035,12 +13035,13 @@ QUESTION_SYSTEM_HINDI = (
 )
 
 QUESTION_USER_TEMPLATE = (
+    "{topic_constraint}"
     "Grade {grade} {subject} | Micro-skill: {micro_skill} | "
     "Slot: {slot_type} | Difficulty: {difficulty}\n"
-    "{topic_constraint}"
     "Avoid reusing: {avoid}\n"
     "{slot_instruction}\n"
     "{language_instruction}"
+    "{topic_constraint}"
     '{{"format":"","question_text":"","pictorial_elements":[],"answer":"","hint":null,"options":null}}'
 )
 
