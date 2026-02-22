@@ -4074,7 +4074,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "pencils", "points", "students", "chocolates",
+            "pencils", "students", "chocolates",
             "pages", "marbles", "rupees",
             "round", "estimate", "hundred", "thousand",
             "base ten", "regrouping", "carry", "borrow",
@@ -15148,7 +15148,30 @@ def verify_visual_contract(questions: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def enforce_slot_counts(questions: list[dict], slot_plan: list[str], subject: str = "Mathematics") -> list[dict]:
+def _pick_fallback_format(slot_type: str, subject: str, topic: str = "") -> str:
+    """Return the most appropriate fallback format for a synthesized stub question.
+
+    Tries to pick a topic-aware format from the topic profile's recipe, falling
+    back to the lexicographically first valid format for the slot.
+    """
+    formats = get_valid_formats(subject)
+    slot_formats = formats.get(slot_type, set())
+    if topic:
+        try:
+            profile = get_topic_profile(topic, subject=subject)
+            if profile:
+                recipe_tags = {r.get("skill_tag", "") for r in profile.get("default_recipe", [])}
+                for fmt in sorted(slot_formats):
+                    if any(tag in fmt or fmt in tag for tag in recipe_tags):
+                        return fmt
+        except Exception:
+            pass
+    if slot_formats:
+        return sorted(slot_formats)[0]
+    return "unknown"
+
+
+def enforce_slot_counts(questions: list[dict], slot_plan: list[str], subject: str = "Mathematics", topic: str = "") -> list[dict]:
     """Deterministically trim extras / fill gaps so output matches slot_plan exactly.
 
     - If a slot_type has too many questions: keep only the first N (by position).
@@ -15177,7 +15200,7 @@ def enforce_slot_counts(questions: list[dict], slot_plan: list[str], subject: st
                 "slot_type": st,
                 "role": st,
                 "skill_tag": st,
-                "format": sorted(formats.get(st, {"unknown"}))[0],
+                "format": _pick_fallback_format(st, subject, topic),
                 "question_text": f"[Slot fill for {st} question]",
                 "pictorial_elements": [],
                 "answer": "",
@@ -15197,7 +15220,7 @@ def enforce_slot_counts(questions: list[dict], slot_plan: list[str], subject: st
     return result
 
 
-def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan: list[str] | None = None) -> list[str]:
+def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan: list[str] | None = None, grade: int = 0) -> list[str]:
     """Validate the full worksheet: slot distribution, uniqueness, diversity.
 
     If expected_plan is provided, validate against that (the actual plan used).
@@ -15216,9 +15239,17 @@ def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan:
         if actual != expected:
             issues.append(f"slot {slot_type}: expected {expected}, got {actual}")
 
-    if actual_counts.get("error_detection", 0) < 1:
+    _grade_forbidden: set = set()
+    if grade:
+        try:
+            _grade_forbidden = set(
+                GRADE_PROFILES.get(str(grade), {}).get("forbidden_question_types", [])
+            )
+        except Exception:
+            pass
+    if "error_detection" not in _grade_forbidden and actual_counts.get("error_detection", 0) < 1:
         issues.append("missing mandatory error_detection question")
-    if actual_counts.get("thinking", 0) < 1:
+    if "thinking" not in _grade_forbidden and actual_counts.get("thinking", 0) < 1:
         issues.append("missing mandatory thinking question")
 
     # Track used number pairs to prevent duplicates
@@ -15759,6 +15790,18 @@ def _extract_avoid_items(q: dict) -> list[str]:
         items.append("op:quarter")
 
     return items
+
+
+def _extract_number_pair(text: str) -> list[str]:
+    """Extract a canonical 2-3 digit number pair token for cross-slot dedup.
+
+    Returns a list with a single "pair:A-B" string if at least two 2-3 digit
+    numbers are found, otherwise an empty list.
+    """
+    nums = re.findall(r'\b(\d{2,3})\b', text)
+    if len(nums) >= 2:
+        return [f"pair:{nums[0]}-{nums[1]}"]
+    return []
 
 
 def _regen_question_for_topic(
@@ -16401,6 +16444,7 @@ def run_slot_pipeline(
                 questions.append(q)
 
                 avoid_state.extend(_extract_avoid_items(q))
+                avoid_state.extend(_extract_number_pair(q.get("question_text", "")))
                 generated = True
                 break
 
@@ -16452,14 +16496,13 @@ def run_slot_pipeline(
                 except Exception as _fb_exc:
                     logger.error("[sync] recognition fallback failed: %s — inserting stub", _fb_exc)
             if not generated:
-                _fallback_formats = get_valid_formats(subject)
                 questions.append({
                     "id": i + 1,
                     "_uuid": str(uuid.uuid4()),
                     "slot_type": slot_type,
                     "role": directive.get("role") or slot_type,
                     "skill_tag": directive.get("skill_tag") or slot_type,
-                    "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
+                    "format": _pick_fallback_format(slot_type, subject, topic),
                     "render_format": _render_fmt,
                     "_is_fallback": True,
                     "question_text": f"[Generation failed for {slot_type} question]",
@@ -16536,7 +16579,7 @@ def run_slot_pipeline(
         questions = enforce_slot_counts(questions, slot_plan, subject=subject)
 
     # 8. Validate whole worksheet (against the actual plan, not SLOT_PLANS)
-    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
+    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan, grade=_sync_grade_num)
     if ws_issues:
         logger.warning("Worksheet-level issues: %s", ws_issues)
 
@@ -17489,7 +17532,7 @@ async def run_slot_pipeline_async(
                 "slot_type": slot_type,
                 "role": directive.get("role") or slot_type,
                 "skill_tag": directive.get("skill_tag") or slot_type,
-                "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
+                "format": _pick_fallback_format(slot_type, subject, topic),
                 "render_format": _ps.get("_render_fmt", "short_answer"),
                 "_is_fallback": True,
                 "question_text": f"[Generation failed for {slot_type} question]",
@@ -17572,6 +17615,7 @@ async def run_slot_pipeline_async(
 
         questions.append(q)
         avoid_state.extend(_extract_avoid_items(q))
+        avoid_state.extend(_extract_number_pair(q.get("question_text", "")))
 
     # ── 9. Post-generation repair pass (same as sync) ───────────────────────
     questions = _repair_pass(
@@ -17630,7 +17674,7 @@ async def run_slot_pipeline_async(
             logger.warning("[async] Difficulty calibration failed (continuing): %s", _dc_exc)
 
     # ── 10. Worksheet-level validation ──────────────────────────────────────
-    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan)
+    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan, grade=_async_grade_num)
     if ws_issues:
         logger.warning("[async] Worksheet-level issues: %s", ws_issues)
 
