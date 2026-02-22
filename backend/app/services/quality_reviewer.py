@@ -388,6 +388,30 @@ def _word_limit(grade: int) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Self-contradiction detector (CHECK 7)
+# ---------------------------------------------------------------------------
+
+def _check_answer_self_contradiction(answer: str) -> bool:
+    """
+    Returns True if answer contains a self-contradiction pattern.
+    Examples: starts with "More than X" but later says "less than X"
+    """
+    if not answer or len(answer) < 30:
+        return False
+    lower = answer.lower()
+    # Pattern: "more than X" followed by "less than X" (or vice versa) for same value
+    more_matches = re.findall(r'more than (\d+)', lower)
+    less_matches = re.findall(r'less than (\d+)', lower)
+    # If same number appears in both → contradiction
+    if set(more_matches) & set(less_matches):
+        return True
+    # Pattern: explicit admission of initial error
+    if 'my initial reasoning was incorrect' in lower or 'i was wrong' in lower:
+        return True
+    return False
+
+
+# ---------------------------------------------------------------------------
 # ReviewResult
 # ---------------------------------------------------------------------------
 
@@ -569,6 +593,23 @@ class QualityReviewerAgent:
                 logger.debug(
                     "[quality_reviewer] Check 6 skipped for Q%s: %s", q_id, exc
                 )
+
+            # ── CHECK 7: Self-contradiction in thinking answer ────────────
+            if slot_type == "thinking":
+                try:
+                    raw_answer = q.get("answer") or q.get("correct_answer") or ""
+                    if _check_answer_self_contradiction(str(raw_answer)):
+                        msg = (
+                            f"Q{q_id}: contradictory answer — reject and regenerate "
+                            f"('{str(raw_answer)[:80]}')"
+                        )
+                        logger.warning("[quality_reviewer] %s", msg)
+                        q["_needs_regen"] = True
+                        result.corrections.append(msg)
+                except Exception as exc:
+                    logger.debug(
+                        "[quality_reviewer] Check 7 skipped for Q%s: %s", q_id, exc
+                    )
 
         total = len(result.corrections)
         logger.info(

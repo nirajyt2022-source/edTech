@@ -553,6 +553,13 @@ def _fix_inconsistent_visuals(data: dict) -> None:
             if vdata.get("end", 0) <= vdata.get("start", 0):
                 q["visual_type"] = None
                 q["visual_data"] = None
+            elif "jumps" not in vdata:
+                # Enrich plain number_line with jumps if the question has a clear answer
+                highlight = vdata.get("highlight")
+                start = vdata.get("start", 0)
+                if highlight is not None and highlight != start:
+                    vdata["jumps"] = [highlight - start]
+                    vdata["arc_points"] = [{"from": start, "to": highlight, "label": str(abs(highlight - start))}]
 
         # object_group: must have groups list
         elif vtype == "object_group":
@@ -1327,12 +1334,30 @@ def _map_visual_fields(q: dict) -> tuple:
     # Translate field names for frontend compatibility
     if model_id == "NUMBER_LINE":
         markers = spec.get("markers", [])
-        return vtype, {
-            "start": spec.get("start", 0),
-            "end": spec.get("end", 100),
-            "step": spec.get("tick_interval", 10),
-            "highlight": markers[1] if len(markers) >= 2 else None,
+        start_val = spec.get("start", 0)
+        end_val = spec.get("end", 100)
+        step_val = spec.get("tick_interval", 10)
+        highlight = markers[1] if len(markers) >= 2 else (markers[0] if markers else spec.get("highlight"))
+
+        # Build jumps array from markers if available
+        jumps = []
+        if len(markers) >= 2:
+            for j in range(len(markers) - 1):
+                jumps.append(markers[j + 1] - markers[j])
+
+        vdata = {
+            "start": start_val,
+            "end": end_val,
+            "step": step_val,
+            "highlight": highlight,
         }
+        if jumps:
+            vdata["jumps"] = jumps
+            vdata["arc_points"] = [
+                {"from": markers[i], "to": markers[i + 1], "label": str(abs(markers[i + 1] - markers[i]))}
+                for i in range(len(markers) - 1)
+            ]
+        return vtype, vdata
 
     # Default: pass through (strip model_id)
     return vtype, {k: v for k, v in spec.items() if k != "model_id"}
@@ -1356,58 +1381,115 @@ def _fill_role_explanations(questions: list[Question]) -> None:
             continue
 
         text = (q.text or "").lower()
-        answer = q.correct_answer or ""
-        is_text = _is_text_subject(q.skill_tag or "")
+        raw_answer = q.correct_answer
+        answer = str(raw_answer).strip() if raw_answer is not None and str(raw_answer).strip() else ""
+        tag = q.skill_tag or ""
+        is_text = _is_text_subject(tag)
+
+        # For MCQ questions, ensure answer is already in letter form for the explanation
+        if q.options and len(q.options) >= 2:
+            answer = _normalize_mcq_answer(answer or None, q.options) or answer
 
         if q.role == "thinking":
-            if is_text:
-                # Subject-appropriate thinking explanations
+            if tag.startswith("hin_"):
+                # Hindi thinking
+                if answer:
+                    q.explanation = f"प्रश्न को ध्यान से पढ़ें। उत्तर: {answer}"
+                else:
+                    q.explanation = "प्रश्न को ध्यान से पढ़कर उत्तर लिखें।"
+            elif tag.startswith("sci_"):
+                # Science thinking
+                if answer:
+                    q.explanation = f"Think about what plants/animals need. Answer: {answer}"
+                else:
+                    q.explanation = "Think about what you know. Write your answer clearly."
+            elif is_text:
+                # English (and other text subjects) thinking
                 if "why" in text or "reason" in text:
-                    q.explanation = "Think about the concept and explain your reasoning in full sentences."
-                elif "creative" in text or "write" in text or "compose" in text:
-                    q.explanation = "Use your imagination and write clearly. There is no single correct answer — focus on expressing your ideas."
-                elif "explain" in text:
-                    q.explanation = "Explain using what you know. Support your answer with an example."
+                    q.explanation = "Support your answer with a reason from the passage."
+                elif "write" in text or "compose" in text:
+                    q.explanation = "Use clear sentences. There is no single right answer."
                 else:
-                    q.explanation = "Think through the question carefully and write your answer in complete sentences."
+                    q.explanation = "Re-read the question and answer in full sentences."
             else:
-                # Maths estimation explanations
-                if "nearest 100" in text or "nearest hundred" in text:
-                    q.explanation = f"Round each number to the nearest 100, then add the rounded values. The estimated answer is {answer}."
-                elif "nearest 10" in text or "nearest ten" in text:
-                    q.explanation = f"Round each number to the nearest 10, then add the rounded values. The estimated answer is {answer}."
-                elif "closer" in text:
-                    q.explanation = f"Add the numbers and check which reference value is nearest. The answer is {answer}."
-                elif "compar" in text:
-                    q.explanation = "Compare both methods step by step and check which gives the correct result."
+                # Maths thinking
+                if "nearest 10" in text or "nearest ten" in text:
+                    # Skip 10 itself — it appears in "nearest 10" and is not an operand
+                    nums = [n for n in re.findall(r'\b\d+\b', q.text or "") if n != "10"]
+                    if len(nums) >= 2 and ("-" in text or "subtract" in text):
+                        a, b = int(nums[0]), int(nums[1])
+                        a_rounded = round(a, -1)
+                        b_rounded = round(b, -1)
+                        q.explanation = (
+                            f"Round each number to nearest 10 first. "
+                            f"{a}→{a_rounded}, {b}→{b_rounded}. "
+                            f"Then subtract: {a_rounded} − {b_rounded} = {answer}."
+                        )
+                    else:
+                        q.explanation = f"Round each number to nearest 10 first. Then add the rounded values. Answer = {answer}."
+                elif "nearest 100" in text or "nearest hundred" in text:
+                    q.explanation = f"Round each number to nearest 100 first. Then compute. Answer = {answer}."
                 else:
-                    q.explanation = f"Think through each step carefully. The answer is {answer}."
+                    q.explanation = f"Work through each step carefully. Answer = {answer}."
 
         elif q.role == "error_detection":
             if is_text:
-                # Subject-appropriate error detection explanations
-                tag = q.skill_tag or ""
-                if tag.startswith("hin_"):
-                    q.explanation = f"गलती खोजें और सही वाक्य लिखें। सही उत्तर: {answer}" if answer else "गलती खोजें और वाक्य को सही करके लिखें।"
-                elif tag.startswith("sci_") or tag.startswith("gk_") or tag.startswith("moral_") or tag.startswith("health_") or tag.startswith("comp_"):
-                    q.explanation = f"Identify the incorrect part and write the corrected version. Correct answer: {answer}" if answer else "Identify the error and write the correct statement."
+                # Science / English / Hindi error_detection
+                if answer:
+                    q.explanation = f"Correct answer: {answer[:120]}"
                 else:
-                    # English
-                    q.explanation = f"Find the grammar or spelling error and rewrite the sentence correctly. Correct version: {answer}" if answer else "Find the error and rewrite the sentence correctly."
+                    q.explanation = None
             else:
-                # Maths arithmetic explanations
-                if "+" in text or "add" in text:
-                    q.explanation = f"Re-add column by column with correct carrying. The correct answer is {answer}."
+                # Maths error_detection — never write template with blank answer
+                if not answer:
+                    q.explanation = None
+                elif "+" in text or "add" in text:
+                    q.explanation = f"Redo the addition carefully. Correct answer = {answer}."
                 elif "-" in text or "subtract" in text:
-                    q.explanation = f"Re-subtract column by column with correct borrowing. The correct answer is {answer}."
-                elif "\u00d7" in text or "x " in text or "times" in text:
-                    q.explanation = f"Recalculate the product. The correct answer is {answer}."
+                    q.explanation = f"Redo the subtraction step by step. Correct answer = {answer}."
+                elif "×" in text or "times" in text or "multiply" in text:
+                    q.explanation = f"Recalculate the product. Correct answer = {answer}."
                 else:
-                    q.explanation = f"Redo the calculation carefully. The correct answer is {answer}."
+                    q.explanation = f"Redo the calculation carefully. Correct answer = {answer}."
 
         # Hard cap
         if q.explanation and len(q.explanation) > 160:
             q.explanation = q.explanation[:157] + "..."
+
+
+def _normalize_mcq_answer(answer: str | None, options: list[str] | None) -> str | None:
+    """
+    Ensure MCQ correct_answer is always a single letter (A/B/C/D).
+
+    If answer is already A/B/C/D → return as-is.
+    If answer matches full option text → find its index → return letter.
+    If answer is a number that matches the numeric part of an option → find it → return letter.
+    Returns answer as-is if no match found.
+    """
+    if not answer or not options:
+        return answer
+    answer = answer.strip()
+    # Already a letter
+    if answer.upper() in ('A', 'B', 'C', 'D'):
+        return answer.upper()
+    # Try matching against option text
+    letters = ['A', 'B', 'C', 'D']
+    for i, opt in enumerate(options):
+        if i >= len(letters):
+            break
+        # Strip "A) " prefix if present
+        opt_text = opt.strip()
+        for prefix in ('A) ', 'B) ', 'C) ', 'D) ', 'A. ', 'B. ', 'C. ', 'D. '):
+            if opt_text.startswith(prefix):
+                opt_text = opt_text[len(prefix):]
+                break
+        # Exact match
+        if answer.lower() == opt_text.lower():
+            return letters[i]
+        # Numeric match (e.g. answer="13", option="13 flowers")
+        if answer.isdigit() and opt_text.startswith(answer):
+            return letters[i]
+    return answer  # Return as-is if no match found
 
 
 def _slot_to_question(q: dict, idx: int) -> Question:
@@ -1416,9 +1498,23 @@ def _slot_to_question(q: dict, idx: int) -> Question:
     text = q.get("question_text", "")
     answer = q.get("answer")
     answer_str = str(answer).strip() if answer is not None and str(answer).strip() else None
+    options = q.get("options") or None
 
     q_type = _FORMAT_TO_QTYPE.get(fmt, "short_answer")
+
+    # Normalise MCQ answers to letter format (A/B/C/D)
+    if q_type in ('mcq_3', 'mcq_4', 'multiple_choice') or (options and len(options) >= 2):
+        answer_str = _normalize_mcq_answer(answer_str, options)
+
     vtype, vdata = _map_visual_fields(q)
+
+    # Enrich plain number_line with jumps if the question has a clear answer
+    if vtype == "number_line" and isinstance(vdata, dict) and "jumps" not in vdata:
+        _nl_highlight = vdata.get("highlight")
+        _nl_start = vdata.get("start", 0)
+        if _nl_highlight is not None and _nl_highlight != _nl_start:
+            vdata["jumps"] = [_nl_highlight - _nl_start]
+            vdata["arc_points"] = [{"from": _nl_start, "to": _nl_highlight, "label": str(abs(_nl_highlight - _nl_start))}]
 
     explanation = q.get("explanation")
     # If correct_answer is None but we have an explanation, use it as sample_answer
@@ -1433,7 +1529,7 @@ def _slot_to_question(q: dict, idx: int) -> Question:
         id=f"q{idx + 1}",
         type=q_type,
         text=text,
-        options=q.get("options") or None,
+        options=options,
         correct_answer=answer_str,
         explanation=explanation,
         difficulty=q.get("difficulty"),

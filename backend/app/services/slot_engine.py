@@ -17459,6 +17459,9 @@ async def run_slot_pipeline_async(
         _qt = q.get("question_text", "")
         if _qt.startswith("[Slot fill") or _qt.startswith("[Generation failed"):
             reasons.append("stub")
+        # Regenerate questions flagged by quality reviewer as self-contradictory
+        if not reasons and q.get("_needs_regen"):
+            reasons.append("contradictory answer")
         if not reasons and _topic_profile:
             reasons.extend(violates_topic_purity(q, _topic_profile))
         nt = normalize_q_text(q)
