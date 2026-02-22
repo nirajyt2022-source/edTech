@@ -83,6 +83,23 @@ _ERROR_DETECTION_ALIASES: dict[str, str] = {
     "short_answer": "error_spot",
     "written_answer": "error_spot",
     "open_ended": "error_spot",
+    # Gemini sometimes returns the slot-type name itself or descriptive aliases
+    "error_detection": "error_spot",
+    "error_spot_question": "error_spot",
+    "find_the_error": "error_spot",
+    "spot_the_error": "error_spot",
+}
+
+# For thinking slots: pull non-thinking formats back to a valid thinking format
+_THINKING_ALIASES: dict[str, str] = {
+    "simple_identify": "multi_step",
+    "fill_blank": "thinking",
+    "fill_in_blank": "thinking",
+    "fill_in_the_blank": "thinking",
+    "short_answer": "thinking",
+    "recognition": "multi_step",
+    "word_problem": "multi_step",
+    "column_setup": "multi_step",
 }
 
 # Kept for backward compatibility — module-level name still resolves
@@ -15220,7 +15237,7 @@ def enforce_slot_counts(questions: list[dict], slot_plan: list[str], subject: st
     return result
 
 
-def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan: list[str] | None = None, grade: int = 0) -> list[str]:
+def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan: list[str] | None = None, grade: str = "") -> list[str]:
     """Validate the full worksheet: slot distribution, uniqueness, diversity.
 
     If expected_plan is provided, validate against that (the actual plan used).
@@ -15239,11 +15256,12 @@ def validate_worksheet_slots(questions: list[dict], q_count: int, expected_plan:
         if actual != expected:
             issues.append(f"slot {slot_type}: expected {expected}, got {actual}")
 
-    _grade_forbidden: set = set()
+    _grade_forbidden: set[str] = set()
     if grade:
         try:
+            _gn = int(str(grade).lower().replace("class", "").replace(" ", "").strip())
             _grade_forbidden = set(
-                GRADE_PROFILES.get(str(grade), {}).get("forbidden_question_types", [])
+                GRADE_PROFILES.get(str(_gn), {}).get("forbidden_question_types", [])
             )
         except Exception:
             pass
@@ -15605,7 +15623,11 @@ def generate_question(
     q.setdefault("format", "")
 
     # Normalise Gemini-invented format aliases — slot-type aware
-    _alias_map = _ERROR_DETECTION_ALIASES if slot_type == "error_detection" else _GENERAL_ALIASES
+    _alias_map = (
+        _ERROR_DETECTION_ALIASES if slot_type == "error_detection"
+        else _THINKING_ALIASES if slot_type == "thinking"
+        else _GENERAL_ALIASES
+    )
     if q.get("format") in _alias_map:
         original_fmt = q["format"]
         q["format"] = _alias_map[original_fmt]
@@ -15647,8 +15669,15 @@ def _validate_question_matches_topic(q: dict, skill_tag: str, disallowed_keyword
             return (False, "Shape question contains arithmetic")
     
     if "time" in skill_tag.lower():
-        time_words = ["clock", "hour", "minute", "morning", "afternoon", "evening", "day", "week", "o'clock"]
-        if not any(w in text for w in time_words):
+        time_words = [
+            "clock", "hour", "minute", "morning", "afternoon", "evening",
+            "day", "week", "o'clock", " am", " pm", "a.m", "p.m",
+            "started", "finished", "arrives", "departs", "leaves", "takes",
+            "duration", "long", "earlier", "later", "before", "after",
+        ]
+        has_time_word = any(w in text for w in time_words)
+        has_time_pattern = bool(re.search(r'\d{1,2}:\d{2}', text))
+        if not has_time_word and not has_time_pattern:
             return (False, "Time question missing time vocabulary")
     
     if "money" in skill_tag.lower():
@@ -15802,6 +15831,19 @@ def _extract_number_pair(text: str) -> list[str]:
     if len(nums) >= 2:
         return [f"pair:{nums[0]}-{nums[1]}"]
     return []
+
+
+def _extract_avoid_number_pair(text: str) -> str | None:
+    """Return a natural-language avoid token for the number pair in text.
+
+    Returns e.g. "number pair 47-35" so the LLM understands it when it appears
+    in the avoid list. Returns None if fewer than two 2-3 digit numbers found.
+    """
+    nums = re.findall(r'\b(\d{2,3})\b', text)
+    if len(nums) >= 2:
+        a, b = int(nums[0]), int(nums[1])
+        return f"number pair {a}-{b}"
+    return None
 
 
 def _regen_question_for_topic(
@@ -16579,7 +16621,7 @@ def run_slot_pipeline(
         questions = enforce_slot_counts(questions, slot_plan, subject=subject)
 
     # 8. Validate whole worksheet (against the actual plan, not SLOT_PLANS)
-    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan, grade=_sync_grade_num)
+    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan, grade=str(grade))
     if ws_issues:
         logger.warning("Worksheet-level issues: %s", ws_issues)
 
@@ -16864,6 +16906,15 @@ def generate_meta_cached(
 
 _DEDUP_STRIP_RE = re.compile(r"[^a-z0-9 ]")
 
+# Common Indian-context names and high-frequency filler words that appear in nearly
+# every question — excluding them prevents inflated Jaccard similarity scores.
+_DEDUP_STOPWORDS: frozenset[str] = frozenset({
+    "amma", "dadi", "raju", "priya", "meena", "bablu", "rohan", "ria",
+    "had", "has", "have", "gave", "give", "gets", "got", "is", "are",
+    "how", "many", "does", "did", "the", "and", "her", "his", "some",
+    "more", "now", "left", "all", "total", "together", "friend", "baked",
+})
+
 # Hint-phrase strip: matches parenthesised/bracketed hints OR leading hint labels
 _HINT_STRIP_PARENS_RE = re.compile(
     r"\s*[\(\[]\s*(?:Hint|Think|Note|Remember|Tip|Clue)\s*:.*?[\)\]]",
@@ -16898,36 +16949,51 @@ def strip_hint_phrases(questions: list) -> list:
     return questions
 
 
-def _normalise_for_dedup(text: str) -> str:
-    return _DEDUP_STRIP_RE.sub("", text.lower())[:80].strip()
+def _normalise_for_dedup(text: str) -> frozenset[str]:
+    """Return a stopword-filtered token frozenset for Jaccard dedup."""
+    tokens = set(_DEDUP_STRIP_RE.sub("", text.lower()).split())
+    return frozenset(tokens - _DEDUP_STOPWORDS)
 
 
 def deduplicate_questions(questions: list) -> list:
-    """Remove near-duplicate questions using Jaccard similarity (threshold 0.65).
+    """Remove near-duplicate questions using Jaccard similarity.
 
     Runs after enforce_slot_counts and before quality review.  When a duplicate
     is detected the later question is dropped and a warning is logged.
     The caller must re-run enforce_slot_counts after this to restore the count.
 
-    Threshold 0.65 (lowered from 0.72) catches scenario-level duplication
-    where the same object/context appears in differently-worded questions
-    (e.g. three consecutive pizza-triangle questions).
+    Thresholds (role-aware):
+      - recognition / application: 0.72 — word problems often share names/verbs;
+        only flag when truly identical context AND numbers.
+      - representation / error_detection / thinking: 0.65 — structural similarity
+        matters more; same template with different numbers is still a duplicate.
     """
-    seen: list[str] = []
+    _THRESHOLD_DEFAULT = 0.72   # raised for recognition/application
+    _THRESHOLD_STRICT = 0.65    # kept for higher-order slots
+
+    seen: list[frozenset[str]] = []
     unique: list = []
     for q in questions:
-        key = _normalise_for_dedup(q.get("question_text") or q.get("question") or q.get("text") or "")
+        key = _normalise_for_dedup(
+            q.get("question_text") or q.get("question") or q.get("text") or ""
+        )
+        role = q.get("role", q.get("slot_type", ""))
+        threshold = (
+            _THRESHOLD_STRICT
+            if role in ("representation", "error_detection", "thinking")
+            else _THRESHOLD_DEFAULT
+        )
         is_dup = False
         for prev in seen:
-            a_words = set(key.split())
-            b_words = set(prev.split())
-            if not a_words:
+            union = key | prev
+            if not union:
                 continue
-            overlap = len(a_words & b_words) / len(a_words | b_words)
-            if overlap > 0.65:
+            overlap = len(key & prev) / len(union)
+            if overlap > threshold:
                 logger.warning(
-                    "Duplicate question removed (%.0f%% similar): %.60s",
-                    overlap * 100, key,
+                    "Duplicate question removed (%.0f%% similar, threshold=%.0f%%): %s",
+                    overlap * 100, threshold * 100,
+                    " ".join(sorted(key))[:60],
                 )
                 is_dup = True
                 break
@@ -17616,6 +17682,9 @@ async def run_slot_pipeline_async(
         questions.append(q)
         avoid_state.extend(_extract_avoid_items(q))
         avoid_state.extend(_extract_number_pair(q.get("question_text", "")))
+        _np = _extract_avoid_number_pair(q.get("question_text", ""))
+        if _np:
+            avoid_state.append(_np)
 
     # ── 9. Post-generation repair pass (same as sync) ───────────────────────
     questions = _repair_pass(
@@ -17674,7 +17743,7 @@ async def run_slot_pipeline_async(
             logger.warning("[async] Difficulty calibration failed (continuing): %s", _dc_exc)
 
     # ── 10. Worksheet-level validation ──────────────────────────────────────
-    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan, grade=_async_grade_num)
+    ws_issues = validate_worksheet_slots(questions, q_count, expected_plan=slot_plan, grade=str(grade))
     if ws_issues:
         logger.warning("[async] Worksheet-level issues: %s", ws_issues)
 
