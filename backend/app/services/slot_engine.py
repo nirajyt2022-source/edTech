@@ -12821,8 +12821,14 @@ META_USER_TEMPLATE = (
     '"difficulty":"","parent_tip":"","teaching_script":"","common_mistakes":[]}}'
 )
 
+_SINGLE_OBJECT_PREFIX = (
+    "RESPONSE FORMAT: Return a single JSON object { } — NOT an array [ ]. "
+    "Do not wrap your response in a list. Output exactly one question object.\n\n"
+)
+
 QUESTION_SYSTEM = (
-    "CRITICAL CONSTRAINT ENFORCEMENT:\n"
+    _SINGLE_OBJECT_PREFIX
+    + "CRITICAL CONSTRAINT ENFORCEMENT:\n"
     "- You MUST generate questions for the EXACT topic specified.\n"
     "- If the topic is about shapes, generate ONLY shape questions.\n"
     "- If the topic is about time, generate ONLY time questions.\n"
@@ -12862,7 +12868,8 @@ QUESTION_SYSTEM = (
 )
 
 QUESTION_SYSTEM_ENGLISH = (
-    "Expert question writer for primary-school English language worksheets. "
+    _SINGLE_OBJECT_PREFIX
+    + "Expert question writer for primary-school English language worksheets. "
     "Output JSON only. No markdown. No extra keys.\n"
     "Rules:\n"
     "- Grade-appropriate vocabulary and sentence complexity.\n"
@@ -12888,7 +12895,8 @@ QUESTION_SYSTEM_ENGLISH = (
 )
 
 QUESTION_SYSTEM_SCIENCE = (
-    "Expert question writer for primary-school Science worksheets (CBSE curriculum). "
+    _SINGLE_OBJECT_PREFIX
+    + "Expert question writer for primary-school Science worksheets (CBSE curriculum). "
     "Output JSON only. No markdown. No extra keys.\n"
     "Rules:\n"
     "- Grade-appropriate scientific vocabulary.\n"
@@ -12915,7 +12923,8 @@ QUESTION_SYSTEM_SCIENCE = (
 )
 
 QUESTION_SYSTEM_HINDI = (
-    "Expert question writer for primary-school Hindi language worksheets (CBSE curriculum). "
+    _SINGLE_OBJECT_PREFIX
+    + "Expert question writer for primary-school Hindi language worksheets (CBSE curriculum). "
     "Output JSON only. No markdown. No extra keys.\n"
     "Rules:\n"
     "- Use Devanagari script for question_text and answer.\n"
@@ -15525,15 +15534,27 @@ def generate_question(
         )
         raise
 
-    # Gemini sometimes wraps the response in a list — unwrap it
+    # Gemini returns a list of candidates — take the first valid dict
     if isinstance(q, list):
-        if len(q) == 1 and isinstance(q[0], dict):
-            q = q[0]
+        valid = [item for item in q if isinstance(item, dict) and item.get("question_text")]
+        if valid:
+            logger.info(
+                "generate_question: unwrapped list of %d → using first valid candidate. "
+                "slot_type=%s grade=%s",
+                len(q), slot_type, grade,
+            )
+            q = valid[0]
         else:
             raise ValueError(
-                f"generate_question: expected dict, got list of length {len(q)}. "
-                f"slot_type={slot_type} grade={grade}. Raw: {content[:200]}"
+                f"generate_question: got list of {len(q)} but none had question_text. "
+                f"slot_type={slot_type} grade={grade}. Raw: {content[:300]}"
             )
+
+    if not isinstance(q, dict):
+        raise ValueError(
+            f"generate_question: expected dict, got {type(q).__name__}. "
+            f"slot_type={slot_type} grade={grade}. Raw: {content[:200]}"
+        )
 
     q.setdefault("format", "")
 
