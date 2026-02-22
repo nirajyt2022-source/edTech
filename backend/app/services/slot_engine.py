@@ -57,6 +57,22 @@ SLOT_PLANS: dict[int, dict[str, int]] = {
 
 SLOT_ORDER = ["recognition", "application", "representation", "error_detection", "thinking"]
 
+# Map common Gemini-invented format aliases → canonical contract values
+_FORMAT_ALIASES: dict[str, str] = {
+    "fill_blank": "simple_identify",
+    "fill-blank": "simple_identify",
+    "fill_in_blank": "simple_identify",
+    "multiple_choice": "mcq_4",
+    "mcq_3choice": "mcq_3",
+    "mcq_4choice": "mcq_4",
+    "multiple_choice_3": "mcq_3",
+    "multiple_choice_4": "mcq_4",
+    "column_arithmetic": "column_setup",
+    "column_form": "column_setup",
+    "written_answer": "short_answer",
+    "open_ended": "short_answer",
+}
+
 VALID_FORMATS: dict[str, set[str]] = {
     "recognition": {
         "column_setup", "place_value", "simple_identify",
@@ -15426,6 +15442,7 @@ def generate_question(
     language: str = "English",
     slot_instruction: str = "",
     topic: str = "",
+    allowed_formats: list[str] | None = None,
 ) -> dict:
     """Generate a single question via LLM."""
     avoid_str = ", ".join(avoid_state[-20:]) if avoid_state else "none"
@@ -15461,6 +15478,12 @@ def generate_question(
         slot_instruction=slot_instruction,
         language_instruction=lang_instruction,
     )
+    if allowed_formats:
+        formats_str = ", ".join(f'"{f}"' for f in allowed_formats)
+        user_msg += (
+            f'\nCRITICAL: The "format" field in your response MUST be one of these exact values: '
+            f'{formats_str}. No other values are accepted.'
+        )
 
     _subj_lower = (subject or "").lower()
     if _subj_lower == "english":
@@ -15502,7 +15525,21 @@ def generate_question(
         )
         raise
 
+    # Gemini sometimes wraps the response in a list — unwrap it
+    if isinstance(q, list):
+        if len(q) == 1 and isinstance(q[0], dict):
+            q = q[0]
+        else:
+            raise ValueError(
+                f"generate_question: expected dict, got list of length {len(q)}. "
+                f"slot_type={slot_type} grade={grade}. Raw: {content[:200]}"
+            )
+
     q.setdefault("format", "")
+
+    # Normalise Gemini-invented format aliases to canonical contract values
+    if q.get("format") in _FORMAT_ALIASES:
+        q["format"] = _FORMAT_ALIASES[q["format"]]
     q.setdefault("question_text", "")
     q.setdefault("pictorial_elements", [])
     q.setdefault("answer", "")
@@ -16191,11 +16228,14 @@ def run_slot_pipeline(
         generated = False
         for attempt in range(max_attempts):
             try:
+                _slot_formats_sync = get_valid_formats(subject)
+                _allowed_sync = sorted(_slot_formats_sync.get(slot_type, set()))
                 q = generate_question(
                     client, grade, subject, micro_skill,
                     slot_type, q_difficulty, avoid_state, region, language,
                     slot_instruction=slot_instruction,
                     topic=topic,
+                    allowed_formats=_allowed_sync,
                 )
 
                 # Backfill format BEFORE validation so validators never see ""
@@ -16322,6 +16362,8 @@ def run_slot_pipeline(
                     f"Answer must be a single word or short phrase."
                 )
                 try:
+                    _fb_formats_sync = get_valid_formats(subject)
+                    _fb_allowed_sync = sorted(_fb_formats_sync.get("recognition", set()))
                     _fb_q = generate_question(
                         client,
                         grade,
@@ -16334,6 +16376,7 @@ def run_slot_pipeline(
                         language,
                         slot_instruction=_fallback_instr,
                         topic=topic,
+                        allowed_formats=_fb_allowed_sync,
                     )
                     _fb_q["slot_type"] = "recognition"
                     _fb_q["role"] = "recognition"
@@ -16826,6 +16869,8 @@ async def generate_all_questions(
     async def _attempt_one(idx: int, slot_data: dict) -> dict:
         """Single LLM call for one slot, run in a threadpool worker."""
         try:
+            _slot_formats = get_valid_formats(subject)
+            _allowed = sorted(_slot_formats.get(slot_data["slot_type"], set()))
             q = await _asyncio.wait_for(
                 _asyncio.to_thread(
                     generate_question,
@@ -16840,6 +16885,7 @@ async def generate_all_questions(
                     language,
                     slot_instruction=slot_data["slot_instruction"],
                     topic=topic,
+                    allowed_formats=_allowed,
                 ),
                 timeout=30,
             )
@@ -17324,6 +17370,7 @@ async def run_slot_pipeline_async(
                     f"Answer must be a single word or short phrase."
                 )
                 try:
+                    _fb_allowed = sorted(_fallback_formats.get("recognition", set()))
                     _fb_q = await _asyncio.to_thread(
                         generate_question,
                         client,
@@ -17337,6 +17384,7 @@ async def run_slot_pipeline_async(
                         language,
                         slot_instruction=_fallback_instr,
                         topic=topic,
+                        allowed_formats=_fb_allowed,
                     )
                     _fb_q["slot_type"] = "recognition"
                     _fb_q["role"] = "recognition"
