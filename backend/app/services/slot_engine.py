@@ -15489,7 +15489,7 @@ def generate_question(
             {"role": "user", "content": user_msg},
         ],
         temperature=0.3,
-        max_tokens=300,
+        max_tokens=512,
     )
     content = _clean_json(response.choices[0].message.content or "")
     try:
@@ -16308,21 +16308,58 @@ def run_slot_pipeline(
                 "[sync] Q%d/%d ALL attempts failed — inserting stub (slot=%s, topic=%s)",
                 i + 1, len(slot_plan), slot_type, topic,
             )
-            _fallback_formats = get_valid_formats(subject)
-            questions.append({
-                "id": i + 1,
-                "_uuid": str(uuid.uuid4()),
-                "slot_type": slot_type,
-                "role": directive.get("role") or slot_type,
-                "skill_tag": directive.get("skill_tag") or slot_type,
-                "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
-                "render_format": _render_fmt,
-                "_is_fallback": True,
-                "question_text": f"[Generation failed for {slot_type} question]",
-                "pictorial_elements": [],
-                "answer": "",
-                "difficulty": q_difficulty,
-            })
+            # For error_detection failures, substitute a recognition question
+            # rather than a stub that prints as visible placeholder text to parents
+            if slot_type == "error_detection":
+                logger.warning(
+                    "[sync] error_detection slot %d exhausted — attempting recognition fallback",
+                    i + 1,
+                )
+                _fallback_instr = (
+                    f"Write a simple recall question about {topic}. "
+                    f"Ask the student to name or identify a single key fact. "
+                    f"format: fill_blank. Keep question under 15 words. "
+                    f"Answer must be a single word or short phrase."
+                )
+                try:
+                    _fb_q = generate_question(
+                        client,
+                        grade,
+                        subject,
+                        micro_skill,
+                        "recognition",
+                        "easy",
+                        [],
+                        region,
+                        language,
+                        slot_instruction=_fallback_instr,
+                        topic=topic,
+                    )
+                    _fb_q["slot_type"] = "recognition"
+                    _fb_q["role"] = "recognition"
+                    _fb_q["skill_tag"] = f"{topic.lower().replace(' ', '_')}_recall"
+                    _fb_q["_is_error_detection_fallback"] = True
+                    questions.append(_fb_q)
+                    logger.info("[sync] recognition fallback succeeded for slot %d", i + 1)
+                    generated = True  # prevents stub insertion below
+                except Exception as _fb_exc:
+                    logger.error("[sync] recognition fallback failed: %s — inserting stub", _fb_exc)
+            if not generated:
+                _fallback_formats = get_valid_formats(subject)
+                questions.append({
+                    "id": i + 1,
+                    "_uuid": str(uuid.uuid4()),
+                    "slot_type": slot_type,
+                    "role": directive.get("role") or slot_type,
+                    "skill_tag": directive.get("skill_tag") or slot_type,
+                    "format": sorted(_fallback_formats.get(slot_type, {"unknown"}))[0],
+                    "render_format": _render_fmt,
+                    "_is_fallback": True,
+                    "question_text": f"[Generation failed for {slot_type} question]",
+                    "pictorial_elements": [],
+                    "answer": "",
+                    "difficulty": q_difficulty,
+                })
 
         logger.info(
             "Q%d/%d: %s / %s",
@@ -16817,20 +16854,27 @@ async def generate_all_questions(
             return {"idx": idx, "ok": False, "q": None, "error": str(exc)}
 
     async def _generate_with_retry(idx: int, slot_data: dict) -> dict:
-        """Try once; if that fails, wait 200 ms and try once more."""
+        """Try up to 3 times before giving up."""
         result = await _attempt_one(idx, slot_data)
         if not result["ok"]:
             logger.warning(
-                "[generate_all_questions] Slot %d failed (%s) — retrying",
+                "[generate_all_questions] Slot %d failed (%s) — retry 1",
                 idx, result.get("error", "?"),
             )
             await _asyncio.sleep(0.2)
             result = await _attempt_one(idx, slot_data)
-            if not result["ok"]:
-                logger.error(
-                    "[generate_all_questions] Slot %d failed after retry: %s",
-                    idx, result.get("error", "?"),
-                )
+        if not result["ok"]:
+            logger.warning(
+                "[generate_all_questions] Slot %d failed (%s) — retry 2",
+                idx, result.get("error", "?"),
+            )
+            await _asyncio.sleep(0.5)
+            result = await _attempt_one(idx, slot_data)
+        if not result["ok"]:
+            logger.error(
+                "[generate_all_questions] Slot %d failed after 3 attempts: %s",
+                idx, result.get("error", "?"),
+            )
         return result
 
     all_results: list[dict] = []
@@ -17266,6 +17310,45 @@ async def run_slot_pipeline_async(
                 "[async] Q%d ALL attempts failed — inserting stub (slot=%s, topic=%s)",
                 idx + 1, slot_type, topic,
             )
+            # For error_detection failures, substitute a recognition question
+            # rather than a stub that prints as visible placeholder text to parents
+            if slot_type == "error_detection":
+                logger.warning(
+                    "[async] error_detection slot %d exhausted — attempting recognition fallback",
+                    idx + 1,
+                )
+                _fallback_instr = (
+                    f"Write a simple recall question about {topic}. "
+                    f"Ask the student to name or identify a single key fact. "
+                    f"format: fill_blank. Keep question under 15 words. "
+                    f"Answer must be a single word or short phrase."
+                )
+                try:
+                    _fb_q = await _asyncio.to_thread(
+                        generate_question,
+                        client,
+                        grade,
+                        subject,
+                        micro_skill,
+                        "recognition",
+                        "easy",
+                        [],
+                        region,
+                        language,
+                        slot_instruction=_fallback_instr,
+                        topic=topic,
+                    )
+                    _fb_q["slot_type"] = "recognition"
+                    _fb_q["role"] = "recognition"
+                    _fb_q["skill_tag"] = f"{topic.lower().replace(' ', '_')}_recall"
+                    _fb_q["_is_error_detection_fallback"] = True
+                    _fb_q["id"] = idx + 1
+                    _fb_q["_uuid"] = str(uuid.uuid4())
+                    questions.append(_fb_q)
+                    logger.info("[async] recognition fallback succeeded for slot %d", idx + 1)
+                    continue  # skip stub insertion
+                except Exception as _fb_exc:
+                    logger.error("[async] recognition fallback failed: %s — inserting stub", _fb_exc)
             questions.append({
                 "id": idx + 1,
                 "_uuid": str(uuid.uuid4()),
