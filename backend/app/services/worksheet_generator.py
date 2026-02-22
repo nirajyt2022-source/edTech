@@ -49,12 +49,58 @@ QUESTION TYPES (use a mix based on what fits the topic):
 - word_problem: Contextual word problem
 - error_detection: Find the mistake (for Medium/Hard)
 
-VISUAL TYPES (include when problem_style is "visual" or "mixed"):
-- For Maths: number_line, base_ten_blocks, clock_face, fraction_bar, shape_grid, bar_chart, tally_chart
-- For English: sentence_diagram, word_web
-- For EVS/Science: diagram_label, food_chain, lifecycle
-- Only include visual_type and visual_data when the question genuinely needs a visual.
-- For "standard" problem_style, minimize visuals.
+VISUAL TYPES — use ONLY these exact type names and data structures:
+
+1. "clock" — analog clock face
+   visual_data: { "hour": <1-12>, "minute": <0-59> }
+   Use for: Time topics. Example: Show 3:30 → {"hour": 3, "minute": 30}
+
+2. "object_group" — groups of countable objects (fruits, birds, stars, coins, etc.)
+   visual_data: { "groups": [{"count": <number>, "label": "<object name>"}], "operation": "+"|"-" }
+   Use for: Addition, subtraction, counting. Example: 4 mangoes + 3 mangoes → {"groups": [{"count": 4, "label": "mangoes"}, {"count": 3, "label": "mangoes"}], "operation": "+"}
+   Supported labels for icons: mango/apple/orange/banana/fruit, bird/parrot/sparrow, star/sticker, coin/rupee, marble/ball/bead, balloon, candy/sweet/toffee/chocolate, flower/rose, pencil/pen/crayon, book/notebook
+
+3. "shapes" — geometric shape with optional side measurements
+   visual_data: { "shape": "triangle"|"rectangle"|"square"|"circle", "sides": [<numbers>] }
+   Use for: Geometry topics. Example: triangle with sides 3,4,5 → {"shape": "triangle", "sides": [3, 4, 5]}
+
+4. "number_line" — number line with tick marks and optional highlight
+   visual_data: { "start": <number>, "end": <number>, "step": <number>, "highlight": <number or null> }
+   Use for: Number sense, counting, skip counting. Example: 0 to 20 by 2s highlighting 14 → {"start": 0, "end": 20, "step": 2, "highlight": 14}
+
+5. "base_ten_regrouping" — column addition/subtraction with H/T/O columns
+   visual_data: { "numbers": [<first_number>, <second_number>], "operation": "addition"|"subtraction" }
+   Use for: Multi-digit arithmetic ONLY. Example: 345 + 278 → {"numbers": [345, 278], "operation": "addition"}
+
+6. "pie_fraction" — circular pie chart showing a fraction
+   visual_data: { "numerator": <number>, "denominator": <number> }
+   Use for: Fractions. Example: 3/4 → {"numerator": 3, "denominator": 4}
+
+7. "grid_symmetry" — dot grid with filled cells and a fold line
+   visual_data: { "grid_size": <number>, "filled_cells": [[row,col], ...], "fold_axis": "vertical"|"horizontal" }
+   Use for: Symmetry topics.
+
+8. "money_coins" — Indian coins and notes
+   visual_data: { "coins": [{"value": <number>, "count": <number>}, ...] }
+   Use for: Money topics. Values ≤10 render as coins, >10 as notes. Example: 3 five-rupee coins and 1 ten-rupee note → {"coins": [{"value": 5, "count": 3}, {"value": 10, "count": 1}]}
+
+9. "pattern_tiles" — sequence of tiles with one blank
+   visual_data: { "tiles": ["A", "B", "A", "B", "A", "?"], "blank_position": 5 }
+   Use for: Pattern recognition topics.
+
+10. "abacus" — 3-rod abacus (hundreds, tens, ones)
+    visual_data: { "hundreds": <0-9>, "tens": <0-9>, "ones": <0-9> }
+    Use for: Place value topics.
+
+CRITICAL RULES FOR VISUALS:
+- Use ONLY the 10 visual types listed above. Any other type name will NOT render.
+- The visual_data structure must EXACTLY match what's shown above — no extra or missing fields.
+- For "standard" problem_style: set visual_type to null and visual_data to null for ALL questions.
+- For "visual" problem_style: EVERY question MUST have a visual_type and visual_data.
+- For "mixed" problem_style: approximately half the questions should have visuals.
+- The question text should reference the visual naturally (e.g., "Look at the clock below" or "Count the objects shown").
+- Do NOT use visual_type "clock_face" — use "clock". Do NOT use "fraction_bar" — use "pie_fraction". Do NOT use "bar_chart" or "tally_chart" — these are NOT supported.
+- Match the visual to the topic: clock for Time, shapes for Geometry, object_group for counting/arithmetic, money_coins for Money, etc.
 
 OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 {
@@ -238,6 +284,83 @@ def _verify_maths_answer(question: dict) -> str | None:
     return computed_str
 
 
+# ---------------------------------------------------------------------------
+# Visual type post-processing
+# ---------------------------------------------------------------------------
+
+VISUAL_TYPE_ALIASES: dict[str, str | None] = {
+    "clock_face": "clock",
+    "clock_analog": "clock",
+    "analog_clock": "clock",
+    "fraction_bar": "pie_fraction",
+    "fraction_circle": "pie_fraction",
+    "fraction_pie": "pie_fraction",
+    "shape_grid": "shapes",
+    "shape": "shapes",
+    "base_ten_blocks": "base_ten_regrouping",
+    "bar_chart": None,
+    "tally_chart": None,
+    "diagram_label": None,
+    "food_chain": None,
+    "lifecycle": None,
+    "sentence_diagram": None,
+    "word_web": None,
+}
+
+SUPPORTED_VISUAL_TYPES = {
+    "clock", "object_group", "shapes", "number_line",
+    "base_ten_regrouping", "pie_fraction", "grid_symmetry",
+    "money_coins", "pattern_tiles", "abacus",
+}
+
+REQUIRED_VISUAL_FIELDS: dict[str, list[str]] = {
+    "clock": ["hour", "minute"],
+    "object_group": ["groups", "operation"],
+    "shapes": ["shape"],
+    "number_line": ["start", "end", "step"],
+    "base_ten_regrouping": ["numbers", "operation"],
+    "pie_fraction": ["numerator", "denominator"],
+    "grid_symmetry": ["grid_size", "filled_cells", "fold_axis"],
+    "money_coins": ["coins"],
+    "pattern_tiles": ["tiles", "blank_position"],
+    "abacus": ["hundreds", "tens", "ones"],
+}
+
+
+def fix_visual_types(questions: list[dict]) -> list[dict]:
+    """Remap known visual type aliases and strip unsupported types."""
+    for q in questions:
+        vt = q.get("visual_type")
+        if vt is None:
+            continue
+        if vt in VISUAL_TYPE_ALIASES:
+            mapped = VISUAL_TYPE_ALIASES[vt]
+            if mapped is None:
+                q["visual_type"] = None
+                q["visual_data"] = None
+            else:
+                q["visual_type"] = mapped
+        elif vt not in SUPPORTED_VISUAL_TYPES:
+            q["visual_type"] = None
+            q["visual_data"] = None
+    return questions
+
+
+def validate_visual_data(questions: list[dict]) -> list[dict]:
+    """Strip visuals whose visual_data is missing required fields."""
+    for q in questions:
+        vt = q.get("visual_type")
+        vd = q.get("visual_data")
+        if vt and vd:
+            required = REQUIRED_VISUAL_FIELDS.get(vt, [])
+            if not all(field in vd for field in required):
+                q["visual_type"] = None
+                q["visual_data"] = None
+        elif vt and not vd:
+            q["visual_type"] = None
+    return questions
+
+
 def validate_response(
     raw_text: str,
     subject: str,
@@ -314,6 +437,10 @@ def validate_response(
                 f"Topic drift: {off_topic_count}/{len(questions)} questions "
                 f"appear off-topic for '{topic}' (category: {topic_cat})"
             )
+
+    # --- Visual type fix-up ---
+    questions = fix_visual_types(questions)
+    questions = validate_visual_data(questions)
 
     data["questions"] = questions
     return data, warnings
