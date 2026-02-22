@@ -12765,12 +12765,24 @@ def _build_slot_instruction(
                 f"Answer: {a} {sym} {b}"
             )
         elif _is_generic_arithmetic:
-            base = (
-                "format: column_setup OR place_value. "
-                "Direct recall or single-step. Easy.\n"
-                'Examples: "Write 345 + 278 in column form." / '
-                '"What is the hundreds digit in 507?"'
-            )
+            # Guard: if this topic has a non-arithmetic constraint,
+            # use topic-specific instruction instead of column form examples.
+            _tc_check = _TOPIC_CONSTRAINTS.get(topic, "")
+            if not _tc_check and topic:
+                _rp2 = get_topic_profile(topic)
+                if _rp2:
+                    _rk2 = next((k for k, v in TOPIC_PROFILES.items() if v is _rp2), None)
+                    if _rk2:
+                        _tc_check = _TOPIC_CONSTRAINTS.get(_rk2, "")
+            if _tc_check and "addition" not in topic.lower() and "subtract" not in topic.lower():
+                base = f"format: standard. Direct recall or identification about '{topic}'. skill: {_skill_tag or topic.lower().replace(' ', '_') + '_recall'}."
+            else:
+                base = (
+                    "format: column_setup OR place_value. "
+                    "Direct recall or single-step. Easy.\n"
+                    'Examples: "Write 345 + 278 in column form." / '
+                    '"What is the hundreds digit in 507?"'
+                )
         else:
             base = f"format: standard. Direct recall or identification about the topic. skill: {_skill_tag}."
 
