@@ -11,7 +11,6 @@ import { useChildren } from '@/lib/children'
 import { useClasses } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
 import { notify } from '@/lib/toast'
-import GradeFromPhoto from '@/components/GradeFromPhoto'
 
 interface SavedWorksheetSummary {
   id: string
@@ -63,7 +62,6 @@ export default function SavedWorksheets() {
   const [worksheets, setWorksheets] = useState<SavedWorksheetSummary[]>([])
   const [selectedWorksheet, setSelectedWorksheet] = useState<FullWorksheet | null>(null)
   const [showAnswers, setShowAnswers] = useState(false)
-  const [showGrading, setShowGrading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [regenerating, setRegenerating] = useState(false)
   const [downloadingPdfType, setDownloadingPdfType] = useState<string | null>(null)
@@ -470,18 +468,6 @@ export default function SavedWorksheets() {
                   </svg>
                   Print
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowGrading(true)}
-                  className="rounded-xl"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-                  </svg>
-                  Grade from Photo
-                </Button>
                 <Button variant="ghost" size="sm" onClick={() => { setSelectedWorksheet(null); setShowAnswers(false) }} className="rounded-xl text-muted-foreground hover:bg-secondary/50">
                   <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -683,20 +669,6 @@ export default function SavedWorksheets() {
         </>
       )}
 
-      {/* Grade from Photo dialog */}
-      {selectedWorksheet && (
-        <GradeFromPhoto
-          open={showGrading}
-          onOpenChange={setShowGrading}
-          worksheet={{
-            title: selectedWorksheet.title,
-            grade: selectedWorksheet.grade,
-            subject: selectedWorksheet.subject,
-            topic: selectedWorksheet.topic,
-            questions: selectedWorksheet.questions,
-          }}
-        />
-      )}
     </div>
   )
 }

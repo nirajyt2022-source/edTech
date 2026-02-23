@@ -9,7 +9,6 @@ import { api, apiV1WithFallback } from '@/lib/api'
 import { useChildren } from '@/lib/children'
 import { useProfile } from '@/lib/profile'
 import { notify } from '@/lib/toast'
-import GradeFromPhoto from '@/components/GradeFromPhoto'
 
 interface WorksheetHistoryItem {
   id: string
@@ -57,7 +56,6 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [viewingWorksheet, setViewingWorksheet] = useState<FullWorksheet | null>(null)
   const [showAnswers, setShowAnswers] = useState(false)
-  const [showGrading, setShowGrading] = useState(false)
   const [viewLoading, setViewLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -246,18 +244,6 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
               {showAnswers ? 'Hide Answers' : 'Show Answers'}
             </Button>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowGrading(true)}
-              className="rounded-xl"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-              </svg>
-              Grade from Photo
-            </Button>
-            <Button
               variant="ghost"
               size="sm"
               onClick={() => { setViewingWorksheet(null); setShowAnswers(false) }}
@@ -307,21 +293,6 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
           </div>
         )}
 
-        {/* Grade from Photo dialog */}
-        <GradeFromPhoto
-          open={showGrading}
-          onOpenChange={setShowGrading}
-          worksheet={{
-            title: viewingWorksheet.title,
-            grade: viewingWorksheet.grade,
-            subject: viewingWorksheet.subject,
-            topic: viewingWorksheet.topic,
-            questions: viewingWorksheet.questions.map(q => ({
-              ...q,
-              type: q.text ? 'unknown' : 'unknown',
-            })),
-          }}
-        />
       </div>
     )
   }

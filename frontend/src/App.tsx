@@ -159,7 +159,6 @@ function AppContent() {
     { id: 'progress', label: 'Progress' },
     { id: 'saved', label: 'Saved' },
     { id: 'history', label: 'History' },
-    { id: 'syllabus', label: 'Syllabus' },
     { id: 'children', label: 'Profile' },
   ]
 
