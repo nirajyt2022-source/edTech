@@ -2182,6 +2182,7 @@ async def export_worksheet_pdf(request: PDFExportRequest):
             }
         )
     except Exception as e:
+        logger.exception("PDF generation failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
 
 
