@@ -41,13 +41,42 @@ DIFFICULTY LEVELS:
 - Medium: Two-step, application, requires some reasoning. Example: "School starts at 8:30 AM. If Priya takes 45 minutes to get ready, what time should she wake up?"
 - Hard: Multi-step, word problems, error detection, reasoning. Example: "Rahul says 90 minutes is the same as 1 hour 20 minutes. Is he correct? Explain why."
 
+QUESTION ROLES — assign a "role" to EVERY question:
+
+Distribute questions across three tiers:
+- "recognition" or "representation" → Foundation tier (★) — recall, identify, basic understanding
+- "application" → Application tier (★★) — use knowledge to solve, apply in context
+- "error_detection" or "thinking" → Stretch tier (★★★) — reason, find mistakes, explain why
+
+DISTRIBUTION RULES based on selected difficulty:
+- Easy: 60% foundation, 30% application, 10% stretch
+- Medium: 30% foundation, 50% application, 20% stretch
+- Hard: 10% foundation, 30% application, 60% stretch
+
+Group questions in this order in your output: all foundation first, then application, then stretch.
+Each question MUST have a "role" field.
+
 QUESTION TYPES (use a mix based on what fits the topic):
 - mcq: Multiple choice with 4 options (one correct)
 - fill_blank: Fill in the blank
-- true_false: True or False
+- true_false: True or False (ALWAYS include "options": ["True", "False"])
 - short_answer: Short written answer
 - word_problem: Contextual word problem
 - error_detection: Find the mistake (for Medium/Hard)
+
+For "true_false" type questions: ALWAYS include "options": ["True", "False"] in the output.
+
+Every question MUST have a "hint" field. The hint should:
+- Guide the student toward the answer WITHOUT revealing it
+- Be age-appropriate and encouraging
+- Never contain the answer itself
+
+IMPORTANT: Even within a single difficulty level, create a GRADIENT:
+- If user selects "Easy": make ~60% warm-up, ~30% at easy level, ~10% slightly harder
+- If user selects "Medium": make ~30% slightly easier (warm-up), ~50% at medium level, ~20% slightly harder (stretch)
+- If user selects "Hard": make ~10% warm-up, ~30% at hard level, ~60% challenging
+- This gradient naturally maps to the Foundation/Application/Stretch tiers
+- Foundation questions should be the easiest, Stretch should be the hardest
 
 VISUAL TYPES — use ONLY these exact type names and data structures:
 
@@ -102,6 +131,12 @@ CRITICAL RULES FOR VISUALS:
 - Do NOT use visual_type "clock_face" — use "clock". Do NOT use "fraction_bar" — use "pie_fraction". Do NOT use "bar_chart" or "tally_chart" — these are NOT supported.
 - Match the visual to the topic: clock for Time, shapes for Geometry, object_group for counting/arithmetic, money_coins for Money, etc.
 
+VISUAL RELEVANCE RULE: The visual must directly help answer the question.
+- Do NOT show a money_coins visual for a shapes question
+- Do NOT show an object_group visual if the question doesn't involve counting objects
+- If no visual genuinely helps the question, set visual_type and visual_data to null
+- It's better to have no visual than a misleading one
+
 OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 {
   "title": "Worksheet: {topic}",
@@ -113,6 +148,7 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
     {
       "id": "q1",
       "type": "<mcq|fill_blank|true_false|short_answer|word_problem|error_detection>",
+      "role": "<recognition|representation|application|error_detection|thinking>",
       "text": "<question text>",
       "options": ["<option A>", "<option B>", "<option C>", "<option D>"] or null,
       "correct_answer": "<the correct answer — MUST be accurate>",
@@ -327,6 +363,36 @@ REQUIRED_VISUAL_FIELDS: dict[str, list[str]] = {
 }
 
 
+VALID_ROLES = {"recognition", "representation", "application", "error_detection", "thinking"}
+
+TIER_ORDER = {"recognition": 0, "representation": 0, "application": 1, "error_detection": 2, "thinking": 2}
+
+
+def ensure_roles(questions: list[dict], difficulty: str) -> list[dict]:
+    """Assign roles if missing, then re-order by tier."""
+    for i, q in enumerate(questions):
+        if q.get("role") not in VALID_ROLES:
+            n = len(questions)
+            pct = i / max(n, 1)
+            if pct < 0.4:
+                q["role"] = "recognition"
+            elif pct < 0.8:
+                q["role"] = "application"
+            else:
+                q["role"] = "thinking"
+    # Re-order: foundation → application → stretch
+    questions.sort(key=lambda q: TIER_ORDER.get(q.get("role", ""), 1))
+    return questions
+
+
+def fix_true_false_options(questions: list[dict]) -> list[dict]:
+    """Ensure true_false questions always have options."""
+    for q in questions:
+        if q.get("type") == "true_false" and not q.get("options"):
+            q["options"] = ["True", "False"]
+    return questions
+
+
 def fix_visual_types(questions: list[dict]) -> list[dict]:
     """Remap known visual type aliases and strip unsupported types."""
     for q in questions:
@@ -366,6 +432,7 @@ def validate_response(
     subject: str,
     topic: str,
     num_questions: int,
+    difficulty: str = "medium",
 ) -> tuple[dict[str, Any], list[str]]:
     """Validate and repair the LLM response.
 
@@ -442,6 +509,12 @@ def validate_response(
     questions = fix_visual_types(questions)
     questions = validate_visual_data(questions)
 
+    # --- True/False options fix ---
+    questions = fix_true_false_options(questions)
+
+    # --- Role assignment + tier ordering ---
+    questions = ensure_roles(questions, difficulty)
+
     data["questions"] = questions
     return data, warnings
 
@@ -488,7 +561,7 @@ def generate_worksheet(
         t0 = time.perf_counter()
         try:
             raw = call_gemini(client, SYSTEM_PROMPT, user_prompt)
-            data, warnings = validate_response(raw, subject, topic, num_questions)
+            data, warnings = validate_response(raw, subject, topic, num_questions, difficulty)
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)
 

@@ -678,11 +678,10 @@ class PDFService:
                 ))
             elements.append(Spacer(1, 4))
 
-        # Hint for thinking/error_detection questions (printed subtly)
-        explanation = question.get('explanation')
-        role = question.get('role', '')
-        if explanation and role in ('thinking', 'error_detection'):
-            hint_text = _sanitize_text(explanation)
+        # Hint for all questions that have one (printed subtly)
+        hint = question.get('hint') or question.get('explanation')
+        if hint:
+            hint_text = _sanitize_text(hint)
             elements.append(Paragraph(
                 f"<i>Hint: {hint_text}</i>",
                 self.styles['HintText']
