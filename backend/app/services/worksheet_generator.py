@@ -15,7 +15,9 @@ from __future__ import annotations
 import json
 import logging
 import math
+import random
 import re
+import string
 import time
 from typing import Any
 
@@ -35,6 +37,21 @@ RULES:
 4. Every question must have a correct answer. For maths, compute the answer precisely.
 5. Never repeat the same question pattern. Vary the question formats.
 6. Use Indian context (₹ for money, Indian names, Indian festivals, Indian cities, etc.)
+7. VARIETY IS CRITICAL: Every worksheet you generate must be DIFFERENT from the last one.
+   - Use different question angles and phrasings each time
+   - Rotate through different real-world scenarios (home, school, market, park, farm, zoo, kitchen, playground, festival, hospital, train station)
+   - For the same topic, explore different subtopics and aspects each time
+   - Avoid formulaic patterns like always starting with "Which of these..."
+   - Mix up question styles: direct questions, scenario-based, riddles, compare-contrast, classify, odd-one-out, complete-the-pattern, true/false statements, fill-in-the-blanks with context
+   - Use varied sentence structures: "Name...", "How many...", "What happens when...", "Which one does NOT...", "Arrange in order...", "Complete the sentence..."
+
+VARIETY ANCHORS BY SUBJECT:
+- EVS: Rotate through different animals, plants, seasons, family scenarios, festivals, food items each generation
+- Science: Use different experiments, phenomena, body parts, materials each time
+- Maths: Change numbers, contexts (shopping, cooking, travel, sports), and units each time
+- English: Use different example sentences, vocabulary themes, and passage topics
+- GK: Cover different landmarks, symbols, facts, personalities each time
+- Hindi: Vary the words, poems, story themes, and sentence contexts
 
 DIFFICULTY LEVELS:
 - Easy: Single-step, direct recall, recognition. Example for Class 3 Maths Time: "What time does this clock show?" (with a described clock face)
@@ -213,6 +230,21 @@ def build_user_prompt(
         "standard": "standard (text-based, minimize visuals)",
     }.get(problem_style, "standard")
 
+    # Random seed to force variety across generations
+    seed = ''.join(random.choices(string.ascii_lowercase, k=6))
+
+    # Random Indian names to use in word problems (different each time)
+    all_names = [
+        "Aarav", "Ananya", "Vihaan", "Diya", "Reyansh", "Saanvi", "Arjun", "Isha",
+        "Kabir", "Myra", "Aditya", "Kiara", "Rohan", "Priya", "Vivaan", "Anika",
+        "Krishna", "Zara", "Rudra", "Pari", "Atharv", "Navya", "Shaurya", "Aadhya",
+        "Dhruv", "Riya", "Arnav", "Sara", "Dev", "Anvi", "Ishan", "Tara",
+        "Kian", "Meera", "Yash", "Nisha", "Aryan", "Siya", "Neil", "Pooja",
+        "Rahul", "Sneha", "Manav", "Kavya", "Sameer", "Tanvi", "Kunal", "Ritika",
+    ]
+    names_for_this_worksheet = random.sample(all_names, min(6, len(all_names)))
+    names_str = ", ".join(names_for_this_worksheet)
+
     prompt = (
         f"Board: {board}\n"
         f"Class: {grade_level}\n"
@@ -221,13 +253,22 @@ def build_user_prompt(
         f"Difficulty: {difficulty}\n"
         f"Number of questions: {num_questions}\n"
         f"Language: {language}\n"
-        f"Problem style: {style_hint}\n\n"
-        f"Generate a worksheet following the system instructions. "
-        f'Every single question must be strictly about "{topic}" and nothing else.'
+        f"Problem style: {style_hint}\n"
+        f"Variation seed: {seed}\n\n"
+        f"Generate a FRESH and CREATIVE worksheet following the system instructions. "
+        f'Every single question must be strictly about "{topic}" and nothing else.\n\n'
+        f"IMPORTANT — UNIQUENESS RULES:\n"
+        f"- Create ORIGINAL questions you have NOT generated before. Be creative.\n"
+        f"- Use different SCENARIOS for word problems each time (market, school, park, zoo, kitchen, garden, playground, train station, bus stop, festival, birthday party, sports day).\n"
+        f"- Use these Indian names in your questions: {names_str}\n"
+        f"- For Maths: vary the NUMBERS each time. Don't always use the same examples.\n"
+        f"- For EVS/Science: ask about DIFFERENT animals, plants, or phenomena each time.\n"
+        f"- For MCQs: vary the DISTRACTORS (wrong options). Don't always use the same set.\n"
+        f"- Each worksheet should feel completely new and different from any previous one.\n"
     )
 
     if custom_instructions:
-        prompt += f"\n\nAdditional teacher instructions: {custom_instructions}"
+        prompt += f"\nAdditional teacher instructions: {custom_instructions}"
 
     return prompt
 
@@ -237,15 +278,17 @@ def build_user_prompt(
 # ---------------------------------------------------------------------------
 
 
-def call_gemini(client, system_prompt: str, user_prompt: str) -> str:
+def call_gemini(client, system_prompt: str, user_prompt: str, subject: str = "") -> str:
     """Call the LLM via the existing adapter and return raw text."""
+    # Lower temperature for Maths to maintain accuracy, higher for creative subjects
+    temp = 0.5 if subject.lower() in ("maths", "math", "mathematics") else 0.8
     response = client.chat.completions.create(
         model="gemini-2.5-flash",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        temperature=0.3,
+        temperature=temp,
         max_tokens=4096,
     )
     return response.choices[0].message.content or ""
@@ -699,7 +742,7 @@ def generate_worksheet(
     for attempt in range(1, max_attempts + 1):
         t0 = time.perf_counter()
         try:
-            raw = call_gemini(client, SYSTEM_PROMPT, user_prompt)
+            raw = call_gemini(client, SYSTEM_PROMPT, user_prompt, subject=subject)
             data, warnings = validate_response(raw, subject, topic, num_questions, difficulty)
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)
