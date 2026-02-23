@@ -2170,15 +2170,19 @@ async def export_worksheet_pdf(request: PDFExportRequest):
             pdf_type=request.pdf_type
         )
 
-        # Create filename with type suffix
+        # Create filename with type suffix — ASCII-safe for HTTP headers
         type_suffix = f"_{request.pdf_type}" if request.pdf_type != "full" else ""
-        filename = f"{request.worksheet.title.replace(' ', '_')}{type_suffix}.pdf"
+        raw_title = request.worksheet.title.replace(' ', '_')
+        # Strip non-ASCII chars from filename (HTTP headers must be latin-1)
+        safe_title = raw_title.encode("ascii", errors="ignore").decode("ascii") or "worksheet"
+        filename = f"{safe_title}{type_suffix}.pdf"
 
+        from urllib.parse import quote
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"'
+                "Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{quote(raw_title + type_suffix + '.pdf')}"
             }
         )
     except Exception as e:
