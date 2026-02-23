@@ -264,7 +264,7 @@ function AppContent() {
 
                 <DropdownMenuSeparator className="mx-1.5" />
                 <DropdownMenuItem
-                  onClick={() => signOut()}
+                  onClick={() => { setShowAuth(false); signOut() }}
                   className="cursor-pointer rounded-lg py-2 px-3 text-sm text-destructive focus:text-destructive"
                 >
                   <svg className="w-4 h-4 mr-2.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
