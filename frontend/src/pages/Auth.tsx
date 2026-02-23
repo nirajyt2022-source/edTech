@@ -135,10 +135,11 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
           {/* Feature checkpoints */}
           <div className="space-y-4">
             {[
+              { text: '7 learning tools in one place', detail: 'Worksheets, revision notes, flashcards, grading & more' },
               { text: '198 topics across 9 subjects', detail: 'Maths, English, Hindi, EVS, Science & more' },
-              { text: 'Three difficulty tiers per worksheet', detail: 'Foundation, Application & Stretch' },
-              { text: 'Print-ready PDFs with answer keys', detail: 'Download and print instantly' },
-              { text: 'Mastery tracking & progress insights', detail: 'See exactly where your child stands' },
+              { text: 'Grade answers from a photo', detail: 'Snap filled worksheet \u2014 AI scores it instantly' },
+              { text: 'AI tutor for homework doubts', detail: 'Ask Skolar explains step-by-step' },
+              { text: 'Snap any textbook page to practice', detail: 'Photograph NCERT pages \u2014 we generate questions' },
               { text: 'Free to start, no card needed', detail: '5 worksheets per month at no cost' },
             ].map((item) => (
               <div key={item.text} className="flex items-start gap-3">

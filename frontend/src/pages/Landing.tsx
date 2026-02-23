@@ -25,6 +25,7 @@ import {
   Users,
   GraduationCap,
   Mail,
+  Camera,
 } from 'lucide-react'
 
 interface Props {
@@ -53,12 +54,15 @@ const COMPARISON_FEATURES = [
   { feature: 'Parent insights after grading', skolar: true, free: false },
   { feature: 'Print-ready PDF with answer key', skolar: true, free: 'partial' as const },
   { feature: 'No repeated questions', skolar: true, free: false },
+  { feature: 'Photo-based answer grading', skolar: true, free: false },
+  { feature: 'AI homework tutor', skolar: true, free: false },
+  { feature: 'Textbook page scanning', skolar: true, free: false },
 ]
 
 const FAQ_ITEMS = [
   {
     q: 'What is Skolar?',
-    a: 'Skolar is an AI-powered worksheet generator built specifically for the CBSE curriculum, covering Classes 1 through 5. It creates structured, print-ready practice worksheets across 9 subjects and 198 topics with three difficulty tiers, answer keys, and Indian-context word problems.',
+    a: 'Skolar is an AI-powered learning platform built for the CBSE curriculum, Classes 1 through 5. It offers seven tools: worksheets, revision notes, flashcards, photo grading, textbook scanning, syllabus upload, and an AI homework tutor \u2014 all across 9 subjects and 198 topics.',
   },
   {
     q: 'What subjects does Skolar cover?',
@@ -66,7 +70,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How does Skolar generate worksheets?',
-    a: 'Pick a topic and class level. Our AI engine creates 10 questions spread across three difficulty tiers: Foundation (building confidence), Application (real-world problems), and Stretch (challenge questions with hints). Each worksheet includes a separate answer key.',
+    a: 'Pick a topic and class level \u2014 or just photograph your textbook page. Our AI creates 10 questions across three difficulty tiers: Foundation, Application, and Stretch. You can also generate revision notes or flashcards from the same topic. After your child finishes, snap a photo of their answers and Skolar grades it instantly.',
   },
   {
     q: 'Is Skolar free to use?',
@@ -87,6 +91,10 @@ const FAQ_ITEMS = [
   {
     q: 'Do I need to install anything?',
     a: 'No. Skolar is a web application that works in any modern browser. Sign up, pick a topic, and download your PDF. No apps, no plugins, no setup required.',
+  },
+  {
+    q: 'What tools does Skolar offer besides worksheets?',
+    a: 'Skolar includes seven tools: AI-generated worksheets, one-page revision notes with worked examples, printable flashcards for active recall, photo-based grading (snap your child\u2019s filled worksheet for instant scores), textbook scanning (photograph any NCERT page to generate practice), syllabus upload to guide topic selection, and Ask Skolar \u2014 an AI tutor that explains any homework question step-by-step.',
   },
 ]
 
@@ -248,7 +256,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               <em>mastery.</em>
             </h1>
             <p className="text-base lg:text-lg leading-relaxed text-indigo-200/80 max-w-[500px] mb-7 lp-hero-text-delay-2">
-              Pick a topic. Get 10 questions. Know exactly where your child stands.
+              Worksheets, revision notes, flashcards, and AI grading — all built for the CBSE syllabus your child actually follows.
             </p>
             <div className="lp-hero-text-delay-3">
               <Button
@@ -261,7 +269,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               </Button>
             </div>
             <div className="flex gap-3 flex-wrap mt-6 lp-hero-text-delay-3">
-              {['198 topics', '9 subjects', 'Classes 1\u20135', 'No card needed'].map(chip => (
+              {['198 topics', '9 subjects', '7 learning tools', 'Classes 1\u20135', 'Free to start'].map(chip => (
                 <span
                   key={chip}
                   className="text-xs text-indigo-200/70 bg-white/[0.08] border border-white/[0.12] py-1.5 px-4 rounded-full"
@@ -406,9 +414,9 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
           {[
             { n: '198', l: 'Topics' },
             { n: '9', l: 'Subjects' },
+            { n: '7', l: 'Tools' },
             { n: '5', l: 'Classes' },
-            { n: '6', l: 'Question Types' },
-            { n: '220+', l: 'Images' },
+            { n: 'AI', l: 'Powered' },
           ].map(s => (
             <div key={s.l} className="text-center">
               <div className="lp-stats-number">{s.n}</div>
@@ -437,9 +445,9 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
 
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { step: 1, title: 'Pick a topic', desc: 'Choose from 198 CBSE-aligned topics across 9 subjects for Classes 1\u20135.', Icon: BookOpen },
-                { step: 2, title: 'AI generates questions', desc: 'Three difficulty tiers \u2014 Foundation, Application, and Stretch \u2014 with Indian context.', Icon: Sparkles },
-                { step: 3, title: 'Download the PDF', desc: 'Print-ready worksheet with answer key. No formatting, no fuss.', Icon: FileDown },
+                { step: 1, title: 'Pick a topic or snap your textbook', desc: 'Choose from 198 CBSE topics \u2014 or photograph any textbook page and we\u2019ll read it for you.', Icon: BookOpen },
+                { step: 2, title: 'AI creates your study material', desc: 'Worksheets, revision notes, or flashcards \u2014 three difficulty tiers with Indian context and hints.', Icon: Sparkles },
+                { step: 3, title: 'Practice, grade, improve', desc: 'Download PDFs, grade from photo, track progress. The complete learning loop.', Icon: Target },
               ].map(item => (
                 <div
                   key={item.step}
@@ -469,12 +477,14 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
           <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-12 tracking-tight">
             What makes Skolar different
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { title: 'Three-Tier Difficulty', desc: 'Every worksheet has Foundation, Application, and Stretch questions. Builds confidence first, then pushes boundaries.', Icon: Target },
               { title: 'Indian Context', desc: 'Meera at the mela. Arjun\u2019s cricket runs. Diwali lamps. Word problems your child can picture immediately.', Icon: Globe },
               { title: 'Hints That Teach', desc: 'Stretch questions include collapsible hints. Children attempt first, then get scaffolding \u2014 not answers.', Icon: Lightbulb },
               { title: 'Complete Answer Key', desc: 'Every worksheet comes with a separate answer key page. Verify work instantly. No guessing.', Icon: CheckCircle },
+              { title: 'Grade from Photo', desc: 'Snap a photo of your child\u2019s filled worksheet. AI reads the answers and grades instantly \u2014 8/10, here\u2019s what went wrong.', Icon: Camera },
+              { title: 'Learn from Textbook', desc: 'Photograph any NCERT page. We\u2019ll read it and generate a worksheet, revision notes, or flashcards from that exact content.', Icon: BookOpen },
             ].map(card => (
               <div
                 key={card.title}
@@ -491,10 +501,143 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </div>
       </section>
 
+      {/* -- 5.5. MORE THAN WORKSHEETS -- */}
+      <section
+        ref={addSectionRef(3)}
+        className="section-fade-in bg-stone-50 py-20 px-6"
+        aria-label="All tools"
+      >
+        <div className="max-w-[1000px] mx-auto text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">The Complete Toolkit</p>
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-4 tracking-tight">
+            More than worksheets
+          </h2>
+          <p className="text-base text-slate-500 mb-12 max-w-[600px] mx-auto">
+            Seven tools that work together. Revise a topic, practice it, grade the answers, see progress — all in one place.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[
+              { icon: '\ud83d\udcdd', name: 'Worksheets', desc: '10-question PDFs with 3 difficulty tiers' },
+              { icon: '\ud83d\udcd6', name: 'Revision Notes', desc: '1-page topic summaries with worked examples' },
+              { icon: '\ud83c\udccf', name: 'Flashcards', desc: 'Printable study cards for active recall' },
+              { icon: '\ud83d\udcf8', name: 'Photo Grading', desc: 'Snap answers, AI grades instantly' },
+              { icon: '\ud83d\udcda', name: 'Textbook Scan', desc: 'Photograph any page, generate practice' },
+              { icon: '\ud83d\udccb', name: 'Syllabus Upload', desc: 'Upload your school syllabus to guide practice' },
+              { icon: '\ud83e\udde0', name: 'Ask Skolar', desc: 'AI tutor for homework doubts, step-by-step' },
+            ].map(tool => (
+              <div
+                key={tool.name}
+                className="stagger-child bg-white border border-slate-200 rounded-xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-default"
+              >
+                <div className="text-3xl mb-3">{tool.icon}</div>
+                <h3 className="text-sm font-semibold text-slate-900 mb-1" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{tool.name}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">{tool.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* -- 5.75. DASHBOARD PREVIEW -- */}
+      <section
+        ref={addSectionRef(4)}
+        className="section-fade-in bg-white py-20 px-6"
+        aria-label="Progress dashboard preview"
+      >
+        <div className="max-w-[900px] mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Progress Dashboard</p>
+            <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-4 tracking-tight">
+              Know exactly where your child stands
+            </h2>
+            <p className="text-base text-slate-500 max-w-[500px] mx-auto">
+              Every graded worksheet feeds into a dashboard that shows strengths, gaps, and what to practice next.
+            </p>
+          </div>
+
+          {/* Dashboard mockup */}
+          <div className="stagger-child bg-stone-50 border border-slate-200 rounded-2xl p-6 md:p-8 shadow-lg">
+
+            {/* Top stats row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {[
+                { label: 'Worksheets', value: '24', sub: 'this month' },
+                { label: 'Average Score', value: '82%', sub: '\u2191 8% from last month' },
+                { label: 'Strongest', value: 'EVS', sub: '94% average' },
+                { label: 'Needs Work', value: 'Fractions', sub: '62% \u2014 practice more' },
+              ].map(stat => (
+                <div key={stat.label} className="bg-white rounded-xl p-4 border border-slate-100">
+                  <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">{stat.label}</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1" style={{ fontFamily: "'Fraunces', serif" }}>{stat.value}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{stat.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Subject progress bars */}
+            <div className="bg-white rounded-xl p-5 border border-slate-100 mb-6">
+              <p className="text-sm font-semibold text-slate-900 mb-4">Subject Progress</p>
+              <div className="space-y-3">
+                {[
+                  { subject: 'EVS / Science', pct: 94, color: '#16A34A' },
+                  { subject: 'English', pct: 86, color: '#3730A3' },
+                  { subject: 'Hindi', pct: 78, color: '#DC2626' },
+                  { subject: 'Mathematics', pct: 72, color: '#F97316' },
+                  { subject: 'GK', pct: 68, color: '#8B5CF6' },
+                ].map(s => (
+                  <div key={s.subject} className="flex items-center gap-3">
+                    <span className="text-xs text-slate-600 w-24 shrink-0">{s.subject}</span>
+                    <div className="flex-1 bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-1000"
+                        style={{ width: `${s.pct}%`, backgroundColor: s.color }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-slate-700 w-10 text-right">{s.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent grading results */}
+            <div className="bg-white rounded-xl p-5 border border-slate-100">
+              <p className="text-sm font-semibold text-slate-900 mb-3">Recent Results</p>
+              <div className="space-y-2.5">
+                {[
+                  { topic: 'Animals Around Us', subject: 'EVS', score: '9/10', date: 'Today', color: '#16A34A' },
+                  { topic: 'Addition 5-digit', subject: 'Maths', score: '7/10', date: 'Yesterday', color: '#F97316' },
+                  { topic: 'Summary Writing', subject: 'English', score: '8/10', date: '2 days ago', color: '#3730A3' },
+                ].map(r => (
+                  <div key={r.topic} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="text-[10px] font-bold uppercase py-0.5 px-2 rounded-full"
+                        style={{ color: r.color, backgroundColor: `${r.color}15` }}
+                      >
+                        {r.subject}
+                      </span>
+                      <span className="text-sm text-slate-700">{r.topic}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-slate-900">{r.score}</span>
+                      <span className="text-xs text-slate-400">{r.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-center text-xs text-slate-400 mt-4">
+              Live dashboard preview — your child's actual data appears after grading
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* -- 6. SUBJECT BROWSER -- */}
       <section
         id="subjects"
-        ref={addSectionRef(3)}
+        ref={addSectionRef(5)}
         className="section-fade-in bg-stone-50 py-20 px-6"
         aria-label="Subject coverage"
       >
@@ -546,7 +689,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
 
       {/* -- 7. SAMPLE WORKSHEETS -- */}
       <section
-        ref={addSectionRef(4)}
+        ref={addSectionRef(6)}
         className="section-fade-in bg-white py-20 px-6"
         aria-label="Sample questions"
       >
@@ -618,7 +761,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
 
       {/* -- 8. COMPARISON TABLE -- */}
       <section
-        ref={addSectionRef(5)}
+        ref={addSectionRef(7)}
         className="section-fade-in bg-stone-50 py-20 px-6"
         aria-label="Feature comparison"
       >
@@ -662,7 +805,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* -- 9. PRICING -- */}
       <section
         id="pricing"
-        ref={addSectionRef(6)}
+        ref={addSectionRef(8)}
         className="section-fade-in bg-white py-20 px-6"
         aria-label="Pricing"
       >
@@ -752,7 +895,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
 
       {/* -- 10. FOR PARENTS / FOR TEACHERS -- */}
       <section
-        ref={addSectionRef(7)}
+        ref={addSectionRef(9)}
         className="section-fade-in bg-stone-50 py-20 px-6"
         aria-label="For parents and teachers"
       >
@@ -767,11 +910,11 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             <h3 className="font-[Fraunces,Georgia,serif] text-[22px] font-normal text-slate-900 mb-5 leading-snug">Know exactly where your child stands.</h3>
             <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
               {[
-                'Generate a focused worksheet in 30 seconds',
-                'Choose the right topic for tonight\u2019s practice',
-                'See mastery progress improve over time',
-                'Understand skill gaps \u2014 no tutoring degree needed',
-                'Print-ready A4 PDF, no formatting hassle',
+                'Generate worksheets, revision notes, or flashcards in 30 seconds',
+                'Photograph a textbook page \u2014 we\u2019ll create practice from it',
+                'Grade answers from a photo \u2014 know the score instantly',
+                'Ask Skolar any homework question \u2014 step-by-step explanations',
+                'Track progress across subjects \u2014 see exactly where they stand',
               ].map(item => (
                 <li key={item} className="text-sm text-slate-500 leading-relaxed flex items-start gap-2">
                   <Check className="w-4 h-4 text-[#3730A3] flex-shrink-0 mt-0.5" />
@@ -820,7 +963,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
 
       {/* -- 11. FAQ SECTION -- */}
       <section
-        ref={addSectionRef(8)}
+        ref={addSectionRef(10)}
         className="section-fade-in bg-white py-20 px-6"
         aria-label="Frequently asked questions"
         itemScope
@@ -868,7 +1011,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
 
       {/* -- 12. CTA + FOOTER -- */}
       <section
-        ref={addSectionRef(9)}
+        ref={addSectionRef(11)}
         className="section-fade-in lp-cta-section relative py-20 px-6 text-center overflow-hidden"
         aria-label="Call to action"
       >
