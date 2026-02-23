@@ -170,7 +170,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               <span className="text-xs font-medium text-white/60">Sample worksheet</span>
             </div>
             <p className="text-[13px] text-white/80 leading-relaxed mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>
-              &ldquo;Priya has 45 marbles. She wins 28 more. How many does she have now?&rdquo;
+              &ldquo;Meera has 45 marbles. She wins 28 more. How many does she have now?&rdquo;
             </p>
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Foundation</span>

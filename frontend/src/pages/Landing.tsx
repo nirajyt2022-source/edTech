@@ -244,9 +244,9 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               CBSE Classes 1&ndash;5 &middot; AI-Powered
             </div>
             <h1 className="lp-hero-h1 mb-5 lp-hero-text-delay">
-              Practice that actually{' '}
-              <em>knows</em>{' '}
-              your syllabus
+              Every chapter.{' '}
+              <em>Every</em>{' '}
+              concept. One click.
             </h1>
             <p className="text-base lg:text-lg leading-relaxed text-indigo-200/80 max-w-[500px] mb-7 lp-hero-text-delay-2">
               AI-powered CBSE worksheets across 198 topics and 9 subjects.
@@ -320,7 +320,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                     <div className="flex items-center gap-2 mb-1.5">
                       <span className="text-[8px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Application</span>
                     </div>
-                    <p className="text-[13px] text-slate-700 leading-snug">Priya has &#x20B9;45. She buys a notebook for &#x20B9;28. How much money does she have left?</p>
+                    <p className="text-[13px] text-slate-700 leading-snug">Meera has &#x20B9;45. She buys a notebook for &#x20B9;28. How much money does she have left?</p>
                     <div className="mt-1.5 h-[1px] border-b border-dashed border-slate-200 w-24" />
                   </div>
                 </div>
@@ -333,7 +333,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                       <span className="text-[8px] font-bold uppercase tracking-wider text-red-600 bg-red-50 px-1.5 py-0.5 rounded">Stretch</span>
                       <span className="text-[8px] text-slate-400 italic">Hint available</span>
                     </div>
-                    <p className="text-[13px] text-slate-700 leading-snug">Rahul had 72 stickers. He gave some to Ananya and now has 38. How many did he give?</p>
+                    <p className="text-[13px] text-slate-700 leading-snug">Arjun had 72 stickers. He gave some to Kavya and now has 38. How many did he give?</p>
                     <div className="mt-1.5 h-[1px] border-b border-dashed border-slate-200 w-24" />
                   </div>
                 </div>
@@ -388,8 +388,8 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                   <div className="w-6 h-6 rounded-full bg-violet-500 border-2 border-white flex items-center justify-center text-[9px] font-bold text-white">A</div>
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-900">2,400+ parents</p>
-                  <p className="text-[9px] text-slate-400">trust Skolar daily</p>
+                  <p className="text-[11px] font-bold text-slate-900">Built for CBSE</p>
+                  <p className="text-[9px] text-slate-400">Classes 1 to 5</p>
                 </div>
               </div>
             </div>
@@ -474,7 +474,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               { title: 'Three-Tier Difficulty', desc: 'Every worksheet has Foundation, Application, and Stretch questions. Builds confidence first, then pushes boundaries.', Icon: Target },
-              { title: 'Indian Context', desc: 'Priya at the mela. Rahul\u2019s cricket runs. Diwali lamps. Word problems your child can picture immediately.', Icon: Globe },
+              { title: 'Indian Context', desc: 'Meera at the mela. Arjun\u2019s cricket runs. Diwali lamps. Word problems your child can picture immediately.', Icon: Globe },
               { title: 'Hints That Teach', desc: 'Stretch questions include collapsible hints. Children attempt first, then get scaffolding \u2014 not answers.', Icon: Lightbulb },
               { title: 'Complete Answer Key', desc: 'Every worksheet comes with a separate answer key page. Verify work instantly. No guessing.', Icon: CheckCircle },
             ].map(card => (
