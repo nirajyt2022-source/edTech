@@ -437,7 +437,6 @@ function GradeWorksheetCard({
           <div className="flex gap-3">
             <Button
               onClick={() => setShowPicker(true)}
-              disabled={loadingWorksheets || recentWorksheets.length === 0}
               className="flex-1 h-11"
               style={{ backgroundColor: '#1E1B4B', color: '#FFFFFF' }}
             >
@@ -449,7 +448,6 @@ function GradeWorksheetCard({
             </Button>
             <Button
               onClick={() => setShowPicker(true)}
-              disabled={loadingWorksheets || recentWorksheets.length === 0}
               variant="outline"
               className="flex-1 h-11"
             >
@@ -725,8 +723,15 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
   const fetchRecentWorksheets = useCallback(async (childId: string) => {
     setLoadingWorksheets(true)
     try {
-      const response = await api.get(`/api/worksheets/saved/list?child_id=${childId}`)
-      setRecentWorksheets((response.data.worksheets || []).slice(0, 5))
+      // Try with child_id first, fall back to all worksheets
+      let response = await api.get(`/api/worksheets/saved/list?child_id=${childId}`)
+      let worksheets = response.data.worksheets || []
+      if (worksheets.length === 0) {
+        // Child may not have worksheets — fetch all user's worksheets
+        response = await api.get('/api/worksheets/saved/list')
+        worksheets = response.data.worksheets || []
+      }
+      setRecentWorksheets(worksheets.slice(0, 8))
     } catch {
       setRecentWorksheets([])
     } finally {
