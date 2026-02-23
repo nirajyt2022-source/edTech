@@ -476,10 +476,21 @@ def ensure_roles(questions: list[dict], difficulty: str) -> list[dict]:
 
 
 def fix_true_false_options(questions: list[dict]) -> list[dict]:
-    """Ensure true_false questions always have options."""
+    """Ensure true_false questions always have options and correct_answer is True/False."""
     for q in questions:
-        if q.get("type") == "true_false" and not q.get("options"):
-            q["options"] = ["True", "False"]
+        if q.get("type") == "true_false":
+            if not q.get("options"):
+                q["options"] = ["True", "False"]
+            # Ensure correct_answer is exactly "True" or "False"
+            ans = str(q.get("correct_answer", "")).strip().lower()
+            if ans not in ("true", "false"):
+                # Try to infer: if the answer looks affirmative, set True
+                if ans in ("yes", "correct", "right"):
+                    q["correct_answer"] = "True"
+                else:
+                    q["correct_answer"] = "False"
+            else:
+                q["correct_answer"] = "True" if ans == "true" else "False"
     return questions
 
 
