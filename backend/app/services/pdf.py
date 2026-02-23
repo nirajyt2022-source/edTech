@@ -16,10 +16,46 @@ from reportlab.platypus import (
     PageBreak, HRFlowable, KeepTogether,
 )
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 import io
 from xml.sax.saxutils import escape as xml_escape
 import os
 import tempfile
+
+# ── Register Unicode font (Latin + Devanagari + ₹) ──────────────────────
+_FONT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "fonts")
+_NOTO_VARIABLE = os.path.join(_FONT_DIR, "NotoSans-Variable.ttf")
+_DEJAVU = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+_DEJAVU_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+_DEJAVU_OBLIQUE = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"
+
+_USE_UNICODE_FONT = False
+
+# Try Noto Sans Variable (best — has Latin + Devanagari + ₹)
+if os.path.exists(_NOTO_VARIABLE):
+    try:
+        pdfmetrics.registerFont(TTFont('SkolarFont', _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont('SkolarFont-Bold', _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont('SkolarFont-Italic', _NOTO_VARIABLE))
+        _USE_UNICODE_FONT = True
+    except Exception:
+        pass
+
+# Fallback: DejaVu Sans (often on Linux/Railway)
+if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
+    try:
+        pdfmetrics.registerFont(TTFont('SkolarFont', _DEJAVU))
+        pdfmetrics.registerFont(TTFont('SkolarFont-Bold', _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
+        pdfmetrics.registerFont(TTFont('SkolarFont-Italic', _DEJAVU_OBLIQUE if os.path.exists(_DEJAVU_OBLIQUE) else _DEJAVU))
+        _USE_UNICODE_FONT = True
+    except Exception:
+        pass
+
+# Final font names used throughout
+FONT_REGULAR = 'SkolarFont' if _USE_UNICODE_FONT else 'Helvetica'
+FONT_BOLD = 'SkolarFont-Bold' if _USE_UNICODE_FONT else 'Helvetica-Bold'
+FONT_ITALIC = 'SkolarFont-Italic' if _USE_UNICODE_FONT else 'Helvetica-Oblique'
 
 
 def _flatten_image_alpha(local_path: str) -> str:
@@ -54,7 +90,7 @@ _HINT_BG = colors.Color(0.95, 0.95, 0.93)       # hint box bg
 
 
 # ──────────────────────────────────────────────
-# Unicode → latin-1 safe replacements
+# Unicode → simpler character replacements
 # ──────────────────────────────────────────────
 _UNICODE_REPLACEMENTS = {
     "\u2014": "-",   # em dash
@@ -77,14 +113,18 @@ _UNICODE_REPLACEMENTS = {
     "\u2b50": "*",   # star emoji
 }
 
+# If no Unicode font, add ₹ → "Rs." fallback
+if not _USE_UNICODE_FONT:
+    _UNICODE_REPLACEMENTS["\u20b9"] = "Rs."
+
 
 def _sanitize_text(text: str) -> str:
-    """Replace Unicode characters that Helvetica/latin-1 cannot encode."""
+    """Normalize special Unicode characters for PDF rendering."""
     if not text:
         return ""
     for char, replacement in _UNICODE_REPLACEMENTS.items():
         text = text.replace(char, replacement)
-    return text.encode("latin-1", errors="replace").decode("latin-1")
+    return text
 
 
 # ──────────────────────────────────────────────
@@ -159,12 +199,12 @@ class PDFService:
         self._show_hints = True
 
     def _setup_custom_styles(self):
-        """Set up premium paragraph styles using built-in Helvetica family."""
+        """Set up premium paragraph styles."""
 
         # ── Title ──
         self.styles.add(ParagraphStyle(
             name='WorksheetTitle',
-            fontName='Helvetica-Bold',
+            fontName=FONT_BOLD,
             fontSize=20,
             leading=24,
             spaceAfter=4,
@@ -175,7 +215,7 @@ class PDFService:
         # ── Subtitle (grade | subject | topic) ──
         self.styles.add(ParagraphStyle(
             name='WorksheetSubtitle',
-            fontName='Helvetica',
+            fontName=FONT_REGULAR,
             fontSize=10,
             textColor=_MUTED,
             alignment=TA_CENTER,
@@ -185,7 +225,7 @@ class PDFService:
         # ── Tier section header ──
         self.styles.add(ParagraphStyle(
             name='TierHeader',
-            fontName='Helvetica-Bold',
+            fontName=FONT_BOLD,
             fontSize=11,
             leading=14,
             textColor=_PRIMARY,
@@ -194,7 +234,7 @@ class PDFService:
         ))
         self.styles.add(ParagraphStyle(
             name='TierDesc',
-            fontName='Helvetica-Oblique',
+            fontName=FONT_ITALIC,
             fontSize=8.5,
             textColor=_MUTED,
             spaceAfter=10,
@@ -204,7 +244,7 @@ class PDFService:
         # ── Question text ──
         self.styles.add(ParagraphStyle(
             name='QuestionText',
-            fontName='Helvetica',
+            fontName=FONT_REGULAR,
             fontSize=11,
             leading=15,
             spaceAfter=6,
@@ -214,7 +254,7 @@ class PDFService:
         # ── Question number ──
         self.styles.add(ParagraphStyle(
             name='QuestionNumber',
-            fontName='Helvetica-Bold',
+            fontName=FONT_BOLD,
             fontSize=11,
             leading=15,
             textColor=_PRIMARY,
@@ -223,7 +263,7 @@ class PDFService:
         # ── Options (MCQ) ──
         self.styles.add(ParagraphStyle(
             name='OptionText',
-            fontName='Helvetica',
+            fontName=FONT_REGULAR,
             fontSize=10,
             leading=13,
             leftIndent=42,
@@ -233,7 +273,7 @@ class PDFService:
         # ── Instructions box ──
         self.styles.add(ParagraphStyle(
             name='Instructions',
-            fontName='Helvetica',
+            fontName=FONT_REGULAR,
             fontSize=9,
             leading=13,
             textColor=colors.Color(0.3, 0.3, 0.3),
@@ -243,7 +283,7 @@ class PDFService:
         # ── Header fields (Name/Date/Score) ──
         self.styles.add(ParagraphStyle(
             name='HeaderField',
-            fontName='Helvetica',
+            fontName=FONT_REGULAR,
             fontSize=10,
             leading=13,
         ))
@@ -251,7 +291,7 @@ class PDFService:
         # ── Hint text ──
         self.styles.add(ParagraphStyle(
             name='HintText',
-            fontName='Helvetica-Oblique',
+            fontName=FONT_ITALIC,
             fontSize=8.5,
             leading=11,
             textColor=_MUTED,
@@ -262,7 +302,7 @@ class PDFService:
         # ── Learning objective ──
         self.styles.add(ParagraphStyle(
             name='ObjectiveTitle',
-            fontName='Helvetica-Bold',
+            fontName=FONT_BOLD,
             fontSize=9.5,
             leading=12,
             textColor=_PRIMARY,
@@ -270,7 +310,7 @@ class PDFService:
         ))
         self.styles.add(ParagraphStyle(
             name='ObjectiveItem',
-            fontName='Helvetica',
+            fontName=FONT_REGULAR,
             fontSize=9,
             leading=12,
             leftIndent=12,
@@ -280,7 +320,7 @@ class PDFService:
         # ── Answer key ──
         self.styles.add(ParagraphStyle(
             name='AnswerKeyTitle',
-            fontName='Helvetica-Bold',
+            fontName=FONT_BOLD,
             fontSize=14,
             leading=18,
             textColor=_PRIMARY,
@@ -290,14 +330,14 @@ class PDFService:
         ))
         self.styles.add(ParagraphStyle(
             name='AnswerText',
-            fontName='Helvetica',
+            fontName=FONT_REGULAR,
             fontSize=9,
             leading=12,
             leftIndent=8,
         ))
         self.styles.add(ParagraphStyle(
             name='ExplanationText',
-            fontName='Helvetica-Oblique',
+            fontName=FONT_ITALIC,
             fontSize=8.5,
             leading=11,
             leftIndent=8,
@@ -393,7 +433,7 @@ class PDFService:
         y_footer = 1.0 * cm
 
         # Left: branding
-        canvas.setFont('Helvetica', 7)
+        canvas.setFont(FONT_REGULAR, 7)
         canvas.setFillColor(_MUTED)
         canvas.drawString(2.0 * cm, y_footer, "Skolar  |  skolar.in")
 
@@ -690,7 +730,7 @@ class PDFService:
             from reportlab.lib.styles import ParagraphStyle as _PS
             from reportlab.lib.enums import TA_RIGHT as _TA_RIGHT
             _vs_style = _PS(
-                'VSNum', fontName='Helvetica-Bold', fontSize=14,
+                'VSNum', fontName=FONT_BOLD, fontSize=14,
                 leading=18, alignment=_TA_RIGHT,
             )
             _col_w = 3.5 * cm
