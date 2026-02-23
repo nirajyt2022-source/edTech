@@ -92,7 +92,7 @@ function UsageBadge() {
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home')
-  const [generatorPreFill, setGeneratorPreFill] = useState<{ grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' | 'flashcards' } | null>(null)
+  const [generatorPreFill, setGeneratorPreFill] = useState<{ grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' | 'flashcards' | 'textbook' } | null>(null)
   const [syllabus, setSyllabus] = useState<ParsedSyllabus | null>(null)
   const [showAuth, setShowAuth] = useState(false)
   const [authDefaultMode, setAuthDefaultMode] = useState<'login' | 'signup'>('login')

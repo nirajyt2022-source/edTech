@@ -8,7 +8,7 @@ import { QuickActionCard } from '@/components/QuickActionCard'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  onNavigate: (page: string, preFill?: { grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' | 'flashcards' }) => void
+  onNavigate: (page: string, preFill?: { grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' | 'flashcards' | 'textbook' }) => void
 }
 
 interface RecentWorksheet {
@@ -190,9 +190,9 @@ export default function HomeDashboard({ onNavigate }: Props) {
           <QuickActionCard
             icon={ICONS.book}
             label="Textbook"
-            description="Chapter summaries"
-            badge="coming"
-            disabled
+            description="From any page"
+            badge="new"
+            onClick={() => onNavigate('generator', { mode: 'textbook' })}
           />
           <QuickActionCard
             icon={ICONS.messageCircle}
