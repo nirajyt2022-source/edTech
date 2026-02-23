@@ -48,7 +48,7 @@ function Logo() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       </div>
-      <span className="text-sm font-semibold text-stone-500 tracking-tight">PracticeCraft</span>
+      <span className="text-sm font-semibold text-stone-500 tracking-tight">Skolar</span>
     </div>
   )
 }
@@ -105,7 +105,7 @@ function ErrorScreen({ message }: { message: string }) {
         href="/"
         className="mt-2 inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-700 text-white rounded-xl text-sm font-semibold hover:bg-emerald-800 transition-colors"
       >
-        Go to PracticeCraft
+        Go to Skolar
       </a>
     </div>
   )
@@ -216,7 +216,7 @@ function SignupCTA() {
         href="/"
         className="inline-flex items-center gap-2 px-6 py-3 bg-white text-emerald-800 rounded-xl text-sm font-bold hover:bg-emerald-50 active:bg-emerald-100 transition-colors shadow-sm"
       >
-        Get started free on PracticeCraft
+        Get started free on Skolar
         <svg
           className="w-4 h-4"
           fill="none"
@@ -338,7 +338,7 @@ export default function ClassReport({ token }: ClassReportProps) {
         <footer className="py-8 text-center">
           <p className="text-xs text-stone-400 tracking-wide">
             Powered by{' '}
-            <span className="font-semibold text-stone-500">PracticeCraft</span>{' '}
+            <span className="font-semibold text-stone-500">Skolar</span>{' '}
             &mdash; CBSE Learning for Classes 1&ndash;5
           </p>
         </footer>

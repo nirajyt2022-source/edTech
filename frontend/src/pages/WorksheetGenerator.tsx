@@ -801,7 +801,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const handleShareWhatsApp = async () => {
     const url = await getShareUrl()
     if (url) {
-      const text = encodeURIComponent(`Check out this ${worksheet?.topic || ''} worksheet on PracticeCraft: ${url}`)
+      const text = encodeURIComponent(`Check out this ${worksheet?.topic || ''} worksheet on Skolar: ${url}`)
       window.open(`https://wa.me/?text=${text}`, '_blank')
     }
   }
@@ -1906,7 +1906,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
 
                   {/* Watermark */}
                   <p className="mt-14 text-center text-[10px] text-foreground/[0.04] select-none print:text-black/[0.05]">
-                    Generated using PracticeCraft
+                    Generated using Skolar
                   </p>
                 </CardContent>
               </Card>

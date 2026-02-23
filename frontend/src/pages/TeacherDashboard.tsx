@@ -359,7 +359,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
       `View report: ${reportState.share_url}`,
       '',
       '_Valid for 7 days_',
-      '_Powered by PracticeCraft_',
+      '_Powered by Skolar_',
     ].join('\n')
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
   }, [reportState, selectedClassId, classes, user])

@@ -282,7 +282,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
                 </svg>
               </div>
               <span className="text-sm font-medium text-stone-700">
-                Made with <span className="text-emerald-700 font-semibold">PracticeCraft</span>
+                Made with <span className="text-emerald-700 font-semibold">Skolar</span>
               </span>
             </div>
             <div className="flex items-center gap-2">

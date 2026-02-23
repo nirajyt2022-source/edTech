@@ -115,16 +115,16 @@ function AppContent() {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen gradient-bg flex flex-col items-center justify-center gap-6">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ backgroundColor: '#FAF7F2' }}>
         <div className="relative">
-          <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <div className="w-16 h-16 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(27,67,50,0.2)', borderTopColor: '#1B4332' }} />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-1 h-1 bg-primary rounded-full animate-ping" />
+            <div className="w-1 h-1 rounded-full animate-ping" style={{ backgroundColor: '#1B4332' }} />
           </div>
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold font-fraunces text-foreground">Getting ready</h2>
-          <p className="text-sm text-muted-foreground font-medium tracking-wide">Preparing your practice workspace...</p>
+          <h2 className="text-xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: '#1E293B' }}>Getting ready</h2>
+          <p className="text-sm font-medium tracking-wide" style={{ color: '#64748B', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Preparing your practice workspace...</p>
         </div>
       </div>
     )
@@ -166,21 +166,19 @@ function AppContent() {
   const tabs = isTeacher ? teacherTabs : parentTabs
 
   return (
-    <div className="min-h-screen gradient-bg">
+    <div className="min-h-screen" style={{ backgroundColor: '#FAF7F2' }}>
       <Toaster position="top-right" richColors />
       <RoleSelector />
       {/* Navigation */}
-      <nav className="bg-background/80 backdrop-blur-xl border-b border-border/30 sticky top-0 z-50 print:hidden">
+      <nav className="backdrop-blur-xl border-b border-border/30 sticky top-0 z-50 print:hidden" style={{ backgroundColor: '#1B4332' }}>
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
           <button className="flex items-center gap-2.5 group cursor-pointer bg-transparent border-none shrink-0" onClick={() => setCurrentPage(isTeacher ? 'dashboard' : 'generator')} aria-label="Go to home page">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <svg className="w-4.5 h-4.5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <span className="text-lg font-semibold tracking-tight hidden sm:inline">
-              <span className="text-foreground">Practice</span><span className="text-primary">Craft</span>
+            <span className="text-lg font-bold tracking-tight hidden sm:inline" style={{ fontFamily: "'DM Serif Display', serif", color: '#FFFFFF' }}>
+              Skolar
+            </span>
+            <span className="sm:hidden text-lg font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: '#FFFFFF' }}>
+              S
             </span>
           </button>
 
@@ -193,9 +191,25 @@ function AppContent() {
                 aria-selected={currentPage === tab.id}
                 onClick={() => setCurrentPage(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${currentPage === tab.id
-                  ? 'text-primary font-semibold bg-primary/8'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/30'
+                  ? 'font-semibold'
+                  : ''
                   }`}
+                style={currentPage === tab.id
+                  ? { color: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.15)' }
+                  : { color: 'rgba(255,255,255,0.55)' }
+                }
+                onMouseEnter={(e) => {
+                  if (currentPage !== tab.id) {
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.85)'
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (currentPage !== tab.id) {
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.55)'
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                  }
+                }}
               >
                 {NAV_ICONS[tab.id]}
                 {tab.label}
@@ -209,13 +223,13 @@ function AppContent() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-lg px-1 -mr-1">
-                  <div className="w-8 h-8 rounded-lg bg-secondary/60 flex items-center justify-center border border-border/40 group-hover:border-primary/20 transition-colors">
-                    <span className="text-xs font-semibold text-foreground">
+                <button className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 rounded-lg px-1 -mr-1">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors" style={{ backgroundColor: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.25)' }}>
+                    <span className="text-xs font-semibold" style={{ color: '#FFFFFF' }}>
                       {(user.user_metadata?.name || user.email || 'U')[0].toUpperCase()}
                     </span>
                   </div>
-                  <svg className="w-3 h-3 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.5)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                   </svg>
                 </button>
@@ -271,7 +285,7 @@ function AppContent() {
         </div>
 
         {/* Mobile bottom nav — icon + label */}
-        <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/30 z-50 pb-[env(safe-area-inset-bottom)]">
+        <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-xl border-t border-border/30 z-50 pb-[env(safe-area-inset-bottom)]" style={{ backgroundColor: 'rgba(250,247,242,0.95)' }}>
           <div className="flex items-center justify-around h-14 px-1">
             {tabs.map((tab) => (
               <button
@@ -279,10 +293,8 @@ function AppContent() {
                 role="tab"
                 aria-selected={currentPage === tab.id}
                 onClick={() => setCurrentPage(tab.id)}
-                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[44px] min-h-[44px] justify-center transition-colors cursor-pointer ${currentPage === tab.id
-                  ? 'text-primary'
-                  : 'text-muted-foreground'
-                  }`}
+                className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[44px] min-h-[44px] justify-center transition-colors cursor-pointer"
+                style={{ color: currentPage === tab.id ? '#1B4332' : '#94A3B8' }}
               >
                 {NAV_ICONS[tab.id]}
                 <span className="text-[10px] font-medium leading-none">{tab.label}</span>

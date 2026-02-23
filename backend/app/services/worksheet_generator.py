@@ -286,6 +286,19 @@ def build_user_prompt(
         f"- Each worksheet should feel completely new and different from any previous one.\n"
     )
 
+    # Problem-style specific image instructions
+    if problem_style == "standard":
+        prompt += (
+            "\nIMPORTANT: Do NOT use image_keywords for any question. "
+            "Set image_keywords to null for ALL questions. "
+            "Standard mode means text-only worksheets with no cartoon images.\n"
+        )
+    elif problem_style == "visual":
+        prompt += (
+            "\nIMPORTANT: EVERY question MUST have at least one image_keyword "
+            "from the provided list.\n"
+        )
+
     if custom_instructions:
         prompt += f"\nAdditional teacher instructions: {custom_instructions}"
 
@@ -776,6 +789,12 @@ def generate_worksheet(
             data, warnings = validate_response(raw, subject, topic, num_questions, difficulty)
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)
+
+            # Safety net: strip all images in standard mode
+            if problem_style == "standard":
+                for q in data.get("questions", []):
+                    q["images"] = []
+                    q.pop("image_keywords", None)
 
             # Check if retry is needed for topic drift
             drift_warnings = [w for w in warnings if "Topic drift" in w]
