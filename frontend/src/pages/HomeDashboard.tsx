@@ -8,7 +8,7 @@ import { QuickActionCard } from '@/components/QuickActionCard'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  onNavigate: (page: string, preFill?: { grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' }) => void
+  onNavigate: (page: string, preFill?: { grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' | 'flashcards' }) => void
 }
 
 interface RecentWorksheet {
@@ -184,8 +184,8 @@ export default function HomeDashboard({ onNavigate }: Props) {
             icon={ICONS.layers}
             label="Flashcards"
             description="Quick recall cards"
-            badge="coming"
-            disabled
+            badge="new"
+            onClick={() => onNavigate('generator', { mode: 'flashcards' })}
           />
           <QuickActionCard
             icon={ICONS.book}

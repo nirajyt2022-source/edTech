@@ -20,6 +20,7 @@ import VisualProblem from '@/components/VisualProblem'
 import { useEngagement } from '@/lib/engagement'
 import { notify } from '@/lib/toast'
 import RevisionPreview, { type RevisionNotes } from '@/components/RevisionPreview'
+import FlashcardPreview, { type FlashcardSetData } from '@/components/FlashcardPreview'
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
@@ -242,7 +243,7 @@ interface ParsedSyllabus {
 interface Props {
   syllabus?: ParsedSyllabus | null
   onClearSyllabus?: () => void
-  preFill?: { grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' } | null
+  preFill?: { grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' | 'flashcards' } | null
   onPreFillConsumed?: () => void
 }
 
@@ -283,10 +284,13 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [revealedHints, setRevealedHints] = useState<Set<string>>(new Set())
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const [showCustomise, setShowCustomise] = useState(false)
-  const [mode, setMode] = useState<'worksheet' | 'revision'>('worksheet')
+  const [mode, setMode] = useState<'worksheet' | 'revision' | 'flashcards'>('worksheet')
   const [revisionNotes, setRevisionNotes] = useState<RevisionNotes | null>(null)
   const [revisionLoading, setRevisionLoading] = useState(false)
   const [revisionDownloading, setRevisionDownloading] = useState(false)
+  const [flashcardSet, setFlashcardSet] = useState<FlashcardSetData | null>(null)
+  const [flashcardLoading, setFlashcardLoading] = useState(false)
+  const [flashcardDownloading, setFlashcardDownloading] = useState(false)
 
   // Curriculum-based state
   const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([])
@@ -895,6 +899,57 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     }
   }
 
+  const handleGenerateFlashcards = async () => {
+    if (!grade || !subject || !topic) {
+      setError('Please select grade, subject, and topic')
+      return
+    }
+    setFlashcardLoading(true)
+    setError('')
+    setFlashcardSet(null)
+    try {
+      const response = await api.post('/api/v1/flashcards/generate', {
+        grade,
+        subject,
+        topic,
+        language,
+      })
+      setFlashcardSet(response.data)
+      setMobileView('preview')
+      notify.success('Flashcards ready!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate flashcards'
+      setError(msg)
+      notify.error(msg)
+    } finally {
+      setFlashcardLoading(false)
+    }
+  }
+
+  const handleDownloadFlashcardPdf = async () => {
+    if (!flashcardSet) return
+    setFlashcardDownloading(true)
+    try {
+      const response = await api.post('/api/v1/flashcards/export-pdf', flashcardSet, {
+        responseType: 'blob',
+      })
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `flashcards_${flashcardSet.topic.replace(/\s+/g, '_')}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to download flashcard PDF:', err)
+      notify.error('Failed to download flashcard PDF')
+    } finally {
+      setFlashcardDownloading(false)
+    }
+  }
+
   return (
     <div className="py-10 px-4 max-w-7xl mx-auto print:p-0 print:max-w-none bg-paper-texture">
       {/* Hero Section */}
@@ -943,7 +998,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       <div className="flex justify-center mb-8 print:hidden">
         <div className="inline-flex items-center gap-1 p-1 bg-secondary/60 border border-border/40 rounded-xl">
           <button
-            onClick={() => { setMode('worksheet'); setRevisionNotes(null) }}
+            onClick={() => { setMode('worksheet'); setRevisionNotes(null); setFlashcardSet(null) }}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'worksheet' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
             <span className="flex items-center gap-2">
@@ -952,12 +1007,21 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
             </span>
           </button>
           <button
-            onClick={() => { setMode('revision'); setWorksheet(null); setWorksheets(null) }}
+            onClick={() => { setMode('revision'); setWorksheet(null); setWorksheets(null); setFlashcardSet(null) }}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'revision' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
             <span className="flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
               Revision Notes
+            </span>
+          </button>
+          <button
+            onClick={() => { setMode('flashcards'); setWorksheet(null); setWorksheets(null); setRevisionNotes(null) }}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'flashcards' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+              Flashcards
               <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">NEW</span>
             </span>
           </button>
@@ -1165,7 +1229,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     </div>
                   )}
 
-                  {(mode === 'revision' || syllabus || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
+                  {(mode === 'revision' || mode === 'flashcards' || syllabus || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
                     <div className="space-y-2">
                       <Label htmlFor="topic" className="text-sm font-semibold">Topic *</Label>
                       <Select
@@ -1346,8 +1410,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
             </div>)}
             </>)}
 
-            {/* Language selector — visible in revision mode too */}
-            {mode === 'revision' && (
+            {/* Language selector — visible in revision and flashcards mode too */}
+            {(mode === 'revision' || mode === 'flashcards') && (
               <div className="space-y-2">
                 <Label htmlFor="language-revision" className="text-sm font-semibold">Language</Label>
                 <Select value={language} onValueChange={setLanguage}>
@@ -1416,7 +1480,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   Uses one worksheet credit. Aligned to CBSE and school standards.
                 </p>
               </>
-            ) : (
+            ) : mode === 'revision' ? (
               <>
                 <Button
                   className="w-full py-4 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl"
@@ -1441,6 +1505,33 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   Free! Get concise revision notes for any topic.
+                </p>
+              </>
+            ) : (
+              <>
+                <Button
+                  className="w-full py-4 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl"
+                  onClick={handleGenerateFlashcards}
+                  disabled={flashcardLoading}
+                  aria-busy={flashcardLoading}
+                  size="lg"
+                >
+                  {flashcardLoading ? (
+                    <span className="flex items-center gap-3">
+                      <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground" />
+                      Generating flashcards...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      Generate Flashcards
+                    </span>
+                  )}
+                </Button>
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  Free! Generate 12 study flashcards for any topic.
                 </p>
               </>
             )}
@@ -1482,6 +1573,39 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
                 <p className="text-muted-foreground text-sm">Select a topic and generate revision notes</p>
+              </div>
+            )}
+            {/* Flashcard Preview */}
+            {mode === 'flashcards' && flashcardSet && (
+              <FlashcardPreview
+                cards={flashcardSet.cards}
+                title={flashcardSet.title}
+                onDownloadPdf={handleDownloadFlashcardPdf}
+                downloadingPdf={flashcardDownloading}
+              />
+            )}
+            {mode === 'flashcards' && flashcardLoading && (
+              <Card className="overflow-hidden border-border/20 shadow-xl bg-white">
+                <CardHeader className="pt-12 px-10">
+                  <p className="text-sm text-muted-foreground font-medium mb-6">Generating flashcards...</p>
+                  <Skeleton className="h-10 w-3/4 mb-4" />
+                  <Skeleton className="h-6 w-1/2" />
+                </CardHeader>
+                <CardContent className="px-10 pb-14 space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                      <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {mode === 'flashcards' && !flashcardSet && !flashcardLoading && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <svg className="w-16 h-16 text-muted-foreground/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <p className="text-muted-foreground text-sm">Select a topic and generate flashcards</p>
               </div>
             )}
             {/* Worksheet Preview */}
