@@ -410,13 +410,13 @@ function GradeWorksheetCard({
   recentWorksheets,
   loadingWorksheets,
   onGradeWorksheet,
-  onUploadDirect,
 }: {
   recentWorksheets: RecentWorksheetItem[]
   loadingWorksheets: boolean
   onGradeWorksheet: (id: string) => void
-  onUploadDirect: () => void
 }) {
+  const [showPicker, setShowPicker] = useState(false)
+
   return (
     <Card className="border-primary/20 bg-primary/[0.02]">
       <CardHeader className="pb-3">
@@ -432,44 +432,95 @@ function GradeWorksheetCard({
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Upload buttons */}
-        <div className="flex gap-3">
-          <Button
-            onClick={onUploadDirect}
-            className="flex-1 h-11"
-            style={{ backgroundColor: '#1E1B4B', color: '#FFFFFF' }}
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-            </svg>
-            Take Photo
-          </Button>
-          <Button
-            onClick={onUploadDirect}
-            variant="outline"
-            className="flex-1 h-11"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-            </svg>
-            Upload File
-          </Button>
-        </div>
-
-        {/* Recent worksheets to grade */}
-        {loadingWorksheets ? (
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-40 rounded" />
-            <Skeleton className="h-14 rounded-lg" />
-            <Skeleton className="h-14 rounded-lg" />
+        {!showPicker ? (
+          /* CTA buttons — open the worksheet picker */
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setShowPicker(true)}
+              disabled={loadingWorksheets || recentWorksheets.length === 0}
+              className="flex-1 h-11"
+              style={{ backgroundColor: '#1E1B4B', color: '#FFFFFF' }}
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+              </svg>
+              Take Photo
+            </Button>
+            <Button
+              onClick={() => setShowPicker(true)}
+              disabled={loadingWorksheets || recentWorksheets.length === 0}
+              variant="outline"
+              className="flex-1 h-11"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              Upload File
+            </Button>
           </div>
-        ) : recentWorksheets.length > 0 ? (
+        ) : (
+          /* Worksheet picker — "Which worksheet are you grading?" */
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-foreground">
+                Which worksheet are you grading?
+              </p>
+              <button
+                onClick={() => setShowPicker(false)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {loadingWorksheets ? (
+              <div className="space-y-2">
+                <Skeleton className="h-14 rounded-lg" />
+                <Skeleton className="h-14 rounded-lg" />
+              </div>
+            ) : recentWorksheets.length > 0 ? (
+              <div className="space-y-2">
+                {recentWorksheets.slice(0, 8).map((ws) => (
+                  <button
+                    key={ws.id}
+                    onClick={() => { onGradeWorksheet(ws.id); setShowPicker(false) }}
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-background border border-border/30 hover:border-primary/30 hover:bg-primary/[0.02] transition-colors text-left"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">{ws.topic}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {ws.grade} &middot; {ws.subject} &middot; {ws.question_count}q &middot;{' '}
+                        {new Date(ws.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                    <svg className="w-4 h-4 text-primary shrink-0 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No worksheets found. Generate one first.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Quick-access list below buttons (only when picker is closed) */}
+        {!showPicker && !loadingWorksheets && recentWorksheets.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-2">
+            Generate a worksheet first, then grade it here.
+          </p>
+        )}
+
+        {!showPicker && !loadingWorksheets && recentWorksheets.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Recent worksheets (not yet graded)
+              Recent worksheets
             </p>
-            {recentWorksheets.slice(0, 5).map((ws) => (
+            {recentWorksheets.slice(0, 3).map((ws) => (
               <div
                 key={ws.id}
                 className="flex items-center justify-between p-3 rounded-lg bg-background border border-border/30 hover:border-primary/30 transition-colors"
@@ -491,10 +542,6 @@ function GradeWorksheetCard({
               </div>
             ))}
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground text-center py-2">
-            Generate a worksheet first, then grade it here.
-          </p>
         )}
       </CardContent>
     </Card>
@@ -723,13 +770,6 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
     }
   }, [])
 
-  // Open grading dialog without a specific worksheet (direct upload)
-  const handleDirectUpload = useCallback(() => {
-    if (recentWorksheets.length > 0) {
-      // Grade the most recent worksheet
-      handleGradeWorksheet(recentWorksheets[0].id)
-    }
-  }, [recentWorksheets, handleGradeWorksheet])
 
   useEffect(() => {
     if (selectedChildId) {
@@ -804,7 +844,6 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
         recentWorksheets={recentWorksheets}
         loadingWorksheets={loadingWorksheets || loadingGradingWorksheet}
         onGradeWorksheet={handleGradeWorksheet}
-        onUploadDirect={handleDirectUpload}
       />
 
       {/* Error state */}
