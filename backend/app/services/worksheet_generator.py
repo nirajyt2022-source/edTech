@@ -154,12 +154,15 @@ Only use keywords from this list: [cow, lion, tiger, elephant, monkey, parrot, f
 
 RULES FOR IMAGES:
 - Only use keywords from the available list. Unknown keywords will be silently ignored.
-- Use 1-3 images per question maximum.
+- Use ONLY 1 image_keyword per question. Pick the MOST relevant one.
+  BAD: "image_keywords": ["hen", "duck", "egg"] — too many, wastes space
+  GOOD: "image_keywords": ["hen"] — one clear image for an egg-laying question
+- Exception: Use 2 keywords only when the question is ABOUT comparing two things.
+  Example: "How is a bird different from a fish?" → ["parrot", "fish"] (comparison)
 - Use images when they ADD value: identifying animals, showing objects, visual context.
 - For EVS/Science subjects with "visual" or "mixed" problem_style: use images on at least 60% of questions.
 - For Maths: prefer SVG visual_type (clock, shapes, etc.) over image_keywords.
 - image_keywords and visual_type can coexist on the same question.
-- If the question text says "Look at the picture" or "See the image below", you MUST include image_keywords.
 
 OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 {

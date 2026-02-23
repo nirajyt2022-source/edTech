@@ -18,6 +18,27 @@ from reportlab.platypus import (
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 import io
 from xml.sax.saxutils import escape as xml_escape
+import os
+import tempfile
+
+
+def _flatten_image_alpha(local_path: str) -> str:
+    """Convert RGBA images to RGB with white background. Returns path to temp file."""
+    try:
+        from PIL import Image as PILImage
+        img = PILImage.open(local_path)
+        if img.mode in ('RGBA', 'LA', 'PA'):
+            background = PILImage.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'RGBA':
+                background.paste(img, mask=img.split()[3])
+            else:
+                background.paste(img)
+            flat_path = os.path.join(tempfile.gettempdir(), f"skolar_{os.path.basename(local_path)}.png")
+            background.save(flat_path, "PNG")
+            return flat_path
+        return local_path
+    except Exception:
+        return local_path
 
 
 # ──────────────────────────────────────────────
@@ -28,7 +49,7 @@ _ACCENT = colors.Color(0.80, 0.60, 0.15)        # warm amber
 _LIGHT_BG = colors.Color(0.96, 0.96, 0.94)      # warm off-white
 _TIER_BG = colors.Color(0.94, 0.94, 0.92)       # tier header bg
 _MUTED = colors.Color(0.55, 0.55, 0.55)         # muted grey
-_RULE = colors.Color(0.82, 0.82, 0.78)          # ruled line colour
+_RULE = colors.HexColor("#B0B4BC")               # ruled line colour — print-visible
 _HINT_BG = colors.Color(0.95, 0.95, 0.93)       # hint box bg
 
 
@@ -454,7 +475,7 @@ class PDFService:
                 elements = self._build_single_question(question, q_number, tier_key)
                 # KeepTogether prevents a question from breaking across pages
                 story.append(KeepTogether(elements))
-                story.append(Spacer(1, 10))
+                story.append(Spacer(1, 6))
                 q_number += 1
 
         # ── Bonus Challenge questions ──
@@ -476,7 +497,7 @@ class PDFService:
             for question in bonus_questions:
                 elements = self._build_bonus_question(question)
                 story.append(KeepTogether(elements))
-                story.append(Spacer(1, 10))
+                story.append(Spacer(1, 6))
 
     def _build_header_fields(self, story: list, worksheet: dict, questions: list) -> None:
         """Build Name / Date / Score fields as a table row."""
@@ -563,25 +584,46 @@ class PDFService:
                 self.styles['QuestionText']
             ))
 
-        # ── Cartoon images (EVS/Science) ─────────────────────────────────────
-        images = question.get('images', [])
-        if images:
-            elements.append(Spacer(1, 4))
-            for img in images:
+        # ── Cartoon images (EVS/Science) — horizontal row, max 2 ─────────────
+        raw_images = question.get('images', []) or []
+        if raw_images:
+            import os
+            from reportlab.platypus import Image as RLImage
+
+            img_cells = []
+            for img in raw_images[:2]:
                 img_path = img.get("path", "")
-                # Try local backend copy first, then frontend public
-                import os
                 local_path = os.path.join(
                     os.path.dirname(os.path.dirname(__file__)),
                     "data", "images", img_path.removeprefix("/images/")
                 )
                 if os.path.exists(local_path):
                     try:
-                        from reportlab.platypus import Image as RLImage
-                        elements.append(RLImage(local_path, width=2.5*cm, height=2.5*cm, kind='proportional'))
+                        flat_path = _flatten_image_alpha(local_path)
+                        img_cells.append(RLImage(flat_path, width=1.8*cm, height=1.8*cm, kind='proportional'))
                     except Exception:
-                        pass  # Skip broken images silently
-            elements.append(Spacer(1, 4))
+                        pass
+
+            if img_cells:
+                elements.append(Spacer(1, 3))
+                if len(img_cells) == 1:
+                    elements.append(img_cells[0])
+                else:
+                    col_width = 2.2 * cm
+                    img_table = Table(
+                        [img_cells],
+                        colWidths=[col_width] * len(img_cells),
+                    )
+                    img_table.setStyle(TableStyle([
+                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                        ('TOPPADDING', (0, 0), (-1, -1), 2),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                    ]))
+                    elements.append(img_table)
+                elements.append(Spacer(1, 3))
 
         # ── Answer area by render format ──────────────────────────────────────
 
@@ -594,7 +636,7 @@ class PDFService:
                     f"{_sanitize_text(str(option))}",
                     self.styles['OptionText']
                 ))
-            elements.append(Spacer(1, 6))
+            elements.append(Spacer(1, 3))
 
         elif q_type in ('mcq_3', 'mcq_4'):
             # MCQ requested but options not in question dict — render a blank choice area
@@ -606,7 +648,7 @@ class PDFService:
                     "______________________________",
                     self.styles['OptionText']
                 ))
-            elements.append(Spacer(1, 6))
+            elements.append(Spacer(1, 3))
 
         elif q_type == 'vertical_sum':
             # ── Stacked column arithmetic layout ─────────────────────────────
@@ -684,7 +726,7 @@ class PDFService:
                 f"<font color='#{_px}'>B)</font>  False",
                 self.styles['OptionText']
             ))
-            elements.append(Spacer(1, 6))
+            elements.append(Spacer(1, 3))
 
         elif q_type == 'fill_blank':
             # Single answer line with box-style underline
@@ -711,7 +753,7 @@ class PDFService:
             for _ in range(num_lines):
                 elements.append(HRFlowable(
                     width="85%", thickness=0.3, color=_RULE,
-                    spaceBefore=10, spaceAfter=0,
+                    spaceBefore=7, spaceAfter=0,
                     hAlign='LEFT',
                 ))
             elements.append(Spacer(1, 4))
