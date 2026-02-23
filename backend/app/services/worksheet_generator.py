@@ -137,6 +137,18 @@ VISUAL RELEVANCE RULE: The visual must directly help answer the question.
 - If no visual genuinely helps the question, set visual_type and visual_data to null
 - It's better to have no visual than a misleading one
 
+IMAGES: You can attach cartoon images to questions using "image_keywords".
+Only use keywords from this list: [cow, lion, tiger, elephant, monkey, parrot, fish, butterfly, ant, spider, rabbit, horse, dog, cat, hen, duck, peacock, frog, snake, deer, bear, penguin, camel, tortoise, bee, tree, flower, rose, sunflower, tulsi, mango_tree, banyan_tree, cactus, lotus, neem, forest, pond, desert, ocean, farm, mountain, garden, nest, mango, apple, banana, rice, roti, milk, egg, vegetables]
+
+RULES FOR IMAGES:
+- Only use keywords from the available list. Unknown keywords will be silently ignored.
+- Use 1-3 images per question maximum.
+- Use images when they ADD value: identifying animals, showing objects, visual context.
+- For EVS/Science subjects with "visual" or "mixed" problem_style: use images on at least 60% of questions.
+- For Maths: prefer SVG visual_type (clock, shapes, etc.) over image_keywords.
+- image_keywords and visual_type can coexist on the same question.
+- If the question text says "Look at the picture" or "See the image below", you MUST include image_keywords.
+
 OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 {
   "title": "Worksheet: {topic}",
@@ -155,6 +167,7 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
       "explanation": "<brief explanation of how to solve it>",
       "difficulty": "<easy|medium|hard>",
       "hint": "<a helpful hint that does NOT reveal the answer>",
+      "image_keywords": ["<keyword1>", "<keyword2>"] or null,
       "visual_type": "<type or null>",
       "visual_data": null
     }
@@ -393,6 +406,28 @@ def fix_true_false_options(questions: list[dict]) -> list[dict]:
     return questions
 
 
+def resolve_question_images(questions: list[dict]) -> list[dict]:
+    """Resolve image_keywords to actual image paths."""
+    from app.data.image_registry import resolve_keywords
+
+    _PICTURE_PHRASES = ["look at the picture", "see the image", "shown below", "in the picture"]
+
+    for q in questions:
+        keywords = q.pop("image_keywords", None) or []
+        if keywords:
+            images = resolve_keywords(keywords)
+            if images:
+                q["images"] = images  # [{path, alt, category}, ...]
+            # If question says "look at the picture" but no valid images, rewrite text
+            text = q.get("text", "")
+            if not images and any(phrase in text.lower() for phrase in _PICTURE_PHRASES):
+                for phrase in ["Look at the picture below. ", "See the image below. ",
+                               "Look at the picture. ", "See the image. "]:
+                    text = text.replace(phrase, "")
+                q["text"] = text
+    return questions
+
+
 def fix_visual_types(questions: list[dict]) -> list[dict]:
     """Remap known visual type aliases and strip unsupported types."""
     for q in questions:
@@ -508,6 +543,9 @@ def validate_response(
     # --- Visual type fix-up ---
     questions = fix_visual_types(questions)
     questions = validate_visual_data(questions)
+
+    # --- Image keyword resolution ---
+    questions = resolve_question_images(questions)
 
     # --- True/False options fix ---
     questions = fix_true_false_options(questions)

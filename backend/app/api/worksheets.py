@@ -119,6 +119,7 @@ class Question(BaseModel):
     is_bonus: bool = False  # Phase 2: bonus challenge question flag
     is_fallback: bool = False  # True when LLM failed all generation attempts and a stub was inserted
     hint: str | None = None  # Optional hint (separate from question_text)
+    images: list[dict] | None = None  # [{path, alt, category}] — cartoon images for EVS/Science
     format: str = "short_answer"  # PDF render format: fill_blank|mcq_3|mcq_4|vertical_sum|true_false|short_answer
 
 

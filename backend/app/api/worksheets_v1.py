@@ -326,6 +326,7 @@ async def generate_v1(request: GenerateRequestV1, authorization: str = Header(No
                 "visual_type": q.get("visual_type"),
                 "visual_data": q.get("visual_data"),
                 "role": q.get("role"),
+                "images": q.get("images"),
                 "format": fmt,
             })
 

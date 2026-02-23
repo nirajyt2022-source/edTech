@@ -39,6 +39,7 @@ def _map_question(q: dict, index: int) -> Question:
         difficulty=q.get("difficulty"),
         hint=q.get("hint"),
         role=q.get("role"),
+        images=q.get("images"),
         visual_type=q.get("visual_type"),
         visual_data=q.get("visual_data"),
         format=_infer_render_format(q.get("type", "short_answer"), q.get("options")),

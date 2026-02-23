@@ -561,6 +561,26 @@ class PDFService:
                 self.styles['QuestionText']
             ))
 
+        # ── Cartoon images (EVS/Science) ─────────────────────────────────────
+        images = question.get('images', [])
+        if images:
+            elements.append(Spacer(1, 4))
+            for img in images:
+                img_path = img.get("path", "")
+                # Try local backend copy first, then frontend public
+                import os
+                local_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    "data", "images", img_path.lstrip("/images/")
+                )
+                if os.path.exists(local_path):
+                    try:
+                        from reportlab.platypus import Image as RLImage
+                        elements.append(RLImage(local_path, width=2.5*cm, height=2.5*cm, kind='proportional'))
+                    except Exception:
+                        pass  # Skip broken images silently
+            elements.append(Spacer(1, 4))
+
         # ── Answer area by render format ──────────────────────────────────────
 
         if q_type in ('mcq_3', 'mcq_4', 'multiple_choice') and question.get('options'):

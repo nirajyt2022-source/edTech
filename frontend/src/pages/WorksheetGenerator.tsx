@@ -182,6 +182,7 @@ interface Question {
   explanation?: string
   hint?: string
   sample_answer?: string
+  images?: { path: string; alt: string; category: string }[]
   visual_type?: string
   visual_data?: Record<string, unknown>
   role?: string
@@ -1635,6 +1636,20 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                         {question.visual_type && question.visual_data && (
                                           <div className="mt-3">
                                             <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
+                                          </div>
+                                        )}
+                                        {question.images && question.images.length > 0 && (
+                                          <div className="flex gap-3 mt-3 flex-wrap">
+                                            {question.images.map((img, i) => (
+                                              <img
+                                                key={i}
+                                                src={img.path}
+                                                alt={img.alt}
+                                                className="w-24 h-24 object-contain rounded-lg border border-border/30 print:border-black/20"
+                                                loading="lazy"
+                                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                              />
+                                            ))}
                                           </div>
                                         )}
                                         {question.options && (
