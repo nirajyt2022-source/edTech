@@ -135,6 +135,7 @@ class PDFService:
         self.styles = getSampleStyleSheet()
         self._setup_custom_styles()
         self._page_count = 0
+        self._show_hints = True
 
     def _setup_custom_styles(self):
         """Set up premium paragraph styles using built-in Helvetica family."""
@@ -285,7 +286,7 @@ class PDFService:
     # ──────────────────────────────────────────
     # Main entry point
     # ──────────────────────────────────────────
-    def generate_worksheet_pdf(self, worksheet: dict, pdf_type: str = "full") -> bytes:
+    def generate_worksheet_pdf(self, worksheet: dict, pdf_type: str = "full", show_hints: bool = True) -> bytes:
         """Generate a premium PDF from a worksheet.
 
         Args:
@@ -296,6 +297,7 @@ class PDFService:
         Returns:
             PDF file as bytes
         """
+        self._show_hints = show_hints
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
             buffer,
@@ -372,7 +374,7 @@ class PDFService:
         # Left: branding
         canvas.setFont('Helvetica', 7)
         canvas.setFillColor(_MUTED)
-        canvas.drawString(2.0 * cm, y_footer, "PracticeCraft  |  practicecraft.in")
+        canvas.drawString(2.0 * cm, y_footer, "Skolar  |  skolar.in")
 
         # Right: page number
         canvas.drawRightString(
@@ -672,8 +674,13 @@ class PDFService:
             elements.append(Spacer(1, 6))
 
         elif q_type == 'true_false':
+            _px = _PRIMARY.hexval()[2:]
             elements.append(Paragraph(
-                "  <u>True</u>  /  <u>False</u>",
+                f"<font color='#{_px}'>A)</font>  True",
+                self.styles['OptionText']
+            ))
+            elements.append(Paragraph(
+                f"<font color='#{_px}'>B)</font>  False",
                 self.styles['OptionText']
             ))
             elements.append(Spacer(1, 6))
@@ -688,9 +695,19 @@ class PDFService:
             elements.append(Spacer(1, 6))
 
         else:
-            # short_answer — 3 ruled lines for adequate writing space
+            # Determine answer line count based on question complexity
+            role = question.get('role', '')
+            q_actual_type = question.get('type', '')
+
+            if role in ('thinking', 'error_detection') or q_actual_type in ('word_problem', 'error_detection'):
+                num_lines = 4  # More space for reasoning/explanation
+            elif q_actual_type == 'short_answer' and role == 'application':
+                num_lines = 2  # Medium answer
+            else:
+                num_lines = 2  # Default: short factual answer
+
             elements.append(Spacer(1, 6))
-            for _ in range(3):
+            for _ in range(num_lines):
                 elements.append(HRFlowable(
                     width="85%", thickness=0.3, color=_RULE,
                     spaceBefore=10, spaceAfter=0,
@@ -698,14 +715,15 @@ class PDFService:
                 ))
             elements.append(Spacer(1, 4))
 
-        # Hint for all questions that have one (printed subtly)
-        hint = question.get('hint') or question.get('explanation')
-        if hint:
-            hint_text = _sanitize_text(hint)
-            elements.append(Paragraph(
-                f"<i>Hint: {hint_text}</i>",
-                self.styles['HintText']
-            ))
+        # Hint — only if show_hints is enabled
+        if self._show_hints:
+            hint = question.get('hint') or question.get('explanation')
+            if hint:
+                hint_text = _sanitize_text(hint)
+                elements.append(Paragraph(
+                    f"<i>Hint: {hint_text}</i>",
+                    self.styles['HintText']
+                ))
 
         return elements
 

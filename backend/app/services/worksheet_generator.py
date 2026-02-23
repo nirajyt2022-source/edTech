@@ -64,7 +64,13 @@ QUESTION TYPES (use a mix based on what fits the topic):
 - word_problem: Contextual word problem
 - error_detection: Find the mistake (for Medium/Hard)
 
-For "true_false" type questions: ALWAYS include "options": ["True", "False"] in the output.
+CRITICAL RULES FOR QUESTION TYPES:
+- For "mcq" type: You MUST include exactly 4 options in the "options" array. Never set options to null for MCQ.
+  One option must be the correct_answer. Include plausible distractors.
+- For "true_false" type: You MUST include "options": ["True", "False"]. Never set options to null.
+- For "fill_blank" type: The question text MUST contain a blank indicated by "______" or "_________".
+- For "short_answer" and "word_problem" type: Set "options" to null.
+- For "error_detection" type: Present a statement with a mistake. Set "options" to null.
 
 Every question MUST have a "hint" field. The hint should:
 - Guide the student toward the answer WITHOUT revealing it
@@ -127,7 +133,12 @@ CRITICAL RULES FOR VISUALS:
 - For "standard" problem_style: set visual_type to null and visual_data to null for ALL questions.
 - For "visual" problem_style: EVERY question MUST have a visual_type and visual_data.
 - For "mixed" problem_style: approximately half the questions should have visuals.
-- The question text should reference the visual naturally (e.g., "Look at the clock below" or "Count the objects shown").
+- If visual_type and visual_data are provided, reference the visual naturally (e.g., "Look at the clock below").
+- CRITICAL: If visual_type is null AND image_keywords is null, NEVER write "look at the image", "look at the picture", "see the animal below", "the animal shown below", "look at the figure", or ANY phrase that implies a visual is present. Instead, describe the subject in text.
+  BAD (no visual): "Look at the animal below. Where does it live?"
+  GOOD (no visual): "Where does a lion usually live?"
+  BAD (no visual): "The animal shown below gives us milk."
+  GOOD (no visual): "Which farm animal gives us milk?"
 - Do NOT use visual_type "clock_face" — use "clock". Do NOT use "fraction_bar" — use "pie_fraction". Do NOT use "bar_chart" or "tally_chart" — these are NOT supported.
 - Match the visual to the topic: clock for Time, shapes for Geometry, object_group for counting/arithmetic, money_coins for Money, etc.
 
@@ -406,6 +417,49 @@ def fix_true_false_options(questions: list[dict]) -> list[dict]:
     return questions
 
 
+def fix_mcq_options(questions: list[dict]) -> list[dict]:
+    """Ensure MCQ questions have options, downgrade to short_answer if not."""
+    for q in questions:
+        if q.get("type") == "mcq":
+            options = q.get("options")
+            if not options or not isinstance(options, list) or len(options) < 2:
+                q["type"] = "short_answer"
+                q["options"] = None
+                logger.warning("MCQ question '%s' has no options — downgraded to short_answer", q.get("id"))
+            else:
+                correct = q.get("correct_answer", "")
+                if correct and correct not in options:
+                    for opt in options:
+                        if correct.lower().strip() == opt.lower().strip():
+                            q["correct_answer"] = opt
+                            break
+    return questions
+
+
+PHANTOM_IMAGE_PATTERNS = [
+    r"[Ll]ook at the (?:image|picture|animal|figure|shape|object|diagram)(?:\s+(?:below|above|shown))?\.\s*",
+    r"[Ss]ee the (?:image|picture|animal|figure)(?:\s+(?:below|above))?\.\s*",
+    r"[Tt]he (?:animal|object|image|picture|figure) (?:shown |displayed )?(?:below|above)[.,]?\s*",
+    r"[Ii]n the (?:image|picture) (?:below|above)[.,]?\s*",
+    r"[Oo]bserve the (?:image|picture|figure)(?:\s+(?:below|above))?\.\s*",
+]
+
+
+def strip_phantom_image_refs(questions: list[dict]) -> list[dict]:
+    """Remove 'look at the image' text when no visual or image is provided."""
+    for q in questions:
+        if q.get("visual_type") is not None or q.get("images"):
+            continue  # Has a visual or images — references are fine
+        text = q.get("text", "")
+        for pattern in PHANTOM_IMAGE_PATTERNS:
+            text = re.sub(pattern, "", text)
+        text = re.sub(r"\s{2,}", " ", text).strip()
+        if text and text[0].islower():
+            text = text[0].upper() + text[1:]
+        q["text"] = text
+    return questions
+
+
 def resolve_question_images(questions: list[dict]) -> list[dict]:
     """Resolve image_keywords to actual image paths."""
     from app.data.image_registry import resolve_keywords
@@ -547,8 +601,12 @@ def validate_response(
     # --- Image keyword resolution ---
     questions = resolve_question_images(questions)
 
-    # --- True/False options fix ---
+    # --- Question type fixes ---
     questions = fix_true_false_options(questions)
+    questions = fix_mcq_options(questions)
+
+    # --- Strip phantom image references ---
+    questions = strip_phantom_image_refs(questions)
 
     # --- Role assignment + tier ordering ---
     questions = ensure_roles(questions, difficulty)

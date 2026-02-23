@@ -306,6 +306,11 @@ async def generate_v1(request: GenerateRequestV1, authorization: str = Header(No
         for i, q in enumerate(data.get("questions", [])):
             q_type = q.get("type", "short_answer")
             options = q.get("options")
+            # Detect T/F questions that Gemini typed as "mcq"
+            if q_type == "mcq" and options and len(options) == 2:
+                opts_lower = {o.lower().strip() for o in options}
+                if opts_lower == {"true", "false"}:
+                    q_type = "true_false"
             if q_type == "mcq":
                 fmt = "mcq_4" if options and len(options) >= 4 else "mcq_3"
             elif q_type == "fill_blank":
