@@ -19,6 +19,7 @@ import TemplateSelector, { type WorksheetTemplate } from '@/components/TemplateS
 import VisualProblem from '@/components/VisualProblem'
 import { useEngagement } from '@/lib/engagement'
 import { notify } from '@/lib/toast'
+import RevisionPreview, { type RevisionNotes } from '@/components/RevisionPreview'
 
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
@@ -241,7 +242,7 @@ interface ParsedSyllabus {
 interface Props {
   syllabus?: ParsedSyllabus | null
   onClearSyllabus?: () => void
-  preFill?: { grade?: string; subject?: string; topic?: string } | null
+  preFill?: { grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' } | null
   onPreFillConsumed?: () => void
 }
 
@@ -282,6 +283,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [revealedHints, setRevealedHints] = useState<Set<string>>(new Set())
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const [showCustomise, setShowCustomise] = useState(false)
+  const [mode, setMode] = useState<'worksheet' | 'revision'>('worksheet')
+  const [revisionNotes, setRevisionNotes] = useState<RevisionNotes | null>(null)
+  const [revisionLoading, setRevisionLoading] = useState(false)
+  const [revisionDownloading, setRevisionDownloading] = useState(false)
 
   // Curriculum-based state
   const [curriculumSubjects, setCurriculumSubjects] = useState<CurriculumSubject[]>([])
@@ -329,12 +334,13 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Pre-fill from History "Generate similar" button
+  // Pre-fill from History "Generate similar" button or Home "Revise" action
   useEffect(() => {
     if (preFill) {
       if (preFill.grade) setGrade(preFill.grade)
       if (preFill.subject) setSubject(preFill.subject)
       if (preFill.topic) setTopic(preFill.topic)
+      if (preFill.mode) setMode(preFill.mode)
       onPreFillConsumed?.()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -838,6 +844,57 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     }
   }
 
+  const handleGenerateRevision = async () => {
+    if (!grade || !subject || !topic) {
+      setError('Please select grade, subject, and topic')
+      return
+    }
+    setRevisionLoading(true)
+    setError('')
+    setRevisionNotes(null)
+    try {
+      const response = await api.post('/api/v1/revision/generate', {
+        grade,
+        subject,
+        topic,
+        language,
+      })
+      setRevisionNotes(response.data)
+      setMobileView('preview')
+      notify.success('Revision notes ready!')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate revision notes'
+      setError(msg)
+      notify.error(msg)
+    } finally {
+      setRevisionLoading(false)
+    }
+  }
+
+  const handleDownloadRevisionPdf = async () => {
+    if (!revisionNotes) return
+    setRevisionDownloading(true)
+    try {
+      const response = await api.post('/api/v1/revision/export-pdf', revisionNotes, {
+        responseType: 'blob',
+      })
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `revision_${revisionNotes.topic.replace(/\s+/g, '_')}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to download revision PDF:', err)
+      notify.error('Failed to download revision PDF')
+    } finally {
+      setRevisionDownloading(false)
+    }
+  }
+
   return (
     <div className="py-10 px-4 max-w-7xl mx-auto print:p-0 print:max-w-none bg-paper-texture">
       {/* Hero Section */}
@@ -882,6 +939,31 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
         </div>
       </PageHeader>
 
+      {/* Mode Toggle */}
+      <div className="flex justify-center mb-8 print:hidden">
+        <div className="inline-flex items-center gap-1 p-1 bg-secondary/60 border border-border/40 rounded-xl">
+          <button
+            onClick={() => { setMode('worksheet'); setRevisionNotes(null) }}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'worksheet' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+              Worksheet
+            </span>
+          </button>
+          <button
+            onClick={() => { setMode('revision'); setWorksheet(null); setWorksheets(null) }}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${mode === 'revision' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              Revision Notes
+              <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">NEW</span>
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* Upgrade Banner */}
       {subscription && !subscription.can_generate && (
         <div className="mb-8 p-6 bg-accent/5 border border-accent/20 rounded-2xl print:hidden animate-fade-in">
@@ -906,8 +988,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
         </div>
       )}
 
-      {/* Usage Info for Free Tier */}
-      {subscription && subscription.tier === 'free' && subscription.can_generate && (
+      {/* Usage Info for Free Tier — worksheet mode only */}
+      {mode === 'worksheet' && subscription && subscription.tier === 'free' && subscription.can_generate && (
         <div className="mb-8 p-4 bg-secondary border border-border rounded-xl print:hidden">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -1083,7 +1165,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     </div>
                   )}
 
-                  {(syllabus || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
+                  {(mode === 'revision' || syllabus || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
                     <div className="space-y-2">
                       <Label htmlFor="topic" className="text-sm font-semibold">Topic *</Label>
                       <Select
@@ -1108,8 +1190,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   )}
                 </div>
 
-                {/* Skill Selector (curriculum-based flow) */}
-                {useCurriculumFlow && curriculumSkills.length > 0 && !syllabus && (
+                {/* Skill Selector (curriculum-based flow) — worksheet mode only */}
+                {mode === 'worksheet' && useCurriculumFlow && curriculumSkills.length > 0 && !syllabus && (
                   <div className="pt-2">
                     <SkillSelector
                       skills={curriculumSkills}
@@ -1119,8 +1201,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   </div>
                 )}
 
-                {/* Advanced Topic Selector (fallback for CBSE syllabus DB) */}
-                {!useCurriculumFlow && !syllabus && cbseSyllabus.length > 0 && (
+                {/* Advanced Topic Selector (fallback for CBSE syllabus DB) — worksheet mode only */}
+                {mode === 'worksheet' && !useCurriculumFlow && !syllabus && cbseSyllabus.length > 0 && (
                   <div className="pt-2">
                     {loadingSyllabus ? (
                       <div className="space-y-4 p-4 rounded-xl border border-border/50 bg-secondary/20">
@@ -1148,7 +1230,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
               </div>
             </div>
 
-            {/* Customise accordion toggle */}
+            {/* Customise accordion toggle + Practice Settings — worksheet mode only */}
+            {mode === 'worksheet' && (<>
             <button
               onClick={() => setShowCustomise(!showCustomise)}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full py-2"
@@ -1261,6 +1344,24 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                 </div>
               </div>
             </div>)}
+            </>)}
+
+            {/* Language selector — visible in revision mode too */}
+            {mode === 'revision' && (
+              <div className="space-y-2">
+                <Label htmlFor="language-revision" className="text-sm font-semibold">Language</Label>
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger id="language-revision" className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(LANGUAGES_BY_REGION[region] || LANGUAGES_BY_REGION.India).map((l) => (
+                      <SelectItem key={l} value={l}>{l}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Action */}
             <div className="pt-2">
@@ -1273,45 +1374,76 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
               </div>
             )}
 
-            {subscription && !subscription.can_generate ? (
-              <Button
-                className="w-full py-4 text-lg font-bold shadow-lg shadow-accent/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl bg-accent hover:bg-accent/90"
-                onClick={() => upgrade()}
-                size="lg"
-              >
-                <span className="flex items-center gap-3">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  Upgrade for Unlimited Worksheets
-                </span>
-              </Button>
-            ) : (
-              <Button
-                className="w-full py-4 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl"
-                onClick={handleGenerate}
-                disabled={loading}
-                aria-busy={loading}
-                size="lg"
-              >
-                {loading ? (
-                  <span className="flex items-center gap-3">
-                    <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground" />
-                    Preparing practice aligned to your syllabus...
-                  </span>
+            {mode === 'worksheet' ? (
+              <>
+                {subscription && !subscription.can_generate ? (
+                  <Button
+                    className="w-full py-4 text-lg font-bold shadow-lg shadow-accent/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl bg-accent hover:bg-accent/90"
+                    onClick={() => upgrade()}
+                    size="lg"
+                  >
+                    <span className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      Upgrade for Unlimited Worksheets
+                    </span>
+                  </Button>
                 ) : (
-                  <span className="flex items-center gap-3">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-                    </svg>
-                    Create today's practice
-                  </span>
+                  <Button
+                    className="w-full py-4 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl"
+                    onClick={handleGenerate}
+                    disabled={loading}
+                    aria-busy={loading}
+                    size="lg"
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-3">
+                        <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground" />
+                        Preparing practice aligned to your syllabus...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-3">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                        </svg>
+                        Create today's practice
+                      </span>
+                    )}
+                  </Button>
                 )}
-              </Button>
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  Uses one worksheet credit. Aligned to CBSE and school standards.
+                </p>
+              </>
+            ) : (
+              <>
+                <Button
+                  className="w-full py-4 text-lg font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] rounded-xl"
+                  onClick={handleGenerateRevision}
+                  disabled={revisionLoading}
+                  aria-busy={revisionLoading}
+                  size="lg"
+                >
+                  {revisionLoading ? (
+                    <span className="flex items-center gap-3">
+                      <span className="spinner !w-5 !h-5 !border-primary-foreground/30 !border-t-primary-foreground" />
+                      Generating revision notes...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      Generate Revision Notes
+                    </span>
+                  )}
+                </Button>
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  Free! Get concise revision notes for any topic.
+                </p>
+              </>
             )}
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              Uses one worksheet credit. Aligned to CBSE and school standards.
-            </p>
             </div>
           </div>
         </div>
@@ -1319,7 +1451,41 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
         {/* Right Panel — Preview */}
         <div className={`mt-8 lg:mt-0 lg:w-[60%] lg:min-w-0 print:w-full print:mt-0 ${mobileView === 'edit' ? 'hidden lg:block' : ''}`}>
           <div className="lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto print:max-h-none print:overflow-visible print:static print:w-full">
-            {loading ? (
+            {/* Revision Notes Preview */}
+            {mode === 'revision' && revisionNotes && (
+              <RevisionPreview
+                notes={revisionNotes}
+                onDownloadPdf={handleDownloadRevisionPdf}
+                downloadingPdf={revisionDownloading}
+              />
+            )}
+            {mode === 'revision' && revisionLoading && (
+              <Card className="overflow-hidden border-border/20 shadow-xl bg-white">
+                <CardHeader className="pt-12 px-10">
+                  <p className="text-sm text-muted-foreground font-medium mb-6">Generating revision notes...</p>
+                  <Skeleton className="h-10 w-3/4 mb-4" />
+                  <Skeleton className="h-6 w-1/2" />
+                </CardHeader>
+                <CardContent className="px-10 pb-14 space-y-6">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="h-6 w-1/3" />
+                      <Skeleton className="h-16 w-full rounded-xl" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+            {mode === 'revision' && !revisionNotes && !revisionLoading && (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <svg className="w-16 h-16 text-muted-foreground/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <p className="text-muted-foreground text-sm">Select a topic and generate revision notes</p>
+              </div>
+            )}
+            {/* Worksheet Preview */}
+            {mode === 'worksheet' && loading ? (
               <Card className="overflow-hidden border-border/20 shadow-xl bg-white">
                 <CardHeader className="pt-12 px-10">
                   <p className="text-sm text-muted-foreground font-medium mb-6">Preparing practice aligned to your syllabus...</p>
@@ -1924,7 +2090,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   </p>
                 </CardContent>
               </Card>
-            ) : (
+            ) : mode === 'worksheet' ? (
               <div className="border border-dashed border-border/40 rounded-2xl p-16 flex flex-col items-center justify-center text-center min-h-[400px] bg-secondary/10">
                 <div className="w-20 h-20 rounded-2xl bg-secondary/50 flex items-center justify-center mb-6">
                   <svg className="w-10 h-10 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -1934,7 +2100,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                 <p className="text-lg font-semibold text-muted-foreground/70 mb-2">Your practice will appear here</p>
                 <p className="text-sm text-muted-foreground/50 max-w-xs">Choose a subject and topic, then click Create today's practice.</p>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

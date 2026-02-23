@@ -11,6 +11,7 @@ import Auth from './pages/Auth'
 import Landing from './pages/Landing'
 import History from './pages/History'
 import ParentDashboard from './pages/ParentDashboard'
+import HomeDashboard from './pages/HomeDashboard'
 import RoleSelector from '@/components/RoleSelector'
 import {
   DropdownMenu,
@@ -29,10 +30,11 @@ import { ProfileProvider, useProfile } from '@/lib/profile'
 import { EngagementProvider } from '@/lib/engagement'
 import './index.css'
 
-type Page = 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history' | 'progress'
+type Page = 'home' | 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history' | 'progress'
 
 // ── Nav Icons ────────────────────────────────────────────────────────────────
 const NAV_ICONS: Record<string, React.ReactElement> = {
+  home:      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>,
   generator: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>,
   classes:   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   saved:     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>,
@@ -89,8 +91,8 @@ function UsageBadge() {
 }
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState<Page>('generator')
-  const [generatorPreFill, setGeneratorPreFill] = useState<{ grade?: string; subject?: string; topic?: string } | null>(null)
+  const [currentPage, setCurrentPage] = useState<Page>('home')
+  const [generatorPreFill, setGeneratorPreFill] = useState<{ grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' } | null>(null)
   const [syllabus, setSyllabus] = useState<ParsedSyllabus | null>(null)
   const [showAuth, setShowAuth] = useState(false)
   const [authDefaultMode, setAuthDefaultMode] = useState<'login' | 'signup'>('login')
@@ -100,15 +102,15 @@ function AppContent() {
 
   // When role switches, reset to default page for that role
   useEffect(() => {
-    const isTeacherPage = ['dashboard', 'classes', 'generator'].includes(currentPage)
-    const isParentPage = ['generator', 'syllabus', 'children', 'progress'].includes(currentPage)
+    const isTeacherPage = ['home', 'dashboard', 'classes', 'generator'].includes(currentPage)
+    const isParentPage = ['home', 'generator', 'syllabus', 'children', 'progress'].includes(currentPage)
 
     const sharedPages = ['saved', 'history']
     if (activeRole === 'teacher' && !isTeacherPage && !sharedPages.includes(currentPage)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentPage('dashboard')
+      setCurrentPage('home')
     } else if (activeRole === 'parent' && !isParentPage && !sharedPages.includes(currentPage)) {
-      setCurrentPage('generator')
+      setCurrentPage('home')
     }
   }, [activeRole, currentPage])
 
@@ -147,18 +149,18 @@ function AppContent() {
   const isTeacher = activeRole === 'teacher'
 
   const teacherTabs: { id: Page; label: string }[] = [
+    { id: 'home', label: 'Home' },
     { id: 'generator', label: 'Practice' },
     { id: 'classes', label: 'Classes' },
     { id: 'saved', label: 'Saved' },
-    { id: 'history', label: 'History' },
     { id: 'dashboard', label: 'Dashboard' },
   ]
 
   const parentTabs: { id: Page; label: string }[] = [
+    { id: 'home', label: 'Home' },
     { id: 'generator', label: 'Practice' },
     { id: 'progress', label: 'Progress' },
     { id: 'saved', label: 'Saved' },
-    { id: 'history', label: 'History' },
     { id: 'children', label: 'Profile' },
   ]
 
@@ -172,7 +174,7 @@ function AppContent() {
       <nav className="backdrop-blur-xl border-b border-border/30 sticky top-0 z-50 print:hidden" style={{ backgroundColor: '#1E1B4B' }}>
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
-          <button className="flex items-center gap-2.5 group cursor-pointer bg-transparent border-none shrink-0" onClick={() => setCurrentPage(isTeacher ? 'dashboard' : 'generator')} aria-label="Go to home page">
+          <button className="flex items-center gap-2.5 group cursor-pointer bg-transparent border-none shrink-0" onClick={() => setCurrentPage('home')} aria-label="Go to home page">
             <span className="text-lg font-bold tracking-tight hidden sm:inline" style={{ fontFamily: "'Fraunces', serif", color: '#FFFFFF' }}>
               Skolar
             </span>
@@ -296,6 +298,12 @@ function AppContent() {
 
       {/* Page Content */}
       <main className="animate-in fade-in duration-700 pb-20 md:pb-0">
+        {currentPage === 'home' && (
+          <HomeDashboard onNavigate={(page, preFill) => {
+            if (preFill) setGeneratorPreFill(preFill)
+            setCurrentPage(page as Page)
+          }} />
+        )}
         {currentPage === 'dashboard' && (
           <TeacherDashboard onNavigate={(page) => setCurrentPage(page as Page)} />
         )}
