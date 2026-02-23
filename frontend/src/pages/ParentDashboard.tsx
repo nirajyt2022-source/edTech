@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { ProgressTimeline, type TimelineSession } from '@/components/ProgressTimeline'
 import { StreakCard } from '@/components/StreakCard'
 import { InsightCard } from '@/components/InsightCard'
+import GradeFromPhoto from '@/components/GradeFromPhoto'
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -363,6 +364,234 @@ function LearningGraphSkeleton() {
   )
 }
 
+// ─── Grading types ───────────────────────────────────────────────────────────
+
+interface RecentWorksheetItem {
+  id: string
+  title: string
+  grade: string
+  subject: string
+  topic: string
+  question_count: number
+  created_at: string
+  child_id: string | null
+}
+
+interface FullWorksheetForGrading {
+  id: string
+  title: string
+  grade: string
+  subject: string
+  topic: string
+  questions: { id: string; type: string; text: string; options?: string[]; correct_answer?: string; format?: string }[]
+}
+
+interface GradingHistoryItem {
+  id: string
+  worksheet_title: string
+  topic: string
+  score: number
+  total: number
+  created_at: string
+  results: {
+    question_number: number
+    student_answer: string
+    correct_answer: string
+    is_correct: boolean
+    confidence: number
+    needs_review: boolean
+    feedback: string
+  }[]
+}
+
+// ─── Grade a Worksheet Card ─────────────────────────────────────────────────
+
+function GradeWorksheetCard({
+  recentWorksheets,
+  loadingWorksheets,
+  onGradeWorksheet,
+  onUploadDirect,
+}: {
+  recentWorksheets: RecentWorksheetItem[]
+  loadingWorksheets: boolean
+  onGradeWorksheet: (id: string) => void
+  onUploadDirect: () => void
+}) {
+  return (
+    <Card className="border-primary/20 bg-primary/[0.02]">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-fraunces flex items-center gap-2">
+          <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+          </svg>
+          Grade a Worksheet
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Upload your child's answer sheet to update progress
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Upload buttons */}
+        <div className="flex gap-3">
+          <Button
+            onClick={onUploadDirect}
+            className="flex-1 h-11"
+            style={{ backgroundColor: '#1E1B4B', color: '#FFFFFF' }}
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+            </svg>
+            Take Photo
+          </Button>
+          <Button
+            onClick={onUploadDirect}
+            variant="outline"
+            className="flex-1 h-11"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            Upload File
+          </Button>
+        </div>
+
+        {/* Recent worksheets to grade */}
+        {loadingWorksheets ? (
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-40 rounded" />
+            <Skeleton className="h-14 rounded-lg" />
+            <Skeleton className="h-14 rounded-lg" />
+          </div>
+        ) : recentWorksheets.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Recent worksheets (not yet graded)
+            </p>
+            {recentWorksheets.slice(0, 5).map((ws) => (
+              <div
+                key={ws.id}
+                className="flex items-center justify-between p-3 rounded-lg bg-background border border-border/30 hover:border-primary/30 transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground truncate">{ws.topic}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {ws.grade} &middot; {ws.subject} &middot; {ws.question_count}q
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onGradeWorksheet(ws.id)}
+                  className="text-primary text-xs font-semibold shrink-0 h-auto py-1.5 px-3"
+                >
+                  Grade this &rarr;
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-2">
+            Generate a worksheet first, then grade it here.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ─── Grading History Section ─────────────────────────────────────────────────
+
+function GradingHistorySection({ history, loading: histLoading }: { history: GradingHistoryItem[]; loading: boolean }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  if (histLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-fraunces">Grading History</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Skeleton className="h-12 rounded-lg" />
+          <Skeleton className="h-12 rounded-lg" />
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (history.length === 0) return null
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-fraunces">Grading History</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {history.map((item) => {
+          const isExpanded = expandedId === item.id
+          const pct = Math.round((item.score / item.total) * 100)
+          const scoreColor = pct >= 80 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-red-500'
+
+          return (
+            <div key={item.id} className="border border-border/30 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-secondary/20 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{item.topic}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(item.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      {item.worksheet_title && ` \u00b7 ${item.worksheet_title}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-sm font-bold ${scoreColor}`}>
+                    {item.score}/{item.total}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+
+              {isExpanded && item.results && (
+                <div className="border-t border-border/20 px-4 py-3 space-y-1.5">
+                  {item.results.map((r) => (
+                    <div key={r.question_number} className="flex items-start gap-2 text-sm">
+                      <span className="mt-0.5">
+                        {r.needs_review ? '⚠️' : r.is_correct ? '✅' : '❌'}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium">Q{r.question_number}</span>
+                        <span className="text-muted-foreground ml-1.5">
+                          {r.student_answer === 'BLANK' ? '(no answer)' : r.student_answer}
+                        </span>
+                        {!r.is_correct && !r.needs_review && (
+                          <span className="text-xs text-muted-foreground ml-1">→ {r.correct_answer}</span>
+                        )}
+                        {r.feedback && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{r.feedback}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </CardContent>
+    </Card>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
@@ -378,6 +607,15 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
   const [loading, setLoading] = useState(false)
   const [graphLoading, setGraphLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Grading state
+  const [recentWorksheets, setRecentWorksheets] = useState<RecentWorksheetItem[]>([])
+  const [loadingWorksheets, setLoadingWorksheets] = useState(false)
+  const [gradingHistory, setGradingHistory] = useState<GradingHistoryItem[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  const [showGrading, setShowGrading] = useState(false)
+  const [gradingWorksheet, setGradingWorksheet] = useState<FullWorksheetForGrading | null>(null)
+  const [loadingGradingWorksheet, setLoadingGradingWorksheet] = useState(false)
 
   // Auto-select first child
   useEffect(() => {
@@ -436,12 +674,71 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
     setGraphLoading(false)
   }, [])
 
+  // Fetch recent worksheets for "grade this" list
+  const fetchRecentWorksheets = useCallback(async (childId: string) => {
+    setLoadingWorksheets(true)
+    try {
+      const response = await api.get(`/api/worksheets/saved/list?child_id=${childId}`)
+      setRecentWorksheets((response.data.worksheets || []).slice(0, 5))
+    } catch {
+      setRecentWorksheets([])
+    } finally {
+      setLoadingWorksheets(false)
+    }
+  }, [])
+
+  // Fetch grading history
+  const fetchGradingHistory = useCallback(async (childId: string) => {
+    setLoadingHistory(true)
+    try {
+      const response = await api.get(`/api/v1/grading/history?child_id=${childId}`)
+      setGradingHistory(response.data.results || [])
+    } catch {
+      // Grading history endpoint may not exist yet — fail silently
+      setGradingHistory([])
+    } finally {
+      setLoadingHistory(false)
+    }
+  }, [])
+
+  // Load a full worksheet for grading
+  const handleGradeWorksheet = useCallback(async (worksheetId: string) => {
+    setLoadingGradingWorksheet(true)
+    try {
+      const response = await api.get(`/api/worksheets/saved/${worksheetId}`)
+      const ws = response.data.worksheet || response.data
+      setGradingWorksheet({
+        id: ws.id || worksheetId,
+        title: ws.title,
+        grade: ws.grade,
+        subject: ws.subject,
+        topic: ws.topic,
+        questions: ws.questions || [],
+      })
+      setShowGrading(true)
+    } catch {
+      console.warn('[ParentDashboard] Failed to load worksheet for grading')
+    } finally {
+      setLoadingGradingWorksheet(false)
+    }
+  }, [])
+
+  // Open grading dialog without a specific worksheet (direct upload)
+  const handleDirectUpload = useCallback(() => {
+    if (recentWorksheets.length > 0) {
+      // Grade the most recent worksheet
+      handleGradeWorksheet(recentWorksheets[0].id)
+    }
+  }, [recentWorksheets, handleGradeWorksheet])
+
   useEffect(() => {
     if (selectedChildId) {
       fetchDashboard(selectedChildId)
       fetchLearningGraph(selectedChildId)
+      fetchRecentWorksheets(selectedChildId)
+      fetchGradingHistory(selectedChildId)
     }
-  }, [selectedChildId, fetchDashboard, fetchLearningGraph])
+  }, [selectedChildId, fetchDashboard, fetchLearningGraph, fetchRecentWorksheets, fetchGradingHistory])
 
   if (childrenLoading) return <LoadingSkeleton />
 
@@ -501,6 +798,14 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
           {selectedChild.name} &middot; Class {selectedChild.grade}
         </div>
       )}
+
+      {/* Grade a Worksheet card */}
+      <GradeWorksheetCard
+        recentWorksheets={recentWorksheets}
+        loadingWorksheets={loadingWorksheets || loadingGradingWorksheet}
+        onGradeWorksheet={handleGradeWorksheet}
+        onUploadDirect={handleDirectUpload}
+      />
 
       {/* Error state */}
       {error && (
@@ -738,7 +1043,30 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
               description="Complete a worksheet to see progress here."
             />
           )}
+
+          {/* Grading History */}
+          <GradingHistorySection history={gradingHistory} loading={loadingHistory} />
         </>
+      )}
+
+      {/* GradeFromPhoto dialog */}
+      {gradingWorksheet && (
+        <GradeFromPhoto
+          open={showGrading}
+          onOpenChange={(open) => {
+            setShowGrading(open)
+            if (!open) {
+              setGradingWorksheet(null)
+              // Refresh data after grading
+              if (selectedChildId) {
+                fetchGradingHistory(selectedChildId)
+                fetchDashboard(selectedChildId)
+              }
+            }
+          }}
+          worksheet={gradingWorksheet}
+          childId={selectedChildId ?? undefined}
+        />
       )}
     </div>
   )
