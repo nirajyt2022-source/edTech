@@ -1717,20 +1717,20 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                     {question.type === 'fill_blank' && (
                                       <div className="mt-4 pt-4"><div className="border-b-2 border-dotted border-border w-2/3 h-6"></div></div>
                                     )}
-                                    {question.type === 'short_answer' && (
+                                    {(question.type === 'short_answer' || question.type === 'word_problem') && (
                                       <div className="mt-4 space-y-4">
                                         <div className="border-b border-border/40 h-8"></div>
                                         <div className="border-b border-border/40 h-8"></div>
                                         <div className="border-b border-border/40 h-8"></div>
                                       </div>
                                     )}
-                                    {/* Hint for thinking/error_detection (Gold-G6) */}
-                                    {question.explanation && (question.role === 'thinking' || question.role === 'error_detection') && (
+                                    {/* Hint — shown on all questions that have one */}
+                                    {(question.hint || question.explanation) && (
                                       <div className="mt-3 print:mt-2">
                                         {revealedHints.has(question.id) ? (
                                           <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-lg text-sm text-amber-900 italic print:bg-gray-50 print:border-gray-300 print:text-gray-600">
                                             <span className="font-semibold not-italic text-amber-700 print:text-gray-700">Hint: </span>
-                                            {question.explanation}
+                                            {question.hint || question.explanation}
                                           </div>
                                         ) : (
                                           <button
