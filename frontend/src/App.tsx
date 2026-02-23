@@ -115,16 +115,16 @@ function AppContent() {
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ backgroundColor: '#FAF7F2' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6" style={{ backgroundColor: '#FAFAF9' }}>
         <div className="relative">
-          <div className="w-16 h-16 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(27,67,50,0.2)', borderTopColor: '#1B4332' }} />
+          <div className="w-16 h-16 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(30,27,75,0.2)', borderTopColor: '#1E1B4B' }} />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-1 h-1 rounded-full animate-ping" style={{ backgroundColor: '#1B4332' }} />
+            <div className="w-1 h-1 rounded-full animate-ping" style={{ backgroundColor: '#1E1B4B' }} />
           </div>
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: '#1E293B' }}>Getting ready</h2>
-          <p className="text-sm font-medium tracking-wide" style={{ color: '#64748B', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Preparing your practice workspace...</p>
+          <h2 className="text-xl font-bold" style={{ fontFamily: "'Fraunces', serif", color: '#1E293B' }}>Getting ready</h2>
+          <p className="text-sm font-medium tracking-wide" style={{ color: '#64748B', fontFamily: "'Inter', sans-serif" }}>Preparing your practice workspace...</p>
         </div>
       </div>
     )
@@ -166,18 +166,18 @@ function AppContent() {
   const tabs = isTeacher ? teacherTabs : parentTabs
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAF7F2' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#FAFAF9' }}>
       <Toaster position="top-right" richColors />
       <RoleSelector />
       {/* Navigation */}
-      <nav className="backdrop-blur-xl border-b border-border/30 sticky top-0 z-50 print:hidden" style={{ backgroundColor: '#1B4332' }}>
+      <nav className="backdrop-blur-xl border-b border-border/30 sticky top-0 z-50 print:hidden" style={{ backgroundColor: '#1E1B4B' }}>
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
           <button className="flex items-center gap-2.5 group cursor-pointer bg-transparent border-none shrink-0" onClick={() => setCurrentPage(isTeacher ? 'dashboard' : 'generator')} aria-label="Go to home page">
-            <span className="text-lg font-bold tracking-tight hidden sm:inline" style={{ fontFamily: "'DM Serif Display', serif", color: '#FFFFFF' }}>
+            <span className="text-lg font-bold tracking-tight hidden sm:inline" style={{ fontFamily: "'Fraunces', serif", color: '#FFFFFF' }}>
               Skolar
             </span>
-            <span className="sm:hidden text-lg font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: '#FFFFFF' }}>
+            <span className="sm:hidden text-lg font-bold" style={{ fontFamily: "'Fraunces', serif", color: '#FFFFFF' }}>
               S
             </span>
           </button>
@@ -285,7 +285,7 @@ function AppContent() {
         </div>
 
         {/* Mobile bottom nav — icon + label */}
-        <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-xl border-t border-border/30 z-50 pb-[env(safe-area-inset-bottom)]" style={{ backgroundColor: 'rgba(250,247,242,0.95)' }}>
+        <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 left-0 right-0 backdrop-blur-xl border-t border-border/30 z-50 pb-[env(safe-area-inset-bottom)]" style={{ backgroundColor: 'rgba(250,250,249,0.95)' }}>
           <div className="flex items-center justify-around h-14 px-1">
             {tabs.map((tab) => (
               <button
@@ -294,7 +294,7 @@ function AppContent() {
                 aria-selected={currentPage === tab.id}
                 onClick={() => setCurrentPage(tab.id)}
                 className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[44px] min-h-[44px] justify-center transition-colors cursor-pointer"
-                style={{ color: currentPage === tab.id ? '#1B4332' : '#94A3B8' }}
+                style={{ color: currentPage === tab.id ? '#1E1B4B' : '#94A3B8' }}
               >
                 {NAV_ICONS[tab.id]}
                 <span className="text-[10px] font-medium leading-none">{tab.label}</span>

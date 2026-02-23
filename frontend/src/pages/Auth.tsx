@@ -98,11 +98,11 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#FAF7F2' }}>
+    <div className="min-h-screen flex" style={{ backgroundColor: '#FAFAF9' }}>
       {/* LEFT PANEL — desktop only */}
       <div
         className="hidden lg:flex lg:w-[480px] xl:w-[520px] flex-col justify-between p-10 xl:p-12 shrink-0"
-        style={{ backgroundColor: '#1B4332' }}
+        style={{ backgroundColor: '#1E1B4B' }}
       >
         <div>
           {/* Back button */}
@@ -124,39 +124,72 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
           {/* Wordmark */}
           <h1
             className="text-4xl font-bold mb-3"
-            style={{ fontFamily: "'DM Serif Display', serif", color: '#FFFFFF' }}
+            style={{ fontFamily: "'Fraunces', serif", color: '#FFFFFF' }}
           >
             Skolar
           </h1>
-          <p className="text-lg mb-12" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <p className="text-lg mb-12" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: "'Inter', sans-serif" }}>
             Practice that knows your syllabus
           </p>
 
           {/* Feature checkpoints */}
-          <div className="space-y-5">
+          <div className="space-y-4">
             {[
-              '198 topics across 9 subjects',
-              'Print-ready PDFs with answer keys',
-              'Free to start, no card needed',
-            ].map((text) => (
-              <div key={text} className="flex items-start gap-3">
-                <svg className="w-5 h-5 mt-0.5 shrink-0" style={{ color: '#D97706' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              { text: '198 topics across 9 subjects', detail: 'Maths, English, Hindi, EVS, Science & more' },
+              { text: 'Three difficulty tiers per worksheet', detail: 'Foundation, Application & Stretch' },
+              { text: 'Print-ready PDFs with answer keys', detail: 'Download and print instantly' },
+              { text: 'Mastery tracking & progress insights', detail: 'See exactly where your child stands' },
+              { text: 'Free to start, no card needed', detail: '5 worksheets per month at no cost' },
+            ].map((item) => (
+              <div key={item.text} className="flex items-start gap-3">
+                <svg className="w-5 h-5 mt-0.5 shrink-0" style={{ color: '#F97316' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
-                <span className="text-sm" style={{ color: 'rgba(255,255,255,0.85)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                  {text}
-                </span>
+                <div>
+                  <span className="text-sm font-medium block" style={{ color: 'rgba(255,255,255,0.9)', fontFamily: "'Inter', sans-serif" }}>
+                    {item.text}
+                  </span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: "'Inter', sans-serif" }}>
+                    {item.detail}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Decorative bottom */}
-        <div className="mt-auto pt-12">
-          <div className="flex items-center gap-4 text-3xl" style={{ opacity: 0.4 }}>
-            <span role="img" aria-label="books">📚</span>
-            <span role="img" aria-label="lion">🦁</span>
-            <span role="img" aria-label="pencil">✏️</span>
+        {/* Sample mini worksheet card */}
+        <div className="mt-auto pt-8">
+          <div className="bg-white/[0.08] border border-white/[0.1] rounded-xl p-4 backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-md bg-orange-500/20 flex items-center justify-center">
+                <svg className="w-3 h-3 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <span className="text-xs font-medium text-white/60">Sample worksheet</span>
+            </div>
+            <p className="text-[13px] text-white/80 leading-relaxed mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+              &ldquo;Priya has 45 marbles. She wins 28 more. How many does she have now?&rdquo;
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Foundation</span>
+              <span className="text-[10px] text-white/40">Class 2 &middot; Maths</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-6 mt-4">
+            <div className="text-center">
+              <div className="text-lg font-bold text-white/80" style={{ fontFamily: "'Inter', sans-serif" }}>198</div>
+              <div className="text-[9px] uppercase tracking-wider text-white/30 font-medium">Topics</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-white/80" style={{ fontFamily: "'Inter', sans-serif" }}>9</div>
+              <div className="text-[9px] uppercase tracking-wider text-white/30 font-medium">Subjects</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-white/80" style={{ fontFamily: "'Inter', sans-serif" }}>5</div>
+              <div className="text-[9px] uppercase tracking-wider text-white/30 font-medium">Classes</div>
+            </div>
           </div>
         </div>
       </div>
@@ -169,7 +202,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             <button
               onClick={onBack}
               className="lg:hidden flex items-center gap-1.5 text-sm mb-6 transition-colors cursor-pointer bg-transparent border-none"
-              style={{ color: '#1B4332' }}
+              style={{ color: '#1E1B4B' }}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -182,7 +215,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
           <div className="mb-8">
             <h2
               className="text-2xl font-bold"
-              style={{ fontFamily: "'DM Serif Display', serif", color: '#1B4332' }}
+              style={{ fontFamily: "'Fraunces', serif", color: '#1E1B4B' }}
             >
               Skolar
             </h2>
@@ -191,11 +224,11 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
           {/* Heading */}
           <h3
             className="text-2xl font-semibold mb-1"
-            style={{ fontFamily: "'DM Serif Display', serif", color: '#1E293B' }}
+            style={{ fontFamily: "'Fraunces', serif", color: '#1E293B' }}
           >
             {mode === 'signup' ? 'Create your account' : 'Welcome back'}
           </h3>
-          <p className="text-sm mb-6" style={{ color: '#64748B', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <p className="text-sm mb-6" style={{ color: '#64748B', fontFamily: "'Inter', sans-serif" }}>
             {mode === 'signup' ? 'Start with 5 free worksheets — no card needed' : 'Sign in to your workspace'}
           </p>
 
@@ -208,7 +241,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               border: '1px solid #E2E8F0',
               backgroundColor: '#FFFFFF',
               color: '#1E293B',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontFamily: "'Inter', sans-serif",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
@@ -228,7 +261,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               <div className="w-full" style={{ borderTop: '1px solid #E2E8F0' }} />
             </div>
             <div className="relative flex justify-center text-xs" style={{ color: '#94A3B8' }}>
-              <span className="px-2" style={{ backgroundColor: '#FAF7F2' }}>or continue with email</span>
+              <span className="px-2" style={{ backgroundColor: '#FAFAF9' }}>or continue with email</span>
             </div>
           </div>
 
@@ -236,7 +269,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <div className="space-y-2 animate-fade-in">
-                <Label htmlFor="name" style={{ color: '#1E293B', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Name</Label>
+                <Label htmlFor="name" style={{ color: '#1E293B', fontFamily: "'Inter', sans-serif" }}>Name</Label>
                 <Input
                   id="name"
                   type="text"
@@ -250,7 +283,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email" style={{ color: '#1E293B', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Email</Label>
+              <Label htmlFor="email" style={{ color: '#1E293B', fontFamily: "'Inter', sans-serif" }}>Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -264,7 +297,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" style={{ color: '#1E293B', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Password</Label>
+              <Label htmlFor="password" style={{ color: '#1E293B', fontFamily: "'Inter', sans-serif" }}>Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -282,7 +315,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
                     type="button"
                     onClick={handleForgotPassword}
                     className="text-xs hover:underline cursor-pointer bg-transparent border-none"
-                    style={{ color: '#1B4332' }}
+                    style={{ color: '#3730A3' }}
                   >
                     Forgot password?
                   </button>
@@ -314,7 +347,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               size="lg"
               disabled={loading}
               aria-busy={loading}
-              style={{ backgroundColor: '#1B4332', fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              style={{ backgroundColor: '#1E1B4B', fontFamily: "'Inter', sans-serif" }}
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -327,7 +360,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             </Button>
           </form>
 
-          <div className="mt-5 text-center text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <div className="mt-5 text-center text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
             <span style={{ color: '#64748B' }}>
               {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
             </span>
@@ -335,7 +368,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               type="button"
               onClick={toggleMode}
               className="font-medium transition-colors cursor-pointer bg-transparent border-none hover:underline"
-              style={{ color: '#1B4332' }}
+              style={{ color: '#3730A3' }}
             >
               {mode === 'login' ? 'Sign up' : 'Sign in'}
             </button>

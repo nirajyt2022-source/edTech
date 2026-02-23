@@ -121,7 +121,7 @@ export default function CBSESyllabusViewer({ grade, subject, onGenerateFromSylla
                   <span className="text-xs font-black">{index + 1}</span>
                 </div>
                 <div>
-                  <span className={`text-sm font-bold font-jakarta transition-colors ${expandedChapters.has(chapter.name) ? 'text-primary' : 'text-foreground/80'
+                  <span className={`text-sm font-bold font-inter transition-colors ${expandedChapters.has(chapter.name) ? 'text-primary' : 'text-foreground/80'
                     }`}>{chapter.name}</span>
                   <p className="text-[10px] text-muted-foreground/50 font-medium">{chapter.topics.length} Topic Segments</p>
                 </div>

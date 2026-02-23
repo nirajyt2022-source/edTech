@@ -1,5 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+  ArrowRight,
+  BookOpen,
+  Sparkles,
+  FileDown,
+  Target,
+  Globe,
+  Lightbulb,
+  CheckCircle,
+  Calculator,
+  Leaf,
+  Languages,
+  Monitor,
+  Globe2,
+  Heart,
+  Activity,
+  PenLine,
+  Check,
+  X,
+  Menu,
+  XIcon,
+  ChevronDown,
+  Users,
+  GraduationCap,
+  Mail,
+} from 'lucide-react'
 
 interface Props {
   onGetStarted: () => void
@@ -7,14 +33,15 @@ interface Props {
 }
 
 const SUBJECTS = [
-  { icon: '\u{1F522}', name: 'Mathematics', topics: ['Number System', 'Addition', 'Subtraction', 'Multiplication', 'Fractions', 'Geometry', 'Time', 'Money', 'Measurement', 'Data Handling'] },
-  { icon: '\u{1F4D6}', name: 'English', topics: ['Grammar', 'Comprehension', 'Vocabulary', 'Writing', 'Poems', 'Stories'] },
-  { icon: '\u{1F33F}', name: 'EVS / Science', topics: ['Plants', 'Animals', 'Human Body', 'Food', 'Shelter', 'Water', 'Weather', 'Solar System'] },
-  { icon: '\u{1F4DD}', name: 'Hindi', topics: ['\u0935\u0930\u094D\u0923\u092E\u093E\u0932\u093E', '\u092E\u093E\u0924\u094D\u0930\u093E\u090F\u0901', '\u0936\u092C\u094D\u0926 \u0930\u091A\u0928\u093E', '\u0935\u093E\u0915\u094D\u092F \u0930\u091A\u0928\u093E', '\u0935\u093F\u0932\u094B\u092E \u0936\u092C\u094D\u0926', '\u0915\u0939\u093E\u0928\u0940 \u0932\u0947\u0916\u0928'] },
-  { icon: '\u{1F4BB}', name: 'Computer', topics: ['Parts of Computer', 'MS Paint', 'Scratch', 'Internet Safety'] },
-  { icon: '\u{1F30D}', name: 'GK', topics: ['National Symbols', 'Landmarks', 'Festivals', 'Sports', 'Solar System'] },
-  { icon: '\u{1F91D}', name: 'Moral Science', topics: ['Good Habits', 'Honesty', 'Kindness', 'Sharing'] },
-  { icon: '\u{1F3C3}', name: 'Health & PE', topics: ['Hygiene', 'Nutrition', 'Yoga', 'First Aid', 'Sports'] },
+  { icon: Calculator, name: 'Mathematics', topics: ['Number System', 'Addition', 'Subtraction', 'Multiplication', 'Fractions', 'Geometry', 'Time', 'Money', 'Measurement', 'Data Handling'] },
+  { icon: BookOpen, name: 'English', topics: ['Grammar', 'Comprehension', 'Vocabulary', 'Writing', 'Poems', 'Stories'] },
+  { icon: Leaf, name: 'EVS / Science', topics: ['Plants', 'Animals', 'Human Body', 'Food', 'Shelter', 'Water', 'Weather', 'Solar System'] },
+  { icon: PenLine, name: 'Hindi', topics: ['\u0935\u0930\u094D\u0923\u092E\u093E\u0932\u093E', '\u092E\u093E\u0924\u094D\u0930\u093E\u090F\u0901', '\u0936\u092C\u094D\u0926 \u0930\u091A\u0928\u093E', '\u0935\u093E\u0915\u094D\u092F \u0930\u091A\u0928\u093E', '\u0935\u093F\u0932\u094B\u092E \u0936\u092C\u094D\u0926', '\u0915\u0939\u093E\u0928\u0940 \u0932\u0947\u0916\u0928'] },
+  { icon: Monitor, name: 'Computer', topics: ['Parts of Computer', 'MS Paint', 'Scratch', 'Internet Safety'] },
+  { icon: Globe2, name: 'GK', topics: ['National Symbols', 'Landmarks', 'Festivals', 'Sports', 'Solar System'] },
+  { icon: Heart, name: 'Moral Science', topics: ['Good Habits', 'Honesty', 'Kindness', 'Sharing'] },
+  { icon: Activity, name: 'Health & PE', topics: ['Hygiene', 'Nutrition', 'Yoga', 'First Aid', 'Sports'] },
+  { icon: Languages, name: 'Urdu', topics: ['Alphabets', 'Words', 'Sentences', 'Stories'] },
 ]
 
 const COMPARISON_FEATURES = [
@@ -28,10 +55,47 @@ const COMPARISON_FEATURES = [
   { feature: 'No repeated questions', skolar: true, free: false },
 ]
 
+const FAQ_ITEMS = [
+  {
+    q: 'What is Skolar?',
+    a: 'Skolar is an AI-powered worksheet generator built specifically for the CBSE curriculum, covering Classes 1 through 5. It creates structured, print-ready practice worksheets across 9 subjects and 198 topics with three difficulty tiers, answer keys, and Indian-context word problems.',
+  },
+  {
+    q: 'What subjects does Skolar cover?',
+    a: 'Skolar covers 9 subjects: Mathematics, English, Hindi, EVS/Science, Computer, General Knowledge, Moral Science, Health & Physical Education, and Urdu. Each subject has carefully mapped topics aligned to CBSE textbooks.',
+  },
+  {
+    q: 'How does Skolar generate worksheets?',
+    a: 'Pick a topic and class level. Our AI engine creates 10 questions spread across three difficulty tiers: Foundation (building confidence), Application (real-world problems), and Stretch (challenge questions with hints). Each worksheet includes a separate answer key.',
+  },
+  {
+    q: 'Is Skolar free to use?',
+    a: 'Yes. You get 5 worksheets per month completely free, with access to all 9 subjects and PDF downloads. For unlimited worksheets, mastery tracking, and bulk generation, upgrade to the Scholar plan at \u20B9199/month.',
+  },
+  {
+    q: 'What classes does Skolar support?',
+    a: 'Skolar supports CBSE Classes 1 through 5. Topics are mapped to the NCERT curriculum for each class level, ensuring age-appropriate content and progressive difficulty.',
+  },
+  {
+    q: 'Can teachers use Skolar?',
+    a: 'Absolutely. Teachers can generate topic-wise worksheets for their entire class, use bulk generation across multiple topics, share via WhatsApp or print batches, and track class-wide mastery and skill gaps.',
+  },
+  {
+    q: 'How is Skolar different from free worksheet sites?',
+    a: 'Free sites offer static, generic PDFs. Skolar generates unique questions every time, uses three difficulty tiers with scaffolding hints, includes Indian names and contexts in word problems, provides mastery tracking, and never repeats questions.',
+  },
+  {
+    q: 'Do I need to install anything?',
+    a: 'No. Skolar is a web application that works in any modern browser. Sign up, pick a topic, and download your PDF. No apps, no plugins, no setup required.',
+  },
+]
+
 export default function LandingPage({ onGetStarted, onSignIn }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSubject, setActiveSubject] = useState(0)
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const sectionsRef = useRef<(HTMLElement | null)[]>([])
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40)
@@ -39,271 +103,463 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Intersection Observer for scroll-reveal
+  useEffect(() => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced) {
+      sectionsRef.current.forEach(el => {
+        if (el) el.classList.add('visible')
+      })
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible')
+          }
+        })
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    )
+
+    sectionsRef.current.forEach(el => {
+      if (el) observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
+  const addSectionRef = (index: number) => (el: HTMLElement | null) => {
+    sectionsRef.current[index] = el
+  }
+
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
     setMobileOpen(false)
   }
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: '#1E293B', overflowX: 'hidden' as const }}>
+    <div className="font-[Inter,system-ui,sans-serif] text-slate-900 overflow-x-hidden">
 
-      {/* ── 1. STICKY NAV ── */}
+      {/* -- 1. GLASS NAV (sticky) -- */}
       <header
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          transition: 'all 0.3s ease',
-          backgroundColor: scrolled ? 'rgba(250,247,242,0.97)' : '#FAF7F2',
-          backdropFilter: scrolled ? 'blur(12px)' : 'none',
-          borderBottom: scrolled ? '1px solid #E5E0D8' : '1px solid transparent',
-          boxShadow: scrolled ? '0 1px 16px rgba(0,0,0,0.06)' : 'none',
-        }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'backdrop-blur-xl bg-white/80 border-b border-slate-200/60 shadow-sm'
+            : 'bg-transparent'
+        }`}
       >
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, fontWeight: 400, color: '#1B4332', letterSpacing: '-0.01em', cursor: 'pointer' }} onClick={() => scrollTo('hero')}>
+        <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
+          <span
+            className={`font-[Fraunces,Georgia,serif] text-2xl font-normal tracking-tight cursor-pointer transition-colors duration-300 ${
+              scrolled ? 'text-[#1E1B4B]' : 'text-white'
+            }`}
+            onClick={() => scrollTo('hero')}
+          >
             Skolar
           </span>
 
           {/* Desktop links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="sk-nav-desktop">
-            <button onClick={() => scrollTo('how')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#64748B', padding: '8px 14px', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>How it works</button>
-            <button onClick={() => scrollTo('subjects')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#64748B', padding: '8px 14px', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Subjects</button>
-            <button onClick={() => scrollTo('pricing')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#64748B', padding: '8px 14px', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Pricing</button>
-            <button onClick={onSignIn} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#1E293B', fontWeight: 500, padding: '8px 14px', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Sign in</button>
-            <Button size="sm" onClick={onGetStarted} style={{ backgroundColor: '#1B4332', color: '#fff', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
+            <button
+              onClick={() => scrollTo('how')}
+              className={`bg-transparent border-none cursor-pointer text-sm px-3.5 py-2 rounded-lg transition-colors font-[Inter,system-ui,sans-serif] ${
+                scrolled ? 'text-slate-500 hover:text-slate-900' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              How it works
+            </button>
+            <button
+              onClick={() => scrollTo('subjects')}
+              className={`bg-transparent border-none cursor-pointer text-sm px-3.5 py-2 rounded-lg transition-colors font-[Inter,system-ui,sans-serif] ${
+                scrolled ? 'text-slate-500 hover:text-slate-900' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              Subjects
+            </button>
+            <button
+              onClick={() => scrollTo('pricing')}
+              className={`bg-transparent border-none cursor-pointer text-sm px-3.5 py-2 rounded-lg transition-colors font-[Inter,system-ui,sans-serif] ${
+                scrolled ? 'text-slate-500 hover:text-slate-900' : 'text-white/70 hover:text-white'
+              }`}
+            >
+              Pricing
+            </button>
+            <button
+              onClick={onSignIn}
+              className={`bg-transparent border-none cursor-pointer text-sm font-medium px-3.5 py-2 rounded-lg transition-colors font-[Inter,system-ui,sans-serif] ${
+                scrolled ? 'text-slate-900' : 'text-white'
+              }`}
+            >
+              Sign in
+            </button>
+            <Button
+              size="sm"
+              onClick={onGetStarted}
+              className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-5 font-[Inter,system-ui,sans-serif] font-semibold cursor-pointer"
+            >
               Start free
             </Button>
           </nav>
 
           {/* Mobile hamburger */}
           <button
-            className="sk-hamburger"
+            className="lg:hidden flex items-center justify-center bg-transparent border-none cursor-pointer p-2"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Menu"
-            style={{ display: 'none', flexDirection: 'column', gap: 5, background: 'none', border: 'none', cursor: 'pointer', padding: 8 }}
+            aria-label="Toggle menu"
           >
-            <span style={{ display: 'block', width: 22, height: 2, background: '#1E293B', borderRadius: 2 }} />
-            <span style={{ display: 'block', width: 22, height: 2, background: '#1E293B', borderRadius: 2 }} />
-            <span style={{ display: 'block', width: 16, height: 2, background: '#1E293B', borderRadius: 2 }} />
+            {mobileOpen ? <XIcon className={`w-6 h-6 ${scrolled ? 'text-slate-900' : 'text-white'}`} /> : <Menu className={`w-6 h-6 ${scrolled ? 'text-slate-900' : 'text-white'}`} />}
           </button>
         </div>
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div style={{ background: '#FAF7F2', borderTop: '1px solid #E5E0D8', padding: '12px 24px 20px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <button onClick={() => scrollTo('how')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#1E293B', padding: '10px 0', textAlign: 'left', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>How it works</button>
-            <button onClick={() => scrollTo('subjects')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#1E293B', padding: '10px 0', textAlign: 'left', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Subjects</button>
-            <button onClick={() => scrollTo('pricing')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#1E293B', padding: '10px 0', textAlign: 'left', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Pricing</button>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-              <button onClick={onSignIn} style={{ background: 'none', border: '1px solid #1B4332', cursor: 'pointer', fontSize: 14, color: '#1B4332', fontWeight: 600, padding: '10px 20px', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Sign in</button>
-              <button onClick={onGetStarted} style={{ background: '#1B4332', border: 'none', cursor: 'pointer', fontSize: 14, color: '#fff', fontWeight: 600, padding: '10px 20px', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Start free</button>
+          <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 px-6 pt-3 pb-5 flex flex-col gap-1">
+            <button onClick={() => scrollTo('how')} className="bg-transparent border-none cursor-pointer text-base text-slate-900 py-2.5 text-left font-[Inter,system-ui,sans-serif]">How it works</button>
+            <button onClick={() => scrollTo('subjects')} className="bg-transparent border-none cursor-pointer text-base text-slate-900 py-2.5 text-left font-[Inter,system-ui,sans-serif]">Subjects</button>
+            <button onClick={() => scrollTo('pricing')} className="bg-transparent border-none cursor-pointer text-base text-slate-900 py-2.5 text-left font-[Inter,system-ui,sans-serif]">Pricing</button>
+            <div className="flex flex-col gap-2 mt-3">
+              <button onClick={onSignIn} className="bg-transparent border border-[#1E1B4B] cursor-pointer text-sm text-[#1E1B4B] font-semibold py-2.5 px-5 rounded-lg font-[Inter,system-ui,sans-serif]">Sign in</button>
+              <button onClick={onGetStarted} className="bg-orange-500 border-none cursor-pointer text-sm text-white font-semibold py-2.5 px-5 rounded-lg font-[Inter,system-ui,sans-serif]">Start free</button>
             </div>
           </div>
         )}
       </header>
 
-      {/* ── 2. HERO ── */}
-      <section id="hero" style={{ backgroundColor: '#FAF7F2', paddingTop: 120, paddingBottom: 80 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }} className="sk-hero-grid">
+      {/* -- 2. HERO SECTION -- */}
+      <section id="hero" className="lp-hero relative pt-32 pb-24 overflow-hidden">
+        <div className="lp-dot-grid" />
+
+        {/* Decorative orbs — floating animation */}
+        <div className="lp-orb lp-orb-indigo lp-orb-float-1 w-[500px] h-[500px] -top-40 -left-40 opacity-60" />
+        <div className="lp-orb lp-orb-amber lp-orb-float-2 w-[350px] h-[350px] top-20 right-10 opacity-40" />
+        <div className="lp-orb lp-orb-violet lp-orb-float-3 w-[300px] h-[300px] bottom-10 left-1/3 opacity-30" />
+
+        <div className="relative z-10 max-w-[1200px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left */}
           <div>
-            <h1 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 400, lineHeight: 1.1, letterSpacing: '-0.02em', color: '#1B4332', margin: '0 0 20px' }}>
-              Practice that knows<br />your syllabus.
+            <div className="lp-badge mb-6 lp-hero-text">
+              CBSE Classes 1&ndash;5 &middot; AI-Powered
+            </div>
+            <h1 className="lp-hero-h1 mb-5 lp-hero-text-delay">
+              Practice that actually{' '}
+              <em>knows</em>{' '}
+              your syllabus
             </h1>
-            <p style={{ fontSize: 17, lineHeight: 1.7, color: '#64748B', maxWidth: 480, margin: '0 0 28px' }}>
-              AI-powered CBSE worksheets for Classes 1&ndash;5. Pick a topic. Get 10 questions. Download the PDF.
+            <p className="text-base lg:text-lg leading-relaxed text-indigo-200/80 max-w-[500px] mb-7 lp-hero-text-delay-2">
+              AI-powered CBSE worksheets across 198 topics and 9 subjects.
+              Pick a topic, choose difficulty, download the PDF.
             </p>
-            <Button size="lg" onClick={onGetStarted} style={{ backgroundColor: '#1B4332', color: '#fff', padding: '14px 32px', fontSize: 16, borderRadius: 10, fontWeight: 600, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Generate your first worksheet &mdash; free
-            </Button>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+            <div className="lp-hero-text-delay-3">
+              <Button
+                size="lg"
+                onClick={onGetStarted}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3.5 text-base rounded-xl font-semibold font-[Inter,system-ui,sans-serif] cursor-pointer inline-flex items-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 hover:-translate-y-0.5"
+              >
+                Generate your first worksheet &mdash; free
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </div>
+            <div className="flex gap-3 flex-wrap mt-6 lp-hero-text-delay-3">
               {['198 topics', '9 subjects', 'Classes 1\u20135', 'No card needed'].map(chip => (
-                <span key={chip} style={{ fontSize: 13, color: '#64748B', background: 'rgba(27,67,50,0.07)', border: '1px solid rgba(27,67,50,0.12)', padding: '5px 14px', borderRadius: 100 }}>
+                <span
+                  key={chip}
+                  className="text-xs text-indigo-200/70 bg-white/[0.08] border border-white/[0.12] py-1.5 px-4 rounded-full"
+                >
                   {chip}
                 </span>
               ))}
             </div>
           </div>
 
-          {/* Right — fanned worksheet cards */}
-          <div style={{ position: 'relative', height: 380, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="sk-hero-right">
-            {[
-              { topic: 'Animals Around Us', cls: 'Class 1', subj: 'EVS', rotate: -6, offset: 0, bg: '#E8F5E9' },
-              { topic: 'Addition & Subtraction', cls: 'Class 4', subj: 'Maths', rotate: -2, offset: 20, bg: '#FFF8E1' },
-              { topic: 'Summary Writing', cls: 'Class 5', subj: 'English', rotate: 2, offset: 40, bg: '#E3F2FD' },
-              { topic: '\u0936\u092C\u094D\u0926 \u0930\u091A\u0928\u093E', cls: 'Class 3', subj: 'Hindi', rotate: 6, offset: 60, bg: '#FFF3E0' },
-            ].map((card, i) => (
-              <div
-                key={i}
-                style={{
-                  position: 'absolute',
-                  width: 220,
-                  background: '#fff',
-                  border: '1px solid #E5E0D8',
-                  borderRadius: 12,
-                  padding: '20px 18px',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                  transform: `rotate(${card.rotate}deg) translateY(${card.offset}px)`,
-                  zIndex: 4 - i,
-                  transition: 'transform 0.3s ease',
-                }}
-              >
-                <div style={{ width: 40, height: 6, borderRadius: 3, background: card.bg, marginBottom: 12 }} />
-                <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 15, fontWeight: 400, color: '#1E293B', margin: '0 0 6px', lineHeight: 1.3 }}>{card.topic}</p>
-                <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>{card.cls} &middot; {card.subj}</p>
-                <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <div key={n} style={{ flex: 1, height: 3, borderRadius: 2, background: '#E5E0D8' }} />
+          {/* Right -- realistic worksheet mockup */}
+          <div className="relative hidden lg:flex items-center justify-center lp-hero-cards-animate">
+            {/* Main worksheet card */}
+            <div className="w-[380px] bg-white rounded-2xl shadow-2xl shadow-black/30 overflow-hidden border border-white/20">
+              {/* Worksheet header */}
+              <div className="bg-[#1E1B4B] px-6 py-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-[Fraunces,Georgia,serif] text-lg text-white font-normal">Skolar</span>
+                  <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Worksheet</span>
+                </div>
+                <div className="text-white">
+                  <p className="text-[15px] font-semibold leading-tight">Addition &amp; Subtraction</p>
+                  <p className="text-[11px] text-white/60 mt-0.5">Class 2 &middot; Mathematics &middot; 10 Questions</p>
+                </div>
+                <div className="flex gap-1.5 mt-3">
+                  {['Foundation', 'Application', 'Stretch'].map((tier, i) => (
+                    <span key={tier} className={`text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                      i === 0 ? 'bg-emerald-400/20 text-emerald-200' :
+                      i === 1 ? 'bg-amber-400/20 text-amber-200' :
+                      'bg-red-400/20 text-red-200'
+                    }`}>{tier}</span>
                   ))}
                 </div>
               </div>
-            ))}
+
+              {/* Questions preview */}
+              <div className="px-6 py-5 space-y-4">
+                {/* Q1 — Foundation */}
+                <div className="flex gap-3">
+                  <span className="text-[11px] font-bold text-slate-300 mt-0.5 shrink-0 w-4">1.</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">Foundation</span>
+                    </div>
+                    <p className="text-[13px] text-slate-700 leading-snug">What is 34 + 25?</p>
+                    <div className="mt-1.5 h-[1px] border-b border-dashed border-slate-200 w-24" />
+                  </div>
+                </div>
+
+                {/* Q2 — Application */}
+                <div className="flex gap-3">
+                  <span className="text-[11px] font-bold text-slate-300 mt-0.5 shrink-0 w-4">2.</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Application</span>
+                    </div>
+                    <p className="text-[13px] text-slate-700 leading-snug">Priya has &#x20B9;45. She buys a notebook for &#x20B9;28. How much money does she have left?</p>
+                    <div className="mt-1.5 h-[1px] border-b border-dashed border-slate-200 w-24" />
+                  </div>
+                </div>
+
+                {/* Q3 — Stretch */}
+                <div className="flex gap-3">
+                  <span className="text-[11px] font-bold text-slate-300 mt-0.5 shrink-0 w-4">3.</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-red-600 bg-red-50 px-1.5 py-0.5 rounded">Stretch</span>
+                      <span className="text-[8px] text-slate-400 italic">Hint available</span>
+                    </div>
+                    <p className="text-[13px] text-slate-700 leading-snug">Rahul had 72 stickers. He gave some to Ananya and now has 38. How many did he give?</p>
+                    <div className="mt-1.5 h-[1px] border-b border-dashed border-slate-200 w-24" />
+                  </div>
+                </div>
+
+                {/* Fade-out hint for more questions */}
+                <div className="relative">
+                  <div className="flex gap-3 opacity-40">
+                    <span className="text-[11px] font-bold text-slate-300 mt-0.5 shrink-0 w-4">4.</span>
+                    <div className="flex-1">
+                      <p className="text-[13px] text-slate-700 leading-snug">Find the missing number: 56 &minus; ___ = 29</p>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent" />
+                </div>
+              </div>
+
+              {/* Footer bar */}
+              <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <FileDown className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-[10px] font-semibold text-slate-400">PDF Ready</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-[10px] font-semibold text-slate-400">Answer Key</span>
+                  </div>
+                </div>
+                <span className="text-[10px] text-slate-300">+ 7 more questions</span>
+              </div>
+            </div>
+
+            {/* Floating badge — top right */}
+            <div className="absolute -top-2 -right-4 bg-white rounded-xl shadow-lg shadow-black/10 px-4 py-3 border border-slate-100 lp-orb-float-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-900">AI Generated</p>
+                  <p className="text-[9px] text-slate-400">Unique every time</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating badge — bottom left */}
+            <div className="absolute -bottom-3 -left-6 bg-white rounded-xl shadow-lg shadow-black/10 px-4 py-3 border border-slate-100 lp-orb-float-2">
+              <div className="flex items-center gap-3">
+                <div className="flex -space-x-1.5">
+                  <div className="w-6 h-6 rounded-full bg-indigo-500 border-2 border-white flex items-center justify-center text-[9px] font-bold text-white">P</div>
+                  <div className="w-6 h-6 rounded-full bg-orange-500 border-2 border-white flex items-center justify-center text-[9px] font-bold text-white">R</div>
+                  <div className="w-6 h-6 rounded-full bg-violet-500 border-2 border-white flex items-center justify-center text-[9px] font-bold text-white">A</div>
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-900">2,400+ parents</p>
+                  <p className="text-[9px] text-slate-400">trust Skolar daily</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
       </section>
 
-      {/* ── 3. STATS BAR ── */}
-      <section style={{ backgroundColor: '#1B4332', padding: '24px 24px' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap' }}>
+      {/* -- 3. STATS RIBBON -- */}
+      <section
+        ref={addSectionRef(0)}
+        className="section-fade-in bg-white py-16 px-6 border-t border-slate-200/50"
+        aria-label="Key statistics"
+      >
+        <div className="max-w-[1000px] mx-auto flex justify-center gap-10 md:gap-16 flex-wrap">
           {[
             { n: '198', l: 'Topics' },
             { n: '9', l: 'Subjects' },
             { n: '5', l: 'Classes' },
             { n: '6', l: 'Question Types' },
-            { n: '220', l: 'Images' },
+            { n: '220+', l: 'Images' },
           ].map(s => (
-            <div key={s.l} style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, fontWeight: 400, color: '#fff', lineHeight: 1 }}>{s.n}</div>
-              <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.6)', fontWeight: 600, marginTop: 4 }}>{s.l}</div>
+            <div key={s.l} className="text-center">
+              <div className="lp-stats-number">{s.n}</div>
+              <div className="text-[11px] uppercase tracking-[0.08em] text-slate-500 font-semibold mt-1.5">{s.l}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── 4. HOW IT WORKS ── */}
-      <section id="how" style={{ backgroundColor: '#FAF7F2', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#D97706', marginBottom: 10 }}>How it works</p>
-          <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 400, color: '#1E293B', margin: '0 0 48px' }}>
+      {/* -- 4. HOW IT WORKS -- */}
+      <section
+        id="how"
+        ref={addSectionRef(1)}
+        className="section-fade-in bg-stone-50 py-20 px-6"
+        aria-label="How it works"
+      >
+        <div className="max-w-[900px] mx-auto text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">How it works</p>
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-12 tracking-tight">
             Three steps. Thirty seconds.
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32 }} className="sk-3col">
-            {[
-              { step: '01', title: 'Pick a topic', desc: 'Choose from 198 CBSE-aligned topics across 9 subjects for Classes 1\u20135.', icon: '\u{1F4DA}' },
-              { step: '02', title: 'AI generates 10 questions', desc: 'Three difficulty tiers \u2014 Foundation (\u2605), Application (\u2605\u2605), Stretch (\u2605\u2605\u2605) \u2014 with Indian context.', icon: '\u2728' },
-              { step: '03', title: 'Download the PDF', desc: 'Print-ready worksheet with answer key. No formatting, no fuss.', icon: '\u{1F4C4}' },
-            ].map(item => (
-              <div key={item.step} style={{ background: '#fff', border: '1px solid #E5E0D8', borderRadius: 14, padding: '32px 24px', textAlign: 'left' }}>
-                <div style={{ fontSize: 32, marginBottom: 16 }}>{item.icon}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#D97706', marginBottom: 6 }}>STEP {item.step}</div>
-                <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 20, fontWeight: 400, color: '#1E293B', margin: '0 0 8px' }}>{item.title}</h3>
-                <p style={{ fontSize: 14, lineHeight: 1.7, color: '#64748B', margin: 0 }}>{item.desc}</p>
-              </div>
-            ))}
+
+          {/* Dotted connector line -- desktop only */}
+          <div className="relative">
+            <div className="hidden md:block absolute top-14 left-[16.67%] right-[16.67%] border-t-2 border-dashed border-slate-200 z-0" />
+
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { step: 1, title: 'Pick a topic', desc: 'Choose from 198 CBSE-aligned topics across 9 subjects for Classes 1\u20135.', Icon: BookOpen },
+                { step: 2, title: 'AI generates questions', desc: 'Three difficulty tiers \u2014 Foundation, Application, and Stretch \u2014 with Indian context.', Icon: Sparkles },
+                { step: 3, title: 'Download the PDF', desc: 'Print-ready worksheet with answer key. No formatting, no fuss.', Icon: FileDown },
+              ].map(item => (
+                <div
+                  key={item.step}
+                  className="stagger-child bg-white border border-slate-200 rounded-2xl p-8 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-default"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#1E1B4B] text-white flex items-center justify-center text-sm font-bold mb-5">
+                    {item.step}
+                  </div>
+                  <item.Icon className="w-6 h-6 text-[#3730A3] mb-3" />
+                  <h3 className="font-[Fraunces,Georgia,serif] text-xl font-normal text-slate-900 mb-2">{item.title}</h3>
+                  <p className="text-sm leading-relaxed text-slate-500">{item.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── 5. WHAT MAKES SKOLAR DIFFERENT ── */}
-      <section style={{ backgroundColor: '#fff', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#D97706', marginBottom: 10 }}>Why Skolar</p>
-          <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 400, color: '#1E293B', margin: '0 0 48px' }}>
+      {/* -- 5. WHAT MAKES US DIFFERENT -- */}
+      <section
+        ref={addSectionRef(2)}
+        className="section-fade-in bg-white py-20 px-6"
+        aria-label="Why Skolar"
+      >
+        <div className="max-w-[900px] mx-auto text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Why Skolar</p>
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-12 tracking-tight">
             What makes Skolar different
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }} className="sk-2col">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { title: 'Three-Tier Difficulty', desc: 'Every worksheet has Foundation, Application, and Stretch questions. Builds confidence first, then pushes boundaries.', icon: '\u{1F3AF}' },
-              { title: 'Indian Context', desc: 'Priya at the mela. Rahul\u2019s cricket runs. Diwali lamps. Word problems your child can picture immediately.', icon: '\u{1F1EE}\u{1F1F3}' },
-              { title: 'Hints That Teach', desc: 'Stretch questions include collapsible hints. Children attempt first, then get scaffolding \u2014 not answers.', icon: '\u{1F4A1}' },
-              { title: 'Complete Answer Key', desc: 'Every worksheet comes with a separate answer key page. Verify work instantly. No guessing.', icon: '\u2705' },
+              { title: 'Three-Tier Difficulty', desc: 'Every worksheet has Foundation, Application, and Stretch questions. Builds confidence first, then pushes boundaries.', Icon: Target },
+              { title: 'Indian Context', desc: 'Priya at the mela. Rahul\u2019s cricket runs. Diwali lamps. Word problems your child can picture immediately.', Icon: Globe },
+              { title: 'Hints That Teach', desc: 'Stretch questions include collapsible hints. Children attempt first, then get scaffolding \u2014 not answers.', Icon: Lightbulb },
+              { title: 'Complete Answer Key', desc: 'Every worksheet comes with a separate answer key page. Verify work instantly. No guessing.', Icon: CheckCircle },
             ].map(card => (
-              <div key={card.title} style={{ background: '#FAF7F2', border: '1px solid #E5E0D8', borderRadius: 14, padding: '28px 24px', textAlign: 'left' }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>{card.icon}</div>
-                <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 18, fontWeight: 400, color: '#1E293B', margin: '0 0 8px' }}>{card.title}</h3>
-                <p style={{ fontSize: 14, lineHeight: 1.7, color: '#64748B', margin: 0 }}>{card.desc}</p>
+              <div
+                key={card.title}
+                className="stagger-child bg-stone-50 border border-slate-200 rounded-2xl p-7 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-default"
+              >
+                <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                  <card.Icon className="w-5 h-5 text-[#3730A3]" />
+                </div>
+                <h3 className="font-[Fraunces,Georgia,serif] text-lg font-normal text-slate-900 mb-2">{card.title}</h3>
+                <p className="text-sm leading-relaxed text-slate-500">{card.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 6. SUBJECT COVERAGE ── */}
-      <section id="subjects" style={{ backgroundColor: '#FAF7F2', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 36 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#D97706', marginBottom: 10 }}>Subject Coverage</p>
-            <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 400, color: '#1E293B', margin: 0 }}>
+      {/* -- 6. SUBJECT BROWSER -- */}
+      <section
+        id="subjects"
+        ref={addSectionRef(3)}
+        className="section-fade-in bg-stone-50 py-20 px-6"
+        aria-label="Subject coverage"
+      >
+        <div className="max-w-[1000px] mx-auto">
+          <div className="text-center mb-9">
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Subject Coverage</p>
+            <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 tracking-tight">
               Nine subjects. 198 topics. All CBSE.
             </h2>
           </div>
 
           {/* Subject tabs */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 28 }}>
-            {SUBJECTS.map((s, i) => (
-              <button
-                key={s.name}
-                onClick={() => setActiveSubject(i)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 7,
-                  background: activeSubject === i ? '#1B4332' : '#fff',
-                  color: activeSubject === i ? '#fff' : '#64748B',
-                  border: `1px solid ${activeSubject === i ? '#1B4332' : '#E5E0D8'}`,
-                  borderRadius: 100,
-                  padding: '8px 18px',
-                  fontSize: 13.5,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}
-              >
-                <span style={{ fontSize: 16 }}>{s.icon}</span>
-                {s.name}
-              </button>
-            ))}
+          <div className="flex gap-2 flex-wrap justify-center mb-7">
+            {SUBJECTS.map((s, i) => {
+              const IconComp = s.icon
+              return (
+                <button
+                  key={s.name}
+                  onClick={() => setActiveSubject(i)}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold cursor-pointer transition-all duration-200 border font-[Inter,system-ui,sans-serif] ${
+                    activeSubject === i
+                      ? 'bg-[#1E1B4B] text-white border-[#1E1B4B]'
+                      : 'bg-white text-slate-500 border-slate-200 hover:text-slate-700 hover:border-slate-300'
+                  }`}
+                >
+                  <IconComp className="w-4 h-4" />
+                  {s.name}
+                </button>
+              )
+            })}
           </div>
 
           {/* Topic pills */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', minHeight: 60 }}>
+          <div className="flex flex-wrap gap-2 justify-center min-h-[60px]">
             {SUBJECTS[activeSubject].topics.map(topic => (
               <span
                 key={topic}
-                style={{
-                  background: '#fff',
-                  border: '1px solid #E5E0D8',
-                  borderRadius: 100,
-                  padding: '6px 16px',
-                  fontSize: 13,
-                  color: '#1E293B',
-                  cursor: 'default',
-                }}
+                className="bg-white border border-slate-200 rounded-full py-1.5 px-4 text-sm text-slate-900"
               >
                 {topic}
               </span>
             ))}
           </div>
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#94A3B8', marginTop: 16 }}>
+          <p className="text-center text-xs text-slate-400 mt-4">
             Topics shown for Classes 1&ndash;5 &middot; {SUBJECTS[activeSubject].name}
           </p>
         </div>
       </section>
 
-      {/* ── 7. SAMPLE WORKSHEETS ── */}
-      <section style={{ backgroundColor: '#fff', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#D97706', marginBottom: 10 }}>Sample Questions</p>
-            <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 400, color: '#1E293B', margin: 0 }}>
+      {/* -- 7. SAMPLE WORKSHEETS -- */}
+      <section
+        ref={addSectionRef(4)}
+        className="section-fade-in bg-white py-20 px-6"
+        aria-label="Sample questions"
+      >
+        <div className="max-w-[1000px] mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Sample Questions</p>
+            <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 tracking-tight">
               See what your child gets
             </h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }} className="sk-2col">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {[
               {
                 subj: 'EVS',
@@ -317,14 +573,14 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 cls: 'Class 4',
                 q: 'Zara had \u20B950,000. She spent \u20B918,500 on a bicycle. How much money does she have left?',
                 options: 'Answer: \u20B9 ________',
-                accent: '#D97706',
+                accent: '#F97316',
               },
               {
                 subj: 'English',
                 cls: 'Class 5',
                 q: 'Ritika read a story about a little bird that learned to fly. What is the main idea of the story?',
                 options: '(A) Birds are colourful \u00a0 (B) Never give up \u00a0 (C) Fly south in winter \u00a0 (D) Eat seeds',
-                accent: '#2563EB',
+                accent: '#3730A3',
               },
               {
                 subj: 'Hindi',
@@ -334,63 +590,67 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 accent: '#DC2626',
               },
             ].map(sample => (
-              <div key={sample.subj} style={{ background: '#FAF7F2', border: '1px solid #E5E0D8', borderRadius: 14, padding: '24px', borderLeft: `4px solid ${sample.accent}` }}>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: sample.accent, background: `${sample.accent}15`, padding: '3px 10px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{sample.subj}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', padding: '3px 0' }}>{sample.cls}</span>
+              <article
+                key={sample.subj}
+                className="stagger-child bg-white border border-slate-200 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                style={{ borderLeft: `4px solid ${sample.accent}` }}
+              >
+                <div className="flex gap-2 mb-3.5">
+                  <span
+                    className="text-[11px] font-bold uppercase tracking-[0.05em] py-0.5 px-2.5 rounded-full"
+                    style={{ color: sample.accent, background: `${sample.accent}15` }}
+                  >
+                    {sample.subj}
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-400 py-0.5">{sample.cls}</span>
                 </div>
-                <p style={{ fontSize: 14, lineHeight: 1.7, color: '#1E293B', margin: '0 0 8px' }}>{sample.q}</p>
-                <p style={{ fontSize: 13, color: '#64748B', margin: '0 0 16px', fontFamily: "'Plus Jakarta Sans', monospace" }}>{sample.options}</p>
+                <p className="text-sm leading-relaxed text-slate-900 mb-2">{sample.q}</p>
+                <p className="text-[13px] text-slate-500 mb-4 font-mono">{sample.options}</p>
                 <button
                   onClick={onGetStarted}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#1B4332',
-                    padding: 0,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  }}
+                  className="bg-transparent border-none cursor-pointer text-[13px] font-semibold text-[#3730A3] p-0 hover:text-[#1E1B4B] transition-colors font-[Inter,system-ui,sans-serif]"
                 >
                   Try this topic free &rarr;
                 </button>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 8. COMPARISON TABLE ── */}
-      <section style={{ backgroundColor: '#FAF7F2', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#D97706', marginBottom: 10 }}>Comparison</p>
-          <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 400, color: '#1E293B', margin: '0 0 36px' }}>
+      {/* -- 8. COMPARISON TABLE -- */}
+      <section
+        ref={addSectionRef(5)}
+        className="section-fade-in bg-stone-50 py-20 px-6"
+        aria-label="Feature comparison"
+      >
+        <div className="max-w-[700px] mx-auto text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Comparison</p>
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-9 tracking-tight">
             Skolar vs Free Tools
           </h2>
-          <div style={{ overflow: 'auto', borderRadius: 14, border: '1px solid #E5E0D8' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, background: '#fff' }}>
+          <div className="overflow-auto rounded-xl border border-slate-200 shadow-sm">
+            <table className="w-full border-collapse text-sm bg-white">
               <thead>
                 <tr>
-                  <th style={{ padding: '14px 18px', textAlign: 'left', fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94A3B8', borderBottom: '2px solid #E5E0D8' }}>Feature</th>
-                  <th style={{ padding: '14px 18px', textAlign: 'center', fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#1B4332', borderBottom: '2px solid #E5E0D8' }}>Skolar</th>
-                  <th style={{ padding: '14px 18px', textAlign: 'center', fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94A3B8', borderBottom: '2px solid #E5E0D8' }}>Free Tools</th>
+                  <th className="p-3.5 px-5 text-left text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Feature</th>
+                  <th className="p-3.5 px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-[#1E1B4B] border-b-2 border-slate-200">Skolar</th>
+                  <th className="p-3.5 px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Free Tools</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON_FEATURES.map((r, i) => (
                   <tr key={i}>
-                    <td style={{ padding: '13px 18px', borderBottom: '1px solid #F0EBE3', color: '#1E293B' }}>{r.feature}</td>
-                    <td style={{ padding: '13px 18px', borderBottom: '1px solid #F0EBE3', textAlign: 'center', background: 'rgba(27,67,50,0.04)' }}>
-                      <span style={{ color: '#1B4332', fontWeight: 700, fontSize: 16 }}>{'\u2713'}</span>
+                    <td className="py-3 px-5 border-b border-slate-100 text-slate-900 text-left">{r.feature}</td>
+                    <td className="py-3 px-5 border-b border-slate-100 text-center bg-indigo-50/40">
+                      <Check className="w-5 h-5 text-emerald-600 inline-block" />
                     </td>
-                    <td style={{ padding: '13px 18px', borderBottom: '1px solid #F0EBE3', textAlign: 'center' }}>
+                    <td className="py-3 px-5 border-b border-slate-100 text-center">
                       {r.free === true
-                        ? <span style={{ color: '#1B4332', fontWeight: 700, fontSize: 16 }}>{'\u2713'}</span>
+                        ? <Check className="w-5 h-5 text-emerald-600 inline-block" />
                         : r.free === 'partial'
-                        ? <span style={{ color: '#D97706', fontWeight: 700, fontSize: 16 }}>~</span>
-                        : <span style={{ color: '#EF4444', fontSize: 16 }}>{'\u2717'}</span>
+                        ? <span className="text-orange-500 font-bold text-base">~</span>
+                        : <X className="w-5 h-5 text-red-400 inline-block" />
                       }
                     </td>
                   </tr>
@@ -401,70 +661,90 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </div>
       </section>
 
-      {/* ── 9. PRICING ── */}
-      <section id="pricing" style={{ backgroundColor: '#fff', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 960, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#D97706', marginBottom: 10 }}>Pricing</p>
-          <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 400, color: '#1E293B', margin: '0 0 48px' }}>
+      {/* -- 9. PRICING -- */}
+      <section
+        id="pricing"
+        ref={addSectionRef(6)}
+        className="section-fade-in bg-white py-20 px-6"
+        aria-label="Pricing"
+      >
+        <div className="max-w-[960px] mx-auto text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Pricing</p>
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-12 tracking-tight">
             Start free. Upgrade when ready.
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, alignItems: 'start' }} className="sk-3col">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
+
             {/* Free */}
-            <div style={{ background: '#FAF7F2', border: '1px solid #E5E0D8', borderRadius: 16, padding: '32px 24px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94A3B8', marginBottom: 8 }}>Free</div>
-              <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 40, fontWeight: 400, color: '#1E293B', lineHeight: 1, marginBottom: 4 }}>
-                {'\u20B9'}0<span style={{ fontSize: 15, fontWeight: 400, color: '#94A3B8' }}> /month</span>
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              <div className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400 mb-2">Free</div>
+              <div className="font-[Fraunces,Georgia,serif] text-[40px] font-normal text-slate-900 leading-none mb-1">
+                {'\u20B9'}0<span className="text-[15px] font-normal text-slate-400"> /month</span>
               </div>
-              <p style={{ fontSize: 13, color: '#94A3B8', marginBottom: 24, marginTop: 4 }}>5 worksheets per month</p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p className="text-[13px] text-slate-400 mb-6 mt-1">5 worksheets per month</p>
+              <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
                 {['All 9 subjects', 'PDF download', '10 questions per sheet', 'Answer key included'].map(f => (
-                  <li key={f} style={{ fontSize: 13.5, color: '#1E293B', display: 'flex', gap: 8 }}>
-                    <span style={{ color: '#1B4332', fontWeight: 700 }}>{'\u2713'}</span> {f}
+                  <li key={f} className="text-[13.5px] text-slate-900 flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" /> {f}
                   </li>
                 ))}
               </ul>
-              <button onClick={onGetStarted} style={{ width: '100%', background: 'transparent', border: '1.5px solid #1B4332', color: '#1B4332', cursor: 'pointer', fontSize: 14, fontWeight: 600, padding: '12px 20px', borderRadius: 10, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button
+                onClick={onGetStarted}
+                className="w-full bg-transparent border-2 border-orange-500 text-orange-500 cursor-pointer text-sm font-semibold py-3 px-5 rounded-xl font-[Inter,system-ui,sans-serif] hover:bg-orange-50 transition-colors"
+              >
                 Get started free
               </button>
             </div>
 
             {/* Scholar */}
-            <div style={{ background: '#1B4332', border: '1px solid #1B4332', borderRadius: 16, padding: '32px 24px', textAlign: 'left', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: -13, right: 20, background: '#D97706', color: '#fff', fontSize: 10.5, fontWeight: 700, padding: '4px 12px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Most Popular</div>
-              <div style={{ fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>Scholar</div>
-              <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 40, fontWeight: 400, color: '#fff', lineHeight: 1, marginBottom: 4 }}>
-                {'\u20B9'}199<span style={{ fontSize: 15, fontWeight: 400, color: 'rgba(255,255,255,0.6)' }}> /month</span>
+            <div className="bg-[#1E1B4B] border border-[#1E1B4B] rounded-2xl p-8 text-left relative transition-all duration-300 hover:shadow-xl hover:shadow-indigo-950/30 hover:-translate-y-1">
+              <div className="absolute -top-3 right-5 bg-orange-500 text-white text-[10.5px] font-bold py-1 px-3 rounded-full uppercase tracking-[0.06em]">
+                Most Popular
               </div>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 24, marginTop: 4 }}>Unlimited worksheets</p>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', margin: '-18px 0 24px' }}>AED 29/mo</p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-white/60 mb-2">Scholar</div>
+              <div className="font-[Fraunces,Georgia,serif] text-[40px] font-normal text-white leading-none mb-1">
+                {'\u20B9'}199<span className="text-[15px] font-normal text-white/60"> /month</span>
+              </div>
+              <p className="text-[13px] text-white/60 mb-1 mt-1">Unlimited worksheets</p>
+              <p className="text-[11px] text-white/40 mb-6">AED 29/mo</p>
+              <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
                 {['Unlimited worksheets', 'Mastery tracking', 'Bulk generation', 'Parent insights', 'Priority support'].map(f => (
-                  <li key={f} style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.88)', display: 'flex', gap: 8 }}>
-                    <span style={{ color: '#D97706', fontWeight: 700 }}>{'\u2713'}</span> {f}
+                  <li key={f} className="text-[13.5px] text-white/90 flex items-center gap-2">
+                    <Check className="w-4 h-4 text-orange-400 flex-shrink-0" /> {f}
                   </li>
                 ))}
               </ul>
-              <button onClick={onGetStarted} style={{ width: '100%', background: '#fff', border: 'none', color: '#1B4332', cursor: 'pointer', fontSize: 14, fontWeight: 600, padding: '12px 20px', borderRadius: 10, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button
+                onClick={onGetStarted}
+                className="w-full bg-white border-none text-[#1E1B4B] cursor-pointer text-sm font-semibold py-3 px-5 rounded-xl font-[Inter,system-ui,sans-serif] hover:bg-white/90 transition-colors"
+              >
                 Start Scholar plan
               </button>
             </div>
 
             {/* Annual */}
-            <div style={{ background: '#FAF7F2', border: '1px solid #E5E0D8', borderRadius: 16, padding: '32px 24px', textAlign: 'left' }}>
-              <div style={{ fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94A3B8', marginBottom: 8 }}>Annual</div>
-              <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 40, fontWeight: 400, color: '#1E293B', lineHeight: 1, marginBottom: 4 }}>
-                {'\u20B9'}1,499<span style={{ fontSize: 15, fontWeight: 400, color: '#94A3B8' }}> /year</span>
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-left relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              <div className="absolute -top-3 right-5 bg-emerald-500 text-white text-[10.5px] font-bold py-1 px-3 rounded-full uppercase tracking-[0.06em]">
+                Save 37%
               </div>
-              <p style={{ fontSize: 13, color: '#16A34A', fontWeight: 600, marginBottom: 24, marginTop: 4 }}>Save 37%</p>
-              <p style={{ fontSize: 11, color: '#94A3B8', margin: '-18px 0 24px' }}>AED 229/yr</p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400 mb-2">Annual</div>
+              <div className="font-[Fraunces,Georgia,serif] text-[40px] font-normal text-slate-900 leading-none mb-1">
+                {'\u20B9'}1,499<span className="text-[15px] font-normal text-slate-400"> /year</span>
+              </div>
+              <p className="text-[13px] text-emerald-600 font-semibold mb-1 mt-1">Save 37%</p>
+              <p className="text-[11px] text-slate-400 mb-6">AED 229/yr</p>
+              <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
                 {['Everything in Scholar', '12 months access', 'Best value for families', 'Lock in price forever'].map(f => (
-                  <li key={f} style={{ fontSize: 13.5, color: '#1E293B', display: 'flex', gap: 8 }}>
-                    <span style={{ color: '#1B4332', fontWeight: 700 }}>{'\u2713'}</span> {f}
+                  <li key={f} className="text-[13.5px] text-slate-900 flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" /> {f}
                   </li>
                 ))}
               </ul>
-              <button onClick={onGetStarted} style={{ width: '100%', background: '#D97706', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600, padding: '12px 20px', borderRadius: 10, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <button
+                onClick={onGetStarted}
+                className="w-full bg-orange-500 border-none text-white cursor-pointer text-sm font-semibold py-3 px-5 rounded-xl font-[Inter,system-ui,sans-serif] hover:bg-orange-600 transition-colors"
+              >
                 Start annual plan
               </button>
             </div>
@@ -472,14 +752,22 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </div>
       </section>
 
-      {/* ── 10. FOR PARENTS / FOR TEACHERS ── */}
-      <section style={{ backgroundColor: '#FAF7F2', padding: '80px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }} className="sk-2col">
+      {/* -- 10. FOR PARENTS / FOR TEACHERS -- */}
+      <section
+        ref={addSectionRef(7)}
+        className="section-fade-in bg-stone-50 py-20 px-6"
+        aria-label="For parents and teachers"
+      >
+        <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+
           {/* Parents */}
-          <div style={{ background: '#fff', border: '1px solid #E5E0D8', borderRadius: 16, padding: '36px 28px', borderTop: '4px solid #1B4332' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94A3B8', marginBottom: 14 }}>For Parents</div>
-            <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 22, fontWeight: 400, color: '#1E293B', margin: '0 0 20px', lineHeight: 1.3 }}>Know exactly where your child stands.</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <article className="stagger-child bg-white border border-slate-200 rounded-2xl p-9 border-t-4 border-t-[#3730A3]">
+            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+              <Users className="w-5 h-5 text-[#3730A3]" />
+            </div>
+            <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 mb-3">For Parents</div>
+            <h3 className="font-[Fraunces,Georgia,serif] text-[22px] font-normal text-slate-900 mb-5 leading-snug">Know exactly where your child stands.</h3>
+            <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
               {[
                 'Generate a focused worksheet in 30 seconds',
                 'Choose the right topic for tonight\u2019s practice',
@@ -487,22 +775,28 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 'Understand skill gaps \u2014 no tutoring degree needed',
                 'Print-ready A4 PDF, no formatting hassle',
               ].map(item => (
-                <li key={item} style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5, paddingLeft: 20, position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 0, color: '#1B4332', fontWeight: 700 }}>{'\u2713'}</span>
+                <li key={item} className="text-sm text-slate-500 leading-relaxed flex items-start gap-2">
+                  <Check className="w-4 h-4 text-[#3730A3] flex-shrink-0 mt-0.5" />
                   {item}
                 </li>
               ))}
             </ul>
-            <button onClick={onGetStarted} style={{ background: '#1B4332', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 600, padding: '10px 24px', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <button
+              onClick={onGetStarted}
+              className="bg-[#1E1B4B] border-none text-white cursor-pointer text-sm font-semibold py-2.5 px-6 rounded-lg font-[Inter,system-ui,sans-serif] hover:bg-[#312E81] transition-colors"
+            >
               Start as Parent &rarr;
             </button>
-          </div>
+          </article>
 
           {/* Teachers */}
-          <div style={{ background: '#fff', border: '1px solid #E5E0D8', borderRadius: 16, padding: '36px 28px', borderTop: '4px solid #D97706' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94A3B8', marginBottom: 14 }}>For Teachers</div>
-            <h3 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 22, fontWeight: 400, color: '#1E293B', margin: '0 0 20px', lineHeight: 1.3 }}>Differentiated practice, at scale.</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <article className="stagger-child bg-white border border-slate-200 rounded-2xl p-9 border-t-4 border-t-orange-500">
+            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mb-4">
+              <GraduationCap className="w-5 h-5 text-orange-600" />
+            </div>
+            <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-400 mb-3">For Teachers</div>
+            <h3 className="font-[Fraunces,Georgia,serif] text-[22px] font-normal text-slate-900 mb-5 leading-snug">Differentiated practice, at scale.</h3>
+            <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
               {[
                 'Generate topic-wise worksheets for the whole class',
                 'Bulk generate across 5 topics in one click',
@@ -510,62 +804,135 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 'Track class-wide mastery and skill gaps',
                 'CBSE chapter progression, already mapped',
               ].map(item => (
-                <li key={item} style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5, paddingLeft: 20, position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 0, color: '#1B4332', fontWeight: 700 }}>{'\u2713'}</span>
+                <li key={item} className="text-sm text-slate-500 leading-relaxed flex items-start gap-2">
+                  <Check className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
                   {item}
                 </li>
               ))}
             </ul>
-            <button onClick={onGetStarted} style={{ background: 'transparent', border: '1.5px solid #1B4332', color: '#1B4332', cursor: 'pointer', fontSize: 14, fontWeight: 600, padding: '10px 24px', borderRadius: 8, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <button
+              onClick={onGetStarted}
+              className="bg-transparent border-2 border-[#1E1B4B] text-[#1E1B4B] cursor-pointer text-sm font-semibold py-2.5 px-6 rounded-lg font-[Inter,system-ui,sans-serif] hover:bg-slate-50 transition-colors"
+            >
               Start as Teacher &rarr;
             </button>
+          </article>
+        </div>
+      </section>
+
+      {/* -- 11. FAQ SECTION -- */}
+      <section
+        ref={addSectionRef(8)}
+        className="section-fade-in bg-white py-20 px-6"
+        aria-label="Frequently asked questions"
+        itemScope
+        itemType="https://schema.org/FAQPage"
+      >
+        <div className="max-w-[720px] mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">FAQ</p>
+            <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 tracking-tight">
+              Frequently asked questions
+            </h2>
+          </div>
+          <div className="flex flex-col gap-3">
+            {FAQ_ITEMS.map((item, i) => (
+              <div
+                key={i}
+                itemScope
+                itemProp="mainEntity"
+                itemType="https://schema.org/Question"
+                className="border border-slate-200 rounded-xl overflow-hidden bg-white"
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between p-5 text-left bg-transparent border-none cursor-pointer gap-4"
+                  aria-expanded={openFaq === i}
+                >
+                  <span itemProp="name" className="text-sm font-semibold text-slate-900 font-[Inter,system-ui,sans-serif]">{item.q}</span>
+                  <ChevronDown className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`} />
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${openFaq === i ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'}`}
+                  itemScope
+                  itemProp="acceptedAnswer"
+                  itemType="https://schema.org/Answer"
+                >
+                  <p itemProp="text" className="px-5 pb-5 pt-0 text-sm leading-relaxed text-slate-500 m-0">
+                    {item.a}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── 11. CTA ── */}
-      <section style={{ backgroundColor: '#1B4332', padding: '80px 24px', textAlign: 'center' }}>
-        <div style={{ maxWidth: 560, margin: '0 auto' }}>
-          <h2 style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(28px, 4.5vw, 44px)', fontWeight: 400, color: '#fff', margin: '0 0 16px', lineHeight: 1.15 }}>
+      {/* -- 12. CTA + FOOTER -- */}
+      <section
+        ref={addSectionRef(9)}
+        className="section-fade-in lp-cta-section relative py-20 px-6 text-center overflow-hidden"
+        aria-label="Call to action"
+      >
+        <div className="lp-dot-grid" />
+        <div className="relative z-10 max-w-[560px] mx-auto">
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4.5vw,44px)] font-normal text-white mb-4 leading-tight tracking-tight">
             Generate your first worksheet in 30 seconds
           </h2>
-          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.65)', margin: '0 0 32px', lineHeight: 1.7 }}>
+          <p className="text-base text-white/65 mb-8 leading-relaxed">
             No setup. No credit card. Pick a topic and go.
           </p>
-          <button onClick={onGetStarted} style={{ background: '#D97706', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 16, fontWeight: 600, padding: '16px 40px', borderRadius: 12, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Create free worksheet &rarr;
+          <button
+            onClick={onGetStarted}
+            className="bg-orange-500 hover:bg-orange-600 border-none text-white cursor-pointer text-base font-semibold py-4 px-10 rounded-xl font-[Inter,system-ui,sans-serif] transition-all duration-300 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:-translate-y-0.5 inline-flex items-center gap-2"
+          >
+            Create free worksheet
+            <ArrowRight className="w-5 h-5" />
           </button>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 20 }}>
+          <p className="text-sm text-white/40 mt-5 flex items-center justify-center gap-1.5">
+            <Mail className="w-4 h-4" />
             hello@skolar.in
           </p>
         </div>
       </section>
 
-      {/* ── 12. FOOTER ── */}
-      <footer style={{ backgroundColor: '#0F2419', padding: '24px', textAlign: 'center' }}>
-        <p style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 18, color: 'rgba(255,255,255,0.7)', margin: '0 0 8px' }}>Skolar</p>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
-          skolar.in &middot; &copy; 2025
-        </p>
+      <footer className="bg-[#0F0E2A] py-8 px-6" aria-label="Footer">
+        <div className="max-w-[1000px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <span className="font-[Fraunces,Georgia,serif] text-lg text-white/70">Skolar</span>
+            <div className="hidden md:flex items-center gap-5 text-xs text-white/35">
+              <button onClick={() => scrollTo('how')} className="bg-transparent border-none cursor-pointer text-white/35 hover:text-white/60 transition-colors font-[Inter,system-ui,sans-serif] text-xs">How it works</button>
+              <button onClick={() => scrollTo('subjects')} className="bg-transparent border-none cursor-pointer text-white/35 hover:text-white/60 transition-colors font-[Inter,system-ui,sans-serif] text-xs">Subjects</button>
+              <button onClick={() => scrollTo('pricing')} className="bg-transparent border-none cursor-pointer text-white/35 hover:text-white/60 transition-colors font-[Inter,system-ui,sans-serif] text-xs">Pricing</button>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-xs text-white/35">
+            <span>hello@skolar.in</span>
+            <span>&middot;</span>
+            <span>skolar.in</span>
+            <span>&middot;</span>
+            <span>&copy; 2025</span>
+          </div>
+        </div>
       </footer>
 
-      {/* ── RESPONSIVE STYLES ── */}
+      {/* -- SCROLL-REVEAL ANIMATION CSS -- */}
       <style>{`
-        @media (max-width: 1024px) {
-          .sk-nav-desktop { display: none !important; }
-          .sk-hamburger { display: flex !important; }
-          .sk-hero-grid { grid-template-columns: 1fr !important; }
-          .sk-hero-right { display: none !important; }
+        .section-fade-in {
+          opacity: 0;
+          transform: translateY(24px);
+          transition: opacity 0.7s ease-out, transform 0.7s ease-out;
         }
-        @media (min-width: 1025px) {
-          .sk-hamburger { display: none !important; }
+        .section-fade-in.visible {
+          opacity: 1;
+          transform: translateY(0);
         }
-        @media (max-width: 768px) {
-          .sk-3col { grid-template-columns: 1fr !important; }
-          .sk-2col { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 480px) {
-          .sk-3col { grid-template-columns: 1fr !important; }
+        @media (prefers-reduced-motion: reduce) {
+          .section-fade-in {
+            opacity: 1;
+            transform: none;
+            transition: none;
+          }
         }
       `}</style>
     </div>

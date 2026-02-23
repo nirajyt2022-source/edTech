@@ -511,7 +511,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
               {classesLoading || analyticsLoading ? (
                 <Skeleton className="h-8 w-12 mx-auto mb-1" />
               ) : (
-                <p className="text-2xl font-bold font-jakarta text-foreground leading-tight">{stat.value}</p>
+                <p className="text-2xl font-bold font-inter text-foreground leading-tight">{stat.value}</p>
               )}
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{stat.label}</p>
             </CardContent>
@@ -586,7 +586,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
       {classes.length > 0 && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold font-jakarta text-foreground">Class Analytics</h2>
+            <h2 className="text-2xl font-bold font-inter text-foreground">Class Analytics</h2>
             {classDashboard && (
               <Badge variant="secondary" className="text-xs font-semibold">
                 {classDashboard.total_students} student{classDashboard.total_students !== 1 ? 's' : ''}
@@ -664,7 +664,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
               {classDashboard.total_students > 0 && (
                 <Card className="border-border/50 rounded-2xl">
                   <CardContent className="p-6">
-                    <h3 className="text-base font-bold font-jakarta text-foreground mb-4">
+                    <h3 className="text-base font-bold font-inter text-foreground mb-4">
                       Mastery Heatmap — {selectedClass?.name}
                     </h3>
                     <ClassHeatmap
@@ -678,7 +678,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
               {/* Student cards */}
               {classDashboard.total_students > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-base font-bold font-jakarta text-foreground">Student Summaries</h3>
+                  <h3 className="text-base font-bold font-inter text-foreground">Student Summaries</h3>
                   <StudentCards childSummaries={classDashboard.child_summaries} />
                 </div>
               )}
@@ -692,7 +692,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         <div className="lg:col-span-3 space-y-6">
           <Section>
             <Section.Header className="flex items-center justify-between border-none pb-0 mb-6">
-              <h2 className="text-2xl font-bold font-jakarta text-foreground">Your Classes</h2>
+              <h2 className="text-2xl font-bold font-inter text-foreground">Your Classes</h2>
               <Button variant="ghost" size="sm" onClick={() => onNavigate('classes')} className="text-primary font-bold hover:bg-primary/5 rounded-xl">
                 Manage All
               </Button>
@@ -724,10 +724,10 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                       <CardContent className="p-5">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center shrink-0 border border-primary/10 group-hover:scale-105 transition-transform">
-                            <span className="text-lg font-bold text-primary font-jakarta">{cls.subject[0]}</span>
+                            <span className="text-lg font-bold text-primary font-inter">{cls.subject[0]}</span>
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-bold text-base text-foreground truncate font-jakarta leading-tight group-hover:text-primary transition-colors">{cls.name}</p>
+                            <p className="font-bold text-base text-foreground truncate font-inter leading-tight group-hover:text-primary transition-colors">{cls.name}</p>
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">{cls.grade}</span>
                               <span className="w-1 h-1 rounded-full bg-border" />
@@ -747,7 +747,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         <div className="lg:col-span-2 space-y-6">
           <Section>
             <Section.Header className="flex items-center justify-between border-none pb-0 mb-6">
-              <h2 className="text-2xl font-bold font-jakarta text-foreground">Recent Worksheets</h2>
+              <h2 className="text-2xl font-bold font-inter text-foreground">Recent Worksheets</h2>
               <Button variant="ghost" size="sm" onClick={() => onNavigate('saved')} className="text-primary font-bold hover:bg-primary/5 rounded-xl">
                 Library
               </Button>
@@ -888,7 +888,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-md bg-white dark:bg-card rounded-2xl shadow-2xl overflow-hidden">
             <div className="px-6 py-5 border-b border-stone-100 dark:border-border">
-              <h3 className="font-bold text-lg text-stone-800 dark:text-foreground font-jakarta">
+              <h3 className="font-bold text-lg text-stone-800 dark:text-foreground font-inter">
                 Add Parent Emails
               </h3>
               <p className="text-sm text-stone-500 dark:text-muted-foreground mt-1">

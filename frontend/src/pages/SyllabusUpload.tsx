@@ -301,7 +301,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
               <div className="space-y-8 pt-10 border-t border-border/40 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
-                    <h3 className="text-2xl font-bold font-jakarta text-foreground">Practice Skills</h3>
+                    <h3 className="text-2xl font-bold font-inter text-foreground">Practice Skills</h3>
                     <p className="text-sm text-muted-foreground">CBSE {cbseSyllabus.grade} • {cbseSyllabus.subject}</p>
                   </div>
                   <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-[10px] font-bold uppercase tracking-wider">
@@ -321,7 +321,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                             {chIdx + 1}
                           </div>
                           <div className="space-y-4 flex-1">
-                            <h4 className="font-bold text-lg text-foreground font-jakarta pt-1.5">{chapter.name}</h4>
+                            <h4 className="font-bold text-lg text-foreground font-inter pt-1.5">{chapter.name}</h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-3">
                               {(chapter.topics || []).map((topic, tIdx) => (
                                 <div key={tIdx} className="space-y-1.5">
@@ -393,7 +393,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                       </svg>
                     </div>
                     <div className="space-y-1">
-                      <h4 className="font-bold text-xl text-foreground font-jakarta">Custom Syllabus Upload</h4>
+                      <h4 className="font-bold text-xl text-foreground font-inter">Custom Syllabus Upload</h4>
                       <p className="text-muted-foreground leading-relaxed">Upload your school's specific syllabus for tailored worksheets. Available on the Pro plan.</p>
                     </div>
                   </div>
@@ -431,7 +431,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
-                        <h4 className="text-foreground font-bold text-lg font-jakarta">{file.name}</h4>
+                        <h4 className="text-foreground font-bold text-lg font-inter">{file.name}</h4>
                         <p className="text-xs font-bold text-muted-foreground/50 uppercase tracking-widest mt-1.5">
                           {(file.size / 1024).toFixed(1)} KB • {file.type.split('/')[1]?.toUpperCase() || 'FILE'}
                         </p>
@@ -454,7 +454,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                           </svg>
                         </div>
                         <div>
-                          <p className="text-foreground font-bold text-lg font-jakarta">Select or drop document</p>
+                          <p className="text-foreground font-bold text-lg font-inter">Select or drop document</p>
                           <p className="text-sm text-muted-foreground max-w-xs mx-auto mt-1">AI will automatically identify structure, chapters, and required topics.</p>
                         </div>
                         <label className="inline-block pt-2">
@@ -543,7 +543,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                 <div className="space-y-8 pt-10 border-t border-border/40 animate-in fade-in slide-in-from-bottom-6 duration-700">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                     <div className="space-y-1">
-                      <h3 className="text-3xl font-bold font-jakarta text-foreground">{syllabus.name}</h3>
+                      <h3 className="text-3xl font-bold font-inter text-foreground">{syllabus.name}</h3>
                       <p className="text-sm text-muted-foreground flex items-center gap-2">
                         {syllabus.board && <><span className="font-bold text-foreground/70">{syllabus.board}</span><span className="w-1 h-1 rounded-full bg-border" /></>}
                         {syllabus.grade && <><span className="font-bold text-foreground/70">{syllabus.grade}</span><span className="w-1 h-1 rounded-full bg-border" /></>}
@@ -572,7 +572,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
                               {chIdx + 1}
                             </div>
                             <div className="space-y-4 flex-1">
-                              <h4 className="font-bold text-lg text-foreground font-jakarta pt-1.5">{chapter.name}</h4>
+                              <h4 className="font-bold text-lg text-foreground font-inter pt-1.5">{chapter.name}</h4>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
                                 {(chapter.topics || []).map((topic, tIdx) => (
                                   <div key={tIdx} className="space-y-2">

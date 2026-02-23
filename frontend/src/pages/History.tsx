@@ -277,7 +277,7 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold font-jakarta">Answer Key</h3>
+              <h3 className="text-xl font-bold font-inter">Answer Key</h3>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -420,7 +420,7 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
                   <div className="p-6 md:p-7 flex-1 space-y-3">
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-lg text-foreground font-jakarta">{worksheet.title}</h3>
+                        <h3 className="font-bold text-lg text-foreground font-inter">{worksheet.title}</h3>
                         {worksheet.child_name && (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-md border border-primary/10">
                             {worksheet.child_name}

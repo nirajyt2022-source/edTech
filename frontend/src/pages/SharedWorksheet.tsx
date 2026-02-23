@@ -71,7 +71,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white flex flex-col items-center justify-center gap-6 px-4">
         <div className="relative">
-          <div className="w-14 h-14 border-4 border-emerald-200 border-t-emerald-700 rounded-full animate-spin" />
+          <div className="w-14 h-14 border-4 border-indigo-200 border-t-indigo-950 rounded-full animate-spin" />
         </div>
         <div className="text-center space-y-2">
           <h2 className="text-xl font-bold text-stone-800" style={{ fontFamily: 'Lora, Georgia, serif' }}>
@@ -99,7 +99,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
         </div>
         <a
           href="/"
-          className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-700 text-white rounded-lg text-sm font-medium hover:bg-emerald-800 transition-colors"
+          className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-950 text-white rounded-lg text-sm font-medium hover:bg-indigo-900 transition-colors"
         >
           Generate your own worksheets
         </a>
@@ -113,18 +113,18 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
       <header className="bg-white/80 backdrop-blur-sm border-b border-stone-200/60 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-indigo-950 flex items-center justify-center">
               <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
             <span className="text-lg font-semibold tracking-tight">
-              <span className="text-stone-800">Practice</span><span className="text-emerald-700">Craft</span>
+              <span className="text-indigo-950 font-bold">Skolar</span>
             </span>
           </a>
           <a
             href="/"
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-semibold hover:bg-emerald-800 transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-indigo-950 text-white rounded-lg text-xs font-semibold hover:bg-indigo-900 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -161,7 +161,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
               onClick={() => setShowAnswers(!showAnswers)}
               className={`mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                 showAnswers
-                  ? 'bg-emerald-700 text-white border-emerald-700'
+                  ? 'bg-indigo-950 text-white border-indigo-950'
                   : 'bg-white text-stone-600 border-stone-200 hover:bg-stone-50'
               }`}
             >
@@ -276,13 +276,13 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
         <div className="mt-12 pt-6 border-t border-stone-200/60 print:hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-700 flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg bg-indigo-950 flex items-center justify-center">
                 <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
               <span className="text-sm font-medium text-stone-700">
-                Made with <span className="text-emerald-700 font-semibold">Skolar</span>
+                Made with <span className="text-indigo-950 font-semibold">Skolar</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -297,7 +297,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
               </button>
               <a
                 href="/"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 text-white rounded-lg text-sm font-semibold hover:bg-emerald-800 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-950 text-white rounded-lg text-sm font-semibold hover:bg-indigo-900 transition-colors"
               >
                 Create free &rarr;
               </a>

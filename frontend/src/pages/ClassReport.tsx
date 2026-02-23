@@ -43,7 +43,7 @@ function formatDate(iso: string): string {
 function Logo() {
   return (
     <div className="flex items-center gap-2">
-      <div className="w-7 h-7 rounded-lg bg-emerald-700 flex items-center justify-center shrink-0">
+      <div className="w-7 h-7 rounded-lg bg-indigo-950 flex items-center justify-center shrink-0">
         <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
@@ -58,7 +58,7 @@ function Logo() {
 function LoadingScreen() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white flex flex-col items-center justify-center gap-6 px-4">
-      <div className="w-14 h-14 border-4 border-emerald-200 border-t-emerald-700 rounded-full animate-spin" />
+      <div className="w-14 h-14 border-4 border-indigo-200 border-t-indigo-950 rounded-full animate-spin" />
       <div className="text-center space-y-1.5">
         <h2
           className="text-xl font-bold text-stone-800"
@@ -103,7 +103,7 @@ function ErrorScreen({ message }: { message: string }) {
       </div>
       <a
         href="/"
-        className="mt-2 inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-700 text-white rounded-xl text-sm font-semibold hover:bg-emerald-800 transition-colors"
+        className="mt-2 inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-950 text-white rounded-xl text-sm font-semibold hover:bg-indigo-900 transition-colors"
       >
         Go to Skolar
       </a>
@@ -124,7 +124,7 @@ function ChildReportCard({ child }: { child: ChildReport }) {
     <article className="bg-white rounded-2xl border border-stone-200/70 shadow-sm overflow-hidden">
       {/* ── Child name header ── */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-stone-100 bg-stone-50/60">
-        <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-full bg-indigo-950 flex items-center justify-center shrink-0">
           <span className="text-white font-bold text-base select-none">
             {child.name.charAt(0).toUpperCase()}
           </span>
@@ -148,8 +148,8 @@ function ChildReportCard({ child }: { child: ChildReport }) {
 
         {/* ── Mastery badges ── */}
         <div className="flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200/80">
+            <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
             {child.mastered_count} Mastered
           </span>
 
@@ -170,9 +170,9 @@ function ChildReportCard({ child }: { child: ChildReport }) {
 
         {/* ── Recommendation — "This week" highlight ── */}
         {hasRec && (
-          <div className="flex items-start gap-3 px-4 py-3.5 bg-emerald-50/80 border border-emerald-200/60 rounded-xl">
+          <div className="flex items-start gap-3 px-4 py-3.5 bg-indigo-50/80 border border-indigo-200/60 rounded-xl">
             <svg
-              className="shrink-0 w-4 h-4 mt-0.5 text-emerald-600"
+              className="shrink-0 w-4 h-4 mt-0.5 text-indigo-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -185,10 +185,10 @@ function ChildReportCard({ child }: { child: ChildReport }) {
               />
             </svg>
             <div className="min-w-0">
-              <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider mb-1">
+              <p className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider mb-1">
                 This week
               </p>
-              <p className="text-sm text-emerald-900 leading-snug">{recDisplay}</p>
+              <p className="text-sm text-indigo-900 leading-snug">{recDisplay}</p>
             </div>
           </div>
         )}
@@ -201,20 +201,20 @@ function ChildReportCard({ child }: { child: ChildReport }) {
 
 function SignupCTA() {
   return (
-    <section className="rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-800 text-white px-6 py-8 text-center shadow-lg shadow-emerald-900/20">
+    <section className="rounded-2xl bg-gradient-to-br from-indigo-950 to-indigo-900 text-white px-6 py-8 text-center shadow-lg shadow-indigo-950/20">
       <h2
         className="text-xl font-bold mb-2"
         style={{ fontFamily: 'Lora, Georgia, serif' }}
       >
         Want to track your child's daily progress?
       </h2>
-      <p className="text-emerald-100 text-sm mb-6 leading-relaxed">
+      <p className="text-indigo-100 text-sm mb-6 leading-relaxed">
         Get personalised CBSE worksheets, real-time mastery tracking, and weekly
         reports — completely free.
       </p>
       <a
         href="/"
-        className="inline-flex items-center gap-2 px-6 py-3 bg-white text-emerald-800 rounded-xl text-sm font-bold hover:bg-emerald-50 active:bg-emerald-100 transition-colors shadow-sm"
+        className="inline-flex items-center gap-2 px-6 py-3 bg-white text-indigo-900 rounded-xl text-sm font-bold hover:bg-indigo-50 active:bg-indigo-100 transition-colors shadow-sm"
       >
         Get started free on Skolar
         <svg

@@ -276,7 +276,7 @@ export default function ClassManager({ onNavigate }: { onNavigate?: (page: strin
       {/* Classes List */}
       <Section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
         <Section.Header className="flex items-center justify-between border-none pb-0 mb-8">
-          <Section.Title as="h2" className="text-2xl font-bold font-jakarta">Your Classes</Section.Title>
+          <Section.Title as="h2" className="text-2xl font-bold font-inter">Your Classes</Section.Title>
           {!showForm && (
             <Button onClick={openAddForm} className="bg-primary hover:shadow-lg hover:shadow-primary/20 rounded-xl px-6 font-bold h-11 transition-all">
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -317,12 +317,12 @@ export default function ClassManager({ onNavigate }: { onNavigate?: (page: strin
                       <div className="flex gap-6 items-start">
                         {/* Subject-colored avatar */}
                         <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${subjectColor(cls.subject)} flex items-center justify-center shrink-0 border group-hover:scale-105 transition-transform duration-300`}>
-                          <span className="text-xl font-bold font-jakarta">
+                          <span className="text-xl font-bold font-inter">
                             {subjectInitial(cls.subject)}
                           </span>
                         </div>
                         <div className="space-y-2">
-                          <h3 className="font-bold text-xl text-foreground font-jakarta leading-tight group-hover:text-primary transition-colors">{cls.name}</h3>
+                          <h3 className="font-bold text-xl text-foreground font-inter leading-tight group-hover:text-primary transition-colors">{cls.name}</h3>
                           <div className="flex flex-wrap items-center gap-3">
                             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/50 rounded-lg text-[10px] font-bold uppercase tracking-widest text-foreground/70 border border-border/40">
                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>

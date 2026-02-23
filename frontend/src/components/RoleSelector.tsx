@@ -126,7 +126,7 @@ export default function RoleSelector() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl text-foreground font-jakarta">Parent</h3>
+                      <h3 className="font-bold text-xl text-foreground font-inter">Parent</h3>
                       <p className="text-xs font-medium text-muted-foreground/60 mt-2 leading-relaxed">
                         Create personal learning paths and practice material for your children at home.
                       </p>
@@ -146,7 +146,7 @@ export default function RoleSelector() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl text-foreground font-jakarta">Teacher</h3>
+                      <h3 className="font-bold text-xl text-foreground font-inter">Teacher</h3>
                       <p className="text-xs font-medium text-muted-foreground/60 mt-2 leading-relaxed">
                         Generate bulk worksheets and manage classroom rosters for your students.
                       </p>

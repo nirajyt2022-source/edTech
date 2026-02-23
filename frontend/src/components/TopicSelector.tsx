@@ -183,7 +183,7 @@ export default function TopicSelector({ chapters, childId, subject, onSelectionC
               </div>
 
               <span
-                className={`text-sm font-bold flex-1 font-jakarta truncate transition-colors ${
+                className={`text-sm font-bold flex-1 font-inter truncate transition-colors ${
                   expandedChapters.has(chapter.name) || chapterHasSelected(chapter)
                     ? 'text-primary'
                     : 'text-foreground/80 group-hover:text-primary'

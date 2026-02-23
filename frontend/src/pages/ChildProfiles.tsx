@@ -314,7 +314,7 @@ export default function ChildProfiles() {
                       <div className="flex gap-4">
                         <ChildAvatar name={child.name} index={index} />
                         <div className="flex-1 space-y-1.5">
-                          <h3 className="font-bold text-xl text-foreground font-jakarta leading-tight">{child.name}</h3>
+                          <h3 className="font-bold text-xl text-foreground font-inter leading-tight">{child.name}</h3>
                           <div className="flex items-center gap-3">
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-secondary/50 rounded-lg text-xs font-bold text-foreground/70 border border-border/40">
                               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
