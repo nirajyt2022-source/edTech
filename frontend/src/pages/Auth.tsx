@@ -211,8 +211,8 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             </button>
           )}
 
-          {/* Small Skolar logo at top */}
-          <div className="mb-8">
+          {/* Small Skolar logo at top — centered */}
+          <div className="mb-8 text-center">
             <h2
               className="text-2xl font-bold"
               style={{ fontFamily: "'Fraunces', serif", color: '#1E1B4B' }}
@@ -221,14 +221,14 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             </h2>
           </div>
 
-          {/* Heading */}
+          {/* Heading — centered */}
           <h3
-            className="text-2xl font-semibold mb-1"
+            className="text-2xl font-semibold mb-1 text-center"
             style={{ fontFamily: "'Fraunces', serif", color: '#1E293B' }}
           >
             {mode === 'signup' ? 'Create your account' : 'Welcome back'}
           </h3>
-          <p className="text-sm mb-6" style={{ color: '#64748B', fontFamily: "'Inter', sans-serif" }}>
+          <p className="text-sm mb-6 text-center" style={{ color: '#64748B', fontFamily: "'Inter', sans-serif" }}>
             {mode === 'signup' ? 'Start with 5 free worksheets — no card needed' : 'Sign in to your workspace'}
           </p>
 

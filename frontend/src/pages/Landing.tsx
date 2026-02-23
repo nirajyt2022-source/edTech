@@ -534,7 +534,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             {SUBJECTS[activeSubject].topics.map(topic => (
               <span
                 key={topic}
-                className="bg-white border border-slate-200 rounded-full py-1.5 px-4 text-sm text-slate-900"
+                className="bg-white border border-slate-200 rounded-lg py-1.5 px-4 text-sm text-slate-900"
               >
                 {topic}
               </span>
@@ -876,10 +876,10 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       >
         <div className="lp-dot-grid" />
         <div className="relative z-10 max-w-[560px] mx-auto">
-          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4.5vw,44px)] font-normal text-white mb-4 leading-tight tracking-tight">
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4.5vw,44px)] font-normal mb-4 leading-tight tracking-tight" style={{ color: '#FFFFFF' }}>
             Generate your first worksheet in 30 seconds
           </h2>
-          <p className="text-base text-white/65 mb-8 leading-relaxed">
+          <p className="text-base mb-8 leading-relaxed" style={{ color: 'rgba(255,255,255,0.7)' }}>
             No setup. No credit card. Pick a topic and go.
           </p>
           <button
