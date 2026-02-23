@@ -96,7 +96,7 @@ function AppContent() {
   const [authDefaultMode, setAuthDefaultMode] = useState<'login' | 'signup'>('login')
   const { user, loading, signOut } = useAuth()
   const profileCtx = useProfile()
-  const { activeRole, profile, switchRole } = profileCtx
+  const { activeRole, profile } = profileCtx
 
   // When role switches, reset to default page for that role
   useEffect(() => {
@@ -237,7 +237,9 @@ function AppContent() {
               <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl border-border/40 shadow-lg">
                 <DropdownMenuLabel className="px-3 py-2">
                   <p className="text-sm font-semibold truncate">{user.user_metadata?.name || user.email}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 capitalize">{activeRole}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {activeRole === 'teacher' ? 'Teacher Account' : 'Parent Account'}
+                  </p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="mx-1.5" />
 
@@ -257,17 +259,6 @@ function AppContent() {
                   </DropdownMenuItem>
                 )}
 
-                {profile && (
-                  <DropdownMenuItem
-                    onClick={() => switchRole(activeRole === 'parent' ? 'teacher' : 'parent')}
-                    className="cursor-pointer rounded-lg py-2 px-3 text-sm"
-                  >
-                    <svg className="w-4 h-4 mr-2.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                    </svg>
-                    Switch to {activeRole === 'parent' ? 'Teacher' : 'Parent'}
-                  </DropdownMenuItem>
-                )}
 
                 <DropdownMenuSeparator className="mx-1.5" />
                 <DropdownMenuItem
