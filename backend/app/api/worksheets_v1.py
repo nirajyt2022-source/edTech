@@ -154,6 +154,9 @@ class QuestionV1(BaseModel):
     visual_data: dict | None = None
     role: str | None = None
     skill_tag: str | None = None
+    hint: str | None = None
+    images: list[dict] | None = None
+    format: str = "short_answer"
 
 
 class WorksheetV1(BaseModel):
