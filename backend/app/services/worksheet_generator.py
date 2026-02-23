@@ -21,6 +21,8 @@ import string
 import time
 from typing import Any
 
+from app.data.image_registry import get_available_keywords
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -167,7 +169,18 @@ VISUAL RELEVANCE RULE: The visual must directly help answer the question.
 - It's better to have no visual than a misleading one
 
 IMAGES: You can attach cartoon images to questions using "image_keywords".
-Only use keywords from this list: [cow, lion, tiger, elephant, monkey, parrot, fish, butterfly, ant, spider, rabbit, horse, dog, cat, hen, duck, peacock, frog, snake, deer, bear, penguin, camel, tortoise, bee, tree, flower, rose, sunflower, tulsi, mango_tree, banyan_tree, cactus, lotus, neem, forest, pond, desert, ocean, farm, mountain, garden, nest, mango, apple, banana, rice, roti, milk, egg, vegetables]
+Only use keywords from this list: {available_image_keywords}
+
+IMAGE USAGE BY SUBJECT:
+- EVS: animals, plants, habitats, food, weather, family, transport, objects
+- Science: body, science, space, animals, plants
+- GK: landmarks, symbols, geography, space, festivals, sports, instruments
+- Computer: computer
+- Health: health, sports, food
+- Moral Science: family, festivals (minimal images needed)
+- Maths: Use SVG visual_type (clock, shapes, etc.) — NOT image_keywords
+- English: Minimal images — mostly text-based subject
+- Hindi: Minimal images — mostly text-based subject
 
 RULES FOR IMAGES:
 - Only use keywords from the available list. Unknown keywords will be silently ignored.
@@ -206,6 +219,12 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
   ]
 }
 """
+
+# Inject dynamic keyword list from registry
+SYSTEM_PROMPT = SYSTEM_PROMPT.replace(
+    "{available_image_keywords}",
+    ", ".join(get_available_keywords()),
+)
 
 # ---------------------------------------------------------------------------
 # 1B  User Prompt Builder
