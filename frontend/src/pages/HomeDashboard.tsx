@@ -195,12 +195,39 @@ export default function HomeDashboard({ onNavigate }: Props) {
             onClick={() => onNavigate('generator', { mode: 'textbook' })}
           />
           <QuickActionCard
-            icon={ICONS.messageCircle}
-            label="Ask Skolar"
-            description="AI homework help"
-            badge="coming"
-            disabled
+            icon={ICONS.sparkle}
+            label="Syllabus"
+            description="Upload & align"
+            badge="active"
+            onClick={() => onNavigate('syllabus')}
           />
+        </div>
+
+        {/* Ask Skolar — featured card below the grid */}
+        <div
+          onClick={() => onNavigate('ask')}
+          className="mt-3 p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-amber-50 border border-emerald-200 cursor-pointer hover:shadow-md transition-all"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter') onNavigate('ask') }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-lg">
+              🧠
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-foreground flex items-center gap-2">
+                Ask Skolar
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold">NEW</span>
+              </div>
+              <p className="text-sm text-muted-foreground">Stuck on homework? Ask any question — I'll explain step by step</p>
+            </div>
+            <div className="ml-auto text-muted-foreground shrink-0">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 

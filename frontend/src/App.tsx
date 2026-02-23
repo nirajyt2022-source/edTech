@@ -12,6 +12,7 @@ import Landing from './pages/Landing'
 import History from './pages/History'
 import ParentDashboard from './pages/ParentDashboard'
 import HomeDashboard from './pages/HomeDashboard'
+import AskSkolar from './pages/AskSkolar'
 import RoleSelector from '@/components/RoleSelector'
 import {
   DropdownMenu,
@@ -30,7 +31,7 @@ import { ProfileProvider, useProfile } from '@/lib/profile'
 import { EngagementProvider } from '@/lib/engagement'
 import './index.css'
 
-type Page = 'home' | 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history' | 'progress'
+type Page = 'home' | 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history' | 'progress' | 'ask'
 
 // ── Nav Icons ────────────────────────────────────────────────────────────────
 const NAV_ICONS: Record<string, React.ReactElement> = {
@@ -103,7 +104,7 @@ function AppContent() {
   // When role switches, reset to default page for that role
   useEffect(() => {
     const isTeacherPage = ['home', 'dashboard', 'classes', 'generator'].includes(currentPage)
-    const isParentPage = ['home', 'generator', 'syllabus', 'children', 'progress'].includes(currentPage)
+    const isParentPage = ['home', 'generator', 'syllabus', 'children', 'progress', 'ask'].includes(currentPage)
 
     const sharedPages = ['saved', 'history']
     if (activeRole === 'teacher' && !isTeacherPage && !sharedPages.includes(currentPage)) {
@@ -332,6 +333,14 @@ function AppContent() {
           }} />
         )}
         {currentPage === 'progress' && <ParentDashboard onNavigate={(page) => setCurrentPage(page as Page)} />}
+        {currentPage === 'ask' && (
+          <AskSkolar
+            onNavigate={(page, preFill) => {
+              if (preFill) setGeneratorPreFill(preFill)
+              setCurrentPage(page as Page)
+            }}
+          />
+        )}
         {currentPage === 'children' && <ChildProfiles />}
       </main>
     </div>
