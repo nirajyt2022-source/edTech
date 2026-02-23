@@ -56,17 +56,18 @@ DISTRIBUTION RULES based on selected difficulty:
 Group questions in this order in your output: all foundation first, then application, then stretch.
 Each question MUST have a "role" field.
 
-QUESTION TYPES (use a mix based on what fits the topic):
-- mcq: Multiple choice with 4 options (one correct)
-- fill_blank: Fill in the blank
-- true_false: True or False (ALWAYS include "options": ["True", "False"])
-- short_answer: Short written answer
-- word_problem: Contextual word problem
-- error_detection: Find the mistake (for Medium/Hard)
+QUESTION TYPES — you MUST use this distribution for every worksheet:
+- mcq: Multiple choice with 4 options → AT LEAST 30% of questions (e.g., 3 out of 10)
+- fill_blank: Fill in the blank → AT LEAST 20% of questions (e.g., 2 out of 10)
+- true_false: True or False → AT LEAST 1 question per worksheet
+- short_answer / word_problem / error_detection: Remaining questions
+
+EXAMPLE for 10 questions: 3 mcq + 2 fill_blank + 1 true_false + 2 short_answer + 1 word_problem + 1 error_detection
 
 CRITICAL RULES FOR QUESTION TYPES:
-- For "mcq" type: You MUST include exactly 4 options in the "options" array. Never set options to null for MCQ.
-  One option must be the correct_answer. Include plausible distractors.
+- EVERY mcq question MUST have an "options" array with EXACTLY 4 strings. This is NON-NEGOTIABLE.
+  Example: "options": ["Dog", "Cat", "Fish", "Lion"]
+  If you cannot think of 4 options, change the question type to short_answer instead.
 - For "true_false" type: You MUST include "options": ["True", "False"]. Never set options to null.
 - For "fill_blank" type: The question text MUST contain a blank indicated by "______" or "_________".
 - For "short_answer" and "word_problem" type: Set "options" to null.
@@ -133,12 +134,12 @@ CRITICAL RULES FOR VISUALS:
 - For "standard" problem_style: set visual_type to null and visual_data to null for ALL questions.
 - For "visual" problem_style: EVERY question MUST have a visual_type and visual_data.
 - For "mixed" problem_style: approximately half the questions should have visuals.
-- If visual_type and visual_data are provided, reference the visual naturally (e.g., "Look at the clock below").
-- CRITICAL: If visual_type is null AND image_keywords is null, NEVER write "look at the image", "look at the picture", "see the animal below", "the animal shown below", "look at the figure", or ANY phrase that implies a visual is present. Instead, describe the subject in text.
-  BAD (no visual): "Look at the animal below. Where does it live?"
-  GOOD (no visual): "Where does a lion usually live?"
-  BAD (no visual): "The animal shown below gives us milk."
-  GOOD (no visual): "Which farm animal gives us milk?"
+- NEVER write "look at the image", "look at the picture", "see the animal below", "the animal shown below", or ANY phrase that implies a visual is embedded in the question. Images are shown as supplementary context — the question text must be fully self-contained and answerable even without the image.
+  BAD: "Look at the image. Which of these animals is a wild animal?"
+  GOOD: "Which of these animals is a wild animal? (a) Hen (b) Lion (c) Cat (d) Dog"
+  BAD: "The animal shown below gives us milk."
+  GOOD: "Which farm animal gives us milk?"
+- You CAN still use image_keywords to show a relevant cartoon alongside the question. But the question text must make sense on its own.
 - Do NOT use visual_type "clock_face" — use "clock". Do NOT use "fraction_bar" — use "pie_fraction". Do NOT use "bar_chart" or "tally_chart" — these are NOT supported.
 - Match the visual to the topic: clock for Time, shapes for Geometry, object_group for counting/arithmetic, money_coins for Money, etc.
 
@@ -419,20 +420,58 @@ def fix_true_false_options(questions: list[dict]) -> list[dict]:
 
 def fix_mcq_options(questions: list[dict]) -> list[dict]:
     """Ensure MCQ questions have options, downgrade to short_answer if not."""
+    MCQ_PHRASES = ["which of these", "which one of", "which of the following", "which animal", "which option"]
+
     for q in questions:
-        if q.get("type") == "mcq":
-            options = q.get("options")
-            if not options or not isinstance(options, list) or len(options) < 2:
-                q["type"] = "short_answer"
-                q["options"] = None
-                logger.warning("MCQ question '%s' has no options — downgraded to short_answer", q.get("id"))
-            else:
-                correct = q.get("correct_answer", "")
-                if correct and correct not in options:
-                    for opt in options:
-                        if correct.lower().strip() == opt.lower().strip():
-                            q["correct_answer"] = opt
-                            break
+        q_type = q.get("type", "")
+        options = q.get("options")
+        text_lower = q.get("text", "").lower()
+
+        # Case 1: Typed as MCQ but no options → downgrade
+        if q_type == "mcq" and (not options or not isinstance(options, list) or len(options) < 2):
+            q["type"] = "short_answer"
+            q["options"] = None
+            logger.warning("MCQ '%s' has no options — downgraded", q.get("id"))
+
+        # Case 2: Typed as MCQ — ensure correct_answer is in options
+        elif q_type == "mcq" and options:
+            correct = q.get("correct_answer", "")
+            if correct and correct not in options:
+                for opt in options:
+                    if correct.lower().strip() == opt.lower().strip():
+                        q["correct_answer"] = opt
+                        break
+
+        # Case 3: Text says "which of these" but type is NOT mcq and no options — log it
+        elif q_type != "mcq" and any(phrase in text_lower for phrase in MCQ_PHRASES) and not options:
+            logger.info("Question '%s' looks like MCQ but typed as '%s' — leaving as-is", q.get("id"), q_type)
+
+    return questions
+
+
+def detect_true_false(questions: list[dict]) -> list[dict]:
+    """Detect questions that are really True/False but typed differently."""
+    TF_INDICATORS = [
+        "true or false",
+        "is this true",
+        "is this correct",
+        "is this statement true",
+        "is this statement correct",
+    ]
+
+    for q in questions:
+        if q.get("type") == "true_false":
+            continue  # Already typed correctly
+
+        text_lower = q.get("text", "").lower().strip()
+        correct_lower = (q.get("correct_answer") or "").lower().strip()
+
+        if correct_lower in ("true", "false"):
+            if any(indicator in text_lower for indicator in TF_INDICATORS) or not text_lower.endswith("?"):
+                q["type"] = "true_false"
+                if not q.get("options"):
+                    q["options"] = ["True", "False"]
+
     return questions
 
 
@@ -602,6 +641,7 @@ def validate_response(
     questions = resolve_question_images(questions)
 
     # --- Question type fixes ---
+    questions = detect_true_false(questions)
     questions = fix_true_false_options(questions)
     questions = fix_mcq_options(questions)
 

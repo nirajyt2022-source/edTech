@@ -573,7 +573,7 @@ class PDFService:
                 import os
                 local_path = os.path.join(
                     os.path.dirname(os.path.dirname(__file__)),
-                    "data", "images", img_path.lstrip("/images/")
+                    "data", "images", img_path.removeprefix("/images/")
                 )
                 if os.path.exists(local_path):
                     try:
@@ -586,10 +586,11 @@ class PDFService:
         # ── Answer area by render format ──────────────────────────────────────
 
         if q_type in ('mcq_3', 'mcq_4', 'multiple_choice') and question.get('options'):
-            # Options list
+            # Options list with A/B/C/D labels
             for j, option in enumerate(question['options']):
+                letter = chr(65 + j)
                 elements.append(Paragraph(
-                    f"<font color='#{_PRIMARY.hexval()[2:]}'></font>  "
+                    f"<font color='#{_PRIMARY.hexval()[2:]}'>{letter})</font>  "
                     f"{_sanitize_text(str(option))}",
                     self.styles['OptionText']
                 ))
