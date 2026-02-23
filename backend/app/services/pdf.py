@@ -124,7 +124,8 @@ def _sanitize_text(text: str) -> str:
         return ""
     for char, replacement in _UNICODE_REPLACEMENTS.items():
         text = text.replace(char, replacement)
-    return text
+    # XML-escape for ReportLab Paragraph (handles &, <, >)
+    return xml_escape(text)
 
 
 # ──────────────────────────────────────────────
