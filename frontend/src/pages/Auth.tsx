@@ -129,7 +129,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             Skolar
           </h1>
           <p className="text-lg mb-12" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: "'Inter', sans-serif" }}>
-            Practice that knows your syllabus
+            From syllabus to mastery.
           </p>
 
           {/* Feature checkpoints */}

@@ -244,13 +244,11 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               CBSE Classes 1&ndash;5 &middot; AI-Powered
             </div>
             <h1 className="lp-hero-h1 mb-5 lp-hero-text-delay">
-              Every chapter.{' '}
-              <em>Every</em>{' '}
-              concept. One click.
+              From syllabus to{' '}
+              <em>mastery.</em>
             </h1>
             <p className="text-base lg:text-lg leading-relaxed text-indigo-200/80 max-w-[500px] mb-7 lp-hero-text-delay-2">
-              AI-powered CBSE worksheets across 198 topics and 9 subjects.
-              Pick a topic, choose difficulty, download the PDF.
+              Pick a topic. Get 10 questions. Know exactly where your child stands.
             </p>
             <div className="lp-hero-text-delay-3">
               <Button
