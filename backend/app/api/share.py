@@ -48,7 +48,7 @@ def _get_user_id_from_token(authorization: str) -> str:
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Auth token verification failed: %s", e)
+        logger.error("Auth verification failed: %s", e)
         raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
 
 

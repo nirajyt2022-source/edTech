@@ -135,7 +135,7 @@ def _increment_view_count(token: str) -> None:
                 .execute()
             )
     except Exception as exc:
-        logger.warning("[reports._increment_view_count] Failed for token %.12s…: %s", token, exc)
+        logger.warning("[reports._increment_view_count] Failed for report_id %.12s…: %s", token, exc)
 
 
 @router.get("/reports/{token}")
@@ -154,7 +154,7 @@ async def get_report_by_token(
         )
         row = getattr(r, "data", None)
     except Exception as exc:
-        logger.error("[reports.get_report_by_token] DB error for token %.12s…: %s", token, exc)
+        logger.error("[reports.get_report_by_token] DB error for report_id %.12s…: %s", token, exc)
         raise HTTPException(status_code=500, detail="Failed to fetch report")
 
     if not row:
@@ -172,7 +172,7 @@ async def get_report_by_token(
         except HTTPException:
             raise
         except Exception as exc:
-            logger.warning("[reports.get_report_by_token] Cannot parse expires_at %r: %s", expires_str, exc)
+            logger.warning("[reports.get_report] Cannot parse expires_at %r: %s", expires_str, exc)
 
     # Increment view count in the background (fire and forget)
     background_tasks.add_task(_increment_view_count, token)
