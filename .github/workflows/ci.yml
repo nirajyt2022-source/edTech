@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+
+jobs:
+  # -- Backend Lint ------------------------------------------------------------
+  backend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install ruff
+        run: pip install ruff
+      - name: Lint backend
+        run: ruff check backend/ --select E,F,W --ignore E501
+
+  # -- Backend Tests -----------------------------------------------------------
+  backend-test:
+    runs-on: ubuntu-latest
+    needs: backend-lint
+    env:
+      SUPABASE_URL: "https://fake.supabase.co"
+      SUPABASE_SERVICE_KEY: "fake-key-for-tests"
+      GEMINI_API_KEY: "fake-key-for-tests"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest ruff
+      - name: Run tests
+        run: |
+          cd backend
+          python -m pytest tests/ -v --tb=short -x
+      - name: Verify app imports
+        run: |
+          cd backend
+          python -c "from app.main import app; print('App imports OK')"
+
+  # -- Frontend Build ----------------------------------------------------------
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      - name: Type check & build
+        run: cd frontend && npm run build
+
+  # -- Security Scan -----------------------------------------------------------
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Gitleaks -- check for leaked secrets
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Semgrep -- static analysis for security vulnerabilities
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Semgrep scan
+        run: |
+          pip install semgrep
+          semgrep scan --config=auto --config=p/owasp-top-ten backend/app/ --error --quiet
+
+      # npm audit -- check for vulnerable dependencies
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: npm audit
+        run: |
+          cd frontend
+          npm ci
+          npm audit --audit-level=high || true
+
+  # -- Docker Build (verify Dockerfile works) ----------------------------------
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-build]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t skolar-backend:ci backend/

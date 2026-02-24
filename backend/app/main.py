@@ -57,8 +57,11 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 from app.middleware.access_log import AccessLogMiddleware
 from app.middleware.request_id import RequestIDMiddleware
 
+from app.middleware.security_headers import SecurityHeadersMiddleware
+
 app.add_middleware(AccessLogMiddleware)
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Configure CORS
 cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
