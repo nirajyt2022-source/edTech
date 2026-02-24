@@ -154,7 +154,7 @@ async def get_report_by_token(
         )
         row = getattr(r, "data", None)
     except Exception as exc:
-        logger.error("[reports.get_report_by_token] DB error for report_id %.12s…: %s", token, exc)
+        logger.error("[reports.get_public_report] DB error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to fetch report")
 
     if not row:
