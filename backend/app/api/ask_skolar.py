@@ -10,8 +10,10 @@ Flow:
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel
+
+from app.middleware.rate_limit import limiter
 from supabase import create_client
 from app.core.config import get_settings
 
@@ -63,15 +65,16 @@ class AskResponse(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────
 
 @router.post("/question", response_model=AskResponse)
-async def ask_question(request: AskRequest, authorization: str = Header(...)):
+@limiter.limit("20/minute")
+async def ask_question(request: Request, body: AskRequest, authorization: str = Header(...)):
     """Answer a student's homework/study question using Gemini."""
     user_id = get_user_id_from_token(authorization)
 
-    grade_context = f"The student is in {request.grade}." if request.grade else "Determine the appropriate level from the question."
-    subject_context = f"This is a {request.subject} question." if request.subject else ""
+    grade_context = f"The student is in {body.grade}." if body.grade else "Determine the appropriate level from the question."
+    subject_context = f"This is a {body.subject} question." if body.subject else ""
 
     language_instruction = ""
-    if request.language.lower() == "hindi":
+    if body.language.lower() == "hindi":
         language_instruction = "Respond entirely in Hindi (Devanagari script). Technical terms may stay in English."
 
     system_prompt = f"""You are Skolar, a friendly and patient AI tutor for Indian school children (CBSE, Classes 1-5).
@@ -102,18 +105,18 @@ RULES:
     Instead say: "I'm here to help with your school studies! Ask me about any subject."
 12. Keep responses concise — max 200 words for simple questions, max 400 for complex ones."""
 
-    answer_text = await _call_gemini_chat(system_prompt, request.history, request.question)
+    answer_text = await _call_gemini_chat(system_prompt, body.history, body.question)
 
     # Detect topic for Practice/Revise links
-    topic_detection = await _detect_topic(request.question, request.grade)
+    topic_detection = await _detect_topic(body.question, body.grade)
 
-    logger.info(f"Ask Skolar answered for user={user_id}: {request.question[:80]}...")
+    logger.info(f"Ask Skolar answered for user={user_id}: {body.question[:80]}...")
 
     return AskResponse(
         answer=answer_text,
         suggested_topic=topic_detection.get("topic"),
         suggested_subject=topic_detection.get("subject"),
-        suggested_grade=topic_detection.get("grade") or request.grade or None,
+        suggested_grade=topic_detection.get("grade") or body.grade or None,
     )
 
 

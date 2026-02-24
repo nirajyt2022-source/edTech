@@ -13,8 +13,10 @@ import io
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from fastapi.responses import StreamingResponse
+
+from app.middleware.rate_limit import limiter
 from pydantic import BaseModel
 from supabase import create_client
 from app.core.config import get_settings
@@ -70,7 +72,8 @@ class FlashcardSet(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────
 
 @router.post("/generate", response_model=FlashcardSet)
-async def generate_flashcards(req: FlashcardRequest, authorization: str = Header(...)):
+@limiter.limit("10/minute")
+async def generate_flashcards(request: Request, req: FlashcardRequest, authorization: str = Header(...)):
     """Generate a set of flashcards for a given topic using Gemini 2.5 Flash."""
     user_id = get_user_id_from_token(authorization)
 
@@ -87,7 +90,8 @@ async def generate_flashcards(req: FlashcardRequest, authorization: str = Header
 
 
 @router.post("/export-pdf")
-async def export_flashcard_pdf(data: FlashcardSet, authorization: str = Header(...)):
+@limiter.limit("10/minute")
+async def export_flashcard_pdf(request: Request, data: FlashcardSet, authorization: str = Header(...)):
     """Generate a printable 2-page PDF from flashcards and return as downloadable file."""
     user_id = get_user_id_from_token(authorization)
 

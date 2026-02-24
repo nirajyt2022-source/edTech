@@ -10,9 +10,13 @@ Flow:
 """
 
 import base64
+import json
 import logging
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Header
+from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Header
+
+from app.middleware.rate_limit import limiter
+from app.middleware.sanitize import validate_file_upload
 from typing import Optional
 from supabase import create_client
 from app.core.config import get_settings
@@ -41,7 +45,9 @@ def get_user_id_from_token(authorization: str) -> str:
 
 
 @router.post("/grade-photo")
+@limiter.limit("5/minute")
 async def grade_from_photo(
+    request: Request,
     images: list[UploadFile] = File(..., description="1-5 photos of filled worksheet"),
     worksheet_json: str = Form(..., description="JSON string of worksheet data including questions"),
     child_id: Optional[str] = Form(None),
@@ -71,8 +77,7 @@ async def grade_from_photo(
     image_data = []
     for img in images:
         content = await img.read()
-        if len(content) > 10 * 1024 * 1024:  # 10MB limit
-            raise HTTPException(400, f"Image {img.filename} exceeds 10MB limit")
+        validate_file_upload(img.content_type or "image/jpeg", len(content), max_mb=10)
         b64 = base64.b64encode(content).decode("utf-8")
         mime = img.content_type or "image/jpeg"
         image_data.append({"base64": b64, "mime_type": mime})

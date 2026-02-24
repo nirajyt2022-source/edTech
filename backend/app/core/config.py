@@ -22,8 +22,9 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     resend_from_email: str = "onboarding@resend.dev"
 
-    # CORS
+    # CORS — comma-separated allowed origins
     frontend_url: str = "http://localhost:5173"
+    cors_origins: str = "http://localhost:5173,http://localhost:3000,http://localhost:5174,https://ed-tech-drab.vercel.app"
 
     class Config:
         env_file = ".env"

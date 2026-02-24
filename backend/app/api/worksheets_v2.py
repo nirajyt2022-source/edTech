@@ -8,8 +8,9 @@ from __future__ import annotations
 import logging
 import time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
+from app.middleware.rate_limit import limiter
 from app.models.worksheet import (
     Question,
     Worksheet,
@@ -57,22 +58,23 @@ def _infer_render_format(q_type: str, options: list | None) -> str:
 
 
 @router.post("/generate", response_model=WorksheetGenerationResponse)
-async def generate_worksheet_v2(request: WorksheetGenerationRequest):
+@limiter.limit("10/minute")
+async def generate_worksheet_v2(request: Request, body: WorksheetGenerationRequest):
     """Generate a worksheet using the simplified v2 pipeline."""
     start = time.perf_counter()
 
     try:
         data, elapsed_ms, warnings = generate_worksheet(
             client=client,
-            board=request.board,
-            grade_level=request.grade_level,
-            subject=request.subject,
-            topic=request.topic,
-            difficulty=request.difficulty,
-            num_questions=request.num_questions,
-            language=request.language,
-            problem_style=request.problem_style,
-            custom_instructions=request.custom_instructions,
+            board=body.board,
+            grade_level=body.grade_level,
+            subject=body.subject,
+            topic=body.topic,
+            difficulty=body.difficulty,
+            num_questions=body.num_questions,
+            language=body.language,
+            problem_style=body.problem_style,
+            custom_instructions=body.custom_instructions,
         )
     except ValueError as exc:
         logger.error("[v2] Generation failed: %s", exc)
@@ -82,12 +84,12 @@ async def generate_worksheet_v2(request: WorksheetGenerationRequest):
     questions = [_map_question(q, i) for i, q in enumerate(raw_questions)]
 
     worksheet = Worksheet(
-        title=data.get("title", f"Worksheet: {request.topic}"),
-        grade=request.grade_level,
-        subject=request.subject,
-        topic=request.topic,
-        difficulty=request.difficulty,
-        language=request.language,
+        title=data.get("title", f"Worksheet: {body.topic}"),
+        grade=body.grade_level,
+        subject=body.subject,
+        topic=body.topic,
+        difficulty=body.difficulty,
+        language=body.language,
         questions=questions,
         skill_focus=data.get("skill_focus", ""),
         common_mistake=data.get("common_mistake", ""),

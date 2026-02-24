@@ -12,8 +12,11 @@ import base64
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Header, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Header, Request, UploadFile, File, Form
 from fastapi.responses import StreamingResponse
+
+from app.middleware.rate_limit import limiter
+from app.middleware.sanitize import validate_file_upload
 from pydantic import BaseModel
 from supabase import create_client
 from app.core.config import get_settings
@@ -67,7 +70,9 @@ class TextbookGenerateRequest(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────
 
 @router.post("/analyze", response_model=TextbookAnalysis)
+@limiter.limit("5/minute")
 async def analyze_textbook_page(
+    request: Request,
     images: list[UploadFile] = File(..., description="1-3 photos of textbook pages"),
     authorization: str = Header(...),
 ):
@@ -80,11 +85,10 @@ async def analyze_textbook_page(
     if len(images) < 1 or len(images) > 3:
         raise HTTPException(400, "Upload 1-3 photos")
 
-    # Validate file sizes (max 10MB each)
+    # Validate file types and sizes (max 10MB each)
     for img in images:
         content = await img.read()
-        if len(content) > 10 * 1024 * 1024:
-            raise HTTPException(400, f"Image {img.filename} exceeds 10MB limit")
+        validate_file_upload(img.content_type or "image/jpeg", len(content), max_mb=10)
         await img.seek(0)  # Reset for re-read below
 
     # Read images as base64
@@ -134,8 +138,10 @@ If you cannot determine a field with confidence, make your best guess based on t
 
 
 @router.post("/generate")
+@limiter.limit("10/minute")
 async def generate_from_textbook(
-    request: TextbookGenerateRequest,
+    request: Request,
+    body: TextbookGenerateRequest,
     authorization: str = Header(...),
 ):
     """
@@ -144,18 +150,18 @@ async def generate_from_textbook(
     """
     user_id = get_user_id_from_token(authorization)
 
-    if request.output_type == "worksheet":
-        result = await _generate_textbook_worksheet(request)
-    elif request.output_type == "revision":
-        result = await _generate_textbook_revision(request)
-    elif request.output_type == "flashcards":
-        result = await _generate_textbook_flashcards(request)
+    if body.output_type == "worksheet":
+        result = await _generate_textbook_worksheet(body)
+    elif body.output_type == "revision":
+        result = await _generate_textbook_revision(body)
+    elif body.output_type == "flashcards":
+        result = await _generate_textbook_flashcards(body)
     else:
-        raise HTTPException(400, f"Unknown output_type: {request.output_type}")
+        raise HTTPException(400, f"Unknown output_type: {body.output_type}")
 
     logger.info(
-        f"Textbook {request.output_type} generated for user={user_id}: "
-        f"{request.analysis.detected_topic}"
+        f"Textbook {body.output_type} generated for user={user_id}: "
+        f"{body.analysis.detected_topic}"
     )
     return result
 

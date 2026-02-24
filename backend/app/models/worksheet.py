@@ -4,8 +4,10 @@ Extracted from app/api/worksheets.py.
 """
 from __future__ import annotations
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 from typing import Literal
+
+from app.middleware.sanitize import sanitize_string, VALID_GRADES, VALID_SUBJECTS
 
 
 class MixRecipeItem(BaseModel):
@@ -45,6 +47,29 @@ class WorksheetGenerationRequest(BaseModel):
     # Frontend selections previously silently dropped
     problem_type: str | None = None   # "visual only" | "standard" | "mixed"
     visual_theme: str | None = None   # "color" | "black_and_white" | "minimal"
+
+    @field_validator("grade_level")
+    @classmethod
+    def validate_grade(cls, v: str) -> str:
+        v = v.strip()
+        if v not in VALID_GRADES:
+            raise ValueError(f"Invalid grade: {v}")
+        return v
+
+    @field_validator("subject")
+    @classmethod
+    def validate_subject(cls, v: str) -> str:
+        v = v.strip()
+        if v not in VALID_SUBJECTS:
+            raise ValueError(f"Invalid subject: {v}")
+        return v
+
+    @field_validator("topic", "custom_instructions")
+    @classmethod
+    def sanitize_text(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return sanitize_string(v, "topic")
 
     @model_validator(mode="after")
     def _map_problem_type(self) -> "WorksheetGenerationRequest":

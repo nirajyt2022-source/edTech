@@ -12,8 +12,10 @@ Flow:
 import io
 import logging
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from fastapi.responses import StreamingResponse
+
+from app.middleware.rate_limit import limiter
 from pydantic import BaseModel
 from supabase import create_client
 from app.core.config import get_settings
@@ -92,7 +94,8 @@ class RevisionResponse(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────
 
 @router.post("/generate", response_model=RevisionResponse)
-async def generate_revision_notes(req: RevisionRequest, authorization: str = Header(...)):
+@limiter.limit("10/minute")
+async def generate_revision_notes(request: Request, req: RevisionRequest, authorization: str = Header(...)):
     """Generate structured revision notes for a given topic using Gemini 2.5 Flash."""
     user_id = get_user_id_from_token(authorization)
 
@@ -110,7 +113,8 @@ async def generate_revision_notes(req: RevisionRequest, authorization: str = Hea
 
 
 @router.post("/export-pdf")
-async def export_revision_pdf(notes: RevisionResponse, authorization: str = Header(...)):
+@limiter.limit("10/minute")
+async def export_revision_pdf(request: Request, notes: RevisionResponse, authorization: str = Header(...)):
     """Generate a PDF from revision notes and return as a downloadable file."""
     user_id = get_user_id_from_token(authorization)
 

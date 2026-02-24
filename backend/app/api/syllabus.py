@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form
 from pydantic import BaseModel
+
+from app.middleware.rate_limit import limiter
 import json
 import uuid
 from datetime import datetime
@@ -119,7 +121,9 @@ async def extract_text_from_image(file_content: bytes, filename: str) -> str:
 
 
 @router.post("/parse", response_model=SyllabusParseResponse)
+@limiter.limit("3/minute")
 async def parse_syllabus(
+    request: Request,
     file: UploadFile = File(...),
     grade_hint: str | None = Form(None),
     subject_hint: str | None = Form(None)
