@@ -105,6 +105,16 @@ RULES:
     Instead say: "I'm here to help with your school studies! Ask me about any subject."
 12. Keep responses concise — max 200 words for simple questions, max 400 for complex ones."""
 
+    # -- RAG: Inject curriculum context if grade+subject available --
+    if body.grade and body.subject:
+        from app.services.curriculum import get_curriculum_context
+        # Use detected topic from question or fall back to empty
+        curriculum_ctx = await get_curriculum_context(body.grade, body.subject, body.question[:50])
+        if curriculum_ctx:
+            system_prompt = f"{system_prompt}\n\n{curriculum_ctx}"
+            logger.info("Curriculum context injected for Ask Skolar: %s/%s", body.grade, body.subject)
+    # -- End RAG --
+
     answer_text = await _call_gemini_chat(system_prompt, body.history, body.question)
 
     # Detect topic for Practice/Revise links

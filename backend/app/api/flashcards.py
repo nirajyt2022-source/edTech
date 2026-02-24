@@ -78,6 +78,15 @@ async def generate_flashcards(request: Request, req: FlashcardRequest, authoriza
     user_id = get_user_id_from_token(authorization)
 
     prompt = _build_flashcard_prompt(req.grade, req.subject, req.topic, req.language, req.count)
+
+    # -- RAG: Inject curriculum context --
+    from app.services.curriculum import get_curriculum_context
+    curriculum_ctx = await get_curriculum_context(req.grade, req.subject, req.topic)
+    if curriculum_ctx:
+        prompt = f"{curriculum_ctx}\n\n{prompt}"
+        logger.info("Curriculum context injected for flashcards: %s/%s/%s", req.grade, req.subject, req.topic)
+    # -- End RAG --
+
     result = await _call_gemini_for_flashcards(prompt)
 
     # Validate output

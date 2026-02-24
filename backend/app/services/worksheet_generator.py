@@ -778,6 +778,27 @@ def generate_worksheet(
         custom_instructions=custom_instructions,
     )
 
+    # -- RAG: Inject curriculum context --
+    import asyncio
+    try:
+        from app.services.curriculum import get_curriculum_context
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                curriculum_context = pool.submit(
+                    lambda: asyncio.run(get_curriculum_context(grade_level, subject, topic))
+                ).result(timeout=5)
+        else:
+            curriculum_context = asyncio.run(get_curriculum_context(grade_level, subject, topic))
+    except Exception:
+        curriculum_context = None
+
+    if curriculum_context:
+        user_prompt = f"{curriculum_context}\n\n{user_prompt}"
+        logger.info("[v2] Curriculum context injected for %s / %s", topic, grade_level)
+    # -- End RAG --
+
     max_attempts = 2
     last_error: Exception | None = None
     all_warnings: list[str] = []
