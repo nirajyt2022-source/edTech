@@ -9,7 +9,6 @@ Flow:
 5. Return grading results
 """
 
-import json
 import base64
 import logging
 
@@ -174,53 +173,26 @@ Return ONLY valid JSON, no markdown backticks:
 
 async def call_gemini_vision_for_grading(image_data: list[dict], prompt: str, expected_total: int) -> dict:
     """Call Gemini Vision API with images and grading prompt."""
-    from google import genai
+    from app.services.ai_client import get_ai_client
 
-    if not settings.gemini_api_key:
-        raise HTTPException(500, "Gemini API key not configured")
-
-    client = genai.Client(api_key=settings.gemini_api_key)
-
-    # Build content parts: images first, then text prompt
-    parts = []
-    for img in image_data:
-        parts.append({
-            "inline_data": {
-                "mime_type": img["mime_type"],
-                "data": img["base64"],
-            }
-        })
-    parts.append({"text": prompt})
+    image_parts = [
+        {"inline_data": {"mime_type": img["mime_type"], "data": img["base64"]}}
+        for img in image_data
+    ]
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[{"parts": parts}],
-            config={
-                "temperature": 0.1,
-                "max_output_tokens": 4096,
-            },
+        ai = get_ai_client()
+        results = ai.generate_with_images(
+            image_parts=image_parts,
+            prompt=prompt,
+            temperature=0.1,
         )
-    except Exception as e:
-        logger.error(f"Gemini Vision API error: {e}")
-        raise HTTPException(502, "AI grading service unavailable. Please try again.")
-
-    # Parse response
-    raw = response.text or ""
-    raw = raw.strip()
-    if raw.startswith("```json"):
-        raw = raw[7:]
-    if raw.startswith("```"):
-        raw = raw[3:]
-    if raw.endswith("```"):
-        raw = raw[:-3]
-    raw = raw.strip()
-
-    try:
-        results = json.loads(raw)
-    except json.JSONDecodeError:
-        logger.error(f"Failed to parse Gemini grading response: {raw[:500]}")
+    except ValueError as e:
+        logger.error(f"AI grading error: {e}")
         raise HTTPException(502, "Could not parse grading results. Please try again with a clearer photo.")
+    except Exception as e:
+        logger.error(f"AI grading service error: {e}")
+        raise HTTPException(502, "AI grading service unavailable. Please try again.")
 
     # Validate and compute score
     question_results = results.get("results", [])

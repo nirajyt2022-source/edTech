@@ -16,15 +16,13 @@ from app.models.worksheet import (
     WorksheetGenerationRequest,
     WorksheetGenerationResponse,
 )
-from app.core.config import get_settings
-from app.core.deps import get_llm_client
+from app.services.ai_client import get_openai_compat_client
 from app.services.worksheet_generator import generate_worksheet
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v2/worksheets", tags=["worksheets-v2"])
 
-settings = get_settings()
-client = get_llm_client(settings)
+client = get_openai_compat_client()
 
 
 def _map_question(q: dict, index: int) -> Question:

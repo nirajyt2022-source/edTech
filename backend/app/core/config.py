@@ -4,7 +4,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # Application
-    app_name: str = "PracticeCraft AI"
+    app_name: str = "Skolar"
     debug: bool = False
 
     # Supabase

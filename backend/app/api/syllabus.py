@@ -6,12 +6,12 @@ from datetime import datetime
 from PyPDF2 import PdfReader
 import io
 from app.core.config import get_settings
-from app.core.deps import get_llm_client
+from app.services.ai_client import get_ai_client, get_openai_compat_client
 
 router = APIRouter(prefix="/api/syllabus", tags=["syllabus"])
 
 settings = get_settings()
-client = get_llm_client(settings)
+client = get_openai_compat_client()
 
 
 class SyllabusTopic(BaseModel):
@@ -89,6 +89,8 @@ async def extract_text_from_pdf(file_content: bytes) -> str:
 
 async def extract_text_from_image(file_content: bytes, filename: str) -> str:
     """Use Gemini Vision to extract text from an image."""
+    from google.genai import types as gtypes
+
     ext = filename.lower().split('.')[-1]
     mime_types = {
         'jpg': 'image/jpeg',
@@ -100,12 +102,9 @@ async def extract_text_from_image(file_content: bytes, filename: str) -> str:
     mime_type = mime_types.get(ext, 'image/jpeg')
 
     try:
-        from google import genai
-        from google.genai import types as gtypes
-        vision_client = genai.Client(api_key=settings.gemini_api_key)
-        response = vision_client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
+        ai = get_ai_client()
+        text = ai.generate_with_typed_parts(
+            parts=[
                 gtypes.Part.from_text(
                     "Extract all text from this syllabus image. "
                     "Preserve the structure (chapters, topics, etc.) as much as possible. "
@@ -114,7 +113,7 @@ async def extract_text_from_image(file_content: bytes, filename: str) -> str:
                 gtypes.Part.from_bytes(data=file_content, mime_type=mime_type),
             ],
         )
-        return response.text or ""
+        return text
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process image: {str(e)}")
 

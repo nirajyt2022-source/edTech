@@ -9,8 +9,6 @@ Flow:
 """
 
 import base64
-import io
-import json
 import logging
 from typing import Optional
 
@@ -166,66 +164,36 @@ async def generate_from_textbook(
 
 async def _call_gemini_vision(image_parts: list, prompt: str) -> dict:
     """Call Gemini Vision with image(s) + text prompt, return parsed JSON."""
-    from google import genai
-
-    if not settings.gemini_api_key:
-        raise HTTPException(500, "Gemini API key not configured")
-
-    client = genai.Client(api_key=settings.gemini_api_key)
-
-    parts = image_parts + [{"text": prompt}]
+    from app.services.ai_client import get_ai_client
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[{"parts": parts}],
-            config={"temperature": 0.2, "max_output_tokens": 4096},
+        ai = get_ai_client()
+        return ai.generate_with_images(
+            image_parts=image_parts,
+            prompt=prompt,
+            temperature=0.2,
         )
+    except ValueError as e:
+        logger.error(f"AI textbook analysis parse error: {e}")
+        raise HTTPException(502, "Could not parse textbook analysis. Please try again.")
     except Exception as e:
-        logger.error(f"Gemini Vision API error: {e}")
+        logger.error(f"AI textbook analysis error: {e}")
         raise HTTPException(502, "AI textbook analysis unavailable. Please try again.")
-
-    return _parse_gemini_json(response.text or "", "textbook analysis")
 
 
 async def _call_gemini_text(prompt: str, temperature: float = 0.7, max_tokens: int = 8192) -> dict:
     """Call Gemini text and return parsed JSON."""
-    from google import genai
-
-    if not settings.gemini_api_key:
-        raise HTTPException(500, "Gemini API key not configured")
-
-    client = genai.Client(api_key=settings.gemini_api_key)
+    from app.services.ai_client import get_ai_client
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[{"parts": [{"text": prompt}]}],
-            config={"temperature": temperature, "max_output_tokens": max_tokens},
-        )
+        ai = get_ai_client()
+        return ai.generate_json(prompt=prompt, temperature=temperature, max_tokens=max_tokens)
+    except ValueError as e:
+        logger.error(f"AI textbook generation parse error: {e}")
+        raise HTTPException(502, "Could not parse textbook generation. Please try again.")
     except Exception as e:
-        logger.error(f"Gemini API error: {e}")
+        logger.error(f"AI textbook generation error: {e}")
         raise HTTPException(502, "AI generation unavailable. Please try again.")
-
-    return _parse_gemini_json(response.text or "", "textbook generation")
-
-
-def _parse_gemini_json(raw: str, context: str) -> dict:
-    """Strip code fences and parse JSON from Gemini response."""
-    raw = raw.strip()
-    if raw.startswith("```json"):
-        raw = raw[7:]
-    if raw.startswith("```"):
-        raw = raw[3:]
-    if raw.endswith("```"):
-        raw = raw[:-3]
-    raw = raw.strip()
-
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        logger.error(f"Failed to parse Gemini {context} response: {raw[:500]}")
-        raise HTTPException(502, f"Could not parse {context}. Please try again.")
 
 
 # ── Generation functions ──────────────────────────────────────────────────

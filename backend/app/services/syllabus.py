@@ -1,6 +1,6 @@
 """Syllabus parsing service for extracting structured data from syllabus documents."""
 
-from app.services.ai import get_ai_service
+from app.services.ai_client import get_ai_client
 from app.prompts.syllabus_parsing import SYLLABUS_PARSING_PROMPT
 
 
@@ -8,7 +8,7 @@ class SyllabusService:
     """Service for parsing syllabus documents into structured data."""
 
     def __init__(self):
-        self.ai_service = get_ai_service()
+        self.ai = get_ai_client()
 
     async def parse_syllabus(self, content: str, file_type: str) -> dict:
         """Parse a syllabus document and extract structured data.
@@ -22,7 +22,7 @@ class SyllabusService:
         """
         # TODO: Implement document parsing and AI extraction
         prompt = SYLLABUS_PARSING_PROMPT.format(content=content)
-        response = await self.ai_service.generate_completion(prompt)
+        response = self.ai.generate_text(prompt=prompt)
         # TODO: Parse response into Syllabus model
         return {"raw_response": response}
 

@@ -8,7 +8,6 @@ Flow:
 4. Multi-turn conversation supported via history
 """
 
-import json
 import logging
 
 from fastapi import APIRouter, HTTPException, Header
@@ -122,52 +121,35 @@ RULES:
 
 async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], question: str) -> str:
     """Call Gemini with chat history and return the answer text."""
-    from google import genai
-
-    if not settings.gemini_api_key:
-        raise HTTPException(500, "Gemini API key not configured")
-
-    client = genai.Client(api_key=settings.gemini_api_key)
+    from app.services.ai_client import get_ai_client
 
     # Build message history (last 10 messages for context)
     messages = []
     for msg in history[-10:]:
         messages.append({
             "role": "user" if msg.role == "user" else "model",
-            "parts": [{"text": msg.content}],
+            "content": msg.content,
         })
 
     # Add current question
-    messages.append({
-        "role": "user",
-        "parts": [{"text": question}],
-    })
+    messages.append({"role": "user", "content": question})
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=messages,
-            config={
-                "temperature": 0.5,
-                "max_output_tokens": 2048,
-                "system_instruction": system_prompt,
-            },
+        ai = get_ai_client()
+        return ai.generate_chat(
+            messages=messages,
+            system=system_prompt,
+            temperature=0.5,
+            max_tokens=2048,
         )
     except Exception as e:
-        logger.error(f"Gemini chat API error: {e}")
+        logger.error(f"AI chat error: {e}")
         raise HTTPException(502, "AI tutor unavailable. Please try again.")
-
-    return response.text or "I'm sorry, I couldn't understand that. Could you rephrase your question?"
 
 
 async def _detect_topic(question: str, grade: str) -> dict:
     """Quick detection of the most relevant Skolar topic from the question."""
-    from google import genai
-
-    if not settings.gemini_api_key:
-        return {"topic": None, "subject": None, "grade": None}
-
-    client = genai.Client(api_key=settings.gemini_api_key)
+    from app.services.ai_client import get_ai_client
 
     prompt = f"""From this student question, identify the most relevant CBSE topic.
 
@@ -180,19 +162,8 @@ Return ONLY JSON (no markdown, no code fences):
 If you can't determine, return: {{"topic": null, "subject": null, "grade": null}}"""
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[{"parts": [{"text": prompt}]}],
-            config={"temperature": 0.1, "max_output_tokens": 100},
-        )
-        raw = (response.text or "").strip()
-        if raw.startswith("```json"):
-            raw = raw[7:]
-        if raw.startswith("```"):
-            raw = raw[3:]
-        if raw.endswith("```"):
-            raw = raw[:-3]
-        return json.loads(raw.strip())
+        ai = get_ai_client()
+        return ai.generate_json(prompt=prompt, temperature=0.1, max_tokens=100)
     except Exception as e:
         logger.warning(f"Topic detection failed: {e}")
         return {"topic": None, "subject": None, "grade": None}

@@ -10,7 +10,6 @@ Flow:
 """
 
 import io
-import json
 import logging
 
 from fastapi import APIRouter, HTTPException, Header
@@ -203,39 +202,14 @@ REQUIREMENTS:
 
 async def _call_gemini_for_revision(prompt: str) -> dict:
     """Call Gemini 2.5 Flash and parse the JSON response."""
-    from google import genai
-
-    if not settings.gemini_api_key:
-        raise HTTPException(500, "Gemini API key not configured")
-
-    client = genai.Client(api_key=settings.gemini_api_key)
+    from app.services.ai_client import get_ai_client
 
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[{"parts": [{"text": prompt}]}],
-            config={"temperature": 0.3, "max_output_tokens": 4096},
-        )
-    except Exception as e:
-        logger.error(f"Gemini API error: {e}")
-        raise HTTPException(502, "AI revision service unavailable. Please try again.")
-
-    raw = response.text or ""
-
-    # Strip markdown code fences
-    raw = raw.strip()
-    if raw.startswith("```json"):
-        raw = raw[7:]
-    if raw.startswith("```"):
-        raw = raw[3:]
-    if raw.endswith("```"):
-        raw = raw[:-3]
-    raw = raw.strip()
-
-    try:
-        result = json.loads(raw)
-    except json.JSONDecodeError:
-        logger.error(f"Failed to parse Gemini revision response: {raw[:500]}")
+        ai = get_ai_client()
+        return ai.generate_json(prompt=prompt, temperature=0.3, max_tokens=4096)
+    except ValueError as e:
+        logger.error(f"AI revision error: {e}")
         raise HTTPException(502, "Could not parse revision notes. Please try again.")
-
-    return result
+    except Exception as e:
+        logger.error(f"AI revision service error: {e}")
+        raise HTTPException(502, "AI revision service unavailable. Please try again.")
