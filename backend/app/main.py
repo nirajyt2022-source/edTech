@@ -63,8 +63,10 @@ app.add_middleware(AccessLogMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# Configure CORS
+# Configure CORS — always include frontend_url
 cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+if settings.frontend_url and settings.frontend_url not in cors_origins:
+    cors_origins.append(settings.frontend_url)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
