@@ -202,11 +202,12 @@ REQUIREMENTS:
 
 async def _call_gemini_for_flashcards(prompt: str) -> dict:
     """Call Gemini 2.5 Flash and parse the JSON response."""
+    import asyncio
     from app.services.ai_client import get_ai_client
 
     try:
         ai = get_ai_client()
-        return ai.generate_json(prompt=prompt, temperature=0.7, max_tokens=4096)
+        return await asyncio.to_thread(ai.generate_json, prompt=prompt, temperature=0.7, max_tokens=4096)
     except ValueError as e:
         logger.error(f"AI flashcard error: {e}")
         raise HTTPException(502, "Could not parse flashcards. Please try again.")

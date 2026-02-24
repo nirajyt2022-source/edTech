@@ -142,7 +142,8 @@ async def export_revision_pdf(request: Request, notes: RevisionResponse, authori
     """Generate a PDF from revision notes and return as a downloadable file."""
     user_id = get_user_id_from_token(authorization)
 
-    pdf_bytes = generate_revision_pdf(notes)
+    import asyncio
+    pdf_bytes = await asyncio.to_thread(generate_revision_pdf, notes)
     logger.info(f"Revision PDF exported for user={user_id}: {notes.topic}")
 
     return StreamingResponse(
@@ -230,11 +231,12 @@ REQUIREMENTS:
 
 async def _call_gemini_for_revision(prompt: str) -> dict:
     """Call Gemini 2.5 Flash and parse the JSON response."""
+    import asyncio
     from app.services.ai_client import get_ai_client
 
     try:
         ai = get_ai_client()
-        return ai.generate_json(prompt=prompt, temperature=0.3, max_tokens=4096)
+        return await asyncio.to_thread(ai.generate_json, prompt=prompt, temperature=0.3, max_tokens=4096)
     except ValueError as e:
         logger.error(f"AI revision error: {e}")
         raise HTTPException(502, "Could not parse revision notes. Please try again.")

@@ -197,8 +197,10 @@ async def call_gemini_vision_for_grading(image_data: list[dict], prompt: str, ex
     ]
 
     try:
+        import asyncio
         ai = get_ai_client()
-        results = ai.generate_with_images(
+        results = await asyncio.to_thread(
+            ai.generate_with_images,
             image_parts=image_parts,
             prompt=prompt,
             temperature=0.1,

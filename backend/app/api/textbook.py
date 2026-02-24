@@ -168,11 +168,13 @@ async def generate_from_textbook(
 
 async def _call_gemini_vision(image_parts: list, prompt: str) -> dict:
     """Call Gemini Vision with image(s) + text prompt, return parsed JSON."""
+    import asyncio
     from app.services.ai_client import get_ai_client
 
     try:
         ai = get_ai_client()
-        return ai.generate_with_images(
+        return await asyncio.to_thread(
+            ai.generate_with_images,
             image_parts=image_parts,
             prompt=prompt,
             temperature=0.2,
@@ -187,11 +189,12 @@ async def _call_gemini_vision(image_parts: list, prompt: str) -> dict:
 
 async def _call_gemini_text(prompt: str, temperature: float = 0.7, max_tokens: int = 8192) -> dict:
     """Call Gemini text and return parsed JSON."""
+    import asyncio
     from app.services.ai_client import get_ai_client
 
     try:
         ai = get_ai_client()
-        return ai.generate_json(prompt=prompt, temperature=temperature, max_tokens=max_tokens)
+        return await asyncio.to_thread(ai.generate_json, prompt=prompt, temperature=temperature, max_tokens=max_tokens)
     except ValueError as e:
         logger.error(f"AI textbook generation parse error: {e}")
         raise HTTPException(502, "Could not parse textbook generation. Please try again.")

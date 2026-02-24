@@ -5,6 +5,7 @@ Mounts at /api/v2/worksheets. The old /api/worksheets (v1) is untouched.
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from fastapi import APIRouter, HTTPException, Request
@@ -61,7 +62,8 @@ def _infer_render_format(q_type: str, options: list | None) -> str:
 async def generate_worksheet_v2(request: Request, body: WorksheetGenerationRequest):
     """Generate a worksheet using the simplified v2 pipeline."""
     try:
-        data, elapsed_ms, warnings = generate_worksheet(
+        data, elapsed_ms, warnings = await asyncio.to_thread(
+            generate_worksheet,
             client=client,
             board=body.board,
             grade_level=body.grade_level,

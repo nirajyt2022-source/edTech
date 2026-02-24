@@ -9,6 +9,7 @@ Flow:
 """
 
 import logging
+import re
 
 from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel
@@ -18,6 +19,36 @@ from supabase import create_client
 from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
+
+# ── Prompt injection protection ────────────────────────────────────────────────
+
+_INJECTION_PATTERNS = [
+    r"ignore\s+(all\s+)?(previous|prior|above|system)\s+(instructions|rules|prompts)",
+    r"you\s+are\s+(now|no\s+longer)\s+",
+    r"act\s+as\s+(an?\s+)?(unrestricted|unfiltered|uncensored)",
+    r"(system|admin|developer)\s*:\s*",
+    r"override\s+(all\s+)?(rules|safety|restrictions|guardrails)",
+    r"jailbreak",
+    r"DAN\s+mode",
+    r"do\s+anything\s+now",
+    r"pretend\s+(you\s+)?(are|have)\s+no\s+(rules|restrictions|limits)",
+    r"forget\s+(all\s+)?(your\s+)?(rules|instructions|training)",
+    r"new\s+instructions?\s*:",
+    r"from\s+now\s+on\s+(you|ignore)",
+]
+_INJECTION_RE = re.compile("|".join(_INJECTION_PATTERNS), re.IGNORECASE)
+
+
+def _sanitize_question(question: str) -> str:
+    """Strip prompt injection attempts from student questions."""
+    if _INJECTION_RE.search(question):
+        logger.warning("prompt_injection_blocked question=%s", question[:100])
+        cleaned = _INJECTION_RE.sub("", question).strip()
+        if len(cleaned) < 5:
+            return "Hello, can you help me with my studies?"
+        return cleaned
+    return question
+
 
 router = APIRouter(prefix="/api/v1/ask", tags=["ask_skolar"])
 
@@ -70,6 +101,17 @@ async def ask_question(request: Request, body: AskRequest, authorization: str = 
     """Answer a student's homework/study question using Gemini."""
     user_id = get_user_id_from_token(authorization)
 
+    # Sanitize input against prompt injection
+    safe_question = _sanitize_question(body.question)
+
+    # Sanitize user messages in history
+    safe_history = []
+    for msg in body.history:
+        if msg.role == "user":
+            safe_history.append(ChatMessage(role=msg.role, content=_sanitize_question(msg.content)))
+        else:
+            safe_history.append(msg)
+
     grade_context = f"The student is in {body.grade}." if body.grade else "Determine the appropriate level from the question."
     subject_context = f"This is a {body.subject} question." if body.subject else ""
 
@@ -109,18 +151,18 @@ RULES:
     if body.grade and body.subject:
         from app.services.curriculum import get_curriculum_context
         # Use detected topic from question or fall back to empty
-        curriculum_ctx = await get_curriculum_context(body.grade, body.subject, body.question[:50])
+        curriculum_ctx = await get_curriculum_context(body.grade, body.subject, safe_question[:50])
         if curriculum_ctx:
             system_prompt = f"{system_prompt}\n\n{curriculum_ctx}"
             logger.info("Curriculum context injected for Ask Skolar: %s/%s", body.grade, body.subject)
     # -- End RAG --
 
-    answer_text = await _call_gemini_chat(system_prompt, body.history, body.question)
+    answer_text = await _call_gemini_chat(system_prompt, safe_history, safe_question)
 
     # Detect topic for Practice/Revise links
-    topic_detection = await _detect_topic(body.question, body.grade)
+    topic_detection = await _detect_topic(safe_question, body.grade)
 
-    logger.info(f"Ask Skolar answered for user={user_id}: {body.question[:80]}...")
+    logger.info(f"Ask Skolar answered for user={user_id}: {safe_question[:80]}...")
 
     return AskResponse(
         answer=answer_text,
@@ -134,6 +176,7 @@ RULES:
 
 async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], question: str) -> str:
     """Call Gemini with chat history and return the answer text."""
+    import asyncio
     from app.services.ai_client import get_ai_client
 
     # Build message history (last 10 messages for context)
@@ -149,7 +192,8 @@ async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], ques
 
     try:
         ai = get_ai_client()
-        return ai.generate_chat(
+        return await asyncio.to_thread(
+            ai.generate_chat,
             messages=messages,
             system=system_prompt,
             temperature=0.5,
@@ -162,6 +206,7 @@ async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], ques
 
 async def _detect_topic(question: str, grade: str) -> dict:
     """Quick detection of the most relevant Skolar topic from the question."""
+    import asyncio
     from app.services.ai_client import get_ai_client
 
     prompt = f"""From this student question, identify the most relevant CBSE topic.
@@ -176,7 +221,7 @@ If you can't determine, return: {{"topic": null, "subject": null, "grade": null}
 
     try:
         ai = get_ai_client()
-        return ai.generate_json(prompt=prompt, temperature=0.1, max_tokens=100)
+        return await asyncio.to_thread(ai.generate_json, prompt=prompt, temperature=0.1, max_tokens=100)
     except Exception as e:
         logger.warning(f"Topic detection failed: {e}")
         return {"topic": None, "subject": None, "grade": None}
