@@ -59,20 +59,25 @@ from app.middleware.request_id import RequestIDMiddleware  # noqa: E402
 
 from app.middleware.security_headers import SecurityHeadersMiddleware  # noqa: E402
 
+# Configure CORS — always include frontend_url
+# IMPORTANT: CORSMiddleware must be added LAST so it executes FIRST
+# (Starlette processes middleware in reverse order of addition)
+cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+if settings.frontend_url and settings.frontend_url not in cors_origins:
+    cors_origins.append(settings.frontend_url)
+
+# Add BaseHTTPMiddleware classes first (they run AFTER CORS)
 app.add_middleware(AccessLogMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# Configure CORS — always include frontend_url
-cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
-if settings.frontend_url and settings.frontend_url not in cors_origins:
-    cors_origins.append(settings.frontend_url)
+# CORS last = runs first — handles OPTIONS preflight before other middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers
