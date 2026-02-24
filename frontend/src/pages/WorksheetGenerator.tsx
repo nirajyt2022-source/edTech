@@ -249,12 +249,11 @@ interface Props {
 }
 
 export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill, onPreFillConsumed }: Props) {
-  const { children } = useChildren()
+  const { children, activeChild, activeChildId, setActiveChildId } = useChildren()
   const { classes } = useClasses()
   const { activeRole, region } = useProfile()
   const { status: subscription, incrementUsage, upgrade, refresh: refreshSubscription } = useSubscription()
   const { recordCompletion, lastCompletion, clearLastCompletion } = useEngagement()
-  const [selectedChildId, setSelectedChildId] = useState('none')
   const [selectedClassId, setSelectedClassId] = useState('none')
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [board, setBoard] = useState('CBSE')
@@ -441,19 +440,15 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   // Topic dropdown only needed for chapter-bounded worksheet types
   const needsTopic = selectedTemplate === 'chapter-test'
 
-  // Handle child selection - pre-fill grade and board
-  const handleChildSelect = (childId: string) => {
-    setSelectedChildId(childId)
-    if (childId && childId !== 'none') {
-      const child = children.find(c => c.id === childId)
-      if (child) {
-        setGrade(child.grade)
-        if (child.board) {
-          setBoard(child.board)
-        }
-      }
+  // Pre-fill grade and board from global active child
+  useEffect(() => {
+    if (activeChild?.grade) {
+      setGrade(activeChild.grade)
     }
-  }
+    if (activeChild?.board) {
+      setBoard(activeChild.board)
+    }
+  }, [activeChild])
 
   // Handle class selection - pre-fill grade, subject, and board (teacher mode)
   const handleClassSelect = (classId: string) => {
@@ -704,7 +699,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!pendingChildIdRef.current || children.length === 0) return
-    handleChildSelect(pendingChildIdRef.current)
+    const childExists = children.some(c => c.id === pendingChildIdRef.current)
+    if (childExists) setActiveChildId(pendingChildIdRef.current!)
     pendingChildIdRef.current = null
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [children])
@@ -762,8 +758,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       window.URL.revokeObjectURL(url)
 
       // Record completion for engagement tracking (if child selected)
-      if (selectedChildId && selectedChildId !== 'none') {
-        await recordCompletion(selectedChildId)
+      if (activeChildId) {
+        await recordCompletion(activeChildId)
       }
     } catch (err) {
       console.error('Failed to download PDF:', err)
@@ -784,7 +780,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       const saveRes = await api.post('/api/worksheets/save', {
         worksheet,
         board,
-        child_id: !isTeacher && selectedChildId !== 'none' ? selectedChildId : undefined,
+        child_id: !isTeacher && activeChildId ? activeChildId : undefined,
         class_id: isTeacher && selectedClassId !== 'none' ? selectedClassId : undefined,
         region,
       })
@@ -1185,22 +1181,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     </div>
                   )}
 
-                  {!isTeacher && children.length > 0 && (
+                  {!isTeacher && activeChild && (
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="child" className="text-sm font-semibold">Generate for</Label>
-                      <Select value={selectedChildId} onValueChange={handleChildSelect}>
-                        <SelectTrigger id="child" className="bg-background">
-                          <SelectValue placeholder="Select a child (optional)" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">No child selected</SelectItem>
-                          {children.map((child) => (
-                            <SelectItem key={child.id} value={child.id}>
-                              {child.name} ({child.grade})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label className="text-sm font-semibold">Generating for</Label>
+                      <p className="text-sm text-muted-foreground">
+                        {activeChild.name} ({activeChild.grade})
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1323,7 +1309,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     ) : (
                       <TopicSelector
                         chapters={cbseSyllabus}
-                        childId={selectedChildId !== 'none' ? selectedChildId : undefined}
+                        childId={activeChildId ? activeChildId : undefined}
                         subject={subject}
                         onSelectionChange={handleTopicSelectionChange}
                       />
@@ -2269,7 +2255,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       </div>
 
       {/* Completion Feedback */}
-      {lastCompletion && selectedChildId && selectedChildId !== 'none' && (
+      {lastCompletion && activeChildId && (
         <div className="mb-6 p-5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-xl print:hidden animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">

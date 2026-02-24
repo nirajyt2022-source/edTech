@@ -593,10 +593,8 @@ function GradingHistorySection({ history, loading: histLoading }: { history: Gra
 
 export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const { user } = useAuth()
-  const { children: childrenList, loading: childrenLoading } = useChildren()
+  const { children: childrenList, loading: childrenLoading, activeChildId, activeChild } = useChildren()
   const displayName = user?.user_metadata?.name?.split(' ')[0] || 'there'
-
-  const [selectedChildId, setSelectedChildId] = useState<string | null>(null)
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
   const [graphSummary, setGraphSummary] = useState<GraphSummary | null>(null)
   const [graph, setGraph] = useState<Record<string, Record<string, GraphTopicData>> | null>(null)
@@ -613,13 +611,6 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
   const [showGrading, setShowGrading] = useState(false)
   const [gradingWorksheet, setGradingWorksheet] = useState<FullWorksheetForGrading | null>(null)
   const [loadingGradingWorksheet, setLoadingGradingWorksheet] = useState(false)
-
-  // Auto-select first child
-  useEffect(() => {
-    if (!selectedChildId && childrenList.length > 0) {
-      setSelectedChildId(childrenList[0].id)
-    }
-  }, [childrenList, selectedChildId])
 
   const fetchDashboard = useCallback(async (childId: string) => {
     setLoading(true)
@@ -729,13 +720,13 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
 
 
   useEffect(() => {
-    if (selectedChildId) {
-      fetchDashboard(selectedChildId)
-      fetchLearningGraph(selectedChildId)
-      fetchRecentWorksheets(selectedChildId)
-      fetchGradingHistory(selectedChildId)
+    if (activeChildId) {
+      fetchDashboard(activeChildId)
+      fetchLearningGraph(activeChildId)
+      fetchRecentWorksheets(activeChildId)
+      fetchGradingHistory(activeChildId)
     }
-  }, [selectedChildId, fetchDashboard, fetchLearningGraph, fetchRecentWorksheets, fetchGradingHistory])
+  }, [activeChildId, fetchDashboard, fetchLearningGraph, fetchRecentWorksheets, fetchGradingHistory])
 
   if (childrenLoading) return <LoadingSkeleton />
 
@@ -755,7 +746,7 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
     )
   }
 
-  const selectedChild = childrenList.find((c) => c.id === selectedChildId)
+  const selectedChild = activeChild
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
@@ -769,30 +760,10 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
         </p>
       </div>
 
-      {/* Child picker pills */}
-      {childrenList.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {childrenList.map((child) => (
-            <button
-              key={child.id}
-              onClick={() => setSelectedChildId(child.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors border ${
-                selectedChildId === child.id
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-foreground border-border hover:border-primary/50'
-              }`}
-            >
-              <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                {child.name[0].toUpperCase()}
-              </span>
-              {child.name}
-            </button>
-          ))}
-        </div>
-      )}
-      {childrenList.length === 1 && selectedChild && (
+      {/* Child info (switcher is in global header) */}
+      {selectedChild && (
         <div className="text-sm font-medium text-muted-foreground">
-          {selectedChild.name} &middot; Class {selectedChild.grade}
+          {selectedChild.name} &middot; {selectedChild.grade}
         </div>
       )}
 
@@ -809,7 +780,7 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
           <CardContent className="p-6 flex items-center justify-between">
             <p className="text-sm text-destructive">{error}</p>
             <button
-              onClick={() => selectedChildId && fetchDashboard(selectedChildId)}
+              onClick={() => activeChildId && fetchDashboard(activeChildId)}
               className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
             >
               Retry
@@ -907,7 +878,7 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
 
           {/* Insight Card — plain-English report + today's recommendation */}
           <InsightCard
-            childId={selectedChildId ?? ''}
+            childId={activeChildId ?? ''}
             onNavigate={onNavigate ? () => onNavigate('generator') : undefined}
           />
 
@@ -919,7 +890,7 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
           ) : null}
 
           {/* Streak card — fetches engagement independently */}
-          <StreakCard childId={selectedChildId ?? ''} sessions={sessions} />
+          <StreakCard childId={activeChildId ?? ''} sessions={sessions} />
 
           {/* 30-day activity timeline */}
           <ProgressTimeline sessions={sessions} loading={graphLoading} />
@@ -1054,14 +1025,14 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
             if (!open) {
               setGradingWorksheet(null)
               // Refresh data after grading
-              if (selectedChildId) {
-                fetchGradingHistory(selectedChildId)
-                fetchDashboard(selectedChildId)
+              if (activeChildId) {
+                fetchGradingHistory(activeChildId)
+                fetchDashboard(activeChildId)
               }
             }
           }}
           worksheet={gradingWorksheet}
-          childId={selectedChildId ?? undefined}
+          childId={activeChildId ?? undefined}
         />
       )}
     </div>

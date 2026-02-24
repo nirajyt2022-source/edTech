@@ -97,7 +97,7 @@ export default function HomeDashboard({ onNavigate }: Props) {
     'there'
 
   const isTeacher = activeRole === 'teacher'
-  const firstChild = children.length > 0 ? children[0] : null
+  const { activeChild } = useChildren()
 
   // ── Fetch recent activity ───────────────────────────────────────────────────
 
@@ -147,9 +147,9 @@ export default function HomeDashboard({ onNavigate }: Props) {
           <span className="text-primary">{displayName}</span>
         </h1>
         <p className="text-sm text-muted-foreground mt-1">{dateStr}</p>
-        {!isTeacher && firstChild && (
+        {!isTeacher && activeChild && (
           <p className="text-sm text-muted-foreground mt-0.5">
-            Practicing with <span className="font-medium text-foreground">{firstChild.name}</span>
+            Practicing with <span className="font-medium text-foreground">{activeChild.name}</span>
           </p>
         )}
       </div>

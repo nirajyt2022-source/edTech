@@ -29,6 +29,7 @@ import { ClassesProvider } from '@/lib/classes'
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription'
 import { ProfileProvider, useProfile } from '@/lib/profile'
 import { EngagementProvider } from '@/lib/engagement'
+import ChildSwitcher from '@/components/ChildSwitcher'
 import './index.css'
 
 type Page = 'home' | 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history' | 'progress' | 'ask'
@@ -183,6 +184,9 @@ function AppContent() {
               S
             </span>
           </button>
+
+          {/* Global child switcher */}
+          <ChildSwitcher />
 
           {/* Navigation Tabs */}
           <div role="tablist" aria-label="Main navigation" className="hidden md:flex items-center gap-0.5">

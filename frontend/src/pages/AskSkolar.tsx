@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
+import { useChildren } from '@/lib/children'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -34,13 +35,19 @@ const EXAMPLE_QUESTIONS = [
 // ---------------------------------------------------------------------------
 
 export default function AskSkolar({ onNavigate, childGrade }: AskSkolarProps) {
+  const { activeChild } = useChildren()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [grade, setGrade] = useState(childGrade || '')
+  const [grade, setGrade] = useState(childGrade || activeChild?.grade || '')
   const [subject, setSubject] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Pre-fill grade from active child
+  useEffect(() => {
+    if (activeChild?.grade) setGrade(activeChild.grade)
+  }, [activeChild])
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {

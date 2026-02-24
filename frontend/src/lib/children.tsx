@@ -35,15 +35,48 @@ interface ChildrenContextType {
   createChild: (data: CreateChildData) => Promise<Child>
   updateChild: (id: string, data: UpdateChildData) => Promise<Child>
   deleteChild: (id: string) => Promise<void>
+  activeChildId: string | null
+  activeChild: Child | null
+  setActiveChildId: (id: string) => void
 }
 
 const ChildrenContext = createContext<ChildrenContextType | undefined>(undefined)
+
+const ACTIVE_CHILD_KEY = 'skolar_active_child'
 
 export function ChildrenProvider({ children: childrenProp }: { children: ReactNode }) {
   const [childrenList, setChildrenList] = useState<Child[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeChildId, setActiveChildIdState] = useState<string | null>(null)
   const { user } = useAuth()
+
+  // Persist active child selection in localStorage
+  const setActiveChildId = useCallback((id: string) => {
+    setActiveChildIdState(id)
+    localStorage.setItem(ACTIVE_CHILD_KEY, id)
+  }, [])
+
+  // Restore from localStorage or auto-select first child
+  useEffect(() => {
+    if (childrenList.length === 0) {
+      setActiveChildIdState(null)
+      return
+    }
+
+    const saved = localStorage.getItem(ACTIVE_CHILD_KEY)
+    const savedExists = saved && childrenList.some(c => c.id === saved)
+
+    if (savedExists) {
+      setActiveChildIdState(saved)
+    } else {
+      // Auto-select first child (also handles deleted child case)
+      setActiveChildIdState(childrenList[0].id)
+      localStorage.setItem(ACTIVE_CHILD_KEY, childrenList[0].id)
+    }
+  }, [childrenList])
+
+  const activeChild = childrenList.find(c => c.id === activeChildId) || null
 
   const fetchChildren = useCallback(async () => {
     if (!user) {
@@ -104,6 +137,9 @@ export function ChildrenProvider({ children: childrenProp }: { children: ReactNo
       createChild,
       updateChild,
       deleteChild,
+      activeChildId,
+      activeChild,
+      setActiveChildId,
     }}>
       {childrenProp}
     </ChildrenContext.Provider>
