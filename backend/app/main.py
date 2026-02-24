@@ -25,7 +25,7 @@ if settings.sentry_dsn:
     )
 
 # Lazy router imports (after logging is set up)
-from app.api import health, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum, analytics, dashboard, share, learning_graph, reports, grading, revision, flashcards, textbook, ask_skolar  # noqa: E402
+from app.api import health, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum, analytics, dashboard, saved_worksheets, share, learning_graph, reports, grading, revision, flashcards, textbook, ask_skolar  # noqa: E402
 from app.api.worksheets_v2 import router as worksheets_v2_router  # noqa: E402
 
 
@@ -93,6 +93,7 @@ app.include_router(classes.router)
 app.include_router(curriculum.router)
 app.include_router(analytics.router)
 app.include_router(dashboard.router)
+app.include_router(saved_worksheets.router)
 app.include_router(share.router)
 app.include_router(learning_graph.router)
 app.include_router(reports.router)
