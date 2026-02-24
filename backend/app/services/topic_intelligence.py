@@ -3,8 +3,8 @@ Topic Intelligence Agent — Agent 1 of 4 in the generation pipeline.
 
 Builds a GenerationContext by combining:
   - curriculum_canon.json  (verify topic exists in CBSE curriculum, ncert_chapter)
-  - slot_engine TOPIC_PROFILES (valid_skill_tags)
-  - slot_engine LEARNING_OBJECTIVES (ncert_subtopics)
+  - TOPIC_PROFILES from app.data.topic_profiles (valid_skill_tags)
+  - LEARNING_OBJECTIVES from app.data.learning_objectives (ncert_subtopics)
   - LearningGraphService.get_adaptive_difficulty() (bloom_level, format_mix, etc.)
 
 All external calls are fail-open: any error falls back to safe defaults so that
@@ -127,14 +127,14 @@ def _lookup_canon(topic_slug: str, subject: str, grade: int) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Helpers that pull from slot_engine (imported lazily — heavy module)
+# Helpers that pull from topic_profiles / learning_objectives data modules
 # ---------------------------------------------------------------------------
 
 
 def _get_skill_tags(topic_slug: str) -> list[str]:
     """Return allowed_skill_tags for this topic from TOPIC_PROFILES."""
     try:
-        from app.services.slot_engine import get_topic_profile
+        from app.data.topic_profiles import get_topic_profile
         profile = get_topic_profile(topic_slug)
         if profile:
             return list(profile.get("allowed_skill_tags", []))
@@ -146,7 +146,7 @@ def _get_skill_tags(topic_slug: str) -> list[str]:
 def _get_subtopics(topic_slug: str) -> list[str]:
     """Return NCERT subtopics (learning objectives) for this topic."""
     try:
-        from app.services.slot_engine import get_learning_objectives
+        from app.data.learning_objectives import get_learning_objectives
         return get_learning_objectives(topic_slug)
     except Exception as exc:
         logger.warning("[topic_intelligence] Could not load learning objectives for %r: %s", topic_slug, exc)

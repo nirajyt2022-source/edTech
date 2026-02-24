@@ -21,8 +21,7 @@ def get_openai_client() -> OpenAI:
 
 
 # ── Gemini adapter — mimics the OpenAI client interface ──────────────────────
-# slot_engine.py calls client.chat.completions.create(...) — this adapter
-# intercepts those calls and routes to Gemini, so slot_engine.py is untouched.
+# TODO: Sprint A2 — Replace with centralized ai_client.py
 
 class _FakeMessage:
     def __init__(self, content: str):

@@ -17,8 +17,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import pytest
-from app.services.slot_engine import GRADE_PROFILES, build_grade_guardrail_prompt
-from app.services.quality_reviewer import validate_grade_appropriateness
+from app.services.quality_reviewer import GRADE_PROFILES, validate_grade_appropriateness
 
 
 # ── 1. grade_profiles.json structure ────────────────────────────────────────
@@ -71,51 +70,7 @@ class TestGradeProfilesJson:
             assert "stretch" in tier, f"Grade {grade} missing tier 'stretch'"
 
 
-# ── 2. build_grade_guardrail_prompt() ────────────────────────────────────────
-
-
-class TestBuildGradeGuardrailPrompt:
-    def test_grade1_prompt_contains_age_range(self):
-        prompt = build_grade_guardrail_prompt(1)
-        assert "6-7" in prompt
-
-    def test_grade1_prompt_contains_forbidden_error_detection(self):
-        prompt = build_grade_guardrail_prompt(1)
-        assert "error_detection" in prompt
-
-    def test_grade1_prompt_contains_max_words(self):
-        prompt = build_grade_guardrail_prompt(1)
-        assert "5" in prompt  # max 5 words
-
-    def test_grade1_prompt_contains_class_header(self):
-        prompt = build_grade_guardrail_prompt(1)
-        assert "CLASS 1" in prompt
-
-    def test_grade3_prompt_allows_error_detection(self):
-        # error_detection should appear in the ALLOWED section, not forbidden
-        prompt = build_grade_guardrail_prompt(3)
-        assert "CLASS 3" in prompt
-        assert "error_detection" in prompt
-
-    def test_grade5_prompt_contains_class_header(self):
-        prompt = build_grade_guardrail_prompt(5)
-        assert "CLASS 5" in prompt
-
-    def test_unknown_grade_returns_empty(self):
-        prompt = build_grade_guardrail_prompt(99)
-        assert prompt == ""
-
-    def test_grade1_prompt_contains_context_constraint(self):
-        prompt = build_grade_guardrail_prompt(1)
-        # Should include context guidance (food/animals/toys etc.)
-        assert "context" in prompt.lower() or "familiar" in prompt.lower()
-
-    def test_prompt_is_nonempty_for_all_valid_grades(self):
-        for g in [1, 2, 3, 4, 5]:
-            assert build_grade_guardrail_prompt(g) != "", f"Grade {g} returned empty prompt"
-
-
-# ── 3. validate_grade_appropriateness() ─────────────────────────────────────
+# ── 2. validate_grade_appropriateness() ─────────────────────────────────────
 
 
 def _make_q(role="recognition", answer="12", question="What is 5 + 3?"):

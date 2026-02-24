@@ -1,7 +1,7 @@
 """Column addition with carry — SkillContract implementation."""
 
 from .base import SkillContract
-from app.services.slot_engine import has_carry, make_carry_pair
+from app.skills.math_utils import has_carry, make_carry_pair
 
 
 class ColumnAdditionContract(SkillContract):
@@ -113,7 +113,7 @@ class ColumnAdditionContract(SkillContract):
         }
 
     def generate_drill(self, drill_focus: str, rng):
-        from app.services.slot_engine import make_carry_pair
+        from app.skills.math_utils import make_carry_pair
 
         if drill_focus == "isolated_ones_carry":
             # Force single-digit carry

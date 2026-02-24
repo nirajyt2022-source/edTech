@@ -166,7 +166,7 @@ def build_question_prompt(slot: dict, context: GenerationContext) -> str:
     # Hindi: inject Devanagari script anchor from profile
     if context.subject.lower() == "hindi":
         try:
-            from app.services.slot_engine import get_topic_profile as _gtp  # lazy — avoids circular import
+            from app.data.topic_profiles import get_topic_profile as _gtp
             _profile = _gtp(context.topic_slug)
             _deva = (_profile or {}).get("devanagari_examples", [])
         except Exception:

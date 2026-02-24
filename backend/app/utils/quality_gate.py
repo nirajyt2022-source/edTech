@@ -182,7 +182,7 @@ def run_quality_gate(worksheet: dict) -> Tuple[bool, List[str]]:
     #   b) options must not contain duplicates
     #   c) if correct_answer is a letter (A/B/C/D) the matching option must exist
     #   d) Safety net: options present but format is NOT an MCQ type
-    #      (catches cases the auto-correct in slot_engine didn't reach)
+    #      (catches cases the auto-correct in the pipeline didn't reach)
     for i, q in enumerate(questions, 1):
         fmt = (q.get("format") or "").lower()
         n = _q_number(q, i)

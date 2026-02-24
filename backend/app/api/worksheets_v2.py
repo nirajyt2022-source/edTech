@@ -10,7 +10,7 @@ import time
 
 from fastapi import APIRouter, HTTPException
 
-from app.api.worksheets import (
+from app.models.worksheet import (
     Question,
     Worksheet,
     WorksheetGenerationRequest,

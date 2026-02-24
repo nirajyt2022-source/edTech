@@ -1,7 +1,7 @@
 """Column subtraction with borrow — SkillContract implementation."""
 
 from .base import SkillContract
-from app.services.slot_engine import has_borrow, make_carry_pair
+from app.skills.math_utils import has_borrow, make_carry_pair
 import random
 
 
@@ -111,7 +111,7 @@ class ColumnSubtractionWithBorrowContract(SkillContract):
         }
 
     def generate_drill(self, drill_focus: str, rng):
-        from app.services.slot_engine import make_carry_pair
+        from app.skills.math_utils import make_carry_pair
 
         if drill_focus == "isolated_tens_borrow":
             # Force borrow from ones place
