@@ -43,14 +43,14 @@ interface FullWorksheet {
 const PAGE_SIZE = 20
 
 export default function History({ onNavigateToGenerator }: { onNavigateToGenerator?: (preFill?: { grade?: string; subject?: string; topic?: string }) => void }) {
-  const { children } = useChildren()
+  const { children, activeChildId } = useChildren()
   const { activeRole } = useProfile()
   const isTeacher = activeRole === 'teacher'
 
   const [worksheets, setWorksheets] = useState<WorksheetHistoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [filterChildId, setFilterChildId] = useState('all')
+  const [filterChildId, setFilterChildId] = useState(activeChildId || 'all')
   const [filterTopic, setFilterTopic] = useState('all')
   const [currentPageNum, setCurrentPageNum] = useState(1)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
@@ -92,6 +92,13 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
   useEffect(() => {
     setCurrentPageNum(1)
   }, [filterChildId, filterTopic, searchQuery])
+
+  // Sync filter with global active child
+  useEffect(() => {
+    if (activeChildId) {
+      setFilterChildId(activeChildId)
+    }
+  }, [activeChildId])
 
   // Derive unique topics from loaded worksheets
   const uniqueTopics = useMemo(() => {

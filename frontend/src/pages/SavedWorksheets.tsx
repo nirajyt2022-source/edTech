@@ -55,7 +55,7 @@ interface FullWorksheet {
 }
 
 export default function SavedWorksheets() {
-  const { children } = useChildren()
+  const { children, activeChildId } = useChildren()
   const { classes } = useClasses()
   const { activeRole } = useProfile()
   const isTeacher = activeRole === 'teacher'
@@ -66,7 +66,7 @@ export default function SavedWorksheets() {
   const [regenerating, setRegenerating] = useState(false)
   const [downloadingPdfType, setDownloadingPdfType] = useState<string | null>(null)
   const [error, setError] = useState('')
-  const [filterChildId, setFilterChildId] = useState('all')
+  const [filterChildId, setFilterChildId] = useState(activeChildId || 'all')
   const [filterClassId, setFilterClassId] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -101,6 +101,13 @@ export default function SavedWorksheets() {
   useEffect(() => {
     loadWorksheets()
   }, [filterChildId, filterClassId, loadWorksheets])
+
+  // Sync filter with global active child
+  useEffect(() => {
+    if (activeChildId) {
+      setFilterChildId(activeChildId)
+    }
+  }, [activeChildId])
 
   const viewWorksheet = async (id: string) => {
     try {

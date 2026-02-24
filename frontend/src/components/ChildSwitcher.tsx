@@ -30,7 +30,7 @@ export default function ChildSwitcher() {
   // 1 child — static label
   if (children.length === 1 && activeChild) {
     return (
-      <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
         <span
           className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
           style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: '#FFFFFF' }}
@@ -46,7 +46,7 @@ export default function ChildSwitcher() {
 
   // 2+ children — dropdown
   return (
-    <div ref={ref} className="relative hidden sm:block">
+    <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
