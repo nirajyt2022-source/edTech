@@ -46,7 +46,14 @@ async def deep_health():
     except Exception:
         checks["curriculum_topics"] = "unavailable"
 
-    all_ok = all(v == "ok" for k, v in checks.items() if k not in ("ai_stats", "curriculum_topics"))
+    # 5. Cache stats
+    try:
+        from app.services.cache import cache_stats
+        checks["cache"] = cache_stats()
+    except Exception:
+        checks["cache"] = "unavailable"
+
+    all_ok = all(v == "ok" for k, v in checks.items() if k not in ("ai_stats", "curriculum_topics", "cache"))
 
     return {
         "status": "healthy" if all_ok else "degraded",

@@ -77,23 +77,32 @@ async def generate_flashcards(request: Request, req: FlashcardRequest, authoriza
     """Generate a set of flashcards for a given topic using Gemini 2.5 Flash."""
     user_id = get_user_id_from_token(authorization)
 
-    prompt = _build_flashcard_prompt(req.grade, req.subject, req.topic, req.language, req.count)
+    # -- Cache check --
+    from app.services.cache import get_cached_flashcards, set_cached_flashcards
+    cached = get_cached_flashcards(req.grade, req.subject, req.topic, req.language)
+    if cached:
+        result = cached
+    else:
+        prompt = _build_flashcard_prompt(req.grade, req.subject, req.topic, req.language, req.count)
 
-    # -- RAG: Inject curriculum context --
-    from app.services.curriculum import get_curriculum_context
-    curriculum_ctx = await get_curriculum_context(req.grade, req.subject, req.topic)
-    if curriculum_ctx:
-        prompt = f"{curriculum_ctx}\n\n{prompt}"
-        logger.info("Curriculum context injected for flashcards: %s/%s/%s", req.grade, req.subject, req.topic)
-    # -- End RAG --
+        # -- RAG: Inject curriculum context --
+        from app.services.curriculum import get_curriculum_context
+        curriculum_ctx = await get_curriculum_context(req.grade, req.subject, req.topic)
+        if curriculum_ctx:
+            prompt = f"{curriculum_ctx}\n\n{prompt}"
+            logger.info("Curriculum context injected for flashcards: %s/%s/%s", req.grade, req.subject, req.topic)
+        # -- End RAG --
 
-    result = await _call_gemini_for_flashcards(prompt)
+        result = await _call_gemini_for_flashcards(prompt)
 
-    # Validate output
-    from app.services.output_validator import get_validator
-    is_valid, errors = get_validator().validate_flashcards(result)
-    if not is_valid:
-        logger.warning("Flashcard validation issues", extra={"errors": errors})
+        # Validate output
+        from app.services.output_validator import get_validator
+        is_valid, errors = get_validator().validate_flashcards(result)
+        if not is_valid:
+            logger.warning("Flashcard validation issues", extra={"errors": errors})
+
+        # Cache the result
+        set_cached_flashcards(req.grade, req.subject, req.topic, req.language, result)
 
     # Attach request metadata
     result["grade"] = req.grade

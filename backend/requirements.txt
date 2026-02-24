@@ -12,6 +12,7 @@ reportlab>=4.4.9
 slowapi>=0.1.9
 resend>=2.0.0
 sentry-sdk[fastapi]>=2.0.0
+cachetools>=5.0.0
 structlog>=24.0.0
 supabase>=2.27.3
 uvicorn[standard]>=0.40.0

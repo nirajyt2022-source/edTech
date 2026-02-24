@@ -94,6 +94,11 @@ async def grade_from_photo(
     if not is_valid:
         logger.warning("Grading validation issues", extra={"errors": val_errors})
 
+    # Invalidate dashboard cache so fresh stats are shown
+    if child_id:
+        from app.services.cache import invalidate_dashboard
+        invalidate_dashboard(child_id)
+
     logger.info(f"Grading complete for user={user_id}: {results['score']}/{results['total']}")
 
     return results

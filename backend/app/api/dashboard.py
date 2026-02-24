@@ -9,8 +9,16 @@ router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
 
 @router.get("/parent")
 def parent_dashboard(student_id: str = Query(...)):
+    from app.services.cache import get_cached_dashboard, set_cached_dashboard
+
+    cached = get_cached_dashboard(student_id)
+    if cached:
+        return cached
+
     try:
-        return get_parent_dashboard(student_id)
+        data = get_parent_dashboard(student_id)
+        set_cached_dashboard(student_id, data)
+        return data
     except Exception as e:
         logger.error("Dashboard error for student %s: %s", student_id, e)
         # Return empty dashboard instead of 500 — lets frontend render gracefully

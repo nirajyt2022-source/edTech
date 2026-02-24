@@ -99,23 +99,32 @@ async def generate_revision_notes(request: Request, req: RevisionRequest, author
     """Generate structured revision notes for a given topic using Gemini 2.5 Flash."""
     user_id = get_user_id_from_token(authorization)
 
-    prompt = _build_revision_prompt(req.grade, req.subject, req.topic, req.language)
+    # -- Cache check --
+    from app.services.cache import get_cached_revision, set_cached_revision
+    cached = get_cached_revision(req.grade, req.subject, req.topic, req.language)
+    if cached:
+        result = cached
+    else:
+        prompt = _build_revision_prompt(req.grade, req.subject, req.topic, req.language)
 
-    # -- RAG: Inject curriculum context --
-    from app.services.curriculum import get_curriculum_context
-    curriculum_ctx = await get_curriculum_context(req.grade, req.subject, req.topic)
-    if curriculum_ctx:
-        prompt = f"{curriculum_ctx}\n\n{prompt}"
-        logger.info("Curriculum context injected for revision: %s/%s/%s", req.grade, req.subject, req.topic)
-    # -- End RAG --
+        # -- RAG: Inject curriculum context --
+        from app.services.curriculum import get_curriculum_context
+        curriculum_ctx = await get_curriculum_context(req.grade, req.subject, req.topic)
+        if curriculum_ctx:
+            prompt = f"{curriculum_ctx}\n\n{prompt}"
+            logger.info("Curriculum context injected for revision: %s/%s/%s", req.grade, req.subject, req.topic)
+        # -- End RAG --
 
-    result = await _call_gemini_for_revision(prompt)
+        result = await _call_gemini_for_revision(prompt)
 
-    # Validate output
-    from app.services.output_validator import get_validator
-    is_valid, errors = get_validator().validate_revision(result)
-    if not is_valid:
-        logger.warning("Revision validation issues", extra={"errors": errors})
+        # Validate output
+        from app.services.output_validator import get_validator
+        is_valid, errors = get_validator().validate_revision(result)
+        if not is_valid:
+            logger.warning("Revision validation issues", extra={"errors": errors})
+
+        # Cache the result
+        set_cached_revision(req.grade, req.subject, req.topic, req.language, result)
 
     # Attach request metadata to the response
     result["grade"] = req.grade
