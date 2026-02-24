@@ -15,9 +15,16 @@ from html import escape
 
 logger = logging.getLogger(__name__)
 
-# ── Share-link base ───────────────────────────────────────────────────────────
-from app.core.config import get_settings as _get_settings  # noqa: E402
-_SHARE_BASE = _get_settings().frontend_url
+# ── Share-link base (resolved lazily to avoid import-time config issues) ──────
+_SHARE_BASE: str | None = None
+
+
+def _get_share_base() -> str:
+    global _SHARE_BASE
+    if _SHARE_BASE is None:
+        from app.core.config import get_settings
+        _SHARE_BASE = get_settings().frontend_url
+    return _SHARE_BASE
 
 # ── Colours (same palette as ClassReport.tsx) ─────────────────────────────────
 _GREEN  = "#2d6a4f"
