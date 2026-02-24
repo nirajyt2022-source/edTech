@@ -15,8 +15,9 @@ from html import escape
 
 logger = logging.getLogger(__name__)
 
-# ── Share-link base (matches the Vercel deployment) ───────────────────────────
-_SHARE_BASE = "https://ed-tech-drab.vercel.app"
+# ── Share-link base ───────────────────────────────────────────────────────────
+from app.core.config import get_settings as _get_settings  # noqa: E402
+_SHARE_BASE = _get_settings().frontend_url
 
 # ── Colours (same palette as ClassReport.tsx) ─────────────────────────────────
 _GREEN  = "#2d6a4f"

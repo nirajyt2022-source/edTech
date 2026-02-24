@@ -41,8 +41,7 @@ supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
 router = APIRouter(prefix="/api", tags=["reports"])
 
-# Shareable link base — matches the Vercel deployment
-_SHARE_BASE = "https://ed-tech-drab.vercel.app"
+_SHARE_BASE = settings.frontend_url
 
 
 # ---------------------------------------------------------------------------

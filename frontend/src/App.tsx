@@ -1,18 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import SharedWorksheet from './pages/SharedWorksheet'
-import ClassReport from './pages/ClassReport'
-import WorksheetGenerator from './pages/WorksheetGenerator'
-import SyllabusUpload from './pages/SyllabusUpload'
-import SavedWorksheets from './pages/SavedWorksheets'
-import ChildProfiles from './pages/ChildProfiles'
-import TeacherDashboard from './pages/TeacherDashboard'
-import ClassManager from './pages/ClassManager'
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import Auth from './pages/Auth'
 import Landing from './pages/Landing'
-import History from './pages/History'
-import ParentDashboard from './pages/ParentDashboard'
 import HomeDashboard from './pages/HomeDashboard'
-import AskSkolar from './pages/AskSkolar'
+
+// Lazy load pages not needed on first paint
+const SharedWorksheet = lazy(() => import('./pages/SharedWorksheet'))
+const ClassReport = lazy(() => import('./pages/ClassReport'))
+const WorksheetGenerator = lazy(() => import('./pages/WorksheetGenerator'))
+const SyllabusUpload = lazy(() => import('./pages/SyllabusUpload'))
+const SavedWorksheets = lazy(() => import('./pages/SavedWorksheets'))
+const ChildProfiles = lazy(() => import('./pages/ChildProfiles'))
+const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'))
+const ClassManager = lazy(() => import('./pages/ClassManager'))
+const History = lazy(() => import('./pages/History'))
+const ParentDashboard = lazy(() => import('./pages/ParentDashboard'))
+const AskSkolar = lazy(() => import('./pages/AskSkolar'))
 import RoleSelector from '@/components/RoleSelector'
 import {
   DropdownMenu,
@@ -30,6 +32,7 @@ import { SubscriptionProvider, useSubscription } from '@/lib/subscription'
 import { ProfileProvider, useProfile } from '@/lib/profile'
 import { EngagementProvider } from '@/lib/engagement'
 import ChildSwitcher from '@/components/ChildSwitcher'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import './index.css'
 
 type Page = 'home' | 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history' | 'progress' | 'ask'
@@ -303,6 +306,11 @@ function AppContent() {
 
       {/* Page Content */}
       <main className="animate-in fade-in duration-700 pb-20 md:pb-0">
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-emerald-600" />
+          </div>
+        }>
         {currentPage === 'home' && (
           <HomeDashboard onNavigate={(page, preFill) => {
             if (preFill) setGeneratorPreFill(preFill)
@@ -346,6 +354,7 @@ function AppContent() {
           />
         )}
         {currentPage === 'children' && <ChildProfiles />}
+        </Suspense>
       </main>
     </div>
   )
@@ -366,28 +375,50 @@ function App() {
 
   // Public shared worksheet route — no auth providers needed
   if (sharedWorksheetId) {
-    return <SharedWorksheet worksheetId={sharedWorksheetId} />
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-emerald-600" />
+          </div>
+        }>
+          <SharedWorksheet worksheetId={sharedWorksheetId} />
+        </Suspense>
+      </ErrorBoundary>
+    )
   }
 
   // Public class report route — no auth providers needed
   if (reportToken) {
-    return <ClassReport token={reportToken} />
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={
+          <div className="flex items-center justify-center min-h-[50vh]">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-emerald-600" />
+          </div>
+        }>
+          <ClassReport token={reportToken} />
+        </Suspense>
+      </ErrorBoundary>
+    )
   }
 
   return (
-    <AuthProvider>
-      <ProfileProvider>
-        <SubscriptionProvider>
-          <ChildrenProvider>
-            <ClassesProvider>
-              <EngagementProvider>
-                <AppContent />
-              </EngagementProvider>
-            </ClassesProvider>
-          </ChildrenProvider>
-        </SubscriptionProvider>
-      </ProfileProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ProfileProvider>
+          <SubscriptionProvider>
+            <ChildrenProvider>
+              <ClassesProvider>
+                <EngagementProvider>
+                  <AppContent />
+                </EngagementProvider>
+              </ClassesProvider>
+            </ChildrenProvider>
+          </SubscriptionProvider>
+        </ProfileProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

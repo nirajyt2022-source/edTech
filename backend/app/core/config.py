@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     log_json: bool = True  # JSON in prod, human-readable in dev
 
     # CORS — comma-separated allowed origins
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "https://ed-tech-drab.vercel.app"
     cors_origins: str = "http://localhost:5173,http://localhost:3000,http://localhost:5174,https://ed-tech-drab.vercel.app"
 
     class Config:
