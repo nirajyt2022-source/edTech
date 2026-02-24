@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from datetime import datetime, date
+import logging
 from supabase import create_client
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/engagement", tags=["engagement"])
+logger = logging.getLogger("skolar.engagement")
 
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
@@ -31,7 +33,8 @@ def get_user_id_from_token(authorization: str) -> str:
             raise HTTPException(status_code=401, detail="Invalid token")
         return user_response.user.id
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        logger.error("Auth verification failed: %s", e)
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 def ensure_engagement_exists(user_id: str, child_id: str) -> dict:
@@ -66,7 +69,7 @@ def ensure_engagement_exists(user_id: str, child_id: str) -> dict:
 @router.get("/{child_id}", response_model=EngagementStats)
 async def get_engagement(
     child_id: str,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Get engagement stats for a child."""
     user_id = get_user_id_from_token(authorization)
@@ -97,13 +100,14 @@ async def get_engagement(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get engagement: {str(e)}")
+        logger.error("Failed to get engagement for child: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.post("/{child_id}/complete")
 async def record_completion(
     child_id: str,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Record a worksheet completion (triggered on PDF download)."""
     user_id = get_user_id_from_token(authorization)
@@ -175,4 +179,5 @@ async def record_completion(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to record completion: {str(e)}")
+        logger.error("Failed to record completion: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")

@@ -10,6 +10,10 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Request
 
+from supabase import create_client
+from app.core.config import get_settings
+from app.services.subscription_check import check_and_increment_usage
+
 from app.middleware.rate_limit import limiter
 from app.models.worksheet import (
     Question,
@@ -23,6 +27,8 @@ from app.services.worksheet_generator import generate_worksheet
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v2/worksheets", tags=["worksheets-v2"])
 
+_settings = get_settings()
+_supabase = create_client(_settings.supabase_url, _settings.supabase_service_key)
 client = get_openai_compat_client()
 
 
@@ -61,23 +67,47 @@ def _infer_render_format(q_type: str, options: list | None) -> str:
 @limiter.limit("10/minute")
 async def generate_worksheet_v2(request: Request, body: WorksheetGenerationRequest):
     """Generate a worksheet using the simplified v2 pipeline."""
+
+    # ── Subscription enforcement ──────────────────────────────
+    authorization = request.headers.get("authorization", "")
+    user_id = None
+    if authorization.startswith("Bearer "):
+        try:
+            token = authorization.replace("Bearer ", "")
+            user_resp = _supabase.auth.get_user(token)
+            user_id = user_resp.user.id
+        except Exception:
+            pass  # Allow generation to proceed for auth edge cases
+
+    if user_id:
+        usage = await check_and_increment_usage(user_id, _supabase)
+        if not usage["allowed"]:
+            raise HTTPException(status_code=402, detail=usage["message"])
+    # ── End subscription enforcement ──────────────────────────
+
     try:
-        data, elapsed_ms, warnings = await asyncio.to_thread(
-            generate_worksheet,
-            client=client,
-            board=body.board,
-            grade_level=body.grade_level,
-            subject=body.subject,
-            topic=body.topic,
-            difficulty=body.difficulty,
-            num_questions=body.num_questions,
-            language=body.language,
-            problem_style=body.problem_style,
-            custom_instructions=body.custom_instructions,
+        data, elapsed_ms, warnings = await asyncio.wait_for(
+            asyncio.to_thread(
+                generate_worksheet,
+                client=client,
+                board=body.board,
+                grade_level=body.grade_level,
+                subject=body.subject,
+                topic=body.topic,
+                difficulty=body.difficulty,
+                num_questions=body.num_questions,
+                language=body.language,
+                problem_style=body.problem_style,
+                custom_instructions=body.custom_instructions,
+            ),
+            timeout=45.0,
         )
+    except asyncio.TimeoutError:
+        logger.error("[v2] Generation timed out (45s) topic=%s", body.topic)
+        raise HTTPException(status_code=504, detail="Worksheet generation timed out. Please try again.")
     except ValueError as exc:
         logger.error("[v2] Generation failed: %s", exc)
-        raise HTTPException(status_code=502, detail=str(exc))
+        raise HTTPException(status_code=502, detail="Worksheet generation failed. Please try again.")
 
     raw_questions = data.get("questions", [])
     questions = [_map_question(q, i) for i, q in enumerate(raw_questions)]

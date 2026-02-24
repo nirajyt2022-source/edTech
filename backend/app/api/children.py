@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from datetime import datetime
+import logging
 from supabase import create_client
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/children", tags=["children"])
+logger = logging.getLogger("skolar.children")
 
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
@@ -47,13 +49,14 @@ def get_user_id_from_token(authorization: str) -> str:
             raise HTTPException(status_code=401, detail="Invalid token")
         return user_response.user.id
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        logger.error("Auth verification failed: %s", e)
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 @router.post("/")
 async def create_child(
     request: CreateChildRequest,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Create a new child profile."""
     user_id = get_user_id_from_token(authorization)
@@ -75,12 +78,13 @@ async def create_child(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create child profile: {str(e)}")
+        logger.error("Failed to create child profile: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.get("/")
 async def list_children(
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """List all children for the authenticated user."""
     user_id = get_user_id_from_token(authorization)
@@ -97,13 +101,14 @@ async def list_children(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list children: {str(e)}")
+        logger.error("Failed to list children: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.get("/{child_id}")
 async def get_child(
     child_id: str,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Get a single child profile by ID."""
     user_id = get_user_id_from_token(authorization)
@@ -124,14 +129,15 @@ async def get_child(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get child: {str(e)}")
+        logger.error("Failed to get child: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.put("/{child_id}")
 async def update_child(
     child_id: str,
     request: UpdateChildRequest,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Update a child profile."""
     user_id = get_user_id_from_token(authorization)
@@ -167,13 +173,14 @@ async def update_child(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update child: {str(e)}")
+        logger.error("Failed to update child: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.delete("/{child_id}")
 async def delete_child(
     child_id: str,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Delete a child profile."""
     user_id = get_user_id_from_token(authorization)
@@ -188,4 +195,5 @@ async def delete_child(
         return {"success": True, "deleted": child_id}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to delete child: {str(e)}")
+        logger.error("Failed to delete child: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")

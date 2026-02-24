@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 from app.middleware.rate_limit import limiter
 import json
+import logging
 import uuid
 from datetime import datetime
 from PyPDF2 import PdfReader
@@ -11,6 +12,7 @@ from app.core.config import get_settings
 from app.services.ai_client import get_ai_client, get_openai_compat_client
 
 router = APIRouter(prefix="/api/syllabus", tags=["syllabus"])
+logger = logging.getLogger("skolar.syllabus")
 
 settings = get_settings()
 client = get_openai_compat_client()
@@ -86,7 +88,8 @@ async def extract_text_from_pdf(file_content: bytes) -> str:
             text += page.extract_text() + "\n"
         return text.strip()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read PDF: {str(e)}")
+        logger.error("Failed to read PDF: %s", e)
+        raise HTTPException(status_code=400, detail="Failed to read PDF. Please try a different file.")
 
 
 async def extract_text_from_image(file_content: bytes, filename: str) -> str:
@@ -117,7 +120,8 @@ async def extract_text_from_image(file_content: bytes, filename: str) -> str:
         )
         return text
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process image: {str(e)}")
+        logger.error("Failed to process image: %s", e)
+        raise HTTPException(status_code=500, detail="Failed to process image. Please try a different file.")
 
 
 @router.post("/parse", response_model=SyllabusParseResponse)
@@ -192,7 +196,8 @@ Return ONLY valid JSON, no markdown."""
         try:
             data = json.loads(content)
         except json.JSONDecodeError as e:
-            raise HTTPException(status_code=500, detail=f"Failed to parse AI response: {str(e)}")
+            logger.error("Failed to parse AI response: %s", e)
+            raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
         # Build chapters
         chapters = []
@@ -230,7 +235,8 @@ Return ONLY valid JSON, no markdown."""
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to parse syllabus: {str(e)}")
+        logger.error("Failed to parse syllabus: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.get("/{syllabus_id}")

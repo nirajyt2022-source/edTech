@@ -4,7 +4,7 @@ Extracted from app/api/worksheets.py.
 """
 from __future__ import annotations
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Literal
 
 from app.middleware.sanitize import sanitize_string, VALID_GRADES, VALID_SUBJECTS
@@ -29,7 +29,7 @@ class WorksheetGenerationRequest(BaseModel):
     subject: str
     topic: str
     difficulty: Literal["easy", "medium", "hard"]
-    num_questions: int = 10
+    num_questions: int = Field(default=10, ge=1, le=30)
     language: str = "English"
     custom_instructions: str | None = None
     skills: list[str] | None = None

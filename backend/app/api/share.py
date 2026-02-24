@@ -1,5 +1,7 @@
 """Share endpoints — public worksheet viewer + share URL generation."""
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 import logging
@@ -48,13 +50,13 @@ def _get_user_id_from_token(authorization: str) -> str:
         raise
     except Exception as e:
         logger.error("Auth verification failed: %s", e)
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 @router.post("/{worksheet_id}/share", response_model=ShareResponse)
 async def create_share_link(
     worksheet_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Generate a public share URL for a worksheet. Owner only."""
     user_id = _get_user_id_from_token(authorization)
@@ -77,6 +79,11 @@ async def create_share_link(
     if ws["user_id"] != user_id:
         raise HTTPException(status_code=403, detail="You can only share your own worksheets")
 
+    # Mark worksheet as shared
+    supabase.table("worksheets").update({
+        "shared_at": datetime.now(timezone.utc).isoformat(),
+    }).eq("id", worksheet_id).execute()
+
     share_url = f"{SHARE_BASE_URL}/shared/{worksheet_id}"
     return ShareResponse(share_url=share_url)
 
@@ -89,6 +96,7 @@ async def get_shared_worksheet(worksheet_id: str):
             supabase.table("worksheets")
             .select("id, title, grade, subject, topic, difficulty, language, questions")
             .eq("id", worksheet_id)
+            .not_.is_("shared_at", "null")
             .execute()
         )
     except Exception as e:

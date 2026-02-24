@@ -39,7 +39,8 @@ def _get_user_id(authorization: str) -> str:
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {exc}")
+        logger.error("Auth verification failed: %s", exc)
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 def _verify_ownership(child_id: str, user_id: str) -> dict:
@@ -69,7 +70,7 @@ def _verify_ownership(child_id: str, user_id: str) -> dict:
 @router.get("/{child_id}/graph")
 def get_child_graph(
     child_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Return the full learning graph for a child, grouped by subject."""
     user_id = _get_user_id(authorization)
@@ -90,7 +91,7 @@ def get_child_graph(
 @router.get("/{child_id}/graph/summary")
 def get_child_graph_summary(
     child_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Return the mastery summary (mastered/improving/needs_attention lists)."""
     user_id = _get_user_id(authorization)
@@ -112,7 +113,7 @@ def get_child_graph_summary(
 def get_child_graph_history(
     child_id: str,
     limit: int = Query(default=20, ge=1, le=50),
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Return recent learning sessions for a child, newest first."""
     user_id = _get_user_id(authorization)
@@ -164,7 +165,7 @@ def _pick_recommendation(rows: list[dict]) -> Optional[dict]:
 @router.get("/{child_id}/graph/recommendation")
 def get_child_next_recommendation(
     child_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Return the single highest-priority topic to practice next."""
     user_id = _get_user_id(authorization)
@@ -215,7 +216,7 @@ def get_child_next_recommendation(
 @router.get("/{child_id}/graph/report")
 def get_child_graph_report(
     child_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Return a plain-English parent-friendly progress report.
 

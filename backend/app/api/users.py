@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from datetime import datetime
+import logging
 from supabase import create_client
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/users", tags=["users"])
+logger = logging.getLogger("skolar.users")
 
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
@@ -46,11 +48,12 @@ def get_user_id_from_token(authorization: str) -> str:
             raise HTTPException(status_code=401, detail="Invalid token")
         return user_response.user.id
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        logger.error("Auth verification failed: %s", e)
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 @router.get("/profile")
-async def get_profile(authorization: str = Header(None)):
+async def get_profile(authorization: str = Header(...)):
     """Get the current user's profile. Returns {profile: null} if no profile exists."""
     user_id = get_user_id_from_token(authorization)
 
@@ -67,13 +70,14 @@ async def get_profile(authorization: str = Header(None)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get profile: {str(e)}")
+        logger.error("Failed to get profile: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.put("/profile")
 async def upsert_profile(
     request: UpdateProfileRequest,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Create or update the user's profile."""
     user_id = get_user_id_from_token(authorization)
@@ -119,13 +123,14 @@ async def upsert_profile(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save profile: {str(e)}")
+        logger.error("Failed to save profile: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.post("/switch-role")
 async def switch_role(
     request: SwitchRoleRequest,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Switch the user's active role."""
     user_id = get_user_id_from_token(authorization)
@@ -150,4 +155,5 @@ async def switch_role(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to switch role: {str(e)}")
+        logger.error("Failed to switch role: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")

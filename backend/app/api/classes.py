@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from datetime import datetime
+import logging
 from supabase import create_client
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/classes", tags=["classes"])
+logger = logging.getLogger("skolar.classes")
 
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
@@ -40,13 +42,14 @@ def get_user_id_from_token(authorization: str) -> str:
             raise HTTPException(status_code=401, detail="Invalid token")
         return user_response.user.id
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        logger.error("Auth verification failed: %s", e)
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 @router.post("/")
 async def create_class(
     request: CreateClassRequest,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Create a new teacher class."""
     user_id = get_user_id_from_token(authorization)
@@ -73,12 +76,13 @@ async def create_class(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create class: {str(e)}")
+        logger.error("Failed to create class: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.get("/")
 async def list_classes(
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """List all classes for the authenticated teacher."""
     user_id = get_user_id_from_token(authorization)
@@ -95,13 +99,14 @@ async def list_classes(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list classes: {str(e)}")
+        logger.error("Failed to list classes: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.get("/{class_id}")
 async def get_class(
     class_id: str,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Get a single class by ID."""
     user_id = get_user_id_from_token(authorization)
@@ -122,14 +127,15 @@ async def get_class(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get class: {str(e)}")
+        logger.error("Failed to get class: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.put("/{class_id}")
 async def update_class(
     class_id: str,
     request: UpdateClassRequest,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Update a class."""
     user_id = get_user_id_from_token(authorization)
@@ -170,13 +176,14 @@ async def update_class(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update class: {str(e)}")
+        logger.error("Failed to update class: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.get("/{class_id}/dashboard")
 async def get_class_dashboard(
     class_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Return class mastery heatmap, weak topics, and per-student summaries.
 
@@ -201,7 +208,7 @@ async def get_class_dashboard(
         cls = getattr(cls_result, "data", None)
     except Exception as e:
         logger.error("[get_class_dashboard] DB error verifying class %s: %s", class_id, e)
-        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
     if not cls:
         raise HTTPException(status_code=403, detail="Access denied or class not found")
@@ -307,7 +314,7 @@ async def get_class_dashboard(
 @router.delete("/{class_id}")
 async def delete_class(
     class_id: str,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Delete a class."""
     user_id = get_user_id_from_token(authorization)
@@ -322,4 +329,5 @@ async def delete_class(
         return {"success": True, "deleted": class_id}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to delete class: {str(e)}")
+        logger.error("Failed to delete class: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")

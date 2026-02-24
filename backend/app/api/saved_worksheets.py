@@ -88,7 +88,7 @@ class PDFExportRequest(BaseModel):
 @router.post("/save")
 async def save_worksheet(
     request: SaveWorksheetRequest,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Save a generated worksheet to the database."""
     user_id = _get_user_id(authorization)
@@ -127,7 +127,7 @@ async def save_worksheet(
 
 @router.get("/saved/list")
 async def list_saved_worksheets(
-    authorization: str = Header(None),
+    authorization: str = Header(...),
     limit: int = 20,
     offset: int = 0,
     child_id: str | None = None,
@@ -190,7 +190,7 @@ async def list_saved_worksheets(
 @router.get("/saved/{worksheet_id}")
 async def get_saved_worksheet(
     worksheet_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Get a saved worksheet by ID."""
     user_id = _get_user_id(authorization)
@@ -222,7 +222,7 @@ async def get_saved_worksheet(
 @router.delete("/saved/{worksheet_id}")
 async def delete_saved_worksheet(
     worksheet_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Delete a saved worksheet."""
     user_id = _get_user_id(authorization)
@@ -299,7 +299,7 @@ async def export_worksheet_pdf(request: PDFExportRequest):
 @router.post("/regenerate/{worksheet_id}")
 async def regenerate_worksheet(
     worksheet_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Regenerate a worksheet with the same settings using v2 generator."""
     user_id = _get_user_id(authorization)
@@ -370,7 +370,7 @@ async def regenerate_worksheet(
 # ── 7. Teacher analytics ──────────────────────────────────────────────────────
 
 @router.get("/analytics")
-async def get_teacher_analytics(authorization: str = Header(None)):
+async def get_teacher_analytics(authorization: str = Header(...)):
     """Get light analytics for a teacher."""
     user_id = _get_user_id(authorization)
 

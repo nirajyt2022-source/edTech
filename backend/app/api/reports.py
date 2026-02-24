@@ -75,7 +75,7 @@ def _get_user_id(authorization: str) -> str:
         raise
     except Exception as exc:
         logger.error("[reports._get_user_id] Auth failed: %s", exc)
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {exc}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 # ---------------------------------------------------------------------------
@@ -85,7 +85,7 @@ def _get_user_id(authorization: str) -> str:
 @router.post("/teacher/classes/{class_id}/report")
 async def generate_class_report(
     class_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Generate a shareable class report and store it in class_reports."""
     teacher_id = _get_user_id(authorization)
@@ -186,7 +186,7 @@ async def get_report_by_token(
 @router.get("/teacher/classes/{class_id}/contacts")
 async def get_class_contacts(
     class_id: str,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Return [{child_id, child_name, parent_email}] for a class."""
     teacher_id = _get_user_id(authorization)
@@ -226,7 +226,7 @@ async def get_class_contacts(
 async def upsert_class_contacts(
     class_id: str,
     body: List[ContactItem],
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Upsert parent email contacts for a class."""
     teacher_id = _get_user_id(authorization)
@@ -264,7 +264,7 @@ async def upsert_class_contacts(
 async def send_email_report(
     class_id: str,
     body: SendEmailBody,
-    authorization: str = Header(None),
+    authorization: str = Header(...),
 ):
     """Send personalised report emails to parents via Resend."""
     teacher_id = _get_user_id(authorization)

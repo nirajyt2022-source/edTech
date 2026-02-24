@@ -25,7 +25,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Referrer policy
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
-        # Permissions policy (disable unnecessary browser features)
-        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        # Content Security Policy
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' https://checkout.razorpay.com https://api.razorpay.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: blob:; "
+            "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com; "
+            "frame-src https://api.razorpay.com; "
+        )
+
+        # Permissions policy (allow camera for grading, disable rest)
+        response.headers["Permissions-Policy"] = "camera=(self), microphone=(), geolocation=()"
 
         return response

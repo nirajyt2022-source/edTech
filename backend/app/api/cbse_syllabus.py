@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+import logging
 from supabase import create_client
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/cbse-syllabus", tags=["cbse-syllabus"])
+logger = logging.getLogger("skolar.cbse_syllabus")
 
 settings = get_settings()
 
@@ -50,7 +52,8 @@ async def get_cbse_syllabus(grade: str, subject: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get syllabus: {str(e)}")
+        logger.error("Failed to get syllabus: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.get("/grades")
@@ -65,7 +68,8 @@ async def list_available_grades():
         return {"grades": grades}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list grades: {str(e)}")
+        logger.error("Failed to list grades: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.get("/subjects/{grade}")
@@ -81,7 +85,8 @@ async def list_subjects_for_grade(grade: str):
         return {"grade": grade, "subjects": subjects}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list subjects: {str(e)}")
+        logger.error("Failed to list subjects: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 # Seed data endpoint (admin only - for initial setup)
@@ -721,4 +726,5 @@ async def seed_cbse_syllabus():
         return {"success": True, "message": f"Seeded {len(syllabus_data)} syllabus entries"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to seed syllabus: {str(e)}")
+        logger.error("Failed to seed syllabus: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")

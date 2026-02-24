@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from datetime import datetime
+import logging
 from supabase import create_client
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/subscription", tags=["subscription"])
+logger = logging.getLogger("skolar.subscription")
 
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
@@ -34,7 +36,8 @@ def get_user_id_from_token(authorization: str) -> str:
             raise HTTPException(status_code=401, detail="Invalid token")
         return user_response.user.id
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        logger.error("Auth verification failed: %s", e)
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 def ensure_subscription_exists(user_id: str) -> dict:
@@ -80,7 +83,7 @@ from datetime import timedelta  # noqa: E402
 
 
 @router.get("/status", response_model=SubscriptionStatus)
-async def get_subscription_status(authorization: str = Header(None)):
+async def get_subscription_status(authorization: str = Header(...)):
     """Get current user's subscription status."""
     user_id = get_user_id_from_token(authorization)
     sub = ensure_subscription_exists(user_id)
@@ -107,7 +110,7 @@ async def get_subscription_status(authorization: str = Header(None)):
 
 
 @router.post("/increment-usage")
-async def increment_usage(authorization: str = Header(None)):
+async def increment_usage(authorization: str = Header(...)):
     """Increment worksheet usage count. Called after successful generation."""
     user_id = get_user_id_from_token(authorization)
     sub = ensure_subscription_exists(user_id)
@@ -130,7 +133,7 @@ async def increment_usage(authorization: str = Header(None)):
 
 
 @router.post("/upgrade")
-async def upgrade_to_paid(authorization: str = Header(None)):
+async def upgrade_to_paid(authorization: str = Header(...)):
     """Upgrade user to paid tier. (Placeholder - integrate with payment provider)"""
     user_id = get_user_id_from_token(authorization)
 

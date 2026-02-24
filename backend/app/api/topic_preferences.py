@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from datetime import datetime
+import logging
 from supabase import create_client
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/topic-preferences", tags=["topic-preferences"])
+logger = logging.getLogger("skolar.topic_preferences")
 
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
@@ -40,14 +42,15 @@ def get_user_id_from_token(authorization: str) -> str:
             raise HTTPException(status_code=401, detail="Invalid token")
         return user_response.user.id
     except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        logger.error("Auth verification failed: %s", e)
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 @router.get("/{child_id}/{subject}")
 async def get_topic_preferences(
     child_id: str,
     subject: str,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Get saved topic preferences for a child and subject."""
     user_id = get_user_id_from_token(authorization)
@@ -100,13 +103,14 @@ async def get_topic_preferences(
                 "selected_topics": None,
                 "has_preferences": False
             }
-        raise HTTPException(status_code=500, detail=f"Failed to get preferences: {str(e)}")
+        logger.error("Failed to get preferences: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.post("/")
 async def save_topic_preferences(
     request: SavePreferencesRequest,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Save topic preferences for a child and subject."""
     user_id = get_user_id_from_token(authorization)
@@ -146,14 +150,15 @@ async def save_topic_preferences(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to save preferences: {str(e)}")
+        logger.error("Failed to save preferences: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.delete("/{child_id}/{subject}")
 async def clear_topic_preferences(
     child_id: str,
     subject: str,
-    authorization: str = Header(None)
+    authorization: str = Header(...)
 ):
     """Clear topic preferences (reset to all selected)."""
     user_id = get_user_id_from_token(authorization)
@@ -169,4 +174,5 @@ async def clear_topic_preferences(
         return {"success": True, "message": "Preferences cleared"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to clear preferences: {str(e)}")
+        logger.error("Failed to clear preferences: %s", e)
+        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
