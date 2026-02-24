@@ -80,6 +80,12 @@ async def generate_flashcards(request: Request, req: FlashcardRequest, authoriza
     prompt = _build_flashcard_prompt(req.grade, req.subject, req.topic, req.language, req.count)
     result = await _call_gemini_for_flashcards(prompt)
 
+    # Validate output
+    from app.services.output_validator import get_validator
+    is_valid, errors = get_validator().validate_flashcards(result)
+    if not is_valid:
+        logger.warning("Flashcard validation issues", extra={"errors": errors})
+
     # Attach request metadata
     result["grade"] = req.grade
     result["subject"] = req.subject

@@ -1,15 +1,32 @@
 import json as _json
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
-from app.api import health, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum, analytics, dashboard, share, learning_graph, reports, grading, revision, flashcards, textbook, ask_skolar
-from app.api.worksheets_v2 import router as worksheets_v2_router
+
 from app.core.config import get_settings
+from app.core.logging_config import setup_logging
 from app.middleware.rate_limit import limiter, rate_limit_exceeded_handler
 
+# Initialize structured logging first
+setup_logging()
+
 settings = get_settings()
+
+# Initialize Sentry (only if DSN is configured)
+if settings.sentry_dsn:
+    sentry_sdk.init(
+        dsn=settings.sentry_dsn,
+        traces_sample_rate=0.1,
+        profiles_sample_rate=0.1,
+        environment="production" if not settings.debug else "development",
+    )
+
+# Lazy router imports (after logging is set up)
+from app.api import health, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum, analytics, dashboard, share, learning_graph, reports, grading, revision, flashcards, textbook, ask_skolar
+from app.api.worksheets_v2 import router as worksheets_v2_router
 
 
 class UnicodeJSONResponse(JSONResponse):
@@ -35,6 +52,13 @@ app = FastAPI(
 # Rate limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# Request tracing + access logging middleware (outermost first)
+from app.middleware.access_log import AccessLogMiddleware
+from app.middleware.request_id import RequestIDMiddleware
+
+app.add_middleware(AccessLogMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 # Configure CORS
 cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]

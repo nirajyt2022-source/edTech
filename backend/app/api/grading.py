@@ -88,6 +88,12 @@ async def grade_from_photo(
     # 4. Call Gemini Vision
     results = await call_gemini_vision_for_grading(image_data, prompt, len(questions))
 
+    # Validate grading output
+    from app.services.output_validator import get_validator
+    is_valid, val_errors = get_validator().validate_grading(results, total_questions=len(questions))
+    if not is_valid:
+        logger.warning("Grading validation issues", extra={"errors": val_errors})
+
     logger.info(f"Grading complete for user={user_id}: {results['score']}/{results['total']}")
 
     return results

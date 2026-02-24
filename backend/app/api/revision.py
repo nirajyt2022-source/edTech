@@ -102,6 +102,12 @@ async def generate_revision_notes(request: Request, req: RevisionRequest, author
     prompt = _build_revision_prompt(req.grade, req.subject, req.topic, req.language)
     result = await _call_gemini_for_revision(prompt)
 
+    # Validate output
+    from app.services.output_validator import get_validator
+    is_valid, errors = get_validator().validate_revision(result)
+    if not is_valid:
+        logger.warning("Revision validation issues", extra={"errors": errors})
+
     # Attach request metadata to the response
     result["grade"] = req.grade
     result["subject"] = req.subject

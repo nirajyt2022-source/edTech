@@ -790,6 +790,19 @@ def generate_worksheet(
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)
 
+            # ── Output validation ──
+            from app.services.output_validator import get_validator
+            validator = get_validator()
+            is_valid, validation_errors = validator.validate_worksheet(
+                data, grade=grade_level, subject=subject, topic=topic, num_questions=num_questions
+            )
+            if not is_valid:
+                all_warnings.extend([f"[validation] {e}" for e in validation_errors])
+                logger.warning(
+                    "Worksheet validation issues",
+                    extra={"errors": validation_errors, "topic": topic, "grade": grade_level},
+                )
+
             # Safety net: strip all images in standard mode
             if problem_style == "standard":
                 for q in data.get("questions", []):

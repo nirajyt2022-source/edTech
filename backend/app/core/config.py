@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     resend_from_email: str = "onboarding@resend.dev"
 
+    # Monitoring
+    sentry_dsn: str = ""  # Empty = disabled
+    log_level: str = "INFO"
+    log_json: bool = True  # JSON in prod, human-readable in dev
+
     # CORS — comma-separated allowed origins
     frontend_url: str = "http://localhost:5173"
     cors_origins: str = "http://localhost:5173,http://localhost:3000,http://localhost:5174,https://ed-tech-drab.vercel.app"

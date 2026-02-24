@@ -28,13 +28,14 @@ Usage:
 from __future__ import annotations
 
 import json
-import logging
 import time
 from typing import Any
 
+import structlog
+
 from app.core.config import get_settings
 
-logger = logging.getLogger("skolar.ai")
+logger = structlog.get_logger("skolar.ai")
 
 # Default model
 DEFAULT_MODEL = "gemini-2.5-flash"
@@ -55,7 +56,7 @@ class AIClient:
         self.model = model
         self._call_count = 0
         self._total_latency_ms = 0
-        logger.info("AIClient initialized", extra={"model": model})
+        logger.info("AIClient initialized", model=model)
 
     # -- JSON generation (worksheets, flashcards, revision, etc.) -----------
 
@@ -96,11 +97,9 @@ class AIClient:
 
                 logger.info(
                     "generate_json OK",
-                    extra={
-                        "attempt": attempt + 1,
-                        "latency_ms": elapsed_ms,
-                        "response_len": len(raw),
-                    },
+                    attempt=attempt + 1,
+                    latency_ms=elapsed_ms,
+                    response_len=len(raw),
                 )
                 return parsed
 
@@ -110,7 +109,8 @@ class AIClient:
                 last_error = e
                 logger.warning(
                     "generate_json parse failed, retrying",
-                    extra={"attempt": attempt + 1, "error": str(e)},
+                    attempt=attempt + 1,
+                    error=str(e),
                 )
             except Exception as e:
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
@@ -118,7 +118,8 @@ class AIClient:
                 last_error = e
                 logger.error(
                     "generate_json API error",
-                    extra={"attempt": attempt + 1, "error": str(e)},
+                    attempt=attempt + 1,
+                    error=str(e),
                 )
 
         raise ValueError(f"AI generation failed after {1 + retries} attempts: {last_error}")
@@ -149,16 +150,13 @@ class AIClient:
             self._track_call(elapsed_ms)
 
             text = response.text or ""
-            logger.info(
-                "generate_text OK",
-                extra={"latency_ms": elapsed_ms, "response_len": len(text)},
-            )
+            logger.info("generate_text OK", latency_ms=elapsed_ms, response_len=len(text))
             return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
-            logger.error("generate_text failed", extra={"error": str(e)})
+            logger.error("generate_text failed", error=str(e))
             raise ValueError(f"AI text generation failed: {e}")
 
     # -- Chat with history (Ask Skolar multi-turn) --------------------------
@@ -194,16 +192,13 @@ class AIClient:
             self._track_call(elapsed_ms)
 
             text = response.text or ""
-            logger.info(
-                "generate_chat OK",
-                extra={"latency_ms": elapsed_ms, "turns": len(messages)},
-            )
+            logger.info("generate_chat OK", latency_ms=elapsed_ms, turns=len(messages))
             return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
-            logger.error("generate_chat failed", extra={"error": str(e)})
+            logger.error("generate_chat failed", error=str(e))
             raise ValueError(f"AI chat generation failed: {e}")
 
     # -- Vision (grading photos, textbook scan) -----------------------------
@@ -247,10 +242,7 @@ class AIClient:
             self._track_call(elapsed_ms)
 
             raw = response.text or ""
-            logger.info(
-                "generate_with_images OK",
-                extra={"latency_ms": elapsed_ms, "num_images": len(image_parts)},
-            )
+            logger.info("generate_with_images OK", latency_ms=elapsed_ms, num_images=len(image_parts))
 
             if response_json:
                 return self._parse_json(raw)
@@ -259,7 +251,7 @@ class AIClient:
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
-            logger.error("generate_with_images failed", extra={"error": str(e)})
+            logger.error("generate_with_images failed", error=str(e))
             raise ValueError(f"AI vision generation failed: {e}")
 
     # -- Vision with typed Parts (syllabus image OCR) -----------------------
@@ -290,16 +282,13 @@ class AIClient:
             self._track_call(elapsed_ms)
 
             text = response.text or ""
-            logger.info(
-                "generate_with_typed_parts OK",
-                extra={"latency_ms": elapsed_ms},
-            )
+            logger.info("generate_with_typed_parts OK", latency_ms=elapsed_ms)
             return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
-            logger.error("generate_with_typed_parts failed", extra={"error": str(e)})
+            logger.error("generate_with_typed_parts failed", error=str(e))
             raise ValueError(f"AI typed parts generation failed: {e}")
 
     # -- Adapter for worksheet_generator (backward compat) ------------------
@@ -342,16 +331,13 @@ class AIClient:
             self._track_call(elapsed_ms)
 
             text = response.text or ""
-            logger.info(
-                "generate_openai_style OK",
-                extra={"latency_ms": elapsed_ms, "response_len": len(text)},
-            )
+            logger.info("generate_openai_style OK", latency_ms=elapsed_ms, response_len=len(text))
             return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
-            logger.error("generate_openai_style failed", extra={"error": str(e)})
+            logger.error("generate_openai_style failed", error=str(e))
             raise
 
     # -- Internal helpers ---------------------------------------------------
