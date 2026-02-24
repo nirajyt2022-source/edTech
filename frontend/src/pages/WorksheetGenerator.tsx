@@ -214,14 +214,6 @@ interface Worksheet {
   } | null
 }
 
-interface GenerateResponse {
-  worksheet: Worksheet
-  worksheets?: Worksheet[]
-  generation_time_ms?: number
-  warnings?: unknown
-  verdict?: string
-}
-
 interface SyllabusTopic {
   name: string
   subtopics?: string[]
@@ -660,7 +652,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
           : topic
 
     try {
-      const response = await apiV1WithFallback<GenerateResponse>('post', '/api/worksheets/generate', {
+      const response = await api.post('/api/v2/worksheets/generate', {
         board,
         grade_level: grade,
         subject: syllabus?.subject || subject,
