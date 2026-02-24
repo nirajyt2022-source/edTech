@@ -67,11 +67,11 @@ const ICONS = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getGreeting(): string {
+function getGreeting(): { greeting: string; motivation: string } {
   const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
+  if (h < 12) return { greeting: 'Good morning', motivation: 'Ready for some practice?' }
+  if (h < 17) return { greeting: 'Good afternoon', motivation: 'Great time to review!' }
+  return { greeting: 'Good evening', motivation: 'Quick revision before bed?' }
 }
 
 function formatDate(dateStr: string): string {
@@ -95,6 +95,8 @@ export default function HomeDashboard({ onNavigate }: Props) {
     user?.user_metadata?.name?.split(' ')[0] ||
     user?.email?.split('@')[0] ||
     'there'
+
+  const greetingData = getGreeting()
 
   const isTeacher = activeRole === 'teacher'
   const { activeChild } = useChildren()
@@ -143,10 +145,11 @@ export default function HomeDashboard({ onNavigate }: Props) {
           className="text-2xl sm:text-3xl font-bold text-foreground"
           style={{ fontFamily: "'Fraunces', serif" }}
         >
-          {getGreeting()},{' '}
+          {greetingData.greeting},{' '}
           <span className="text-primary">{displayName}</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">{dateStr}</p>
+        <p className="text-sm text-muted-foreground mt-1">{greetingData.motivation}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{dateStr}</p>
         {!isTeacher && activeChild && (
           <p className="text-sm text-muted-foreground mt-0.5">
             Practicing with <span className="font-medium text-foreground">{activeChild.name}</span>
@@ -158,47 +161,41 @@ export default function HomeDashboard({ onNavigate }: Props) {
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
         <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           <QuickActionCard
             icon={ICONS.pencil}
             label="Practice"
             description="Generate a worksheet"
-            badge="active"
             onClick={() => onNavigate('generator')}
           />
           <QuickActionCard
             icon={ICONS.bookOpen}
             label="Revise"
             description="Topic revision notes"
-            badge="new"
             onClick={() => onNavigate('generator', { mode: 'revision' })}
           />
           <QuickActionCard
             icon={ICONS.camera}
             label="Grade"
             description="Grade from photo"
-            badge="active"
             onClick={() => onNavigate('progress')}
           />
           <QuickActionCard
             icon={ICONS.layers}
             label="Flashcards"
             description="Quick recall cards"
-            badge="new"
             onClick={() => onNavigate('generator', { mode: 'flashcards' })}
           />
           <QuickActionCard
             icon={ICONS.book}
             label="Textbook"
             description="From any page"
-            badge="new"
             onClick={() => onNavigate('generator', { mode: 'textbook' })}
           />
           <QuickActionCard
             icon={ICONS.sparkle}
             label="Syllabus"
             description="Upload & align"
-            badge="active"
             onClick={() => onNavigate('syllabus')}
           />
         </div>
@@ -292,7 +289,7 @@ export default function HomeDashboard({ onNavigate }: Props) {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                       </svg>
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <p className="text-sm font-semibold text-foreground truncate">
                         {ws.subject}
                         <span className="font-normal text-muted-foreground"> — </span>

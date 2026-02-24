@@ -104,11 +104,20 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
   const [activeSubject, setActiveSubject] = useState(0)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const sectionsRef = useRef<(HTMLElement | null)[]>([])
+  const userInteractedRef = useRef(false)
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    if (userInteractedRef.current) return
+    const interval = setInterval(() => {
+      setActiveSubject(prev => (prev + 1) % SUBJECTS.length)
+    }, 4000)
+    return () => clearInterval(interval)
   }, [])
 
   // Intersection Observer for scroll-reveal
@@ -400,6 +409,21 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Mobile hero — shown below lg */}
+          <div className="lg:hidden mt-8 mx-auto max-w-[320px]">
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-white/20">
+              <div className="bg-[#1E1B4B] px-5 py-3">
+                <p className="text-sm font-semibold text-white">Addition &amp; Subtraction</p>
+                <p className="text-[10px] text-white/60">Class 2 &middot; Mathematics &middot; 10 Questions</p>
+              </div>
+              <div className="px-5 py-4 space-y-3">
+                <p className="text-xs text-slate-600">1. What is 34 + 25?</p>
+                <p className="text-xs text-slate-600">2. Meera has &#x20B9;45. She buys a notebook for &#x20B9;28...</p>
+                <div className="h-6 bg-gradient-to-t from-white to-transparent" />
+              </div>
+            </div>
+          </div>
         </div>
 
       </section>
@@ -424,6 +448,13 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Social proof strip */}
+      <section className="bg-white py-6 px-6 border-b border-slate-100">
+        <p className="text-center text-sm text-slate-400">
+          Trusted by parents across India &middot; <span className="font-semibold text-slate-600">CBSE Aligned</span> &middot; <span className="font-semibold text-slate-600">NCERT Mapped</span>
+        </p>
       </section>
 
       {/* -- 4. HOW IT WORKS -- */}
@@ -656,7 +687,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               return (
                 <button
                   key={s.name}
-                  onClick={() => setActiveSubject(i)}
+                  onClick={() => { userInteractedRef.current = true; setActiveSubject(i) }}
                   className={`flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold cursor-pointer transition-all duration-200 border font-[Inter,system-ui,sans-serif] ${
                     activeSubject === i
                       ? 'bg-[#1E1B4B] text-white border-[#1E1B4B]'
@@ -994,7 +1025,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                   <ChevronDown className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`} />
                 </button>
                 <div
-                  className={`overflow-hidden transition-all duration-300 ${openFaq === i ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'}`}
+                  className={`overflow-hidden transition-all duration-300 ${openFaq === i ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
                   itemScope
                   itemProp="acceptedAnswer"
                   itemType="https://schema.org/Answer"
@@ -1052,10 +1083,20 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             <span>&middot;</span>
             <span>skolar.in</span>
             <span>&middot;</span>
-            <span>&copy; 2025</span>
+            <span>&copy; 2025–2026</span>
           </div>
         </div>
       </footer>
+
+      {scrolled && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-full bg-[#1E1B4B] text-white shadow-lg flex items-center justify-center hover:bg-[#312E81] transition-colors"
+          aria-label="Back to top"
+        >
+          <ChevronDown className="w-5 h-5 rotate-180" />
+        </button>
+      )}
 
       {/* -- SCROLL-REVEAL ANIMATION CSS -- */}
       <style>{`

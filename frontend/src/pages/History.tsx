@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
-import { api, apiV1WithFallback } from '@/lib/api'
+import { api } from '@/lib/api'
 import { useChildren } from '@/lib/children'
 import { useProfile } from '@/lib/profile'
 import { notify } from '@/lib/toast'
@@ -163,7 +163,7 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
       const fullResponse = await api.get(`/api/worksheets/saved/${worksheet.id}`)
       const fullWorksheet = fullResponse.data
 
-      const response = await apiV1WithFallback<BlobPart>('post', '/api/worksheets/export-pdf', {
+      const response = await api.post('/api/worksheets/export-pdf', {
         worksheet: {
           title: fullWorksheet.title,
           grade: fullWorksheet.grade,

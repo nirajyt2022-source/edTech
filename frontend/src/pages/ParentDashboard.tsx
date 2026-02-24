@@ -200,7 +200,7 @@ function LearningHealthCard({ summary }: { summary: GraphSummary }) {
         <CardTitle className="text-lg font-fraunces">Learning Progress</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {sections.map((s) => (
             <div
               key={s.label}
@@ -732,7 +732,7 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
 
   if (childrenList.length === 0) {
     return (
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
         <EmptyState
           icon={
             <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -749,7 +749,7 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
   const selectedChild = activeChild
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       {/* Greeting */}
       <div>
         <h1 className="text-2xl font-bold font-fraunces text-foreground">
@@ -981,7 +981,7 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
                       <div>
                         <p className="text-sm font-medium text-foreground">{topic.topic}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {topic.count} worksheet{topic.count !== 1 ? 's' : ''} &middot;{' '}
+                          {topic.count} worksheet{topic.count !== 1 ? 's' : ''} &middot; Last practiced{' '}
                           {new Date(topic.last_generated).toLocaleDateString('en-IN', {
                             day: 'numeric',
                             month: 'short',
