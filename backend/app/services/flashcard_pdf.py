@@ -13,7 +13,6 @@ to avoid conflicts with other PDF services.
 import io
 import os
 import logging
-from xml.sax.saxutils import escape as xml_escape
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -31,8 +30,8 @@ _DEJAVU_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 _USE_UNICODE_FONT = False
 
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase import pdfmetrics  # noqa: E402
+from reportlab.pdfbase.ttfonts import TTFont  # noqa: E402
 
 if os.path.exists(_NOTO_VARIABLE):
     try:

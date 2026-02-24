@@ -22,7 +22,6 @@ os.environ.setdefault("SUPABASE_SERVICE_KEY", "fake-service-key")
 os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "fake-service-key")
 os.environ.setdefault("OPENAI_API_KEY", "sk-fake-key-for-tests")
 
-import pytest
 from datetime import datetime, timezone, timedelta
 
 from app.services.report_generator import ClassReportGenerator

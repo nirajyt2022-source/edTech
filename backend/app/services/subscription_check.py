@@ -7,9 +7,9 @@ Usage:
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-logger = logging.getLogger("practicecraft.subscription")
+logger = logging.getLogger("skolar.subscription")
 
 FREE_TIER_LIMIT = 10  # worksheets per month
 

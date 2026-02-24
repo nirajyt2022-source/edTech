@@ -1,5 +1,5 @@
 """
-Learning objectives extracted from slot_engine.py.
+Learning objectives for CBSE topics.
 Maps topics to their CBSE learning outcomes.
 """
 

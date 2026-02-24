@@ -29,7 +29,7 @@ _dashboard_cache: TTLCache = TTLCache(maxsize=200, ttl=300)  # 5 minutes
 def _make_key(*parts: str) -> str:
     """Create a cache key from parts."""
     raw = ":".join(str(p).strip().lower() for p in parts)
-    return hashlib.md5(raw.encode()).hexdigest()
+    return hashlib.sha256(raw.encode()).hexdigest()
 
 
 # -- Revision Cache ------------------------------------------------------------

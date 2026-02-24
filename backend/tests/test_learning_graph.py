@@ -8,13 +8,11 @@ import os
 # Ensure the backend/ directory is on the path when running from project root
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-import pytest
 from app.services.learning_graph import (
     _compute_mastery_transition,
     _find_weakest_format,
     _build_format_mix,
     _apply_decay,
-    MASTERY_ORDER,
 )
 from datetime import datetime, timezone, timedelta
 

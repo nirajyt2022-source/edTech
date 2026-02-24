@@ -15,7 +15,7 @@ from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
     PageBreak, HRFlowable, KeepTogether,
 )
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import io
@@ -528,7 +528,7 @@ class PDFService:
                 spaceBefore=4, spaceAfter=8,
             ))
             story.append(Paragraph(
-                f"*  Bonus Challenge",
+                "*  Bonus Challenge",
                 self.styles['TierHeader']
             ))
             story.append(Paragraph(

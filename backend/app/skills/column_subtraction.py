@@ -1,7 +1,7 @@
 """Column subtraction with borrow — SkillContract implementation."""
 
 from .base import SkillContract
-from app.skills.math_utils import has_borrow, make_carry_pair
+from app.skills.math_utils import make_carry_pair
 import random
 
 

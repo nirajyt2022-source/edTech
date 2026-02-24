@@ -1,7 +1,7 @@
 """Column addition with carry — SkillContract implementation."""
 
 from .base import SkillContract
-from app.skills.math_utils import has_carry, make_carry_pair
+from app.skills.math_utils import make_carry_pair
 
 
 class ColumnAdditionContract(SkillContract):

@@ -147,7 +147,7 @@ def main():
             else:
                 if warnings:
                     print(f"  Warnings: {warnings}")
-                print(f"  RESULT: PASS")
+                print("  RESULT: PASS")
                 total_pass += 1
 
         except Exception as exc:

@@ -372,17 +372,17 @@ def main():
     skipped = 0
     failed = []
 
-    print(f"╔══════════════════════════════════════════════════╗")
-    print(f"║  Skolar Image Generator — Phase 2 (All Subjects) ║")
-    print(f"╠══════════════════════════════════════════════════╣")
+    print("╔══════════════════════════════════════════════════╗")
+    print("║  Skolar Image Generator — Phase 2 (All Subjects) ║")
+    print("╠══════════════════════════════════════════════════╣")
     print(f"║  Model: {MODEL:<40s} ║")
     print(f"║  Total images: {total:<33d} ║")
-    print(f"║  Output: frontend/public/images/ + backend/      ║")
-    print(f"╚══════════════════════════════════════════════════╝")
+    print("║  Output: frontend/public/images/ + backend/      ║")
+    print("╚══════════════════════════════════════════════════╝")
     print()
 
     for category, items in IMAGES.items():
-        print(f"── {category.upper()} ({len(items)} images) {'─' * (40 - len(category))}") 
+        print(f"── {category.upper()} ({len(items)} images) {'─' * (40 - len(category))}")
 
         for keyword, description in items.items():
             # Check if already exists (skip)
@@ -411,12 +411,12 @@ def main():
             time.sleep(4.5)
 
     print()
-    print(f"═══════════════════════════════════════════════════")
+    print("═══════════════════════════════════════════════════")
     print(f" Done! Generated: {generated} | Skipped: {skipped} | Failed: {len(failed)}")
     print(f" Total images in library: {generated + skipped}")
     if failed:
         print(f" Failed ({len(failed)}): {', '.join(failed)}")
-    print(f"═══════════════════════════════════════════════════")
+    print("═══════════════════════════════════════════════════")
 
 
 if __name__ == "__main__":

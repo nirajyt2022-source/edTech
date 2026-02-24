@@ -1,7 +1,6 @@
 """
 Tests for answer_computer.py — every function, every specified case.
 """
-import pytest
 from app.utils.answer_computer import (
     add, subtract, multiply,
     clock_time, time_after_duration, duration_between,

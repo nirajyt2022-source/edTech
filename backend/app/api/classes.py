@@ -313,7 +313,7 @@ async def delete_class(
     user_id = get_user_id_from_token(authorization)
 
     try:
-        result = supabase.table("teacher_classes") \
+        supabase.table("teacher_classes") \
             .delete() \
             .eq("id", class_id) \
             .eq("user_id", user_id) \

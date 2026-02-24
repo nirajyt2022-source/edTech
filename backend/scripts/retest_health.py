@@ -6,7 +6,6 @@ Usage:
     cd backend
     python scripts/retest_health.py <fresh_auth_token>
 """
-import json
 import sys
 import time
 

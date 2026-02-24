@@ -16,7 +16,6 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-import pytest
 from app.services.quality_reviewer import GRADE_PROFILES, validate_grade_appropriateness
 
 

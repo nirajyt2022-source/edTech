@@ -4,7 +4,7 @@ Persistent history store for worksheet generation.
 Tracks last N=30 worksheets to avoid repeating contexts, error patterns,
 thinking styles, number pairs, and question templates across generations.
 
-Storage: local JSON file at backend/.practicecraft_history.json
+Storage: local JSON file at backend/.skolar_history.json
 """
 
 import hashlib
@@ -13,9 +13,9 @@ import logging
 import re
 from pathlib import Path
 
-logger = logging.getLogger("practicecraft.history_store")
+logger = logging.getLogger("skolar.history_store")
 
-HISTORY_FILE = Path(__file__).parent.parent.parent / ".practicecraft_history.json"
+HISTORY_FILE = Path(__file__).parent.parent.parent / ".skolar_history.json"
 MAX_HISTORY = 30
 
 
@@ -64,13 +64,13 @@ def get_avoid_state() -> dict:
 def hash_question(text: str) -> str:
     """Hash question text for dedup (exact match)."""
     normalized = text.lower().strip()
-    return hashlib.md5(normalized.encode()).hexdigest()[:12]
+    return hashlib.sha256(normalized.encode()).hexdigest()[:12]
 
 
 def hash_question_template(text: str) -> str:
     """Hash question text with numbers replaced (structural dedup)."""
     normalized = re.sub(r"\d+", "N", text.lower().strip())
-    return hashlib.md5(normalized.encode()).hexdigest()[:12]
+    return hashlib.sha256(normalized.encode()).hexdigest()[:12]
 
 
 def update_history(worksheet_record: dict) -> None:

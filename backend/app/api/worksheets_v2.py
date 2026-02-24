@@ -6,7 +6,6 @@ Mounts at /api/v2/worksheets. The old /api/worksheets (v1) is untouched.
 from __future__ import annotations
 
 import logging
-import time
 
 from fastapi import APIRouter, HTTPException, Request
 
@@ -61,8 +60,6 @@ def _infer_render_format(q_type: str, options: list | None) -> str:
 @limiter.limit("10/minute")
 async def generate_worksheet_v2(request: Request, body: WorksheetGenerationRequest):
     """Generate a worksheet using the simplified v2 pipeline."""
-    start = time.perf_counter()
-
     try:
         data, elapsed_ms, warnings = generate_worksheet(
             client=client,

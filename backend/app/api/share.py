@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/worksheets", tags=["share"])
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
-logger = logging.getLogger("practicecraft.share")
+logger = logging.getLogger("skolar.share")
 
 # Production frontend URL for share links
 SHARE_BASE_URL = "https://ed-tech-drab.vercel.app"

@@ -179,7 +179,7 @@ async def delete_child(
     user_id = get_user_id_from_token(authorization)
 
     try:
-        result = supabase.table("children") \
+        supabase.table("children") \
             .delete() \
             .eq("id", child_id) \
             .eq("user_id", user_id) \

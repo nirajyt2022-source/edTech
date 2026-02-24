@@ -552,7 +552,7 @@ def check_topic_relevance(
     ).strip()
 
     if not all_text:
-        return [f"OFF_TOPIC: No question text generated at all"]
+        return ["OFF_TOPIC: No question text generated at all"]
 
     import re as _re
     for signal in signals:

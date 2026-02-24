@@ -5,7 +5,7 @@ import asyncio
 from typing import Optional
 from functools import wraps
 
-logger = logging.getLogger("practicecraft.telemetry")
+logger = logging.getLogger("skolar.telemetry")
 
 
 def emit_event(event: str, *, route: str, version: str, student_id: Optional[str] = None,

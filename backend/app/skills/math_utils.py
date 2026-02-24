@@ -1,6 +1,5 @@
 """
 Math utilities for arithmetic skill generators.
-Extracted from slot_engine.py.
 """
 import random
 

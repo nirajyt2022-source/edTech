@@ -19,7 +19,7 @@ def _get_user_or_ip(request: Request) -> str:
     if auth.startswith("Bearer ") and len(auth) > 20:
         # Use a hash of the token as the key (don't log the actual token)
         import hashlib
-        token_hash = hashlib.md5(auth.encode()).hexdigest()[:12]
+        token_hash = hashlib.sha256(auth.encode()).hexdigest()[:12]
         return f"user:{token_hash}"
     return f"ip:{get_remote_address(request)}"
 

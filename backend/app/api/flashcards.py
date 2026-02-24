@@ -11,7 +11,6 @@ Flow:
 
 import io
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Header, Request
 from fastapi.responses import StreamingResponse

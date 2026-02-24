@@ -1,0 +1,2648 @@
+{
+  "summary": {
+    "total_topics": 198,
+    "clean_topics": 102,
+    "topics_with_issues": 89,
+    "generation_failures": 7,
+    "SUBJECT_CONTAMINATION": 0,
+    "TOPIC_DRIFT": 0,
+    "HINDI_NO_DEVANAGARI": 0,
+    "GRADE_VOCAB": 0,
+    "WRONG_ANSWER": 14,
+    "DUPLICATE": 1,
+    "OFF_TOPIC": 86,
+    "GENERATION_FAILURE": 0
+  },
+  "issues_by_type": {
+    "OFF_TOPIC": [
+      {
+        "subject": "Maths",
+        "grade": 1,
+        "topic": "Numbers 1 to 50 (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['numbers']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 1,
+        "topic": "Numbers 51 to 100 (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['numbers']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 1,
+        "topic": "Addition up to 20 (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['addition']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 1,
+        "topic": "Subtraction within 20 (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['subtraction', 'within']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 1,
+        "topic": "Basic Shapes (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['basic', 'shapes']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 1,
+        "topic": "Spatial sense (in/out, near/far) (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['near', 'sense', 'spatial']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 2,
+        "topic": "Numbers up to 1000 (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['1000', 'numbers']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 2,
+        "topic": "Multiplication (tables 2-5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['multiplication', 'tables']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 2,
+        "topic": "Shapes and space (2D)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['shapes', 'space']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 2,
+        "topic": "Data handling (pictographs)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['data', 'handling', 'pictographs']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Addition (carries)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['addition', 'carries']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Subtraction (borrowing)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['borrowing', 'subtraction']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Addition and subtraction (3-digit)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['3-digit', 'addition', 'subtraction']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Multiplication (tables 2-10)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['2-10', 'multiplication', 'tables']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Division basics",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['basics', 'division']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Numbers up to 10000",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['10000', 'numbers']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Fractions (halves, quarters)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['fractions', 'halves', 'quarters']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Fractions",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['fractions']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Patterns and sequences",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['patterns', 'sequences']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 4,
+        "topic": "Large numbers (up to 1,00,000)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['large', 'numbers']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 4,
+        "topic": "Multiplication (3-digit × 2-digit)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['2-digit', '3-digit', 'multiplication']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 5,
+        "topic": "Fractions (add and subtract) (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['fractions', 'subtract']"
+      },
+      {
+        "subject": "Maths",
+        "grade": 5,
+        "topic": "Data handling (pie charts) (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['charts', 'data', 'handling']"
+      },
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Alphabet (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['alphabet']"
+      },
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Phonics (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['phonics']"
+      },
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Self and Family Vocabulary (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['family', 'self', 'vocabulary']"
+      },
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Greetings and Polite Words (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['greetings', 'polite', 'words']"
+      },
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Seasons (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['seasons']"
+      },
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Simple Sentences (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['sentences', 'simple']"
+      },
+      {
+        "subject": "English",
+        "grade": 2,
+        "topic": "Verbs (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['verbs']"
+      },
+      {
+        "subject": "English",
+        "grade": 2,
+        "topic": "Pronouns (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['pronouns']"
+      },
+      {
+        "subject": "English",
+        "grade": 2,
+        "topic": "Sentences (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['sentences']"
+      },
+      {
+        "subject": "English",
+        "grade": 3,
+        "topic": "Verbs (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['verbs']"
+      },
+      {
+        "subject": "English",
+        "grade": 3,
+        "topic": "Pronouns (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['pronouns']"
+      },
+      {
+        "subject": "English",
+        "grade": 3,
+        "topic": "Tenses (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['tenses']"
+      },
+      {
+        "subject": "English",
+        "grade": 3,
+        "topic": "Vocabulary (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['vocabulary']"
+      },
+      {
+        "subject": "English",
+        "grade": 3,
+        "topic": "Reading Comprehension (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['comprehension', 'reading']"
+      },
+      {
+        "subject": "English",
+        "grade": 4,
+        "topic": "Tenses (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['tenses']"
+      },
+      {
+        "subject": "English",
+        "grade": 4,
+        "topic": "Conjunctions (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['conjunctions']"
+      },
+      {
+        "subject": "English",
+        "grade": 4,
+        "topic": "Adverbs (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['adverbs']"
+      },
+      {
+        "subject": "English",
+        "grade": 4,
+        "topic": "Prefixes and Suffixes (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['prefixes', 'suffixes']"
+      },
+      {
+        "subject": "English",
+        "grade": 4,
+        "topic": "Vocabulary (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['vocabulary']"
+      },
+      {
+        "subject": "English",
+        "grade": 4,
+        "topic": "Reading Comprehension (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['comprehension', 'reading']"
+      },
+      {
+        "subject": "English",
+        "grade": 5,
+        "topic": "Comprehension (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['comprehension']"
+      },
+      {
+        "subject": "English",
+        "grade": 5,
+        "topic": "Synonyms and Antonyms (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['antonyms', 'synonyms']"
+      },
+      {
+        "subject": "English",
+        "grade": 5,
+        "topic": "Creative Writing (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['creative', 'writing']"
+      },
+      {
+        "subject": "Science",
+        "grade": 3,
+        "topic": "Plants (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['plants']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 1,
+        "topic": "Varnamala Swar (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['swar', 'varnamala']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 1,
+        "topic": "Varnamala Vyanjan (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['varnamala', 'vyanjan']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 1,
+        "topic": "Family Words (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['family', 'words']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 1,
+        "topic": "Simple Sentences in Hindi (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['hindi', 'sentences', 'simple']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 2,
+        "topic": "Matras Introduction (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['introduction', 'matras']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 2,
+        "topic": "Two Letter Words (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['letter', 'words']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 2,
+        "topic": "Three Letter Words (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['letter', 'three', 'words']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 2,
+        "topic": "Rhymes and Poems (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['poems', 'rhymes']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 2,
+        "topic": "Nature Vocabulary (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['nature', 'vocabulary']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 3,
+        "topic": "Varnamala (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['varnamala']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 3,
+        "topic": "Matras (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['matras']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 3,
+        "topic": "Shabd Rachna (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['rachna', 'shabd']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 3,
+        "topic": "Vakya Rachna (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['rachna', 'vakya']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 3,
+        "topic": "Kahani Lekhan (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['kahani', 'lekhan']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 4,
+        "topic": "Anusvaar and Visarg (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['anusvaar', 'visarg']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 4,
+        "topic": "Vachan and Ling (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['ling', 'vachan']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 4,
+        "topic": "Kaal (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['kaal']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 4,
+        "topic": "Patra Lekhan (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['lekhan', 'patra']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 4,
+        "topic": "Comprehension Hindi (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['comprehension', 'hindi']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 5,
+        "topic": "Muhavare (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['muhavare']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 5,
+        "topic": "Paryayvachi Shabd (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['paryayvachi', 'shabd']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 5,
+        "topic": "Vilom Shabd (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['shabd', 'vilom']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 5,
+        "topic": "Samas (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['samas']"
+      },
+      {
+        "subject": "Hindi",
+        "grade": 5,
+        "topic": "Samvad Lekhan (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['lekhan', 'samvad']"
+      },
+      {
+        "subject": "Computer",
+        "grade": 2,
+        "topic": "Special Keys (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['keys', 'special']"
+      },
+      {
+        "subject": "Computer",
+        "grade": 5,
+        "topic": "Internet Basics (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['basics', 'internet']"
+      },
+      {
+        "subject": "GK",
+        "grade": 3,
+        "topic": "Solar System Basics (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['basics', 'solar', 'system']"
+      },
+      {
+        "subject": "GK",
+        "grade": 3,
+        "topic": "Current Awareness (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['awareness', 'current']"
+      },
+      {
+        "subject": "GK",
+        "grade": 4,
+        "topic": "Continents and Oceans (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['continents', 'oceans']"
+      },
+      {
+        "subject": "GK",
+        "grade": 4,
+        "topic": "Famous Scientists (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['famous', 'scientists']"
+      },
+      {
+        "subject": "GK",
+        "grade": 4,
+        "topic": "Festivals of India (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['festivals', 'india']"
+      },
+      {
+        "subject": "GK",
+        "grade": 5,
+        "topic": "Environmental Awareness (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['awareness', 'environmental']"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": 1,
+        "topic": "Honesty (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['honesty']"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": 2,
+        "topic": "Respecting Elders (Class 2)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['elders', 'respecting']"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": 3,
+        "topic": "Environmental Care (Class 3)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['care', 'environmental']"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": 4,
+        "topic": "Leadership (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['leadership']"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": 5,
+        "topic": "Digital Ethics (Class 5)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['digital', 'ethics']"
+      },
+      {
+        "subject": "Health",
+        "grade": 1,
+        "topic": "Personal Hygiene (Class 1)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['hygiene', 'personal']"
+      },
+      {
+        "subject": "Health",
+        "grade": 4,
+        "topic": "Yoga Introduction (Class 4)",
+        "detail": "OFF_TOPIC: No topic keywords in questions. Expected one of: ['introduction', 'yoga']"
+      }
+    ],
+    "WRONG_ANSWER": [
+      {
+        "subject": "Maths",
+        "grade": 1,
+        "topic": "Addition up to 20 (Class 1)",
+        "detail": "WRONG_ANSWER: '3 + 4 = ___. Is the answer more than 5 or less than 5? Expla' — expected 7, got 5.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 2,
+        "topic": "Addition (2-digit with carry)",
+        "detail": "WRONG_ANSWER: 'Lily has 27 apples and she buys 48 more. How many apples doe' — expected 75, got 70.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Subtraction (borrowing)",
+        "detail": "WRONG_ANSWER: 'Estimate the result of 482 - 276 by rounding each number to ' — expected 206, got 800.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Multiplication (tables 2-10)",
+        "detail": "WRONG_ANSWER: 'Which is greater: 6 × 4 or 5 × 5? Explain your reasoning.' — expected 24, got 6.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Multiplication (tables 2-10)",
+        "detail": "WRONG_ANSWER: 'Which is greater: 7 × 3 or 6 × 5? Explain your reasoning.' — expected 21, got 7.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Fractions (halves, quarters)",
+        "detail": "WRONG_ANSWER: 'A student wrote that 1/2 of a pizza is the same as 3/4 of a ' — expected 0.5, got 1.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Fractions",
+        "detail": "WRONG_ANSWER: 'Is 3/4 more or less than 2/3? Explain your reasoning.' — expected 0.75, got 3.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Fractions",
+        "detail": "WRONG_ANSWER: 'A student wrote that 1/3 is greater than 2/5. What is the mi' — expected 0.3333, got 1.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 4,
+        "topic": "Fractions (equivalent, comparison)",
+        "detail": "WRONG_ANSWER: 'Which of the following fractions is equivalent to 12/16? A) ' — expected 0.75, got 3.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 4,
+        "topic": "Fractions (equivalent, comparison)",
+        "detail": "WRONG_ANSWER: 'A student simplified the fraction 4/8 to 1/2. However, they ' — expected 0.5, got 1.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 5,
+        "topic": "Fractions (add and subtract) (Class 5)",
+        "detail": "WRONG_ANSWER: 'What is 3/8 + 1/8?' — expected 0.375, got 1.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 5,
+        "topic": "Fractions (add and subtract) (Class 5)",
+        "detail": "WRONG_ANSWER: 'A student calculated 2/5 + 3/5 and wrote the answer as 5/10.' — expected 0.4, got 1.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 5,
+        "topic": "Fractions (add and subtract) (Class 5)",
+        "detail": "WRONG_ANSWER: 'Liam has 3/5 of a pizza, and Emma has 1/2 of a pizza. Who ha' — expected 0.6, got 11.0"
+      },
+      {
+        "subject": "Maths",
+        "grade": 5,
+        "topic": "Area and volume (Class 5)",
+        "detail": "WRONG_ANSWER: 'What is the area of a triangle with a base of 10 cm and a he' — expected 0.5, got 20.0"
+      }
+    ],
+    "GENERATION_FAILURE": [
+      {
+        "subject": "Maths",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Measurement (Class 1)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Perimeter and area",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Factors and multiples (Class 5)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Decimals (all operations) (Class 5)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Fitness and Stamina (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Nutrition Labels Reading (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Mental Health Awareness (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      }
+    ],
+    "DUPLICATE": [
+      {
+        "subject": "Maths",
+        "grade": 3,
+        "topic": "Multiplication (tables 2-10)",
+        "detail": "DUPLICATE: Q1 and Q3 are 75% similar"
+      }
+    ]
+  },
+  "full_results": [
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Numbers 1 to 50 (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['numbers']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Numbers 51 to 100 (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['numbers']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Addition up to 20 (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: '3 + 4 = ___. Is the answer more than 5 or less than 5? Expla' — expected 7, got 5.0",
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['addition']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Subtraction within 20 (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['subtraction', 'within']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Basic Shapes (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['basic', 'shapes']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Spatial sense (in/out, near/far) (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['near', 'sense', 'spatial']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Measurement (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Time (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Money (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Numbers up to 1000 (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['1000', 'numbers']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Addition (2-digit with carry)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'Lily has 27 apples and she buys 48 more. How many apples doe' — expected 75, got 70.0"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Subtraction (2-digit with borrow)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Multiplication (tables 2-5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['multiplication', 'tables']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Division (sharing equally)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Shapes and space (2D)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['shapes', 'space']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Measurement (length, weight)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Time (hour, half-hour)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Money (coins and notes)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Data handling (pictographs)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['data', 'handling', 'pictographs']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Addition (carries)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['addition', 'carries']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Subtraction (borrowing)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'Estimate the result of 482 - 276 by rounding each number to ' — expected 206, got 800.0",
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['borrowing', 'subtraction']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Addition and subtraction (3-digit)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['3-digit', 'addition', 'subtraction']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Multiplication (tables 2-10)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'Which is greater: 6 × 4 or 5 × 5? Explain your reasoning.' — expected 24, got 6.0",
+        "WRONG_ANSWER: 'Which is greater: 7 × 3 or 6 × 5? Explain your reasoning.' — expected 21, got 7.0",
+        "DUPLICATE: Q1 and Q3 are 75% similar",
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['2-10', 'multiplication', 'tables']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Division basics",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['basics', 'division']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Numbers up to 10000",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['10000', 'numbers']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Fractions (halves, quarters)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'A student wrote that 1/2 of a pizza is the same as 3/4 of a ' — expected 0.5, got 1.0",
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['fractions', 'halves', 'quarters']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Fractions",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'Is 3/4 more or less than 2/3? Explain your reasoning.' — expected 0.75, got 3.0",
+        "WRONG_ANSWER: 'A student wrote that 1/3 is greater than 2/5. What is the mi' — expected 0.3333, got 1.0",
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['fractions']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Time (reading clock, calendar)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Money (bills and change)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Symmetry",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Patterns and sequences",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['patterns', 'sequences']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Large numbers (up to 1,00,000)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['large', 'numbers']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Addition and subtraction (5-digit)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Multiplication (3-digit × 2-digit)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['2-digit', '3-digit', 'multiplication']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Division (long division)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Fractions (equivalent, comparison)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'Which of the following fractions is equivalent to 12/16? A) ' — expected 0.75, got 3.0",
+        "WRONG_ANSWER: 'A student simplified the fraction 4/8 to 1/2. However, they ' — expected 0.5, got 1.0"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Decimals (tenths, hundredths)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Geometry (angles, lines)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Perimeter and area",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Time (minutes, 24-hour clock)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Money (bills, profit/loss)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Numbers up to 10 lakh (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Factors and multiples (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "HCF and LCM (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Fractions (add and subtract) (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'What is 3/8 + 1/8?' — expected 0.375, got 1.0",
+        "WRONG_ANSWER: 'A student calculated 2/5 + 3/5 and wrote the answer as 5/10.' — expected 0.4, got 1.0",
+        "WRONG_ANSWER: 'Liam has 3/5 of a pizza, and Emma has 1/2 of a pizza. Who ha' — expected 0.6, got 11.0",
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['fractions', 'subtract']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Decimals (all operations) (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Percentage (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Area and volume (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'What is the area of a triangle with a base of 10 cm and a he' — expected 0.5, got 20.0"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Geometry (circles, symmetry) (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Data handling (pie charts) (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['charts', 'data', 'handling']"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Speed distance time (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Alphabet (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['alphabet']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Phonics (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['phonics']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Self and Family Vocabulary (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['family', 'self', 'vocabulary']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Animals and Food Vocabulary (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Greetings and Polite Words (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['greetings', 'polite', 'words']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Seasons (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['seasons']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Simple Sentences (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['sentences', 'simple']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Nouns (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Verbs (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['verbs']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Pronouns (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['pronouns']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Sentences (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['sentences']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Rhyming Words (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Punctuation (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Nouns (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Verbs (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['verbs']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Adjectives (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Pronouns (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['pronouns']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Tenses (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['tenses']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Punctuation (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Vocabulary (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['vocabulary']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Reading Comprehension (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['comprehension', 'reading']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Tenses (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['tenses']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Sentence Types (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Conjunctions (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['conjunctions']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Prepositions (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Adverbs (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['adverbs']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Prefixes and Suffixes (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['prefixes', 'suffixes']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Vocabulary (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['vocabulary']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Reading Comprehension (Class 4)",
+      "status": "ok",
+      "questions_checked": 2,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['comprehension', 'reading']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Active and Passive Voice (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Direct and Indirect Speech (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Complex Sentences (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Summary Writing (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Comprehension (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['comprehension']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Synonyms and Antonyms (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['antonyms', 'synonyms']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Formal Letter Writing (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Creative Writing (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['creative', 'writing']"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Clauses (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "My Family (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "My Body (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Plants Around Us (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Animals Around Us (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Food We Eat (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Seasons and Weather (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Plants (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Animals and Habitats (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Food and Nutrition (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Water (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Shelter (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Our Senses (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Plants (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['plants']"
+      ]
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Animals (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Food and Nutrition (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Shelter (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Water (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Air (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Our Body (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Living Things (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Human Body (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "States of Matter (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Force and Motion (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Simple Machines (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Photosynthesis (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Animal Adaptation (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Circulatory System (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Respiratory and Nervous System (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Reproduction in Plants and Animals (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Physical and Chemical Changes (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Forms of Energy (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Solar System and Earth (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Ecosystem and Food Chains (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Varnamala Swar (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['swar', 'varnamala']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Varnamala Vyanjan (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['varnamala', 'vyanjan']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Family Words (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['family', 'words']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Simple Sentences in Hindi (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['hindi', 'sentences', 'simple']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Matras Introduction (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['introduction', 'matras']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Two Letter Words (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['letter', 'words']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Three Letter Words (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['letter', 'three', 'words']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Rhymes and Poems (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['poems', 'rhymes']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Nature Vocabulary (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['nature', 'vocabulary']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Varnamala (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['varnamala']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Matras (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['matras']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Shabd Rachna (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['rachna', 'shabd']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Vakya Rachna (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['rachna', 'vakya']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Kahani Lekhan (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['kahani', 'lekhan']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Anusvaar and Visarg (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['anusvaar', 'visarg']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Vachan and Ling (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['ling', 'vachan']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Kaal (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['kaal']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Patra Lekhan (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['lekhan', 'patra']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Comprehension Hindi (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['comprehension', 'hindi']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Muhavare (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['muhavare']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Paryayvachi Shabd (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['paryayvachi', 'shabd']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Vilom Shabd (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['shabd', 'vilom']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Samas (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['samas']"
+      ]
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Samvad Lekhan (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['lekhan', 'samvad']"
+      ]
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Parts of Computer (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Using Mouse and Keyboard (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Desktop and Icons (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Basic Typing (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Special Keys (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['keys', 'special']"
+      ]
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "MS Paint Basics (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Keyboard Shortcuts (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Files and Folders (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "MS Word Basics (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Introduction to Scratch (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Internet Safety (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Scratch Programming (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Internet Basics (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['basics', 'internet']"
+      ]
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "MS PowerPoint Basics (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Digital Citizenship (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Famous Landmarks (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "National Symbols (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Solar System Basics (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['basics', 'solar', 'system']"
+      ]
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Current Awareness (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['awareness', 'current']"
+      ]
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Continents and Oceans (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['continents', 'oceans']"
+      ]
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Famous Scientists (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['famous', 'scientists']"
+      ]
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Festivals of India (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['festivals', 'india']"
+      ]
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Sports and Games (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Indian Constitution (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "World Heritage Sites (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Space Missions (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Environmental Awareness (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['awareness', 'environmental']"
+      ]
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Sharing (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Honesty (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['honesty']"
+      ]
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Kindness (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Respecting Elders (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['elders', 'respecting']"
+      ]
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Teamwork (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Empathy (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Environmental Care (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['care', 'environmental']"
+      ]
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Leadership (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['leadership']"
+      ]
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Global Citizenship (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Digital Ethics (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['digital', 'ethics']"
+      ]
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Personal Hygiene (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['hygiene', 'personal']"
+      ]
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Good Posture (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Basic Physical Activities (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Healthy Eating Habits (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Outdoor Play (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Basic Stretching (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Balanced Diet (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Team Sports Rules (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Safety at Play (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "First Aid Basics (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Yoga Introduction (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No topic keywords in questions. Expected one of: ['introduction', 'yoga']"
+      ]
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Importance of Sleep (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Fitness and Stamina (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Nutrition Labels Reading (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Mental Health Awareness (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    }
+  ]
+}

@@ -611,7 +611,6 @@ class QualityReviewerAgent:
                         "[quality_reviewer] Check 7 skipped for Q%s: %s", q_id, exc
                     )
 
-        total = len(result.corrections)
         logger.info(
             "[quality_reviewer] Review complete: %d question(s), "
             "%d correction(s), %d warning(s), %d error(s)",

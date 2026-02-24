@@ -25,7 +25,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         auth = request.headers.get("authorization", "")
         if auth.startswith("Bearer "):
             import hashlib
-            user_hash = hashlib.md5(auth.encode()).hexdigest()[:8]
+            user_hash = hashlib.sha256(auth.encode()).hexdigest()[:8]
             structlog.contextvars.bind_contextvars(user=user_hash)
 
         response = await call_next(request)

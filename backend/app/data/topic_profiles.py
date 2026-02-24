@@ -1,5 +1,5 @@
 """
-Topic profiles extracted from slot_engine.py.
+Topic profiles for CBSE curriculum.
 Maps 198+ CBSE topics to their configuration.
 """
 from __future__ import annotations
@@ -3969,15 +3969,12 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 1 plants": "Plants Around Us (Class 1)",
     "c1 plants evs": "Plants Around Us (Class 1)",
     "animals around us": "Animals Around Us (Class 1)",
-    "c1 animals": "Animals Around Us (Class 1)",
-    "class 1 animals": "Animals Around Us (Class 1)",
     "c1 animals evs": "Animals Around Us (Class 1)",
     "food we eat": "Food We Eat (Class 1)",
     "c1 food": "Food We Eat (Class 1)",
     "class 1 food": "Food We Eat (Class 1)",
     "c1 food evs": "Food We Eat (Class 1)",
     "seasons and weather": "Seasons and Weather (Class 1)",
-    "c1 seasons": "Seasons and Weather (Class 1)",
     "c1 weather": "Seasons and Weather (Class 1)",
     "class 1 weather": "Seasons and Weather (Class 1)",
     # ── EVS Class 2 aliases ──
@@ -4241,7 +4238,6 @@ _TOPIC_ALIASES: dict[str, str] = {
     "national flag": "National Symbols (Class 3)",
     "solar system basics": "Solar System Basics (Class 3)",
     "class 3 solar system": "Solar System Basics (Class 3)",
-    "solar system": "Solar System Basics (Class 3)",
     "planets": "Solar System Basics (Class 3)",
     "current awareness": "Current Awareness (Class 3)",
     "class 3 current awareness": "Current Awareness (Class 3)",
@@ -4317,7 +4313,6 @@ _TOPIC_ALIASES: dict[str, str] = {
     "world peace": "Global Citizenship (Class 5)",
     "digital ethics": "Digital Ethics (Class 5)",
     "class 5 digital ethics": "Digital Ethics (Class 5)",
-    "online safety": "Digital Ethics (Class 5)",
     "digital footprint": "Digital Ethics (Class 5)",
     # ── Health & Physical Education aliases ──────────────────────────
     "personal hygiene": "Personal Hygiene (Class 1)",
@@ -4344,10 +4339,8 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 2 stretching": "Basic Stretching (Class 2)",
     "c2 stretching": "Basic Stretching (Class 2)",
     "warm up exercises": "Basic Stretching (Class 2)",
-    "balanced diet": "Balanced Diet (Class 3)",
     "class 3 balanced diet": "Balanced Diet (Class 3)",
     "c3 diet": "Balanced Diet (Class 3)",
-    "food groups": "Balanced Diet (Class 3)",
     "team sports rules": "Team Sports Rules (Class 3)",
     "class 3 team sports": "Team Sports Rules (Class 3)",
     "c3 sports": "Team Sports Rules (Class 3)",
@@ -4403,13 +4396,20 @@ _SUBJECT_TO_PROFILE_GROUP: dict[str, str] = {
 def _profile_subject_group(profile: dict) -> str:
     """Return subject group for a profile based on its skill-tag prefixes."""
     tags = profile.get("allowed_skill_tags", [])
-    if any(t.startswith("eng_") for t in tags):   return "English"
-    if any(t.startswith("sci_") or t.startswith("evs_") for t in tags): return "Science/EVS"
-    if any(t.startswith("hin_") for t in tags):   return "Hindi"
-    if any(t.startswith("comp_") for t in tags):  return "Computer"
-    if any(t.startswith("gk_") for t in tags):    return "GK"
-    if any(t.startswith("moral_") for t in tags): return "Moral"
-    if any(t.startswith("health_") for t in tags):return "Health"
+    if any(t.startswith("eng_") for t in tags):
+        return "English"
+    if any(t.startswith("sci_") or t.startswith("evs_") for t in tags):
+        return "Science/EVS"
+    if any(t.startswith("hin_") for t in tags):
+        return "Hindi"
+    if any(t.startswith("comp_") for t in tags):
+        return "Computer"
+    if any(t.startswith("gk_") for t in tags):
+        return "GK"
+    if any(t.startswith("moral_") for t in tags):
+        return "Moral"
+    if any(t.startswith("health_") for t in tags):
+        return "Health"
     return "Maths"
 
 
@@ -4421,7 +4421,6 @@ def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
     skill-tag prefix belongs to a different subject group.
     subject=None keeps the original permissive behaviour (backward compatible).
     """
-    import re as _re
 
     def _ok(profile: dict) -> bool:
         if not subject:

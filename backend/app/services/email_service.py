@@ -117,7 +117,6 @@ class EmailService:
     ) -> str:
         """Build a Gmail-safe HTML email for one child's weekly report."""
 
-        token       = report.get("expires_at", "")  # used for link; actually we need token
         class_name  = escape(report.get("class_name", "Your Class"))
         subject_str = escape(report.get("subject", ""))
         grade       = escape(str(report.get("grade", "")))
@@ -199,7 +198,7 @@ class EmailService:
             <td style="background:{_GREEN};padding:24px 32px;">
               <p style="margin:0 0 2px;color:#d8f3dc;font-size:11px;
                         font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
-                PracticeCraft</p>
+                Skolar</p>
               <h1 style="margin:0 0 6px;color:#ffffff;font-size:20px;font-weight:700;">
                 Weekly Learning Report</h1>
               <p style="margin:0;color:#a7f3d0;font-size:13px;">
@@ -230,7 +229,7 @@ class EmailService:
             <td style="padding:16px 32px;border-top:1px solid {_BORDER};
                        background:#fafaf8;">
               <p style="margin:0;color:{_MUTED};font-size:12px;text-align:center;">
-                Powered by <strong style="color:#4b5563;">PracticeCraft</strong>
+                Powered by <strong style="color:#4b5563;">Skolar</strong>
                 &mdash; CBSE Learning for Classes 1&ndash;5
               </p>
               <p style="margin:6px 0 0;color:#9ca3af;font-size:11px;text-align:center;">

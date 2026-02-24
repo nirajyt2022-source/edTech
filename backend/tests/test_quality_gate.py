@@ -1,5 +1,4 @@
 """Tests for quality_gate.run_quality_gate() — all 12 checks."""
-import pytest
 from app.utils.quality_gate import (
     run_quality_gate, jaccard, extract_times, _content_words, _is_mcq_letter,
     _OCLOCK_RE,

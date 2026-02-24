@@ -1,0 +1,2403 @@
+{
+  "summary": {
+    "total_topics": 198,
+    "clean_topics": 102,
+    "topics_with_issues": 5,
+    "generation_failures": 91,
+    "SUBJECT_CONTAMINATION": 0,
+    "TOPIC_DRIFT": 0,
+    "HINDI_NO_DEVANAGARI": 0,
+    "GRADE_VOCAB": 0,
+    "WRONG_ANSWER": 1,
+    "DUPLICATE": 1,
+    "OFF_TOPIC": 4,
+    "GENERATION_FAILURE": 0
+  },
+  "issues_by_type": {
+    "GENERATION_FAILURE": [
+      {
+        "subject": "Maths",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Measurement (Class 1)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Money (coins and notes)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Money (bills and change)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Addition and subtraction (5-digit)",
+        "detail": "{'status': 'error', 'code': 502, 'body': '{\"status\":\"error\",\"code\":502,\"message\":\"Application failed to respond\",\"request_id\":\"abJPQqIgTdSM-LUeV7rehQ\"}'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Multiplication (3-digit × 2-digit)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Division (long division)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Perimeter and area",
+        "detail": "{'status': 'error', 'code': 404, 'body': 'Both endpoints returned 404'}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Time (minutes, 24-hour clock)",
+        "detail": "{'status': 'exception', 'error': \"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\"}"
+      },
+      {
+        "subject": "Maths",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Data handling (pie charts) (Class 5)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "English",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Complex Sentences (Class 5)",
+        "detail": "{'status': 'exception', 'error': \"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\"}"
+      },
+      {
+        "subject": "English",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Formal Letter Writing (Class 5)",
+        "detail": "{'status': 'exception', 'error': \"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\"}"
+      },
+      {
+        "subject": "English",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Creative Writing (Class 5)",
+        "detail": "{'status': 'exception', 'error': \"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\"}"
+      },
+      {
+        "subject": "EVS",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Food We Eat (Class 1)",
+        "detail": "{'status': 'exception', 'error': \"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\"}"
+      },
+      {
+        "subject": "EVS",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Seasons and Weather (Class 1)",
+        "detail": "{'status': 'exception', 'error': \"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\"}"
+      },
+      {
+        "subject": "EVS",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Plants (Class 2)",
+        "detail": "{'status': 'exception', 'error': 'timeout after 45s'}"
+      },
+      {
+        "subject": "Science",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Forms of Energy (Class 5)",
+        "detail": "{'status': 'exception', 'error': \"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\"}"
+      },
+      {
+        "subject": "Science",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Ecosystem and Food Chains (Class 5)",
+        "detail": "{'status': 'exception', 'error': \"('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))\"}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Family Words (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Simple Sentences in Hindi (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Matras Introduction (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Two Letter Words (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Three Letter Words (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Rhymes and Poems (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Nature Vocabulary (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Varnamala (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Matras (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Shabd Rachna (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Vakya Rachna (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Kahani Lekhan (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Anusvaar and Visarg (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Vachan and Ling (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Kaal (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Patra Lekhan (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Comprehension Hindi (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Muhavare (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Paryayvachi Shabd (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Vilom Shabd (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Samas (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Hindi",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Samvad Lekhan (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Parts of Computer (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Using Mouse and Keyboard (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Desktop and Icons (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Basic Typing (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Special Keys (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "MS Paint Basics (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Keyboard Shortcuts (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Files and Folders (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "MS Word Basics (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Introduction to Scratch (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Internet Safety (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Scratch Programming (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Internet Basics (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "MS PowerPoint Basics (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Computer",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Digital Citizenship (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Famous Landmarks (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "National Symbols (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Solar System Basics (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Current Awareness (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Continents and Oceans (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Famous Scientists (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Festivals of India (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Sports and Games (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Indian Constitution (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "World Heritage Sites (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Space Missions (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "GK",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Environmental Awareness (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Sharing (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Honesty (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Kindness (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Respecting Elders (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Teamwork (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Empathy (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Environmental Care (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Leadership (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Global Citizenship (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Moral Science",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Digital Ethics (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Personal Hygiene (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Good Posture (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 1",
+        "grade_num": 1,
+        "topic": "Basic Physical Activities (Class 1)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Healthy Eating Habits (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Outdoor Play (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 2",
+        "grade_num": 2,
+        "topic": "Basic Stretching (Class 2)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Balanced Diet (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Team Sports Rules (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 3",
+        "grade_num": 3,
+        "topic": "Safety at Play (Class 3)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "First Aid Basics (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Yoga Introduction (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 4",
+        "grade_num": 4,
+        "topic": "Importance of Sleep (Class 4)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Fitness and Stamina (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Nutrition Labels Reading (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      },
+      {
+        "subject": "Health",
+        "grade": "Class 5",
+        "grade_num": 5,
+        "topic": "Mental Health Awareness (Class 5)",
+        "detail": "{'status': 'error', 'code': 401, 'body': '{\"detail\":\"Authentication failed: invalid JWT: unable to parse or verify signature, token has invalid claims: token is expired\"}'}"
+      }
+    ],
+    "WRONG_ANSWER": [
+      {
+        "subject": "Maths",
+        "grade": 5,
+        "topic": "Decimals (all operations) (Class 5)",
+        "detail": "WRONG_ANSWER: 'What is 12.45 + 7.89?' — expected 20.34, got 52.0"
+      }
+    ],
+    "OFF_TOPIC": [
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Animals and Food Vocabulary (Class 1)",
+        "detail": "OFF_TOPIC: No English content signals found in generated questions"
+      },
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Greetings and Polite Words (Class 1)",
+        "detail": "OFF_TOPIC: No English content signals found in generated questions"
+      },
+      {
+        "subject": "English",
+        "grade": 1,
+        "topic": "Seasons (Class 1)",
+        "detail": "OFF_TOPIC: No English content signals found in generated questions"
+      },
+      {
+        "subject": "English",
+        "grade": 3,
+        "topic": "Reading Comprehension (Class 3)",
+        "detail": "OFF_TOPIC: No English content signals found in generated questions"
+      }
+    ],
+    "DUPLICATE": [
+      {
+        "subject": "English",
+        "grade": 3,
+        "topic": "Reading Comprehension (Class 3)",
+        "detail": "DUPLICATE: Q1 and Q3 are 93% similar"
+      }
+    ]
+  },
+  "full_results": [
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Numbers 1 to 50 (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Numbers 51 to 100 (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Addition up to 20 (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Subtraction within 20 (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Basic Shapes (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Spatial sense (in/out, near/far) (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Measurement (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Time (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Money (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Numbers up to 1000 (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Addition (2-digit with carry)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Subtraction (2-digit with borrow)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Multiplication (tables 2-5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Division (sharing equally)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Shapes and space (2D)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Measurement (length, weight)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Time (hour, half-hour)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Money (coins and notes)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Data handling (pictographs)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Addition (carries)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Subtraction (borrowing)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Addition and subtraction (3-digit)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Multiplication (tables 2-10)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Division basics",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Numbers up to 10000",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Fractions (halves, quarters)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Fractions",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Time (reading clock, calendar)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Money (bills and change)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Symmetry",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Patterns and sequences",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Large numbers (up to 1,00,000)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Addition and subtraction (5-digit)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Multiplication (3-digit × 2-digit)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Division (long division)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Fractions (equivalent, comparison)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Decimals (tenths, hundredths)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Geometry (angles, lines)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Perimeter and area",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Time (minutes, 24-hour clock)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Money (bills, profit/loss)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Numbers up to 10 lakh (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Factors and multiples (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "HCF and LCM (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Fractions (add and subtract) (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Decimals (all operations) (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "WRONG_ANSWER: 'What is 12.45 + 7.89?' — expected 20.34, got 52.0"
+      ]
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Percentage (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Area and volume (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Geometry (circles, symmetry) (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Data handling (pie charts) (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Maths",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Speed distance time (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Alphabet (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Phonics (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Self and Family Vocabulary (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Animals and Food Vocabulary (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No English content signals found in generated questions"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Greetings and Polite Words (Class 1)",
+      "status": "ok",
+      "questions_checked": 2,
+      "issues": [
+        "OFF_TOPIC: No English content signals found in generated questions"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Seasons (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "OFF_TOPIC: No English content signals found in generated questions"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Simple Sentences (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Nouns (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Verbs (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Pronouns (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Sentences (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Rhyming Words (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Punctuation (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Nouns (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Verbs (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Adjectives (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Pronouns (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Tenses (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Punctuation (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Vocabulary (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Reading Comprehension (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": [
+        "DUPLICATE: Q1 and Q3 are 93% similar",
+        "OFF_TOPIC: No English content signals found in generated questions"
+      ]
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Tenses (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Sentence Types (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Conjunctions (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Prepositions (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Adverbs (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Prefixes and Suffixes (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Vocabulary (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Reading Comprehension (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Active and Passive Voice (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Direct and Indirect Speech (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Complex Sentences (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Summary Writing (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Comprehension (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Synonyms and Antonyms (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Formal Letter Writing (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Creative Writing (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "English",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Clauses (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "My Family (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "My Body (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Plants Around Us (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Animals Around Us (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Food We Eat (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Seasons and Weather (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Plants (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Animals and Habitats (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Food and Nutrition (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Water (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Shelter (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "EVS",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Our Senses (Class 2)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Plants (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Animals (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Food and Nutrition (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Shelter (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Water (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Air (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Our Body (Class 3)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Living Things (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Human Body (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "States of Matter (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Force and Motion (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Simple Machines (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Photosynthesis (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Animal Adaptation (Class 4)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Circulatory System (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Respiratory and Nervous System (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Reproduction in Plants and Animals (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Physical and Chemical Changes (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Forms of Energy (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Solar System and Earth (Class 5)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Ecosystem and Food Chains (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Varnamala Swar (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Varnamala Vyanjan (Class 1)",
+      "status": "ok",
+      "questions_checked": 3,
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Family Words (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Simple Sentences in Hindi (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Matras Introduction (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Two Letter Words (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Three Letter Words (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Rhymes and Poems (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Nature Vocabulary (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Varnamala (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Matras (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Shabd Rachna (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Vakya Rachna (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Kahani Lekhan (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Anusvaar and Visarg (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Vachan and Ling (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Kaal (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Patra Lekhan (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Comprehension Hindi (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Muhavare (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Paryayvachi Shabd (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Vilom Shabd (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Samas (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Hindi",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Samvad Lekhan (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Parts of Computer (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Using Mouse and Keyboard (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Desktop and Icons (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Basic Typing (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Special Keys (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "MS Paint Basics (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Keyboard Shortcuts (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Files and Folders (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "MS Word Basics (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Introduction to Scratch (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Internet Safety (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Scratch Programming (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Internet Basics (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "MS PowerPoint Basics (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Computer",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Digital Citizenship (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Famous Landmarks (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "National Symbols (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Solar System Basics (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Current Awareness (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Continents and Oceans (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Famous Scientists (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Festivals of India (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Sports and Games (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Indian Constitution (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "World Heritage Sites (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Space Missions (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "GK",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Environmental Awareness (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Sharing (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Honesty (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Kindness (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Respecting Elders (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Teamwork (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Empathy (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Environmental Care (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Leadership (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Global Citizenship (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Moral Science",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Digital Ethics (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Personal Hygiene (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Good Posture (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 1",
+      "grade_num": 1,
+      "topic": "Basic Physical Activities (Class 1)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Healthy Eating Habits (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Outdoor Play (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 2",
+      "grade_num": 2,
+      "topic": "Basic Stretching (Class 2)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Balanced Diet (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Team Sports Rules (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 3",
+      "grade_num": 3,
+      "topic": "Safety at Play (Class 3)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "First Aid Basics (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Yoga Introduction (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 4",
+      "grade_num": 4,
+      "topic": "Importance of Sleep (Class 4)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Fitness and Stamina (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Nutrition Labels Reading (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    },
+    {
+      "subject": "Health",
+      "grade": "Class 5",
+      "grade_num": 5,
+      "topic": "Mental Health Awareness (Class 5)",
+      "status": "generation_failed",
+      "issues": []
+    }
+  ]
+}

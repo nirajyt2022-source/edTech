@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/subscription", tags=["subscription"])
 settings = get_settings()
 supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
-from app.services.subscription_check import FREE_TIER_LIMIT  # 10 worksheets/month
+from app.services.subscription_check import FREE_TIER_LIMIT  # noqa: E402  # 10 worksheets/month
 
 
 class SubscriptionStatus(BaseModel):
@@ -76,7 +76,7 @@ def ensure_subscription_exists(user_id: str) -> dict:
         raise HTTPException(status_code=500, detail="Failed to create subscription")
 
 
-from datetime import timedelta
+from datetime import timedelta  # noqa: E402
 
 
 @router.get("/status", response_model=SubscriptionStatus)

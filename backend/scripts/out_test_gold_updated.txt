@@ -1,0 +1,1075 @@
+apurwa@Apurwas-MacBook-Air edTech % python backend/scripts/test_gold_class_updated.py
+PracticeCraft Gold-Class Worksheet Quality Test
+============================================================
+Deterministic | No LLM | No external APIs
+
+
+============================================================
+  1. CARRY GUARANTEED ADDITION (10Q)
+============================================================
+  Total questions:       10
+  Skill tag counts:
+    column_setup         3
+    error_spot           2
+    missing_number       2
+    thinking             1
+    word_problem         2
+  Visual type != null:   10/10
+  Visual ratio:          100%
+  Carry/borrow verified: 7/7 (100%)
+  Error spot w/ answer:  2/2 (100%)
+  Verdict:               PASS
+
+============================================================
+  2. BORROWING SUBTRACTION (10Q)
+============================================================
+  Total questions:       10
+  Skill tag counts:
+    column_setup         3
+    error_spot           2
+    missing_number       2
+    thinking             1
+    word_problem         2
+  Visual type != null:   10/10
+  Visual ratio:          100%
+  Carry/borrow verified: 7/7 (100%)
+  Error spot w/ answer:  2/2 (100%)
+  Verdict:               PASS
+
+============================================================
+  3. GOLD MIX (20Q)
+============================================================
+  Total questions:       20
+  Skill tag counts:
+    column_setup         6
+    error_spot           3
+    missing_number       4
+    thinking             3
+    word_problem         4
+  Visual type != null:   20/20
+  Visual ratio:          100%
+  Carry/borrow verified: 13/13 (100%)
+  Error spot w/ answer:  3/3 (100%)
+  Verdict:               PASS
+
+============================================================
+  4. VISUAL STRESS (15Q)
+============================================================
+  Total questions:       15
+  Skill tag counts:
+    column_setup         4
+    error_spot           2
+    missing_number       3
+    thinking             3
+    word_problem         3
+  Visual type != null:   15/15
+  Visual ratio:          100%
+  Carry/borrow verified: 9/9 (100%)
+  Error spot w/ answer:  2/2 (100%)
+  Verdict:               PASS
+
+============================================================
+  5. PARENT TRUST (10Q)
+============================================================
+  Total questions:       10
+  Skill tag counts:
+    column_setup         3
+    error_spot           2
+    missing_number       2
+    thinking             1
+    word_problem         2
+  Visual type != null:   10/10
+  Visual ratio:          100%
+  Carry/borrow verified: 7/7 (100%)
+  Error spot w/ answer:  2/2 (100%)
+  Verdict:               PASS
+
+============================================================
+  6. ERROR SPOT ONLY (5Q)
+============================================================
+  Total questions:       5
+  Skill tag counts:
+    error_spot           5
+  Visual type != null:   5/5
+  Visual ratio:          100%
+  Carry/borrow verified: 5/5 (100%)
+  Error spot w/ answer:  5/5 (100%)
+  Verdict:               PASS
+
+============================================================
+  OVERALL SUMMARY
+============================================================
+  1. Carry addition            PASS
+  2. Borrowing subtraction     PASS
+  3. Gold mix                  PASS
+  4. Visual stress             PASS
+  5. Parent trust              PASS
+  6. Error spot only           PASS
+
+  6/6 payloads clean
+apurwa@Apurwas-MacBook-Air edTech % SHOW_SLOT_PLAN=1 python backend/scripts/test_gold_class_updated.py
+PracticeCraft Gold-Class Worksheet Quality Test
+============================================================
+Deterministic | No LLM | No external APIs
+
+
+--- SLOT_PLAN JSON: 1. CARRY GUARANTEED ADDITION (10Q) ---
+[
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  }
+]
+--- END SLOT_PLAN ---
+
+
+============================================================
+  1. CARRY GUARANTEED ADDITION (10Q)
+============================================================
+  Total questions:       10
+  Skill tag counts:
+    column_setup         3
+    error_spot           2
+    missing_number       2
+    thinking             1
+    word_problem         2
+  Visual type != null:   10/10
+  Visual ratio:          100%
+  Carry/borrow verified: 7/7 (100%)
+  Error spot w/ answer:  2/2 (100%)
+  Verdict:               PASS
+
+--- SLOT_PLAN JSON: 2. BORROWING SUBTRACTION (10Q) ---
+[
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  }
+]
+--- END SLOT_PLAN ---
+
+
+============================================================
+  2. BORROWING SUBTRACTION (10Q)
+============================================================
+  Total questions:       10
+  Skill tag counts:
+    column_setup         3
+    error_spot           2
+    missing_number       2
+    thinking             1
+    word_problem         2
+  Visual type != null:   10/10
+  Visual ratio:          100%
+  Carry/borrow verified: 7/7 (100%)
+  Error spot w/ answer:  2/2 (100%)
+  Verdict:               PASS
+
+--- SLOT_PLAN JSON: 3. GOLD MIX (20Q) ---
+[
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  }
+]
+--- END SLOT_PLAN ---
+
+
+============================================================
+  3. GOLD MIX (20Q)
+============================================================
+  Total questions:       20
+  Skill tag counts:
+    column_setup         6
+    error_spot           3
+    missing_number       4
+    thinking             3
+    word_problem         4
+  Visual type != null:   20/20
+  Visual ratio:          100%
+  Carry/borrow verified: 13/13 (100%)
+  Error spot w/ answer:  3/3 (100%)
+  Verdict:               PASS
+
+--- SLOT_PLAN JSON: 4. VISUAL STRESS (15Q) ---
+[
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  }
+]
+--- END SLOT_PLAN ---
+
+
+============================================================
+  4. VISUAL STRESS (15Q)
+============================================================
+  Total questions:       15
+  Skill tag counts:
+    column_setup         4
+    error_spot           2
+    missing_number       3
+    thinking             3
+    word_problem         3
+  Visual type != null:   15/15
+  Visual ratio:          100%
+  Carry/borrow verified: 9/9 (100%)
+  Error spot w/ answer:  2/2 (100%)
+  Verdict:               PASS
+
+--- SLOT_PLAN JSON: 5. PARENT TRUST (10Q) ---
+[
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "recognition",
+    "format_hint": "column_setup",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "application",
+    "format_hint": "word_problem",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": true
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "representation",
+    "format_hint": "missing_number",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "thinking",
+    "format_hint": "thinking",
+    "carry_required": true,
+    "require_student_answer": false,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  }
+]
+--- END SLOT_PLAN ---
+
+
+============================================================
+  5. PARENT TRUST (10Q)
+============================================================
+  Total questions:       10
+  Skill tag counts:
+    column_setup         3
+    error_spot           2
+    missing_number       2
+    thinking             1
+    word_problem         2
+  Visual type != null:   10/10
+  Visual ratio:          100%
+  Carry/borrow verified: 7/7 (100%)
+  Error spot w/ answer:  2/2 (100%)
+  Verdict:               PASS
+
+--- SLOT_PLAN JSON: 6. ERROR SPOT ONLY (5Q) ---
+[
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  },
+  {
+    "slot_type": "error_detection",
+    "format_hint": "error_spot",
+    "carry_required": true,
+    "require_student_answer": true,
+    "allow_operations": [
+      "addition",
+      "subtraction"
+    ],
+    "visual_type": null,
+    "unique_contexts": false
+  }
+]
+--- END SLOT_PLAN ---
+
+
+============================================================
+  6. ERROR SPOT ONLY (5Q)
+============================================================
+  Total questions:       5
+  Skill tag counts:
+    error_spot           5
+  Visual type != null:   5/5
+  Visual ratio:          100%
+  Carry/borrow verified: 5/5 (100%)
+  Error spot w/ answer:  5/5 (100%)
+  Verdict:               PASS
+
+============================================================
+  OVERALL SUMMARY
+============================================================
+  1. Carry addition            PASS
+  2. Borrowing subtraction     PASS
+  3. Gold mix                  PASS
+  4. Visual stress             PASS
+  5. Parent trust              PASS
+  6. Error spot only           PASS
+
+  6/6 payloads clean
+apurwa@Apurwas-MacBook-Air edTech % 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from supabase import create_client
 from app.core.config import get_settings
 
@@ -152,7 +152,7 @@ async def record_completion(
         new_total = engagement["total_worksheets_completed"] + 1
 
         # Update engagement
-        update_result = supabase.table("child_engagement") \
+        supabase.table("child_engagement") \
             .update({
                 "total_stars": new_stars,
                 "current_streak": current_streak,

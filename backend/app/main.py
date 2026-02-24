@@ -25,8 +25,8 @@ if settings.sentry_dsn:
     )
 
 # Lazy router imports (after logging is set up)
-from app.api import health, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum, analytics, dashboard, share, learning_graph, reports, grading, revision, flashcards, textbook, ask_skolar
-from app.api.worksheets_v2 import router as worksheets_v2_router
+from app.api import health, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum, analytics, dashboard, share, learning_graph, reports, grading, revision, flashcards, textbook, ask_skolar  # noqa: E402
+from app.api.worksheets_v2 import router as worksheets_v2_router  # noqa: E402
 
 
 class UnicodeJSONResponse(JSONResponse):
@@ -54,10 +54,10 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Request tracing + access logging middleware (outermost first)
-from app.middleware.access_log import AccessLogMiddleware
-from app.middleware.request_id import RequestIDMiddleware
+from app.middleware.access_log import AccessLogMiddleware  # noqa: E402
+from app.middleware.request_id import RequestIDMiddleware  # noqa: E402
 
-from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware  # noqa: E402
 
 app.add_middleware(AccessLogMiddleware)
 app.add_middleware(RequestIDMiddleware)

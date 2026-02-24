@@ -10,7 +10,6 @@ import os
 # Ensure backend/ is on sys.path when running from project root
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-import pytest
 from datetime import datetime, timezone, timedelta
 
 from app.services.learning_graph import (
@@ -234,7 +233,6 @@ class TestNoLLMCall:
         # None of the pure helpers trigger openai imports
         mod._build_report_text("Aryan", ["Symmetry"], [])
         mod._build_recommendation_reason({"mastery_level": "learning", "sessions_total": 1})
-        loaded = [m for m in sys.modules if "openai" in m.lower()]
         # Assertion: openai is not loaded as a result of calling report helpers
         # (It might be present if another test loaded it — that's OK; what matters
         #  is that OUR helpers don't require it.)
