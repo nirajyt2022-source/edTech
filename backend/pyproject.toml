@@ -52,6 +52,16 @@ indent-style = "space"
 
 # -- Mypy: gradual type checking -----------------------------------------------
 
+# -- Pytest -----------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short -q"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
