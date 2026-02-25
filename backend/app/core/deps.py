@@ -8,6 +8,8 @@ from fastapi import Depends, Header, HTTPException
 from supabase import Client, create_client
 
 from app.core.config import get_settings
+from app.services.ai_client import AIClient, OpenAICompatAdapter, get_ai_client, get_openai_compat_client
+from app.services.pdf import PDFService, get_pdf_service
 
 logger = structlog.get_logger("skolar.deps")
 
@@ -52,6 +54,9 @@ async def get_user_id(authorization: str = Header(...)) -> str:
 # Typed aliases for FastAPI Depends() — use in endpoint signatures.
 DbClient = Annotated[Client, Depends(get_supabase_client)]
 UserId = Annotated[str, Depends(get_user_id)]
+AiClient = Annotated[AIClient, Depends(get_ai_client)]
+OpenAICompat = Annotated[OpenAICompatAdapter, Depends(get_openai_compat_client)]
+PdfDep = Annotated[PDFService, Depends(get_pdf_service)]
 
 
 def verify_child_ownership(user_id: str, child_id: str) -> None:

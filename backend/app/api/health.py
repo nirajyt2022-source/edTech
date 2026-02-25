@@ -1,6 +1,9 @@
 import os
 
+import structlog
 from fastapi import APIRouter, HTTPException, Request
+
+logger = structlog.get_logger("skolar.health")
 
 router = APIRouter()
 
@@ -45,7 +48,8 @@ async def deep_health(request: Request):
         from app.services.ai_client import get_ai_client
 
         checks["ai_stats"] = get_ai_client().stats
-    except Exception:
+    except Exception as e:
+        logger.debug("ai_stats_check_failed", error=str(e))
         checks["ai_stats"] = "unavailable"
 
     # 4. Curriculum content count
@@ -54,7 +58,8 @@ async def deep_health(request: Request):
 
         count_result = _get_sb().table("curriculum_content").select("id", count="exact").execute()
         checks["curriculum_topics"] = count_result.count or 0
-    except Exception:
+    except Exception as e:
+        logger.debug("curriculum_check_failed", error=str(e))
         checks["curriculum_topics"] = "unavailable"
 
     # 5. Cache stats
@@ -62,7 +67,8 @@ async def deep_health(request: Request):
         from app.services.cache import cache_stats
 
         checks["cache"] = cache_stats()
-    except Exception:
+    except Exception as e:
+        logger.debug("cache_check_failed", error=str(e))
         checks["cache"] = "unavailable"
 
     all_ok = all(v == "ok" for k, v in checks.items() if k not in ("ai_stats", "curriculum_topics", "cache"))

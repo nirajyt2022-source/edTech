@@ -12,7 +12,7 @@ import structlog
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.core.deps import DbClient, UserId
+from app.core.deps import AiClient, DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import INJECTION_RE as _INJECTION_RE
 from app.services.subscription_check import check_ai_usage_allowed
@@ -61,7 +61,7 @@ class AskResponse(BaseModel):
 
 @router.post("/question", response_model=AskResponse)
 @limiter.limit("20/minute")
-async def ask_question(request: Request, body: AskRequest, user_id: UserId, db: DbClient):
+async def ask_question(request: Request, body: AskRequest, user_id: UserId, db: DbClient, ai: AiClient):
     """Answer a student's homework/study question using Gemini."""
 
     # -- Subscription gate --
@@ -128,10 +128,10 @@ RULES:
             logger.info("Curriculum context injected for Ask Skolar: %s/%s", body.grade, body.subject)
     # -- End RAG --
 
-    answer_text = await _call_gemini_chat(system_prompt, safe_history, safe_question)
+    answer_text = await _call_gemini_chat(system_prompt, safe_history, safe_question, ai=ai)
 
     # Detect topic for Practice/Revise links
-    topic_detection = await _detect_topic(safe_question, body.grade)
+    topic_detection = await _detect_topic(safe_question, body.grade, ai=ai)
 
     logger.info(f"Ask Skolar answered for user={user_id}: {safe_question[:80]}...")
 
@@ -146,11 +146,9 @@ RULES:
 # ── Internal helpers ──────────────────────────────────────────────────────
 
 
-async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], question: str) -> str:
+async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], question: str, *, ai) -> str:
     """Call Gemini with chat history and return the answer text."""
     import asyncio
-
-    from app.services.ai_client import get_ai_client
 
     # Build message history (last 10 messages for context)
     messages = []
@@ -166,7 +164,6 @@ async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], ques
     messages.append({"role": "user", "content": question})
 
     try:
-        ai = get_ai_client()
         return await asyncio.to_thread(
             ai.generate_chat,
             messages=messages,
@@ -179,11 +176,9 @@ async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], ques
         raise HTTPException(502, "AI tutor unavailable. Please try again.")
 
 
-async def _detect_topic(question: str, grade: str) -> dict:
+async def _detect_topic(question: str, grade: str, *, ai) -> dict:
     """Quick detection of the most relevant Skolar topic from the question."""
     import asyncio
-
-    from app.services.ai_client import get_ai_client
 
     prompt = f"""From this student question, identify the most relevant CBSE topic.
 
@@ -196,7 +191,6 @@ Return ONLY JSON (no markdown, no code fences):
 If you can't determine, return: {{"topic": null, "subject": null, "grade": null}}"""
 
     try:
-        ai = get_ai_client()
         return await asyncio.to_thread(ai.generate_json, prompt=prompt, temperature=0.1, max_tokens=100)
     except Exception as e:
         logger.warning(f"Topic detection failed: {e}")

@@ -16,7 +16,7 @@ from typing import Optional
 import structlog
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
-from app.core.deps import DbClient, UserId
+from app.core.deps import AiClient, DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import validate_file_upload
 from app.services.subscription_check import check_ai_usage_allowed
@@ -30,6 +30,7 @@ router = APIRouter(prefix="/api/v1/grading", tags=["grading"])
 @limiter.limit("5/minute")
 async def grade_from_photo(
     request: Request,
+    ai: AiClient,
     images: list[UploadFile] = File(..., description="1-5 photos of filled worksheet"),
     worksheet_json: str = Form(..., description="JSON string of worksheet data including questions"),
     child_id: Optional[str] = Form(None),
@@ -72,7 +73,7 @@ async def grade_from_photo(
     prompt = build_grading_prompt(questions, grade_level, subject)
 
     # 4. Call Gemini Vision
-    results = await call_gemini_vision_for_grading(image_data, prompt, len(questions))
+    results = await call_gemini_vision_for_grading(image_data, prompt, len(questions), ai=ai)
 
     # Validate grading output
     from app.services.output_validator import get_validator
@@ -175,16 +176,13 @@ Return ONLY valid JSON, no markdown backticks:
 }}"""
 
 
-async def call_gemini_vision_for_grading(image_data: list[dict], prompt: str, expected_total: int) -> dict:
+async def call_gemini_vision_for_grading(image_data: list[dict], prompt: str, expected_total: int, *, ai) -> dict:
     """Call Gemini Vision API with images and grading prompt."""
-    from app.services.ai_client import get_ai_client
-
     image_parts = [{"inline_data": {"mime_type": img["mime_type"], "data": img["base64"]}} for img in image_data]
 
     try:
         import asyncio
 
-        ai = get_ai_client()
         results = await asyncio.to_thread(
             ai.generate_with_images,
             image_parts=image_parts,

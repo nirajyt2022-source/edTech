@@ -56,6 +56,8 @@ from app.api.worksheets_v2 import router as worksheets_v2_router  # noqa: E402
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: warm singletons so config errors surface at boot, not first request."""
+    import time as _time
+
     _lifespan_logger.info("startup_begin", version="0.1.0")
 
     from app.core.deps import get_supabase_client
@@ -69,7 +71,37 @@ async def lifespan(app: FastAPI):
 
     _lifespan_logger.info("startup_complete")
     yield
-    _lifespan_logger.info("shutdown_complete")
+
+    # ── Graceful shutdown ─────────────────────────────────────
+    _t0 = _time.monotonic()
+    _lifespan_logger.info("shutdown_begin")
+
+    # 1. Clear Gemini context cache
+    try:
+        from app.services.ai_client import _cached_contents
+
+        n_cached = len(_cached_contents)
+        _cached_contents.clear()
+        _lifespan_logger.info("gemini_cache_cleared", entries=n_cached)
+    except Exception as e:
+        _lifespan_logger.warning("gemini_cache_clear_failed", error=str(e))
+
+    # 2. Log AI client stats summary
+    try:
+        ai = get_ai_client()
+        _lifespan_logger.info("ai_client_stats", **ai.stats)
+    except Exception as e:
+        _lifespan_logger.warning("ai_stats_log_failed", error=str(e))
+
+    # 3. Flush Sentry events
+    try:
+        sentry_sdk.flush(timeout=5)
+        _lifespan_logger.info("sentry_flushed")
+    except Exception as e:
+        _lifespan_logger.warning("sentry_flush_failed", error=str(e))
+
+    _elapsed_ms = int((_time.monotonic() - _t0) * 1000)
+    _lifespan_logger.info("shutdown_complete", elapsed_ms=_elapsed_ms)
 
 
 class UnicodeJSONResponse(JSONResponse):

@@ -11,12 +11,10 @@ import structlog
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
-from app.core.deps import DbClient, UserId
+from app.core.deps import AiClient, DbClient, PdfDep, UserId
 from app.middleware.rate_limit import limiter
-from app.services.pdf import get_pdf_service
 
 logger = structlog.get_logger("skolar.saved_worksheets")
-pdf_service = get_pdf_service()
 
 router = APIRouter(prefix="/api/worksheets", tags=["saved-worksheets"])
 
@@ -231,7 +229,9 @@ async def delete_saved_worksheet(
 
 @router.post("/export-pdf")
 @limiter.limit("10/minute")
-async def export_worksheet_pdf(request: Request, body: PDFExportRequest, user_id: UserId, db: DbClient):
+async def export_worksheet_pdf(
+    request: Request, body: PDFExportRequest, user_id: UserId, db: DbClient, pdf_service: PdfDep
+):
     """Export a worksheet as a PDF file."""
     try:
         worksheet_dict = body.worksheet.model_dump()
@@ -297,6 +297,7 @@ async def regenerate_worksheet(
     worksheet_id: str,
     user_id: UserId,
     db: DbClient,
+    ai: AiClient,
 ):
     """Regenerate a worksheet with the same settings using v2 generator."""
     try:
@@ -309,12 +310,10 @@ async def regenerate_worksheet(
         original = result.data
 
         # Use v2 generator
-        from app.services.ai_client import get_ai_client
         from app.services.worksheets_v2 import generate_worksheet
 
-        client = get_ai_client()
         data, elapsed_ms, warnings = generate_worksheet(
-            client=client,
+            client=ai,
             board=original.get("board", "CBSE"),
             grade_level=original["grade"],
             subject=original["subject"],

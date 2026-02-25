@@ -1,24 +1,23 @@
 import io
 import json
-import logging
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, Request, UploadFile
+import structlog
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from PyPDF2 import PdfReader
 
 from app.core.config import get_settings
-from app.core.deps import get_current_user_id
+from app.core.deps import AiClient, OpenAICompat, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import validate_file_upload
-from app.services.ai_client import get_ai_client, get_openai_compat_client
+from app.services.ai_client import AIClient, get_ai_client
 
 router = APIRouter(prefix="/api/syllabus", tags=["syllabus"])
-logger = logging.getLogger("skolar.syllabus")
+logger = structlog.get_logger("skolar.syllabus")
 
 settings = get_settings()
-client = get_openai_compat_client()
 
 
 class SyllabusTopic(BaseModel):
@@ -95,7 +94,7 @@ async def extract_text_from_pdf(file_content: bytes) -> str:
         raise HTTPException(status_code=400, detail="Failed to read PDF. Please try a different file.")
 
 
-async def extract_text_from_image(file_content: bytes, filename: str) -> str:
+async def extract_text_from_image(file_content: bytes, filename: str, ai: AIClient | None = None) -> str:
     """Use Gemini Vision to extract text from an image."""
     from google.genai import types as gtypes
 
@@ -110,7 +109,8 @@ async def extract_text_from_image(file_content: bytes, filename: str) -> str:
     mime_type = mime_types.get(ext, "image/jpeg")
 
     try:
-        ai = get_ai_client()
+        if ai is None:
+            ai = get_ai_client()
         text = ai.generate_with_typed_parts(
             parts=[
                 gtypes.Part.from_text(
@@ -131,13 +131,14 @@ async def extract_text_from_image(file_content: bytes, filename: str) -> str:
 @limiter.limit("3/minute")
 async def parse_syllabus(
     request: Request,
+    user_id: UserId,
+    client: OpenAICompat,
+    ai: AiClient,
     file: UploadFile = File(...),
     grade_hint: str | None = Form(None),
     subject_hint: str | None = Form(None),
-    authorization: str = Header(...),
 ):
     """Parse an uploaded syllabus document (PDF, image, or text)."""
-    get_current_user_id(authorization)
     start_time = datetime.now()
 
     # Read file content
@@ -153,7 +154,7 @@ async def parse_syllabus(
     if ext == "pdf":
         text = await extract_text_from_pdf(file_content)
     elif ext in ["jpg", "jpeg", "png", "gif", "webp"]:
-        text = await extract_text_from_image(file_content, filename)
+        text = await extract_text_from_image(file_content, filename, ai=ai)
     elif ext in ["txt", "text"]:
         text = file_content.decode("utf-8")
     else:
