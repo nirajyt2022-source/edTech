@@ -9,20 +9,17 @@ Flow:
 """
 
 import logging
-import re
 
 from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel, Field
 
 from app.middleware.rate_limit import limiter
+from app.middleware.sanitize import INJECTION_RE as _INJECTION_RE
 from supabase import create_client
 from app.core.config import get_settings
 from app.services.subscription_check import check_ai_usage_allowed
 
 logger = logging.getLogger(__name__)
-
-# ── Prompt injection protection (shared patterns from sanitize.py) ────────────
-from app.middleware.sanitize import INJECTION_RE as _INJECTION_RE
 
 
 def _sanitize_question(question: str) -> str:

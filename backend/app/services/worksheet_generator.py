@@ -21,7 +21,7 @@ import string
 import time
 from typing import Any
 
-from app.data.image_registry import get_available_keywords, get_keywords_for_subject
+from app.data.image_registry import get_keywords_for_subject
 from app.services.prompt_builder import _BLOOM_DIRECTIVES
 
 logger = logging.getLogger(__name__)
