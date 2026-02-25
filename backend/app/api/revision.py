@@ -241,6 +241,12 @@ Return ONLY valid JSON with this exact structure (no markdown, no code fences):
   ]
 }}
 
+EXAMPLE key_concept:
+{{"title": "Like Fractions", "explanation": "Fractions with the same denominator are called like fractions.", "example": "1/4 and 3/4 are like fractions because both have denominator 4."}}
+
+EXAMPLE quick_quiz item:
+{{"question": "Which fraction is greater: 3/8 or 5/8?", "options": ["3/8", "5/8", "They are equal", "Cannot compare"], "correct_answer": "5/8", "explanation": "With the same denominator, the fraction with the larger numerator is greater."}}
+
 REQUIREMENTS:
 - Generate 3-5 key concepts
 - Generate 2-3 worked examples with clear step-by-step solutions

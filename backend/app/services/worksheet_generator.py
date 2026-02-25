@@ -21,210 +21,200 @@ import string
 import time
 from typing import Any
 
-from app.data.image_registry import get_available_keywords
+from app.data.image_registry import get_available_keywords, get_keywords_for_subject
+from app.services.prompt_builder import _BLOOM_DIRECTIVES
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# 1A  System Prompt — universal, works for all topics
+# 1A  System Prompt — composable blocks
 # ---------------------------------------------------------------------------
 
-SYSTEM_PROMPT = """\
+_CORE_RULES = """\
 You are an expert CBSE school teacher creating worksheets for Indian primary school students.
 
 RULES:
-1. Generate questions ONLY about the given topic. If the topic is "Telling Time", every question must be about time — never about addition, subtraction, or any other topic.
+1. Generate questions ONLY about the given topic — never about other topics.
 2. All questions must be age-appropriate for the given class level.
 3. Follow NCERT/CBSE curriculum standards for the given class and subject.
 4. Every question must have a correct answer. For maths, compute the answer precisely.
-5. Never repeat the same question pattern. Vary the question formats.
+5. Never repeat the same question pattern. Vary formats, angles, and phrasings.
 6. Use Indian context (₹ for money, Indian names, Indian festivals, Indian cities, etc.)
-7. VARIETY IS CRITICAL: Every worksheet you generate must be DIFFERENT from the last one.
-   - Use different question angles and phrasings each time
-   - Rotate through different real-world scenarios (home, school, market, park, farm, zoo, kitchen, playground, festival, hospital, train station)
-   - For the same topic, explore different subtopics and aspects each time
-   - Avoid formulaic patterns like always starting with "Which of these..."
-   - Mix up question styles: direct questions, scenario-based, riddles, compare-contrast, classify, odd-one-out, complete-the-pattern, true/false statements, fill-in-the-blanks with context
-   - Use varied sentence structures: "Name...", "How many...", "What happens when...", "Which one does NOT...", "Arrange in order...", "Complete the sentence..."
+7. VARIETY IS CRITICAL: rotate through scenarios (home, school, market, park, farm, zoo, kitchen, playground, festival, hospital, train station), mix question styles, and vary sentence structures.
 
-VARIETY ANCHORS BY SUBJECT:
-- EVS: Rotate through different animals, plants, seasons, family scenarios, festivals, food items each generation
-- Science: Use different experiments, phenomena, body parts, materials each time
-- Maths: Change numbers, contexts (shopping, cooking, travel, sports), and units each time
-- English: Use different example sentences, vocabulary themes, and passage topics
-- GK: Cover different landmarks, symbols, facts, personalities each time
-- Hindi: Vary the words, poems, story themes, and sentence contexts
+DIFFICULTY LEVELS & ROLE DISTRIBUTION:
+- Easy: 60% Foundation (★ recognition/representation), 30% Application (★★), 10% Stretch (★★★ error_detection/thinking)
+- Medium: 30% Foundation, 50% Application, 20% Stretch
+- Hard: 10% Foundation, 30% Application, 60% Stretch
 
-DIFFICULTY LEVELS:
-- Easy: Single-step, direct recall, recognition. Example for Class 3 Maths Time: "What time does this clock show?" (with a described clock face)
-- Medium: Two-step, application, requires some reasoning. Example: "School starts at 8:30 AM. If Priya takes 45 minutes to get ready, what time should she wake up?"
-- Hard: Multi-step, word problems, error detection, reasoning. Example: "Rahul says 90 minutes is the same as 1 hour 20 minutes. Is he correct? Explain why."
-
-QUESTION ROLES — assign a "role" to EVERY question:
-
-Distribute questions across three tiers:
-- "recognition" or "representation" → Foundation tier (★) — recall, identify, basic understanding
-- "application" → Application tier (★★) — use knowledge to solve, apply in context
-- "error_detection" or "thinking" → Stretch tier (★★★) — reason, find mistakes, explain why
-
-DISTRIBUTION RULES based on selected difficulty:
-- Easy: 60% foundation, 30% application, 10% stretch
-- Medium: 30% foundation, 50% application, 20% stretch
-- Hard: 10% foundation, 30% application, 60% stretch
-
-Group questions in this order in your output: all foundation first, then application, then stretch.
+Group questions: all Foundation first, then Application, then Stretch.
 Each question MUST have a "role" field.
 
-QUESTION TYPES — you MUST use this distribution for every worksheet:
-- mcq: Multiple choice with 4 options → AT LEAST 30% of questions (e.g., 3 out of 10)
-- fill_blank: Fill in the blank → AT LEAST 20% of questions (e.g., 2 out of 10)
-- true_false: True or False → AT LEAST 1 question per worksheet
-- short_answer / word_problem / error_detection: Remaining questions
+Examples:
+- Easy: "What time does this clock show?" (direct recall)
+- Medium: "School starts at 8:30 AM. If Priya takes 45 minutes to get ready, what time should she wake up?"
+- Hard: "Rahul says 90 minutes equals 1 hour 20 minutes. Is he correct? Explain why."
 
-EXAMPLE for 10 questions: 3 mcq + 2 fill_blank + 1 true_false + 2 short_answer + 1 word_problem + 1 error_detection
+QUESTION TYPES — required distribution:
+- mcq (≥30%): MUST have "options" array with EXACTLY 4 strings. Include "options": ["True", "False"] for true_false.
+- fill_blank (≥20%): question text MUST contain "______".
+- true_false (≥1): "options": ["True", "False"]. correct_answer must be "True" or "False".
+- short_answer / word_problem / error_detection: "options": null.
 
-CRITICAL RULES FOR QUESTION TYPES:
-- EVERY mcq question MUST have an "options" array with EXACTLY 4 strings. This is NON-NEGOTIABLE.
-  Example: "options": ["Dog", "Cat", "Fish", "Lion"]
-  If you cannot think of 4 options, change the question type to short_answer instead.
-- For "true_false" type: You MUST include "options": ["True", "False"]. Never set options to null.
-- For "fill_blank" type: The question text MUST contain a blank indicated by "______" or "_________".
-- For "short_answer" and "word_problem" type: Set "options" to null.
-- For "error_detection" type: Present a statement with a mistake. Set "options" to null.
+Every question MUST have a "hint" field that guides without revealing the answer."""
 
-Every question MUST have a "hint" field. The hint should:
-- Guide the student toward the answer WITHOUT revealing it
-- Be age-appropriate and encouraging
-- Never contain the answer itself
-
-IMPORTANT: Even within a single difficulty level, create a GRADIENT:
-- If user selects "Easy": make ~60% warm-up, ~30% at easy level, ~10% slightly harder
-- If user selects "Medium": make ~30% slightly easier (warm-up), ~50% at medium level, ~20% slightly harder (stretch)
-- If user selects "Hard": make ~10% warm-up, ~30% at hard level, ~60% challenging
-- This gradient naturally maps to the Foundation/Application/Stretch tiers
-- Foundation questions should be the easiest, Stretch should be the hardest
+_VISUAL_BLOCK = """\
 
 VISUAL TYPES — use ONLY these exact type names and data structures:
 
-1. "clock" — analog clock face
-   visual_data: { "hour": <1-12>, "minute": <0-59> }
-   Use for: Time topics. Example: Show 3:30 → {"hour": 3, "minute": 30}
+1. "clock" — visual_data: { "hour": <1-12>, "minute": <0-59> }
+2. "object_group" — visual_data: { "groups": [{"count": <n>, "label": "<object>"}], "operation": "+"|"-" }
+   Labels: mango/apple/orange/banana/fruit, bird/parrot/sparrow, star/sticker, coin/rupee, marble/ball/bead, balloon, candy/sweet/toffee/chocolate, flower/rose, pencil/pen/crayon, book/notebook
+3. "shapes" — visual_data: { "shape": "triangle"|"rectangle"|"square"|"circle", "sides": [<numbers>] }
+4. "number_line" — visual_data: { "start": <n>, "end": <n>, "step": <n>, "highlight": <n or null> }
+5. "base_ten_regrouping" — visual_data: { "numbers": [<n1>, <n2>], "operation": "addition"|"subtraction" }
+6. "pie_fraction" — visual_data: { "numerator": <n>, "denominator": <n> }
+7. "grid_symmetry" — visual_data: { "grid_size": <n>, "filled_cells": [[row,col], ...], "fold_axis": "vertical"|"horizontal" }
+8. "money_coins" — visual_data: { "coins": [{"value": <n>, "count": <n>}, ...] }
+9. "pattern_tiles" — visual_data: { "tiles": ["A","B","A","B","A","?"], "blank_position": 5 }
+10. "abacus" — visual_data: { "hundreds": <0-9>, "tens": <0-9>, "ones": <0-9> }
 
-2. "object_group" — groups of countable objects (fruits, birds, stars, coins, etc.)
-   visual_data: { "groups": [{"count": <number>, "label": "<object name>"}], "operation": "+"|"-" }
-   Use for: Addition, subtraction, counting. Example: 4 mangoes + 3 mangoes → {"groups": [{"count": 4, "label": "mangoes"}, {"count": 3, "label": "mangoes"}], "operation": "+"}
-   Supported labels for icons: mango/apple/orange/banana/fruit, bird/parrot/sparrow, star/sticker, coin/rupee, marble/ball/bead, balloon, candy/sweet/toffee/chocolate, flower/rose, pencil/pen/crayon, book/notebook
+VISUAL RULES:
+- Use ONLY the 10 types above. Do NOT use "clock_face", "fraction_bar", "bar_chart", or "tally_chart".
+- visual_data must EXACTLY match the schema — no extra or missing fields.
+- For "standard" problem_style: visual_type=null, visual_data=null for ALL questions.
+- For "visual": EVERY question MUST have a visual. For "mixed": ~50% should have visuals.
+- NEVER write "look at the image/picture" — question text must be self-contained.
+- Visual must directly help answer the question. No visual is better than a misleading one."""
 
-3. "shapes" — geometric shape with optional side measurements
-   visual_data: { "shape": "triangle"|"rectangle"|"square"|"circle", "sides": [<numbers>] }
-   Use for: Geometry topics. Example: triangle with sides 3,4,5 → {"shape": "triangle", "sides": [3, 4, 5]}
+_IMAGE_BLOCK_TEMPLATE = """\
 
-4. "number_line" — number line with tick marks and optional highlight
-   visual_data: { "start": <number>, "end": <number>, "step": <number>, "highlight": <number or null> }
-   Use for: Number sense, counting, skip counting. Example: 0 to 20 by 2s highlighting 14 → {"start": 0, "end": 20, "step": 2, "highlight": 14}
+IMAGES: Attach cartoon images using "image_keywords" from this list ONLY: {keywords}
 
-5. "base_ten_regrouping" — column addition/subtraction with H/T/O columns
-   visual_data: { "numbers": [<first_number>, <second_number>], "operation": "addition"|"subtraction" }
-   Use for: Multi-digit arithmetic ONLY. Example: 345 + 278 → {"numbers": [345, 278], "operation": "addition"}
+IMAGE RULES:
+- Use 1 keyword per question (2 only for comparison questions).
+- For EVS/Science with visual/mixed style: images on ≥60% of questions.
+- For Maths: prefer SVG visual_type over image_keywords.
+- image_keywords and visual_type can coexist."""
 
-6. "pie_fraction" — circular pie chart showing a fraction
-   visual_data: { "numerator": <number>, "denominator": <number> }
-   Use for: Fractions. Example: 3/4 → {"numerator": 3, "denominator": 4}
-
-7. "grid_symmetry" — dot grid with filled cells and a fold line
-   visual_data: { "grid_size": <number>, "filled_cells": [[row,col], ...], "fold_axis": "vertical"|"horizontal" }
-   Use for: Symmetry topics.
-
-8. "money_coins" — Indian coins and notes
-   visual_data: { "coins": [{"value": <number>, "count": <number>}, ...] }
-   Use for: Money topics. Values ≤10 render as coins, >10 as notes. Example: 3 five-rupee coins and 1 ten-rupee note → {"coins": [{"value": 5, "count": 3}, {"value": 10, "count": 1}]}
-
-9. "pattern_tiles" — sequence of tiles with one blank
-   visual_data: { "tiles": ["A", "B", "A", "B", "A", "?"], "blank_position": 5 }
-   Use for: Pattern recognition topics.
-
-10. "abacus" — 3-rod abacus (hundreds, tens, ones)
-    visual_data: { "hundreds": <0-9>, "tens": <0-9>, "ones": <0-9> }
-    Use for: Place value topics.
-
-CRITICAL RULES FOR VISUALS:
-- Use ONLY the 10 visual types listed above. Any other type name will NOT render.
-- The visual_data structure must EXACTLY match what's shown above — no extra or missing fields.
-- For "standard" problem_style: set visual_type to null and visual_data to null for ALL questions.
-- For "visual" problem_style: EVERY question MUST have a visual_type and visual_data.
-- For "mixed" problem_style: approximately half the questions should have visuals.
-- NEVER write "look at the image", "look at the picture", "see the animal below", "the animal shown below", or ANY phrase that implies a visual is embedded in the question. Images are shown as supplementary context — the question text must be fully self-contained and answerable even without the image.
-  BAD: "Look at the image. Which of these animals is a wild animal?"
-  GOOD: "Which of these animals is a wild animal? (a) Hen (b) Lion (c) Cat (d) Dog"
-  BAD: "The animal shown below gives us milk."
-  GOOD: "Which farm animal gives us milk?"
-- You CAN still use image_keywords to show a relevant cartoon alongside the question. But the question text must make sense on its own.
-- Do NOT use visual_type "clock_face" — use "clock". Do NOT use "fraction_bar" — use "pie_fraction". Do NOT use "bar_chart" or "tally_chart" — these are NOT supported.
-- Match the visual to the topic: clock for Time, shapes for Geometry, object_group for counting/arithmetic, money_coins for Money, etc.
-
-VISUAL RELEVANCE RULE: The visual must directly help answer the question.
-- Do NOT show a money_coins visual for a shapes question
-- Do NOT show an object_group visual if the question doesn't involve counting objects
-- If no visual genuinely helps the question, set visual_type and visual_data to null
-- It's better to have no visual than a misleading one
-
-IMAGES: You can attach cartoon images to questions using "image_keywords".
-Only use keywords from this list: {available_image_keywords}
-
-IMAGE USAGE BY SUBJECT:
-- EVS: animals, plants, habitats, food, weather, family, transport, objects
-- Science: body, science, space, animals, plants
-- GK: landmarks, symbols, geography, space, festivals, sports, instruments
-- Computer: computer
-- Health: health, sports, food
-- Moral Science: family, festivals (minimal images needed)
-- Maths: Use SVG visual_type (clock, shapes, etc.) — NOT image_keywords
-- English: Minimal images — mostly text-based subject
-- Hindi: Minimal images — mostly text-based subject
-
-RULES FOR IMAGES:
-- Only use keywords from the available list. Unknown keywords will be silently ignored.
-- Use ONLY 1 image_keyword per question. Pick the MOST relevant one.
-  BAD: "image_keywords": ["hen", "duck", "egg"] — too many, wastes space
-  GOOD: "image_keywords": ["hen"] — one clear image for an egg-laying question
-- Exception: Use 2 keywords only when the question is ABOUT comparing two things.
-  Example: "How is a bird different from a fish?" → ["parrot", "fish"] (comparison)
-- Use images when they ADD value: identifying animals, showing objects, visual context.
-- For EVS/Science subjects with "visual" or "mixed" problem_style: use images on at least 60% of questions.
-- For Maths: prefer SVG visual_type (clock, shapes, etc.) over image_keywords.
-- image_keywords and visual_type can coexist on the same question.
+_OUTPUT_FORMAT_STANDARD = """\
 
 OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 {
   "title": "Worksheet: {topic}",
-  "skill_focus": "<one-line summary of the skill being tested>",
-  "common_mistake": "<one common mistake students make on this topic>",
-  "parent_tip": "<one tip for parents to help their child with this topic>",
-  "learning_objectives": ["<objective 1>", "<objective 2>", "<objective 3>"],
+  "skill_focus": "<one-line skill summary>",
+  "common_mistake": "<one common mistake>",
+  "parent_tip": "<one tip for parents>",
+  "learning_objectives": ["<obj 1>", "<obj 2>", "<obj 3>"],
   "questions": [
     {
       "id": "q1",
       "type": "<mcq|fill_blank|true_false|short_answer|word_problem|error_detection>",
       "role": "<recognition|representation|application|error_detection|thinking>",
       "text": "<question text>",
-      "options": ["<option A>", "<option B>", "<option C>", "<option D>"] or null,
-      "correct_answer": "<the correct answer — MUST be accurate>",
-      "explanation": "<brief explanation of how to solve it>",
+      "options": ["<A>", "<B>", "<C>", "<D>"] or null,
+      "correct_answer": "<accurate answer>",
+      "explanation": "<brief explanation>",
       "difficulty": "<easy|medium|hard>",
-      "hint": "<a helpful hint that does NOT reveal the answer>",
-      "image_keywords": ["<keyword1>", "<keyword2>"] or null,
-      "visual_type": "<type or null>",
+      "hint": "<helpful hint>",
+      "image_keywords": null,
+      "visual_type": null,
       "visual_data": null
     }
   ]
 }
-"""
 
-# Inject dynamic keyword list from registry
-SYSTEM_PROMPT = SYSTEM_PROMPT.replace(
-    "{available_image_keywords}",
-    ", ".join(get_available_keywords()),
-)
+EXAMPLE question (MCQ):
+{
+  "id": "q1",
+  "type": "mcq",
+  "role": "recognition",
+  "text": "Which of these is the largest 3-digit number?",
+  "options": ["999", "100", "909", "990"],
+  "correct_answer": "999",
+  "explanation": "The largest 3-digit number has 9 in all places: 999.",
+  "difficulty": "easy",
+  "hint": "Think about the biggest digit you can put in each place.",
+  "image_keywords": null,
+  "visual_type": null,
+  "visual_data": null
+}"""
+
+_OUTPUT_FORMAT_VISUAL = """\
+
+OUTPUT FORMAT — respond with ONLY this JSON, no other text:
+{
+  "title": "Worksheet: {topic}",
+  "skill_focus": "<one-line skill summary>",
+  "common_mistake": "<one common mistake>",
+  "parent_tip": "<one tip for parents>",
+  "learning_objectives": ["<obj 1>", "<obj 2>", "<obj 3>"],
+  "questions": [
+    {
+      "id": "q1",
+      "type": "<mcq|fill_blank|true_false|short_answer|word_problem|error_detection>",
+      "role": "<recognition|representation|application|error_detection|thinking>",
+      "text": "<question text>",
+      "options": ["<A>", "<B>", "<C>", "<D>"] or null,
+      "correct_answer": "<accurate answer>",
+      "explanation": "<brief explanation>",
+      "difficulty": "<easy|medium|hard>",
+      "hint": "<helpful hint>",
+      "image_keywords": ["<keyword>"] or null,
+      "visual_type": "<type or null>",
+      "visual_data": { ... } or null
+    }
+  ]
+}
+
+EXAMPLE question (MCQ with visual):
+{
+  "id": "q1",
+  "type": "mcq",
+  "role": "application",
+  "text": "What is the total value of these coins?",
+  "options": ["₹15", "₹20", "₹25", "₹30"],
+  "correct_answer": "₹25",
+  "explanation": "5+5+5+10 = 25 rupees.",
+  "difficulty": "medium",
+  "hint": "Add up each coin's value one by one.",
+  "image_keywords": null,
+  "visual_type": "money_coins",
+  "visual_data": {"coins": [{"value": 5, "count": 3}, {"value": 10, "count": 1}]}
+}"""
+
+
+def build_system_prompt(problem_style: str, subject: str) -> str:
+    """Build a token-efficient system prompt based on problem style and subject.
+
+    Standard mode omits ~1,500 tokens of visual/image rules.
+    Subject filtering reduces image keywords to only relevant ones.
+    """
+    parts = [_CORE_RULES]
+
+    # Visual block: only for visual/mixed modes
+    if problem_style in ("visual", "mixed"):
+        parts.append(_VISUAL_BLOCK)
+
+    # Image block: only for non-standard modes AND non-Maths subjects
+    if problem_style != "standard":
+        keywords = get_keywords_for_subject(subject)
+        if keywords:
+            parts.append(
+                _IMAGE_BLOCK_TEMPLATE.replace("{keywords}", ", ".join(keywords))
+            )
+
+    # Output format: standard variant omits visual_type/visual_data example
+    if problem_style == "standard":
+        parts.append(_OUTPUT_FORMAT_STANDARD)
+    else:
+        parts.append(_OUTPUT_FORMAT_VISUAL)
+
+    return "".join(parts)
+
+
+# Legacy constant for backward compatibility (tests, etc.)
+SYSTEM_PROMPT = build_system_prompt("visual", "EVS")
 
 # ---------------------------------------------------------------------------
 # 1B  User Prompt Builder
@@ -299,6 +289,28 @@ def build_user_prompt(
             "from the provided list.\n"
         )
 
+    # -- Bloom's taxonomy directive (from prompt_builder.py) --
+    bloom_map = {"easy": "recall", "medium": "application", "hard": "reasoning"}
+    bloom_key = bloom_map.get(difficulty.lower(), "application")
+    bloom_directive = _BLOOM_DIRECTIVES.get(bloom_key)
+    if bloom_directive:
+        prompt += f"\nCOGNITIVE LEVEL: {bloom_directive}\n"
+
+    # -- Fractions constraint --
+    if "fraction" in topic.lower():
+        prompt += (
+            "\nFRACTIONS CONSTRAINT: Every question MUST contain a fraction "
+            "(e.g. 1/2, 3/4, 5/8). No whole-number arithmetic.\n"
+        )
+
+    # -- Hindi Devanagari anchor --
+    if language.lower() == "hindi" or subject.lower() == "hindi":
+        prompt += (
+            "\nHINDI SCRIPT: Generate ALL question content in Devanagari script. "
+            "NEVER use transliterated Hindi (Roman script for Hindi words). "
+            "All Hindi words must use proper Devanagari Unicode characters.\n"
+        )
+
     if custom_instructions:
         prompt += f"\nAdditional teacher instructions: {custom_instructions}"
 
@@ -310,10 +322,21 @@ def build_user_prompt(
 # ---------------------------------------------------------------------------
 
 
-def call_gemini(client, system_prompt: str, user_prompt: str, subject: str = "") -> str:
+def call_gemini(
+    client,
+    system_prompt: str,
+    user_prompt: str,
+    subject: str = "",
+    difficulty: str = "medium",
+) -> str:
     """Call the LLM via the existing adapter and return raw text."""
     # Lower temperature for Maths to maintain accuracy, higher for creative subjects
-    temp = 0.5 if subject.lower() in ("maths", "math", "mathematics") else 0.8
+    is_maths = subject.lower() in ("maths", "math", "mathematics")
+    temp = 0.5 if is_maths else 0.8
+
+    # Enable chain-of-thought for Maths medium/hard (reduces auto-corrections)
+    thinking_budget = 1024 if is_maths and difficulty.lower() in ("medium", "hard") else 0
+
     response = client.chat.completions.create(
         model="gemini-2.5-flash",
         messages=[
@@ -322,6 +345,7 @@ def call_gemini(client, system_prompt: str, user_prompt: str, subject: str = "")
         ],
         temperature=temp,
         max_tokens=4096,
+        thinking_budget=thinking_budget,
     )
     return response.choices[0].message.content or ""
 
@@ -807,7 +831,8 @@ def generate_worksheet(
     for attempt in range(1, max_attempts + 1):
         t0 = time.perf_counter()
         try:
-            raw = call_gemini(client, SYSTEM_PROMPT, user_prompt, subject=subject)
+            system_prompt = build_system_prompt(problem_style, subject)
+            raw = call_gemini(client, system_prompt, user_prompt, subject=subject, difficulty=difficulty)
             data, warnings = validate_response(raw, subject, topic, num_questions, difficulty)
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)

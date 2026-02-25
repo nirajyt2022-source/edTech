@@ -209,6 +209,10 @@ Return ONLY valid JSON with this exact structure (no markdown, no code fences):
   ]
 }}
 
+EXAMPLE cards:
+{{"front": "What is a fraction?", "back": "A fraction represents a part of a whole, written as numerator/denominator (e.g. 3/4).", "category": "concept"}}
+{{"front": "If Riya eats 2/8 of a pizza, what fraction is left?", "back": "6/8 or 3/4 of the pizza is left.", "category": "question"}}
+
 REQUIREMENTS:
 - Generate exactly {count} cards
 - Front text: maximum 15 words, clear and direct

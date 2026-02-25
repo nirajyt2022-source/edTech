@@ -266,9 +266,45 @@ IMAGE_REGISTRY: dict[str, dict] = {
 }
 
 
+# Categories relevant to each subject for prompt token savings
+_SUBJECT_CATEGORIES: dict[str, list[str]] = {
+    "maths": [],  # Maths uses SVG visuals, not image keywords
+    "math": [],
+    "mathematics": [],
+    "science": ["animal", "plant", "body", "science", "space", "weather"],
+    "evs": ["animal", "plant", "habitat", "food", "weather", "family", "transport", "object"],
+    "english": ["object", "family"],
+    "hindi": ["object", "family"],
+    "gk": ["landmark", "symbol", "geography", "space", "instrument", "sport", "festival"],
+    "computer": ["computer"],
+    "health": ["health", "sport", "food"],
+    "moral science": ["family", "festival"],
+}
+
+
 def get_available_keywords() -> list[str]:
     """Return all available image keywords for the LLM prompt."""
     return sorted(IMAGE_REGISTRY.keys())
+
+
+def get_keywords_for_subject(subject: str) -> list[str]:
+    """Return image keywords filtered by subject relevance.
+
+    Maths returns empty (uses SVG visuals). Other subjects return only
+    keywords whose category matches the subject's relevant categories.
+    Falls back to all keywords for unknown subjects.
+    """
+    categories = _SUBJECT_CATEGORIES.get(subject.lower())
+    if categories is None:
+        # Unknown subject — return all keywords
+        return get_available_keywords()
+    if not categories:
+        # Maths — no image keywords needed
+        return []
+    return sorted(
+        kw for kw, info in IMAGE_REGISTRY.items()
+        if info.get("category") in categories
+    )
 
 
 def resolve_keywords(keywords: list[str]) -> list[dict]:

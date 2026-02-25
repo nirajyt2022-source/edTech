@@ -89,64 +89,65 @@ async def get_curriculum_context(
 
 
 def _format_context(data: dict[str, Any]) -> str:
-    """Format curriculum data into a prompt-friendly string."""
-    parts = []
+    """Format curriculum data into a compact, token-efficient prompt string."""
+    parts = ["[CURRICULUM]"]
 
-    parts.append("=" * 60)
-    parts.append("NCERT CURRICULUM CONTEXT (use this to ensure accuracy)")
-    parts.append("=" * 60)
-
+    # Line 1: chapter identity
     if data.get("chapter_name"):
         parts.append(f"Chapter: {data['chapter_name']}")
 
+    # Summary (compact)
     if data.get("ncert_summary"):
-        parts.append(f"\nWhat this chapter teaches:\n{data['ncert_summary']}")
+        parts.append(f"Teaches: {data['ncert_summary']}")
 
+    # Key concepts (semicolon-delimited)
     if data.get("key_concepts"):
         concepts = data["key_concepts"]
         if isinstance(concepts, list) and concepts:
-            parts.append(f"\nKey concepts to cover: {', '.join(concepts)}")
+            parts.append(f"Concepts: {'; '.join(concepts)}")
 
+    # Learning outcomes (semicolon-delimited)
     if data.get("learning_outcomes"):
         outcomes = data["learning_outcomes"]
         if isinstance(outcomes, list) and outcomes:
-            parts.append("\nLearning outcomes (student should be able to):")
-            for o in outcomes:
-                parts.append(f"  - {o}")
+            parts.append(f"Outcomes: {'; '.join(outcomes)}")
 
+    # Common mistakes (semicolon-delimited)
     if data.get("common_mistakes"):
         mistakes = data["common_mistakes"]
         if isinstance(mistakes, list) and mistakes:
-            parts.append("\nCommon mistakes students make:")
-            for m in mistakes:
-                parts.append(f"  - {m}")
+            parts.append(f"Mistakes: {'; '.join(mistakes)}")
 
+    # Difficulty notes (pipe-delimited on one line)
     if data.get("difficulty_notes"):
         notes = data["difficulty_notes"]
         if isinstance(notes, dict):
+            dn_parts = []
             if notes.get("foundation"):
-                parts.append(f"\nFoundation level: {notes['foundation']}")
+                dn_parts.append(f"Foundation: {notes['foundation']}")
             if notes.get("stretch"):
-                parts.append(f"\nStretch level: {notes['stretch']}")
+                dn_parts.append(f"Stretch: {notes['stretch']}")
+            if dn_parts:
+                parts.append(" | ".join(dn_parts))
 
+    # Vocabulary, contexts, question types (pipe-delimited single line)
+    extras = []
     if data.get("grade_vocabulary"):
         vocab = data["grade_vocabulary"]
         if isinstance(vocab, list) and vocab:
-            parts.append(f"\nGrade-appropriate vocabulary: {', '.join(vocab)}")
-
+            extras.append(f"Vocab: {', '.join(vocab)}")
     if data.get("real_world_contexts"):
         contexts = data["real_world_contexts"]
         if isinstance(contexts, list) and contexts:
-            parts.append(f"\nReal-world contexts for word problems: {', '.join(contexts)}")
-
+            extras.append(f"Contexts: {', '.join(contexts)}")
     if data.get("question_types"):
         qtypes = data["question_types"]
         if isinstance(qtypes, list) and qtypes:
-            parts.append(f"\nRecommended question types: {', '.join(qtypes)}")
+            extras.append(f"Q-types: {', '.join(qtypes)}")
+    if extras:
+        parts.append(" | ".join(extras))
 
-    parts.append("=" * 60)
-    parts.append("Generate questions that align with the above curriculum context.")
-    parts.append("=" * 60)
+    parts.append("[/CURRICULUM]")
 
     return "\n".join(parts)
 

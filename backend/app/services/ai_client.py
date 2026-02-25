@@ -67,6 +67,7 @@ class AIClient:
         temperature: float = 0.7,
         max_tokens: int = 4096,
         retries: int = 1,
+        thinking_budget: int = 0,
     ) -> dict[str, Any]:
         """Generate a JSON response from Gemini.
 
@@ -82,7 +83,7 @@ class AIClient:
                     temperature=temperature,
                     max_output_tokens=max_tokens,
                     response_mime_type="application/json",
-                    thinking_config=t.ThinkingConfig(thinking_budget=0),
+                    thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
                 )
                 response = self.client.models.generate_content(
                     model=self.model,
@@ -298,6 +299,7 @@ class AIClient:
         messages: list[dict],
         temperature: float = 0.7,
         max_tokens: int = 4096,
+        thinking_budget: int = 0,
     ) -> str:
         """Backward-compatible method that mimics the old OpenAI-style interface.
 
@@ -320,7 +322,7 @@ class AIClient:
                 temperature=temperature,
                 max_output_tokens=max_tokens,
                 response_mime_type="application/json",
-                thinking_config=t.ThinkingConfig(thinking_budget=0),
+                thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
             )
             response = self.client.models.generate_content(
                 model=self.model,
@@ -392,11 +394,12 @@ class OpenAICompatAdapter:
             def __init__(self, ai_client: AIClient):
                 self._ai = ai_client
 
-            def create(self, model=None, messages=None, temperature=0.7, max_tokens=None, **kwargs):
+            def create(self, model=None, messages=None, temperature=0.7, max_tokens=None, thinking_budget=0, **kwargs):
                 text = self._ai.generate_openai_style(
                     messages=messages or [],
                     temperature=temperature,
                     max_tokens=max_tokens or 4096,
+                    thinking_budget=thinking_budget,
                 )
 
                 class _Msg:
