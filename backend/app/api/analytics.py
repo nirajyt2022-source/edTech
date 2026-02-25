@@ -13,7 +13,12 @@ router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 @limiter.limit("60/minute")
 async def skill_accuracy(request: Request, user_id: UserId, db: DbClient):
     try:
-        res = db.table("v_skill_accuracy").select("*").execute()
+        # Get user's children to scope data to this user only
+        children_res = db.table("children").select("id").eq("user_id", user_id).execute()
+        child_ids = [c["id"] for c in (children_res.data or [])]
+        if not child_ids:
+            return []
+        res = db.table("v_skill_accuracy").select("*").in_("student_id", child_ids).execute()
         return res.data
     except Exception as e:
         logger.error("skill_accuracy_failed", user_id=user_id, error=str(e))
@@ -22,9 +27,19 @@ async def skill_accuracy(request: Request, user_id: UserId, db: DbClient):
 
 @router.get("/error_distribution")
 @limiter.limit("60/minute")
-async def error_distribution(request: Request, user_id: UserId, db: DbClient, skill_tag: str | None = None):
+async def error_distribution(
+    request: Request,
+    user_id: UserId,
+    db: DbClient,
+    skill_tag: str | None = Query(default=None, max_length=100),
+):
     try:
-        q = db.table("v_error_distribution").select("*")
+        # Get user's children to scope data to this user only
+        children_res = db.table("children").select("id").eq("user_id", user_id).execute()
+        child_ids = [c["id"] for c in (children_res.data or [])]
+        if not child_ids:
+            return []
+        q = db.table("v_error_distribution").select("*").in_("student_id", child_ids)
         if skill_tag:
             q = q.eq("skill_tag", skill_tag)
         return q.execute().data

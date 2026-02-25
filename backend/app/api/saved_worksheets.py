@@ -9,7 +9,7 @@ from urllib.parse import quote
 
 import structlog
 from fastapi import APIRouter, HTTPException, Query, Request, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
@@ -25,17 +25,17 @@ router = APIRouter(prefix="/api/worksheets", tags=["saved-worksheets"])
 
 
 class WorksheetForSave(BaseModel):
-    title: str = ""
-    grade: str = ""
-    subject: str = ""
-    topic: str = ""
-    difficulty: str = "Mixed"
-    language: str = "English"
-    questions: list = []
-    skill_focus: str = ""
-    common_mistake: str = ""
-    parent_tip: str = ""
-    learning_objectives: list = []
+    title: str = Field(default="", max_length=300)
+    grade: str = Field(default="", max_length=20)
+    subject: str = Field(default="", max_length=50)
+    topic: str = Field(default="", max_length=200)
+    difficulty: str = Field(default="Mixed", max_length=20)
+    language: str = Field(default="English", max_length=30)
+    questions: list = Field(default_factory=list, max_length=50)
+    skill_focus: str = Field(default="", max_length=200)
+    common_mistake: str = Field(default="", max_length=500)
+    parent_tip: str = Field(default="", max_length=500)
+    learning_objectives: list = Field(default_factory=list, max_length=20)
 
 
 class SaveWorksheetRequest(BaseModel):
@@ -47,20 +47,20 @@ class SaveWorksheetRequest(BaseModel):
 
 
 class PDFExportWorksheet(BaseModel):
-    title: str = "Worksheet"
-    grade: str = ""
-    subject: str = ""
-    topic: str = ""
-    difficulty: str = "Mixed"
-    language: str = "English"
-    questions: list = []
-    skill_focus: str = ""
-    common_mistake: str = ""
-    parent_tip: str = ""
-    learning_objectives: list = []
+    title: str = Field(default="Worksheet", max_length=300)
+    grade: str = Field(default="", max_length=20)
+    subject: str = Field(default="", max_length=50)
+    topic: str = Field(default="", max_length=200)
+    difficulty: str = Field(default="Mixed", max_length=20)
+    language: str = Field(default="English", max_length=30)
+    questions: list = Field(default_factory=list, max_length=50)
+    skill_focus: str = Field(default="", max_length=200)
+    common_mistake: str = Field(default="", max_length=500)
+    parent_tip: str = Field(default="", max_length=500)
+    learning_objectives: list = Field(default_factory=list, max_length=20)
 
     class Config:
-        extra = "allow"
+        extra = "ignore"
 
 
 class PDFExportRequest(BaseModel):
@@ -361,7 +361,8 @@ async def regenerate_worksheet(
 
 
 @router.get("/analytics")
-async def get_teacher_analytics(user_id: UserId, db: DbClient):
+@limiter.limit("60/minute")
+async def get_teacher_analytics(request: Request, user_id: UserId, db: DbClient):
     """Get light analytics for a teacher."""
     try:
         result = db.table("worksheets").select("topic, subject, created_at").eq("user_id", user_id).execute()

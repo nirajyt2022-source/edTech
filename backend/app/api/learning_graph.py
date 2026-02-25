@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Optional
 
 import structlog
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from app.core.deps import DbClient, UserId
+from app.middleware.rate_limit import limiter
 from app.services.learning_graph import (
     _build_recommendation_reason,
     _build_report_text,
@@ -44,7 +45,9 @@ def _verify_ownership(db: DbClient, child_id: str, user_id: str) -> dict:
 
 
 @router.get("/{child_id}/graph")
+@limiter.limit("60/minute")
 async def get_child_graph(
+    request: Request,
     child_id: str,
     user_id: UserId,
     db: DbClient,
@@ -66,7 +69,9 @@ async def get_child_graph(
 
 
 @router.get("/{child_id}/graph/summary")
+@limiter.limit("60/minute")
 async def get_child_graph_summary(
+    request: Request,
     child_id: str,
     user_id: UserId,
     db: DbClient,
@@ -88,7 +93,9 @@ async def get_child_graph_summary(
 
 
 @router.get("/{child_id}/graph/history")
+@limiter.limit("60/minute")
 async def get_child_graph_history(
+    request: Request,
     child_id: str,
     user_id: UserId,
     db: DbClient,
@@ -139,7 +146,9 @@ def _pick_recommendation(rows: list[dict]) -> Optional[dict]:
 
 
 @router.get("/{child_id}/graph/recommendation")
+@limiter.limit("60/minute")
 async def get_child_next_recommendation(
+    request: Request,
     child_id: str,
     user_id: UserId,
     db: DbClient,
@@ -192,7 +201,9 @@ async def get_child_next_recommendation(
 
 
 @router.get("/{child_id}/graph/report")
+@limiter.limit("60/minute")
 async def get_child_graph_report(
+    request: Request,
     child_id: str,
     user_id: UserId,
     db: DbClient,

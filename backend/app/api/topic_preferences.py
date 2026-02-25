@@ -2,7 +2,7 @@ from datetime import datetime
 
 import structlog
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
@@ -12,14 +12,14 @@ logger = structlog.get_logger("skolar.topic_preferences")
 
 
 class TopicSelection(BaseModel):
-    chapter: str
-    topics: list[str]  # List of selected topic names
+    chapter: str = Field(max_length=200)
+    topics: list[str] = Field(max_length=50)  # List of selected topic names
 
 
 class SavePreferencesRequest(BaseModel):
-    child_id: str
-    subject: str
-    selected_topics: list[TopicSelection]
+    child_id: str = Field(max_length=100)
+    subject: str = Field(max_length=50)
+    selected_topics: list[TopicSelection] = Field(max_length=100)
 
 
 class TopicPreferences(BaseModel):

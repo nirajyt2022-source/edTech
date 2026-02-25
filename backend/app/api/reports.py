@@ -28,7 +28,7 @@ from typing import List
 
 import structlog
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 from app.core.config import get_settings
 from app.core.deps import DbClient, UserId
@@ -49,12 +49,12 @@ _SHARE_BASE = get_settings().frontend_url
 
 
 class ContactItem(BaseModel):
-    child_id: str
-    parent_email: str
+    child_id: str = Field(max_length=100)
+    parent_email: EmailStr
 
 
 class SendEmailBody(BaseModel):
-    report_token: str
+    report_token: str = Field(min_length=16, max_length=200)
 
 
 # ---------------------------------------------------------------------------
