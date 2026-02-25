@@ -1939,7 +1939,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                 const idx = qNum
                                 const starCount = tier.key === 'foundation' ? 1 : tier.key === 'application' ? 2 : 3
                                 return (
-                                  <div key={question.id} className="relative group stagger-item" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                                  <div key={question.id} className="relative group stagger-item question-card-container" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                                     <div className="flex gap-5">
                                       <div className="flex-shrink-0 flex flex-col items-center gap-0.5 mt-0.5">
                                         <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-primary/20 text-primary/70 text-xs font-bold print:border-black/30 print:text-black/60">
@@ -1971,7 +1971,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                           </div>
                                         )}
                                         {question.options && (
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                                          <div className="options-grid mt-4">
                                             {question.options.map((option, optIndex) => (
                                               <div key={optIndex} className="flex items-center gap-3 p-3.5 rounded-lg border border-border/40 bg-white/50 print:bg-transparent print:border-black/20 print:rounded-none print:p-2.5">
                                                 <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">{String.fromCharCode(65 + optIndex)}</span>
@@ -2027,7 +2027,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         )) : (
                           <div className="space-y-12">
                             {allQuestions.map((question, index) => (
-                              <div key={question.id} className="relative group stagger-item" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                              <div key={question.id} className="relative group stagger-item question-card-container" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                                 <div className="flex gap-5">
                                   <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold mt-0.5 print:border-black/30 print:text-black/60">{index + 1}</span>
                                   <div className="flex-grow space-y-4">
@@ -2038,7 +2038,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                       </div>
                                     )}
                                     {question.options && (
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                                      <div className="options-grid mt-4">
                                         {question.options.map((option, optIndex) => (
                                           <div key={optIndex} className="flex items-center gap-3 p-3.5 rounded-lg border border-border/40 bg-white/50 print:bg-transparent print:border-black/20 print:rounded-none print:p-2.5">
                                             <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">{String.fromCharCode(65 + optIndex)}</span>

@@ -197,7 +197,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           {/* Questions */}
           <div className="px-6 sm:px-10 py-8 space-y-6">
             {worksheet.questions.filter(q => !q.is_bonus).map((q, idx, arr) => (
-              <div key={q.id || idx} className="group">
+              <div key={q.id || idx} className="group question-card-container">
                 <div className="flex items-start gap-4">
                   {/* Question number */}
                   <span className="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 border border-stone-200/60 flex items-center justify-center text-sm font-bold text-stone-600">
@@ -212,7 +212,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
 
                     {/* Options if present */}
                     {q.options && q.options.length > 0 && (
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="options-grid mt-3">
                         {q.options.map((opt, optIdx) => (
                           <div
                             key={optIdx}

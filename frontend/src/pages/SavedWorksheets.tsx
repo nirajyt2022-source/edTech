@@ -501,7 +501,7 @@ export default function SavedWorksheets() {
 
               <div className="space-y-10">
                 {selectedWorksheet.questions.filter(q => !q.is_bonus).map((question, index) => (
-                  <div key={question.id} className="relative pl-12">
+                  <div key={question.id} className="relative pl-12 question-card-container">
                     <div className="absolute left-0 top-0 w-8 h-8 rounded-full bg-secondary/50 border border-border/50 flex items-center justify-center font-bold text-sm text-foreground/70">
                       {index + 1}
                     </div>
@@ -509,7 +509,7 @@ export default function SavedWorksheets() {
                       <p className="text-lg font-medium text-foreground leading-snug">{question.text}</p>
 
                       {question.options && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                        <div className="options-grid mt-4">
                           {question.options.map((option, optIndex) => (
                             <div key={optIndex} className="p-3 pl-4 rounded-xl border border-border/40 bg-background flex items-center gap-3 group transition-colors hover:border-primary/20">
                               <span className="flex-shrink-0 w-6 h-6 rounded-md bg-secondary/40 border border-border/60 flex items-center justify-center text-[10px] font-bold text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary group-hover:border-primary/20 transition-colors">
@@ -557,15 +557,17 @@ export default function SavedWorksheets() {
                     <h3 className="text-xl font-bold font-inter">Answer Key</h3>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {selectedWorksheet.questions.map((question, index) => (
-                      <div key={question.id} className="p-3 rounded-xl bg-secondary/20 border border-border/30 flex justify-between items-center group hover:bg-accent/5 hover:border-accent/20 transition-all">
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:text-accent/70">Q{index + 1}</span>
-                        <span className="font-bold text-foreground text-sm group-hover:text-accent transition-colors">
-                          {question.correct_answer || question.explanation || <span className="text-muted-foreground text-xs italic">Open-ended</span>}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="answer-key-container">
+                    <div className="answer-key-grid">
+                      {selectedWorksheet.questions.map((question, index) => (
+                        <div key={question.id} className="p-3 rounded-xl bg-secondary/20 border border-border/30 flex justify-between items-center group hover:bg-accent/5 hover:border-accent/20 transition-all">
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider group-hover:text-accent/70">Q{index + 1}</span>
+                          <span className="font-bold text-foreground text-sm group-hover:text-accent transition-colors">
+                            {question.correct_answer || question.explanation || <span className="text-muted-foreground text-xs italic">Open-ended</span>}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
