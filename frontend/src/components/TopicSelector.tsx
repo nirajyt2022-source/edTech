@@ -115,7 +115,7 @@ export default function TopicSelector({ chapters, childId, subject, onSelectionC
   const toggleChapterExpand = (chapterName: string) => {
     setExpandedChapters(prev => {
       const next = new Set(prev)
-      next.has(chapterName) ? next.delete(chapterName) : next.add(chapterName)
+      if (next.has(chapterName)) { next.delete(chapterName) } else { next.add(chapterName) }
       return next
     })
   }

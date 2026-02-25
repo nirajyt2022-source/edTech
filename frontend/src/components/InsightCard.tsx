@@ -31,9 +31,10 @@ export function InsightCard({ childId, onNavigate }: Props) {
   const [report, setReport] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Data fetching effect — setState in async callbacks is the standard pattern
   useEffect(() => {
     if (!childId) return
-    setLoading(true)
+    setLoading(true) // eslint-disable-line react-hooks/set-state-in-effect
     api
       .get(`/api/children/${childId}/graph/report`)
       .then((r) => setReport(r.data))

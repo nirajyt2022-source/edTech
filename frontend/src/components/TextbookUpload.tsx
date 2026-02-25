@@ -20,9 +20,11 @@ export interface TextbookAnalysis {
 }
 
 interface TextbookUploadProps {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   onWorksheetGenerated: (worksheet: any) => void
   onRevisionGenerated: (revision: any) => void
   onFlashcardsGenerated: (flashcards: any) => void
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 }
 
 type Step = "upload" | "analysis" | "generating"

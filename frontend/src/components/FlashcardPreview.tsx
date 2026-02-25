@@ -51,12 +51,14 @@ export default function FlashcardPreview({ cards, title, onDownloadPdf, download
   const [flipped, setFlipped] = useState(false)
   const [gridView, setGridView] = useState(false)
 
-  // Reset state when cards change
+  // Reset state when cards change — data sync from prop is a valid effect pattern
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setCurrentIndex(0)
     setFlipped(false)
     setGridView(false)
   }, [cards])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {

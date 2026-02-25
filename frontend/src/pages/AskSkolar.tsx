@@ -17,7 +17,7 @@ interface ChatMessage {
 }
 
 interface AskSkolarProps {
-  onNavigate: (page: string, preFill?: any) => void
+  onNavigate: (page: string, preFill?: Record<string, unknown>) => void
   childGrade?: string
 }
 
@@ -85,7 +85,7 @@ export default function AskSkolar({ onNavigate, childGrade }: AskSkolarProps) {
         suggestedGrade: response.data.suggested_grade,
       }
       setMessages(prev => [...prev, assistantMsg])
-    } catch (err: unknown) {
+    } catch {
       const errorMsg: ChatMessage = {
         role: 'assistant',
         content: "I'm sorry, I couldn't process that right now. Please try again!",

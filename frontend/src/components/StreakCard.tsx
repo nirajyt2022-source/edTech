@@ -52,9 +52,10 @@ export function StreakCard({ childId, sessions }: Props) {
   const [engagement, setEngagement] = useState<EngagementData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Data fetching effect — setState in async callbacks is the standard pattern
   useEffect(() => {
     if (!childId) return
-    setLoading(true)
+    setLoading(true) // eslint-disable-line react-hooks/set-state-in-effect
     api
       .get(`/api/engagement/${childId}`)
       .then((r) => setEngagement(r.data))

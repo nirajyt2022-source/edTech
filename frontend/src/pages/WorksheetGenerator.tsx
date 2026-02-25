@@ -327,7 +327,6 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     if (paramGrade || paramSubject || paramTopic || paramChildId || paramAutoGenerate) {
       window.history.replaceState({}, '', window.location.pathname)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Pre-fill from History "Generate similar" button or Home "Revise" action
@@ -688,14 +687,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   }
 
   // Apply child_id from URL params once the children list is available
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!pendingChildIdRef.current || children.length === 0) return
     const childExists = children.some(c => c.id === pendingChildIdRef.current)
     if (childExists) setActiveChildId(pendingChildIdRef.current!)
     pendingChildIdRef.current = null
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [children])
+  }, [children, setActiveChildId])
 
   // Reset answer-reveal state whenever the active worksheet changes identity
   useEffect(() => {
