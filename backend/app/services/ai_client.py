@@ -28,6 +28,7 @@ Usage:
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from typing import Any
@@ -41,6 +42,10 @@ logger = structlog.get_logger("skolar.ai")
 
 # Default model
 DEFAULT_MODEL = "gemini-2.5-flash"
+
+# In-memory cache for Gemini CachedContent objects (keyed by system prompt hash)
+_cached_contents: dict[str, Any] = {}
+_CACHE_TTL_MINUTES = 60
 
 
 def _types():
@@ -331,6 +336,46 @@ class AIClient:
             logger.error("generate_with_typed_parts failed", error=str(e))
             raise ValueError(f"AI typed parts generation failed: {e}")
 
+    # -- Gemini Context Caching -----------------------------------------------
+
+    def _get_or_create_cache(self, system_instruction: str) -> Any:
+        """Get or create a Gemini CachedContent for the given system prompt.
+
+        Caches the system prompt server-side so repeated worksheet generations
+        with the same system prompt (same problem_style + subject combo) reuse
+        cached tokens instead of re-processing them. Saves 50-90% on input tokens.
+
+        Falls back to None (no caching) on any error — the call proceeds normally.
+        """
+        cache_key = hashlib.sha256(system_instruction.encode()).hexdigest()
+
+        # Check in-memory cache first
+        cached = _cached_contents.get(cache_key)
+        if cached:
+            logger.debug("gemini_cache_hit", cache_key=cache_key[:8])
+            return cached
+
+        # Create server-side cached content
+        try:
+            from datetime import timedelta
+
+            t = _types()
+            cached_content = self.client.caches.create(
+                model=self.model,
+                config=t.CreateCachedContentConfig(
+                    system_instruction=system_instruction,
+                    ttl=timedelta(minutes=_CACHE_TTL_MINUTES),
+                    display_name=f"skolar-sys-{cache_key[:8]}",
+                ),
+            )
+            _cached_contents[cache_key] = cached_content
+            logger.info("gemini_cache_created", cache_key=cache_key[:8])
+            return cached_content
+        except Exception as exc:
+            # Caching is optional — fall back to uncached call
+            logger.warning("gemini_cache_create_failed", error=str(exc))
+            return None
+
     # -- Adapter for worksheet_generator (backward compat) ------------------
 
     def generate_openai_style(
@@ -346,6 +391,9 @@ class AIClient:
 
         messages: [{"role": "system", "content": "..."}, {"role": "user", "content": "..."}]
         Returns: raw text response
+
+        Uses Gemini context caching for the system prompt when available,
+        reducing input token costs by 50-90% across repeated generations.
         """
         system_parts = [m["content"] for m in messages if m.get("role") == "system"]
         user_parts = [m["content"] for m in messages if m.get("role") != "system"]
@@ -360,18 +408,43 @@ class AIClient:
                 span.set_data("max_tokens", max_tokens)
                 span.set_data("thinking_budget", thinking_budget)
                 t = _types()
-                config = t.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    temperature=temperature,
-                    max_output_tokens=max_tokens,
-                    response_mime_type="application/json",
-                    thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
-                )
-                response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=user_prompt,
-                    config=config,
-                )
+
+                # Try to use cached system prompt
+                cached_content = None
+                if system_instruction:
+                    cached_content = self._get_or_create_cache(system_instruction)
+
+                if cached_content:
+                    # Use cached content — system prompt is already server-side
+                    span.set_data("cache_hit", True)
+                    config = t.GenerateContentConfig(
+                        temperature=temperature,
+                        max_output_tokens=max_tokens,
+                        response_mime_type="application/json",
+                        thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
+                    )
+                    response = self.client.models.generate_content(
+                        model=self.model,
+                        contents=user_prompt,
+                        config=config,
+                        cached_content=cached_content.name,
+                    )
+                else:
+                    # Fallback: uncached call with inline system instruction
+                    span.set_data("cache_hit", False)
+                    config = t.GenerateContentConfig(
+                        system_instruction=system_instruction,
+                        temperature=temperature,
+                        max_output_tokens=max_tokens,
+                        response_mime_type="application/json",
+                        thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
+                    )
+                    response = self.client.models.generate_content(
+                        model=self.model,
+                        contents=user_prompt,
+                        config=config,
+                    )
+
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
                 self._track_call(elapsed_ms)
                 text = response.text or ""
