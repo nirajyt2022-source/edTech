@@ -3,18 +3,17 @@ Worksheets v2 API — simplified prompt-to-Gemini pipeline.
 
 Mounts at /api/v2/worksheets. The old /api/worksheets (v1) is untouched.
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
 
 from fastapi import APIRouter, Header, HTTPException, Request
-
 from supabase import create_client
+
 from app.core.config import get_settings
 from app.core.deps import get_current_user_id
-from app.services.subscription_check import check_and_increment_usage
-
 from app.middleware.rate_limit import limiter
 from app.models.worksheet import (
     Question,
@@ -23,6 +22,7 @@ from app.models.worksheet import (
     WorksheetGenerationResponse,
 )
 from app.services.ai_client import get_openai_compat_client
+from app.services.subscription_check import check_and_increment_usage
 from app.services.worksheet_generator import generate_worksheet
 
 logger = logging.getLogger(__name__)

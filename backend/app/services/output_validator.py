@@ -12,6 +12,7 @@ Usage:
     if not is_valid:
         # retry or return with warnings
 """
+
 from __future__ import annotations
 
 import logging
@@ -48,7 +49,7 @@ class OutputValidator:
 
         # 2. Every question needs required fields
         for i, q in enumerate(questions):
-            qid = q.get("id", f"Q{i+1}")
+            qid = q.get("id", f"Q{i + 1}")
 
             if not q.get("text", "").strip():
                 errors.append(f"{qid}: empty question text")
@@ -81,7 +82,7 @@ class OutputValidator:
         seen = set()
         for t in texts:
             # Normalize whitespace for comparison
-            normalized = re.sub(r'\s+', ' ', t)
+            normalized = re.sub(r"\s+", " ", t)
             if normalized in seen:
                 errors.append("Duplicate question detected")
                 break
@@ -91,7 +92,7 @@ class OutputValidator:
         grade_num = self._parse_grade_num(grade)
         if grade_num:
             for i, q in enumerate(questions):
-                qid = q.get("id", f"Q{i+1}")
+                qid = q.get("id", f"Q{i + 1}")
                 text = q.get("text", "")
 
                 # Class 1-2: questions shouldn't be too long
@@ -100,7 +101,16 @@ class OutputValidator:
 
                 # Class 1-2: shouldn't use complex vocabulary
                 if grade_num <= 2:
-                    complex_words = {"approximately", "calculate", "determine", "evaluate", "demonstrate", "illustrate", "hypothesis", "consequently"}
+                    complex_words = {
+                        "approximately",
+                        "calculate",
+                        "determine",
+                        "evaluate",
+                        "demonstrate",
+                        "illustrate",
+                        "hypothesis",
+                        "consequently",
+                    }
                     used_complex = [w for w in text.lower().split() if w in complex_words]
                     if used_complex:
                         errors.append(f"{qid}: complex vocabulary for {grade}: {', '.join(used_complex)}")
@@ -108,7 +118,7 @@ class OutputValidator:
         # 5. Maths answer verification (basic checks)
         if subject.lower() in ("maths", "mathematics", "math"):
             for i, q in enumerate(questions):
-                qid = q.get("id", f"Q{i+1}")
+                qid = q.get("id", f"Q{i + 1}")
                 verified = self._verify_math_answer(q)
                 if verified is False:
                     errors.append(f"{qid}: math answer appears incorrect")
@@ -141,9 +151,9 @@ class OutputValidator:
         # Each key concept should have title and explanation
         for i, concept in enumerate(data.get("key_concepts", [])):
             if not concept.get("title", "").strip():
-                errors.append(f"Key concept {i+1}: missing title")
+                errors.append(f"Key concept {i + 1}: missing title")
             if not concept.get("explanation", "").strip():
-                errors.append(f"Key concept {i+1}: missing explanation")
+                errors.append(f"Key concept {i + 1}: missing explanation")
 
         if not data.get("quick_quiz") or len(data.get("quick_quiz", [])) < 2:
             errors.append("Need at least 2 quick quiz questions")
@@ -165,12 +175,12 @@ class OutputValidator:
 
         for i, card in enumerate(cards):
             if not card.get("front", "").strip():
-                errors.append(f"Card {i+1}: empty front")
+                errors.append(f"Card {i + 1}: empty front")
             if not card.get("back", "").strip():
-                errors.append(f"Card {i+1}: empty back")
+                errors.append(f"Card {i + 1}: empty back")
             # Front should be short (it's a card)
             if len(card.get("front", "").split()) > 20:
-                errors.append(f"Card {i+1}: front too long ({len(card['front'].split())} words)")
+                errors.append(f"Card {i + 1}: front too long ({len(card['front'].split())} words)")
 
         # Check for duplicate fronts
         fronts = [c.get("front", "").strip().lower() for c in cards]
@@ -202,7 +212,7 @@ class OutputValidator:
 
         for i, r in enumerate(results):
             if "is_correct" not in r and "status" not in r:
-                errors.append(f"Result {i+1}: missing is_correct/status field")
+                errors.append(f"Result {i + 1}: missing is_correct/status field")
 
         is_valid = len(errors) == 0
         if not is_valid:
@@ -214,7 +224,7 @@ class OutputValidator:
     @staticmethod
     def _parse_grade_num(grade: str) -> int | None:
         """Extract number from 'Class 4' -> 4."""
-        match = re.search(r'\d+', grade)
+        match = re.search(r"\d+", grade)
         return int(match.group()) if match else None
 
     @staticmethod
@@ -233,9 +243,9 @@ class OutputValidator:
 
         # Try to extract a simple arithmetic expression
         patterns = [
-            r'(\d+)\s*\+\s*(\d+)',   # addition
-            r'(\d+)\s*[-−]\s*(\d+)',  # subtraction
-            r'(\d+)\s*[×x]\s*(\d+)', # multiplication
+            r"(\d+)\s*\+\s*(\d+)",  # addition
+            r"(\d+)\s*[-−]\s*(\d+)",  # subtraction
+            r"(\d+)\s*[×x]\s*(\d+)",  # multiplication
         ]
 
         try:
@@ -247,9 +257,9 @@ class OutputValidator:
             match = re.search(pattern, text)
             if match:
                 a, b = int(match.group(1)), int(match.group(2))
-                if '+' in pattern:
+                if "+" in pattern:
                     expected = a + b
-                elif '-' in pattern or '−' in pattern:
+                elif "-" in pattern or "−" in pattern:
                     expected = a - b
                 else:
                     expected = a * b
@@ -268,6 +278,7 @@ class OutputValidator:
 
 # Singleton
 _validator: OutputValidator | None = None
+
 
 def get_validator() -> OutputValidator:
     global _validator

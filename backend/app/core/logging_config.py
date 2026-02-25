@@ -6,9 +6,12 @@ In development: Colorful human-readable output
 
 Every log line includes: timestamp, level, request_id, event, and custom fields.
 """
+
 import logging
 import sys
+
 import structlog
+
 from app.core.config import get_settings
 
 

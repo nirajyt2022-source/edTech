@@ -1,8 +1,10 @@
 import logging
+
 from fastapi import APIRouter, Header, Query, Request
-from app.services.dashboard_service import get_parent_dashboard
+
 from app.core.deps import get_current_user_id, verify_child_ownership
 from app.middleware.rate_limit import limiter
+from app.services.dashboard_service import get_parent_dashboard
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,9 @@
 """
 Request ID middleware — assigns a unique ID to every request for tracing.
 """
+
 import uuid
+
 import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -25,6 +27,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         auth = request.headers.get("authorization", "")
         if auth.startswith("Bearer "):
             import hashlib
+
             user_hash = hashlib.sha256(auth.encode()).hexdigest()[:8]
             structlog.contextvars.bind_contextvars(user=user_hash)
 

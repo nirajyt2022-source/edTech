@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -29,7 +30,9 @@ class Settings(BaseSettings):
 
     # CORS — comma-separated allowed origins
     frontend_url: str = "https://ed-tech-drab.vercel.app"
-    cors_origins: str = "http://localhost:5173,http://localhost:3000,http://localhost:5174,https://ed-tech-drab.vercel.app"
+    cors_origins: str = (
+        "http://localhost:5173,http://localhost:3000,http://localhost:5174,https://ed-tech-drab.vercel.app"
+    )
 
     class Config:
         env_file = ".env"

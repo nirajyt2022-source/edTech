@@ -10,16 +10,16 @@ Flow:
 
 import base64
 import logging
+from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Header, Request, UploadFile, File
+from fastapi import APIRouter, File, Header, HTTPException, Request, UploadFile
+from pydantic import BaseModel, Field
+from supabase import create_client
 
+from app.core.config import get_settings
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import validate_file_upload
 from app.services.subscription_check import check_ai_usage_allowed
-from pydantic import BaseModel, Field
-from typing import Literal
-from supabase import create_client
-from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -46,20 +46,23 @@ def get_user_id_from_token(authorization: str) -> str:
 
 # ── Pydantic models ──────────────────────────────────────────────────────
 
+
 class TextbookAnalysis(BaseModel):
     """What Gemini extracted from the textbook photo."""
-    detected_grade: str        # "Class 4"
-    detected_subject: str      # "Maths"
-    detected_topic: str        # "Fractions"
-    detected_chapter: str      # "Chapter 8: Fractions"
-    key_concepts: list[str]    # ["Like fractions", "Unlike fractions", ...]
-    content_summary: str       # 2-3 sentence summary
-    language: str              # "English" or "Hindi"
-    raw_text: str              # Full extracted text from the page
+
+    detected_grade: str  # "Class 4"
+    detected_subject: str  # "Maths"
+    detected_topic: str  # "Fractions"
+    detected_chapter: str  # "Chapter 8: Fractions"
+    key_concepts: list[str]  # ["Like fractions", "Unlike fractions", ...]
+    content_summary: str  # 2-3 sentence summary
+    language: str  # "English" or "Hindi"
+    raw_text: str  # Full extracted text from the page
 
 
 class TextbookGenerateRequest(BaseModel):
     """Generate content from analyzed textbook page."""
+
     analysis: TextbookAnalysis
     output_type: Literal["worksheet", "revision", "flashcards"] = "worksheet"
     difficulty: str = "Medium"
@@ -68,6 +71,7 @@ class TextbookGenerateRequest(BaseModel):
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────
+
 
 @router.post("/analyze", response_model=TextbookAnalysis)
 @limiter.limit("5/minute")
@@ -102,9 +106,7 @@ async def analyze_textbook_page(
         content = await img.read()
         b64 = base64.b64encode(content).decode("utf-8")
         mime = img.content_type or "image/jpeg"
-        image_parts.append({
-            "inline_data": {"mime_type": mime, "data": b64}
-        })
+        image_parts.append({"inline_data": {"mime_type": mime, "data": b64}})
 
     prompt = """You are analyzing a page from an Indian school textbook (NCERT or CBSE-aligned).
 
@@ -169,18 +171,17 @@ async def generate_from_textbook(
     else:
         raise HTTPException(400, f"Unknown output_type: {body.output_type}")
 
-    logger.info(
-        f"Textbook {body.output_type} generated for user={user_id}: "
-        f"{body.analysis.detected_topic}"
-    )
+    logger.info(f"Textbook {body.output_type} generated for user={user_id}: {body.analysis.detected_topic}")
     return result
 
 
 # ── Gemini helpers ────────────────────────────────────────────────────────
 
+
 async def _call_gemini_vision(image_parts: list, prompt: str) -> dict:
     """Call Gemini Vision with image(s) + text prompt, return parsed JSON."""
     import asyncio
+
     from app.services.ai_client import get_ai_client
 
     try:
@@ -202,6 +203,7 @@ async def _call_gemini_vision(image_parts: list, prompt: str) -> dict:
 async def _call_gemini_text(prompt: str, temperature: float = 0.7, max_tokens: int = 8192) -> dict:
     """Call Gemini text and return parsed JSON."""
     import asyncio
+
     from app.services.ai_client import get_ai_client
 
     try:
@@ -217,21 +219,23 @@ async def _call_gemini_text(prompt: str, temperature: float = 0.7, max_tokens: i
 
 # ── Generation functions ──────────────────────────────────────────────────
 
+
 async def _generate_textbook_worksheet(request: TextbookGenerateRequest) -> dict:
     """Generate a Skolar worksheet based on textbook content."""
     analysis = request.analysis
 
     hindi_instruction = (
-        'Generate ALL question text and options in Hindi (Devanagari script). '
-        'Technical terms may stay in English.'
-    ) if request.language.lower() == "hindi" else ""
+        ("Generate ALL question text and options in Hindi (Devanagari script). Technical terms may stay in English.")
+        if request.language.lower() == "hindi"
+        else ""
+    )
 
     prompt = f"""Generate a {request.question_count}-question worksheet for {analysis.detected_grade} {analysis.detected_subject}.
 
 TEXTBOOK CONTEXT (generate questions based on THIS content):
 Chapter: {analysis.detected_chapter}
 Topic: {analysis.detected_topic}
-Key Concepts: {', '.join(analysis.key_concepts)}
+Key Concepts: {", ".join(analysis.key_concepts)}
 Content: {analysis.raw_text[:3000]}
 
 IMPORTANT: Generate questions that DIRECTLY test the concepts from the textbook page above.
@@ -305,16 +309,20 @@ async def _generate_textbook_revision(request: TextbookGenerateRequest) -> dict:
     analysis = request.analysis
 
     hindi_instruction = (
-        'IMPORTANT: Write ALL content in Hindi using Devanagari script. '
-        'Technical terms may be kept in English with Hindi transliteration in parentheses.'
-    ) if request.language.lower() == "hindi" else "Write all content in clear, simple English."
+        (
+            "IMPORTANT: Write ALL content in Hindi using Devanagari script. "
+            "Technical terms may be kept in English with Hindi transliteration in parentheses."
+        )
+        if request.language.lower() == "hindi"
+        else "Write all content in clear, simple English."
+    )
 
     prompt = f"""You are an expert CBSE {analysis.detected_subject} teacher creating revision notes for {analysis.detected_grade} students.
 
 BASE YOUR NOTES ON THIS TEXTBOOK CONTENT:
 Chapter: {analysis.detected_chapter}
 Topic: {analysis.detected_topic}
-Key concepts: {', '.join(analysis.key_concepts)}
+Key concepts: {", ".join(analysis.key_concepts)}
 Content: {analysis.raw_text[:3000]}
 
 {hindi_instruction}
@@ -389,15 +397,19 @@ async def _generate_textbook_flashcards(request: TextbookGenerateRequest) -> dic
     analysis = request.analysis
 
     hindi_instruction = (
-        'IMPORTANT: Write ALL card content in Hindi using Devanagari script. '
-        'Technical terms may be kept in English with Hindi transliteration in parentheses.'
-    ) if request.language.lower() == "hindi" else "Write all card content in clear, simple English."
+        (
+            "IMPORTANT: Write ALL card content in Hindi using Devanagari script. "
+            "Technical terms may be kept in English with Hindi transliteration in parentheses."
+        )
+        if request.language.lower() == "hindi"
+        else "Write all card content in clear, simple English."
+    )
 
     prompt = f"""Generate 12 flashcards for {analysis.detected_grade} {analysis.detected_subject} based on this textbook content:
 
 Chapter: {analysis.detected_chapter}
 Topic: {analysis.detected_topic}
-Key concepts: {', '.join(analysis.key_concepts)}
+Key concepts: {", ".join(analysis.key_concepts)}
 Content: {analysis.raw_text[:3000]}
 
 {hindi_instruction}

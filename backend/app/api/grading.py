@@ -12,15 +12,15 @@ Flow:
 import base64
 import json
 import logging
+from typing import Optional
 
-from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Header
+from fastapi import APIRouter, File, Form, Header, HTTPException, Request, UploadFile
+from supabase import create_client
 
+from app.core.config import get_settings
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import validate_file_upload
 from app.services.subscription_check import check_ai_usage_allowed
-from typing import Optional
-from supabase import create_client
-from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,7 @@ async def grade_from_photo(
 
     # Validate grading output
     from app.services.output_validator import get_validator
+
     is_valid, val_errors = get_validator().validate_grading(results, total_questions=len(questions))
     if not is_valid:
         logger.warning("Grading validation issues", extra={"errors": val_errors})
@@ -103,6 +104,7 @@ async def grade_from_photo(
     # Invalidate dashboard cache so fresh stats are shown
     if child_id:
         from app.services.cache import invalidate_dashboard
+
         invalidate_dashboard(child_id)
 
     logger.info(f"Grading complete for user={user_id}: {results['score']}/{results['total']}")
@@ -197,13 +199,11 @@ async def call_gemini_vision_for_grading(image_data: list[dict], prompt: str, ex
     """Call Gemini Vision API with images and grading prompt."""
     from app.services.ai_client import get_ai_client
 
-    image_parts = [
-        {"inline_data": {"mime_type": img["mime_type"], "data": img["base64"]}}
-        for img in image_data
-    ]
+    image_parts = [{"inline_data": {"mime_type": img["mime_type"], "data": img["base64"]}} for img in image_data]
 
     try:
         import asyncio
+
         ai = get_ai_client()
         results = await asyncio.to_thread(
             ai.generate_with_images,

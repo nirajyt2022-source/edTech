@@ -29,6 +29,7 @@ Runs four deterministic checks on the assembled question list, in order:
 All checks are fail-open: an exception in any check is logged and skipped
 so that generation is never blocked by the review layer.
 """
+
 from __future__ import annotations
 
 import ast
@@ -107,9 +108,7 @@ _OP_NORMALISE = str.maketrans({"×": "*", "÷": "/", "–": "-", "−": "-"})
 
 # Regex: exactly two non-negative integers separated by a basic operator
 # Anchored loosely so it can appear inside longer question text
-_SIMPLE_EXPR_RE = re.compile(
-    r"(?<!\d)(\d+)\s*([+\-×÷*/])\s*(\d+)(?!\d)"
-)
+_SIMPLE_EXPR_RE = re.compile(r"(?<!\d)(\d+)\s*([+\-×÷*/])\s*(\d+)(?!\d)")
 
 # Words that reliably indicate a word problem / narrative context
 _NARRATIVE_WORDS = re.compile(
@@ -176,9 +175,7 @@ def _answers_match(stored: str, computed: float) -> bool:
 # ---------------------------------------------------------------------------
 
 # A/B [+-] C/D  — same or different denominators
-_FRAC_ADD_SUB_RE = re.compile(
-    r"(\d+)/(\d+)\s*([+\-])\s*(\d+)/(\d+)"
-)
+_FRAC_ADD_SUB_RE = re.compile(r"(\d+)/(\d+)\s*([+\-])\s*(\d+)/(\d+)")
 
 # "A/B as a decimal" — fraction-to-decimal conversion questions
 _FRAC_AS_DEC_RE = re.compile(
@@ -187,9 +184,7 @@ _FRAC_AS_DEC_RE = re.compile(
 )
 
 # "A op B = WRONG_ANSWER" — error_detection question pattern
-_ERROR_DETECT_EXPR_RE = re.compile(
-    r"(\d+)\s*([+\-×÷*/])\s*(\d+)\s*=\s*(\d+)"
-)
+_ERROR_DETECT_EXPR_RE = re.compile(r"(\d+)\s*([+\-×÷*/])\s*(\d+)\s*=\s*(\d+)")
 
 _OP_NORMALISE_4 = str.maketrans({"×": "*", "÷": "/"})
 
@@ -197,6 +192,7 @@ _OP_NORMALISE_4 = str.maketrans({"×": "*", "÷": "/"})
 def _fraction_str(numerator: int, denominator: int) -> str:
     """Return a reduced fraction string 'N/D' or whole number 'N'."""
     from math import gcd
+
     g = gcd(abs(numerator), abs(denominator))
     n, d = numerator // g, denominator // g
     return str(n) if d == 1 else f"{n}/{d}"
@@ -214,8 +210,11 @@ def _validate_fraction_answer(question_text: str, answer: str) -> Optional[str]:
         return None
 
     a, b, op, c, d = (
-        int(m.group(1)), int(m.group(2)), m.group(3),
-        int(m.group(4)), int(m.group(5)),
+        int(m.group(1)),
+        int(m.group(2)),
+        m.group(3),
+        int(m.group(4)),
+        int(m.group(5)),
     )
     # Common denominator arithmetic
     if b == d:
@@ -295,10 +294,7 @@ def _validate_error_detection_answer(question_text: str, answer: str) -> Optiona
 
     # If stored matches the wrong answer shown in the question → fix it
     if abs(stored - wrong_in_question) < 0.01:
-        correct_str = (
-            str(int(result)) if result == int(result)
-            else f"{result:.4f}".rstrip("0").rstrip(".")
-        )
+        correct_str = str(int(result)) if result == int(result) else f"{result:.4f}".rstrip("0").rstrip(".")
         return correct_str
 
     return None
@@ -337,6 +333,7 @@ def _hint_leaks_answer(hint: str, answer: str) -> bool:
         if phrase in hint_lower:
             return True
     return False
+
 
 # Map (question pattern) → correct string answer for common factual time blanks.
 # Each entry: (compiled regex to match question_text, correct answer string)
@@ -384,6 +381,7 @@ def _check_time_fact(question_text: str, answer: str) -> Optional[str]:
 # Word-count limits by grade
 # ---------------------------------------------------------------------------
 
+
 def _word_limit(grade: int) -> int:
     return 15 if grade <= 2 else 25
 
@@ -391,6 +389,7 @@ def _word_limit(grade: int) -> int:
 # ---------------------------------------------------------------------------
 # Self-contradiction detector (CHECK 7)
 # ---------------------------------------------------------------------------
+
 
 def _check_answer_self_contradiction(answer: str) -> bool:
     """
@@ -401,13 +400,13 @@ def _check_answer_self_contradiction(answer: str) -> bool:
         return False
     lower = answer.lower()
     # Pattern: "more than X" followed by "less than X" (or vice versa) for same value
-    more_matches = re.findall(r'more than (\d+)', lower)
-    less_matches = re.findall(r'less than (\d+)', lower)
+    more_matches = re.findall(r"more than (\d+)", lower)
+    less_matches = re.findall(r"less than (\d+)", lower)
     # If same number appears in both → contradiction
     if set(more_matches) & set(less_matches):
         return True
     # Pattern: explicit admission of initial error
-    if 'my initial reasoning was incorrect' in lower or 'i was wrong' in lower:
+    if "my initial reasoning was incorrect" in lower or "i was wrong" in lower:
         return True
     return False
 
@@ -416,18 +415,21 @@ def _check_answer_self_contradiction(answer: str) -> bool:
 # ReviewResult
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ReviewResult:
     """Output of QualityReviewerAgent.review_worksheet()."""
-    questions: list   = field(default_factory=list)   # possibly corrected
-    corrections: list = field(default_factory=list)   # human-readable log of corrections
-    warnings: list    = field(default_factory=list)   # grade-level language warnings
-    errors: list      = field(default_factory=list)   # skill-tag replacement log
+
+    questions: list = field(default_factory=list)  # possibly corrected
+    corrections: list = field(default_factory=list)  # human-readable log of corrections
+    warnings: list = field(default_factory=list)  # grade-level language warnings
+    errors: list = field(default_factory=list)  # skill-tag replacement log
 
 
 # ---------------------------------------------------------------------------
 # QualityReviewerAgent
 # ---------------------------------------------------------------------------
+
 
 class QualityReviewerAgent:
     """
@@ -475,18 +477,13 @@ class QualityReviewerAgent:
                                 if computed == int(computed)
                                 else f"{computed:.4f}".rstrip("0").rstrip(".")
                             )
-                            msg = (
-                                f"Q{q_id}: arithmetic corrected "
-                                f"({expr} = {correct_str}, stored was '{stored}')"
-                            )
+                            msg = f"Q{q_id}: arithmetic corrected ({expr} = {correct_str}, stored was '{stored}')"
                             logger.warning("[quality_reviewer] %s", msg)
                             q["answer"] = correct_str
                             q["_answer_corrected"] = True
                             result.corrections.append(msg)
                 except Exception as exc:
-                    logger.debug(
-                        "[quality_reviewer] Check 1 skipped for Q%s: %s", q_id, exc
-                    )
+                    logger.debug("[quality_reviewer] Check 1 skipped for Q%s: %s", q_id, exc)
 
             # ── CHECK 2: Skill tag validation ────────────────────────────
             try:
@@ -495,17 +492,12 @@ class QualityReviewerAgent:
                     skill_tag = q.get("skill_tag", "")
                     if skill_tag not in valid_tags:
                         replacement = valid_tags[0]
-                        msg = (
-                            f"Q{q_id}: invalid skill_tag '{skill_tag}' "
-                            f"replaced with '{replacement}'"
-                        )
+                        msg = f"Q{q_id}: invalid skill_tag '{skill_tag}' replaced with '{replacement}'"
                         logger.error("[quality_reviewer] %s", msg)
                         q["skill_tag"] = replacement
                         result.errors.append(msg)
             except Exception as exc:
-                logger.debug(
-                    "[quality_reviewer] Check 2 skipped for Q%s: %s", q_id, exc
-                )
+                logger.debug("[quality_reviewer] Check 2 skipped for Q%s: %s", q_id, exc)
 
             # ── CHECK 3: Grade-level word count ──────────────────────────
             try:
@@ -513,16 +505,11 @@ class QualityReviewerAgent:
                 limit = _word_limit(grade)
                 word_count = len(question_text.split())
                 if word_count > limit:
-                    msg = (
-                        f"Q{q_id}: question has {word_count} words "
-                        f"(Grade {grade} limit is {limit})"
-                    )
+                    msg = f"Q{q_id}: question has {word_count} words (Grade {grade} limit is {limit})"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)
             except Exception as exc:
-                logger.debug(
-                    "[quality_reviewer] Check 3 skipped for Q%s: %s", q_id, exc
-                )
+                logger.debug("[quality_reviewer] Check 3 skipped for Q%s: %s", q_id, exc)
 
             # ── CHECK 4: Fraction and decimal answer format ───────────────
             if is_maths:
@@ -532,89 +519,62 @@ class QualityReviewerAgent:
 
                     if slot_type == "error_detection":
                         # Bug C: LLM agrees with the wrong answer shown in Q
-                        correction = _validate_error_detection_answer(
-                            question_text, stored_answer
-                        )
+                        correction = _validate_error_detection_answer(question_text, stored_answer)
                     else:
                         # Bug A: fraction addition stored as decimal float
-                        correction = _validate_fraction_answer(
-                            question_text, stored_answer
-                        )
+                        correction = _validate_fraction_answer(question_text, stored_answer)
                         # Bug B: fraction-to-decimal stored with wrong magnitude
                         if correction is None:
-                            correction = _validate_fraction_to_decimal(
-                                question_text, stored_answer
-                            )
+                            correction = _validate_fraction_to_decimal(question_text, stored_answer)
 
                     if correction is not None:
-                        msg = (
-                            f"Q{q_id}: answer format corrected "
-                            f"('{stored_answer}' → '{correction}')"
-                        )
+                        msg = f"Q{q_id}: answer format corrected ('{stored_answer}' → '{correction}')"
                         logger.warning("[quality_reviewer] %s", msg)
                         q["answer"] = correction
                         q["_answer_corrected"] = True
                         result.corrections.append(msg)
                 except Exception as exc:
-                    logger.debug(
-                        "[quality_reviewer] Check 4 skipped for Q%s: %s", q_id, exc
-                    )
+                    logger.debug("[quality_reviewer] Check 4 skipped for Q%s: %s", q_id, exc)
 
             # ── CHECK 5: Time fact answer validation ─────────────────────
             try:
                 stored_answer = q.get("answer", "")
                 tf_correction = _check_time_fact(question_text, stored_answer)
                 if tf_correction is not None:
-                    msg = (
-                        f"Q{q_id}: time-fact answer corrected "
-                        f"('{stored_answer}' → '{tf_correction}')"
-                    )
+                    msg = f"Q{q_id}: time-fact answer corrected ('{stored_answer}' → '{tf_correction}')"
                     logger.warning("[quality_reviewer] %s", msg)
                     q["answer"] = tf_correction
                     q["_answer_corrected"] = True
                     result.corrections.append(msg)
             except Exception as exc:
-                logger.debug(
-                    "[quality_reviewer] Check 5 skipped for Q%s: %s", q_id, exc
-                )
+                logger.debug("[quality_reviewer] Check 5 skipped for Q%s: %s", q_id, exc)
 
             # ── CHECK 6: Hint answer-leakage detection ────────────────────
             try:
                 hint = q.get("hint") or ""
                 answer_for_leak = q.get("answer") or q.get("correct_answer") or ""
                 if hint and _hint_leaks_answer(hint, answer_for_leak):
-                    msg = (
-                        f"Q{q_id}: hint reveals answer — nulled "
-                        f"(hint='{hint[:60]}')"
-                    )
+                    msg = f"Q{q_id}: hint reveals answer — nulled (hint='{hint[:60]}')"
                     logger.warning("[quality_reviewer] %s", msg)
                     q["hint"] = None
                     result.warnings.append(msg)
             except Exception as exc:
-                logger.debug(
-                    "[quality_reviewer] Check 6 skipped for Q%s: %s", q_id, exc
-                )
+                logger.debug("[quality_reviewer] Check 6 skipped for Q%s: %s", q_id, exc)
 
             # ── CHECK 7: Self-contradiction in thinking answer ────────────
             if slot_type == "thinking":
                 try:
                     raw_answer = q.get("answer") or q.get("correct_answer") or ""
                     if _check_answer_self_contradiction(str(raw_answer)):
-                        msg = (
-                            f"Q{q_id}: contradictory answer — reject and regenerate "
-                            f"('{str(raw_answer)[:80]}')"
-                        )
+                        msg = f"Q{q_id}: contradictory answer — reject and regenerate ('{str(raw_answer)[:80]}')"
                         logger.warning("[quality_reviewer] %s", msg)
                         q["_needs_regen"] = True
                         result.corrections.append(msg)
                 except Exception as exc:
-                    logger.debug(
-                        "[quality_reviewer] Check 7 skipped for Q%s: %s", q_id, exc
-                    )
+                    logger.debug("[quality_reviewer] Check 7 skipped for Q%s: %s", q_id, exc)
 
         logger.info(
-            "[quality_reviewer] Review complete: %d question(s), "
-            "%d correction(s), %d warning(s), %d error(s)",
+            "[quality_reviewer] Review complete: %d question(s), %d correction(s), %d warning(s), %d error(s)",
             len(result.questions),
             len(result.corrections),
             len(result.warnings),
@@ -687,15 +647,11 @@ def validate_grade_appropriateness(
         is_error_detection = role in ("error_detection", "error_spot")
         effective_max = max_words * 2 if is_error_detection else max_words
         if word_count > effective_max:
-            reasons.append(
-                f"answer too long ({word_count} words, max {effective_max})"
-            )
+            reasons.append(f"answer too long ({word_count} words, max {effective_max})")
 
         # Rule 3: explanation requests forbidden for Class 1-2
         if grade_num <= 2 and _EXPLAIN_RE.search(q_text):
-            reasons.append(
-                f"question asks for explanation — forbidden for Class {grade_num}"
-            )
+            reasons.append(f"question asks for explanation — forbidden for Class {grade_num}")
 
         if reasons:
             rejected.append({**q, "_rejection_reasons": reasons})

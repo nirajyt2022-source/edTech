@@ -1,4 +1,5 @@
 import logging
+
 from app.services.supabase_client import get_supabase_client
 
 logger = logging.getLogger(__name__)
@@ -50,14 +51,16 @@ def get_parent_dashboard(student_id: str):
                 total = row.get("total_attempts", 0) or 0
                 correct = row.get("correct_attempts", 0) or 0
                 accuracy = round(100.0 * correct / total, 1) if total > 0 else 0.0
-                skills.append({
-                    "skill_tag": row.get("skill_tag", ""),
-                    "mastery_level": row.get("mastery_level", "unknown"),
-                    "streak": row.get("streak", 0) or 0,
-                    "total_attempts": total,
-                    "correct_attempts": correct,
-                    "accuracy": accuracy,
-                })
+                skills.append(
+                    {
+                        "skill_tag": row.get("skill_tag", ""),
+                        "mastery_level": row.get("mastery_level", "unknown"),
+                        "streak": row.get("streak", 0) or 0,
+                        "total_attempts": total,
+                        "correct_attempts": correct,
+                        "accuracy": accuracy,
+                    }
+                )
     except Exception as e:
         logger.warning("Failed to fetch mastery_state for %s: %s", student_id, e)
 

@@ -28,6 +28,7 @@ Runs four deterministic post-processing steps on the assembled question list:
 All steps are fail-open: exceptions are logged and skipped so calibration
 never blocks generation.
 """
+
 from __future__ import annotations
 
 import logging
@@ -42,17 +43,19 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 # Formats that are considered "harder" (pushed to the end during scaffolding sort)
-_HARD_FORMATS: frozenset[str] = frozenset({
-    "word_problem",
-    "word_problem_english",
-    "word_problem_science",
-    "word_problem_hindi",
-    "multi_step",
-    "multi_step_science",
-    "growing_pattern",
-    "thinking",
-    "thinking_science",
-})
+_HARD_FORMATS: frozenset[str] = frozenset(
+    {
+        "word_problem",
+        "word_problem_english",
+        "word_problem_science",
+        "word_problem_hindi",
+        "multi_step",
+        "multi_step_science",
+        "growing_pattern",
+        "thinking",
+        "thinking_science",
+    }
+)
 
 
 def _sort_key(q: dict) -> tuple:
@@ -71,6 +74,7 @@ def _sort_key(q: dict) -> tuple:
 # ---------------------------------------------------------------------------
 # Hint builder (STEP B)
 # ---------------------------------------------------------------------------
+
 
 def _make_hint(topic_slug: str) -> str:
     """
@@ -94,6 +98,7 @@ def _make_hint(topic_slug: str) -> str:
 # ---------------------------------------------------------------------------
 # Format distribution logger (STEP D)
 # ---------------------------------------------------------------------------
+
 
 def _log_format_distribution(questions: list, context: GenerationContext) -> None:
     """
@@ -134,7 +139,10 @@ def _log_format_distribution(questions: list, context: GenerationContext) -> Non
         if drift > 20:
             logger.warning(
                 "[difficulty_calibrator] Format drift: '%s' target=%d%% actual=%.0f%% drift=%.0f%%",
-                key, target_pct, actual, drift,
+                key,
+                target_pct,
+                actual,
+                drift,
             )
 
     logger.debug(
@@ -146,6 +154,7 @@ def _log_format_distribution(questions: list, context: GenerationContext) -> Non
 # ---------------------------------------------------------------------------
 # DifficultyCalibrator
 # ---------------------------------------------------------------------------
+
 
 class DifficultyCalibrator:
     """
@@ -195,20 +204,14 @@ class DifficultyCalibrator:
                     if not existing_hint:
                         q["hint"] = hint_text
                         hints_added += 1
-                logger.debug(
-                    "[difficulty_calibrator] STEP B: added %d hint(s)", hints_added
-                )
+                logger.debug("[difficulty_calibrator] STEP B: added %d hint(s)", hints_added)
             except Exception as exc:
                 logger.warning("[difficulty_calibrator] STEP B hint injection failed: %s", exc)
 
         # ── STEP C: Add bonus challenge question (challenge_mode only) ────
         if context.challenge_mode:
             try:
-                skill_tag = (
-                    context.valid_skill_tags[0]
-                    if context.valid_skill_tags
-                    else "general"
-                )
+                skill_tag = context.valid_skill_tags[0] if context.valid_skill_tags else "general"
                 bonus = {
                     "question_text": f"BONUS: {context.topic_slug} challenge problem",
                     "format": "word_problem",
@@ -217,21 +220,15 @@ class DifficultyCalibrator:
                     "_is_bonus": True,
                 }
                 result.append(bonus)
-                logger.info(
-                    "[difficulty_calibrator] STEP C: bonus challenge question appended"
-                )
+                logger.info("[difficulty_calibrator] STEP C: bonus challenge question appended")
             except Exception as exc:
-                logger.warning(
-                    "[difficulty_calibrator] STEP C bonus append failed: %s", exc
-                )
+                logger.warning("[difficulty_calibrator] STEP C bonus append failed: %s", exc)
 
         # ── STEP D: Log format distribution ───────────────────────────────
         try:
             _log_format_distribution(result, context)
         except Exception as exc:
-            logger.warning(
-                "[difficulty_calibrator] STEP D distribution log failed: %s", exc
-            )
+            logger.warning("[difficulty_calibrator] STEP D distribution log failed: %s", exc)
 
         return result
 

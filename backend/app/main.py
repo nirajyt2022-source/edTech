@@ -4,9 +4,10 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
-from app.middleware.rate_limit import limiter, rate_limit_exceeded_handler, RateLimitExceeded
+from app.middleware.rate_limit import RateLimitExceeded, limiter, rate_limit_exceeded_handler
 
 # Initialize structured logging first
 setup_logging()
@@ -23,7 +24,29 @@ if settings.sentry_dsn:
     )
 
 # Lazy router imports (after logging is set up)
-from app.api import health, syllabus, children, subscription, cbse_syllabus, topic_preferences, engagement, users, classes, curriculum, analytics, dashboard, saved_worksheets, share, learning_graph, reports, grading, revision, flashcards, textbook, ask_skolar  # noqa: E402
+from app.api import (  # noqa: E402
+    analytics,
+    ask_skolar,
+    cbse_syllabus,
+    children,
+    classes,
+    curriculum,
+    dashboard,
+    engagement,
+    flashcards,
+    grading,
+    health,
+    learning_graph,
+    reports,
+    revision,
+    saved_worksheets,
+    share,
+    subscription,
+    syllabus,
+    textbook,
+    topic_preferences,
+    users,
+)
 from app.api.worksheets_v2 import router as worksheets_v2_router  # noqa: E402
 
 
@@ -55,7 +78,6 @@ if RateLimitExceeded is not None:
 # Request tracing + access logging middleware (outermost first)
 from app.middleware.access_log import AccessLogMiddleware  # noqa: E402
 from app.middleware.request_id import RequestIDMiddleware  # noqa: E402
-
 from app.middleware.security_headers import SecurityHeadersMiddleware  # noqa: E402
 
 # Configure CORS — always include frontend_url

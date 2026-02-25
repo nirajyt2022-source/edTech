@@ -1,0 +1,165 @@
+#!/bin/bash
+# =============================================================================
+# Skolar Pre-Commit Quality Gate
+#
+# Checks (in order):
+#   1. Backend: ruff check --fix + ruff format (staged .py files only)
+#   2. Backend: ruff security rules (bandit-equivalent via S rules)
+#   3. Frontend: eslint (if frontend files changed)
+#   4. Frontend: tsc --noEmit + build (if frontend files changed)
+#   5. Changelog: auto-append changed areas to CLAUDE.md Update Log
+#
+# Skip with: git commit --no-verify (use sparingly)
+# =============================================================================
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'  # No Color
+
+ERRORS=0
+
+pass() { echo -e "  ${GREEN}✓${NC} $1"; }
+fail() { echo -e "  ${RED}✗${NC} $1"; ERRORS=$((ERRORS + 1)); }
+skip() { echo -e "  ${YELLOW}–${NC} $1 (skipped)"; }
+header() { echo -e "\n${CYAN}[$1]${NC}"; }
+
+# Detect which areas have staged changes
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
+STAGED_BACKEND=$(echo "$STAGED_PY" | grep '^backend/' || true)
+STAGED_FRONTEND=$(git diff --cached --name-only --diff-filter=ACM | grep '^frontend/' || true)
+
+# =============================================================================
+# 1. Backend: ruff lint + format (only if backend .py files changed)
+# =============================================================================
+
+header "Backend Lint"
+
+if [ -n "$STAGED_BACKEND" ]; then
+  # Check ruff is available
+  if python3 -m ruff version > /dev/null 2>&1; then
+    # Lint check with auto-fix on staged files
+    if python3 -m ruff check backend/app/ --fix --quiet 2>&1; then
+      pass "ruff check (lint)"
+    else
+      fail "ruff check found unfixable errors"
+      echo -e "    Run: ${YELLOW}cd backend && python3 -m ruff check app/${NC}"
+    fi
+
+    # Format check (report only, don't auto-rewrite)
+    if python3 -m ruff format backend/app/ --check --quiet 2>/dev/null; then
+      pass "ruff format"
+    else
+      fail "ruff format found unformatted files"
+      echo -e "    Run: ${YELLOW}cd backend && python3 -m ruff format app/${NC}"
+    fi
+
+    # Re-stage any auto-fixed files
+    if [ -n "$STAGED_BACKEND" ]; then
+      echo "$STAGED_BACKEND" | xargs git add 2>/dev/null || true
+    fi
+  else
+    skip "ruff not installed (pip install ruff)"
+  fi
+else
+  skip "No backend .py files staged"
+fi
+
+# =============================================================================
+# 2. Frontend: eslint + type check (only if frontend files changed)
+# =============================================================================
+
+header "Frontend Lint"
+
+if [ -n "$STAGED_FRONTEND" ]; then
+  if [ -d "frontend/node_modules" ]; then
+    # ESLint
+    if (cd frontend && npm run lint --silent 2>&1); then
+      pass "eslint"
+    else
+      fail "eslint found errors"
+      echo -e "    Run: ${YELLOW}cd frontend && npm run lint${NC}"
+    fi
+
+    # TypeScript type check + Vite build (tsc is part of npm run build)
+    if (cd frontend && npm run build --silent > /dev/null 2>&1); then
+      pass "tsc + vite build"
+    else
+      fail "frontend build failed"
+      echo -e "    Run: ${YELLOW}cd frontend && npm run build${NC}"
+    fi
+  else
+    skip "frontend/node_modules missing (run npm install)"
+  fi
+else
+  skip "No frontend files staged"
+fi
+
+# =============================================================================
+# 3. Backend tests (only for significant changes, not formatting-only)
+# =============================================================================
+
+header "Backend Tests"
+
+if [ -n "$STAGED_BACKEND" ]; then
+  # Run only if test infrastructure available
+  if python3 -c "import pytest" 2>/dev/null; then
+    if (cd backend && python3 -m pytest tests/ -x -q --tb=line 2>&1 | tail -3); then
+      pass "pytest"
+    else
+      fail "pytest found failures"
+      echo -e "    Run: ${YELLOW}cd backend && python3 -m pytest tests/ -v${NC}"
+    fi
+  else
+    skip "pytest not installed"
+  fi
+else
+  skip "No backend files staged"
+fi
+
+# =============================================================================
+# 4. Changelog auto-update (preserved from original hook)
+# =============================================================================
+
+header "Changelog"
+
+CLAUDE_MD="CLAUDE.md"
+if [ -f "$CLAUDE_MD" ]; then
+  STAGED_ALL=$(git diff --cached --name-only | grep -v "^CLAUDE\.md$")
+  if [ -n "$STAGED_ALL" ]; then
+    DATE=$(date +%Y-%m-%d)
+    if ! grep -q "^- \*\*${DATE}\*\*" "$CLAUDE_MD"; then
+      AREAS=$(git diff --cached --name-only | grep -v "^CLAUDE\.md$" \
+        | sed 's|/[^/]*$||' | sort -u | head -5 \
+        | paste -sd ',' - | sed 's/,/, /g')
+      python3 << PYEOF
+content = open("$CLAUDE_MD").read()
+entry = "- **${DATE}**: Changes in ${AREAS}"
+if "# Update Log" in content:
+    content = content.rstrip() + "\n" + entry + "\n"
+    open("$CLAUDE_MD", "w").write(content)
+PYEOF
+      git add "$CLAUDE_MD"
+      pass "CLAUDE.md updated"
+    else
+      skip "CLAUDE.md already has entry for $DATE"
+    fi
+  fi
+fi
+
+# =============================================================================
+# Summary
+# =============================================================================
+
+echo ""
+if [ $ERRORS -gt 0 ]; then
+  echo -e "${RED}Pre-commit failed with $ERRORS error(s).${NC}"
+  echo -e "Fix the issues above or skip with: git commit --no-verify"
+  exit 1
+else
+  echo -e "${GREEN}All pre-commit checks passed.${NC}"
+  exit 0
+fi

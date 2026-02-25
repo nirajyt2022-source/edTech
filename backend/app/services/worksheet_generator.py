@@ -10,6 +10,7 @@ Architecture:
             -> validate(response) -> schema + maths verification + topic drift
                 -> return WorksheetGenerationResponse (same shape as v1)
 """
+
 from __future__ import annotations
 
 import json
@@ -200,9 +201,7 @@ def build_system_prompt(problem_style: str, subject: str) -> str:
     if problem_style != "standard":
         keywords = get_keywords_for_subject(subject)
         if keywords:
-            parts.append(
-                _IMAGE_BLOCK_TEMPLATE.replace("{keywords}", ", ".join(keywords))
-            )
+            parts.append(_IMAGE_BLOCK_TEMPLATE.replace("{keywords}", ", ".join(keywords)))
 
     # Output format: standard variant omits visual_type/visual_data example
     if problem_style == "standard":
@@ -240,16 +239,58 @@ def build_user_prompt(
     }.get(problem_style, "standard")
 
     # Random seed to force variety across generations
-    seed = ''.join(random.choices(string.ascii_lowercase, k=6))
+    seed = "".join(random.choices(string.ascii_lowercase, k=6))
 
     # Random Indian names to use in word problems (different each time)
     all_names = [
-        "Aarav", "Ananya", "Vihaan", "Diya", "Reyansh", "Saanvi", "Arjun", "Isha",
-        "Kabir", "Myra", "Aditya", "Kiara", "Rohan", "Priya", "Vivaan", "Anika",
-        "Krishna", "Zara", "Rudra", "Pari", "Atharv", "Navya", "Shaurya", "Aadhya",
-        "Dhruv", "Riya", "Arnav", "Sara", "Dev", "Anvi", "Ishan", "Tara",
-        "Kian", "Meera", "Yash", "Nisha", "Aryan", "Siya", "Neil", "Pooja",
-        "Rahul", "Sneha", "Manav", "Kavya", "Sameer", "Tanvi", "Kunal", "Ritika",
+        "Aarav",
+        "Ananya",
+        "Vihaan",
+        "Diya",
+        "Reyansh",
+        "Saanvi",
+        "Arjun",
+        "Isha",
+        "Kabir",
+        "Myra",
+        "Aditya",
+        "Kiara",
+        "Rohan",
+        "Priya",
+        "Vivaan",
+        "Anika",
+        "Krishna",
+        "Zara",
+        "Rudra",
+        "Pari",
+        "Atharv",
+        "Navya",
+        "Shaurya",
+        "Aadhya",
+        "Dhruv",
+        "Riya",
+        "Arnav",
+        "Sara",
+        "Dev",
+        "Anvi",
+        "Ishan",
+        "Tara",
+        "Kian",
+        "Meera",
+        "Yash",
+        "Nisha",
+        "Aryan",
+        "Siya",
+        "Neil",
+        "Pooja",
+        "Rahul",
+        "Sneha",
+        "Manav",
+        "Kavya",
+        "Sameer",
+        "Tanvi",
+        "Kunal",
+        "Ritika",
     ]
     names_for_this_worksheet = random.sample(all_names, min(6, len(all_names)))
     names_str = ", ".join(names_for_this_worksheet)
@@ -284,10 +325,7 @@ def build_user_prompt(
             "Standard mode means text-only worksheets with no cartoon images.\n"
         )
     elif problem_style == "visual":
-        prompt += (
-            "\nIMPORTANT: EVERY question MUST have at least one image_keyword "
-            "from the provided list.\n"
-        )
+        prompt += "\nIMPORTANT: EVERY question MUST have at least one image_keyword from the provided list.\n"
 
     # -- Bloom's taxonomy directive (from prompt_builder.py) --
     bloom_map = {"easy": "recall", "medium": "application", "hard": "reasoning"}
@@ -356,7 +394,21 @@ def call_gemini(
 
 # Broad topic keywords — NOT 198 profiles, just ~20 categories
 _TOPIC_KEYWORDS: dict[str, list[str]] = {
-    "time": ["time", "clock", "hour", "minute", "o'clock", "half past", "quarter", "am", "pm", "calendar", "month", "day", "week"],
+    "time": [
+        "time",
+        "clock",
+        "hour",
+        "minute",
+        "o'clock",
+        "half past",
+        "quarter",
+        "am",
+        "pm",
+        "calendar",
+        "month",
+        "day",
+        "week",
+    ],
     "addition": ["add", "sum", "plus", "carry", "total", "+"],
     "subtraction": ["subtract", "minus", "borrow", "difference", "take away", "-"],
     "multiplication": ["multiply", "times", "product", "table", "×"],
@@ -374,7 +426,20 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
     "comprehension": ["passage", "read", "comprehension", "paragraph", "story"],
     "vocabulary": ["word", "meaning", "synonym", "antonym", "spelling"],
     "hindi": ["matra", "shabd", "vakya", "kaal", "sangya", "sarvanam", "kriya", "varnamala"],
-    "science": ["plant", "animal", "body", "water", "air", "food", "weather", "environment", "habitat", "material", "force", "energy"],
+    "science": [
+        "plant",
+        "animal",
+        "body",
+        "water",
+        "air",
+        "food",
+        "weather",
+        "environment",
+        "habitat",
+        "material",
+        "force",
+        "energy",
+    ],
     "evs": ["environment", "family", "community", "shelter", "transport", "safety", "festival", "food", "water"],
 }
 
@@ -442,7 +507,9 @@ def _verify_maths_answer(question: dict) -> str | None:
 
     logger.warning(
         "Maths auto-correct: Q '%s' — LLM said '%s', computed '%s'",
-        text[:60], answer, computed_str,
+        text[:60],
+        answer,
+        computed_str,
     )
     return computed_str
 
@@ -471,9 +538,16 @@ VISUAL_TYPE_ALIASES: dict[str, str | None] = {
 }
 
 SUPPORTED_VISUAL_TYPES = {
-    "clock", "object_group", "shapes", "number_line",
-    "base_ten_regrouping", "pie_fraction", "grid_symmetry",
-    "money_coins", "pattern_tiles", "abacus",
+    "clock",
+    "object_group",
+    "shapes",
+    "number_line",
+    "base_ten_regrouping",
+    "pie_fraction",
+    "grid_symmetry",
+    "money_coins",
+    "pattern_tiles",
+    "abacus",
 }
 
 REQUIRED_VISUAL_FIELDS: dict[str, list[str]] = {
@@ -627,8 +701,12 @@ def resolve_question_images(questions: list[dict]) -> list[dict]:
             # If question says "look at the picture" but no valid images, rewrite text
             text = q.get("text", "")
             if not images and any(phrase in text.lower() for phrase in _PICTURE_PHRASES):
-                for phrase in ["Look at the picture below. ", "See the image below. ",
-                               "Look at the picture. ", "See the image. "]:
+                for phrase in [
+                    "Look at the picture below. ",
+                    "See the image below. ",
+                    "Look at the picture. ",
+                    "See the image. ",
+                ]:
                     text = text.replace(phrase, "")
                 q["text"] = text
     return questions
@@ -720,9 +798,7 @@ def validate_response(
     # --- Count check ---
     count_diff = abs(len(questions) - num_questions)
     if count_diff > 1:
-        warnings.append(
-            f"Requested {num_questions} questions, got {len(questions)}"
-        )
+        warnings.append(f"Requested {num_questions} questions, got {len(questions)}")
 
     # --- Maths answer verification ---
     if subject.lower() in ("maths", "mathematics", "math"):
@@ -735,10 +811,7 @@ def validate_response(
     # --- Topic drift check ---
     topic_cat = _detect_topic_category(topic)
     if topic_cat:
-        off_topic_count = sum(
-            1 for q in questions
-            if not _is_question_on_topic(q.get("text", ""), topic_cat)
-        )
+        off_topic_count = sum(1 for q in questions if not _is_question_on_topic(q.get("text", ""), topic_cat))
         drift_ratio = off_topic_count / max(len(questions), 1)
         if drift_ratio > 0.3:
             warnings.append(
@@ -804,11 +877,14 @@ def generate_worksheet(
 
     # -- RAG: Inject curriculum context --
     import asyncio
+
     try:
         from app.services.curriculum import get_curriculum_context
+
         loop = asyncio.get_event_loop()
         if loop.is_running():
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 curriculum_context = pool.submit(
                     lambda: asyncio.run(get_curriculum_context(grade_level, subject, topic))
@@ -839,6 +915,7 @@ def generate_worksheet(
 
             # ── Output validation ──
             from app.services.output_validator import get_validator
+
             validator = get_validator()
             is_valid, validation_errors = validator.validate_worksheet(
                 data, grade=grade_level, subject=subject, topic=topic, num_questions=num_questions
@@ -870,7 +947,9 @@ def generate_worksheet(
 
             logger.info(
                 "[v2] Generated %d questions in %d ms (attempt %d)",
-                len(data.get("questions", [])), elapsed_ms, attempt,
+                len(data.get("questions", [])),
+                elapsed_ms,
+                attempt,
             )
             return data, elapsed_ms, all_warnings
 
@@ -883,7 +962,4 @@ def generate_worksheet(
                 user_prompt += "\n\nIMPORTANT: Respond with ONLY valid JSON. No markdown, no extra text."
                 continue
 
-    raise ValueError(
-        f"Worksheet generation failed after {max_attempts} attempts. "
-        f"Last error: {last_error}"
-    )
+    raise ValueError(f"Worksheet generation failed after {max_attempts} attempts. Last error: {last_error}")

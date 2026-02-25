@@ -2,17 +2,21 @@
 Topic profiles for CBSE curriculum.
 Maps 198+ CBSE topics to their configuration.
 """
+
 from __future__ import annotations
 
 import re as _re
-
 
 TOPIC_PROFILES: dict[str, dict] = {
     # ── Arithmetic topics (carry/borrow enforcement handled elsewhere) ──
     "Addition (carries)": {
         "allowed_skill_tags": [
-            "column_add_with_carry", "addition_word_problem", "addition_error_spot",
-            "missing_number", "estimation", "thinking",
+            "column_add_with_carry",
+            "addition_word_problem",
+            "addition_error_spot",
+            "missing_number",
+            "estimation",
+            "thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [],
@@ -27,8 +31,12 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Subtraction (borrowing)": {
         "allowed_skill_tags": [
-            "column_sub_with_borrow", "subtraction_word_problem", "subtraction_error_spot",
-            "missing_number", "estimation", "thinking",
+            "column_sub_with_borrow",
+            "subtraction_word_problem",
+            "subtraction_error_spot",
+            "missing_number",
+            "estimation",
+            "thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [],
@@ -44,9 +52,15 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Combined Addition + Subtraction ──
     "Addition and subtraction (3-digit)": {
         "allowed_skill_tags": [
-            "column_add_with_carry", "addition_word_problem", "addition_error_spot",
-            "column_sub_with_borrow", "subtraction_word_problem", "subtraction_error_spot",
-            "missing_number", "estimation", "thinking",
+            "column_add_with_carry",
+            "addition_word_problem",
+            "addition_error_spot",
+            "column_sub_with_borrow",
+            "subtraction_word_problem",
+            "subtraction_error_spot",
+            "missing_number",
+            "estimation",
+            "thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [],
@@ -105,14 +119,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Multiplication / Division ──
     "Multiplication (tables 2-10)": {
         "allowed_skill_tags": [
-            "multiplication_tables", "multiplication_word_problem",
-            "multiplication_fill_blank", "multiplication_error_spot",
+            "multiplication_tables",
+            "multiplication_word_problem",
+            "multiplication_fill_blank",
+            "multiplication_error_spot",
             "multiplication_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "add", "subtract", "column form",
-            "plus", "minus", "regroup",
+            "carry",
+            "borrow",
+            "add",
+            "subtract",
+            "column form",
+            "plus",
+            "minus",
+            "regroup",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -125,8 +147,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Division basics": {
         "allowed_skill_tags": [
-            "division_basics", "division_word_problem",
-            "division_fill_blank", "division_error_spot", "division_thinking",
+            "division_basics",
+            "division_word_problem",
+            "division_fill_blank",
+            "division_error_spot",
+            "division_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "decimal"],
@@ -151,8 +176,16 @@ TOPIC_PROFILES: dict[str, dict] = {
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "regroup", "base ten", "column form",
-            "rupees", "dirhams", "multiply", "divide", "addition", "subtraction",
+            "carry",
+            "regroup",
+            "base ten",
+            "column form",
+            "rupees",
+            "dirhams",
+            "multiply",
+            "divide",
+            "addition",
+            "subtraction",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "allowed_visual_types": [None],
@@ -177,8 +210,13 @@ TOPIC_PROFILES: dict[str, dict] = {
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "thirds", "third", "eighths", "decimals", "percentage",
-            "improper fraction", "mixed number",
+            "thirds",
+            "third",
+            "eighths",
+            "decimals",
+            "percentage",
+            "improper fraction",
+            "mixed number",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "clock_face"],
         "allowed_visual_types": [None, "fraction_circle", "fraction_rectangle"],
@@ -193,9 +231,13 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Fractions": {
         "allowed_skill_tags": [
-            "fraction_identify_half", "fraction_identify_quarter",
-            "fraction_compare", "fraction_word_problem",
-            "fraction_fill_blank", "fraction_error_spot", "fraction_thinking",
+            "fraction_identify_half",
+            "fraction_identify_quarter",
+            "fraction_compare",
+            "fraction_word_problem",
+            "fraction_fill_blank",
+            "fraction_error_spot",
+            "fraction_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "decimal", "percentage"],
@@ -212,15 +254,29 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Time ──
     "Time (reading clock, calendar)": {
         "allowed_skill_tags": [
-            "clock_reading", "time_word_problem", "calendar_reading",
-            "time_fill_blank", "time_error_spot", "time_thinking",
+            "clock_reading",
+            "time_word_problem",
+            "calendar_reading",
+            "time_fill_blank",
+            "time_error_spot",
+            "time_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "pencils", "students", "chocolates",
-            "pages", "marbles", "rupees",
-            "round", "estimate", "hundred", "thousand",
-            "base ten", "regrouping", "carry", "borrow",
+            "pencils",
+            "students",
+            "chocolates",
+            "pages",
+            "marbles",
+            "rupees",
+            "round",
+            "estimate",
+            "hundred",
+            "thousand",
+            "base ten",
+            "regrouping",
+            "carry",
+            "borrow",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "default_recipe": [
@@ -234,8 +290,12 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Money ──
     "Money (bills and change)": {
         "allowed_skill_tags": [
-            "money_recognition", "money_word_problem", "money_change",
-            "money_fill_blank", "money_error_spot", "money_thinking",
+            "money_recognition",
+            "money_word_problem",
+            "money_change",
+            "money_fill_blank",
+            "money_error_spot",
+            "money_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "fraction"],
@@ -252,13 +312,23 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Symmetry ──
     "Symmetry": {
         "allowed_skill_tags": [
-            "symmetry_identify", "symmetry_draw",
-            "symmetry_fill_blank", "symmetry_error_spot", "symmetry_thinking",
+            "symmetry_identify",
+            "symmetry_draw",
+            "symmetry_fill_blank",
+            "symmetry_error_spot",
+            "symmetry_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "addition", "subtraction", "multiply",
-            "divide", "plus", "minus", "column",
+            "carry",
+            "borrow",
+            "addition",
+            "subtraction",
+            "multiply",
+            "divide",
+            "plus",
+            "minus",
+            "column",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "default_recipe": [
@@ -272,8 +342,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Patterns ──
     "Patterns and sequences": {
         "allowed_skill_tags": [
-            "number_pattern", "shape_pattern",
-            "pattern_fill_blank", "pattern_error_spot", "pattern_thinking",
+            "number_pattern",
+            "shape_pattern",
+            "pattern_fill_blank",
+            "pattern_error_spot",
+            "pattern_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "symmetry", "fraction"],
@@ -293,8 +366,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Numbers 1 to 50 (Class 1) ──
     "Numbers 1 to 50 (Class 1)": {
         "allowed_skill_tags": [
-            "c1_count_identify", "c1_number_compare",
-            "c1_number_order", "c1_number_error", "c1_number_think",
+            "c1_count_identify",
+            "c1_number_compare",
+            "c1_number_order",
+            "c1_number_error",
+            "c1_number_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["multiply", "divide", "fraction", "decimal", "carry", "borrow"],
@@ -310,8 +386,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Numbers 51 to 100 (Class 1) ──
     "Numbers 51 to 100 (Class 1)": {
         "allowed_skill_tags": [
-            "c1_count_big_identify", "c1_number_big_compare",
-            "c1_number_big_order", "c1_number_big_error", "c1_number_big_think",
+            "c1_count_big_identify",
+            "c1_number_big_compare",
+            "c1_number_big_order",
+            "c1_number_big_error",
+            "c1_number_big_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["multiply", "divide", "fraction", "decimal", "carry", "borrow"],
@@ -327,8 +406,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Addition up to 20 (Class 1) ──
     "Addition up to 20 (Class 1)": {
         "allowed_skill_tags": [
-            "c1_add_basic", "c1_add_word_problem",
-            "c1_add_missing", "c1_add_error", "c1_add_think",
+            "c1_add_basic",
+            "c1_add_word_problem",
+            "c1_add_missing",
+            "c1_add_error",
+            "c1_add_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["multiply", "divide", "fraction", "decimal", "carry", "borrow", "column form"],
@@ -344,8 +426,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Subtraction within 20 (Class 1) ──
     "Subtraction within 20 (Class 1)": {
         "allowed_skill_tags": [
-            "c1_sub_basic", "c1_sub_word_problem",
-            "c1_sub_missing", "c1_sub_error", "c1_sub_think",
+            "c1_sub_basic",
+            "c1_sub_word_problem",
+            "c1_sub_missing",
+            "c1_sub_error",
+            "c1_sub_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["multiply", "divide", "fraction", "decimal", "carry", "borrow", "column form"],
@@ -361,13 +446,25 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Basic Shapes (Class 1) ──
     "Basic Shapes (Class 1)": {
         "allowed_skill_tags": [
-            "c1_shape_identify", "c1_shape_match",
-            "c1_shape_count", "c1_shape_error", "c1_shape_think",
+            "c1_shape_identify",
+            "c1_shape_match",
+            "c1_shape_count",
+            "c1_shape_error",
+            "c1_shape_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "add", "subtract", "multiply", "divide", "fraction", "decimal",
-            "carry", "borrow", "plus", "minus", "column",
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "fraction",
+            "decimal",
+            "carry",
+            "borrow",
+            "plus",
+            "minus",
+            "column",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "max_questions": 10,
@@ -382,13 +479,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Measurement (Class 1) ──
     "Measurement (Class 1)": {
         "allowed_skill_tags": [
-            "c1_measure_compare", "c1_measure_order",
-            "c1_measure_fill", "c1_measure_error", "c1_measure_think",
+            "c1_measure_compare",
+            "c1_measure_order",
+            "c1_measure_fill",
+            "c1_measure_error",
+            "c1_measure_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "add", "subtract", "multiply", "divide", "fraction", "decimal",
-            "carry", "borrow", "cm", "m", "kg", "g",
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "fraction",
+            "decimal",
+            "carry",
+            "borrow",
+            "cm",
+            "m",
+            "kg",
+            "g",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "default_recipe": [
@@ -402,14 +512,29 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Time (Class 1) ──
     "Time (Class 1)": {
         "allowed_skill_tags": [
-            "c1_time_identify", "c1_time_sequence",
-            "c1_time_fill", "c1_time_error", "c1_time_think",
+            "c1_time_identify",
+            "c1_time_sequence",
+            "c1_time_fill",
+            "c1_time_error",
+            "c1_time_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "add", "subtract", "multiply", "divide", "fraction", "decimal",
-            "carry", "borrow", "column form", "regroup", "base ten",
-            "place value", "perimeter", "area", "symmetry",
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "fraction",
+            "decimal",
+            "carry",
+            "borrow",
+            "column form",
+            "regroup",
+            "base ten",
+            "place value",
+            "perimeter",
+            "area",
+            "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line", "clock"],
         "max_questions": 10,
@@ -424,13 +549,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Money (Class 1) ──
     "Money (Class 1)": {
         "allowed_skill_tags": [
-            "c1_money_identify", "c1_money_count",
-            "c1_money_fill", "c1_money_error", "c1_money_think",
+            "c1_money_identify",
+            "c1_money_count",
+            "c1_money_fill",
+            "c1_money_error",
+            "c1_money_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "multiply", "divide", "fraction", "decimal",
-            "carry", "borrow", "notes", "bills",
+            "multiply",
+            "divide",
+            "fraction",
+            "decimal",
+            "carry",
+            "borrow",
+            "notes",
+            "bills",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "max_questions": 10,
@@ -445,14 +579,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Spatial sense (Class 1) ──
     "Spatial sense (in/out, near/far) (Class 1)": {
         "allowed_skill_tags": [
-            "c1_spatial_in_out_identify", "c1_spatial_near_far_identify",
-            "c1_spatial_position_word", "c1_spatial_draw",
-            "c1_spatial_error", "c1_spatial_thinking",
+            "c1_spatial_in_out_identify",
+            "c1_spatial_near_far_identify",
+            "c1_spatial_position_word",
+            "c1_spatial_draw",
+            "c1_spatial_error",
+            "c1_spatial_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "add", "subtract", "multiply", "divide", "fraction", "decimal",
-            "carry", "borrow", "sum", "difference", "product",
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "fraction",
+            "decimal",
+            "carry",
+            "borrow",
+            "sum",
+            "difference",
+            "product",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "max_questions": 10,
@@ -471,15 +617,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Numbers up to 1000 (Class 2) ──
     "Numbers up to 1000 (Class 2)": {
         "allowed_skill_tags": [
-            "c2_place_value_identify", "c2_number_compare",
-            "c2_number_expansion", "c2_number_ordering",
-            "c2_place_value_error", "c2_number_thinking",
+            "c2_place_value_identify",
+            "c2_number_compare",
+            "c2_number_expansion",
+            "c2_number_ordering",
+            "c2_place_value_error",
+            "c2_number_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "regroup", "base ten", "column form",
-            "rupees", "multiply", "divide", "addition", "subtraction",
-            "thousand", "10000",
+            "carry",
+            "regroup",
+            "base ten",
+            "column form",
+            "rupees",
+            "multiply",
+            "divide",
+            "addition",
+            "subtraction",
+            "thousand",
+            "10000",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -494,8 +651,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Addition (2-digit with carry) ──
     "Addition (2-digit with carry)": {
         "allowed_skill_tags": [
-            "c2_add_column", "c2_add_word_problem",
-            "c2_add_missing_number", "c2_add_error_spot", "c2_add_thinking",
+            "c2_add_column",
+            "c2_add_word_problem",
+            "c2_add_missing_number",
+            "c2_add_error_spot",
+            "c2_add_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["3-digit", "thousand", "hundred"],
@@ -511,8 +671,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Subtraction (2-digit with borrow) ──
     "Subtraction (2-digit with borrow)": {
         "allowed_skill_tags": [
-            "c2_sub_column", "c2_sub_word_problem",
-            "c2_sub_missing_number", "c2_sub_error_spot", "c2_sub_thinking",
+            "c2_sub_column",
+            "c2_sub_word_problem",
+            "c2_sub_missing_number",
+            "c2_sub_error_spot",
+            "c2_sub_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["3-digit", "thousand", "hundred"],
@@ -528,13 +691,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Multiplication (tables 2-5) ──
     "Multiplication (tables 2-5)": {
         "allowed_skill_tags": [
-            "c2_mult_tables", "c2_mult_word_problem",
-            "c2_mult_fill_blank", "c2_mult_error_spot", "c2_mult_thinking",
+            "c2_mult_tables",
+            "c2_mult_word_problem",
+            "c2_mult_fill_blank",
+            "c2_mult_error_spot",
+            "c2_mult_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "add", "subtract", "column form",
-            "plus", "minus", "regroup",
+            "carry",
+            "borrow",
+            "add",
+            "subtract",
+            "column form",
+            "plus",
+            "minus",
+            "regroup",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -548,8 +720,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Division (sharing equally) ──
     "Division (sharing equally)": {
         "allowed_skill_tags": [
-            "c2_div_sharing", "c2_div_word_problem",
-            "c2_div_fill_blank", "c2_div_error_spot", "c2_div_thinking",
+            "c2_div_sharing",
+            "c2_div_word_problem",
+            "c2_div_fill_blank",
+            "c2_div_error_spot",
+            "c2_div_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "decimal", "remainder"],
@@ -565,13 +740,23 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Shapes and space (2D) ──
     "Shapes and space (2D)": {
         "allowed_skill_tags": [
-            "c2_shape_identify", "c2_shape_word_problem",
-            "c2_shape_fill_blank", "c2_shape_error_spot", "c2_shape_thinking",
+            "c2_shape_identify",
+            "c2_shape_word_problem",
+            "c2_shape_fill_blank",
+            "c2_shape_error_spot",
+            "c2_shape_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "addition", "subtraction", "multiply",
-            "divide", "plus", "minus", "column",
+            "carry",
+            "borrow",
+            "addition",
+            "subtraction",
+            "multiply",
+            "divide",
+            "plus",
+            "minus",
+            "column",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "default_recipe": [
@@ -585,12 +770,20 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Measurement (length, weight) ──
     "Measurement (length, weight)": {
         "allowed_skill_tags": [
-            "c2_measure_identify", "c2_measure_compare",
-            "c2_measure_fill_blank", "c2_measure_error_spot", "c2_measure_thinking",
+            "c2_measure_identify",
+            "c2_measure_compare",
+            "c2_measure_fill_blank",
+            "c2_measure_error_spot",
+            "c2_measure_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "fraction", "symmetry", "multiply", "divide",
+            "carry",
+            "borrow",
+            "fraction",
+            "symmetry",
+            "multiply",
+            "divide",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -604,14 +797,25 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Time (hour, half-hour) ──
     "Time (hour, half-hour)": {
         "allowed_skill_tags": [
-            "c2_clock_reading", "c2_time_word_problem",
-            "c2_time_fill_blank", "c2_time_error_spot", "c2_time_thinking",
+            "c2_clock_reading",
+            "c2_time_word_problem",
+            "c2_time_fill_blank",
+            "c2_time_error_spot",
+            "c2_time_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "quarter", "quarter-hour", "15 minutes",
-            "carry", "borrow", "base ten", "regrouping",
-            "round", "estimate", "hundred", "thousand",
+            "quarter",
+            "quarter-hour",
+            "15 minutes",
+            "carry",
+            "borrow",
+            "base ten",
+            "regrouping",
+            "round",
+            "estimate",
+            "hundred",
+            "thousand",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "max_questions": 10,
@@ -626,8 +830,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Money (coins and notes) ──
     "Money (coins and notes)": {
         "allowed_skill_tags": [
-            "c2_money_identify", "c2_money_word_problem",
-            "c2_money_fill_blank", "c2_money_error_spot", "c2_money_thinking",
+            "c2_money_identify",
+            "c2_money_word_problem",
+            "c2_money_fill_blank",
+            "c2_money_error_spot",
+            "c2_money_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "fraction", "bills"],
@@ -643,12 +850,20 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Data handling (pictographs) ──
     "Data handling (pictographs)": {
         "allowed_skill_tags": [
-            "c2_data_read", "c2_data_word_problem",
-            "c2_data_fill_blank", "c2_data_error_spot", "c2_data_thinking",
+            "c2_data_read",
+            "c2_data_word_problem",
+            "c2_data_fill_blank",
+            "c2_data_error_spot",
+            "c2_data_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "fraction", "symmetry", "multiply", "divide",
+            "carry",
+            "borrow",
+            "fraction",
+            "symmetry",
+            "multiply",
+            "divide",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -665,14 +880,24 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Large numbers (up to 1,00,000) ──
     "Large numbers (up to 1,00,000)": {
         "allowed_skill_tags": [
-            "c4_large_number_identify", "c4_large_number_compare",
-            "c4_large_number_order", "c4_large_number_expand",
-            "c4_large_number_error", "c4_large_number_thinking",
+            "c4_large_number_identify",
+            "c4_large_number_compare",
+            "c4_large_number_order",
+            "c4_large_number_expand",
+            "c4_large_number_error",
+            "c4_large_number_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "regroup", "base ten", "column form",
-            "rupees", "multiply", "divide", "addition", "subtraction",
+            "carry",
+            "regroup",
+            "base ten",
+            "column form",
+            "rupees",
+            "multiply",
+            "divide",
+            "addition",
+            "subtraction",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -687,9 +912,13 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Addition and subtraction (5-digit) ──
     "Addition and subtraction (5-digit)": {
         "allowed_skill_tags": [
-            "c4_add5_column", "c4_add5_word_problem",
-            "c4_sub5_column", "c4_sub5_word_problem",
-            "c4_addsub5_missing", "c4_addsub5_error", "c4_addsub5_thinking",
+            "c4_add5_column",
+            "c4_add5_word_problem",
+            "c4_sub5_column",
+            "c4_sub5_word_problem",
+            "c4_addsub5_missing",
+            "c4_addsub5_error",
+            "c4_addsub5_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["fraction", "decimal", "angle", "perimeter"],
@@ -707,13 +936,24 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Multiplication (3-digit x 2-digit) ──
     "Multiplication (3-digit × 2-digit)": {
         "allowed_skill_tags": [
-            "c4_mult_setup", "c4_mult_word_problem",
-            "c4_mult_missing", "c4_mult_error", "c4_mult_thinking",
+            "c4_mult_setup",
+            "c4_mult_word_problem",
+            "c4_mult_missing",
+            "c4_mult_error",
+            "c4_mult_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "add", "subtract", "column form",
-            "plus", "minus", "regroup", "fraction", "decimal",
+            "carry",
+            "borrow",
+            "add",
+            "subtract",
+            "column form",
+            "plus",
+            "minus",
+            "regroup",
+            "fraction",
+            "decimal",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -727,12 +967,20 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Division (long division) ──
     "Division (long division)": {
         "allowed_skill_tags": [
-            "c4_div_setup", "c4_div_word_problem",
-            "c4_div_missing", "c4_div_error", "c4_div_thinking",
+            "c4_div_setup",
+            "c4_div_word_problem",
+            "c4_div_missing",
+            "c4_div_error",
+            "c4_div_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "add", "subtract", "fraction", "decimal",
+            "carry",
+            "borrow",
+            "add",
+            "subtract",
+            "fraction",
+            "decimal",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -746,13 +994,21 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Fractions (equivalent, comparison) ──
     "Fractions (equivalent, comparison)": {
         "allowed_skill_tags": [
-            "c4_fraction_identify", "c4_fraction_compare",
-            "c4_fraction_equivalent", "c4_fraction_represent",
-            "c4_fraction_error", "c4_fraction_thinking",
+            "c4_fraction_identify",
+            "c4_fraction_compare",
+            "c4_fraction_equivalent",
+            "c4_fraction_represent",
+            "c4_fraction_error",
+            "c4_fraction_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "decimal", "percentage", "angle", "perimeter",
+            "carry",
+            "borrow",
+            "decimal",
+            "percentage",
+            "angle",
+            "perimeter",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -767,14 +1023,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Decimals (tenths, hundredths) ──
     "Decimals (tenths, hundredths)": {
         "allowed_skill_tags": [
-            "c4_decimal_identify", "c4_decimal_compare",
-            "c4_decimal_word_problem", "c4_decimal_represent",
-            "c4_decimal_error", "c4_decimal_thinking",
+            "c4_decimal_identify",
+            "c4_decimal_compare",
+            "c4_decimal_word_problem",
+            "c4_decimal_represent",
+            "c4_decimal_error",
+            "c4_decimal_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "regroup",
-            "angle", "perimeter", "symmetry",
+            "carry",
+            "borrow",
+            "column form",
+            "regroup",
+            "angle",
+            "perimeter",
+            "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -789,13 +1053,24 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Geometry (angles, lines) ──
     "Geometry (angles, lines)": {
         "allowed_skill_tags": [
-            "c4_geometry_identify", "c4_geometry_classify",
-            "c4_geometry_represent", "c4_geometry_error", "c4_geometry_thinking",
+            "c4_geometry_identify",
+            "c4_geometry_classify",
+            "c4_geometry_represent",
+            "c4_geometry_error",
+            "c4_geometry_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "addition", "subtraction", "multiply",
-            "divide", "plus", "minus", "fraction", "decimal",
+            "carry",
+            "borrow",
+            "addition",
+            "subtraction",
+            "multiply",
+            "divide",
+            "plus",
+            "minus",
+            "fraction",
+            "decimal",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "default_recipe": [
@@ -809,14 +1084,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Perimeter and area ──
     "Perimeter and area": {
         "allowed_skill_tags": [
-            "c4_perimeter_identify", "c4_perimeter_word_problem",
-            "c4_area_word_problem", "c4_perimeter_area_missing",
-            "c4_perimeter_area_error", "c4_perimeter_area_thinking",
+            "c4_perimeter_identify",
+            "c4_perimeter_word_problem",
+            "c4_area_word_problem",
+            "c4_perimeter_area_missing",
+            "c4_perimeter_area_error",
+            "c4_perimeter_area_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "fraction", "decimal", "angle",
-            "symmetry", "pattern",
+            "carry",
+            "borrow",
+            "fraction",
+            "decimal",
+            "angle",
+            "symmetry",
+            "pattern",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "default_recipe": [
@@ -831,13 +1114,24 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Time (minutes, 24-hour clock) ──
     "Time (minutes, 24-hour clock)": {
         "allowed_skill_tags": [
-            "c4_time_reading", "c4_time_word_problem", "c4_time_convert",
-            "c4_time_missing", "c4_time_error", "c4_time_thinking",
+            "c4_time_reading",
+            "c4_time_word_problem",
+            "c4_time_convert",
+            "c4_time_missing",
+            "c4_time_error",
+            "c4_time_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "base ten", "regrouping", "column form",
-            "fraction", "decimal", "angle", "perimeter",
+            "carry",
+            "borrow",
+            "base ten",
+            "regrouping",
+            "column form",
+            "fraction",
+            "decimal",
+            "angle",
+            "perimeter",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "default_recipe": [
@@ -852,13 +1146,21 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Money (bills, profit/loss) ──
     "Money (bills, profit/loss)": {
         "allowed_skill_tags": [
-            "c4_money_identify", "c4_money_word_problem",
-            "c4_money_profit_loss", "c4_money_missing",
-            "c4_money_error", "c4_money_thinking",
+            "c4_money_identify",
+            "c4_money_word_problem",
+            "c4_money_profit_loss",
+            "c4_money_missing",
+            "c4_money_error",
+            "c4_money_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "fraction", "decimal", "angle", "perimeter",
+            "carry",
+            "borrow",
+            "fraction",
+            "decimal",
+            "angle",
+            "perimeter",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -876,13 +1178,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Numbers up to 10 lakh (Class 5) ──
     "Numbers up to 10 lakh (Class 5)": {
         "allowed_skill_tags": [
-            "c5_lakh_identify", "c5_lakh_compare",
-            "c5_lakh_expand", "c5_lakh_error", "c5_lakh_think",
+            "c5_lakh_identify",
+            "c5_lakh_compare",
+            "c5_lakh_expand",
+            "c5_lakh_error",
+            "c5_lakh_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "regroup", "base ten", "column form",
-            "multiply", "divide", "fraction", "decimal",
+            "carry",
+            "regroup",
+            "base ten",
+            "column form",
+            "multiply",
+            "divide",
+            "fraction",
+            "decimal",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -896,13 +1207,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Factors and multiples (Class 5) ──
     "Factors and multiples (Class 5)": {
         "allowed_skill_tags": [
-            "c5_factor_identify", "c5_factor_apply",
-            "c5_factor_missing", "c5_factor_error", "c5_factor_think",
+            "c5_factor_identify",
+            "c5_factor_apply",
+            "c5_factor_missing",
+            "c5_factor_error",
+            "c5_factor_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "decimal", "percentage",
-            "angle", "perimeter", "symmetry",
+            "carry",
+            "borrow",
+            "column form",
+            "decimal",
+            "percentage",
+            "angle",
+            "perimeter",
+            "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -916,13 +1236,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── HCF and LCM (Class 5) ──
     "HCF and LCM (Class 5)": {
         "allowed_skill_tags": [
-            "c5_hcf_identify", "c5_hcf_apply",
-            "c5_hcf_missing", "c5_hcf_error", "c5_hcf_think",
+            "c5_hcf_identify",
+            "c5_hcf_apply",
+            "c5_hcf_missing",
+            "c5_hcf_error",
+            "c5_hcf_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "decimal", "percentage",
-            "angle", "perimeter", "symmetry",
+            "carry",
+            "borrow",
+            "column form",
+            "decimal",
+            "percentage",
+            "angle",
+            "perimeter",
+            "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -936,13 +1265,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Fractions (add and subtract) (Class 5) ──
     "Fractions (add and subtract) (Class 5)": {
         "allowed_skill_tags": [
-            "c5_frac_identify", "c5_frac_apply",
-            "c5_frac_missing", "c5_frac_error", "c5_frac_think",
+            "c5_frac_identify",
+            "c5_frac_apply",
+            "c5_frac_missing",
+            "c5_frac_error",
+            "c5_frac_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "decimal", "percentage",
-            "angle", "perimeter", "symmetry",
+            "carry",
+            "borrow",
+            "column form",
+            "decimal",
+            "percentage",
+            "angle",
+            "perimeter",
+            "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -956,12 +1294,20 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Decimals (all operations) (Class 5) ──
     "Decimals (all operations) (Class 5)": {
         "allowed_skill_tags": [
-            "c5_dec_identify", "c5_dec_apply",
-            "c5_dec_missing", "c5_dec_error", "c5_dec_think",
+            "c5_dec_identify",
+            "c5_dec_apply",
+            "c5_dec_missing",
+            "c5_dec_error",
+            "c5_dec_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "angle", "perimeter", "symmetry",
+            "carry",
+            "borrow",
+            "column form",
+            "angle",
+            "perimeter",
+            "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -975,12 +1321,20 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Percentage (Class 5) ──
     "Percentage (Class 5)": {
         "allowed_skill_tags": [
-            "c5_percent_identify", "c5_percent_apply",
-            "c5_percent_missing", "c5_percent_error", "c5_percent_think",
+            "c5_percent_identify",
+            "c5_percent_apply",
+            "c5_percent_missing",
+            "c5_percent_error",
+            "c5_percent_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "angle", "perimeter", "symmetry",
+            "carry",
+            "borrow",
+            "column form",
+            "angle",
+            "perimeter",
+            "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -994,12 +1348,19 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Area and volume (Class 5) ──
     "Area and volume (Class 5)": {
         "allowed_skill_tags": [
-            "c5_area_identify", "c5_area_apply",
-            "c5_area_missing", "c5_area_error", "c5_area_think",
+            "c5_area_identify",
+            "c5_area_apply",
+            "c5_area_missing",
+            "c5_area_error",
+            "c5_area_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "fraction", "percentage",
+            "carry",
+            "borrow",
+            "column form",
+            "fraction",
+            "percentage",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -1013,13 +1374,22 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Geometry (circles, symmetry) (Class 5) ──
     "Geometry (circles, symmetry) (Class 5)": {
         "allowed_skill_tags": [
-            "c5_geo_identify", "c5_geo_apply",
-            "c5_geo_missing", "c5_geo_error", "c5_geo_think",
+            "c5_geo_identify",
+            "c5_geo_apply",
+            "c5_geo_missing",
+            "c5_geo_error",
+            "c5_geo_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "fraction", "decimal",
-            "percentage", "multiply", "divide",
+            "carry",
+            "borrow",
+            "column form",
+            "fraction",
+            "decimal",
+            "percentage",
+            "multiply",
+            "divide",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
         "default_recipe": [
@@ -1033,12 +1403,19 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Data handling (pie charts) (Class 5) ──
     "Data handling (pie charts) (Class 5)": {
         "allowed_skill_tags": [
-            "c5_data_identify", "c5_data_apply",
-            "c5_data_missing", "c5_data_error", "c5_data_think",
+            "c5_data_identify",
+            "c5_data_apply",
+            "c5_data_missing",
+            "c5_data_error",
+            "c5_data_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "fraction", "symmetry",
+            "carry",
+            "borrow",
+            "column form",
+            "fraction",
+            "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -1052,13 +1429,21 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Speed distance time (Class 5) ──
     "Speed distance time (Class 5)": {
         "allowed_skill_tags": [
-            "c5_speed_identify", "c5_speed_apply",
-            "c5_speed_missing", "c5_speed_error", "c5_speed_think",
+            "c5_speed_identify",
+            "c5_speed_apply",
+            "c5_speed_missing",
+            "c5_speed_error",
+            "c5_speed_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": [
-            "carry", "borrow", "column form", "fraction", "symmetry",
-            "angle", "perimeter",
+            "carry",
+            "borrow",
+            "column form",
+            "fraction",
+            "symmetry",
+            "angle",
+            "perimeter",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
         "default_recipe": [
@@ -1075,8 +1460,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Class 1 English (7 topics) ──
     "Alphabet (Class 1)": {
         "allowed_skill_tags": [
-            "eng_c1_alpha_identify", "eng_c1_alpha_match", "eng_c1_alpha_fill",
-            "eng_c1_alpha_error", "eng_c1_alpha_think",
+            "eng_c1_alpha_identify",
+            "eng_c1_alpha_match",
+            "eng_c1_alpha_fill",
+            "eng_c1_alpha_error",
+            "eng_c1_alpha_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1092,8 +1480,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Phonics (Class 1)": {
         "allowed_skill_tags": [
-            "eng_c1_phonics_identify", "eng_c1_phonics_match", "eng_c1_phonics_fill",
-            "eng_c1_phonics_error", "eng_c1_phonics_think",
+            "eng_c1_phonics_identify",
+            "eng_c1_phonics_match",
+            "eng_c1_phonics_fill",
+            "eng_c1_phonics_error",
+            "eng_c1_phonics_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1109,8 +1500,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Self and Family Vocabulary (Class 1)": {
         "allowed_skill_tags": [
-            "eng_c1_family_identify", "eng_c1_family_match", "eng_c1_family_fill",
-            "eng_c1_family_error", "eng_c1_family_think",
+            "eng_c1_family_identify",
+            "eng_c1_family_match",
+            "eng_c1_family_fill",
+            "eng_c1_family_error",
+            "eng_c1_family_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1126,8 +1520,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Animals and Food Vocabulary (Class 1)": {
         "allowed_skill_tags": [
-            "eng_c1_animals_identify", "eng_c1_animals_match", "eng_c1_animals_fill",
-            "eng_c1_animals_error", "eng_c1_animals_think",
+            "eng_c1_animals_identify",
+            "eng_c1_animals_match",
+            "eng_c1_animals_fill",
+            "eng_c1_animals_error",
+            "eng_c1_animals_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1143,8 +1540,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Greetings and Polite Words (Class 1)": {
         "allowed_skill_tags": [
-            "eng_c1_greetings_identify", "eng_c1_greetings_match", "eng_c1_greetings_fill",
-            "eng_c1_greetings_error", "eng_c1_greetings_think",
+            "eng_c1_greetings_identify",
+            "eng_c1_greetings_match",
+            "eng_c1_greetings_fill",
+            "eng_c1_greetings_error",
+            "eng_c1_greetings_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1160,8 +1560,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Seasons (Class 1)": {
         "allowed_skill_tags": [
-            "eng_c1_seasons_identify", "eng_c1_seasons_match", "eng_c1_seasons_fill",
-            "eng_c1_seasons_error", "eng_c1_seasons_think",
+            "eng_c1_seasons_identify",
+            "eng_c1_seasons_match",
+            "eng_c1_seasons_fill",
+            "eng_c1_seasons_error",
+            "eng_c1_seasons_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1177,8 +1580,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Simple Sentences (Class 1)": {
         "allowed_skill_tags": [
-            "eng_c1_simple_identify", "eng_c1_simple_rewrite", "eng_c1_simple_fill",
-            "eng_c1_simple_error", "eng_c1_simple_think",
+            "eng_c1_simple_identify",
+            "eng_c1_simple_rewrite",
+            "eng_c1_simple_fill",
+            "eng_c1_simple_error",
+            "eng_c1_simple_think",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1195,8 +1601,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Class 2 English (6 topics) ──
     "Nouns (Class 2)": {
         "allowed_skill_tags": [
-            "eng_noun_identify", "eng_noun_use", "eng_noun_complete",
-            "eng_noun_error", "eng_noun_thinking",
+            "eng_noun_identify",
+            "eng_noun_use",
+            "eng_noun_complete",
+            "eng_noun_error",
+            "eng_noun_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1212,8 +1621,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Verbs (Class 2)": {
         "allowed_skill_tags": [
-            "eng_verb_identify", "eng_verb_use", "eng_verb_complete",
-            "eng_verb_error", "eng_verb_thinking",
+            "eng_verb_identify",
+            "eng_verb_use",
+            "eng_verb_complete",
+            "eng_verb_error",
+            "eng_verb_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1229,8 +1641,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Pronouns (Class 2)": {
         "allowed_skill_tags": [
-            "eng_pronoun_identify", "eng_pronoun_use", "eng_pronoun_complete",
-            "eng_pronoun_error", "eng_pronoun_thinking",
+            "eng_pronoun_identify",
+            "eng_pronoun_use",
+            "eng_pronoun_complete",
+            "eng_pronoun_error",
+            "eng_pronoun_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1246,8 +1661,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Sentences (Class 2)": {
         "allowed_skill_tags": [
-            "eng_sentence_identify", "eng_sentence_rewrite", "eng_sentence_rearrange",
-            "eng_sentence_error", "eng_sentence_thinking",
+            "eng_sentence_identify",
+            "eng_sentence_rewrite",
+            "eng_sentence_rearrange",
+            "eng_sentence_error",
+            "eng_sentence_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1263,8 +1681,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Rhyming Words (Class 2)": {
         "allowed_skill_tags": [
-            "eng_rhyme_identify", "eng_rhyme_match", "eng_rhyme_complete",
-            "eng_rhyme_error", "eng_rhyme_thinking",
+            "eng_rhyme_identify",
+            "eng_rhyme_match",
+            "eng_rhyme_complete",
+            "eng_rhyme_error",
+            "eng_rhyme_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1280,8 +1701,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Punctuation (Class 2)": {
         "allowed_skill_tags": [
-            "eng_punctuation_identify", "eng_punctuation_use", "eng_punctuation_complete",
-            "eng_punctuation_error", "eng_punctuation_thinking",
+            "eng_punctuation_identify",
+            "eng_punctuation_use",
+            "eng_punctuation_complete",
+            "eng_punctuation_error",
+            "eng_punctuation_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1298,8 +1722,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Class 3 English (8 topics) ──
     "Nouns (Class 3)": {
         "allowed_skill_tags": [
-            "eng_noun_identify", "eng_noun_use", "eng_noun_complete",
-            "eng_noun_error", "eng_noun_thinking",
+            "eng_noun_identify",
+            "eng_noun_use",
+            "eng_noun_complete",
+            "eng_noun_error",
+            "eng_noun_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1315,8 +1742,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Verbs (Class 3)": {
         "allowed_skill_tags": [
-            "eng_verb_identify", "eng_verb_use", "eng_verb_complete",
-            "eng_verb_error", "eng_verb_thinking",
+            "eng_verb_identify",
+            "eng_verb_use",
+            "eng_verb_complete",
+            "eng_verb_error",
+            "eng_verb_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1332,8 +1762,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Adjectives (Class 3)": {
         "allowed_skill_tags": [
-            "eng_adjective_identify", "eng_adjective_use", "eng_adjective_complete",
-            "eng_adjective_error", "eng_adjective_thinking",
+            "eng_adjective_identify",
+            "eng_adjective_use",
+            "eng_adjective_complete",
+            "eng_adjective_error",
+            "eng_adjective_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1349,8 +1782,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Pronouns (Class 3)": {
         "allowed_skill_tags": [
-            "eng_pronoun_identify", "eng_pronoun_use", "eng_pronoun_complete",
-            "eng_pronoun_error", "eng_pronoun_thinking",
+            "eng_pronoun_identify",
+            "eng_pronoun_use",
+            "eng_pronoun_complete",
+            "eng_pronoun_error",
+            "eng_pronoun_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1366,8 +1802,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Tenses (Class 3)": {
         "allowed_skill_tags": [
-            "eng_tense_identify", "eng_tense_change", "eng_tense_complete",
-            "eng_tense_error", "eng_tense_thinking",
+            "eng_tense_identify",
+            "eng_tense_change",
+            "eng_tense_complete",
+            "eng_tense_error",
+            "eng_tense_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1383,8 +1822,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Punctuation (Class 3)": {
         "allowed_skill_tags": [
-            "eng_punctuation_identify", "eng_punctuation_use", "eng_punctuation_complete",
-            "eng_punctuation_error", "eng_punctuation_thinking",
+            "eng_punctuation_identify",
+            "eng_punctuation_use",
+            "eng_punctuation_complete",
+            "eng_punctuation_error",
+            "eng_punctuation_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1400,8 +1842,12 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Vocabulary (Class 3)": {
         "allowed_skill_tags": [
-            "eng_vocabulary_identify", "eng_vocabulary_use", "eng_vocabulary_match",
-            "eng_vocabulary_complete", "eng_vocabulary_error", "eng_vocabulary_thinking",
+            "eng_vocabulary_identify",
+            "eng_vocabulary_use",
+            "eng_vocabulary_match",
+            "eng_vocabulary_complete",
+            "eng_vocabulary_error",
+            "eng_vocabulary_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1418,8 +1864,10 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Reading Comprehension (Class 3)": {
         "allowed_skill_tags": [
-            "eng_comprehension_identify", "eng_comprehension_answer",
-            "eng_comprehension_complete", "eng_comprehension_error",
+            "eng_comprehension_identify",
+            "eng_comprehension_answer",
+            "eng_comprehension_complete",
+            "eng_comprehension_error",
             "eng_comprehension_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
@@ -1437,8 +1885,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Class 4 English (8 topics) ──
     "Tenses (Class 4)": {
         "allowed_skill_tags": [
-            "eng_tense_identify", "eng_tense_change", "eng_tense_complete",
-            "eng_tense_error", "eng_tense_thinking",
+            "eng_tense_identify",
+            "eng_tense_change",
+            "eng_tense_complete",
+            "eng_tense_error",
+            "eng_tense_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1454,8 +1905,10 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Sentence Types (Class 4)": {
         "allowed_skill_tags": [
-            "eng_sentence_type_identify", "eng_sentence_type_rewrite",
-            "eng_sentence_type_rearrange", "eng_sentence_type_error",
+            "eng_sentence_type_identify",
+            "eng_sentence_type_rewrite",
+            "eng_sentence_type_rearrange",
+            "eng_sentence_type_error",
             "eng_sentence_type_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
@@ -1472,8 +1925,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Conjunctions (Class 4)": {
         "allowed_skill_tags": [
-            "eng_conjunction_identify", "eng_conjunction_use", "eng_conjunction_complete",
-            "eng_conjunction_error", "eng_conjunction_thinking",
+            "eng_conjunction_identify",
+            "eng_conjunction_use",
+            "eng_conjunction_complete",
+            "eng_conjunction_error",
+            "eng_conjunction_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1489,8 +1945,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Prepositions (Class 4)": {
         "allowed_skill_tags": [
-            "eng_preposition_identify", "eng_preposition_use", "eng_preposition_complete",
-            "eng_preposition_error", "eng_preposition_thinking",
+            "eng_preposition_identify",
+            "eng_preposition_use",
+            "eng_preposition_complete",
+            "eng_preposition_error",
+            "eng_preposition_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1506,8 +1965,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Adverbs (Class 4)": {
         "allowed_skill_tags": [
-            "eng_adverb_identify", "eng_adverb_use", "eng_adverb_complete",
-            "eng_adverb_error", "eng_adverb_thinking",
+            "eng_adverb_identify",
+            "eng_adverb_use",
+            "eng_adverb_complete",
+            "eng_adverb_error",
+            "eng_adverb_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1523,8 +1985,12 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Prefixes and Suffixes (Class 4)": {
         "allowed_skill_tags": [
-            "eng_prefix_identify", "eng_suffix_identify", "eng_affix_use",
-            "eng_affix_change", "eng_affix_error", "eng_affix_thinking",
+            "eng_prefix_identify",
+            "eng_suffix_identify",
+            "eng_affix_use",
+            "eng_affix_change",
+            "eng_affix_error",
+            "eng_affix_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1541,8 +2007,12 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Vocabulary (Class 4)": {
         "allowed_skill_tags": [
-            "eng_vocabulary_identify", "eng_vocabulary_use", "eng_vocabulary_match",
-            "eng_vocabulary_complete", "eng_vocabulary_error", "eng_vocabulary_thinking",
+            "eng_vocabulary_identify",
+            "eng_vocabulary_use",
+            "eng_vocabulary_match",
+            "eng_vocabulary_complete",
+            "eng_vocabulary_error",
+            "eng_vocabulary_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product"],
@@ -1559,8 +2029,10 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Reading Comprehension (Class 4)": {
         "allowed_skill_tags": [
-            "eng_comprehension_identify", "eng_comprehension_answer",
-            "eng_comprehension_complete", "eng_comprehension_error",
+            "eng_comprehension_identify",
+            "eng_comprehension_answer",
+            "eng_comprehension_complete",
+            "eng_comprehension_error",
             "eng_comprehension_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
@@ -1580,8 +2052,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ════════════════════════════════════════════════════════════
     "Active and Passive Voice (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_voice_identify", "eng_c5_voice_convert",
-            "eng_c5_voice_complete", "eng_c5_voice_error", "eng_c5_voice_thinking",
+            "eng_c5_voice_identify",
+            "eng_c5_voice_convert",
+            "eng_c5_voice_complete",
+            "eng_c5_voice_error",
+            "eng_c5_voice_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
@@ -1597,8 +2072,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Direct and Indirect Speech (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_speech_identify", "eng_c5_speech_convert",
-            "eng_c5_speech_complete", "eng_c5_speech_error", "eng_c5_speech_thinking",
+            "eng_c5_speech_identify",
+            "eng_c5_speech_convert",
+            "eng_c5_speech_complete",
+            "eng_c5_speech_error",
+            "eng_c5_speech_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
@@ -1614,8 +2092,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Complex Sentences (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_complex_identify", "eng_c5_complex_rewrite",
-            "eng_c5_complex_complete", "eng_c5_complex_error", "eng_c5_complex_thinking",
+            "eng_c5_complex_identify",
+            "eng_c5_complex_rewrite",
+            "eng_c5_complex_complete",
+            "eng_c5_complex_error",
+            "eng_c5_complex_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
@@ -1633,8 +2114,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Summary Writing (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_summary_identify", "eng_c5_summary_write",
-            "eng_c5_summary_complete", "eng_c5_summary_error", "eng_c5_summary_thinking",
+            "eng_c5_summary_identify",
+            "eng_c5_summary_write",
+            "eng_c5_summary_complete",
+            "eng_c5_summary_error",
+            "eng_c5_summary_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
@@ -1650,8 +2134,10 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Comprehension (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_comprehension_identify", "eng_c5_comprehension_answer",
-            "eng_c5_comprehension_complete", "eng_c5_comprehension_error",
+            "eng_c5_comprehension_identify",
+            "eng_c5_comprehension_answer",
+            "eng_c5_comprehension_complete",
+            "eng_c5_comprehension_error",
             "eng_c5_comprehension_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
@@ -1668,8 +2154,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Synonyms and Antonyms (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_synonym_identify", "eng_c5_synonym_match",
-            "eng_c5_synonym_use", "eng_c5_synonym_error", "eng_c5_synonym_thinking",
+            "eng_c5_synonym_identify",
+            "eng_c5_synonym_match",
+            "eng_c5_synonym_use",
+            "eng_c5_synonym_error",
+            "eng_c5_synonym_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
@@ -1685,8 +2174,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Formal Letter Writing (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_letter_identify", "eng_c5_letter_write",
-            "eng_c5_letter_complete", "eng_c5_letter_error", "eng_c5_letter_thinking",
+            "eng_c5_letter_identify",
+            "eng_c5_letter_write",
+            "eng_c5_letter_complete",
+            "eng_c5_letter_error",
+            "eng_c5_letter_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
@@ -1704,8 +2196,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Creative Writing (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_creative_identify", "eng_c5_creative_use",
-            "eng_c5_creative_expand", "eng_c5_creative_error", "eng_c5_creative_thinking",
+            "eng_c5_creative_identify",
+            "eng_c5_creative_use",
+            "eng_c5_creative_expand",
+            "eng_c5_creative_error",
+            "eng_c5_creative_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
@@ -1723,8 +2218,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Clauses (Class 5)": {
         "allowed_skill_tags": [
-            "eng_c5_clause_identify", "eng_c5_clause_rewrite",
-            "eng_c5_clause_complete", "eng_c5_clause_error", "eng_c5_clause_thinking",
+            "eng_c5_clause_identify",
+            "eng_c5_clause_rewrite",
+            "eng_c5_clause_complete",
+            "eng_c5_clause_error",
+            "eng_c5_clause_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "fraction", "decimal", "number line"],
@@ -1743,8 +2241,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ════════════════════════════════════════════════════════════
     "Plants (Class 3)": {
         "allowed_skill_tags": [
-            "sci_plants_identify", "sci_plants_apply", "sci_plants_represent",
-            "sci_plants_error", "sci_plants_thinking",
+            "sci_plants_identify",
+            "sci_plants_apply",
+            "sci_plants_represent",
+            "sci_plants_error",
+            "sci_plants_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -1760,8 +2261,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Animals (Class 3)": {
         "allowed_skill_tags": [
-            "sci_animals_identify", "sci_animals_apply", "sci_animals_represent",
-            "sci_animals_error", "sci_animals_thinking",
+            "sci_animals_identify",
+            "sci_animals_apply",
+            "sci_animals_represent",
+            "sci_animals_error",
+            "sci_animals_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -1777,8 +2281,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Food and Nutrition (Class 3)": {
         "allowed_skill_tags": [
-            "sci_food_identify", "sci_food_apply", "sci_food_represent",
-            "sci_food_error", "sci_food_thinking",
+            "sci_food_identify",
+            "sci_food_apply",
+            "sci_food_represent",
+            "sci_food_error",
+            "sci_food_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -1794,8 +2301,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Shelter (Class 3)": {
         "allowed_skill_tags": [
-            "sci_shelter_identify", "sci_shelter_apply", "sci_shelter_represent",
-            "sci_shelter_error", "sci_shelter_thinking",
+            "sci_shelter_identify",
+            "sci_shelter_apply",
+            "sci_shelter_represent",
+            "sci_shelter_error",
+            "sci_shelter_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -1811,8 +2321,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Water (Class 3)": {
         "allowed_skill_tags": [
-            "sci_water_identify", "sci_water_apply", "sci_water_represent",
-            "sci_water_error", "sci_water_thinking",
+            "sci_water_identify",
+            "sci_water_apply",
+            "sci_water_represent",
+            "sci_water_error",
+            "sci_water_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -1828,8 +2341,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Air (Class 3)": {
         "allowed_skill_tags": [
-            "sci_air_identify", "sci_air_apply", "sci_air_represent",
-            "sci_air_error", "sci_air_thinking",
+            "sci_air_identify",
+            "sci_air_apply",
+            "sci_air_represent",
+            "sci_air_error",
+            "sci_air_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -1845,8 +2361,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Our Body (Class 3)": {
         "allowed_skill_tags": [
-            "sci_body_identify", "sci_body_apply", "sci_body_represent",
-            "sci_body_error", "sci_body_thinking",
+            "sci_body_identify",
+            "sci_body_apply",
+            "sci_body_represent",
+            "sci_body_error",
+            "sci_body_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -1865,11 +2384,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ════════════════════════════════════════════════════════════
     "My Family (Class 1)": {
         "allowed_skill_tags": [
-            "sci_c1_family_identify", "sci_c1_family_apply", "sci_c1_family_represent",
-            "sci_c1_family_error", "sci_c1_family_thinking",
+            "sci_c1_family_identify",
+            "sci_c1_family_apply",
+            "sci_c1_family_represent",
+            "sci_c1_family_error",
+            "sci_c1_family_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -1882,11 +2416,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "My Body (Class 1)": {
         "allowed_skill_tags": [
-            "sci_c1_body_identify", "sci_c1_body_apply", "sci_c1_body_represent",
-            "sci_c1_body_error", "sci_c1_body_thinking",
+            "sci_c1_body_identify",
+            "sci_c1_body_apply",
+            "sci_c1_body_represent",
+            "sci_c1_body_error",
+            "sci_c1_body_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -1899,11 +2448,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Plants Around Us (Class 1)": {
         "allowed_skill_tags": [
-            "sci_c1_plants_identify", "sci_c1_plants_apply", "sci_c1_plants_represent",
-            "sci_c1_plants_error", "sci_c1_plants_thinking",
+            "sci_c1_plants_identify",
+            "sci_c1_plants_apply",
+            "sci_c1_plants_represent",
+            "sci_c1_plants_error",
+            "sci_c1_plants_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -1916,11 +2480,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Animals Around Us (Class 1)": {
         "allowed_skill_tags": [
-            "sci_c1_animals_identify", "sci_c1_animals_apply", "sci_c1_animals_represent",
-            "sci_c1_animals_error", "sci_c1_animals_thinking",
+            "sci_c1_animals_identify",
+            "sci_c1_animals_apply",
+            "sci_c1_animals_represent",
+            "sci_c1_animals_error",
+            "sci_c1_animals_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -1933,11 +2512,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Food We Eat (Class 1)": {
         "allowed_skill_tags": [
-            "sci_c1_food_identify", "sci_c1_food_apply", "sci_c1_food_represent",
-            "sci_c1_food_error", "sci_c1_food_thinking",
+            "sci_c1_food_identify",
+            "sci_c1_food_apply",
+            "sci_c1_food_represent",
+            "sci_c1_food_error",
+            "sci_c1_food_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -1950,11 +2544,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Seasons and Weather (Class 1)": {
         "allowed_skill_tags": [
-            "sci_c1_seasons_identify", "sci_c1_seasons_apply", "sci_c1_seasons_represent",
-            "sci_c1_seasons_error", "sci_c1_seasons_thinking",
+            "sci_c1_seasons_identify",
+            "sci_c1_seasons_apply",
+            "sci_c1_seasons_represent",
+            "sci_c1_seasons_error",
+            "sci_c1_seasons_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -1970,11 +2579,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ════════════════════════════════════════════════════════════
     "Plants (Class 2)": {
         "allowed_skill_tags": [
-            "sci_c2_plants_identify", "sci_c2_plants_apply", "sci_c2_plants_represent",
-            "sci_c2_plants_error", "sci_c2_plants_thinking",
+            "sci_c2_plants_identify",
+            "sci_c2_plants_apply",
+            "sci_c2_plants_represent",
+            "sci_c2_plants_error",
+            "sci_c2_plants_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -1987,11 +2611,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Animals and Habitats (Class 2)": {
         "allowed_skill_tags": [
-            "sci_c2_animals_identify", "sci_c2_animals_apply", "sci_c2_animals_represent",
-            "sci_c2_animals_error", "sci_c2_animals_thinking",
+            "sci_c2_animals_identify",
+            "sci_c2_animals_apply",
+            "sci_c2_animals_represent",
+            "sci_c2_animals_error",
+            "sci_c2_animals_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -2004,11 +2643,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Food and Nutrition (Class 2)": {
         "allowed_skill_tags": [
-            "sci_c2_food_identify", "sci_c2_food_apply", "sci_c2_food_represent",
-            "sci_c2_food_error", "sci_c2_food_thinking",
+            "sci_c2_food_identify",
+            "sci_c2_food_apply",
+            "sci_c2_food_represent",
+            "sci_c2_food_error",
+            "sci_c2_food_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -2021,11 +2675,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Water (Class 2)": {
         "allowed_skill_tags": [
-            "sci_c2_water_identify", "sci_c2_water_apply", "sci_c2_water_represent",
-            "sci_c2_water_error", "sci_c2_water_thinking",
+            "sci_c2_water_identify",
+            "sci_c2_water_apply",
+            "sci_c2_water_represent",
+            "sci_c2_water_error",
+            "sci_c2_water_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -2038,11 +2707,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Shelter (Class 2)": {
         "allowed_skill_tags": [
-            "sci_c2_shelter_identify", "sci_c2_shelter_apply", "sci_c2_shelter_represent",
-            "sci_c2_shelter_error", "sci_c2_shelter_thinking",
+            "sci_c2_shelter_identify",
+            "sci_c2_shelter_apply",
+            "sci_c2_shelter_represent",
+            "sci_c2_shelter_error",
+            "sci_c2_shelter_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -2055,11 +2739,26 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Our Senses (Class 2)": {
         "allowed_skill_tags": [
-            "sci_c2_senses_identify", "sci_c2_senses_apply", "sci_c2_senses_represent",
-            "sci_c2_senses_error", "sci_c2_senses_thinking",
+            "sci_c2_senses_identify",
+            "sci_c2_senses_apply",
+            "sci_c2_senses_represent",
+            "sci_c2_senses_error",
+            "sci_c2_senses_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
-        "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction", "decimal", "number line", "equation"],
+        "disallowed_keywords": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "sum",
+            "difference",
+            "product",
+            "fraction",
+            "decimal",
+            "number line",
+            "equation",
+        ],
         "disallowed_visual_types": [],
         "subject": "Science",
         "default_recipe": [
@@ -2073,8 +2772,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Science Class 4 (7 topics) ──────────────────────────
     "Living Things (Class 4)": {
         "allowed_skill_tags": [
-            "sci_c4_living_identify", "sci_c4_living_apply", "sci_c4_living_represent",
-            "sci_c4_living_error", "sci_c4_living_thinking",
+            "sci_c4_living_identify",
+            "sci_c4_living_apply",
+            "sci_c4_living_represent",
+            "sci_c4_living_error",
+            "sci_c4_living_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2090,8 +2792,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Human Body (Class 4)": {
         "allowed_skill_tags": [
-            "sci_c4_humanbody_identify", "sci_c4_humanbody_apply", "sci_c4_humanbody_represent",
-            "sci_c4_humanbody_error", "sci_c4_humanbody_thinking",
+            "sci_c4_humanbody_identify",
+            "sci_c4_humanbody_apply",
+            "sci_c4_humanbody_represent",
+            "sci_c4_humanbody_error",
+            "sci_c4_humanbody_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2107,8 +2812,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "States of Matter (Class 4)": {
         "allowed_skill_tags": [
-            "sci_c4_matter_identify", "sci_c4_matter_apply", "sci_c4_matter_represent",
-            "sci_c4_matter_error", "sci_c4_matter_thinking",
+            "sci_c4_matter_identify",
+            "sci_c4_matter_apply",
+            "sci_c4_matter_represent",
+            "sci_c4_matter_error",
+            "sci_c4_matter_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2124,8 +2832,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Force and Motion (Class 4)": {
         "allowed_skill_tags": [
-            "sci_c4_force_identify", "sci_c4_force_apply", "sci_c4_force_represent",
-            "sci_c4_force_error", "sci_c4_force_thinking",
+            "sci_c4_force_identify",
+            "sci_c4_force_apply",
+            "sci_c4_force_represent",
+            "sci_c4_force_error",
+            "sci_c4_force_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2141,8 +2852,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Simple Machines (Class 4)": {
         "allowed_skill_tags": [
-            "sci_c4_machines_identify", "sci_c4_machines_apply", "sci_c4_machines_represent",
-            "sci_c4_machines_error", "sci_c4_machines_thinking",
+            "sci_c4_machines_identify",
+            "sci_c4_machines_apply",
+            "sci_c4_machines_represent",
+            "sci_c4_machines_error",
+            "sci_c4_machines_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2158,8 +2872,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Photosynthesis (Class 4)": {
         "allowed_skill_tags": [
-            "sci_c4_photosyn_identify", "sci_c4_photosyn_apply", "sci_c4_photosyn_represent",
-            "sci_c4_photosyn_error", "sci_c4_photosyn_thinking",
+            "sci_c4_photosyn_identify",
+            "sci_c4_photosyn_apply",
+            "sci_c4_photosyn_represent",
+            "sci_c4_photosyn_error",
+            "sci_c4_photosyn_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2175,8 +2892,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Animal Adaptation (Class 4)": {
         "allowed_skill_tags": [
-            "sci_c4_adapt_identify", "sci_c4_adapt_apply", "sci_c4_adapt_represent",
-            "sci_c4_adapt_error", "sci_c4_adapt_thinking",
+            "sci_c4_adapt_identify",
+            "sci_c4_adapt_apply",
+            "sci_c4_adapt_represent",
+            "sci_c4_adapt_error",
+            "sci_c4_adapt_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2193,8 +2913,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Science Class 5 (7 topics) ──────────────────────────
     "Circulatory System (Class 5)": {
         "allowed_skill_tags": [
-            "sci_c5_circulatory_identify", "sci_c5_circulatory_apply", "sci_c5_circulatory_represent",
-            "sci_c5_circulatory_error", "sci_c5_circulatory_thinking",
+            "sci_c5_circulatory_identify",
+            "sci_c5_circulatory_apply",
+            "sci_c5_circulatory_represent",
+            "sci_c5_circulatory_error",
+            "sci_c5_circulatory_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2210,8 +2933,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Respiratory and Nervous System (Class 5)": {
         "allowed_skill_tags": [
-            "sci_c5_respnerv_identify", "sci_c5_respnerv_apply", "sci_c5_respnerv_represent",
-            "sci_c5_respnerv_error", "sci_c5_respnerv_thinking",
+            "sci_c5_respnerv_identify",
+            "sci_c5_respnerv_apply",
+            "sci_c5_respnerv_represent",
+            "sci_c5_respnerv_error",
+            "sci_c5_respnerv_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2227,8 +2953,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Reproduction in Plants and Animals (Class 5)": {
         "allowed_skill_tags": [
-            "sci_c5_reprod_identify", "sci_c5_reprod_apply", "sci_c5_reprod_represent",
-            "sci_c5_reprod_error", "sci_c5_reprod_thinking",
+            "sci_c5_reprod_identify",
+            "sci_c5_reprod_apply",
+            "sci_c5_reprod_represent",
+            "sci_c5_reprod_error",
+            "sci_c5_reprod_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2244,8 +2973,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Physical and Chemical Changes (Class 5)": {
         "allowed_skill_tags": [
-            "sci_c5_changes_identify", "sci_c5_changes_apply", "sci_c5_changes_represent",
-            "sci_c5_changes_error", "sci_c5_changes_thinking",
+            "sci_c5_changes_identify",
+            "sci_c5_changes_apply",
+            "sci_c5_changes_represent",
+            "sci_c5_changes_error",
+            "sci_c5_changes_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2261,8 +2993,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Forms of Energy (Class 5)": {
         "allowed_skill_tags": [
-            "sci_c5_energy_identify", "sci_c5_energy_apply", "sci_c5_energy_represent",
-            "sci_c5_energy_error", "sci_c5_energy_thinking",
+            "sci_c5_energy_identify",
+            "sci_c5_energy_apply",
+            "sci_c5_energy_represent",
+            "sci_c5_energy_error",
+            "sci_c5_energy_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2278,8 +3013,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Solar System and Earth (Class 5)": {
         "allowed_skill_tags": [
-            "sci_c5_solar_identify", "sci_c5_solar_apply", "sci_c5_solar_represent",
-            "sci_c5_solar_error", "sci_c5_solar_thinking",
+            "sci_c5_solar_identify",
+            "sci_c5_solar_apply",
+            "sci_c5_solar_represent",
+            "sci_c5_solar_error",
+            "sci_c5_solar_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2295,8 +3033,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Ecosystem and Food Chains (Class 5)": {
         "allowed_skill_tags": [
-            "sci_c5_ecosystem_identify", "sci_c5_ecosystem_apply", "sci_c5_ecosystem_represent",
-            "sci_c5_ecosystem_error", "sci_c5_ecosystem_thinking",
+            "sci_c5_ecosystem_identify",
+            "sci_c5_ecosystem_apply",
+            "sci_c5_ecosystem_represent",
+            "sci_c5_ecosystem_error",
+            "sci_c5_ecosystem_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "compute", "sum", "difference"],
@@ -2315,8 +3056,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Hindi Class 3 topic profiles ──────────────────────────
     "Varnamala (Class 3)": {
         "allowed_skill_tags": [
-            "hin_varna_identify", "hin_varna_use", "hin_varna_complete",
-            "hin_varna_error", "hin_varna_thinking",
+            "hin_varna_identify",
+            "hin_varna_use",
+            "hin_varna_complete",
+            "hin_varna_error",
+            "hin_varna_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2333,8 +3077,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Matras (Class 3)": {
         "allowed_skill_tags": [
-            "hin_matra_identify", "hin_matra_fill", "hin_matra_complete",
-            "hin_matra_error", "hin_matra_thinking",
+            "hin_matra_identify",
+            "hin_matra_fill",
+            "hin_matra_complete",
+            "hin_matra_error",
+            "hin_matra_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2351,8 +3098,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Shabd Rachna (Class 3)": {
         "allowed_skill_tags": [
-            "hin_shabd_identify", "hin_shabd_make", "hin_shabd_complete",
-            "hin_shabd_error", "hin_shabd_thinking",
+            "hin_shabd_identify",
+            "hin_shabd_make",
+            "hin_shabd_complete",
+            "hin_shabd_error",
+            "hin_shabd_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2369,8 +3119,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Vakya Rachna (Class 3)": {
         "allowed_skill_tags": [
-            "hin_vakya_identify", "hin_vakya_make", "hin_vakya_rearrange",
-            "hin_vakya_error", "hin_vakya_thinking",
+            "hin_vakya_identify",
+            "hin_vakya_make",
+            "hin_vakya_rearrange",
+            "hin_vakya_error",
+            "hin_vakya_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2387,8 +3140,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Kahani Lekhan (Class 3)": {
         "allowed_skill_tags": [
-            "hin_kahani_identify", "hin_kahani_answer", "hin_kahani_complete",
-            "hin_kahani_error", "hin_kahani_thinking",
+            "hin_kahani_identify",
+            "hin_kahani_answer",
+            "hin_kahani_complete",
+            "hin_kahani_error",
+            "hin_kahani_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2406,8 +3162,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Hindi Class 1 topic profiles ──────────────────────────
     "Varnamala Swar (Class 1)": {
         "allowed_skill_tags": [
-            "hin_c1_swar_identify", "hin_c1_swar_use", "hin_c1_swar_complete",
-            "hin_c1_swar_error", "hin_c1_swar_thinking",
+            "hin_c1_swar_identify",
+            "hin_c1_swar_use",
+            "hin_c1_swar_complete",
+            "hin_c1_swar_error",
+            "hin_c1_swar_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2424,8 +3183,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Varnamala Vyanjan (Class 1)": {
         "allowed_skill_tags": [
-            "hin_c1_vyanjan_identify", "hin_c1_vyanjan_use", "hin_c1_vyanjan_complete",
-            "hin_c1_vyanjan_error", "hin_c1_vyanjan_thinking",
+            "hin_c1_vyanjan_identify",
+            "hin_c1_vyanjan_use",
+            "hin_c1_vyanjan_complete",
+            "hin_c1_vyanjan_error",
+            "hin_c1_vyanjan_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2442,8 +3204,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Family Words (Class 1)": {
         "allowed_skill_tags": [
-            "hin_c1_family_identify", "hin_c1_family_use", "hin_c1_family_complete",
-            "hin_c1_family_error", "hin_c1_family_thinking",
+            "hin_c1_family_identify",
+            "hin_c1_family_use",
+            "hin_c1_family_complete",
+            "hin_c1_family_error",
+            "hin_c1_family_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2460,8 +3225,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Simple Sentences in Hindi (Class 1)": {
         "allowed_skill_tags": [
-            "hin_c1_sentence_identify", "hin_c1_sentence_use", "hin_c1_sentence_complete",
-            "hin_c1_sentence_error", "hin_c1_sentence_thinking",
+            "hin_c1_sentence_identify",
+            "hin_c1_sentence_use",
+            "hin_c1_sentence_complete",
+            "hin_c1_sentence_error",
+            "hin_c1_sentence_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2479,8 +3247,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Hindi Class 2 topic profiles ──────────────────────────
     "Matras Introduction (Class 2)": {
         "allowed_skill_tags": [
-            "hin_c2_matra_identify", "hin_c2_matra_fill", "hin_c2_matra_complete",
-            "hin_c2_matra_error", "hin_c2_matra_thinking",
+            "hin_c2_matra_identify",
+            "hin_c2_matra_fill",
+            "hin_c2_matra_complete",
+            "hin_c2_matra_error",
+            "hin_c2_matra_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2497,8 +3268,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Two Letter Words (Class 2)": {
         "allowed_skill_tags": [
-            "hin_c2_two_identify", "hin_c2_two_use", "hin_c2_two_complete",
-            "hin_c2_two_error", "hin_c2_two_thinking",
+            "hin_c2_two_identify",
+            "hin_c2_two_use",
+            "hin_c2_two_complete",
+            "hin_c2_two_error",
+            "hin_c2_two_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2515,8 +3289,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Three Letter Words (Class 2)": {
         "allowed_skill_tags": [
-            "hin_c2_three_identify", "hin_c2_three_use", "hin_c2_three_complete",
-            "hin_c2_three_error", "hin_c2_three_thinking",
+            "hin_c2_three_identify",
+            "hin_c2_three_use",
+            "hin_c2_three_complete",
+            "hin_c2_three_error",
+            "hin_c2_three_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2533,8 +3310,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Rhymes and Poems (Class 2)": {
         "allowed_skill_tags": [
-            "hin_c2_rhyme_identify", "hin_c2_rhyme_use", "hin_c2_rhyme_complete",
-            "hin_c2_rhyme_error", "hin_c2_rhyme_thinking",
+            "hin_c2_rhyme_identify",
+            "hin_c2_rhyme_use",
+            "hin_c2_rhyme_complete",
+            "hin_c2_rhyme_error",
+            "hin_c2_rhyme_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2551,8 +3331,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Nature Vocabulary (Class 2)": {
         "allowed_skill_tags": [
-            "hin_c2_nature_identify", "hin_c2_nature_use", "hin_c2_nature_complete",
-            "hin_c2_nature_error", "hin_c2_nature_thinking",
+            "hin_c2_nature_identify",
+            "hin_c2_nature_use",
+            "hin_c2_nature_complete",
+            "hin_c2_nature_error",
+            "hin_c2_nature_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2570,8 +3353,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Hindi Class 4 topic profiles ──────────────────────────
     "Anusvaar and Visarg (Class 4)": {
         "allowed_skill_tags": [
-            "hin_c4_anusvaar_identify", "hin_c4_anusvaar_use", "hin_c4_anusvaar_complete",
-            "hin_c4_anusvaar_error", "hin_c4_anusvaar_thinking",
+            "hin_c4_anusvaar_identify",
+            "hin_c4_anusvaar_use",
+            "hin_c4_anusvaar_complete",
+            "hin_c4_anusvaar_error",
+            "hin_c4_anusvaar_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2588,8 +3374,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Vachan and Ling (Class 4)": {
         "allowed_skill_tags": [
-            "hin_c4_vachan_identify", "hin_c4_vachan_use", "hin_c4_vachan_complete",
-            "hin_c4_vachan_error", "hin_c4_vachan_thinking",
+            "hin_c4_vachan_identify",
+            "hin_c4_vachan_use",
+            "hin_c4_vachan_complete",
+            "hin_c4_vachan_error",
+            "hin_c4_vachan_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2606,8 +3395,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Kaal (Class 4)": {
         "allowed_skill_tags": [
-            "hin_c4_kaal_identify", "hin_c4_kaal_use", "hin_c4_kaal_complete",
-            "hin_c4_kaal_error", "hin_c4_kaal_thinking",
+            "hin_c4_kaal_identify",
+            "hin_c4_kaal_use",
+            "hin_c4_kaal_complete",
+            "hin_c4_kaal_error",
+            "hin_c4_kaal_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2624,8 +3416,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Patra Lekhan (Class 4)": {
         "allowed_skill_tags": [
-            "hin_c4_patra_identify", "hin_c4_patra_use", "hin_c4_patra_complete",
-            "hin_c4_patra_error", "hin_c4_patra_thinking",
+            "hin_c4_patra_identify",
+            "hin_c4_patra_use",
+            "hin_c4_patra_complete",
+            "hin_c4_patra_error",
+            "hin_c4_patra_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2642,8 +3437,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Comprehension Hindi (Class 4)": {
         "allowed_skill_tags": [
-            "hin_c4_comprehension_identify", "hin_c4_comprehension_answer", "hin_c4_comprehension_complete",
-            "hin_c4_comprehension_error", "hin_c4_comprehension_thinking",
+            "hin_c4_comprehension_identify",
+            "hin_c4_comprehension_answer",
+            "hin_c4_comprehension_complete",
+            "hin_c4_comprehension_error",
+            "hin_c4_comprehension_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2661,8 +3459,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Hindi Class 5 topic profiles ──────────────────────────
     "Muhavare (Class 5)": {
         "allowed_skill_tags": [
-            "hin_c5_muhavare_identify", "hin_c5_muhavare_use", "hin_c5_muhavare_complete",
-            "hin_c5_muhavare_error", "hin_c5_muhavare_thinking",
+            "hin_c5_muhavare_identify",
+            "hin_c5_muhavare_use",
+            "hin_c5_muhavare_complete",
+            "hin_c5_muhavare_error",
+            "hin_c5_muhavare_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2679,8 +3480,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Paryayvachi Shabd (Class 5)": {
         "allowed_skill_tags": [
-            "hin_c5_paryay_identify", "hin_c5_paryay_use", "hin_c5_paryay_complete",
-            "hin_c5_paryay_error", "hin_c5_paryay_thinking",
+            "hin_c5_paryay_identify",
+            "hin_c5_paryay_use",
+            "hin_c5_paryay_complete",
+            "hin_c5_paryay_error",
+            "hin_c5_paryay_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2697,8 +3501,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Vilom Shabd (Class 5)": {
         "allowed_skill_tags": [
-            "hin_c5_vilom_identify", "hin_c5_vilom_use", "hin_c5_vilom_complete",
-            "hin_c5_vilom_error", "hin_c5_vilom_thinking",
+            "hin_c5_vilom_identify",
+            "hin_c5_vilom_use",
+            "hin_c5_vilom_complete",
+            "hin_c5_vilom_error",
+            "hin_c5_vilom_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2715,8 +3522,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Samas (Class 5)": {
         "allowed_skill_tags": [
-            "hin_c5_samas_identify", "hin_c5_samas_use", "hin_c5_samas_complete",
-            "hin_c5_samas_error", "hin_c5_samas_thinking",
+            "hin_c5_samas_identify",
+            "hin_c5_samas_use",
+            "hin_c5_samas_complete",
+            "hin_c5_samas_error",
+            "hin_c5_samas_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2733,8 +3543,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Samvad Lekhan (Class 5)": {
         "allowed_skill_tags": [
-            "hin_c5_samvad_identify", "hin_c5_samvad_use", "hin_c5_samvad_complete",
-            "hin_c5_samvad_error", "hin_c5_samvad_thinking",
+            "hin_c5_samvad_identify",
+            "hin_c5_samvad_use",
+            "hin_c5_samvad_complete",
+            "hin_c5_samvad_error",
+            "hin_c5_samvad_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "sum", "difference", "product", "fraction"],
@@ -2752,8 +3565,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Computer Science Class 1 (2 topics) ──────────────────────────
     "Parts of Computer (Class 1)": {
         "allowed_skill_tags": [
-            "comp_c1_parts_identify", "comp_c1_parts_apply", "comp_c1_parts_represent",
-            "comp_c1_parts_error", "comp_c1_parts_thinking",
+            "comp_c1_parts_identify",
+            "comp_c1_parts_apply",
+            "comp_c1_parts_represent",
+            "comp_c1_parts_error",
+            "comp_c1_parts_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2769,8 +3585,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Using Mouse and Keyboard (Class 1)": {
         "allowed_skill_tags": [
-            "comp_c1_mouse_identify", "comp_c1_mouse_apply", "comp_c1_mouse_represent",
-            "comp_c1_mouse_error", "comp_c1_mouse_thinking",
+            "comp_c1_mouse_identify",
+            "comp_c1_mouse_apply",
+            "comp_c1_mouse_represent",
+            "comp_c1_mouse_error",
+            "comp_c1_mouse_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2787,8 +3606,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Computer Science Class 2 (3 topics) ──────────────────────────
     "Desktop and Icons (Class 2)": {
         "allowed_skill_tags": [
-            "comp_c2_desktop_identify", "comp_c2_desktop_apply", "comp_c2_desktop_represent",
-            "comp_c2_desktop_error", "comp_c2_desktop_thinking",
+            "comp_c2_desktop_identify",
+            "comp_c2_desktop_apply",
+            "comp_c2_desktop_represent",
+            "comp_c2_desktop_error",
+            "comp_c2_desktop_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2804,8 +3626,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Basic Typing (Class 2)": {
         "allowed_skill_tags": [
-            "comp_c2_typing_identify", "comp_c2_typing_apply", "comp_c2_typing_represent",
-            "comp_c2_typing_error", "comp_c2_typing_thinking",
+            "comp_c2_typing_identify",
+            "comp_c2_typing_apply",
+            "comp_c2_typing_represent",
+            "comp_c2_typing_error",
+            "comp_c2_typing_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2821,8 +3646,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Special Keys (Class 2)": {
         "allowed_skill_tags": [
-            "comp_c2_special_identify", "comp_c2_special_apply", "comp_c2_special_represent",
-            "comp_c2_special_error", "comp_c2_special_thinking",
+            "comp_c2_special_identify",
+            "comp_c2_special_apply",
+            "comp_c2_special_represent",
+            "comp_c2_special_error",
+            "comp_c2_special_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2839,8 +3667,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Computer Science Class 3 (3 topics) ──────────────────────────
     "MS Paint Basics (Class 3)": {
         "allowed_skill_tags": [
-            "comp_c3_paint_identify", "comp_c3_paint_apply", "comp_c3_paint_represent",
-            "comp_c3_paint_error", "comp_c3_paint_thinking",
+            "comp_c3_paint_identify",
+            "comp_c3_paint_apply",
+            "comp_c3_paint_represent",
+            "comp_c3_paint_error",
+            "comp_c3_paint_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2856,8 +3687,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Keyboard Shortcuts (Class 3)": {
         "allowed_skill_tags": [
-            "comp_c3_shortcuts_identify", "comp_c3_shortcuts_apply", "comp_c3_shortcuts_represent",
-            "comp_c3_shortcuts_error", "comp_c3_shortcuts_thinking",
+            "comp_c3_shortcuts_identify",
+            "comp_c3_shortcuts_apply",
+            "comp_c3_shortcuts_represent",
+            "comp_c3_shortcuts_error",
+            "comp_c3_shortcuts_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2873,8 +3707,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Files and Folders (Class 3)": {
         "allowed_skill_tags": [
-            "comp_c3_files_identify", "comp_c3_files_apply", "comp_c3_files_represent",
-            "comp_c3_files_error", "comp_c3_files_thinking",
+            "comp_c3_files_identify",
+            "comp_c3_files_apply",
+            "comp_c3_files_represent",
+            "comp_c3_files_error",
+            "comp_c3_files_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2891,8 +3728,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Computer Science Class 4 (3 topics) ──────────────────────────
     "MS Word Basics (Class 4)": {
         "allowed_skill_tags": [
-            "comp_c4_word_identify", "comp_c4_word_apply", "comp_c4_word_represent",
-            "comp_c4_word_error", "comp_c4_word_thinking",
+            "comp_c4_word_identify",
+            "comp_c4_word_apply",
+            "comp_c4_word_represent",
+            "comp_c4_word_error",
+            "comp_c4_word_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2908,8 +3748,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Introduction to Scratch (Class 4)": {
         "allowed_skill_tags": [
-            "comp_c4_scratch_identify", "comp_c4_scratch_apply", "comp_c4_scratch_represent",
-            "comp_c4_scratch_error", "comp_c4_scratch_thinking",
+            "comp_c4_scratch_identify",
+            "comp_c4_scratch_apply",
+            "comp_c4_scratch_represent",
+            "comp_c4_scratch_error",
+            "comp_c4_scratch_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2925,8 +3768,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Internet Safety (Class 4)": {
         "allowed_skill_tags": [
-            "comp_c4_safety_identify", "comp_c4_safety_apply", "comp_c4_safety_represent",
-            "comp_c4_safety_error", "comp_c4_safety_thinking",
+            "comp_c4_safety_identify",
+            "comp_c4_safety_apply",
+            "comp_c4_safety_represent",
+            "comp_c4_safety_error",
+            "comp_c4_safety_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2943,8 +3789,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Computer Science Class 5 (4 topics) ──────────────────────────
     "Scratch Programming (Class 5)": {
         "allowed_skill_tags": [
-            "comp_c5_scratch_identify", "comp_c5_scratch_apply", "comp_c5_scratch_represent",
-            "comp_c5_scratch_error", "comp_c5_scratch_thinking",
+            "comp_c5_scratch_identify",
+            "comp_c5_scratch_apply",
+            "comp_c5_scratch_represent",
+            "comp_c5_scratch_error",
+            "comp_c5_scratch_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2960,8 +3809,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Internet Basics (Class 5)": {
         "allowed_skill_tags": [
-            "comp_c5_internet_identify", "comp_c5_internet_apply", "comp_c5_internet_represent",
-            "comp_c5_internet_error", "comp_c5_internet_thinking",
+            "comp_c5_internet_identify",
+            "comp_c5_internet_apply",
+            "comp_c5_internet_represent",
+            "comp_c5_internet_error",
+            "comp_c5_internet_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2977,8 +3829,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "MS PowerPoint Basics (Class 5)": {
         "allowed_skill_tags": [
-            "comp_c5_ppt_identify", "comp_c5_ppt_apply", "comp_c5_ppt_represent",
-            "comp_c5_ppt_error", "comp_c5_ppt_thinking",
+            "comp_c5_ppt_identify",
+            "comp_c5_ppt_apply",
+            "comp_c5_ppt_represent",
+            "comp_c5_ppt_error",
+            "comp_c5_ppt_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -2994,8 +3849,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Digital Citizenship (Class 5)": {
         "allowed_skill_tags": [
-            "comp_c5_digital_identify", "comp_c5_digital_apply", "comp_c5_digital_represent",
-            "comp_c5_digital_error", "comp_c5_digital_thinking",
+            "comp_c5_digital_identify",
+            "comp_c5_digital_apply",
+            "comp_c5_digital_represent",
+            "comp_c5_digital_error",
+            "comp_c5_digital_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3012,8 +3870,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── General Knowledge Class 3 (4 topics) ──────────────────────────
     "Famous Landmarks (Class 3)": {
         "allowed_skill_tags": [
-            "gk_c3_landmarks_identify", "gk_c3_landmarks_apply", "gk_c3_landmarks_represent",
-            "gk_c3_landmarks_error", "gk_c3_landmarks_thinking",
+            "gk_c3_landmarks_identify",
+            "gk_c3_landmarks_apply",
+            "gk_c3_landmarks_represent",
+            "gk_c3_landmarks_error",
+            "gk_c3_landmarks_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3029,8 +3890,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "National Symbols (Class 3)": {
         "allowed_skill_tags": [
-            "gk_c3_symbols_identify", "gk_c3_symbols_apply", "gk_c3_symbols_represent",
-            "gk_c3_symbols_error", "gk_c3_symbols_thinking",
+            "gk_c3_symbols_identify",
+            "gk_c3_symbols_apply",
+            "gk_c3_symbols_represent",
+            "gk_c3_symbols_error",
+            "gk_c3_symbols_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3046,8 +3910,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Solar System Basics (Class 3)": {
         "allowed_skill_tags": [
-            "gk_c3_solar_identify", "gk_c3_solar_apply", "gk_c3_solar_represent",
-            "gk_c3_solar_error", "gk_c3_solar_thinking",
+            "gk_c3_solar_identify",
+            "gk_c3_solar_apply",
+            "gk_c3_solar_represent",
+            "gk_c3_solar_error",
+            "gk_c3_solar_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3063,8 +3930,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Current Awareness (Class 3)": {
         "allowed_skill_tags": [
-            "gk_c3_current_identify", "gk_c3_current_apply", "gk_c3_current_represent",
-            "gk_c3_current_error", "gk_c3_current_thinking",
+            "gk_c3_current_identify",
+            "gk_c3_current_apply",
+            "gk_c3_current_represent",
+            "gk_c3_current_error",
+            "gk_c3_current_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3081,8 +3951,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── General Knowledge Class 4 (4 topics) ──────────────────────────
     "Continents and Oceans (Class 4)": {
         "allowed_skill_tags": [
-            "gk_c4_continents_identify", "gk_c4_continents_apply", "gk_c4_continents_represent",
-            "gk_c4_continents_error", "gk_c4_continents_thinking",
+            "gk_c4_continents_identify",
+            "gk_c4_continents_apply",
+            "gk_c4_continents_represent",
+            "gk_c4_continents_error",
+            "gk_c4_continents_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3098,8 +3971,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Famous Scientists (Class 4)": {
         "allowed_skill_tags": [
-            "gk_c4_scientists_identify", "gk_c4_scientists_apply", "gk_c4_scientists_represent",
-            "gk_c4_scientists_error", "gk_c4_scientists_thinking",
+            "gk_c4_scientists_identify",
+            "gk_c4_scientists_apply",
+            "gk_c4_scientists_represent",
+            "gk_c4_scientists_error",
+            "gk_c4_scientists_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3115,8 +3991,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Festivals of India (Class 4)": {
         "allowed_skill_tags": [
-            "gk_c4_festivals_identify", "gk_c4_festivals_apply", "gk_c4_festivals_represent",
-            "gk_c4_festivals_error", "gk_c4_festivals_thinking",
+            "gk_c4_festivals_identify",
+            "gk_c4_festivals_apply",
+            "gk_c4_festivals_represent",
+            "gk_c4_festivals_error",
+            "gk_c4_festivals_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3132,8 +4011,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Sports and Games (Class 4)": {
         "allowed_skill_tags": [
-            "gk_c4_sports_identify", "gk_c4_sports_apply", "gk_c4_sports_represent",
-            "gk_c4_sports_error", "gk_c4_sports_thinking",
+            "gk_c4_sports_identify",
+            "gk_c4_sports_apply",
+            "gk_c4_sports_represent",
+            "gk_c4_sports_error",
+            "gk_c4_sports_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3150,8 +4032,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── General Knowledge Class 5 (4 topics) ──────────────────────────
     "Indian Constitution (Class 5)": {
         "allowed_skill_tags": [
-            "gk_c5_constitution_identify", "gk_c5_constitution_apply", "gk_c5_constitution_represent",
-            "gk_c5_constitution_error", "gk_c5_constitution_thinking",
+            "gk_c5_constitution_identify",
+            "gk_c5_constitution_apply",
+            "gk_c5_constitution_represent",
+            "gk_c5_constitution_error",
+            "gk_c5_constitution_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3167,8 +4052,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "World Heritage Sites (Class 5)": {
         "allowed_skill_tags": [
-            "gk_c5_heritage_identify", "gk_c5_heritage_apply", "gk_c5_heritage_represent",
-            "gk_c5_heritage_error", "gk_c5_heritage_thinking",
+            "gk_c5_heritage_identify",
+            "gk_c5_heritage_apply",
+            "gk_c5_heritage_represent",
+            "gk_c5_heritage_error",
+            "gk_c5_heritage_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3184,8 +4072,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Space Missions (Class 5)": {
         "allowed_skill_tags": [
-            "gk_c5_space_identify", "gk_c5_space_apply", "gk_c5_space_represent",
-            "gk_c5_space_error", "gk_c5_space_thinking",
+            "gk_c5_space_identify",
+            "gk_c5_space_apply",
+            "gk_c5_space_represent",
+            "gk_c5_space_error",
+            "gk_c5_space_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3201,8 +4092,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Environmental Awareness (Class 5)": {
         "allowed_skill_tags": [
-            "gk_c5_environment_identify", "gk_c5_environment_apply", "gk_c5_environment_represent",
-            "gk_c5_environment_error", "gk_c5_environment_thinking",
+            "gk_c5_environment_identify",
+            "gk_c5_environment_apply",
+            "gk_c5_environment_represent",
+            "gk_c5_environment_error",
+            "gk_c5_environment_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3219,8 +4113,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Moral Science Class 1 (2 topics) ──────────────────────────
     "Sharing (Class 1)": {
         "allowed_skill_tags": [
-            "moral_c1_sharing_identify", "moral_c1_sharing_apply", "moral_c1_sharing_represent",
-            "moral_c1_sharing_error", "moral_c1_sharing_thinking",
+            "moral_c1_sharing_identify",
+            "moral_c1_sharing_apply",
+            "moral_c1_sharing_represent",
+            "moral_c1_sharing_error",
+            "moral_c1_sharing_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3236,8 +4133,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Honesty (Class 1)": {
         "allowed_skill_tags": [
-            "moral_c1_honesty_identify", "moral_c1_honesty_apply", "moral_c1_honesty_represent",
-            "moral_c1_honesty_error", "moral_c1_honesty_thinking",
+            "moral_c1_honesty_identify",
+            "moral_c1_honesty_apply",
+            "moral_c1_honesty_represent",
+            "moral_c1_honesty_error",
+            "moral_c1_honesty_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3254,8 +4154,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Moral Science Class 2 (2 topics) ──────────────────────────
     "Kindness (Class 2)": {
         "allowed_skill_tags": [
-            "moral_c2_kindness_identify", "moral_c2_kindness_apply", "moral_c2_kindness_represent",
-            "moral_c2_kindness_error", "moral_c2_kindness_thinking",
+            "moral_c2_kindness_identify",
+            "moral_c2_kindness_apply",
+            "moral_c2_kindness_represent",
+            "moral_c2_kindness_error",
+            "moral_c2_kindness_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3271,8 +4174,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Respecting Elders (Class 2)": {
         "allowed_skill_tags": [
-            "moral_c2_respect_identify", "moral_c2_respect_apply", "moral_c2_respect_represent",
-            "moral_c2_respect_error", "moral_c2_respect_thinking",
+            "moral_c2_respect_identify",
+            "moral_c2_respect_apply",
+            "moral_c2_respect_represent",
+            "moral_c2_respect_error",
+            "moral_c2_respect_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3289,8 +4195,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Moral Science Class 3 (3 topics) ──────────────────────────
     "Teamwork (Class 3)": {
         "allowed_skill_tags": [
-            "moral_c3_teamwork_identify", "moral_c3_teamwork_apply", "moral_c3_teamwork_represent",
-            "moral_c3_teamwork_error", "moral_c3_teamwork_thinking",
+            "moral_c3_teamwork_identify",
+            "moral_c3_teamwork_apply",
+            "moral_c3_teamwork_represent",
+            "moral_c3_teamwork_error",
+            "moral_c3_teamwork_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3306,8 +4215,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Empathy (Class 3)": {
         "allowed_skill_tags": [
-            "moral_c3_empathy_identify", "moral_c3_empathy_apply", "moral_c3_empathy_represent",
-            "moral_c3_empathy_error", "moral_c3_empathy_thinking",
+            "moral_c3_empathy_identify",
+            "moral_c3_empathy_apply",
+            "moral_c3_empathy_represent",
+            "moral_c3_empathy_error",
+            "moral_c3_empathy_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3323,8 +4235,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Environmental Care (Class 3)": {
         "allowed_skill_tags": [
-            "moral_c3_envcare_identify", "moral_c3_envcare_apply", "moral_c3_envcare_represent",
-            "moral_c3_envcare_error", "moral_c3_envcare_thinking",
+            "moral_c3_envcare_identify",
+            "moral_c3_envcare_apply",
+            "moral_c3_envcare_represent",
+            "moral_c3_envcare_error",
+            "moral_c3_envcare_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3341,8 +4256,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Moral Science Class 4 (1 topic) ──────────────────────────
     "Leadership (Class 4)": {
         "allowed_skill_tags": [
-            "moral_c4_leadership_identify", "moral_c4_leadership_apply", "moral_c4_leadership_represent",
-            "moral_c4_leadership_error", "moral_c4_leadership_thinking",
+            "moral_c4_leadership_identify",
+            "moral_c4_leadership_apply",
+            "moral_c4_leadership_represent",
+            "moral_c4_leadership_error",
+            "moral_c4_leadership_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3359,8 +4277,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Moral Science Class 5 (2 topics) ──────────────────────────
     "Global Citizenship (Class 5)": {
         "allowed_skill_tags": [
-            "moral_c5_global_identify", "moral_c5_global_apply", "moral_c5_global_represent",
-            "moral_c5_global_error", "moral_c5_global_thinking",
+            "moral_c5_global_identify",
+            "moral_c5_global_apply",
+            "moral_c5_global_represent",
+            "moral_c5_global_error",
+            "moral_c5_global_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3376,8 +4297,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Digital Ethics (Class 5)": {
         "allowed_skill_tags": [
-            "moral_c5_digital_identify", "moral_c5_digital_apply", "moral_c5_digital_represent",
-            "moral_c5_digital_error", "moral_c5_digital_thinking",
+            "moral_c5_digital_identify",
+            "moral_c5_digital_apply",
+            "moral_c5_digital_represent",
+            "moral_c5_digital_error",
+            "moral_c5_digital_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3394,8 +4318,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Health & Physical Education Class 1 (3 topics) ──────────────────────────
     "Personal Hygiene (Class 1)": {
         "allowed_skill_tags": [
-            "health_c1_hygiene_identify", "health_c1_hygiene_apply", "health_c1_hygiene_represent",
-            "health_c1_hygiene_error", "health_c1_hygiene_thinking",
+            "health_c1_hygiene_identify",
+            "health_c1_hygiene_apply",
+            "health_c1_hygiene_represent",
+            "health_c1_hygiene_error",
+            "health_c1_hygiene_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3411,8 +4338,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Good Posture (Class 1)": {
         "allowed_skill_tags": [
-            "health_c1_posture_identify", "health_c1_posture_apply", "health_c1_posture_represent",
-            "health_c1_posture_error", "health_c1_posture_thinking",
+            "health_c1_posture_identify",
+            "health_c1_posture_apply",
+            "health_c1_posture_represent",
+            "health_c1_posture_error",
+            "health_c1_posture_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3428,8 +4358,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Basic Physical Activities (Class 1)": {
         "allowed_skill_tags": [
-            "health_c1_physical_identify", "health_c1_physical_apply", "health_c1_physical_represent",
-            "health_c1_physical_error", "health_c1_physical_thinking",
+            "health_c1_physical_identify",
+            "health_c1_physical_apply",
+            "health_c1_physical_represent",
+            "health_c1_physical_error",
+            "health_c1_physical_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3446,8 +4379,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Health & Physical Education Class 2 (3 topics) ──────────────────────────
     "Healthy Eating Habits (Class 2)": {
         "allowed_skill_tags": [
-            "health_c2_eating_identify", "health_c2_eating_apply", "health_c2_eating_represent",
-            "health_c2_eating_error", "health_c2_eating_thinking",
+            "health_c2_eating_identify",
+            "health_c2_eating_apply",
+            "health_c2_eating_represent",
+            "health_c2_eating_error",
+            "health_c2_eating_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3463,8 +4399,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Outdoor Play (Class 2)": {
         "allowed_skill_tags": [
-            "health_c2_outdoor_identify", "health_c2_outdoor_apply", "health_c2_outdoor_represent",
-            "health_c2_outdoor_error", "health_c2_outdoor_thinking",
+            "health_c2_outdoor_identify",
+            "health_c2_outdoor_apply",
+            "health_c2_outdoor_represent",
+            "health_c2_outdoor_error",
+            "health_c2_outdoor_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3480,8 +4419,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Basic Stretching (Class 2)": {
         "allowed_skill_tags": [
-            "health_c2_stretching_identify", "health_c2_stretching_apply", "health_c2_stretching_represent",
-            "health_c2_stretching_error", "health_c2_stretching_thinking",
+            "health_c2_stretching_identify",
+            "health_c2_stretching_apply",
+            "health_c2_stretching_represent",
+            "health_c2_stretching_error",
+            "health_c2_stretching_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3498,8 +4440,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Health & Physical Education Class 3 (3 topics) ──────────────────────────
     "Balanced Diet (Class 3)": {
         "allowed_skill_tags": [
-            "health_c3_diet_identify", "health_c3_diet_apply", "health_c3_diet_represent",
-            "health_c3_diet_error", "health_c3_diet_thinking",
+            "health_c3_diet_identify",
+            "health_c3_diet_apply",
+            "health_c3_diet_represent",
+            "health_c3_diet_error",
+            "health_c3_diet_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3515,8 +4460,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Team Sports Rules (Class 3)": {
         "allowed_skill_tags": [
-            "health_c3_sports_identify", "health_c3_sports_apply", "health_c3_sports_represent",
-            "health_c3_sports_error", "health_c3_sports_thinking",
+            "health_c3_sports_identify",
+            "health_c3_sports_apply",
+            "health_c3_sports_represent",
+            "health_c3_sports_error",
+            "health_c3_sports_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3532,8 +4480,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Safety at Play (Class 3)": {
         "allowed_skill_tags": [
-            "health_c3_safety_identify", "health_c3_safety_apply", "health_c3_safety_represent",
-            "health_c3_safety_error", "health_c3_safety_thinking",
+            "health_c3_safety_identify",
+            "health_c3_safety_apply",
+            "health_c3_safety_represent",
+            "health_c3_safety_error",
+            "health_c3_safety_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3550,8 +4501,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Health & Physical Education Class 4 (3 topics) ──────────────────────────
     "First Aid Basics (Class 4)": {
         "allowed_skill_tags": [
-            "health_c4_firstaid_identify", "health_c4_firstaid_apply", "health_c4_firstaid_represent",
-            "health_c4_firstaid_error", "health_c4_firstaid_thinking",
+            "health_c4_firstaid_identify",
+            "health_c4_firstaid_apply",
+            "health_c4_firstaid_represent",
+            "health_c4_firstaid_error",
+            "health_c4_firstaid_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3567,8 +4521,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Yoga Introduction (Class 4)": {
         "allowed_skill_tags": [
-            "health_c4_yoga_identify", "health_c4_yoga_apply", "health_c4_yoga_represent",
-            "health_c4_yoga_error", "health_c4_yoga_thinking",
+            "health_c4_yoga_identify",
+            "health_c4_yoga_apply",
+            "health_c4_yoga_represent",
+            "health_c4_yoga_error",
+            "health_c4_yoga_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3584,8 +4541,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Importance of Sleep (Class 4)": {
         "allowed_skill_tags": [
-            "health_c4_sleep_identify", "health_c4_sleep_apply", "health_c4_sleep_represent",
-            "health_c4_sleep_error", "health_c4_sleep_thinking",
+            "health_c4_sleep_identify",
+            "health_c4_sleep_apply",
+            "health_c4_sleep_represent",
+            "health_c4_sleep_error",
+            "health_c4_sleep_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3602,8 +4562,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     # ── Health & Physical Education Class 5 (3 topics) ──────────────────────────
     "Fitness and Stamina (Class 5)": {
         "allowed_skill_tags": [
-            "health_c5_fitness_identify", "health_c5_fitness_apply", "health_c5_fitness_represent",
-            "health_c5_fitness_error", "health_c5_fitness_thinking",
+            "health_c5_fitness_identify",
+            "health_c5_fitness_apply",
+            "health_c5_fitness_represent",
+            "health_c5_fitness_error",
+            "health_c5_fitness_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3619,8 +4582,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Nutrition Labels Reading (Class 5)": {
         "allowed_skill_tags": [
-            "health_c5_nutrition_identify", "health_c5_nutrition_apply", "health_c5_nutrition_represent",
-            "health_c5_nutrition_error", "health_c5_nutrition_thinking",
+            "health_c5_nutrition_identify",
+            "health_c5_nutrition_apply",
+            "health_c5_nutrition_represent",
+            "health_c5_nutrition_error",
+            "health_c5_nutrition_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3636,8 +4602,11 @@ TOPIC_PROFILES: dict[str, dict] = {
     },
     "Mental Health Awareness (Class 5)": {
         "allowed_skill_tags": [
-            "health_c5_mental_identify", "health_c5_mental_apply", "health_c5_mental_represent",
-            "health_c5_mental_error", "health_c5_mental_thinking",
+            "health_c5_mental_identify",
+            "health_c5_mental_apply",
+            "health_c5_mental_represent",
+            "health_c5_mental_error",
+            "health_c5_mental_thinking",
         ],
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["add", "subtract", "multiply", "divide", "calculate", "fraction", "decimal"],
@@ -3656,7 +4625,6 @@ TOPIC_PROFILES: dict[str, dict] = {
 
 def normalize_topic(topic: str) -> str:
     return (topic or "").strip()
-
 
 
 # Fuzzy aliases: frontend may send short names like "Multiplication"
@@ -4376,21 +5344,25 @@ _TOPIC_ALIASES: dict[str, str] = {
 }
 
 
-
 # Maps frontend subject strings → canonical group matching skill-tag prefixes.
 _SUBJECT_TO_PROFILE_GROUP: dict[str, str] = {
-    "maths": "Maths", "math": "Maths", "mathematics": "Maths",
+    "maths": "Maths",
+    "math": "Maths",
+    "mathematics": "Maths",
     "english": "English",
-    "evs": "Science/EVS", "science": "Science/EVS",
+    "evs": "Science/EVS",
+    "science": "Science/EVS",
     "hindi": "Hindi",
-    "computer": "Computer", "computers": "Computer",
-    "gk": "GK", "general knowledge": "GK",
-    "moral science": "Moral", "moral": "Moral",
+    "computer": "Computer",
+    "computers": "Computer",
+    "gk": "GK",
+    "general knowledge": "GK",
+    "moral science": "Moral",
+    "moral": "Moral",
     "health": "Health",
     "health & physical education": "Health",
     "health and physical education": "Health",
 }
-
 
 
 def _profile_subject_group(profile: dict) -> str:
@@ -4411,7 +5383,6 @@ def _profile_subject_group(profile: dict) -> str:
     if any(t.startswith("health_") for t in tags):
         return "Health"
     return "Maths"
-
 
 
 def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
@@ -4464,4 +5435,3 @@ def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
                 if _ok(_v):
                     return _v
     return None
-

@@ -1,7 +1,9 @@
 """
 Access logging middleware — logs every request with timing.
 """
+
 import time
+
 import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request

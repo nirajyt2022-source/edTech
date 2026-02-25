@@ -2,8 +2,9 @@
 
 import logging
 
-from .base import SkillContract
 from app.skills.math_utils import make_carry_pair
+
+from .base import SkillContract
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +32,7 @@ class ColumnAdditionContract(SkillContract):
             return issues
 
         # Compute expected total from slots
-        expected = (
-            slots["hundreds_sum"] * 100
-            + slots["tens_sum"] * 10
-            + slots["ones_sum"]
-        )
+        expected = slots["hundreds_sum"] * 100 + slots["tens_sum"] * 10 + slots["ones_sum"]
 
         # Validate numeric answer consistency (if present)
         answer = question.get("answer") or question.get("correct_answer")
@@ -183,11 +180,7 @@ class ColumnAdditionContract(SkillContract):
             + f" = {slots['hundreds_sum']}"
         )
 
-        final_answer = str(
-            slots["hundreds_sum"] * 100
-            + slots["tens_sum"] * 10
-            + slots["ones_sum"]
-        )
+        final_answer = str(slots["hundreds_sum"] * 100 + slots["tens_sum"] * 10 + slots["ones_sum"])
 
         return {
             "steps": steps,
@@ -207,11 +200,7 @@ class ColumnAdditionContract(SkillContract):
         if not slots:
             return result
 
-        expected = (
-            slots["hundreds_sum"] * 100
-            + slots["tens_sum"] * 10
-            + slots["ones_sum"]
-        )
+        expected = slots["hundreds_sum"] * 100 + slots["tens_sum"] * 10 + slots["ones_sum"]
 
         try:
             student = int(student_answer)

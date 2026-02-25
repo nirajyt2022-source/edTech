@@ -12,6 +12,7 @@ Usage:
     if context:
         enriched_prompt = f"{context}\n\n{original_prompt}"
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -50,23 +51,27 @@ async def get_curriculum_context(
 
     try:
         sb = get_supabase_client()
-        result = sb.table("curriculum_content") \
-            .select("*") \
-            .eq("grade", grade) \
-            .eq("subject", subject) \
-            .eq("topic", topic) \
-            .maybe_single() \
+        result = (
+            sb.table("curriculum_content")
+            .select("*")
+            .eq("grade", grade)
+            .eq("subject", subject)
+            .eq("topic", topic)
+            .maybe_single()
             .execute()
+        )
 
         if not result.data:
             # Try fuzzy match -- topic name might differ slightly
-            result = sb.table("curriculum_content") \
-                .select("*") \
-                .eq("grade", grade) \
-                .eq("subject", subject) \
-                .ilike("topic", f"%{topic}%") \
-                .limit(1) \
+            result = (
+                sb.table("curriculum_content")
+                .select("*")
+                .eq("grade", grade)
+                .eq("subject", subject)
+                .ilike("topic", f"%{topic}%")
+                .limit(1)
                 .execute()
+            )
 
             if not result.data or len(result.data) == 0:
                 logger.info("curriculum_not_found", grade=grade, subject=subject, topic=topic)

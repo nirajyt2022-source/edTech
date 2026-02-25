@@ -3,15 +3,15 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Header, Query
+from fastapi import APIRouter, Header, HTTPException, Query
 from supabase import create_client
 
 from app.core.config import get_settings
 from app.services.learning_graph import (
-    get_learning_graph_service,
-    _clean_topic_name,
     _build_recommendation_reason,
     _build_report_text,
+    _clean_topic_name,
+    get_learning_graph_service,
 )
 
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ router = APIRouter(prefix="/api/children", tags=["learning-graph"])
 # ---------------------------------------------------------------------------
 # Auth helpers (same pattern as children.py)
 # ---------------------------------------------------------------------------
+
 
 def _get_user_id(authorization: str) -> str:
     """Extract user_id from Supabase JWT token."""
@@ -67,6 +68,7 @@ def _verify_ownership(child_id: str, user_id: str) -> dict:
 # Endpoint 1: Full graph
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{child_id}/graph")
 def get_child_graph(
     child_id: str,
@@ -88,6 +90,7 @@ def get_child_graph(
 # Endpoint 2: Summary
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{child_id}/graph/summary")
 def get_child_graph_summary(
     child_id: str,
@@ -108,6 +111,7 @@ def get_child_graph_summary(
 # ---------------------------------------------------------------------------
 # Endpoint 3: History
 # ---------------------------------------------------------------------------
+
 
 @router.get("/{child_id}/graph/history")
 def get_child_graph_history(
@@ -132,9 +136,7 @@ def get_child_graph_history(
         )
         rows = getattr(r, "data", None) or []
     except Exception as exc:
-        logger.error(
-            "[learning_graph.get_child_graph_history] DB error for child %s: %s", child_id, exc
-        )
+        logger.error("[learning_graph.get_child_graph_history] DB error for child %s: %s", child_id, exc)
         raise HTTPException(status_code=500, detail="Failed to load history")
     return {"child_id": child_id, "sessions": rows, "count": len(rows)}
 
@@ -181,7 +183,8 @@ def get_child_next_recommendation(
     except Exception as exc:
         logger.error(
             "[learning_graph.get_child_next_recommendation] DB error for child %s: %s",
-            child_id, exc,
+            child_id,
+            exc,
         )
         raise HTTPException(status_code=500, detail="Failed to load topic mastery")
 
@@ -213,6 +216,7 @@ def get_child_next_recommendation(
 # Endpoint 5: Plain-English Report
 # ---------------------------------------------------------------------------
 
+
 @router.get("/{child_id}/graph/report")
 def get_child_graph_report(
     child_id: str,
@@ -236,7 +240,8 @@ def get_child_graph_report(
     except Exception as exc:
         logger.error(
             "[learning_graph.get_child_graph_report] Summary error for child %s: %s",
-            child_id, exc,
+            child_id,
+            exc,
         )
         raise HTTPException(status_code=500, detail="Failed to load summary")
 
@@ -251,10 +256,7 @@ def get_child_graph_report(
     try:
         r = (
             supabase.table("topic_mastery")
-            .select(
-                "topic_slug, subject, mastery_level, "
-                "streak, sessions_total, last_practiced_at"
-            )
+            .select("topic_slug, subject, mastery_level, streak, sessions_total, last_practiced_at")
             .eq("child_id", child_id)
             .execute()
         )
@@ -269,9 +271,7 @@ def get_child_graph_report(
                 "subject": best.get("subject") or "",
             }
     except Exception as exc:
-        logger.warning(
-            "[learning_graph.get_child_graph_report] Recommendation lookup failed: %s", exc
-        )
+        logger.warning("[learning_graph.get_child_graph_report] Recommendation lookup failed: %s", exc)
 
     return {
         "child_name": child_name,

@@ -12,14 +12,14 @@ Flow:
 import io
 import logging
 
-from fastapi import APIRouter, HTTPException, Header, Request
+from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
-
-from app.middleware.rate_limit import limiter
 from pydantic import BaseModel, field_validator
-from app.middleware.sanitize import VALID_GRADES, VALID_SUBJECTS
 from supabase import create_client
+
 from app.core.config import get_settings
+from app.middleware.rate_limit import limiter
+from app.middleware.sanitize import VALID_GRADES, VALID_SUBJECTS
 from app.services.revision_pdf import generate_revision_pdf
 from app.services.subscription_check import check_ai_usage_allowed
 
@@ -48,10 +48,11 @@ def get_user_id_from_token(authorization: str) -> str:
 
 # ── Pydantic models ──────────────────────────────────────────────────────
 
+
 class RevisionRequest(BaseModel):
-    grade: str          # e.g. "Class 3"
-    subject: str        # e.g. "Maths"
-    topic: str          # e.g. "Fractions"
+    grade: str  # e.g. "Class 3"
+    subject: str  # e.g. "Maths"
+    topic: str  # e.g. "Fractions"
     language: str = "English"  # or "Hindi"
 
     @field_validator("grade")
@@ -111,6 +112,7 @@ class RevisionResponse(BaseModel):
 
 # ── Endpoints ─────────────────────────────────────────────────────────────
 
+
 @router.post("/generate", response_model=RevisionResponse)
 @limiter.limit("10/minute")
 async def generate_revision_notes(request: Request, req: RevisionRequest, authorization: str = Header(...)):
@@ -124,6 +126,7 @@ async def generate_revision_notes(request: Request, req: RevisionRequest, author
 
     # -- Cache check --
     from app.services.cache import get_cached_revision, set_cached_revision
+
     cached = get_cached_revision(req.grade, req.subject, req.topic, req.language)
     if cached:
         result = cached
@@ -132,6 +135,7 @@ async def generate_revision_notes(request: Request, req: RevisionRequest, author
 
         # -- RAG: Inject curriculum context --
         from app.services.curriculum import get_curriculum_context
+
         curriculum_ctx = await get_curriculum_context(req.grade, req.subject, req.topic)
         if curriculum_ctx:
             prompt = f"{curriculum_ctx}\n\n{prompt}"
@@ -142,6 +146,7 @@ async def generate_revision_notes(request: Request, req: RevisionRequest, author
 
         # Validate output
         from app.services.output_validator import get_validator
+
         is_valid, errors = get_validator().validate_revision(result)
         if not is_valid:
             logger.warning("Revision validation issues", extra={"errors": errors})
@@ -166,19 +171,19 @@ async def export_revision_pdf(request: Request, notes: RevisionResponse, authori
     user_id = get_user_id_from_token(authorization)
 
     import asyncio
+
     pdf_bytes = await asyncio.to_thread(generate_revision_pdf, notes)
     logger.info(f"Revision PDF exported for user={user_id}: {notes.topic}")
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
-        headers={
-            "Content-Disposition": f"attachment; filename=revision_{notes.topic.replace(' ', '_')}.pdf"
-        },
+        headers={"Content-Disposition": f"attachment; filename=revision_{notes.topic.replace(' ', '_')}.pdf"},
     )
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────
+
 
 def _build_revision_prompt(grade: str, subject: str, topic: str, language: str) -> str:
     """Build a structured prompt for Gemini to generate revision notes."""
@@ -261,6 +266,7 @@ REQUIREMENTS:
 async def _call_gemini_for_revision(prompt: str) -> dict:
     """Call Gemini 2.5 Flash and parse the JSON response."""
     import asyncio
+
     from app.services.ai_client import get_ai_client
 
     try:

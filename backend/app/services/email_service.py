@@ -7,6 +7,7 @@ Rules:
     asyncio.to_thread so the FastAPI event loop is never blocked.
   - One email per child/parent pair; skips children with no email on record.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -23,16 +24,18 @@ def _get_share_base() -> str:
     global _SHARE_BASE
     if _SHARE_BASE is None:
         from app.core.config import get_settings
+
         _SHARE_BASE = get_settings().frontend_url
     return _SHARE_BASE
 
+
 # ── Colours (same palette as ClassReport.tsx) ─────────────────────────────────
-_GREEN  = "#2d6a4f"
-_AMBER  = "#b45309"
-_BG     = "#f5f4f0"
-_CARD   = "#ffffff"
-_MUTED  = "#6b7280"
-_BODY   = "#374151"
+_GREEN = "#2d6a4f"
+_AMBER = "#b45309"
+_BG = "#f5f4f0"
+_CARD = "#ffffff"
+_MUTED = "#6b7280"
+_BODY = "#374151"
 _BORDER = "#e5e7eb"
 
 
@@ -64,9 +67,7 @@ class EmailService:
             {"sent": N, "skipped": M}
         """
         if not self._api_key:
-            logger.warning(
-                "[EmailService] RESEND_API_KEY not configured — skipping email send"
-            )
+            logger.warning("[EmailService] RESEND_API_KEY not configured — skipping email send")
             return {
                 "sent": 0,
                 "skipped": len(report.get("children", [])),
@@ -91,12 +92,15 @@ class EmailService:
                 sent += 1
                 logger.info(
                     "[EmailService] Sent report for child %r to %s",
-                    child.get("name"), email,
+                    child.get("name"),
+                    email,
                 )
             except Exception as exc:
                 logger.error(
                     "[EmailService] Failed to send to %s for child %r: %s",
-                    email, child.get("name"), exc,
+                    email,
+                    child.get("name"),
+                    exc,
                 )
                 skipped += 1
 
@@ -109,13 +113,16 @@ class EmailService:
     def _send_one(self, to_email: str, subject: str, html: str) -> None:
         """Synchronous resend API call — run via asyncio.to_thread."""
         import resend  # imported here so tests that skip email don't need resend installed
+
         resend.api_key = self._api_key
-        resend.Emails.send({
-            "from": self._from_email,
-            "to": [to_email],
-            "subject": subject,
-            "html": html,
-        })
+        resend.Emails.send(
+            {
+                "from": self._from_email,
+                "to": [to_email],
+                "subject": subject,
+                "html": html,
+            }
+        )
 
     def _build_email_html(
         self,
@@ -125,16 +132,16 @@ class EmailService:
     ) -> str:
         """Build a Gmail-safe HTML email for one child's weekly report."""
 
-        class_name  = escape(report.get("class_name", "Your Class"))
+        class_name = escape(report.get("class_name", "Your Class"))
         subject_str = escape(report.get("subject", ""))
-        grade       = escape(str(report.get("grade", "")))
-        report_url  = escape(report.get("_report_url", ""))  # injected by the endpoint
+        grade = escape(str(report.get("grade", "")))
+        report_url = escape(report.get("_report_url", ""))  # injected by the endpoint
 
-        child_name  = escape(child.get("name", "Your child"))
+        child_name = escape(child.get("name", "Your child"))
         report_text = escape(child.get("report_text", ""))
-        mastered    = int(child.get("mastered_count", 0))
-        needs_attn  = int(child.get("needs_attention_count", 0))
-        rec         = child.get("recommendation", "")
+        mastered = int(child.get("mastered_count", 0))
+        needs_attn = int(child.get("needs_attention_count", 0))
+        rec = child.get("recommendation", "")
 
         teacher_label = escape(teacher_name) if teacher_name else "Your Teacher"
 
@@ -149,9 +156,9 @@ class EmailService:
         # ── Mastered badge ────────────────────────────────────────────────────
         mastered_badge = (
             f'<span style="display:inline-block;padding:4px 12px;'
-            f'background:#d1fae5;color:#065f46;border-radius:20px;'
+            f"background:#d1fae5;color:#065f46;border-radius:20px;"
             f'font-size:13px;font-weight:700;margin-right:8px;">'
-            f'&#9679; {mastered} Mastered</span>'
+            f"&#9679; {mastered} Mastered</span>"
         )
 
         # ── Needs-practice badge (only if >0) ─────────────────────────────────
@@ -159,9 +166,9 @@ class EmailService:
         if needs_attn > 0:
             needs_badge = (
                 f'<span style="display:inline-block;padding:4px 12px;'
-                f'background:#fef3c7;color:#92400e;border-radius:20px;'
+                f"background:#fef3c7;color:#92400e;border-radius:20px;"
                 f'font-size:13px;font-weight:700;">'
-                f'&#9679; {needs_attn} Need Practice</span>'
+                f"&#9679; {needs_attn} Need Practice</span>"
             )
 
         # ── Recommendation block (only if present) ────────────────────────────
@@ -174,19 +181,23 @@ class EmailService:
                 f'<p style="margin:0 0 4px;font-size:10px;font-weight:700;'
                 f'color:#15803d;text-transform:uppercase;letter-spacing:0.05em;">This week</p>'
                 f'<p style="margin:0;font-size:13px;color:#166534;line-height:1.5;">{rec_display}</p>'
-                f'</div>'
+                f"</div>"
             )
 
         # ── CTA button ────────────────────────────────────────────────────────
         cta = (
-            f'<div style="margin-top:24px;">'
-            f'<a href="{report_url}" '
-            f'style="display:inline-block;padding:12px 28px;background:{_GREEN};'
-            f'color:#ffffff;text-decoration:none;border-radius:8px;'
-            f'font-size:14px;font-weight:700;font-family:Arial,sans-serif;">'
-            f'View Full Report &rarr;</a>'
-            f'</div>'
-        ) if report_url else ""
+            (
+                f'<div style="margin-top:24px;">'
+                f'<a href="{report_url}" '
+                f'style="display:inline-block;padding:12px 28px;background:{_GREEN};'
+                f"color:#ffffff;text-decoration:none;border-radius:8px;"
+                f'font-size:14px;font-weight:700;font-family:Arial,sans-serif;">'
+                f"View Full Report &rarr;</a>"
+                f"</div>"
+            )
+            if report_url
+            else ""
+        )
 
         return f"""<!DOCTYPE html>
 <html lang="en">

@@ -3,8 +3,9 @@
 import logging
 import random
 
-from .base import SkillContract
 from app.skills.math_utils import make_carry_pair
+
+from .base import SkillContract
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +31,7 @@ class ColumnSubtractionWithBorrowContract(SkillContract):
             issues.append("slots_missing")
             return issues
 
-        expected = (
-            slots["hundreds_sum"] * 100
-            + slots["tens_sum"] * 10
-            + slots["ones_sum"]
-        )
+        expected = slots["hundreds_sum"] * 100 + slots["tens_sum"] * 10 + slots["ones_sum"]
 
         answer = question.get("answer") or question.get("correct_answer")
         try:
@@ -162,9 +159,7 @@ class ColumnSubtractionWithBorrowContract(SkillContract):
         steps = []
 
         steps.append(
-            f"Ones: {a % 10} − {b % 10}"
-            + (" (borrow 1 from tens)" if borrow_ones else "")
-            + f" → {slots['ones_sum']}"
+            f"Ones: {a % 10} − {b % 10}" + (" (borrow 1 from tens)" if borrow_ones else "") + f" → {slots['ones_sum']}"
         )
 
         steps.append(
@@ -173,16 +168,9 @@ class ColumnSubtractionWithBorrowContract(SkillContract):
             + f" → {slots['tens_sum']}"
         )
 
-        steps.append(
-            f"Hundreds: {(a // 100) % 10} − {(b // 100) % 10}"
-            + f" → {slots['hundreds_sum']}"
-        )
+        steps.append(f"Hundreds: {(a // 100) % 10} − {(b // 100) % 10}" + f" → {slots['hundreds_sum']}")
 
-        final_answer = str(
-            slots["hundreds_sum"] * 100
-            + slots["tens_sum"] * 10
-            + slots["ones_sum"]
-        )
+        final_answer = str(slots["hundreds_sum"] * 100 + slots["tens_sum"] * 10 + slots["ones_sum"])
 
         return {
             "steps": steps,
@@ -202,11 +190,7 @@ class ColumnSubtractionWithBorrowContract(SkillContract):
         if not slots:
             return result
 
-        expected = (
-            slots["hundreds_sum"] * 100
-            + slots["tens_sum"] * 10
-            + slots["ones_sum"]
-        )
+        expected = slots["hundreds_sum"] * 100 + slots["tens_sum"] * 10 + slots["ones_sum"]
 
         try:
             student = int(student_answer)

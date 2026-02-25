@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, Header, Request
-from pydantic import BaseModel
-from datetime import datetime
 import logging
+from datetime import datetime
+
+from fastapi import APIRouter, Header, HTTPException, Request
+from pydantic import BaseModel
 from supabase import create_client
+
 from app.core.config import get_settings
 from app.middleware.rate_limit import limiter
 
@@ -49,34 +51,28 @@ def get_user_id_from_token(authorization: str) -> str:
 
 @router.get("/{child_id}/{subject}")
 @limiter.limit("60/minute")
-async def get_topic_preferences(
-    request: Request,
-    child_id: str,
-    subject: str,
-    authorization: str = Header(...)
-):
+async def get_topic_preferences(request: Request, child_id: str, subject: str, authorization: str = Header(...)):
     """Get saved topic preferences for a child and subject."""
     user_id = get_user_id_from_token(authorization)
 
     try:
         # Verify child belongs to user
-        child_result = supabase.table("children") \
-            .select("id") \
-            .eq("id", child_id) \
-            .eq("user_id", user_id) \
-            .single() \
-            .execute()
+        child_result = (
+            supabase.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
+        )
 
         if not child_result.data:
             raise HTTPException(status_code=404, detail="Child not found")
 
         # Get preferences
-        result = supabase.table("topic_preferences") \
-            .select("*") \
-            .eq("child_id", child_id) \
-            .eq("subject", subject) \
-            .single() \
+        result = (
+            supabase.table("topic_preferences")
+            .select("*")
+            .eq("child_id", child_id)
+            .eq("subject", subject)
+            .single()
             .execute()
+        )
 
         if not result.data:
             # Return empty preferences (means all selected by default)
@@ -84,7 +80,7 @@ async def get_topic_preferences(
                 "child_id": child_id,
                 "subject": subject,
                 "selected_topics": None,  # None means all selected
-                "has_preferences": False
+                "has_preferences": False,
             }
 
         return {
@@ -92,7 +88,7 @@ async def get_topic_preferences(
             "child_id": result.data["child_id"],
             "subject": result.data["subject"],
             "selected_topics": result.data["selected_topics"],
-            "has_preferences": True
+            "has_preferences": True,
         }
 
     except HTTPException:
@@ -100,52 +96,44 @@ async def get_topic_preferences(
     except Exception as e:
         # If no preferences found, return empty (all selected)
         if "No rows" in str(e) or "0 rows" in str(e):
-            return {
-                "child_id": child_id,
-                "subject": subject,
-                "selected_topics": None,
-                "has_preferences": False
-            }
+            return {"child_id": child_id, "subject": subject, "selected_topics": None, "has_preferences": False}
         logger.error("Failed to get preferences: %s", e)
         raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
 
 
 @router.post("/")
 @limiter.limit("30/minute")
-async def save_topic_preferences(
-    request: Request,
-    body: SavePreferencesRequest,
-    authorization: str = Header(...)
-):
+async def save_topic_preferences(request: Request, body: SavePreferencesRequest, authorization: str = Header(...)):
     """Save topic preferences for a child and subject."""
     user_id = get_user_id_from_token(authorization)
 
     try:
         # Verify child belongs to user
-        child_result = supabase.table("children") \
-            .select("id") \
-            .eq("id", body.child_id) \
-            .eq("user_id", user_id) \
-            .single() \
-            .execute()
+        child_result = (
+            supabase.table("children").select("id").eq("id", body.child_id).eq("user_id", user_id).single().execute()
+        )
 
         if not child_result.data:
             raise HTTPException(status_code=404, detail="Child not found")
 
         # Convert to JSON-serializable format
-        selected_topics_data = [
-            {"chapter": t.chapter, "topics": t.topics}
-            for t in body.selected_topics
-        ]
+        selected_topics_data = [{"chapter": t.chapter, "topics": t.topics} for t in body.selected_topics]
 
         # Upsert preferences
-        result = supabase.table("topic_preferences").upsert({
-            "user_id": user_id,
-            "child_id": body.child_id,
-            "subject": body.subject,
-            "selected_topics": selected_topics_data,
-            "updated_at": datetime.now().isoformat()
-        }, on_conflict="child_id,subject").execute()
+        result = (
+            supabase.table("topic_preferences")
+            .upsert(
+                {
+                    "user_id": user_id,
+                    "child_id": body.child_id,
+                    "subject": body.subject,
+                    "selected_topics": selected_topics_data,
+                    "updated_at": datetime.now().isoformat(),
+                },
+                on_conflict="child_id,subject",
+            )
+            .execute()
+        )
 
         if result.data:
             return {"success": True, "preferences": result.data[0]}
@@ -161,22 +149,14 @@ async def save_topic_preferences(
 
 @router.delete("/{child_id}/{subject}")
 @limiter.limit("30/minute")
-async def clear_topic_preferences(
-    request: Request,
-    child_id: str,
-    subject: str,
-    authorization: str = Header(...)
-):
+async def clear_topic_preferences(request: Request, child_id: str, subject: str, authorization: str = Header(...)):
     """Clear topic preferences (reset to all selected)."""
     user_id = get_user_id_from_token(authorization)
 
     try:
-        supabase.table("topic_preferences") \
-            .delete() \
-            .eq("child_id", child_id) \
-            .eq("subject", subject) \
-            .eq("user_id", user_id) \
-            .execute()
+        supabase.table("topic_preferences").delete().eq("child_id", child_id).eq("subject", subject).eq(
+            "user_id", user_id
+        ).execute()
 
         return {"success": True, "message": "Preferences cleared"}
 

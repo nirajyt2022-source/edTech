@@ -23,6 +23,7 @@ async def deep_health(request: Request):
     # 1. Supabase
     try:
         from app.core.deps import get_supabase_client
+
         sb = get_supabase_client()
         sb.table("profiles").select("id").limit(1).execute()
         checks["supabase"] = "ok"
@@ -32,6 +33,7 @@ async def deep_health(request: Request):
     # 2. Gemini API
     try:
         from app.services.ai_client import get_ai_client
+
         ai = get_ai_client()
         ai.generate_text("Reply with 'ok'", temperature=0, max_tokens=5)
         checks["gemini"] = "ok"
@@ -41,6 +43,7 @@ async def deep_health(request: Request):
     # 3. AI client stats
     try:
         from app.services.ai_client import get_ai_client
+
         checks["ai_stats"] = get_ai_client().stats
     except Exception:
         checks["ai_stats"] = "unavailable"
@@ -48,6 +51,7 @@ async def deep_health(request: Request):
     # 4. Curriculum content count
     try:
         from app.core.deps import get_supabase_client as _get_sb
+
         count_result = _get_sb().table("curriculum_content").select("id", count="exact").execute()
         checks["curriculum_topics"] = count_result.count or 0
     except Exception:
@@ -56,6 +60,7 @@ async def deep_health(request: Request):
     # 5. Cache stats
     try:
         from app.services.cache import cache_stats
+
         checks["cache"] = cache_stats()
     except Exception:
         checks["cache"] = "unavailable"
@@ -72,6 +77,7 @@ async def deep_health(request: Request):
 async def check_curriculum(grade: str = "Class 3", subject: str = "Maths", topic: str = "Fractions"):
     """Check if curriculum content exists for a topic (debug endpoint)."""
     from app.services.curriculum import get_curriculum_context
+
     context = await get_curriculum_context(grade, subject, topic)
     return {
         "grade": grade,

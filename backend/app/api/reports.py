@@ -20,6 +20,7 @@ POST /api/teacher/classes/{class_id}/report/send-email
     Body: {report_token}
     Returns {sent, skipped}.
 """
+
 from __future__ import annotations
 
 import logging
@@ -32,8 +33,8 @@ from supabase import create_client
 
 from app.core.config import get_settings
 from app.middleware.rate_limit import limiter
-from app.services.report_generator import ClassReportGenerator
 from app.services.email_service import EmailService
+from app.services.report_generator import ClassReportGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ _SHARE_BASE = settings.frontend_url
 # Pydantic request/response models
 # ---------------------------------------------------------------------------
 
+
 class ContactItem(BaseModel):
     child_id: str
     parent_email: str
@@ -61,6 +63,7 @@ class SendEmailBody(BaseModel):
 # ---------------------------------------------------------------------------
 # Auth helper (same pattern as classes.py / share.py)
 # ---------------------------------------------------------------------------
+
 
 def _get_user_id(authorization: str) -> str:
     """Extract user_id from Supabase JWT; raise 401 on failure."""
@@ -82,6 +85,7 @@ def _get_user_id(authorization: str) -> str:
 # ---------------------------------------------------------------------------
 # Endpoint 1 — generate report (teacher only)
 # ---------------------------------------------------------------------------
+
 
 @router.post("/teacher/classes/{class_id}/report")
 @limiter.limit("10/minute")
@@ -117,25 +121,15 @@ async def generate_class_report(
 # Endpoint 2 — public viewer (no auth)
 # ---------------------------------------------------------------------------
 
+
 def _increment_view_count(token: str) -> None:
     """Fire-and-forget: bump view_count for a report by token."""
     try:
-        r = (
-            supabase.table("class_reports")
-            .select("view_count")
-            .eq("token", token)
-            .maybe_single()
-            .execute()
-        )
+        r = supabase.table("class_reports").select("view_count").eq("token", token).maybe_single().execute()
         row = getattr(r, "data", None)
         if row:
             new_count = (row.get("view_count") or 0) + 1
-            (
-                supabase.table("class_reports")
-                .update({"view_count": new_count})
-                .eq("token", token)
-                .execute()
-            )
+            (supabase.table("class_reports").update({"view_count": new_count}).eq("token", token).execute())
     except Exception as exc:
         logger.warning("[reports._increment_view_count] Failed for report_id %.12s…: %s", token, exc)
 
@@ -188,6 +182,7 @@ async def get_report_by_token(
 # Endpoint 3 — list parent contacts (teacher only)
 # ---------------------------------------------------------------------------
 
+
 @router.get("/teacher/classes/{class_id}/contacts")
 @limiter.limit("60/minute")
 async def get_class_contacts(
@@ -214,11 +209,7 @@ async def get_class_contacts(
     return [
         {
             "child_id": row["child_id"],
-            "child_name": (
-                row["children"]["name"]
-                if isinstance(row.get("children"), dict)
-                else ""
-            ),
+            "child_name": (row["children"]["name"] if isinstance(row.get("children"), dict) else ""),
             "parent_email": row.get("parent_email") or "",
         }
         for row in rows
@@ -228,6 +219,7 @@ async def get_class_contacts(
 # ---------------------------------------------------------------------------
 # Endpoint 4 — upsert parent contacts (teacher only)
 # ---------------------------------------------------------------------------
+
 
 @router.post("/teacher/classes/{class_id}/contacts")
 @limiter.limit("30/minute")
@@ -255,9 +247,7 @@ async def upsert_class_contacts(
         return {"updated": 0}
 
     try:
-        supabase.table("class_contacts").upsert(
-            rows, on_conflict="class_id,child_id"
-        ).execute()
+        supabase.table("class_contacts").upsert(rows, on_conflict="class_id,child_id").execute()
     except Exception as exc:
         logger.error("[reports.upsert_class_contacts] DB error for class %s: %s", class_id, exc)
         raise HTTPException(status_code=500, detail="Failed to save contacts")
@@ -268,6 +258,7 @@ async def upsert_class_contacts(
 # ---------------------------------------------------------------------------
 # Endpoint 5 — send email report (teacher only)
 # ---------------------------------------------------------------------------
+
 
 @router.post("/teacher/classes/{class_id}/report/send-email")
 @limiter.limit("5/minute")
@@ -315,25 +306,21 @@ async def send_email_report(
     # Fetch parent contacts for this class
     try:
         contacts_r = (
-            supabase.table("class_contacts")
-            .select("child_id, parent_email")
-            .eq("class_id", class_id)
-            .execute()
+            supabase.table("class_contacts").select("child_id, parent_email").eq("class_id", class_id).execute()
         )
         contact_rows = getattr(contacts_r, "data", None) or []
     except Exception as exc:
         logger.error("[reports.send_email_report] DB error fetching contacts: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to fetch contacts")
 
-    parent_emails = {
-        row["child_id"]: row["parent_email"]
-        for row in contact_rows
-        if row.get("parent_email")
-    }
+    parent_emails = {row["child_id"]: row["parent_email"] for row in contact_rows if row.get("parent_email")}
 
     if not parent_emails:
-        return {"sent": 0, "skipped": len(report_data.get("children", [])),
-                "error": "No parent emails configured for this class."}
+        return {
+            "sent": 0,
+            "skipped": len(report_data.get("children", [])),
+            "error": "No parent emails configured for this class.",
+        }
 
     svc = EmailService(
         api_key=settings.resend_api_key,
@@ -346,6 +333,7 @@ async def send_email_report(
 # ---------------------------------------------------------------------------
 # Shared helper — verify class ownership (raises 403 on failure)
 # ---------------------------------------------------------------------------
+
 
 def _verify_class_ownership(class_id: str, teacher_id: str) -> None:
     """Raise HTTPException 403 if teacher doesn't own the class."""

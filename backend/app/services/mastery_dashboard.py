@@ -13,12 +13,14 @@ def get_mastery(student_id: str):
         )
         # Map mastery_level → status for the API surface
         status_map = {"mastered": "mastered", "improving": "developing", "learning": "developing", "unknown": "unknown"}
-        out.append({
-            "skill_tag": s.skill_tag,
-            "accuracy": accuracy,
-            "attempts": s.total_attempts,
-            "status": status_map.get(s.mastery_level, s.mastery_level),
-        })
+        out.append(
+            {
+                "skill_tag": s.skill_tag,
+                "accuracy": accuracy,
+                "attempts": s.total_attempts,
+                "status": status_map.get(s.mastery_level, s.mastery_level),
+            }
+        )
     return out
 
 

@@ -4,13 +4,13 @@ Application-level caching for AI responses and data lookups.
 Uses in-memory TTL caches. No Redis needed at current scale (< 1000 users).
 When scale demands it, swap these for Redis with the same interface.
 """
+
 from __future__ import annotations
 
 import hashlib
 
-from cachetools import TTLCache
-
 import structlog
+from cachetools import TTLCache
 
 logger = structlog.get_logger("skolar.cache")
 
@@ -34,6 +34,7 @@ def _make_key(*parts: str) -> str:
 
 # -- Revision Cache ------------------------------------------------------------
 
+
 def get_cached_revision(grade: str, subject: str, topic: str, language: str = "English") -> dict | None:
     """Get cached revision notes, or None if not cached."""
     key = _make_key("revision", grade, subject, topic, language)
@@ -52,6 +53,7 @@ def set_cached_revision(grade: str, subject: str, topic: str, language: str, dat
 
 # -- Flashcard Cache -----------------------------------------------------------
 
+
 def get_cached_flashcards(grade: str, subject: str, topic: str, language: str = "English") -> dict | None:
     """Get cached flashcards, or None if not cached."""
     key = _make_key("flashcards", grade, subject, topic, language)
@@ -69,6 +71,7 @@ def set_cached_flashcards(grade: str, subject: str, topic: str, language: str, d
 
 
 # -- Dashboard Cache -----------------------------------------------------------
+
 
 def get_cached_dashboard(child_id: str) -> dict | None:
     """Get cached dashboard data, or None if not cached."""
@@ -94,6 +97,7 @@ def invalidate_dashboard(child_id: str) -> None:
 
 
 # -- Stats ---------------------------------------------------------------------
+
 
 def cache_stats() -> dict:
     """Return current cache sizes and capacities."""

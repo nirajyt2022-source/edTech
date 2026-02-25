@@ -3,8 +3,10 @@ Input sanitization middleware.
 
 Strips dangerous content from request bodies before they reach endpoint handlers.
 """
-import re
+
 import logging
+import re
+
 from fastapi import HTTPException
 
 logger = logging.getLogger("skolar.sanitize")
@@ -12,9 +14,19 @@ logger = logging.getLogger("skolar.sanitize")
 # Allowed values for constrained fields
 VALID_GRADES = {"Class 1", "Class 2", "Class 3", "Class 4", "Class 5"}
 VALID_SUBJECTS = {
-    "Maths", "Mathematics", "English", "Hindi", "EVS", "Science",
-    "Computer", "Computer Science", "GK", "General Knowledge",
-    "Moral Science", "Health & PE", "Urdu",
+    "Maths",
+    "Mathematics",
+    "English",
+    "Hindi",
+    "EVS",
+    "Science",
+    "Computer",
+    "Computer Science",
+    "GK",
+    "General Knowledge",
+    "Moral Science",
+    "Health & PE",
+    "Urdu",
 }
 VALID_DIFFICULTIES = {"easy", "medium", "hard"}
 VALID_LANGUAGES = {"English", "Hindi"}
@@ -36,8 +48,8 @@ MAX_LENGTHS = {
 
 # HTML/script tag pattern
 _DANGEROUS_PATTERN = re.compile(
-    r'<\s*script|<\s*iframe|<\s*object|<\s*embed|<\s*form|'
-    r'javascript:|data:text/html|on\w+\s*=',
+    r"<\s*script|<\s*iframe|<\s*object|<\s*embed|<\s*form|"
+    r"javascript:|data:text/html|on\w+\s*=",
     re.IGNORECASE,
 )
 
@@ -74,7 +86,7 @@ def sanitize_string(value: str, field_name: str = "") -> str:
         value = value[:max_len]
 
     # Strip null bytes and control characters (except newline, tab)
-    value = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', value)
+    value = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", value)
 
     # Check for dangerous patterns
     if _DANGEROUS_PATTERN.search(value):
@@ -83,7 +95,7 @@ def sanitize_string(value: str, field_name: str = "") -> str:
             extra={"field": field_name, "preview": value[:100]},
         )
         # Strip HTML tags entirely
-        value = re.sub(r'<[^>]+>', '', value)
+        value = re.sub(r"<[^>]+>", "", value)
 
     # Check for prompt injection in AI-facing fields
     if field_name in ("custom_instructions", "question") and INJECTION_RE.search(value):
@@ -123,8 +135,13 @@ def validate_difficulty(difficulty: str) -> str:
 def validate_file_upload(content_type: str, size_bytes: int, max_mb: int = 10) -> None:
     """Validate uploaded file type and size."""
     allowed_types = {
-        "image/jpeg", "image/jpg", "image/png", "image/webp",
-        "image/gif", "application/pdf", "text/plain",
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "application/pdf",
+        "text/plain",
     }
     if content_type not in allowed_types:
         raise HTTPException(

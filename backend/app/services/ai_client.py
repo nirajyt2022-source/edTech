@@ -25,6 +25,7 @@ Usage:
     # Chat with history (Ask Skolar multi-turn)
     text = ai.generate_chat(messages, system=system_prompt)
 """
+
 from __future__ import annotations
 
 import json
@@ -44,6 +45,7 @@ DEFAULT_MODEL = "gemini-2.5-flash"
 def _types():
     """Lazy import google.genai.types to avoid import errors in environments without the SDK."""
     from google.genai import types as _t
+
     return _t
 
 
@@ -52,6 +54,7 @@ class AIClient:
 
     def __init__(self, api_key: str, model: str = DEFAULT_MODEL):
         from google import genai as _genai
+
         self.client = _genai.Client(api_key=api_key)
         self.model = model
         self._call_count = 0
@@ -174,10 +177,12 @@ class AIClient:
         try:
             gemini_messages = []
             for msg in messages:
-                gemini_messages.append({
-                    "role": msg["role"],
-                    "parts": [{"text": msg["content"]}],
-                })
+                gemini_messages.append(
+                    {
+                        "role": msg["role"],
+                        "parts": [{"text": msg["content"]}],
+                    }
+                )
 
             config = _types().GenerateContentConfig(
                 system_instruction=system,
@@ -367,9 +372,7 @@ class AIClient:
         return {
             "total_calls": self._call_count,
             "total_latency_ms": self._total_latency_ms,
-            "avg_latency_ms": (
-                self._total_latency_ms // self._call_count if self._call_count else 0
-            ),
+            "avg_latency_ms": (self._total_latency_ms // self._call_count if self._call_count else 0),
         }
 
 

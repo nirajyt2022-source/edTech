@@ -11,8 +11,8 @@ to avoid conflicts with other PDF services.
 """
 
 import io
-import os
 import logging
+import os
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -35,22 +35,22 @@ from reportlab.pdfbase.ttfonts import TTFont  # noqa: E402
 
 if os.path.exists(_NOTO_VARIABLE):
     try:
-        pdfmetrics.registerFont(TTFont('FlashcardFont', _NOTO_VARIABLE))
-        pdfmetrics.registerFont(TTFont('FlashcardFont-Bold', _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont("FlashcardFont", _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont("FlashcardFont-Bold", _NOTO_VARIABLE))
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register Noto Sans font for flashcards: %s", e)
 
 if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
     try:
-        pdfmetrics.registerFont(TTFont('FlashcardFont', _DEJAVU))
-        pdfmetrics.registerFont(TTFont('FlashcardFont-Bold', _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
+        pdfmetrics.registerFont(TTFont("FlashcardFont", _DEJAVU))
+        pdfmetrics.registerFont(TTFont("FlashcardFont-Bold", _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register DejaVu font for flashcards: %s", e)
 
-FONT_REGULAR = 'FlashcardFont' if _USE_UNICODE_FONT else 'Helvetica'
-FONT_BOLD = 'FlashcardFont-Bold' if _USE_UNICODE_FONT else 'Helvetica-Bold'
+FONT_REGULAR = "FlashcardFont" if _USE_UNICODE_FONT else "Helvetica"
+FONT_BOLD = "FlashcardFont-Bold" if _USE_UNICODE_FONT else "Helvetica-Bold"
 
 # ── Colour palette ────────────────────────────────────────────────────────
 
@@ -78,10 +78,10 @@ CELL_HEIGHT = (PAGE_HEIGHT - MARGIN_Y - HEADER_HEIGHT - FOOTER_HEIGHT - MARGIN_Y
 
 # Category emoji mapping
 _CATEGORY_EMOJI = {
-    "concept": "\u2728",    # ✨
-    "fact": "\u2139\uFE0F",  # ℹ️
-    "formula": "\U0001F4D0", # 📐
-    "question": "\u2753",    # ❓
+    "concept": "\u2728",  # ✨
+    "fact": "\u2139\ufe0f",  # ℹ️
+    "formula": "\U0001f4d0",  # 📐
+    "question": "\u2753",  # ❓
 }
 
 
@@ -89,7 +89,9 @@ def _get_emoji(category: str) -> str:
     return _CATEGORY_EMOJI.get(category, "\u2728")
 
 
-def _wrap_text(c, text: str, x: float, y: float, max_width: float, font: str, font_size: float, color, max_lines: int = 4):
+def _wrap_text(
+    c, text: str, x: float, y: float, max_width: float, font: str, font_size: float, color, max_lines: int = 4
+):
     """Draw text with word wrapping within a cell. Returns the y position after drawing."""
     c.setFont(font, font_size)
     c.setFillColor(color)
@@ -114,7 +116,7 @@ def _wrap_text(c, text: str, x: float, y: float, max_width: float, font: str, fo
     if len(lines) > max_lines:
         lines = lines[:max_lines]
         if lines[-1]:
-            lines[-1] = lines[-1][:max(0, len(lines[-1]) - 3)] + "..."
+            lines[-1] = lines[-1][: max(0, len(lines[-1]) - 3)] + "..."
 
     leading = font_size * 1.3
     for line in lines:
@@ -151,7 +153,7 @@ class FlashcardPDFService:
             cards.append({"front": "", "back": "", "category": "concept"})
 
         # Truncate to 12
-        cards = cards[:COLS * ROWS]
+        cards = cards[: COLS * ROWS]
 
         # ── Page 1: FRONTS ────────────────────────────────────────────
         _draw_header(c, title, "FRONTS — Print this side first")

@@ -4,6 +4,7 @@ Rate limiting middleware using SlowAPI.
 Limits are per-user (via Supabase JWT) or per-IP for unauthenticated requests.
 Gracefully degrades to a no-op limiter if slowapi is not installed (e.g. in tests).
 """
+
 import logging
 
 from fastapi import Request, Response
@@ -13,8 +14,8 @@ logger = logging.getLogger("skolar.rate_limit")
 
 try:
     from slowapi import Limiter
-    from slowapi.util import get_remote_address
     from slowapi.errors import RateLimitExceeded
+    from slowapi.util import get_remote_address
 
     _SLOWAPI_AVAILABLE = True
 except ImportError:
@@ -27,6 +28,7 @@ def _get_user_or_ip(request: Request) -> str:
     auth = request.headers.get("authorization", "")
     if auth.startswith("Bearer ") and len(auth) > 20:
         import hashlib
+
         token_hash = hashlib.sha256(auth.encode()).hexdigest()[:12]
         return f"user:{token_hash}"
     if _SLOWAPI_AVAILABLE:
@@ -37,16 +39,20 @@ def _get_user_or_ip(request: Request) -> str:
 if _SLOWAPI_AVAILABLE:
     limiter = Limiter(key_func=_get_user_or_ip)
 else:
+
     class _NoOpLimiter:
         """Dummy limiter that does nothing when slowapi is missing."""
+
         def limit(self, *args, **kwargs):
             def decorator(func):
                 return func
+
             return decorator
 
         def shared_limit(self, *args, **kwargs):
             def decorator(func):
                 return func
+
             return decorator
 
     limiter = _NoOpLimiter()  # type: ignore[assignment]

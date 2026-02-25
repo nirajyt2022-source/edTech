@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, Query
 
 router = APIRouter(prefix="/api/curriculum", tags=["curriculum"])
@@ -50,14 +51,16 @@ async def list_subjects(
         else:
             continue  # skip (e.g. India-only for UAE user)
 
-        subjects.append({
-            "name": subj["name"],
-            "region": subj["region"],
-            "source": subj.get("source"),
-            "skills": subj["skills"],
-            "logic_tags": subj["logic_tags"],
-            "depth": subj["depth"],
-        })
+        subjects.append(
+            {
+                "name": subj["name"],
+                "region": subj["region"],
+                "source": subj.get("source"),
+                "skills": subj["skills"],
+                "logic_tags": subj["logic_tags"],
+                "depth": subj["depth"],
+            }
+        )
 
     return {"grade": grade, "region": region, "subjects": subjects}
 
@@ -78,10 +81,7 @@ async def get_subject_detail(
             # Verify region access
             subj_region = subj["region"]
             if subj_region != "Global" and subj_region != region:
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"{subject} is not available in {region} region"
-                )
+                raise HTTPException(status_code=403, detail=f"{subject} is not available in {region} region")
             return {
                 "grade": grade,
                 "subject": subj["name"],

@@ -4,16 +4,17 @@ These endpoints were in the old worksheets.py and got deleted in Sprint A1.
 Restored here as a standalone module with modern patterns.
 """
 
-import structlog
 from datetime import datetime
 from urllib.parse import quote
-from fastapi import APIRouter, HTTPException, Header, Query, Request, Response
+
+import structlog
+from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from supabase import create_client
 
 from app.core.config import get_settings
-from app.services.pdf import get_pdf_service
 from app.middleware.rate_limit import limiter
+from app.services.pdf import get_pdf_service
 
 logger = structlog.get_logger()
 settings = get_settings()
@@ -24,6 +25,7 @@ router = APIRouter(prefix="/api/worksheets", tags=["saved-worksheets"])
 
 
 # ── Auth helper ────────────────────────────────────────────────────────────────
+
 
 def _get_user_id(authorization: str | None) -> str:
     """Extract user ID from Supabase JWT token."""
@@ -39,6 +41,7 @@ def _get_user_id(authorization: str | None) -> str:
 
 # ── Pydantic models ───────────────────────────────────────────────────────────
 
+
 class WorksheetForSave(BaseModel):
     title: str = ""
     grade: str = ""
@@ -52,12 +55,14 @@ class WorksheetForSave(BaseModel):
     parent_tip: str = ""
     learning_objectives: list = []
 
+
 class SaveWorksheetRequest(BaseModel):
     worksheet: WorksheetForSave
     board: str | None = None
     child_id: str | None = None
     class_id: str | None = None
     region: str | None = None
+
 
 class PDFExportWorksheet(BaseModel):
     title: str = "Worksheet"
@@ -75,6 +80,7 @@ class PDFExportWorksheet(BaseModel):
     class Config:
         extra = "allow"
 
+
 class PDFExportRequest(BaseModel):
     worksheet: PDFExportWorksheet
     pdf_type: str = "full"
@@ -85,6 +91,7 @@ class PDFExportRequest(BaseModel):
 
 
 # ── 1. Save worksheet ─────────────────────────────────────────────────────────
+
 
 @router.post("/save")
 @limiter.limit("30/minute")
@@ -99,20 +106,26 @@ async def save_worksheet(
     try:
         questions_data = [q if isinstance(q, dict) else q.model_dump() for q in body.worksheet.questions]
 
-        result = supabase.table("worksheets").insert({
-            "user_id": user_id,
-            "title": body.worksheet.title,
-            "board": body.board,
-            "grade": body.worksheet.grade,
-            "subject": body.worksheet.subject,
-            "topic": body.worksheet.topic,
-            "difficulty": body.worksheet.difficulty,
-            "language": body.worksheet.language,
-            "questions": questions_data,
-            "child_id": body.child_id,
-            "class_id": body.class_id,
-            "region": body.region or "India",
-        }).execute()
+        result = (
+            supabase.table("worksheets")
+            .insert(
+                {
+                    "user_id": user_id,
+                    "title": body.worksheet.title,
+                    "board": body.board,
+                    "grade": body.worksheet.grade,
+                    "subject": body.worksheet.subject,
+                    "topic": body.worksheet.topic,
+                    "difficulty": body.worksheet.difficulty,
+                    "language": body.worksheet.language,
+                    "questions": questions_data,
+                    "child_id": body.child_id,
+                    "class_id": body.class_id,
+                    "region": body.region or "India",
+                }
+            )
+            .execute()
+        )
 
         if result.data:
             return {"success": True, "worksheet_id": result.data[0]["id"]}
@@ -127,6 +140,7 @@ async def save_worksheet(
 
 
 # ── 2. List saved worksheets ──────────────────────────────────────────────────
+
 
 @router.get("/saved/list")
 @limiter.limit("60/minute")
@@ -153,33 +167,31 @@ async def list_saved_worksheets(
         if class_id:
             query = query.eq("class_id", class_id)
 
-        result = (
-            query.order("created_at", desc=True)
-            .range(offset, offset + limit - 1)
-            .execute()
-        )
+        result = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
 
         worksheets = []
         for row in result.data:
             child_data = row.get("children")
             class_data = row.get("teacher_classes")
-            worksheets.append({
-                "id": row["id"],
-                "title": row.get("title", ""),
-                "board": row.get("board"),
-                "grade": row.get("grade", ""),
-                "subject": row.get("subject", ""),
-                "topic": row.get("topic", ""),
-                "difficulty": row.get("difficulty", "mixed"),
-                "language": row.get("language", "English"),
-                "question_count": len(row.get("questions", [])),
-                "created_at": row.get("created_at"),
-                "child_id": row.get("child_id"),
-                "child_name": child_data.get("name") if child_data else None,
-                "class_id": row.get("class_id"),
-                "class_name": class_data.get("name") if class_data else None,
-                "regeneration_count": row.get("regeneration_count", 0),
-            })
+            worksheets.append(
+                {
+                    "id": row["id"],
+                    "title": row.get("title", ""),
+                    "board": row.get("board"),
+                    "grade": row.get("grade", ""),
+                    "subject": row.get("subject", ""),
+                    "topic": row.get("topic", ""),
+                    "difficulty": row.get("difficulty", "mixed"),
+                    "language": row.get("language", "English"),
+                    "question_count": len(row.get("questions", [])),
+                    "created_at": row.get("created_at"),
+                    "child_id": row.get("child_id"),
+                    "child_name": child_data.get("name") if child_data else None,
+                    "class_id": row.get("class_id"),
+                    "class_name": class_data.get("name") if class_data else None,
+                    "regeneration_count": row.get("regeneration_count", 0),
+                }
+            )
 
         return {"worksheets": worksheets, "count": len(worksheets)}
 
@@ -191,6 +203,7 @@ async def list_saved_worksheets(
 
 
 # ── 3. Get saved worksheet ────────────────────────────────────────────────────
+
 
 @router.get("/saved/{worksheet_id}")
 @limiter.limit("60/minute")
@@ -204,12 +217,7 @@ async def get_saved_worksheet(
 
     try:
         result = (
-            supabase.table("worksheets")
-            .select("*")
-            .eq("id", worksheet_id)
-            .eq("user_id", user_id)
-            .single()
-            .execute()
+            supabase.table("worksheets").select("*").eq("id", worksheet_id).eq("user_id", user_id).single().execute()
         )
 
         if not result.data:
@@ -225,6 +233,7 @@ async def get_saved_worksheet(
 
 
 # ── 4. Delete saved worksheet ─────────────────────────────────────────────────
+
 
 @router.delete("/saved/{worksheet_id}")
 @limiter.limit("30/minute")
@@ -247,6 +256,7 @@ async def delete_saved_worksheet(
 
 # ── 5. Export PDF ─────────────────────────────────────────────────────────────
 
+
 @router.post("/export-pdf")
 @limiter.limit("10/minute")
 async def export_worksheet_pdf(request: Request, body: PDFExportRequest, authorization: str = Header(...)):
@@ -258,6 +268,7 @@ async def export_worksheet_pdf(request: Request, body: PDFExportRequest, authori
         # Quality gate (log-only)
         try:
             from app.utils.quality_gate import run_quality_gate as _run_qg
+
             _gate_qs = []
             for _i, _q in enumerate(worksheet_dict.get("questions", []), 1):
                 _gq = dict(_q)
@@ -297,7 +308,7 @@ async def export_worksheet_pdf(request: Request, body: PDFExportRequest, authori
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="{filename}"; filename*=UTF-8\'\'{quote(raw_title + type_suffix + ".pdf")}'
+                "Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{quote(raw_title + type_suffix + '.pdf')}"
             },
         )
     except Exception as exc:
@@ -306,6 +317,7 @@ async def export_worksheet_pdf(request: Request, body: PDFExportRequest, authori
 
 
 # ── 6. Regenerate worksheet ───────────────────────────────────────────────────
+
 
 @router.post("/regenerate/{worksheet_id}")
 @limiter.limit("10/minute")
@@ -320,12 +332,7 @@ async def regenerate_worksheet(
     try:
         # Get original worksheet
         result = (
-            supabase.table("worksheets")
-            .select("*")
-            .eq("id", worksheet_id)
-            .eq("user_id", user_id)
-            .single()
-            .execute()
+            supabase.table("worksheets").select("*").eq("id", worksheet_id).eq("user_id", user_id).single().execute()
         )
 
         if not result.data:
@@ -334,8 +341,8 @@ async def regenerate_worksheet(
         original = result.data
 
         # Use v2 generator
-        from app.services.worksheets_v2 import generate_worksheet
         from app.services.ai_client import get_ai_client
+        from app.services.worksheets_v2 import generate_worksheet
 
         client = get_ai_client()
         data, elapsed_ms, warnings = generate_worksheet(
@@ -351,10 +358,12 @@ async def regenerate_worksheet(
 
         # Increment regeneration count
         regen_count = original.get("regeneration_count", 0)
-        supabase.table("worksheets").update({
-            "regeneration_count": regen_count + 1,
-            "updated_at": datetime.now().isoformat(),
-        }).eq("id", worksheet_id).execute()
+        supabase.table("worksheets").update(
+            {
+                "regeneration_count": regen_count + 1,
+                "updated_at": datetime.now().isoformat(),
+            }
+        ).eq("id", worksheet_id).execute()
 
         return {
             "worksheet": {
@@ -382,18 +391,14 @@ async def regenerate_worksheet(
 
 # ── 7. Teacher analytics ──────────────────────────────────────────────────────
 
+
 @router.get("/analytics")
 async def get_teacher_analytics(authorization: str = Header(...)):
     """Get light analytics for a teacher."""
     user_id = _get_user_id(authorization)
 
     try:
-        result = (
-            supabase.table("worksheets")
-            .select("topic, subject, created_at")
-            .eq("user_id", user_id)
-            .execute()
-        )
+        result = supabase.table("worksheets").select("topic, subject, created_at").eq("user_id", user_id).execute()
 
         rows = result.data or []
         total_worksheets = len(rows)

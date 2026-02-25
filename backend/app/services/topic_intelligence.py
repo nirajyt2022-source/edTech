@@ -10,6 +10,7 @@ Builds a GenerationContext by combining:
 All external calls are fail-open: any error falls back to safe defaults so that
 worksheet generation is never blocked by an intelligence-layer failure.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -40,14 +41,14 @@ class GenerationContext(BaseModel):
     topic_slug: str
     subject: str
     grade: int
-    ncert_chapter: str          # chapter name from curriculum canon (= topic name)
+    ncert_chapter: str  # chapter name from curriculum canon (= topic name)
     ncert_subtopics: list[str]  # 3 learning objectives from LEARNING_OBJECTIVES
-    bloom_level: str            # recall | application | reasoning
-    format_mix: dict            # {mcq: int, fill_blank: int, word_problem: int}
+    bloom_level: str  # recall | application | reasoning
+    format_mix: dict  # {mcq: int, fill_blank: int, word_problem: int}
     scaffolding: bool
     challenge_mode: bool
-    valid_skill_tags: list[str] # from TOPIC_PROFILES["allowed_skill_tags"]
-    child_context: dict         # ≤200 tokens of child-specific state (empty if no child_id)
+    valid_skill_tags: list[str]  # from TOPIC_PROFILES["allowed_skill_tags"]
+    child_context: dict  # ≤200 tokens of child-specific state (empty if no child_id)
 
 
 # ---------------------------------------------------------------------------
@@ -135,6 +136,7 @@ def _get_skill_tags(topic_slug: str) -> list[str]:
     """Return allowed_skill_tags for this topic from TOPIC_PROFILES."""
     try:
         from app.data.topic_profiles import get_topic_profile
+
         profile = get_topic_profile(topic_slug)
         if profile:
             return list(profile.get("allowed_skill_tags", []))
@@ -147,6 +149,7 @@ def _get_subtopics(topic_slug: str) -> list[str]:
     """Return NCERT subtopics (learning objectives) for this topic."""
     try:
         from app.data.learning_objectives import get_learning_objectives
+
         return get_learning_objectives(topic_slug)
     except Exception as exc:
         logger.warning("[topic_intelligence] Could not load learning objectives for %r: %s", topic_slug, exc)
@@ -203,11 +206,10 @@ class TopicIntelligenceAgent:
         if child_id:
             try:
                 from app.services.learning_graph import get_learning_graph_service
+
                 svc = get_learning_graph_service()
                 # get_adaptive_difficulty is synchronous — run in thread to stay non-blocking
-                config: dict = await asyncio.to_thread(
-                    svc.get_adaptive_difficulty, child_id, topic_slug
-                )
+                config: dict = await asyncio.to_thread(svc.get_adaptive_difficulty, child_id, topic_slug)
                 bloom_level = config.get("bloom_level", _DEFAULT_BLOOM)
                 format_mix = config.get("format_mix", dict(_DEFAULT_FORMAT_MIX))
                 scaffolding = bool(config.get("scaffolding", _DEFAULT_SCAFFOLDING))
@@ -222,7 +224,9 @@ class TopicIntelligenceAgent:
                 logger.warning(
                     "[topic_intelligence] get_adaptive_difficulty failed for child=%s topic=%r; "
                     "using defaults. Error: %s",
-                    child_id, topic_slug, exc,
+                    child_id,
+                    topic_slug,
+                    exc,
                 )
 
         return GenerationContext(

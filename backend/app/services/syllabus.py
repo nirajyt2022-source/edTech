@@ -1,7 +1,7 @@
 """Syllabus parsing service for extracting structured data from syllabus documents."""
 
-from app.services.ai_client import get_ai_client
 from app.prompts.syllabus_parsing import SYLLABUS_PARSING_PROMPT
+from app.services.ai_client import get_ai_client
 
 
 class SyllabusService:

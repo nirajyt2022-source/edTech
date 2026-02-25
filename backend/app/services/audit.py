@@ -19,6 +19,7 @@ def write_attempt_event(payload: dict) -> None:
 
     try:
         from app.services.supabase_client import get_supabase_client
+
         sb = get_supabase_client()
         sb.table("attempt_events").insert(payload).execute()
     except Exception as e:

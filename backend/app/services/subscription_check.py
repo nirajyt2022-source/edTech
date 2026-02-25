@@ -29,8 +29,7 @@ async def check_and_increment_usage(user_id: str, supabase_client) -> dict:
     """
     try:
         result = supabase_client.rpc(
-            "increment_worksheet_usage",
-            {"p_user_id": user_id, "p_limit": FREE_TIER_LIMIT}
+            "increment_worksheet_usage", {"p_user_id": user_id, "p_limit": FREE_TIER_LIMIT}
         ).execute()
 
         if result.data:
@@ -68,11 +67,13 @@ async def check_ai_usage_allowed(user_id: str, supabase_client) -> dict:
     On DB failure: fail-closed.
     """
     try:
-        result = supabase_client.table("user_subscriptions") \
-            .select("tier, worksheets_generated_this_month") \
-            .eq("user_id", user_id) \
-            .maybe_single() \
+        result = (
+            supabase_client.table("user_subscriptions")
+            .select("tier, worksheets_generated_this_month")
+            .eq("user_id", user_id)
+            .maybe_single()
             .execute()
+        )
 
         data = getattr(result, "data", None)
         if not data:
@@ -99,7 +100,5 @@ async def check_ai_usage_allowed(user_id: str, supabase_client) -> dict:
 def _start_of_next_month(now: datetime) -> datetime:
     """Return the first day of the next month, preserving tzinfo."""
     if now.month == 12:
-        return now.replace(year=now.year + 1, month=1, day=1,
-                           hour=0, minute=0, second=0, microsecond=0)
-    return now.replace(month=now.month + 1, day=1,
-                       hour=0, minute=0, second=0, microsecond=0)
+        return now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    return now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)

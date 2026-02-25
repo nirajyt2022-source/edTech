@@ -3,7 +3,6 @@ Learning objectives for CBSE topics.
 Maps topics to their CBSE learning outcomes.
 """
 
-
 LEARNING_OBJECTIVES: dict[str, list[str]] = {
     # ── Class 3 topics ──
     "Addition (carries)": [
@@ -1027,7 +1026,8 @@ LEARNING_OBJECTIVES: dict[str, list[str]] = {
 
 def get_learning_objectives(topic: str) -> list[str]:
     """Return learning objectives for a topic. Falls back to empty list."""
-    from app.data.topic_profiles import get_topic_profile, TOPIC_PROFILES
+    from app.data.topic_profiles import TOPIC_PROFILES, get_topic_profile
+
     # Resolve to canonical key
     profile = get_topic_profile(topic)
     if profile:

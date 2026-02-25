@@ -6,17 +6,18 @@ Rules:
   - Uses _build_report_text / _clean_topic_name / _build_recommendation_reason
     from learning_graph.py (already offline-tested).
 """
+
 from __future__ import annotations
 
 import logging
 import secrets
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from app.services.learning_graph import (
     LearningGraphService,
-    _build_report_text,
     _build_recommendation_reason,
+    _build_report_text,
     _clean_topic_name,
 )
 
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _MASTERY_PRIORITY: dict[str, int] = {
-    "unknown":  0,
+    "unknown": 0,
     "learning": 1,
     "improving": 2,
     "mastered": 3,
@@ -56,6 +57,7 @@ def _pick_best_topic(mastery_rows: list[dict]) -> Optional[dict]:
 # ClassReportGenerator
 # ---------------------------------------------------------------------------
 
+
 class ClassReportGenerator:
     """Builds a shareable class report and persists it in class_reports."""
 
@@ -67,6 +69,7 @@ class ClassReportGenerator:
         if self._sb:
             return self._sb
         from app.services.supabase_client import get_supabase_client
+
         return get_supabase_client()
 
     # -----------------------------------------------------------------------
@@ -152,12 +155,7 @@ class ClassReportGenerator:
 
     def _fetch_child_ids(self, sb, class_id: str) -> list[str]:
         try:
-            r = (
-                sb.table("worksheets")
-                .select("child_id")
-                .eq("class_id", class_id)
-                .execute()
-            )
+            r = sb.table("worksheets").select("child_id").eq("class_id", class_id).execute()
             rows = getattr(r, "data", None) or []
         except Exception as exc:
             logger.error("[ClassReportGenerator._fetch_child_ids] DB error: %s", exc)
@@ -169,12 +167,7 @@ class ClassReportGenerator:
         if not child_ids:
             return {}
         try:
-            r = (
-                sb.table("children")
-                .select("id, name")
-                .in_("id", child_ids)
-                .execute()
-            )
+            r = sb.table("children").select("id, name").in_("id", child_ids).execute()
             rows = getattr(r, "data", None) or []
             return {row["id"]: row["name"] for row in rows}
         except Exception as exc:
@@ -223,10 +216,7 @@ class ClassReportGenerator:
         try:
             r = (
                 sb.table("topic_mastery")
-                .select(
-                    "topic_slug, subject, mastery_level, "
-                    "streak, sessions_total, last_practiced_at"
-                )
+                .select("topic_slug, subject, mastery_level, streak, sessions_total, last_practiced_at")
                 .eq("child_id", child_id)
                 .execute()
             )
@@ -234,7 +224,8 @@ class ClassReportGenerator:
         except Exception as exc:
             logger.warning(
                 "[ClassReportGenerator._build_recommendation] DB error for child %s: %s",
-                child_id, exc,
+                child_id,
+                exc,
             )
             return ""
 

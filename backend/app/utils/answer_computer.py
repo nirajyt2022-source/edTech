@@ -4,6 +4,7 @@ answer_computer.py — deterministic arithmetic and time computation.
 Python computes all answers for Maths/Time questions.
 The LLM only writes question wording — never the answer.
 """
+
 from datetime import datetime, timedelta
 
 
@@ -55,8 +56,8 @@ def duration_between(start_str: str, end_str: str) -> str:
             continue
     diff = int((t2 - t1).total_seconds() / 60)
     if diff >= 60 and diff % 60 == 0:
-        return f"{diff // 60} hour{'s' if diff//60 > 1 else ''}"
+        return f"{diff // 60} hour{'s' if diff // 60 > 1 else ''}"
     elif diff >= 60:
-        return f"{diff // 60} hour{'s' if diff//60 > 1 else ''} {diff % 60} minutes"
+        return f"{diff // 60} hour{'s' if diff // 60 > 1 else ''} {diff % 60} minutes"
     else:
         return f"{diff} minutes"

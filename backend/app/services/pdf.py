@@ -7,22 +7,29 @@ Gold-G8: Redesigned to match Pearson/Oxford primary workbook quality.
 - Professional footer with page number + branding
 """
 
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, HRFlowable, KeepTogether,
-)
-from reportlab.lib.enums import TA_CENTER
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 import io
 import logging
-from xml.sax.saxutils import escape as xml_escape
 import os
 import tempfile
+from xml.sax.saxutils import escape as xml_escape
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import (
+    HRFlowable,
+    KeepTogether,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +45,9 @@ _USE_UNICODE_FONT = False
 # Try Noto Sans Variable (best — has Latin + Devanagari + ₹)
 if os.path.exists(_NOTO_VARIABLE):
     try:
-        pdfmetrics.registerFont(TTFont('SkolarFont', _NOTO_VARIABLE))
-        pdfmetrics.registerFont(TTFont('SkolarFont-Bold', _NOTO_VARIABLE))
-        pdfmetrics.registerFont(TTFont('SkolarFont-Italic', _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont("SkolarFont", _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont("SkolarFont-Bold", _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont("SkolarFont-Italic", _NOTO_VARIABLE))
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register Noto Sans font: %s", e)
@@ -48,27 +55,30 @@ if os.path.exists(_NOTO_VARIABLE):
 # Fallback: DejaVu Sans (often on Linux/Railway)
 if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
     try:
-        pdfmetrics.registerFont(TTFont('SkolarFont', _DEJAVU))
-        pdfmetrics.registerFont(TTFont('SkolarFont-Bold', _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
-        pdfmetrics.registerFont(TTFont('SkolarFont-Italic', _DEJAVU_OBLIQUE if os.path.exists(_DEJAVU_OBLIQUE) else _DEJAVU))
+        pdfmetrics.registerFont(TTFont("SkolarFont", _DEJAVU))
+        pdfmetrics.registerFont(TTFont("SkolarFont-Bold", _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
+        pdfmetrics.registerFont(
+            TTFont("SkolarFont-Italic", _DEJAVU_OBLIQUE if os.path.exists(_DEJAVU_OBLIQUE) else _DEJAVU)
+        )
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register DejaVu font: %s", e)
 
 # Final font names used throughout
-FONT_REGULAR = 'SkolarFont' if _USE_UNICODE_FONT else 'Helvetica'
-FONT_BOLD = 'SkolarFont-Bold' if _USE_UNICODE_FONT else 'Helvetica-Bold'
-FONT_ITALIC = 'SkolarFont-Italic' if _USE_UNICODE_FONT else 'Helvetica-Oblique'
+FONT_REGULAR = "SkolarFont" if _USE_UNICODE_FONT else "Helvetica"
+FONT_BOLD = "SkolarFont-Bold" if _USE_UNICODE_FONT else "Helvetica-Bold"
+FONT_ITALIC = "SkolarFont-Italic" if _USE_UNICODE_FONT else "Helvetica-Oblique"
 
 
 def _flatten_image_alpha(local_path: str) -> str:
     """Convert RGBA images to RGB with white background. Returns path to temp file."""
     try:
         from PIL import Image as PILImage
+
         img = PILImage.open(local_path)
-        if img.mode in ('RGBA', 'LA', 'PA'):
-            background = PILImage.new('RGB', img.size, (255, 255, 255))
-            if img.mode == 'RGBA':
+        if img.mode in ("RGBA", "LA", "PA"):
+            background = PILImage.new("RGB", img.size, (255, 255, 255))
+            if img.mode == "RGBA":
                 background.paste(img, mask=img.split()[3])
             else:
                 background.paste(img)
@@ -84,19 +94,19 @@ def _flatten_image_alpha(local_path: str) -> str:
 # ──────────────────────────────────────────────
 # Colours — warm, professional palette
 # ──────────────────────────────────────────────
-_PRIMARY = colors.HexColor("#1E1B4B")            # Skolar indigo
-_ACCENT = colors.HexColor("#F97316")             # orange accent
-_LIGHT_BG = colors.HexColor("#F8FAFC")           # soft slate bg
-_TIER_BG = colors.HexColor("#F1F5F9")            # tier header bg
-_MUTED = colors.HexColor("#94A3B8")              # muted slate
-_RULE = colors.HexColor("#B0B4BC")               # ruled line colour — print-visible
-_HINT_BG = colors.Color(0.95, 0.95, 0.93)       # hint box bg
+_PRIMARY = colors.HexColor("#1E1B4B")  # Skolar indigo
+_ACCENT = colors.HexColor("#F97316")  # orange accent
+_LIGHT_BG = colors.HexColor("#F8FAFC")  # soft slate bg
+_TIER_BG = colors.HexColor("#F1F5F9")  # tier header bg
+_MUTED = colors.HexColor("#94A3B8")  # muted slate
+_RULE = colors.HexColor("#B0B4BC")  # ruled line colour — print-visible
+_HINT_BG = colors.Color(0.95, 0.95, 0.93)  # hint box bg
 
 # Tier-specific accent colours
 TIER_COLORS = {
-    "Foundation": colors.HexColor("#059669"),    # emerald green
-    "Application": colors.HexColor("#D97706"),   # amber
-    "Stretch": colors.HexColor("#DC2626"),       # red
+    "Foundation": colors.HexColor("#059669"),  # emerald green
+    "Application": colors.HexColor("#D97706"),  # amber
+    "Stretch": colors.HexColor("#DC2626"),  # red
 }
 
 
@@ -104,24 +114,24 @@ TIER_COLORS = {
 # Unicode → simpler character replacements
 # ──────────────────────────────────────────────
 _UNICODE_REPLACEMENTS = {
-    "\u2014": "-",   # em dash
-    "\u2013": "-",   # en dash
-    "\u2018": "'",   # left single quote
-    "\u2019": "'",   # right single quote
-    "\u201c": '"',   # left double quote
-    "\u201d": '"',   # right double quote
-    "\u2026": "...", # ellipsis
-    "\u00d7": "x",   # multiplication sign
-    "\u00f7": "/",   # division sign
+    "\u2014": "-",  # em dash
+    "\u2013": "-",  # en dash
+    "\u2018": "'",  # left single quote
+    "\u2019": "'",  # right single quote
+    "\u201c": '"',  # left double quote
+    "\u201d": '"',  # right double quote
+    "\u2026": "...",  # ellipsis
+    "\u00d7": "x",  # multiplication sign
+    "\u00f7": "/",  # division sign
     "\u2264": "<=",  # less than or equal
     "\u2265": ">=",  # greater than or equal
     "\u2260": "!=",  # not equal
-    "\u25a1": "___", # white square (blank marker) — wider for writing
-    "\u25a2": "___", # white square with rounded corners
-    "\u2610": "___", # ballot box
+    "\u25a1": "___",  # white square (blank marker) — wider for writing
+    "\u25a2": "___",  # white square with rounded corners
+    "\u2610": "___",  # ballot box
     "\u2192": "->",  # right arrow
-    "\u2605": "*",   # star
-    "\u2b50": "*",   # star emoji
+    "\u2605": "*",  # star
+    "\u2b50": "*",  # star emoji
 }
 
 # If no Unicode font, add ₹ → "Rs." fallback
@@ -214,147 +224,177 @@ class PDFService:
         """Set up premium paragraph styles."""
 
         # ── Title ──
-        self.styles.add(ParagraphStyle(
-            name='WorksheetTitle',
-            fontName=FONT_BOLD,
-            fontSize=20,
-            leading=24,
-            spaceAfter=4,
-            alignment=TA_CENTER,
-            textColor=_PRIMARY,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="WorksheetTitle",
+                fontName=FONT_BOLD,
+                fontSize=20,
+                leading=24,
+                spaceAfter=4,
+                alignment=TA_CENTER,
+                textColor=_PRIMARY,
+            )
+        )
 
         # ── Subtitle (grade | subject | topic) ──
-        self.styles.add(ParagraphStyle(
-            name='WorksheetSubtitle',
-            fontName=FONT_REGULAR,
-            fontSize=10,
-            textColor=_MUTED,
-            alignment=TA_CENTER,
-            spaceAfter=16,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="WorksheetSubtitle",
+                fontName=FONT_REGULAR,
+                fontSize=10,
+                textColor=_MUTED,
+                alignment=TA_CENTER,
+                spaceAfter=16,
+            )
+        )
 
         # ── Tier section header ──
-        self.styles.add(ParagraphStyle(
-            name='TierHeader',
-            fontName=FONT_BOLD,
-            fontSize=11,
-            leading=14,
-            textColor=_PRIMARY,
-            spaceBefore=18,
-            spaceAfter=4,
-        ))
-        self.styles.add(ParagraphStyle(
-            name='TierDesc',
-            fontName=FONT_ITALIC,
-            fontSize=8.5,
-            textColor=_MUTED,
-            spaceAfter=10,
-            leftIndent=2,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="TierHeader",
+                fontName=FONT_BOLD,
+                fontSize=11,
+                leading=14,
+                textColor=_PRIMARY,
+                spaceBefore=18,
+                spaceAfter=4,
+            )
+        )
+        self.styles.add(
+            ParagraphStyle(
+                name="TierDesc",
+                fontName=FONT_ITALIC,
+                fontSize=8.5,
+                textColor=_MUTED,
+                spaceAfter=10,
+                leftIndent=2,
+            )
+        )
 
         # ── Question text ──
-        self.styles.add(ParagraphStyle(
-            name='QuestionText',
-            fontName=FONT_REGULAR,
-            fontSize=11,
-            leading=15,
-            spaceAfter=6,
-            leftIndent=28,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="QuestionText",
+                fontName=FONT_REGULAR,
+                fontSize=11,
+                leading=15,
+                spaceAfter=6,
+                leftIndent=28,
+            )
+        )
 
         # ── Question number ──
-        self.styles.add(ParagraphStyle(
-            name='QuestionNumber',
-            fontName=FONT_BOLD,
-            fontSize=11,
-            leading=15,
-            textColor=_PRIMARY,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="QuestionNumber",
+                fontName=FONT_BOLD,
+                fontSize=11,
+                leading=15,
+                textColor=_PRIMARY,
+            )
+        )
 
         # ── Options (MCQ) ──
-        self.styles.add(ParagraphStyle(
-            name='OptionText',
-            fontName=FONT_REGULAR,
-            fontSize=10,
-            leading=13,
-            leftIndent=42,
-            spaceAfter=2,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="OptionText",
+                fontName=FONT_REGULAR,
+                fontSize=10,
+                leading=13,
+                leftIndent=42,
+                spaceAfter=2,
+            )
+        )
 
         # ── Instructions box ──
-        self.styles.add(ParagraphStyle(
-            name='Instructions',
-            fontName=FONT_REGULAR,
-            fontSize=9,
-            leading=13,
-            textColor=colors.Color(0.3, 0.3, 0.3),
-            spaceAfter=12,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="Instructions",
+                fontName=FONT_REGULAR,
+                fontSize=9,
+                leading=13,
+                textColor=colors.Color(0.3, 0.3, 0.3),
+                spaceAfter=12,
+            )
+        )
 
         # ── Header fields (Name/Date/Score) ──
-        self.styles.add(ParagraphStyle(
-            name='HeaderField',
-            fontName=FONT_REGULAR,
-            fontSize=10,
-            leading=13,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="HeaderField",
+                fontName=FONT_REGULAR,
+                fontSize=10,
+                leading=13,
+            )
+        )
 
         # ── Hint text ──
-        self.styles.add(ParagraphStyle(
-            name='HintText',
-            fontName=FONT_ITALIC,
-            fontSize=8.5,
-            leading=11,
-            textColor=_MUTED,
-            leftIndent=28,
-            spaceAfter=4,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="HintText",
+                fontName=FONT_ITALIC,
+                fontSize=8.5,
+                leading=11,
+                textColor=_MUTED,
+                leftIndent=28,
+                spaceAfter=4,
+            )
+        )
 
         # ── Learning objective ──
-        self.styles.add(ParagraphStyle(
-            name='ObjectiveTitle',
-            fontName=FONT_BOLD,
-            fontSize=9.5,
-            leading=12,
-            textColor=_PRIMARY,
-            spaceAfter=4,
-        ))
-        self.styles.add(ParagraphStyle(
-            name='ObjectiveItem',
-            fontName=FONT_REGULAR,
-            fontSize=9,
-            leading=12,
-            leftIndent=12,
-            textColor=colors.Color(0.25, 0.25, 0.25),
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="ObjectiveTitle",
+                fontName=FONT_BOLD,
+                fontSize=9.5,
+                leading=12,
+                textColor=_PRIMARY,
+                spaceAfter=4,
+            )
+        )
+        self.styles.add(
+            ParagraphStyle(
+                name="ObjectiveItem",
+                fontName=FONT_REGULAR,
+                fontSize=9,
+                leading=12,
+                leftIndent=12,
+                textColor=colors.Color(0.25, 0.25, 0.25),
+            )
+        )
 
         # ── Answer key ──
-        self.styles.add(ParagraphStyle(
-            name='AnswerKeyTitle',
-            fontName=FONT_BOLD,
-            fontSize=16,
-            leading=22,
-            textColor=_PRIMARY,
-            spaceBefore=8,
-            spaceAfter=10,
-            alignment=TA_CENTER,
-        ))
-        self.styles.add(ParagraphStyle(
-            name='AnswerText',
-            fontName=FONT_REGULAR,
-            fontSize=9,
-            leading=12,
-            leftIndent=8,
-        ))
-        self.styles.add(ParagraphStyle(
-            name='ExplanationText',
-            fontName=FONT_ITALIC,
-            fontSize=8.5,
-            leading=11,
-            leftIndent=8,
-            textColor=_MUTED,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="AnswerKeyTitle",
+                fontName=FONT_BOLD,
+                fontSize=16,
+                leading=22,
+                textColor=_PRIMARY,
+                spaceBefore=8,
+                spaceAfter=10,
+                alignment=TA_CENTER,
+            )
+        )
+        self.styles.add(
+            ParagraphStyle(
+                name="AnswerText",
+                fontName=FONT_REGULAR,
+                fontSize=9,
+                leading=12,
+                leftIndent=8,
+            )
+        )
+        self.styles.add(
+            ParagraphStyle(
+                name="ExplanationText",
+                fontName=FONT_ITALIC,
+                fontSize=8.5,
+                leading=11,
+                leftIndent=8,
+                textColor=_MUTED,
+            )
+        )
 
     # ──────────────────────────────────────────
     # Main entry point
@@ -386,23 +426,23 @@ class PDFService:
         self._page_count = 0
 
         story = []
-        questions = worksheet.get('questions', [])
+        questions = worksheet.get("questions", [])
 
         # Switch colour palette based on visual_theme
         global _PRIMARY, _ACCENT, _LIGHT_BG
         _theme = (worksheet.get("visual_theme") or "color").lower()
         if _theme == "black_and_white":
-            _PRIMARY  = colors.Color(0.1, 0.1, 0.1)
-            _ACCENT   = colors.Color(0.3, 0.3, 0.3)
+            _PRIMARY = colors.Color(0.1, 0.1, 0.1)
+            _ACCENT = colors.Color(0.3, 0.3, 0.3)
             _LIGHT_BG = colors.white
         elif _theme == "minimal":
-            _PRIMARY  = colors.Color(0.2, 0.2, 0.2)
-            _ACCENT   = colors.Color(0.4, 0.4, 0.4)
+            _PRIMARY = colors.Color(0.2, 0.2, 0.2)
+            _ACCENT = colors.Color(0.4, 0.4, 0.4)
             _LIGHT_BG = colors.white
         else:
             # Restore Skolar brand defaults in case a prior call changed them
-            _PRIMARY  = colors.HexColor("#1E1B4B")
-            _ACCENT   = colors.HexColor("#F97316")
+            _PRIMARY = colors.HexColor("#1E1B4B")
+            _ACCENT = colors.HexColor("#F97316")
             _LIGHT_BG = colors.HexColor("#F8FAFC")
 
         # Compute display order once — tier-sorted (Foundation → Application →
@@ -438,8 +478,7 @@ class PDFService:
         # ── Top rule line ──
         canvas.setStrokeColor(_PRIMARY)
         canvas.setLineWidth(1.5)
-        canvas.line(2.0 * cm, page_height - 1.6 * cm,
-                    page_width - 2.0 * cm, page_height - 1.6 * cm)
+        canvas.line(2.0 * cm, page_height - 1.6 * cm, page_width - 2.0 * cm, page_height - 1.6 * cm)
 
         # ── Footer ──
         y_footer = 1.0 * cm
@@ -450,10 +489,7 @@ class PDFService:
         canvas.drawString(2.0 * cm, y_footer, "Generated by Skolar")
 
         # Right: page number
-        canvas.drawRightString(
-            page_width - 2.0 * cm, y_footer,
-            f"Page {self._page_count}"
-        )
+        canvas.drawRightString(page_width - 2.0 * cm, y_footer, f"Page {self._page_count}")
 
         # Footer rule line
         canvas.setStrokeColor(_RULE)
@@ -469,25 +505,25 @@ class PDFService:
         """Build the questions section with tiered layout."""
 
         # ── Title ──
-        title = _sanitize_text(worksheet.get('title', 'Practice Worksheet'))
-        story.append(Paragraph(title, self.styles['WorksheetTitle']))
+        title = _sanitize_text(worksheet.get("title", "Practice Worksheet"))
+        story.append(Paragraph(title, self.styles["WorksheetTitle"]))
 
         # ── Subtitle (grade | subject | topic) ──
         subtitle_parts = []
-        if worksheet.get('grade'):
-            subtitle_parts.append(worksheet['grade'])
-        if worksheet.get('subject'):
-            subtitle_parts.append(worksheet['subject'])
-        if worksheet.get('topic'):
-            subtitle_parts.append(worksheet['topic'])
+        if worksheet.get("grade"):
+            subtitle_parts.append(worksheet["grade"])
+        if worksheet.get("subject"):
+            subtitle_parts.append(worksheet["subject"])
+        if worksheet.get("topic"):
+            subtitle_parts.append(worksheet["topic"])
         if subtitle_parts:
             subtitle = _sanitize_text("  |  ".join(subtitle_parts))
-            story.append(Paragraph(subtitle, self.styles['WorksheetSubtitle']))
+            story.append(Paragraph(subtitle, self.styles["WorksheetSubtitle"]))
 
         story.append(Spacer(1, 4))
 
         # ── Learning Objectives (Gold-G5) ──
-        objectives = worksheet.get('learning_objectives', [])
+        objectives = worksheet.get("learning_objectives", [])
         if objectives:
             self._build_learning_objectives(story, objectives)
             story.append(Spacer(1, 6))
@@ -498,17 +534,24 @@ class PDFService:
         story.append(Spacer(1, 6))
 
         # ── Instructions ──
-        story.append(Paragraph(
-            "<b>Instructions:</b> Read each question carefully. "
-            "Show your working in the space provided. Answer all questions.",
-            self.styles['Instructions']
-        ))
+        story.append(
+            Paragraph(
+                "<b>Instructions:</b> Read each question carefully. "
+                "Show your working in the space provided. Answer all questions.",
+                self.styles["Instructions"],
+            )
+        )
 
         # ── Thin separator ──
-        story.append(HRFlowable(
-            width="100%", thickness=0.5, color=_RULE,
-            spaceBefore=2, spaceAfter=12,
-        ))
+        story.append(
+            HRFlowable(
+                width="100%",
+                thickness=0.5,
+                color=_RULE,
+                spaceBefore=2,
+                spaceAfter=12,
+            )
+        )
 
         # ── Group questions by tier and render ──
         tiers = _group_questions_by_tier(questions)
@@ -519,15 +562,18 @@ class PDFService:
                 stars = _TIER_STARS.get(tier_key, "")
                 tier_color = TIER_COLORS.get(tier_label, _PRIMARY)
                 # Colored indicator line before tier header
-                story.append(HRFlowable(
-                    width="20%", thickness=2.5, color=tier_color,
-                    spaceBefore=14, spaceAfter=2, hAlign='LEFT',
-                ))
-                story.append(Paragraph(
-                    f"{stars}  {tier_label}",
-                    self.styles['TierHeader']
-                ))
-                story.append(Paragraph(tier_desc, self.styles['TierDesc']))
+                story.append(
+                    HRFlowable(
+                        width="20%",
+                        thickness=2.5,
+                        color=tier_color,
+                        spaceBefore=14,
+                        spaceAfter=2,
+                        hAlign="LEFT",
+                    )
+                )
+                story.append(Paragraph(f"{stars}  {tier_label}", self.styles["TierHeader"]))
+                story.append(Paragraph(tier_desc, self.styles["TierDesc"]))
 
             for question in tier_qs:
                 elements = self._build_single_question(question, q_number, tier_key)
@@ -540,18 +586,17 @@ class PDFService:
         bonus_questions = [q for q in questions if q.get("is_bonus") or q.get("_is_bonus")]
         if bonus_questions:
             story.append(Spacer(1, 8))
-            story.append(HRFlowable(
-                width="100%", thickness=1.0, color=_ACCENT,
-                spaceBefore=4, spaceAfter=8,
-            ))
-            story.append(Paragraph(
-                "*  Bonus Challenge",
-                self.styles['TierHeader']
-            ))
-            story.append(Paragraph(
-                "Optional — stretch your thinking!",
-                self.styles['TierDesc']
-            ))
+            story.append(
+                HRFlowable(
+                    width="100%",
+                    thickness=1.0,
+                    color=_ACCENT,
+                    spaceBefore=4,
+                    spaceAfter=8,
+                )
+            )
+            story.append(Paragraph("*  Bonus Challenge", self.styles["TierHeader"]))
+            story.append(Paragraph("Optional — stretch your thinking!", self.styles["TierDesc"]))
             for question in bonus_questions:
                 elements = self._build_bonus_question(question)
                 story.append(KeepTogether(elements))
@@ -564,9 +609,9 @@ class PDFService:
 
         row_data = [
             [
-                Paragraph("Name: ____________________________", self.styles['HeaderField']),
-                Paragraph("Date: ______________", self.styles['HeaderField']),
-                Paragraph(f"Score: _____ / {num_q}", self.styles['HeaderField']),
+                Paragraph("Name: ____________________________", self.styles["HeaderField"]),
+                Paragraph("Date: ______________", self.styles["HeaderField"]),
+                Paragraph(f"Score: _____ / {num_q}", self.styles["HeaderField"]),
             ]
         ]
 
@@ -575,13 +620,17 @@ class PDFService:
         col_w3 = page_width * 0.22
 
         header_table = Table(row_data, colWidths=[col_w1, col_w2, col_w3])
-        header_table.setStyle(TableStyle([
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('LINEBELOW', (0, 0), (-1, -1), 0.5, _RULE),
-        ]))
+        header_table.setStyle(
+            TableStyle(
+                [
+                    ("FONTSIZE", (0, 0), (-1, -1), 10),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                    ("LINEBELOW", (0, 0), (-1, -1), 0.5, _RULE),
+                ]
+            )
+        )
         story.append(header_table)
 
     def _build_learning_objectives(self, story: list, objectives: list[str]) -> None:
@@ -590,39 +639,40 @@ class PDFService:
 
         # Build content: title + bullet items
         obj_elements = []
-        obj_elements.append(Paragraph(
-            "Today's Learning Goal",
-            self.styles['ObjectiveTitle']
-        ))
+        obj_elements.append(Paragraph("Today's Learning Goal", self.styles["ObjectiveTitle"]))
         for obj in objectives:
-            obj_elements.append(Paragraph(
-                f"<bullet>&bull;</bullet> {_sanitize_text(obj)}",
-                self.styles['ObjectiveItem']
-            ))
+            obj_elements.append(
+                Paragraph(f"<bullet>&bull;</bullet> {_sanitize_text(obj)}", self.styles["ObjectiveItem"])
+            )
 
         # Wrap in a single-cell table for the bordered box
         obj_table = Table(
             [[obj_elements]],
             colWidths=[page_width - 1.0 * cm],
         )
-        obj_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), _LIGHT_BG),
-            ('BOX', (0, 0), (-1, -1), 0.5, _PRIMARY),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('LEFTPADDING', (0, 0), (-1, -1), 12),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
+        obj_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), _LIGHT_BG),
+                    ("BOX", (0, 0), (-1, -1), 0.5, _PRIMARY),
+                    ("TOPPADDING", (0, 0), (-1, -1), 8),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
         story.append(obj_table)
 
     def _build_single_question(self, question: dict, number: int, tier_key: str = "all") -> list:
         """Build elements for a single question. Returns list of flowables."""
         import re as _re
+
         elements = []
         # Prefer the render format field; fall back to legacy type field
-        q_type = question.get('format', question.get('type', 'short_answer'))
-        q_text = _sanitize_text(question.get('text', ''))
+        q_type = question.get("format", question.get("type", "short_answer"))
+        q_text = _sanitize_text(question.get("text", ""))
 
         # Star badge based on tier
         star_badge = ""
@@ -635,30 +685,32 @@ class PDFService:
 
         # Question text with number + star badge
         # For vertical_sum, suppress the question text header and render the sum directly
-        if q_type != 'vertical_sum':
-            elements.append(Paragraph(
-                f"<b><font color='#{_PRIMARY.hexval()[2:]}'>{number}.</font></b>"
-                f"<font size='7' color='#{_ACCENT.hexval()[2:]}'>{star_badge}</font>  {q_text}",
-                self.styles['QuestionText']
-            ))
+        if q_type != "vertical_sum":
+            elements.append(
+                Paragraph(
+                    f"<b><font color='#{_PRIMARY.hexval()[2:]}'>{number}.</font></b>"
+                    f"<font size='7' color='#{_ACCENT.hexval()[2:]}'>{star_badge}</font>  {q_text}",
+                    self.styles["QuestionText"],
+                )
+            )
 
         # ── Cartoon images (EVS/Science) — horizontal row, max 2 ─────────────
-        raw_images = question.get('images', []) or []
+        raw_images = question.get("images", []) or []
         if raw_images:
             import os
+
             from reportlab.platypus import Image as RLImage
 
             img_cells = []
             for img in raw_images[:2]:
                 img_path = img.get("path", "")
                 local_path = os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)),
-                    "data", "images", img_path.removeprefix("/images/")
+                    os.path.dirname(os.path.dirname(__file__)), "data", "images", img_path.removeprefix("/images/")
                 )
                 if os.path.exists(local_path):
                     try:
                         flat_path = _flatten_image_alpha(local_path)
-                        img_cells.append(RLImage(flat_path, width=1.8*cm, height=1.8*cm, kind='proportional'))
+                        img_cells.append(RLImage(flat_path, width=1.8 * cm, height=1.8 * cm, kind="proportional"))
                     except Exception as e:
                         logger.warning("Failed to embed image %s in PDF: %s", img_path, e)
 
@@ -672,47 +724,53 @@ class PDFService:
                         [img_cells],
                         colWidths=[col_width] * len(img_cells),
                     )
-                    img_table.setStyle(TableStyle([
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                        ('TOPPADDING', (0, 0), (-1, -1), 2),
-                        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-                    ]))
+                    img_table.setStyle(
+                        TableStyle(
+                            [
+                                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                                ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                                ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+                                ("TOPPADDING", (0, 0), (-1, -1), 2),
+                                ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+                            ]
+                        )
+                    )
                     elements.append(img_table)
                 elements.append(Spacer(1, 3))
 
         # ── Answer area by render format ──────────────────────────────────────
 
-        if q_type in ('mcq_3', 'mcq_4', 'multiple_choice') and question.get('options'):
+        if q_type in ("mcq_3", "mcq_4", "multiple_choice") and question.get("options"):
             # Options list with A/B/C/D labels
-            for j, option in enumerate(question['options']):
+            for j, option in enumerate(question["options"]):
                 letter = chr(65 + j)
-                elements.append(Paragraph(
-                    f"<font color='#{_PRIMARY.hexval()[2:]}'>{letter})</font>  "
-                    f"{_sanitize_text(str(option))}",
-                    self.styles['OptionText']
-                ))
+                elements.append(
+                    Paragraph(
+                        f"<font color='#{_PRIMARY.hexval()[2:]}'>{letter})</font>  {_sanitize_text(str(option))}",
+                        self.styles["OptionText"],
+                    )
+                )
             elements.append(Spacer(1, 3))
 
-        elif q_type in ('mcq_3', 'mcq_4'):
+        elif q_type in ("mcq_3", "mcq_4"):
             # MCQ requested but options not in question dict — render a blank choice area
-            num_opts = 4 if q_type == 'mcq_4' else 3
+            num_opts = 4 if q_type == "mcq_4" else 3
             for j in range(num_opts):
                 letter = chr(65 + j)
-                elements.append(Paragraph(
-                    f"<font color='#{_PRIMARY.hexval()[2:]}'>{letter})</font>  "
-                    "______________________________",
-                    self.styles['OptionText']
-                ))
+                elements.append(
+                    Paragraph(
+                        f"<font color='#{_PRIMARY.hexval()[2:]}'>{letter})</font>  ______________________________",
+                        self.styles["OptionText"],
+                    )
+                )
             elements.append(Spacer(1, 3))
 
-        elif q_type == 'vertical_sum':
+        elif q_type == "vertical_sum":
             # ── Stacked column arithmetic layout ─────────────────────────────
             # Parse "47 + 35" or "84 - 29" or "6 x 7" from question_text
             _vs_match = _re.search(
-                r'(\d+)\s*([+\-\u00d7\u00f7x])\s*(\d+)',
+                r"(\d+)\s*([+\-\u00d7\u00f7x])\s*(\d+)",
                 q_text,
             )
             _px = _PRIMARY.hexval()[2:]
@@ -723,33 +781,46 @@ class PDFService:
                 _b = _vs_match.group(3)
             else:
                 # Fallback: show the raw question text and ruled lines
-                elements.append(Paragraph(
-                    f"<b><font color='#{_px}'>{number}.</font></b>"
-                    f"<font size='7' color='#{_ac}'>{star_badge}</font>  {q_text}",
-                    self.styles['QuestionText']
-                ))
+                elements.append(
+                    Paragraph(
+                        f"<b><font color='#{_px}'>{number}.</font></b>"
+                        f"<font size='7' color='#{_ac}'>{star_badge}</font>  {q_text}",
+                        self.styles["QuestionText"],
+                    )
+                )
                 elements.append(Spacer(1, 6))
                 for _ in range(2):
-                    elements.append(HRFlowable(
-                        width="40%", thickness=0.3, color=_RULE,
-                        spaceBefore=10, spaceAfter=0, hAlign='LEFT',
-                    ))
+                    elements.append(
+                        HRFlowable(
+                            width="40%",
+                            thickness=0.3,
+                            color=_RULE,
+                            spaceBefore=10,
+                            spaceAfter=0,
+                            hAlign="LEFT",
+                        )
+                    )
                 elements.append(Spacer(1, 4))
                 return elements
 
             # Build question header with number badge
-            elements.append(Paragraph(
-                f"<b><font color='#{_px}'>{number}.</font></b>"
-                f"<font size='7' color='#{_ac}'>{star_badge}</font>",
-                self.styles['QuestionNumber']
-            ))
+            elements.append(
+                Paragraph(
+                    f"<b><font color='#{_px}'>{number}.</font></b><font size='7' color='#{_ac}'>{star_badge}</font>",
+                    self.styles["QuestionNumber"],
+                )
+            )
 
             # Stacked sum using a narrow right-aligned Table
-            from reportlab.lib.styles import ParagraphStyle as _PS
             from reportlab.lib.enums import TA_RIGHT as _TA_RIGHT
+            from reportlab.lib.styles import ParagraphStyle as _PS
+
             _vs_style = _PS(
-                'VSNum', fontName=FONT_BOLD, fontSize=14,
-                leading=18, alignment=_TA_RIGHT,
+                "VSNum",
+                fontName=FONT_BOLD,
+                fontSize=14,
+                leading=18,
+                alignment=_TA_RIGHT,
             )
             _col_w = 3.5 * cm
             _vs_table = Table(
@@ -759,108 +830,118 @@ class PDFService:
                 ],
                 colWidths=[_col_w],
             )
-            _vs_table.setStyle(TableStyle([
-                ('LINEBELOW', (0, 1), (-1, 1), 1.2, colors.black),
-                ('TOPPADDING', (0, 0), (-1, -1), 2),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ]))
+            _vs_table.setStyle(
+                TableStyle(
+                    [
+                        ("LINEBELOW", (0, 1), (-1, 1), 1.2, colors.black),
+                        ("TOPPADDING", (0, 0), (-1, -1), 2),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                        ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+                    ]
+                )
+            )
             elements.append(_vs_table)
             # Answer blank below the rule
-            elements.append(HRFlowable(
-                width=f"{_col_w}",
-                thickness=0.3, color=_RULE,
-                spaceBefore=8, spaceAfter=0, hAlign='LEFT',
-            ))
+            elements.append(
+                HRFlowable(
+                    width=f"{_col_w}",
+                    thickness=0.3,
+                    color=_RULE,
+                    spaceBefore=8,
+                    spaceAfter=0,
+                    hAlign="LEFT",
+                )
+            )
             elements.append(Spacer(1, 6))
 
-        elif q_type == 'true_false':
+        elif q_type == "true_false":
             _px = _PRIMARY.hexval()[2:]
-            elements.append(Paragraph(
-                f"<font color='#{_px}'>A)</font>  True",
-                self.styles['OptionText']
-            ))
-            elements.append(Paragraph(
-                f"<font color='#{_px}'>B)</font>  False",
-                self.styles['OptionText']
-            ))
+            elements.append(Paragraph(f"<font color='#{_px}'>A)</font>  True", self.styles["OptionText"]))
+            elements.append(Paragraph(f"<font color='#{_px}'>B)</font>  False", self.styles["OptionText"]))
             elements.append(Spacer(1, 3))
 
-        elif q_type == 'fill_blank':
+        elif q_type == "fill_blank":
             # Single answer line with box-style underline
             elements.append(Spacer(1, 4))
-            elements.append(Paragraph(
-                "Ans: ________________________________________",
-                self.styles['OptionText']
-            ))
+            elements.append(Paragraph("Ans: ________________________________________", self.styles["OptionText"]))
             elements.append(Spacer(1, 6))
 
         else:
             # Determine answer line count based on question complexity
-            role = question.get('role', '')
-            q_actual_type = question.get('type', '')
+            role = question.get("role", "")
+            q_actual_type = question.get("type", "")
 
-            if role in ('thinking', 'error_detection') or q_actual_type in ('word_problem', 'error_detection'):
+            if role in ("thinking", "error_detection") or q_actual_type in ("word_problem", "error_detection"):
                 num_lines = 4  # More space for reasoning/explanation
-            elif q_actual_type == 'short_answer' and role == 'application':
+            elif q_actual_type == "short_answer" and role == "application":
                 num_lines = 2  # Medium answer
             else:
                 num_lines = 2  # Default: short factual answer
 
             elements.append(Spacer(1, 6))
             for _ in range(num_lines):
-                elements.append(HRFlowable(
-                    width="85%", thickness=0.3, color=_RULE,
-                    spaceBefore=7, spaceAfter=0,
-                    hAlign='LEFT',
-                ))
+                elements.append(
+                    HRFlowable(
+                        width="85%",
+                        thickness=0.3,
+                        color=_RULE,
+                        spaceBefore=7,
+                        spaceAfter=0,
+                        hAlign="LEFT",
+                    )
+                )
             elements.append(Spacer(1, 4))
 
         # Hint — only if show_hints is enabled
         if self._show_hints:
-            hint = question.get('hint') or question.get('explanation')
+            hint = question.get("hint") or question.get("explanation")
             if hint:
                 hint_text = _sanitize_text(hint)
-                elements.append(Paragraph(
-                    f"<i>Hint: {hint_text}</i>",
-                    self.styles['HintText']
-                ))
+                elements.append(Paragraph(f"<i>Hint: {hint_text}</i>", self.styles["HintText"]))
 
         return elements
 
     def _build_bonus_question(self, question: dict) -> list:
         """Build elements for a bonus challenge question with a framed box."""
         elements = []
-        q_text = _sanitize_text(question.get('text', ''))
+        q_text = _sanitize_text(question.get("text", ""))
 
         # Question text paragraph
         q_para = Paragraph(
-            f"<b><font color='#{_ACCENT.hexval()[2:]}'>BONUS:</font></b>  {q_text}",
-            self.styles['QuestionText']
+            f"<b><font color='#{_ACCENT.hexval()[2:]}'>BONUS:</font></b>  {q_text}", self.styles["QuestionText"]
         )
 
         # Three answer lines
         answer_lines = [Spacer(1, 6)]
         for _ in range(3):
-            answer_lines.append(HRFlowable(
-                width="85%", thickness=0.3, color=_RULE,
-                spaceBefore=10, spaceAfter=0,
-                hAlign='LEFT',
-            ))
+            answer_lines.append(
+                HRFlowable(
+                    width="85%",
+                    thickness=0.3,
+                    color=_RULE,
+                    spaceBefore=10,
+                    spaceAfter=0,
+                    hAlign="LEFT",
+                )
+            )
         answer_lines.append(Spacer(1, 4))
 
         # Wrap in a Table with a dashed-style amber border
         page_width = A4[0] - 4.0 * cm
         inner = [q_para] + answer_lines
         box_table = Table([[inner]], colWidths=[page_width])
-        box_table.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 1.2, _ACCENT),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.Color(1.0, 0.97, 0.88)),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-        ]))
+        box_table.setStyle(
+            TableStyle(
+                [
+                    ("BOX", (0, 0), (-1, -1), 1.2, _ACCENT),
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.Color(1.0, 0.97, 0.88)),
+                    ("TOPPADDING", (0, 0), (-1, -1), 8),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ]
+            )
+        )
         elements.append(box_table)
         return elements
 
@@ -871,76 +952,85 @@ class PDFService:
         """Build a clean answer key section."""
         # Prominent divider before the answer key
         story.append(Spacer(1, 10))
-        story.append(HRFlowable(
-            width="100%", thickness=2.0, color=_PRIMARY,
-            spaceBefore=6, spaceAfter=8,
-        ))
+        story.append(
+            HRFlowable(
+                width="100%",
+                thickness=2.0,
+                color=_PRIMARY,
+                spaceBefore=6,
+                spaceAfter=8,
+            )
+        )
 
-        title = _sanitize_text(worksheet.get('title', 'Practice Worksheet'))
-        story.append(Paragraph(f"{title} - Answer Key", self.styles['AnswerKeyTitle']))
+        title = _sanitize_text(worksheet.get("title", "Practice Worksheet"))
+        story.append(Paragraph(f"{title} - Answer Key", self.styles["AnswerKeyTitle"]))
 
-        story.append(HRFlowable(
-            width="100%", thickness=0.5, color=_PRIMARY,
-            spaceBefore=2, spaceAfter=14,
-        ))
+        story.append(
+            HRFlowable(
+                width="100%",
+                thickness=0.5,
+                color=_PRIMARY,
+                spaceBefore=2,
+                spaceAfter=14,
+            )
+        )
 
         # Answer grid — 3 columns
         answer_data = []
         row = []
         for i, question in enumerate(questions, 1):
-            answer = question.get('correct_answer', 'N/A')
+            answer = question.get("correct_answer", "N/A")
             if isinstance(answer, list):
-                answer = ', '.join(str(a) for a in answer)
-            row.append(Paragraph(
-                f"<b>Q{i}:</b> {_sanitize_text(str(answer))}",
-                self.styles['AnswerText']
-            ))
+                answer = ", ".join(str(a) for a in answer)
+            row.append(Paragraph(f"<b>Q{i}:</b> {_sanitize_text(str(answer))}", self.styles["AnswerText"]))
             if len(row) == 3:
                 answer_data.append(row)
                 row = []
         if row:
             while len(row) < 3:
-                row.append('')
+                row.append("")
             answer_data.append(row)
 
         if answer_data:
             page_width = A4[0] - 4.0 * cm
             col_w = page_width / 3
             answer_table = Table(answer_data, colWidths=[col_w] * 3)
-            answer_table.setStyle(TableStyle([
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 0.4, _RULE),
-                # Alternate row shading
-                *[
-                    ('BACKGROUND', (0, r), (-1, r), _LIGHT_BG)
-                    for r in range(0, len(answer_data), 2)
-                ],
-            ]))
+            answer_table.setStyle(
+                TableStyle(
+                    [
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("TOPPADDING", (0, 0), (-1, -1), 6),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                        ("GRID", (0, 0), (-1, -1), 0.4, _RULE),
+                        # Alternate row shading
+                        *[("BACKGROUND", (0, r), (-1, r), _LIGHT_BG) for r in range(0, len(answer_data), 2)],
+                    ]
+                )
+            )
             story.append(answer_table)
 
         # Explanations
-        has_explanations = any(q.get('explanation') for q in questions)
+        has_explanations = any(q.get("explanation") for q in questions)
         if has_explanations:
             story.append(Spacer(1, 18))
-            story.append(Paragraph(
-                "<b>Explanations</b>",
-                self.styles['AnswerKeyTitle']
-            ))
-            story.append(HRFlowable(
-                width="100%", thickness=0.3, color=_RULE,
-                spaceBefore=2, spaceAfter=10,
-            ))
+            story.append(Paragraph("<b>Explanations</b>", self.styles["AnswerKeyTitle"]))
+            story.append(
+                HRFlowable(
+                    width="100%",
+                    thickness=0.3,
+                    color=_RULE,
+                    spaceBefore=2,
+                    spaceAfter=10,
+                )
+            )
 
             for i, question in enumerate(questions, 1):
-                explanation = question.get('explanation')
+                explanation = question.get("explanation")
                 if explanation:
-                    story.append(Paragraph(
-                        f"<b>Q{i}:</b> {_sanitize_text(explanation)}",
-                        self.styles['ExplanationText']
-                    ))
+                    story.append(
+                        Paragraph(f"<b>Q{i}:</b> {_sanitize_text(explanation)}", self.styles["ExplanationText"])
+                    )
                     story.append(Spacer(1, 4))
 
 

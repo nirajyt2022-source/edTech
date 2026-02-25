@@ -10,13 +10,13 @@ Flow:
 
 import logging
 
-from fastapi import APIRouter, HTTPException, Header, Request
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel, Field
+from supabase import create_client
 
+from app.core.config import get_settings
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import INJECTION_RE as _INJECTION_RE
-from supabase import create_client
-from app.core.config import get_settings
 from app.services.subscription_check import check_ai_usage_allowed
 
 logger = logging.getLogger(__name__)
@@ -56,27 +56,29 @@ def get_user_id_from_token(authorization: str) -> str:
 
 # ── Pydantic models ──────────────────────────────────────────────────────
 
+
 class ChatMessage(BaseModel):
-    role: str        # "user" or "assistant"
+    role: str  # "user" or "assistant"
     content: str
 
 
 class AskRequest(BaseModel):
     question: str = Field(..., max_length=2000)
-    grade: str = ""               # Optional: "Class 4"
-    subject: str = ""             # Optional: "Maths"
-    language: str = "English"     # "English" or "Hindi"
+    grade: str = ""  # Optional: "Class 4"
+    subject: str = ""  # Optional: "Maths"
+    language: str = "English"  # "English" or "Hindi"
     history: list[ChatMessage] = Field(default=[], max_length=20)  # Previous messages for multi-turn
 
 
 class AskResponse(BaseModel):
     answer: str
-    suggested_topic: str | None = None     # e.g., "Fractions"
-    suggested_subject: str | None = None   # e.g., "Maths"
-    suggested_grade: str | None = None     # e.g., "Class 4"
+    suggested_topic: str | None = None  # e.g., "Fractions"
+    suggested_subject: str | None = None  # e.g., "Maths"
+    suggested_grade: str | None = None  # e.g., "Class 4"
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────
+
 
 @router.post("/question", response_model=AskResponse)
 @limiter.limit("20/minute")
@@ -100,7 +102,9 @@ async def ask_question(request: Request, body: AskRequest, authorization: str = 
         else:
             safe_history.append(msg)
 
-    grade_context = f"The student is in {body.grade}." if body.grade else "Determine the appropriate level from the question."
+    grade_context = (
+        f"The student is in {body.grade}." if body.grade else "Determine the appropriate level from the question."
+    )
     subject_context = f"This is a {body.subject} question." if body.subject else ""
 
     language_instruction = ""
@@ -138,6 +142,7 @@ RULES:
     # -- RAG: Inject curriculum context if grade+subject available --
     if body.grade and body.subject:
         from app.services.curriculum import get_curriculum_context
+
         # Use detected topic from question or fall back to empty
         curriculum_ctx = await get_curriculum_context(body.grade, body.subject, safe_question[:50])
         if curriculum_ctx:
@@ -162,18 +167,22 @@ RULES:
 
 # ── Internal helpers ──────────────────────────────────────────────────────
 
+
 async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], question: str) -> str:
     """Call Gemini with chat history and return the answer text."""
     import asyncio
+
     from app.services.ai_client import get_ai_client
 
     # Build message history (last 10 messages for context)
     messages = []
     for msg in history[-10:]:
-        messages.append({
-            "role": "user" if msg.role == "user" else "model",
-            "content": msg.content,
-        })
+        messages.append(
+            {
+                "role": "user" if msg.role == "user" else "model",
+                "content": msg.content,
+            }
+        )
 
     # Add current question
     messages.append({"role": "user", "content": question})
@@ -195,6 +204,7 @@ async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], ques
 async def _detect_topic(question: str, grade: str) -> dict:
     """Quick detection of the most relevant Skolar topic from the question."""
     import asyncio
+
     from app.services.ai_client import get_ai_client
 
     prompt = f"""From this student question, identify the most relevant CBSE topic.

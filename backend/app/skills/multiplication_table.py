@@ -1,8 +1,9 @@
 """Multiplication table recall — SkillContract implementation."""
 
-from .base import SkillContract
 import random
 import re
+
+from .base import SkillContract
 
 
 class MultiplicationTableRecallContract(SkillContract):

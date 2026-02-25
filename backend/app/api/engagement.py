@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, Header, Request
-from pydantic import BaseModel
-from datetime import datetime, date
 import logging
+from datetime import date, datetime
+
+from fastapi import APIRouter, Header, HTTPException, Request
+from pydantic import BaseModel
 from supabase import create_client
+
 from app.core.config import get_settings
 from app.middleware.rate_limit import limiter
 
@@ -40,26 +42,27 @@ def get_user_id_from_token(authorization: str) -> str:
 
 def ensure_engagement_exists(user_id: str, child_id: str) -> dict:
     """Ensure engagement record exists for a child."""
-    result = supabase.table("child_engagement") \
-        .select("*") \
-        .eq("child_id", child_id) \
-        .execute()
+    result = supabase.table("child_engagement").select("*").eq("child_id", child_id).execute()
 
     if result.data and len(result.data) > 0:
         return result.data[0]
 
     # Create new engagement record
-    insert_result = supabase.table("child_engagement") \
-        .insert({
-            "user_id": user_id,
-            "child_id": child_id,
-            "total_stars": 0,
-            "current_streak": 0,
-            "longest_streak": 0,
-            "last_activity_date": None,
-            "total_worksheets_completed": 0,
-        }) \
+    insert_result = (
+        supabase.table("child_engagement")
+        .insert(
+            {
+                "user_id": user_id,
+                "child_id": child_id,
+                "total_stars": 0,
+                "current_streak": 0,
+                "longest_streak": 0,
+                "last_activity_date": None,
+                "total_worksheets_completed": 0,
+            }
+        )
         .execute()
+    )
 
     if insert_result.data:
         return insert_result.data[0]
@@ -69,22 +72,15 @@ def ensure_engagement_exists(user_id: str, child_id: str) -> dict:
 
 @router.get("/{child_id}", response_model=EngagementStats)
 @limiter.limit("60/minute")
-async def get_engagement(
-    request: Request,
-    child_id: str,
-    authorization: str = Header(...)
-):
+async def get_engagement(request: Request, child_id: str, authorization: str = Header(...)):
     """Get engagement stats for a child."""
     user_id = get_user_id_from_token(authorization)
 
     try:
         # Verify child belongs to user
-        child_result = supabase.table("children") \
-            .select("id") \
-            .eq("id", child_id) \
-            .eq("user_id", user_id) \
-            .single() \
-            .execute()
+        child_result = (
+            supabase.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
+        )
 
         if not child_result.data:
             raise HTTPException(status_code=404, detail="Child not found")
@@ -109,22 +105,15 @@ async def get_engagement(
 
 @router.post("/{child_id}/complete")
 @limiter.limit("30/minute")
-async def record_completion(
-    request: Request,
-    child_id: str,
-    authorization: str = Header(...)
-):
+async def record_completion(request: Request, child_id: str, authorization: str = Header(...)):
     """Record a worksheet completion (triggered on PDF download)."""
     user_id = get_user_id_from_token(authorization)
 
     try:
         # Verify child belongs to user
-        child_result = supabase.table("children") \
-            .select("id") \
-            .eq("id", child_id) \
-            .eq("user_id", user_id) \
-            .single() \
-            .execute()
+        child_result = (
+            supabase.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
+        )
 
         if not child_result.data:
             raise HTTPException(status_code=404, detail="Child not found")
@@ -161,17 +150,16 @@ async def record_completion(
         new_total = engagement["total_worksheets_completed"] + 1
 
         # Update engagement
-        supabase.table("child_engagement") \
-            .update({
+        supabase.table("child_engagement").update(
+            {
                 "total_stars": new_stars,
                 "current_streak": current_streak,
                 "longest_streak": longest_streak,
                 "total_worksheets_completed": new_total,
                 "last_activity_date": today.isoformat(),
                 "updated_at": datetime.now().isoformat(),
-            }) \
-            .eq("child_id", child_id) \
-            .execute()
+            }
+        ).eq("child_id", child_id).execute()
 
         return {
             "success": True,

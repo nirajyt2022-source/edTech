@@ -12,21 +12,26 @@ Produces a clean, colourful 1-2 page A4 PDF with:
 """
 
 import io
-import os
 import logging
+import os
 from xml.sax.saxutils import escape as xml_escape
 
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
 from reportlab.lib.enums import TA_CENTER
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    HRFlowable, KeepTogether,
-)
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import (
+    HRFlowable,
+    KeepTogether,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,22 +46,22 @@ _USE_UNICODE_FONT = False
 
 if os.path.exists(_NOTO_VARIABLE):
     try:
-        pdfmetrics.registerFont(TTFont('RevisionFont', _NOTO_VARIABLE))
-        pdfmetrics.registerFont(TTFont('RevisionFont-Bold', _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont("RevisionFont", _NOTO_VARIABLE))
+        pdfmetrics.registerFont(TTFont("RevisionFont-Bold", _NOTO_VARIABLE))
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register Noto Sans font for revision PDF: %s", e)
 
 if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
     try:
-        pdfmetrics.registerFont(TTFont('RevisionFont', _DEJAVU))
-        pdfmetrics.registerFont(TTFont('RevisionFont-Bold', _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
+        pdfmetrics.registerFont(TTFont("RevisionFont", _DEJAVU))
+        pdfmetrics.registerFont(TTFont("RevisionFont-Bold", _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register DejaVu font for revision PDF: %s", e)
 
-FONT_REGULAR = 'RevisionFont' if _USE_UNICODE_FONT else 'Helvetica'
-FONT_BOLD = 'RevisionFont-Bold' if _USE_UNICODE_FONT else 'Helvetica-Bold'
+FONT_REGULAR = "RevisionFont" if _USE_UNICODE_FONT else "Helvetica"
+FONT_BOLD = "RevisionFont-Bold" if _USE_UNICODE_FONT else "Helvetica-Bold"
 
 # ── Colour palette ────────────────────────────────────────────────────────
 
@@ -77,102 +82,123 @@ PAGE_WIDTH, PAGE_HEIGHT = A4
 
 # ── Styles ────────────────────────────────────────────────────────────────
 
+
 def _build_styles():
     """Build all ParagraphStyles used in the revision PDF."""
     styles = getSampleStyleSheet()
 
-    styles.add(ParagraphStyle(
-        'RevTitle',
-        fontName=FONT_BOLD,
-        fontSize=18,
-        leading=22,
-        textColor=_FOREST_GREEN,
-        alignment=TA_CENTER,
-        spaceAfter=2,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevTitle",
+            fontName=FONT_BOLD,
+            fontSize=18,
+            leading=22,
+            textColor=_FOREST_GREEN,
+            alignment=TA_CENTER,
+            spaceAfter=2,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevSubtitle',
-        fontName=FONT_REGULAR,
-        fontSize=10,
-        leading=14,
-        textColor=_MUTED_TEXT,
-        alignment=TA_CENTER,
-        spaceAfter=12,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevSubtitle",
+            fontName=FONT_REGULAR,
+            fontSize=10,
+            leading=14,
+            textColor=_MUTED_TEXT,
+            alignment=TA_CENTER,
+            spaceAfter=12,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevSectionHeader',
-        fontName=FONT_BOLD,
-        fontSize=13,
-        leading=17,
-        textColor=_FOREST_GREEN,
-        spaceBefore=14,
-        spaceAfter=6,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevSectionHeader",
+            fontName=FONT_BOLD,
+            fontSize=13,
+            leading=17,
+            textColor=_FOREST_GREEN,
+            spaceBefore=14,
+            spaceAfter=6,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevBody',
-        fontName=FONT_REGULAR,
-        fontSize=9.5,
-        leading=13,
-        textColor=_BODY_TEXT,
-        spaceAfter=4,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevBody",
+            fontName=FONT_REGULAR,
+            fontSize=9.5,
+            leading=13,
+            textColor=_BODY_TEXT,
+            spaceAfter=4,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevBodyBold',
-        fontName=FONT_BOLD,
-        fontSize=9.5,
-        leading=13,
-        textColor=_BODY_TEXT,
-        spaceAfter=2,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevBodyBold",
+            fontName=FONT_BOLD,
+            fontSize=9.5,
+            leading=13,
+            textColor=_BODY_TEXT,
+            spaceAfter=2,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevConceptTitle',
-        fontName=FONT_BOLD,
-        fontSize=10,
-        leading=13,
-        textColor=_AMBER,
-        spaceAfter=2,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevConceptTitle",
+            fontName=FONT_BOLD,
+            fontSize=10,
+            leading=13,
+            textColor=_AMBER,
+            spaceAfter=2,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevExampleHeader',
-        fontName=FONT_BOLD,
-        fontSize=10,
-        leading=13,
-        textColor=_DARK_GREEN,
-        spaceAfter=2,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevExampleHeader",
+            fontName=FONT_BOLD,
+            fontSize=10,
+            leading=13,
+            textColor=_DARK_GREEN,
+            spaceAfter=2,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevMistakeHeader',
-        fontName=FONT_BOLD,
-        fontSize=10,
-        leading=13,
-        textColor=_RED,
-        spaceAfter=2,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevMistakeHeader",
+            fontName=FONT_BOLD,
+            fontSize=10,
+            leading=13,
+            textColor=_RED,
+            spaceAfter=2,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevAnswer',
-        fontName=FONT_BOLD,
-        fontSize=9.5,
-        leading=13,
-        textColor=_DARK_GREEN,
-        spaceAfter=2,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevAnswer",
+            fontName=FONT_BOLD,
+            fontSize=9.5,
+            leading=13,
+            textColor=_DARK_GREEN,
+            spaceAfter=2,
+        )
+    )
 
-    styles.add(ParagraphStyle(
-        'RevFooter',
-        fontName=FONT_REGULAR,
-        fontSize=8,
-        leading=10,
-        textColor=_MUTED_TEXT,
-        alignment=TA_CENTER,
-    ))
+    styles.add(
+        ParagraphStyle(
+            "RevFooter",
+            fontName=FONT_REGULAR,
+            fontSize=8,
+            leading=10,
+            textColor=_MUTED_TEXT,
+            alignment=TA_CENTER,
+        )
+    )
 
     return styles
 
@@ -185,6 +211,7 @@ def _esc(text: str) -> str:
 
 
 # ── Main PDF generation ──────────────────────────────────────────────────
+
 
 def generate_revision_pdf(notes) -> bytes:
     """Generate a revision notes PDF and return raw bytes.
@@ -212,32 +239,36 @@ def generate_revision_pdf(notes) -> bytes:
     story = []
 
     # ── Header ────────────────────────────────────────────────────────
-    story.append(Paragraph(_esc(f"{notes.topic} \u2014 Revision Notes"), styles['RevTitle']))
+    story.append(Paragraph(_esc(f"{notes.topic} \u2014 Revision Notes"), styles["RevTitle"]))
     subtitle = f"{notes.grade}  |  {notes.subject}  |  {notes.language}"
-    story.append(Paragraph(_esc(subtitle), styles['RevSubtitle']))
+    story.append(Paragraph(_esc(subtitle), styles["RevSubtitle"]))
     story.append(HRFlowable(width="100%", thickness=1.5, color=_FOREST_GREEN, spaceAfter=10))
 
     # ── Introduction ──────────────────────────────────────────────────
     if notes.introduction:
-        story.append(Paragraph(_esc(notes.introduction), styles['RevBody']))
+        story.append(Paragraph(_esc(notes.introduction), styles["RevBody"]))
         story.append(Spacer(1, 6))
 
     # ── Key Concepts ──────────────────────────────────────────────────
     if notes.key_concepts:
-        story.append(Paragraph("\u25C6  Key Concepts", styles['RevSectionHeader']))
+        story.append(Paragraph("\u25c6  Key Concepts", styles["RevSectionHeader"]))
 
         for i, concept in enumerate(notes.key_concepts, 1):
             concept_items = []
-            concept_items.append(Paragraph(
-                f"{i}. {_esc(concept.title)}",
-                styles['RevConceptTitle'],
-            ))
-            concept_items.append(Paragraph(_esc(concept.explanation), styles['RevBody']))
+            concept_items.append(
+                Paragraph(
+                    f"{i}. {_esc(concept.title)}",
+                    styles["RevConceptTitle"],
+                )
+            )
+            concept_items.append(Paragraph(_esc(concept.explanation), styles["RevBody"]))
             if concept.example:
-                concept_items.append(Paragraph(
-                    f"<i>Example:</i> {_esc(concept.example)}",
-                    styles['RevBody'],
-                ))
+                concept_items.append(
+                    Paragraph(
+                        f"<i>Example:</i> {_esc(concept.example)}",
+                        styles["RevBody"],
+                    )
+                )
             concept_items.append(Spacer(1, 4))
 
             # Wrap each concept in a light amber box
@@ -245,136 +276,172 @@ def generate_revision_pdf(notes) -> bytes:
                 [[concept_items]],
                 colWidths=[doc.width - 0.6 * cm],
             )
-            inner_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), _LIGHT_AMBER_BG),
-                ('BOX', (0, 0), (-1, -1), 0.5, _AMBER),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ]))
+            inner_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), _LIGHT_AMBER_BG),
+                        ("BOX", (0, 0), (-1, -1), 0.5, _AMBER),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                        ("TOPPADDING", (0, 0), (-1, -1), 6),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ]
+                )
+            )
             story.append(KeepTogether([inner_table, Spacer(1, 4)]))
 
     # ── Worked Examples ───────────────────────────────────────────────
     if notes.worked_examples:
-        story.append(Paragraph("\u270D  Worked Examples", styles['RevSectionHeader']))
+        story.append(Paragraph("\u270d  Worked Examples", styles["RevSectionHeader"]))
 
         for i, ex in enumerate(notes.worked_examples, 1):
             ex_items = []
-            ex_items.append(Paragraph(
-                f"Example {i}: {_esc(ex.problem)}",
-                styles['RevExampleHeader'],
-            ))
+            ex_items.append(
+                Paragraph(
+                    f"Example {i}: {_esc(ex.problem)}",
+                    styles["RevExampleHeader"],
+                )
+            )
             for step_idx, step in enumerate(ex.step_by_step):
-                ex_items.append(Paragraph(f"  {_esc(step)}", styles['RevBody']))
-            ex_items.append(Paragraph(
-                f"Answer: {_esc(ex.answer)}",
-                styles['RevAnswer'],
-            ))
+                ex_items.append(Paragraph(f"  {_esc(step)}", styles["RevBody"]))
+            ex_items.append(
+                Paragraph(
+                    f"Answer: {_esc(ex.answer)}",
+                    styles["RevAnswer"],
+                )
+            )
             ex_items.append(Spacer(1, 4))
 
             inner_table = Table(
                 [[ex_items]],
                 colWidths=[doc.width - 0.6 * cm],
             )
-            inner_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), _LIGHT_GREEN_BG),
-                ('BOX', (0, 0), (-1, -1), 0.5, _DARK_GREEN),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ]))
+            inner_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), _LIGHT_GREEN_BG),
+                        ("BOX", (0, 0), (-1, -1), 0.5, _DARK_GREEN),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                        ("TOPPADDING", (0, 0), (-1, -1), 6),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ]
+                )
+            )
             story.append(KeepTogether([inner_table, Spacer(1, 4)]))
 
     # ── Common Mistakes ───────────────────────────────────────────────
     if notes.common_mistakes:
-        story.append(Paragraph("\u26A0  Common Mistakes", styles['RevSectionHeader']))
+        story.append(Paragraph("\u26a0  Common Mistakes", styles["RevSectionHeader"]))
 
         for i, m in enumerate(notes.common_mistakes, 1):
             m_items = []
-            m_items.append(Paragraph(
-                f"{i}. Mistake: {_esc(m.mistake)}",
-                styles['RevMistakeHeader'],
-            ))
-            m_items.append(Paragraph(
-                f"<b>Correction:</b> {_esc(m.correction)}",
-                styles['RevBody'],
-            ))
-            m_items.append(Paragraph(
-                f"<i>Tip:</i> {_esc(m.tip)}",
-                styles['RevBody'],
-            ))
+            m_items.append(
+                Paragraph(
+                    f"{i}. Mistake: {_esc(m.mistake)}",
+                    styles["RevMistakeHeader"],
+                )
+            )
+            m_items.append(
+                Paragraph(
+                    f"<b>Correction:</b> {_esc(m.correction)}",
+                    styles["RevBody"],
+                )
+            )
+            m_items.append(
+                Paragraph(
+                    f"<i>Tip:</i> {_esc(m.tip)}",
+                    styles["RevBody"],
+                )
+            )
             m_items.append(Spacer(1, 4))
 
             inner_table = Table(
                 [[m_items]],
                 colWidths=[doc.width - 0.6 * cm],
             )
-            inner_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), _LIGHT_RED_BG),
-                ('BOX', (0, 0), (-1, -1), 0.5, _RED),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ]))
+            inner_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), _LIGHT_RED_BG),
+                        ("BOX", (0, 0), (-1, -1), 0.5, _RED),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                        ("TOPPADDING", (0, 0), (-1, -1), 6),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ]
+                )
+            )
             story.append(KeepTogether([inner_table, Spacer(1, 4)]))
 
     # ── Quick Quiz ────────────────────────────────────────────────────
     if notes.quick_quiz:
-        story.append(Paragraph("\u2753  Quick Quiz", styles['RevSectionHeader']))
+        story.append(Paragraph("\u2753  Quick Quiz", styles["RevSectionHeader"]))
 
         for i, q in enumerate(notes.quick_quiz, 1):
             q_items = []
-            q_items.append(Paragraph(
-                f"Q{i}. {_esc(q.question)}",
-                styles['RevBodyBold'],
-            ))
-            option_letters = ['A', 'B', 'C', 'D']
+            q_items.append(
+                Paragraph(
+                    f"Q{i}. {_esc(q.question)}",
+                    styles["RevBodyBold"],
+                )
+            )
+            option_letters = ["A", "B", "C", "D"]
             for j, opt in enumerate(q.options):
                 letter = option_letters[j] if j < len(option_letters) else str(j + 1)
-                is_correct = (opt.strip() == q.correct_answer.strip())
+                is_correct = opt.strip() == q.correct_answer.strip()
                 if is_correct:
-                    q_items.append(Paragraph(
-                        f"  <b>{letter})</b> {_esc(opt)}  <font color='#166534'>\u2713</font>",
-                        styles['RevAnswer'],
-                    ))
+                    q_items.append(
+                        Paragraph(
+                            f"  <b>{letter})</b> {_esc(opt)}  <font color='#166534'>\u2713</font>",
+                            styles["RevAnswer"],
+                        )
+                    )
                 else:
-                    q_items.append(Paragraph(
-                        f"  {letter}) {_esc(opt)}",
-                        styles['RevBody'],
-                    ))
+                    q_items.append(
+                        Paragraph(
+                            f"  {letter}) {_esc(opt)}",
+                            styles["RevBody"],
+                        )
+                    )
             if q.explanation:
-                q_items.append(Paragraph(
-                    f"<i>{_esc(q.explanation)}</i>",
-                    styles['RevBody'],
-                ))
+                q_items.append(
+                    Paragraph(
+                        f"<i>{_esc(q.explanation)}</i>",
+                        styles["RevBody"],
+                    )
+                )
             q_items.append(Spacer(1, 4))
 
             inner_table = Table(
                 [[q_items]],
                 colWidths=[doc.width - 0.6 * cm],
             )
-            inner_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), _LIGHT_BLUE_BG),
-                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#3B82F6")),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ]))
+            inner_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), _LIGHT_BLUE_BG),
+                        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#3B82F6")),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                        ("TOPPADDING", (0, 0), (-1, -1), 6),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ]
+                )
+            )
             story.append(KeepTogether([inner_table, Spacer(1, 4)]))
 
     # ── Memory Tips ───────────────────────────────────────────────────
     if notes.memory_tips:
-        story.append(Paragraph("\u2728  Memory Tips", styles['RevSectionHeader']))
+        story.append(Paragraph("\u2728  Memory Tips", styles["RevSectionHeader"]))
 
         for tip in notes.memory_tips:
-            story.append(Paragraph(
-                f"\u2022  {_esc(tip)}",
-                styles['RevBody'],
-            ))
+            story.append(
+                Paragraph(
+                    f"\u2022  {_esc(tip)}",
+                    styles["RevBody"],
+                )
+            )
         story.append(Spacer(1, 8))
 
     # ── Build with footer ─────────────────────────────────────────────

@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, Header, Request
-from pydantic import BaseModel
-from datetime import datetime
 import logging
+from datetime import datetime
+
+from fastapi import APIRouter, Header, HTTPException, Request
+from pydantic import BaseModel
 from supabase import create_client
+
 from app.core.config import get_settings
 from app.middleware.rate_limit import limiter
 
@@ -43,10 +45,7 @@ def get_user_id_from_token(authorization: str) -> str:
 
 def ensure_subscription_exists(user_id: str) -> dict:
     """Ensure user has a subscription record, create if not exists."""
-    result = supabase.table("user_subscriptions") \
-        .select("*") \
-        .eq("user_id", user_id) \
-        .execute()
+    result = supabase.table("user_subscriptions").select("*").eq("user_id", user_id).execute()
 
     if result.data and len(result.data) > 0:
         sub = result.data[0]
@@ -55,26 +54,34 @@ def ensure_subscription_exists(user_id: str) -> dict:
         if datetime.now(month_reset_at.tzinfo) >= month_reset_at:
             # Reset the monthly count
             new_reset = (datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1)
-            update_result = supabase.table("user_subscriptions") \
-                .update({
-                    "worksheets_generated_this_month": 0,
-                    "month_reset_at": new_reset.isoformat(),
-                    "updated_at": datetime.now().isoformat()
-                }) \
-                .eq("user_id", user_id) \
+            update_result = (
+                supabase.table("user_subscriptions")
+                .update(
+                    {
+                        "worksheets_generated_this_month": 0,
+                        "month_reset_at": new_reset.isoformat(),
+                        "updated_at": datetime.now().isoformat(),
+                    }
+                )
+                .eq("user_id", user_id)
                 .execute()
+            )
             if update_result.data:
                 return update_result.data[0]
         return sub
     else:
         # Create new subscription
-        insert_result = supabase.table("user_subscriptions") \
-            .insert({
-                "user_id": user_id,
-                "tier": "free",
-                "worksheets_generated_this_month": 0,
-            }) \
+        insert_result = (
+            supabase.table("user_subscriptions")
+            .insert(
+                {
+                    "user_id": user_id,
+                    "tier": "free",
+                    "worksheets_generated_this_month": 0,
+                }
+            )
             .execute()
+        )
         if insert_result.data:
             return insert_result.data[0]
         raise HTTPException(status_code=500, detail="Failed to create subscription")
@@ -124,13 +131,9 @@ async def increment_usage(request: Request, authorization: str = Header(...)):
 
     new_count = sub["worksheets_generated_this_month"] + 1
 
-    supabase.table("user_subscriptions") \
-        .update({
-            "worksheets_generated_this_month": new_count,
-            "updated_at": datetime.now().isoformat()
-        }) \
-        .eq("user_id", user_id) \
-        .execute()
+    supabase.table("user_subscriptions").update(
+        {"worksheets_generated_this_month": new_count, "updated_at": datetime.now().isoformat()}
+    ).eq("user_id", user_id).execute()
 
     return {"success": True, "new_count": new_count, "remaining": max(0, FREE_TIER_LIMIT - new_count)}
 

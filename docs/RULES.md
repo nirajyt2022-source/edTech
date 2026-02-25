@@ -113,6 +113,102 @@ LLM generates `question_text` → `hydrate_visuals()` (deterministic regex) → 
 
 ---
 
+# Debugging Protocol
+
+Systematic approach aligned with CLAUDE.md Rules 2 and 6.
+
+## Triage: Classify Before Fixing
+
+| Signal | Category | Action |
+|---|---|---|
+| Stack trace with line number | **Crash** | Read the file at that line, fix root cause |
+| Wrong output, no error | **Logic bug** | Add logging, reproduce, trace data flow |
+| Works locally, fails in CI | **Environment** | Check Python/Node version, env vars, dependency diff |
+| Intermittent failure | **Race / flaky** | Look for async timing, shared state, network dependency |
+
+## Rule 2 Protocol: No Silent Failures
+
+Every code change touching `except` blocks MUST follow:
+
+```python
+# BAD — silent failure, violates Rule 2
+except Exception:
+    pass
+
+# BAD — logs but swallows context
+except Exception:
+    logger.error("something failed")
+
+# GOOD — logs with context, re-raises or returns explicit error
+except Exception as e:
+    logger.error("worksheet generation failed", extra={"topic": topic, "error": str(e)})
+    raise  # or: return None with documented contract
+```
+
+**Audit checklist for except blocks:**
+1. Does it log the exception with `str(e)` or `exc_info=True`?
+2. Does it include enough context (function name, key params) to reproduce?
+3. If it swallows the error, is the fallback behavior documented?
+4. Is the error surfaced to the caller in some way (return value, warning, metric)?
+
+## Rule 6 Protocol: Grep After replace_all
+
+After ANY `replace_all` or rename operation:
+
+```bash
+# 1. Search for stale references in the ENTIRE codebase
+grep -r "OLD_NAME" backend/ frontend/src/ --include="*.py" --include="*.ts" --include="*.tsx"
+
+# 2. Check imports specifically
+grep -r "from.*import.*OLD_NAME" backend/
+grep -r "import.*OLD_NAME" frontend/src/
+
+# 3. Check string references (config, tests, API routes)
+grep -r '"OLD_NAME"' backend/ frontend/src/
+grep -r "'OLD_NAME'" backend/
+
+# 4. If renaming a file, check all relative imports
+grep -r "from.*old_module" backend/
+```
+
+**Never commit until grep returns zero matches for the old name.**
+
+## Error Investigation Sequence
+
+1. **Read the error** — full traceback, not just the last line
+2. **Reproduce** — find the minimal trigger (curl, test, script)
+3. **Read the code** — open the file at the error line, read ±20 lines of context
+4. **Trace the data** — follow the variable from input to error site
+5. **Fix the root cause** — not the symptom
+6. **Verify** — run the reproducer again, run full test suite
+7. **Check blast radius** — grep for other uses of the changed function/variable
+
+## Common Skolar-Specific Traps
+
+| Trap | How to detect | Fix |
+|---|---|---|
+| Import cycle | `ImportError: cannot import name X` | Move import inside function or restructure |
+| Stale module constant | Test passes, production fails | Module-level code runs once at import; use function |
+| Supabase RLS | 403 or empty result | Check that `service_key` (not `anon_key`) is used server-side |
+| Gemini JSON parse | `json.JSONDecodeError` | Response may have markdown fences; `_parse_json()` strips them |
+| Type mismatch in validator | Pydantic `ValidationError` | Check field types match what Gemini actually returns |
+
+## Pre-Commit Quality Gate
+
+The pre-commit hook (`scripts/pre-commit`) runs automatically:
+
+```
+[Backend Lint]    ruff check --fix + ruff format
+[Frontend Lint]   eslint + tsc + vite build
+[Backend Tests]   pytest -x -q
+[Changelog]       CLAUDE.md auto-update
+```
+
+Install: `cp scripts/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit`
+Skip once: `git commit --no-verify`
+
+---
+
 # Known Issues
 
 ## Silent Failures (bare except — still present)

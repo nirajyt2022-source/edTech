@@ -1,12 +1,12 @@
 """Share endpoints — public worksheet viewer + share URL generation."""
 
+import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Header, Request
+from fastapi import APIRouter, Header, HTTPException, Request
 from pydantic import BaseModel
-import logging
-
 from supabase import create_client
+
 from app.core.config import get_settings
 from app.middleware.rate_limit import limiter
 
@@ -65,12 +65,7 @@ async def create_share_link(
     user_id = _get_user_id_from_token(authorization)
 
     try:
-        result = (
-            supabase.table("worksheets")
-            .select("id, user_id")
-            .eq("id", worksheet_id)
-            .execute()
-        )
+        result = supabase.table("worksheets").select("id, user_id").eq("id", worksheet_id).execute()
     except Exception as e:
         logger.error("DB query failed for worksheet %s: %s", worksheet_id, e)
         raise HTTPException(status_code=500, detail="Failed to look up worksheet")
@@ -83,9 +78,11 @@ async def create_share_link(
         raise HTTPException(status_code=403, detail="You can only share your own worksheets")
 
     # Mark worksheet as shared
-    supabase.table("worksheets").update({
-        "shared_at": datetime.now(timezone.utc).isoformat(),
-    }).eq("id", worksheet_id).execute()
+    supabase.table("worksheets").update(
+        {
+            "shared_at": datetime.now(timezone.utc).isoformat(),
+        }
+    ).eq("id", worksheet_id).execute()
 
     share_url = f"{SHARE_BASE_URL}/shared/{worksheet_id}"
     return ShareResponse(share_url=share_url)

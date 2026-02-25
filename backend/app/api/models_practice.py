@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from typing import Any, Optional
+
+from pydantic import BaseModel
 
 
 class GradeResult(BaseModel):
@@ -86,6 +87,7 @@ class ResetResponse(BaseModel):
 # ──────────────────────────────────────────────
 # Endpoint-level response schemas
 # ──────────────────────────────────────────────
+
 
 class GenerateResponse(BaseModel):
     worksheet: dict

@@ -2,12 +2,14 @@
 Worksheet API models — shared between v2 endpoint and other services.
 Extracted from app/api/worksheets.py.
 """
+
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Literal
 
-from app.middleware.sanitize import sanitize_string, VALID_GRADES, VALID_SUBJECTS
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from app.middleware.sanitize import VALID_GRADES, VALID_SUBJECTS, sanitize_string
 
 
 class MixRecipeItem(BaseModel):
@@ -45,8 +47,8 @@ class WorksheetGenerationRequest(BaseModel):
     min_visual_ratio: float | None = None
     child_id: str | None = None  # Gold-G2: mastery-aware slot adjustment
     # Frontend selections previously silently dropped
-    problem_type: str | None = None   # "visual only" | "standard" | "mixed"
-    visual_theme: str | None = None   # "color" | "black_and_white" | "minimal"
+    problem_type: str | None = None  # "visual only" | "standard" | "mixed"
+    visual_theme: str | None = None  # "color" | "black_and_white" | "minimal"
 
     @field_validator("grade_level")
     @classmethod

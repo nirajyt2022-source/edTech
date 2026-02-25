@@ -1,16 +1,17 @@
-from fastapi import APIRouter, HTTPException, Header, Request, UploadFile, File, Form
-from pydantic import BaseModel
-
-from app.middleware.rate_limit import limiter
-from app.middleware.sanitize import validate_file_upload
-from app.core.deps import get_current_user_id
+import io
 import json
 import logging
 import uuid
 from datetime import datetime
+
+from fastapi import APIRouter, File, Form, Header, HTTPException, Request, UploadFile
+from pydantic import BaseModel
 from PyPDF2 import PdfReader
-import io
+
 from app.core.config import get_settings
+from app.core.deps import get_current_user_id
+from app.middleware.rate_limit import limiter
+from app.middleware.sanitize import validate_file_upload
 from app.services.ai_client import get_ai_client, get_openai_compat_client
 
 router = APIRouter(prefix="/api/syllabus", tags=["syllabus"])
@@ -98,15 +99,15 @@ async def extract_text_from_image(file_content: bytes, filename: str) -> str:
     """Use Gemini Vision to extract text from an image."""
     from google.genai import types as gtypes
 
-    ext = filename.lower().split('.')[-1]
+    ext = filename.lower().split(".")[-1]
     mime_types = {
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif',
-        'webp': 'image/webp',
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "gif": "image/gif",
+        "webp": "image/webp",
     }
-    mime_type = mime_types.get(ext, 'image/jpeg')
+    mime_type = mime_types.get(ext, "image/jpeg")
 
     try:
         ai = get_ai_client()
@@ -147,14 +148,14 @@ async def parse_syllabus(
     validate_file_upload(file.content_type or "application/octet-stream", len(file_content), max_mb=5)
 
     # Extract text based on file type
-    ext = filename.lower().split('.')[-1]
+    ext = filename.lower().split(".")[-1]
 
-    if ext == 'pdf':
+    if ext == "pdf":
         text = await extract_text_from_pdf(file_content)
-    elif ext in ['jpg', 'jpeg', 'png', 'gif', 'webp']:
+    elif ext in ["jpg", "jpeg", "png", "gif", "webp"]:
         text = await extract_text_from_image(file_content, filename)
-    elif ext in ['txt', 'text']:
-        text = file_content.decode('utf-8')
+    elif ext in ["txt", "text"]:
+        text = file_content.decode("utf-8")
     else:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
 
@@ -179,10 +180,7 @@ Return ONLY valid JSON, no markdown."""
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_prompt}
-            ],
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user_prompt}],
             temperature=0.3,
             max_tokens=4096,
         )
@@ -214,10 +212,7 @@ Return ONLY valid JSON, no markdown."""
                 if isinstance(t, str):
                     topics.append(SyllabusTopic(name=t))
                 else:
-                    topics.append(SyllabusTopic(
-                        name=t.get("name", ""),
-                        subtopics=t.get("subtopics")
-                    ))
+                    topics.append(SyllabusTopic(name=t.get("name", ""), subtopics=t.get("subtopics")))
             chapters.append(SyllabusChapter(name=ch.get("name", ""), topics=topics))
 
         syllabus = ParsedSyllabus(
@@ -227,16 +222,14 @@ Return ONLY valid JSON, no markdown."""
             grade=grade_hint or data.get("grade"),
             subject=subject_hint or data.get("subject"),
             chapters=chapters,
-            raw_text=text[:2000]  # Store first 2000 chars for reference
+            raw_text=text[:2000],  # Store first 2000 chars for reference
         )
 
         end_time = datetime.now()
         parsing_time_ms = int((end_time - start_time).total_seconds() * 1000)
 
         return SyllabusParseResponse(
-            syllabus=syllabus,
-            confidence_score=data.get("confidence_score", 0.7),
-            parsing_time_ms=parsing_time_ms
+            syllabus=syllabus, confidence_score=data.get("confidence_score", 0.7), parsing_time_ms=parsing_time_ms
         )
 
     except HTTPException:
@@ -371,7 +364,11 @@ _CBSE_SYLLABUS: dict[str, dict[str, list[dict]]] = {
             {"id": "c5m3", "title": "How Many Squares?", "topics": ["Area", "Perimeter", "Counting squares"]},
             {"id": "c5m4", "title": "Parts and Wholes", "topics": ["Fractions", "Equivalent fractions"]},
             {"id": "c5m5", "title": "Does it Look the Same?", "topics": ["Symmetry", "Reflection", "Rotation"]},
-            {"id": "c5m6", "title": "Be My Multiple, I'll Be Your Factor", "topics": ["Factors", "Multiples", "HCF", "LCM"]},
+            {
+                "id": "c5m6",
+                "title": "Be My Multiple, I'll Be Your Factor",
+                "topics": ["Factors", "Multiples", "HCF", "LCM"],
+            },
             {"id": "c5m7", "title": "Can You See the Pattern?", "topics": ["Number patterns", "Magic squares"]},
             {"id": "c5m8", "title": "Mapping Your Way", "topics": ["Maps", "Scale", "Directions"]},
             {"id": "c5m9", "title": "Boxes and Sketches", "topics": ["3D shapes", "Nets", "Faces/edges/vertices"]},
@@ -412,17 +409,13 @@ async def get_syllabus(grade: str, subject: str):
     normalized_subject = _SUBJECT_ALIASES.get(subject.lower(), subject)
 
     if normalized_grade not in _CBSE_SYLLABUS:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Unsupported grade: {grade}. Supported: Class 1-5"
-        )
+        raise HTTPException(status_code=422, detail=f"Unsupported grade: {grade}. Supported: Class 1-5")
 
     grade_data = _CBSE_SYLLABUS[normalized_grade]
     if normalized_subject not in grade_data:
         available = ", ".join(grade_data.keys())
         raise HTTPException(
-            status_code=422,
-            detail=f"Unsupported subject '{subject}' for {normalized_grade}. Available: {available}"
+            status_code=422, detail=f"Unsupported subject '{subject}' for {normalized_grade}. Available: {available}"
         )
 
     return {

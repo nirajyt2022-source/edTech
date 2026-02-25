@@ -18,6 +18,7 @@ encoding. The equivalent goal — compressing curriculum context for LLM prompts
 is achieved here with structured plain-text formatting, which is more
 token-efficient and fully dependency-free.
 """
+
 from __future__ import annotations
 
 import logging
@@ -124,9 +125,7 @@ def build_question_prompt(slot: dict, context: GenerationContext) -> str:
     ]
 
     # Bloom's taxonomy directive
-    bloom_directive = _BLOOM_DIRECTIVES.get(
-        context.bloom_level, _BLOOM_DIRECTIVES["recall"]
-    )
+    bloom_directive = _BLOOM_DIRECTIVES.get(context.bloom_level, _BLOOM_DIRECTIVES["recall"])
     parts.append(f"COGNITIVE LEVEL: {bloom_directive}")
 
     # Scaffolding directive
@@ -148,10 +147,7 @@ def build_question_prompt(slot: dict, context: GenerationContext) -> str:
     slot_type = slot.get("slot_type", "")
     if context.valid_skill_tags:
         # Filter tags relevant to this slot type for a tighter constraint
-        relevant = [
-            t for t in context.valid_skill_tags
-            if slot_type.split("_")[0] in t or t.split("_")[0] in slot_type
-        ]
+        relevant = [t for t in context.valid_skill_tags if slot_type.split("_")[0] in t or t.split("_")[0] in slot_type]
         scope_tags = (relevant or context.valid_skill_tags)[:4]
         parts.append(
             f"SCOPE: Generate a question appropriate for: {', '.join(scope_tags)}. "
@@ -171,6 +167,7 @@ def build_question_prompt(slot: dict, context: GenerationContext) -> str:
     if context.subject.lower() == "hindi":
         try:
             from app.data.topic_profiles import get_topic_profile as _gtp
+
             _profile = _gtp(context.topic_slug)
             _deva = (_profile or {}).get("devanagari_examples", [])
         except Exception as e:

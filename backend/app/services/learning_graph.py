@@ -15,7 +15,7 @@ MASTERY_ORDER = ["unknown", "learning", "improving", "mastered"]
 
 # How many idle days before a mastery level decays
 _DECAY_DAYS: dict[str, int] = {
-    "mastered": 14,   # mastered → improving after 14 days without practice
+    "mastered": 14,  # mastered → improving after 14 days without practice
     "improving": 21,  # improving → learning after 21 days without practice
 }
 
@@ -23,6 +23,7 @@ _DECAY_DAYS: dict[str, int] = {
 # ---------------------------------------------------------------------------
 # Pure helper functions (no DB — fully testable without mocks)
 # ---------------------------------------------------------------------------
+
 
 def _apply_decay(level: str, last_practiced_at: Optional[datetime]) -> str:
     """Regress mastery level if the topic hasn't been practised recently."""
@@ -70,7 +71,6 @@ def _compute_mastery_transition(
             level = "improving"
         elif level == "improving" and streak >= 5:
             level = "mastered"
-
 
     # 4. Hard regression for failing scores (overrides step 3)
     if score_pct < 50:
@@ -231,6 +231,7 @@ def _build_report_text(child_name: str, mastered: list, improving: list) -> str:
 # LearningGraphService
 # ---------------------------------------------------------------------------
 
+
 class LearningGraphService:
     def __init__(self, supabase_client=None):
         self._sb = supabase_client
@@ -239,6 +240,7 @@ class LearningGraphService:
         if self._sb:
             return self._sb
         from app.services.supabase_client import get_supabase_client
+
         return get_supabase_client()
 
     # -----------------------------------------------------------------------
@@ -369,13 +371,7 @@ class LearningGraphService:
     def get_child_summary(self, child_id: str) -> dict:
         sb = self._get_sb()
         try:
-            r = (
-                sb.table("child_learning_summary")
-                .select("*")
-                .eq("child_id", child_id)
-                .maybe_single()
-                .execute()
-            )
+            r = sb.table("child_learning_summary").select("*").eq("child_id", child_id).maybe_single().execute()
             data = getattr(r, "data", None)
         except Exception as exc:
             logger.error("[learning_graph.get_child_summary] DB error for child %s: %s", child_id, exc)
@@ -408,7 +404,9 @@ class LearningGraphService:
         except Exception as exc:
             logger.error(
                 "[learning_graph.get_adaptive_difficulty] DB error for child %s / topic %s: %s",
-                child_id, topic_slug, exc,
+                child_id,
+                topic_slug,
+                exc,
             )
             row = None
 
@@ -424,10 +422,10 @@ class LearningGraphService:
         format_weakness = row.get("format_weakness")
 
         _level_config: dict[str, dict] = {
-            "unknown":   {"bloom_level": "recall",       "scaffolding": True,  "challenge_mode": False},
-            "learning":  {"bloom_level": "recall",       "scaffolding": True,  "challenge_mode": False},
-            "improving": {"bloom_level": "application",  "scaffolding": False, "challenge_mode": False},
-            "mastered":  {"bloom_level": "reasoning",    "scaffolding": False, "challenge_mode": True},
+            "unknown": {"bloom_level": "recall", "scaffolding": True, "challenge_mode": False},
+            "learning": {"bloom_level": "recall", "scaffolding": True, "challenge_mode": False},
+            "improving": {"bloom_level": "application", "scaffolding": False, "challenge_mode": False},
+            "mastered": {"bloom_level": "reasoning", "scaffolding": False, "challenge_mode": True},
         }
         config = dict(_level_config.get(level, _level_config["unknown"]))
         config["format_mix"] = _build_format_mix(level, format_weakness)
@@ -468,12 +466,7 @@ class LearningGraphService:
         weakest = max(subject_attention, key=lambda k: subject_attention[k]) if subject_attention else None
 
         # Aggregate from learning_sessions
-        s = (
-            sb.table("learning_sessions")
-            .select("questions_total, score_pct")
-            .eq("child_id", child_id)
-            .execute()
-        )
+        s = sb.table("learning_sessions").select("questions_total, score_pct").eq("child_id", child_id).execute()
         session_rows = getattr(s, "data", None) or []
         total_sessions = len(session_rows)
         total_questions = sum(row.get("questions_total", 0) for row in session_rows)
@@ -515,9 +508,11 @@ class LearningGraphService:
 # Module-level singleton
 # ---------------------------------------------------------------------------
 
+
 def get_learning_graph_service() -> LearningGraphService:
     """Returns a LearningGraphService backed by Supabase."""
     from app.services.supabase_client import get_supabase_client
+
     try:
         sb = get_supabase_client()
         return LearningGraphService(supabase_client=sb)

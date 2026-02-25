@@ -2,7 +2,7 @@ import logging
 from functools import lru_cache
 
 from fastapi import HTTPException
-from supabase import create_client, Client
+from supabase import Client, create_client
 
 from app.core.config import get_settings
 
@@ -41,13 +41,6 @@ def get_current_user_id(authorization: str) -> str:
 def verify_child_ownership(user_id: str, child_id: str) -> None:
     """Raise 403 if *child_id* does not belong to *user_id*."""
     sb = get_supabase_client()
-    result = (
-        sb.table("children")
-        .select("id")
-        .eq("id", child_id)
-        .eq("user_id", user_id)
-        .maybe_single()
-        .execute()
-    )
+    result = sb.table("children").select("id").eq("id", child_id).eq("user_id", user_id).maybe_single().execute()
     if not getattr(result, "data", None):
         raise HTTPException(status_code=403, detail="Access denied")

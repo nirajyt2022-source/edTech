@@ -1,7 +1,7 @@
-from dataclasses import dataclass, asdict
-from typing import Optional
 import logging
 import time
+from dataclasses import asdict, dataclass
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class MasteryState:
     total_attempts: int = 0
     correct_attempts: int = 0
     last_error_type: Optional[str] = None
-    mastery_level: str = "unknown"   # unknown | learning | improving | mastered
+    mastery_level: str = "unknown"  # unknown | learning | improving | mastered
     updated_at: float = 0.0
 
     def to_dict(self):
@@ -117,11 +117,7 @@ class SupabaseMasteryStore(MasteryStore):
             "mastery_level": state.mastery_level,
             "updated_at": time.time(),
         }
-        (
-            self.sb.table("mastery_state")
-            .upsert(payload, on_conflict="student_id,skill_tag")
-            .execute()
-        )
+        (self.sb.table("mastery_state").upsert(payload, on_conflict="student_id,skill_tag").execute())
         return state
 
     def reset(self, student_id: str, skill_tag: str) -> None:
@@ -132,16 +128,18 @@ class SupabaseMasteryStore(MasteryStore):
         rows = getattr(r, "data", None) or []
         out = []
         for d in rows:
-            out.append(MasteryState(
-                student_id=d["student_id"],
-                skill_tag=d["skill_tag"],
-                streak=int(d["streak"]),
-                total_attempts=int(d["total_attempts"]),
-                correct_attempts=int(d["correct_attempts"]),
-                last_error_type=d.get("last_error_type"),
-                mastery_level=d.get("mastery_level", "unknown"),
-                updated_at=float(time.time()),
-            ))
+            out.append(
+                MasteryState(
+                    student_id=d["student_id"],
+                    skill_tag=d["skill_tag"],
+                    streak=int(d["streak"]),
+                    total_attempts=int(d["total_attempts"]),
+                    correct_attempts=int(d["correct_attempts"]),
+                    last_error_type=d.get("last_error_type"),
+                    mastery_level=d.get("mastery_level", "unknown"),
+                    updated_at=float(time.time()),
+                )
+            )
         return out
 
     def list_student_by_topic(self, student_id, topic):
@@ -154,6 +152,7 @@ MASTERY_STORE = InMemoryMasteryStore()
 
 def get_mastery_store():
     import os
+
     use_db = os.getenv("PRACTICECRAFT_MASTERY_STORE", "memory").lower()
     if use_db != "supabase":
         return MASTERY_STORE
@@ -162,14 +161,18 @@ def get_mastery_store():
     try:
         from app.services.supabase_client import get_supabase_client
     except Exception as e:
-        logger.warning("[mastery_store.get_mastery_store] Supabase import failed, falling back to in-memory store. Error: %s", e)
+        logger.warning(
+            "[mastery_store.get_mastery_store] Supabase import failed, falling back to in-memory store. Error: %s", e
+        )
         return MASTERY_STORE
 
     try:
         sb = get_supabase_client()
         return SupabaseMasteryStore(sb)
     except Exception as e:
-        logger.warning("[mastery_store.get_mastery_store] Supabase init failed, falling back to in-memory store. Error: %s", e)
+        logger.warning(
+            "[mastery_store.get_mastery_store] Supabase init failed, falling back to in-memory store. Error: %s", e
+        )
         return MASTERY_STORE
 
 
