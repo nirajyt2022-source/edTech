@@ -44,16 +44,16 @@ if os.path.exists(_NOTO_VARIABLE):
         pdfmetrics.registerFont(TTFont('RevisionFont', _NOTO_VARIABLE))
         pdfmetrics.registerFont(TTFont('RevisionFont-Bold', _NOTO_VARIABLE))
         _USE_UNICODE_FONT = True
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to register Noto Sans font for revision PDF: %s", e)
 
 if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
     try:
         pdfmetrics.registerFont(TTFont('RevisionFont', _DEJAVU))
         pdfmetrics.registerFont(TTFont('RevisionFont-Bold', _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
         _USE_UNICODE_FONT = True
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to register DejaVu font for revision PDF: %s", e)
 
 FONT_REGULAR = 'RevisionFont' if _USE_UNICODE_FONT else 'Helvetica'
 FONT_BOLD = 'RevisionFont-Bold' if _USE_UNICODE_FONT else 'Helvetica-Bold'

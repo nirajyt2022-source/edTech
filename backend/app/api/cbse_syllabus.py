@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException
+import os
+
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 import logging
 from supabase import create_client
 from app.core.config import get_settings
+from app.core.deps import get_current_user_id
 
 router = APIRouter(prefix="/api/cbse-syllabus", tags=["cbse-syllabus"])
 logger = logging.getLogger("skolar.cbse_syllabus")
@@ -91,8 +94,16 @@ async def list_subjects_for_grade(grade: str):
 
 # Seed data endpoint (admin only - for initial setup)
 @router.post("/seed")
-async def seed_cbse_syllabus():
-    """Seed the CBSE syllabus data. Run once during setup."""
+async def seed_cbse_syllabus(authorization: str = Header(...)):
+    """Seed the CBSE syllabus data. Restricted to admin users."""
+    admin_ids_raw = os.environ.get("ADMIN_USER_IDS", "")
+    if not admin_ids_raw:
+        raise HTTPException(status_code=503, detail="Admin endpoint disabled")
+
+    user_id = get_current_user_id(authorization)
+    admin_ids = {uid.strip() for uid in admin_ids_raw.split(",") if uid.strip()}
+    if user_id not in admin_ids:
+        raise HTTPException(status_code=403, detail="Admin access required")
 
     syllabus_data = [
         # Class 1

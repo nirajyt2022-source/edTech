@@ -12,31 +12,17 @@ import logging
 import re
 
 from fastapi import APIRouter, HTTPException, Header, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.middleware.rate_limit import limiter
 from supabase import create_client
 from app.core.config import get_settings
+from app.services.subscription_check import check_ai_usage_allowed
 
 logger = logging.getLogger(__name__)
 
-# ── Prompt injection protection ────────────────────────────────────────────────
-
-_INJECTION_PATTERNS = [
-    r"ignore\s+(all\s+)?(previous|prior|above|system)\s+(instructions|rules|prompts)",
-    r"you\s+are\s+(now|no\s+longer)\s+",
-    r"act\s+as\s+(an?\s+)?(unrestricted|unfiltered|uncensored)",
-    r"(system|admin|developer)\s*:\s*",
-    r"override\s+(all\s+)?(rules|safety|restrictions|guardrails)",
-    r"jailbreak",
-    r"DAN\s+mode",
-    r"do\s+anything\s+now",
-    r"pretend\s+(you\s+)?(are|have)\s+no\s+(rules|restrictions|limits)",
-    r"forget\s+(all\s+)?(your\s+)?(rules|instructions|training)",
-    r"new\s+instructions?\s*:",
-    r"from\s+now\s+on\s+(you|ignore)",
-]
-_INJECTION_RE = re.compile("|".join(_INJECTION_PATTERNS), re.IGNORECASE)
+# ── Prompt injection protection (shared patterns from sanitize.py) ────────────
+from app.middleware.sanitize import INJECTION_RE as _INJECTION_RE
 
 
 def _sanitize_question(question: str) -> str:
@@ -79,11 +65,11 @@ class ChatMessage(BaseModel):
 
 
 class AskRequest(BaseModel):
-    question: str
+    question: str = Field(..., max_length=2000)
     grade: str = ""               # Optional: "Class 4"
     subject: str = ""             # Optional: "Maths"
     language: str = "English"     # "English" or "Hindi"
-    history: list[ChatMessage] = []  # Previous messages for multi-turn
+    history: list[ChatMessage] = Field(default=[], max_length=20)  # Previous messages for multi-turn
 
 
 class AskResponse(BaseModel):
@@ -100,6 +86,11 @@ class AskResponse(BaseModel):
 async def ask_question(request: Request, body: AskRequest, authorization: str = Header(...)):
     """Answer a student's homework/study question using Gemini."""
     user_id = get_user_id_from_token(authorization)
+
+    # -- Subscription gate --
+    usage = await check_ai_usage_allowed(user_id, supabase)
+    if not usage["allowed"]:
+        raise HTTPException(status_code=402, detail=usage["message"])
 
     # Sanitize input against prompt injection
     safe_question = _sanitize_question(body.question)

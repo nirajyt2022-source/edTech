@@ -19,9 +19,12 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import io
+import logging
 from xml.sax.saxutils import escape as xml_escape
 import os
 import tempfile
+
+logger = logging.getLogger(__name__)
 
 # ── Register Unicode font (Latin + Devanagari + ₹) ──────────────────────
 _FONT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "fonts")
@@ -39,8 +42,8 @@ if os.path.exists(_NOTO_VARIABLE):
         pdfmetrics.registerFont(TTFont('SkolarFont-Bold', _NOTO_VARIABLE))
         pdfmetrics.registerFont(TTFont('SkolarFont-Italic', _NOTO_VARIABLE))
         _USE_UNICODE_FONT = True
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to register Noto Sans font: %s", e)
 
 # Fallback: DejaVu Sans (often on Linux/Railway)
 if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
@@ -49,8 +52,8 @@ if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
         pdfmetrics.registerFont(TTFont('SkolarFont-Bold', _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
         pdfmetrics.registerFont(TTFont('SkolarFont-Italic', _DEJAVU_OBLIQUE if os.path.exists(_DEJAVU_OBLIQUE) else _DEJAVU))
         _USE_UNICODE_FONT = True
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to register DejaVu font: %s", e)
 
 # Final font names used throughout
 FONT_REGULAR = 'SkolarFont' if _USE_UNICODE_FONT else 'Helvetica'
@@ -73,7 +76,8 @@ def _flatten_image_alpha(local_path: str) -> str:
             background.save(flat_path, "PNG")
             return flat_path
         return local_path
-    except Exception:
+    except Exception as e:
+        logger.warning("Failed to flatten image alpha for %s: %s", local_path, e)
         return local_path
 
 
@@ -655,8 +659,8 @@ class PDFService:
                     try:
                         flat_path = _flatten_image_alpha(local_path)
                         img_cells.append(RLImage(flat_path, width=1.8*cm, height=1.8*cm, kind='proportional'))
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning("Failed to embed image %s in PDF: %s", img_path, e)
 
             if img_cells:
                 elements.append(Spacer(1, 3))

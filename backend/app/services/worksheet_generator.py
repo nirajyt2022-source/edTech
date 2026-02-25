@@ -791,7 +791,8 @@ def generate_worksheet(
                 ).result(timeout=5)
         else:
             curriculum_context = asyncio.run(get_curriculum_context(grade_level, subject, topic))
-    except Exception:
+    except Exception as e:
+        logger.warning("Failed to fetch curriculum context for %s/%s: %s", topic, grade_level, e)
         curriculum_context = None
 
     if curriculum_context:

@@ -66,10 +66,10 @@ class WorksheetGenerationRequest(BaseModel):
 
     @field_validator("topic", "custom_instructions")
     @classmethod
-    def sanitize_text(cls, v: str | None) -> str | None:
+    def sanitize_text(cls, v: str | None, info) -> str | None:
         if v is None:
             return v
-        return sanitize_string(v, "topic")
+        return sanitize_string(v, info.field_name)
 
     @model_validator(mode="after")
     def _map_problem_type(self) -> "WorksheetGenerationRequest":

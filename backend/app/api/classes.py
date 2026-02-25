@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Header, Request
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 import logging
 from supabase import create_client
 from app.core.config import get_settings
+from app.middleware.rate_limit import limiter
+from app.middleware.sanitize import sanitize_string
 
 router = APIRouter(prefix="/api/classes", tags=["classes"])
 logger = logging.getLogger("skolar.classes")
@@ -13,21 +15,35 @@ supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
 
 class CreateClassRequest(BaseModel):
-    name: str
-    grade: str
-    subject: str
-    board: str = "CBSE"
+    name: str = Field(..., max_length=100)
+    grade: str = Field(..., max_length=20)
+    subject: str = Field(..., max_length=50)
+    board: str = Field(default="CBSE", max_length=50)
     syllabus_source: str = "cbse"
     custom_syllabus: dict | None = None
 
+    @field_validator("name", "grade", "subject", "board", mode="before")
+    @classmethod
+    def _sanitize(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return sanitize_string(v, "name")
+
 
 class UpdateClassRequest(BaseModel):
-    name: str | None = None
-    grade: str | None = None
-    subject: str | None = None
-    board: str | None = None
+    name: str | None = Field(default=None, max_length=100)
+    grade: str | None = Field(default=None, max_length=20)
+    subject: str | None = Field(default=None, max_length=50)
+    board: str | None = Field(default=None, max_length=50)
     syllabus_source: str | None = None
     custom_syllabus: dict | None = None
+
+    @field_validator("name", "grade", "subject", "board", mode="before")
+    @classmethod
+    def _sanitize(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return sanitize_string(v, "name")
 
 
 def get_user_id_from_token(authorization: str) -> str:
@@ -47,25 +63,27 @@ def get_user_id_from_token(authorization: str) -> str:
 
 
 @router.post("/")
+@limiter.limit("30/minute")
 async def create_class(
-    request: CreateClassRequest,
+    request: Request,
+    body: CreateClassRequest,
     authorization: str = Header(...)
 ):
     """Create a new teacher class."""
     user_id = get_user_id_from_token(authorization)
 
-    if request.syllabus_source not in ("cbse", "custom"):
+    if body.syllabus_source not in ("cbse", "custom"):
         raise HTTPException(status_code=400, detail="syllabus_source must be 'cbse' or 'custom'")
 
     try:
         result = supabase.table("teacher_classes").insert({
             "user_id": user_id,
-            "name": request.name,
-            "grade": request.grade,
-            "subject": request.subject,
-            "board": request.board,
-            "syllabus_source": request.syllabus_source,
-            "custom_syllabus": request.custom_syllabus,
+            "name": body.name,
+            "grade": body.grade,
+            "subject": body.subject,
+            "board": body.board,
+            "syllabus_source": body.syllabus_source,
+            "custom_syllabus": body.custom_syllabus,
         }).execute()
 
         if result.data:
@@ -81,7 +99,9 @@ async def create_class(
 
 
 @router.get("/")
+@limiter.limit("60/minute")
 async def list_classes(
+    request: Request,
     authorization: str = Header(...)
 ):
     """List all classes for the authenticated teacher."""
@@ -104,7 +124,9 @@ async def list_classes(
 
 
 @router.get("/{class_id}")
+@limiter.limit("60/minute")
 async def get_class(
+    request: Request,
     class_id: str,
     authorization: str = Header(...)
 ):
@@ -132,9 +154,11 @@ async def get_class(
 
 
 @router.put("/{class_id}")
+@limiter.limit("30/minute")
 async def update_class(
+    request: Request,
     class_id: str,
-    request: UpdateClassRequest,
+    body: UpdateClassRequest,
     authorization: str = Header(...)
 ):
     """Update a class."""
@@ -142,20 +166,20 @@ async def update_class(
 
     try:
         update_data = {}
-        if request.name is not None:
-            update_data["name"] = request.name
-        if request.grade is not None:
-            update_data["grade"] = request.grade
-        if request.subject is not None:
-            update_data["subject"] = request.subject
-        if request.board is not None:
-            update_data["board"] = request.board
-        if request.syllabus_source is not None:
-            if request.syllabus_source not in ("cbse", "custom"):
+        if body.name is not None:
+            update_data["name"] = body.name
+        if body.grade is not None:
+            update_data["grade"] = body.grade
+        if body.subject is not None:
+            update_data["subject"] = body.subject
+        if body.board is not None:
+            update_data["board"] = body.board
+        if body.syllabus_source is not None:
+            if body.syllabus_source not in ("cbse", "custom"):
                 raise HTTPException(status_code=400, detail="syllabus_source must be 'cbse' or 'custom'")
-            update_data["syllabus_source"] = request.syllabus_source
-        if request.custom_syllabus is not None:
-            update_data["custom_syllabus"] = request.custom_syllabus
+            update_data["syllabus_source"] = body.syllabus_source
+        if body.custom_syllabus is not None:
+            update_data["custom_syllabus"] = body.custom_syllabus
 
         if not update_data:
             raise HTTPException(status_code=400, detail="No fields to update")
@@ -181,7 +205,9 @@ async def update_class(
 
 
 @router.get("/{class_id}/dashboard")
+@limiter.limit("60/minute")
 async def get_class_dashboard(
+    request: Request,
     class_id: str,
     authorization: str = Header(...),
 ):
@@ -312,7 +338,9 @@ async def get_class_dashboard(
 
 
 @router.delete("/{class_id}")
+@limiter.limit("30/minute")
 async def delete_class(
+    request: Request,
     class_id: str,
     authorization: str = Header(...)
 ):

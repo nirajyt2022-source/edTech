@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel
 from datetime import datetime, date
 import logging
 from supabase import create_client
 from app.core.config import get_settings
+from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/engagement", tags=["engagement"])
 logger = logging.getLogger("skolar.engagement")
@@ -67,7 +68,9 @@ def ensure_engagement_exists(user_id: str, child_id: str) -> dict:
 
 
 @router.get("/{child_id}", response_model=EngagementStats)
+@limiter.limit("60/minute")
 async def get_engagement(
+    request: Request,
     child_id: str,
     authorization: str = Header(...)
 ):
@@ -105,7 +108,9 @@ async def get_engagement(
 
 
 @router.post("/{child_id}/complete")
+@limiter.limit("30/minute")
 async def record_completion(
+    request: Request,
     child_id: str,
     authorization: str = Header(...)
 ):

@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Header, Request
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 import logging
 from supabase import create_client
 from app.core.config import get_settings
+from app.middleware.sanitize import sanitize_string
+from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/children", tags=["children"])
 logger = logging.getLogger("skolar.children")
@@ -13,17 +15,31 @@ supabase = create_client(settings.supabase_url, settings.supabase_service_key)
 
 
 class CreateChildRequest(BaseModel):
-    name: str
-    grade: str
-    board: str | None = None
-    notes: str | None = None
+    name: str = Field(..., max_length=100)
+    grade: str = Field(..., max_length=20)
+    board: str | None = Field(default=None, max_length=50)
+    notes: str | None = Field(default=None, max_length=500)
+
+    @field_validator("name", "grade", "board", "notes", mode="before")
+    @classmethod
+    def _sanitize(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return sanitize_string(v, "name")
 
 
 class UpdateChildRequest(BaseModel):
-    name: str | None = None
-    grade: str | None = None
-    board: str | None = None
-    notes: str | None = None
+    name: str | None = Field(default=None, max_length=100)
+    grade: str | None = Field(default=None, max_length=20)
+    board: str | None = Field(default=None, max_length=50)
+    notes: str | None = Field(default=None, max_length=500)
+
+    @field_validator("name", "grade", "board", "notes", mode="before")
+    @classmethod
+    def _sanitize(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return sanitize_string(v, "name")
 
 
 class Child(BaseModel):
@@ -54,8 +70,10 @@ def get_user_id_from_token(authorization: str) -> str:
 
 
 @router.post("/")
+@limiter.limit("30/minute")
 async def create_child(
-    request: CreateChildRequest,
+    request: Request,
+    body: CreateChildRequest,
     authorization: str = Header(...)
 ):
     """Create a new child profile."""
@@ -64,10 +82,10 @@ async def create_child(
     try:
         result = supabase.table("children").insert({
             "user_id": user_id,
-            "name": request.name,
-            "grade": request.grade,
-            "board": request.board,
-            "notes": request.notes,
+            "name": body.name,
+            "grade": body.grade,
+            "board": body.board,
+            "notes": body.notes,
         }).execute()
 
         if result.data:
@@ -83,7 +101,9 @@ async def create_child(
 
 
 @router.get("/")
+@limiter.limit("60/minute")
 async def list_children(
+    request: Request,
     authorization: str = Header(...)
 ):
     """List all children for the authenticated user."""
@@ -106,7 +126,9 @@ async def list_children(
 
 
 @router.get("/{child_id}")
+@limiter.limit("60/minute")
 async def get_child(
+    request: Request,
     child_id: str,
     authorization: str = Header(...)
 ):
@@ -134,9 +156,11 @@ async def get_child(
 
 
 @router.put("/{child_id}")
+@limiter.limit("30/minute")
 async def update_child(
+    request: Request,
     child_id: str,
-    request: UpdateChildRequest,
+    body: UpdateChildRequest,
     authorization: str = Header(...)
 ):
     """Update a child profile."""
@@ -145,14 +169,14 @@ async def update_child(
     try:
         # Build update data with only provided fields
         update_data = {}
-        if request.name is not None:
-            update_data["name"] = request.name
-        if request.grade is not None:
-            update_data["grade"] = request.grade
-        if request.board is not None:
-            update_data["board"] = request.board
-        if request.notes is not None:
-            update_data["notes"] = request.notes
+        if body.name is not None:
+            update_data["name"] = body.name
+        if body.grade is not None:
+            update_data["grade"] = body.grade
+        if body.board is not None:
+            update_data["board"] = body.board
+        if body.notes is not None:
+            update_data["notes"] = body.notes
 
         if not update_data:
             raise HTTPException(status_code=400, detail="No fields to update")
@@ -178,7 +202,9 @@ async def update_child(
 
 
 @router.delete("/{child_id}")
+@limiter.limit("30/minute")
 async def delete_child(
+    request: Request,
     child_id: str,
     authorization: str = Header(...)
 ):

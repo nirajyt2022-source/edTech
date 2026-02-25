@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Header, Request, UploadFile, File, Form
 from pydantic import BaseModel
 
 from app.middleware.rate_limit import limiter
+from app.middleware.sanitize import validate_file_upload
+from app.core.deps import get_current_user_id
 import json
 import logging
 import uuid
@@ -130,14 +132,19 @@ async def parse_syllabus(
     request: Request,
     file: UploadFile = File(...),
     grade_hint: str | None = Form(None),
-    subject_hint: str | None = Form(None)
+    subject_hint: str | None = Form(None),
+    authorization: str = Header(...),
 ):
     """Parse an uploaded syllabus document (PDF, image, or text)."""
+    get_current_user_id(authorization)
     start_time = datetime.now()
 
     # Read file content
     file_content = await file.read()
     filename = file.filename or "unknown"
+
+    # Validate file type and size (max 5 MB)
+    validate_file_upload(file.content_type or "application/octet-stream", len(file_content), max_mb=5)
 
     # Extract text based on file type
     ext = filename.lower().split('.')[-1]

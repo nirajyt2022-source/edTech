@@ -2,12 +2,13 @@
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel
 import logging
 
 from supabase import create_client
 from app.core.config import get_settings
+from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/worksheets", tags=["share"])
 
@@ -54,7 +55,9 @@ def _get_user_id_from_token(authorization: str) -> str:
 
 
 @router.post("/{worksheet_id}/share", response_model=ShareResponse)
+@limiter.limit("30/minute")
 async def create_share_link(
+    request: Request,
     worksheet_id: str,
     authorization: str = Header(...),
 ):
@@ -89,7 +92,8 @@ async def create_share_link(
 
 
 @router.get("/shared/{worksheet_id}", response_model=SharedWorksheetResponse)
-async def get_shared_worksheet(worksheet_id: str):
+@limiter.limit("60/minute")
+async def get_shared_worksheet(request: Request, worksheet_id: str):
     """Public endpoint — fetch a shared worksheet without auth."""
     try:
         result = (

@@ -26,11 +26,12 @@ import logging
 from datetime import datetime, timezone
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request
 from pydantic import BaseModel
 from supabase import create_client
 
 from app.core.config import get_settings
+from app.middleware.rate_limit import limiter
 from app.services.report_generator import ClassReportGenerator
 from app.services.email_service import EmailService
 
@@ -83,7 +84,9 @@ def _get_user_id(authorization: str) -> str:
 # ---------------------------------------------------------------------------
 
 @router.post("/teacher/classes/{class_id}/report")
+@limiter.limit("10/minute")
 async def generate_class_report(
+    request: Request,
     class_id: str,
     authorization: str = Header(...),
 ):
@@ -138,7 +141,9 @@ def _increment_view_count(token: str) -> None:
 
 
 @router.get("/reports/{token}")
+@limiter.limit("60/minute")
 async def get_report_by_token(
+    request: Request,
     token: str,
     background_tasks: BackgroundTasks,
 ):
@@ -184,7 +189,9 @@ async def get_report_by_token(
 # ---------------------------------------------------------------------------
 
 @router.get("/teacher/classes/{class_id}/contacts")
+@limiter.limit("60/minute")
 async def get_class_contacts(
+    request: Request,
     class_id: str,
     authorization: str = Header(...),
 ):
@@ -223,7 +230,9 @@ async def get_class_contacts(
 # ---------------------------------------------------------------------------
 
 @router.post("/teacher/classes/{class_id}/contacts")
+@limiter.limit("30/minute")
 async def upsert_class_contacts(
+    request: Request,
     class_id: str,
     body: List[ContactItem],
     authorization: str = Header(...),
@@ -261,7 +270,9 @@ async def upsert_class_contacts(
 # ---------------------------------------------------------------------------
 
 @router.post("/teacher/classes/{class_id}/report/send-email")
+@limiter.limit("5/minute")
 async def send_email_report(
+    request: Request,
     class_id: str,
     body: SendEmailBody,
     authorization: str = Header(...),

@@ -16,10 +16,12 @@ from fastapi import APIRouter, HTTPException, Header, Request
 from fastapi.responses import StreamingResponse
 
 from app.middleware.rate_limit import limiter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
+from app.middleware.sanitize import VALID_GRADES, VALID_SUBJECTS
 from supabase import create_client
 from app.core.config import get_settings
 from app.services.flashcard_pdf import FlashcardPDFService
+from app.services.subscription_check import check_ai_usage_allowed
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +53,23 @@ class FlashcardRequest(BaseModel):
     subject: str        # e.g. "Maths"
     topic: str          # e.g. "Fractions"
     language: str = "English"
-    count: int = 12
+    count: int = Field(default=12, ge=1, le=50)
+
+    @field_validator("grade")
+    @classmethod
+    def _validate_grade(cls, v: str) -> str:
+        v = v.strip()
+        if v not in VALID_GRADES:
+            raise ValueError(f"Invalid grade: {v}")
+        return v
+
+    @field_validator("subject")
+    @classmethod
+    def _validate_subject(cls, v: str) -> str:
+        v = v.strip()
+        if v not in VALID_SUBJECTS:
+            raise ValueError(f"Invalid subject: {v}")
+        return v
 
 
 class Flashcard(BaseModel):
@@ -75,6 +93,11 @@ class FlashcardSet(BaseModel):
 async def generate_flashcards(request: Request, req: FlashcardRequest, authorization: str = Header(...)):
     """Generate a set of flashcards for a given topic using Gemini 2.5 Flash."""
     user_id = get_user_id_from_token(authorization)
+
+    # -- Subscription gate --
+    usage = await check_ai_usage_allowed(user_id, supabase)
+    if not usage["allowed"]:
+        raise HTTPException(status_code=402, detail=usage["message"])
 
     # -- Cache check --
     from app.services.cache import get_cached_flashcards, set_cached_flashcards

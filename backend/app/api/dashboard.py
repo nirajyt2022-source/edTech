@@ -1,6 +1,8 @@
 import logging
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Header, Query, Request
 from app.services.dashboard_service import get_parent_dashboard
+from app.core.deps import get_current_user_id, verify_child_ownership
+from app.middleware.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -8,7 +10,11 @@ router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
 
 
 @router.get("/parent")
-def parent_dashboard(student_id: str = Query(...)):
+@limiter.limit("60/minute")
+def parent_dashboard(request: Request, authorization: str = Header(...), student_id: str = Query(...)):
+    user_id = get_current_user_id(authorization)
+    verify_child_ownership(user_id, student_id)
+
     from app.services.cache import get_cached_dashboard, set_cached_dashboard
 
     cached = get_cached_dashboard(student_id)

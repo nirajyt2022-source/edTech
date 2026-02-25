@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+import os
+
+from fastapi import APIRouter, HTTPException, Request
 
 router = APIRouter()
 
@@ -9,8 +11,13 @@ async def health_check():
 
 
 @router.get("/health/deep")
-async def deep_health():
-    """Deep health check — verifies all dependencies."""
+async def deep_health(request: Request):
+    """Deep health check — verifies all dependencies. Requires X-Health-Token header."""
+    expected_token = os.environ.get("HEALTH_CHECK_TOKEN", "")
+    if expected_token:
+        provided = request.headers.get("X-Health-Token", "")
+        if provided != expected_token:
+            raise HTTPException(status_code=403, detail="Forbidden")
     checks = {}
 
     # 1. Supabase

@@ -15,7 +15,9 @@ from fastapi import APIRouter, HTTPException, Header, Request, UploadFile, File
 
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import validate_file_upload
-from pydantic import BaseModel
+from app.services.subscription_check import check_ai_usage_allowed
+from pydantic import BaseModel, Field
+from typing import Literal
 from supabase import create_client
 from app.core.config import get_settings
 
@@ -59,9 +61,9 @@ class TextbookAnalysis(BaseModel):
 class TextbookGenerateRequest(BaseModel):
     """Generate content from analyzed textbook page."""
     analysis: TextbookAnalysis
-    output_type: str = "worksheet"  # "worksheet" | "revision" | "flashcards"
+    output_type: Literal["worksheet", "revision", "flashcards"] = "worksheet"
     difficulty: str = "Medium"
-    question_count: int = 10
+    question_count: int = Field(default=10, ge=1, le=30)
     language: str = "English"
 
 
@@ -79,6 +81,11 @@ async def analyze_textbook_page(
     Extracts grade, subject, topic, key concepts, and full text content.
     """
     user_id = get_user_id_from_token(authorization)
+
+    # -- Subscription gate --
+    usage = await check_ai_usage_allowed(user_id, supabase)
+    if not usage["allowed"]:
+        raise HTTPException(status_code=402, detail=usage["message"])
 
     if len(images) < 1 or len(images) > 3:
         raise HTTPException(400, "Upload 1-3 photos")
@@ -147,6 +154,11 @@ async def generate_from_textbook(
     Uses the extracted text and concepts as context for Gemini.
     """
     user_id = get_user_id_from_token(authorization)
+
+    # -- Subscription gate --
+    usage = await check_ai_usage_allowed(user_id, supabase)
+    if not usage["allowed"]:
+        raise HTTPException(status_code=402, detail=usage["message"])
 
     if body.output_type == "worksheet":
         result = await _generate_textbook_worksheet(body)

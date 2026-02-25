@@ -20,7 +20,11 @@ token-efficient and fully dependency-free.
 """
 from __future__ import annotations
 
+import logging
+
 from app.services.topic_intelligence import GenerationContext
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Bloom's taxonomy directives
@@ -169,7 +173,8 @@ def build_question_prompt(slot: dict, context: GenerationContext) -> str:
             from app.data.topic_profiles import get_topic_profile as _gtp
             _profile = _gtp(context.topic_slug)
             _deva = (_profile or {}).get("devanagari_examples", [])
-        except Exception:
+        except Exception as e:
+            logger.warning("Failed to load Devanagari examples for %s: %s", context.topic_slug, e)
             _deva = []
         if _deva:
             examples_str = "  ".join(_deva[:8])

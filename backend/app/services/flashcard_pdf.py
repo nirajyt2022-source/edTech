@@ -38,16 +38,16 @@ if os.path.exists(_NOTO_VARIABLE):
         pdfmetrics.registerFont(TTFont('FlashcardFont', _NOTO_VARIABLE))
         pdfmetrics.registerFont(TTFont('FlashcardFont-Bold', _NOTO_VARIABLE))
         _USE_UNICODE_FONT = True
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to register Noto Sans font for flashcards: %s", e)
 
 if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
     try:
         pdfmetrics.registerFont(TTFont('FlashcardFont', _DEJAVU))
         pdfmetrics.registerFont(TTFont('FlashcardFont-Bold', _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
         _USE_UNICODE_FONT = True
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to register DejaVu font for flashcards: %s", e)
 
 FONT_REGULAR = 'FlashcardFont' if _USE_UNICODE_FONT else 'Helvetica'
 FONT_BOLD = 'FlashcardFont-Bold' if _USE_UNICODE_FONT else 'Helvetica-Bold'

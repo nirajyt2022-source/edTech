@@ -8,6 +8,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from app.core.config import get_settings
+
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
@@ -38,5 +40,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Permissions policy (allow camera for grading, disable rest)
         response.headers["Permissions-Policy"] = "camera=(self), microphone=(), geolocation=()"
+
+        # HSTS — only in production (not debug mode)
+        settings = get_settings()
+        if not settings.debug:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         return response

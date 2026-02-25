@@ -41,6 +41,23 @@ _DANGEROUS_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# Prompt injection patterns (shared with ask_skolar.py)
+INJECTION_PATTERNS = [
+    r"ignore\s+(all\s+)?(previous|prior|above|system)\s+(instructions|rules|prompts)",
+    r"you\s+are\s+(now|no\s+longer)\s+",
+    r"act\s+as\s+(an?\s+)?(unrestricted|unfiltered|uncensored)",
+    r"(system|admin|developer)\s*:\s*",
+    r"override\s+(all\s+)?(rules|safety|restrictions|guardrails)",
+    r"jailbreak",
+    r"DAN\s+mode",
+    r"do\s+anything\s+now",
+    r"pretend\s+(you\s+)?(are|have)\s+no\s+(rules|restrictions|limits)",
+    r"forget\s+(all\s+)?(your\s+)?(rules|instructions|training)",
+    r"new\s+instructions?\s*:",
+    r"from\s+now\s+on\s+(you|ignore)",
+]
+INJECTION_RE = re.compile("|".join(INJECTION_PATTERNS), re.IGNORECASE)
+
 
 def sanitize_string(value: str, field_name: str = "") -> str:
     """Remove dangerous content from a string value."""
@@ -67,6 +84,14 @@ def sanitize_string(value: str, field_name: str = "") -> str:
         )
         # Strip HTML tags entirely
         value = re.sub(r'<[^>]+>', '', value)
+
+    # Check for prompt injection in AI-facing fields
+    if field_name in ("custom_instructions", "question") and INJECTION_RE.search(value):
+        logger.warning(
+            "Prompt injection detected and stripped",
+            extra={"field": field_name, "preview": value[:100]},
+        )
+        value = INJECTION_RE.sub("", value).strip()
 
     return value.strip()
 
@@ -99,7 +124,7 @@ def validate_file_upload(content_type: str, size_bytes: int, max_mb: int = 10) -
     """Validate uploaded file type and size."""
     allowed_types = {
         "image/jpeg", "image/jpg", "image/png", "image/webp",
-        "image/gif", "application/pdf",
+        "image/gif", "application/pdf", "text/plain",
     }
     if content_type not in allowed_types:
         raise HTTPException(

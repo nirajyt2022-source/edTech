@@ -93,7 +93,8 @@ def _safe_eval(expr: str) -> Optional[float]:
     try:
         tree = ast.parse(expr.strip(), mode="eval")
         return _eval_node(tree.body)
-    except Exception:
+    except Exception as e:
+        logger.warning("Safe eval failed for expression '%s': %s", expr, e)
         return None
 
 

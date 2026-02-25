@@ -1,8 +1,12 @@
 """Column subtraction with borrow — SkillContract implementation."""
 
+import logging
+import random
+
 from .base import SkillContract
 from app.skills.math_utils import make_carry_pair
-import random
+
+logger = logging.getLogger(__name__)
 
 
 class ColumnSubtractionWithBorrowContract(SkillContract):
@@ -36,7 +40,8 @@ class ColumnSubtractionWithBorrowContract(SkillContract):
         try:
             if answer is not None and int(answer) != expected:
                 issues.append("answer_slot_mismatch")
-        except Exception:
+        except Exception as e:
+            logger.warning("Invalid answer format in column subtraction validate: %s", e)
             issues.append("invalid_answer_format")
 
         return issues
@@ -205,7 +210,8 @@ class ColumnSubtractionWithBorrowContract(SkillContract):
 
         try:
             student = int(student_answer)
-        except Exception:
+        except Exception as e:
+            logger.warning("Invalid student answer format in column subtraction grade: %s", e)
             result["error_type"] = "invalid_format"
             return result
 

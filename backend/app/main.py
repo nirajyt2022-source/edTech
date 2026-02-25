@@ -4,11 +4,9 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi.errors import RateLimitExceeded
-
 from app.core.config import get_settings
 from app.core.logging_config import setup_logging
-from app.middleware.rate_limit import limiter, rate_limit_exceeded_handler
+from app.middleware.rate_limit import limiter, rate_limit_exceeded_handler, RateLimitExceeded
 
 # Initialize structured logging first
 setup_logging()
@@ -51,7 +49,8 @@ app = FastAPI(
 
 # Rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+if RateLimitExceeded is not None:
+    app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Request tracing + access logging middleware (outermost first)
 from app.middleware.access_log import AccessLogMiddleware  # noqa: E402
@@ -76,8 +75,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
 
 # Include routers

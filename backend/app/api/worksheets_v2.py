@@ -8,10 +8,11 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Header, HTTPException, Request
 
 from supabase import create_client
 from app.core.config import get_settings
+from app.core.deps import get_current_user_id
 from app.services.subscription_check import check_and_increment_usage
 
 from app.middleware.rate_limit import limiter
@@ -65,24 +66,15 @@ def _infer_render_format(q_type: str, options: list | None) -> str:
 
 @router.post("/generate", response_model=WorksheetGenerationResponse)
 @limiter.limit("10/minute")
-async def generate_worksheet_v2(request: Request, body: WorksheetGenerationRequest):
+async def generate_worksheet_v2(request: Request, body: WorksheetGenerationRequest, authorization: str = Header(...)):
     """Generate a worksheet using the simplified v2 pipeline."""
 
-    # ── Subscription enforcement ──────────────────────────────
-    authorization = request.headers.get("authorization", "")
-    user_id = None
-    if authorization.startswith("Bearer "):
-        try:
-            token = authorization.replace("Bearer ", "")
-            user_resp = _supabase.auth.get_user(token)
-            user_id = user_resp.user.id
-        except Exception:
-            pass  # Allow generation to proceed for auth edge cases
+    # ── Auth + Subscription enforcement ───────────────────────
+    user_id = get_current_user_id(authorization)
 
-    if user_id:
-        usage = await check_and_increment_usage(user_id, _supabase)
-        if not usage["allowed"]:
-            raise HTTPException(status_code=402, detail=usage["message"])
+    usage = await check_and_increment_usage(user_id, _supabase)
+    if not usage["allowed"]:
+        raise HTTPException(status_code=402, detail=usage["message"])
     # ── End subscription enforcement ──────────────────────────
 
     try:

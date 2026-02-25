@@ -1,7 +1,11 @@
 """Column addition with carry — SkillContract implementation."""
 
+import logging
+
 from .base import SkillContract
 from app.skills.math_utils import make_carry_pair
+
+logger = logging.getLogger(__name__)
 
 
 class ColumnAdditionContract(SkillContract):
@@ -38,7 +42,8 @@ class ColumnAdditionContract(SkillContract):
         try:
             if answer is not None and int(answer) != expected:
                 issues.append("answer_slot_mismatch")
-        except Exception:
+        except Exception as e:
+            logger.warning("Invalid answer format in column addition validate: %s", e)
             issues.append("invalid_answer_format")
 
         # Carry enforcement (if visual requires carry)
@@ -210,7 +215,8 @@ class ColumnAdditionContract(SkillContract):
 
         try:
             student = int(student_answer)
-        except Exception:
+        except Exception as e:
+            logger.warning("Invalid student answer format in column addition grade: %s", e)
             result["error_type"] = "invalid_format"
             return result
 

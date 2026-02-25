@@ -7,12 +7,13 @@ Restored here as a standalone module with modern patterns.
 import structlog
 from datetime import datetime
 from urllib.parse import quote
-from fastapi import APIRouter, HTTPException, Header, Response
+from fastapi import APIRouter, HTTPException, Header, Query, Request, Response
 from pydantic import BaseModel
 from supabase import create_client
 
 from app.core.config import get_settings
 from app.services.pdf import get_pdf_service
+from app.middleware.rate_limit import limiter
 
 logger = structlog.get_logger()
 settings = get_settings()
@@ -86,29 +87,31 @@ class PDFExportRequest(BaseModel):
 # ── 1. Save worksheet ─────────────────────────────────────────────────────────
 
 @router.post("/save")
+@limiter.limit("30/minute")
 async def save_worksheet(
-    request: SaveWorksheetRequest,
+    request: Request,
+    body: SaveWorksheetRequest,
     authorization: str = Header(...),
 ):
     """Save a generated worksheet to the database."""
     user_id = _get_user_id(authorization)
 
     try:
-        questions_data = [q if isinstance(q, dict) else q.model_dump() for q in request.worksheet.questions]
+        questions_data = [q if isinstance(q, dict) else q.model_dump() for q in body.worksheet.questions]
 
         result = supabase.table("worksheets").insert({
             "user_id": user_id,
-            "title": request.worksheet.title,
-            "board": request.board,
-            "grade": request.worksheet.grade,
-            "subject": request.worksheet.subject,
-            "topic": request.worksheet.topic,
-            "difficulty": request.worksheet.difficulty,
-            "language": request.worksheet.language,
+            "title": body.worksheet.title,
+            "board": body.board,
+            "grade": body.worksheet.grade,
+            "subject": body.worksheet.subject,
+            "topic": body.worksheet.topic,
+            "difficulty": body.worksheet.difficulty,
+            "language": body.worksheet.language,
             "questions": questions_data,
-            "child_id": request.child_id,
-            "class_id": request.class_id,
-            "region": request.region or "India",
+            "child_id": body.child_id,
+            "class_id": body.class_id,
+            "region": body.region or "India",
         }).execute()
 
         if result.data:
@@ -126,10 +129,12 @@ async def save_worksheet(
 # ── 2. List saved worksheets ──────────────────────────────────────────────────
 
 @router.get("/saved/list")
+@limiter.limit("60/minute")
 async def list_saved_worksheets(
+    request: Request,
     authorization: str = Header(...),
-    limit: int = 20,
-    offset: int = 0,
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
     child_id: str | None = None,
     class_id: str | None = None,
 ):
@@ -188,7 +193,9 @@ async def list_saved_worksheets(
 # ── 3. Get saved worksheet ────────────────────────────────────────────────────
 
 @router.get("/saved/{worksheet_id}")
+@limiter.limit("60/minute")
 async def get_saved_worksheet(
+    request: Request,
     worksheet_id: str,
     authorization: str = Header(...),
 ):
@@ -220,7 +227,9 @@ async def get_saved_worksheet(
 # ── 4. Delete saved worksheet ─────────────────────────────────────────────────
 
 @router.delete("/saved/{worksheet_id}")
+@limiter.limit("30/minute")
 async def delete_saved_worksheet(
+    request: Request,
     worksheet_id: str,
     authorization: str = Header(...),
 ):
@@ -239,10 +248,12 @@ async def delete_saved_worksheet(
 # ── 5. Export PDF ─────────────────────────────────────────────────────────────
 
 @router.post("/export-pdf")
-async def export_worksheet_pdf(request: PDFExportRequest):
+@limiter.limit("10/minute")
+async def export_worksheet_pdf(request: Request, body: PDFExportRequest, authorization: str = Header(...)):
     """Export a worksheet as a PDF file."""
+    _get_user_id(authorization)
     try:
-        worksheet_dict = request.worksheet.model_dump()
+        worksheet_dict = body.worksheet.model_dump()
 
         # Quality gate (log-only)
         try:
@@ -270,15 +281,15 @@ async def export_worksheet_pdf(request: PDFExportRequest):
             logger.warning("quality_gate_skipped", error=str(_qg_exc))
 
         # Generate PDF
-        worksheet_dict["visual_theme"] = request.visual_theme or "color"
+        worksheet_dict["visual_theme"] = body.visual_theme or "color"
         pdf_bytes = pdf_service.generate_worksheet_pdf(
             worksheet_dict,
-            pdf_type=request.pdf_type,
+            pdf_type=body.pdf_type,
         )
 
         # Create safe filename
-        type_suffix = f"_{request.pdf_type}" if request.pdf_type != "full" else ""
-        raw_title = request.worksheet.title.replace(" ", "_")
+        type_suffix = f"_{body.pdf_type}" if body.pdf_type != "full" else ""
+        raw_title = body.worksheet.title.replace(" ", "_")
         safe_title = raw_title.encode("ascii", errors="ignore").decode("ascii") or "worksheet"
         filename = f"{safe_title}{type_suffix}.pdf"
 
@@ -297,7 +308,9 @@ async def export_worksheet_pdf(request: PDFExportRequest):
 # ── 6. Regenerate worksheet ───────────────────────────────────────────────────
 
 @router.post("/regenerate/{worksheet_id}")
+@limiter.limit("10/minute")
 async def regenerate_worksheet(
+    request: Request,
     worksheet_id: str,
     authorization: str = Header(...),
 ):

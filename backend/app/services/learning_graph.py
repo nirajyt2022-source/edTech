@@ -177,7 +177,8 @@ def _build_recommendation_reason(row: dict) -> str:
             if last_dt.tzinfo is None:
                 last_dt = last_dt.replace(tzinfo=timezone.utc)
             days_idle = (datetime.now(timezone.utc) - last_dt).days
-        except Exception:
+        except Exception as e:
+            logger.warning("Failed to parse last_practiced_at timestamp: %s", e)
             days_idle = None
 
     if level in ("unknown", None) or sessions_total == 0:

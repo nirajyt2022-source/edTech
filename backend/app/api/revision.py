@@ -16,10 +16,12 @@ from fastapi import APIRouter, HTTPException, Header, Request
 from fastapi.responses import StreamingResponse
 
 from app.middleware.rate_limit import limiter
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from app.middleware.sanitize import VALID_GRADES, VALID_SUBJECTS
 from supabase import create_client
 from app.core.config import get_settings
 from app.services.revision_pdf import generate_revision_pdf
+from app.services.subscription_check import check_ai_usage_allowed
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,22 @@ class RevisionRequest(BaseModel):
     subject: str        # e.g. "Maths"
     topic: str          # e.g. "Fractions"
     language: str = "English"  # or "Hindi"
+
+    @field_validator("grade")
+    @classmethod
+    def _validate_grade(cls, v: str) -> str:
+        v = v.strip()
+        if v not in VALID_GRADES:
+            raise ValueError(f"Invalid grade: {v}")
+        return v
+
+    @field_validator("subject")
+    @classmethod
+    def _validate_subject(cls, v: str) -> str:
+        v = v.strip()
+        if v not in VALID_SUBJECTS:
+            raise ValueError(f"Invalid subject: {v}")
+        return v
 
 
 class KeyConcept(BaseModel):
@@ -98,6 +116,11 @@ class RevisionResponse(BaseModel):
 async def generate_revision_notes(request: Request, req: RevisionRequest, authorization: str = Header(...)):
     """Generate structured revision notes for a given topic using Gemini 2.5 Flash."""
     user_id = get_user_id_from_token(authorization)
+
+    # -- Subscription gate --
+    usage = await check_ai_usage_allowed(user_id, supabase)
+    if not usage["allowed"]:
+        raise HTTPException(status_code=402, detail=usage["message"])
 
     # -- Cache check --
     from app.services.cache import get_cached_revision, set_cached_revision

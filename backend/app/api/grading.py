@@ -17,6 +17,7 @@ from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, H
 
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import validate_file_upload
+from app.services.subscription_check import check_ai_usage_allowed
 from typing import Optional
 from supabase import create_client
 from app.core.config import get_settings
@@ -56,6 +57,11 @@ async def grade_from_photo(
     """Grade a student's handwritten answers from photos."""
 
     user_id = get_user_id_from_token(authorization)
+
+    # -- Subscription gate --
+    usage = await check_ai_usage_allowed(user_id, supabase)
+    if not usage["allowed"]:
+        raise HTTPException(status_code=402, detail=usage["message"])
 
     # 1. Parse worksheet data
     try:

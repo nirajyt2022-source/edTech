@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel
 from datetime import datetime
 import logging
 from supabase import create_client
 from app.core.config import get_settings
+from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/topic-preferences", tags=["topic-preferences"])
 logger = logging.getLogger("skolar.topic_preferences")
@@ -47,7 +48,9 @@ def get_user_id_from_token(authorization: str) -> str:
 
 
 @router.get("/{child_id}/{subject}")
+@limiter.limit("60/minute")
 async def get_topic_preferences(
+    request: Request,
     child_id: str,
     subject: str,
     authorization: str = Header(...)
@@ -108,8 +111,10 @@ async def get_topic_preferences(
 
 
 @router.post("/")
+@limiter.limit("30/minute")
 async def save_topic_preferences(
-    request: SavePreferencesRequest,
+    request: Request,
+    body: SavePreferencesRequest,
     authorization: str = Header(...)
 ):
     """Save topic preferences for a child and subject."""
@@ -119,7 +124,7 @@ async def save_topic_preferences(
         # Verify child belongs to user
         child_result = supabase.table("children") \
             .select("id") \
-            .eq("id", request.child_id) \
+            .eq("id", body.child_id) \
             .eq("user_id", user_id) \
             .single() \
             .execute()
@@ -130,14 +135,14 @@ async def save_topic_preferences(
         # Convert to JSON-serializable format
         selected_topics_data = [
             {"chapter": t.chapter, "topics": t.topics}
-            for t in request.selected_topics
+            for t in body.selected_topics
         ]
 
         # Upsert preferences
         result = supabase.table("topic_preferences").upsert({
             "user_id": user_id,
-            "child_id": request.child_id,
-            "subject": request.subject,
+            "child_id": body.child_id,
+            "subject": body.subject,
             "selected_topics": selected_topics_data,
             "updated_at": datetime.now().isoformat()
         }, on_conflict="child_id,subject").execute()
@@ -155,7 +160,9 @@ async def save_topic_preferences(
 
 
 @router.delete("/{child_id}/{subject}")
+@limiter.limit("30/minute")
 async def clear_topic_preferences(
+    request: Request,
     child_id: str,
     subject: str,
     authorization: str = Header(...)

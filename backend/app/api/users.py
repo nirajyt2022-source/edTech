@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Header, Request
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 import logging
 from supabase import create_client
 from app.core.config import get_settings
+from app.middleware.rate_limit import limiter
+from app.middleware.sanitize import sanitize_string
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 logger = logging.getLogger("skolar.users")
@@ -28,8 +30,15 @@ class UpdateProfileRequest(BaseModel):
     active_role: str | None = None
     subjects: list[str] | None = None
     grades: list[str] | None = None
-    school_name: str | None = None
-    region: str | None = None
+    school_name: str | None = Field(default=None, max_length=200)
+    region: str | None = Field(default=None, max_length=100)
+
+    @field_validator("school_name", "region", mode="before")
+    @classmethod
+    def _sanitize(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return sanitize_string(v, "name")
 
 
 class SwitchRoleRequest(BaseModel):
@@ -53,7 +62,8 @@ def get_user_id_from_token(authorization: str) -> str:
 
 
 @router.get("/profile")
-async def get_profile(authorization: str = Header(...)):
+@limiter.limit("60/minute")
+async def get_profile(request: Request, authorization: str = Header(...)):
     """Get the current user's profile. Returns {profile: null} if no profile exists."""
     user_id = get_user_id_from_token(authorization)
 
@@ -75,25 +85,27 @@ async def get_profile(authorization: str = Header(...)):
 
 
 @router.put("/profile")
+@limiter.limit("30/minute")
 async def upsert_profile(
-    request: UpdateProfileRequest,
+    request: Request,
+    body: UpdateProfileRequest,
     authorization: str = Header(...)
 ):
     """Create or update the user's profile."""
     user_id = get_user_id_from_token(authorization)
 
-    if request.role not in ("parent", "teacher"):
+    if body.role not in ("parent", "teacher"):
         raise HTTPException(status_code=400, detail="Role must be 'parent' or 'teacher'")
 
     try:
         profile_data = {
             "user_id": user_id,
-            "role": request.role,
-            "active_role": request.active_role or request.role,
-            "subjects": request.subjects or [],
-            "grades": request.grades or [],
-            "school_name": request.school_name,
-            "region": request.region or "India",
+            "role": body.role,
+            "active_role": body.active_role or body.role,
+            "subjects": body.subjects or [],
+            "grades": body.grades or [],
+            "school_name": body.school_name,
+            "region": body.region or "India",
             "updated_at": datetime.now().isoformat(),
         }
 
@@ -128,20 +140,22 @@ async def upsert_profile(
 
 
 @router.post("/switch-role")
+@limiter.limit("30/minute")
 async def switch_role(
-    request: SwitchRoleRequest,
+    request: Request,
+    body: SwitchRoleRequest,
     authorization: str = Header(...)
 ):
     """Switch the user's active role."""
     user_id = get_user_id_from_token(authorization)
 
-    if request.active_role not in ("parent", "teacher"):
+    if body.active_role not in ("parent", "teacher"):
         raise HTTPException(status_code=400, detail="active_role must be 'parent' or 'teacher'")
 
     try:
         result = supabase.table("user_profiles") \
             .update({
-                "active_role": request.active_role,
+                "active_role": body.active_role,
                 "updated_at": datetime.now().isoformat(),
             }) \
             .eq("user_id", user_id) \

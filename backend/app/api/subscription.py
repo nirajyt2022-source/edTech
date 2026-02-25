@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel
 from datetime import datetime
 import logging
 from supabase import create_client
 from app.core.config import get_settings
+from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/subscription", tags=["subscription"])
 logger = logging.getLogger("skolar.subscription")
@@ -83,7 +84,8 @@ from datetime import timedelta  # noqa: E402
 
 
 @router.get("/status", response_model=SubscriptionStatus)
-async def get_subscription_status(authorization: str = Header(...)):
+@limiter.limit("60/minute")
+async def get_subscription_status(request: Request, authorization: str = Header(...)):
     """Get current user's subscription status."""
     user_id = get_user_id_from_token(authorization)
     sub = ensure_subscription_exists(user_id)
@@ -110,7 +112,8 @@ async def get_subscription_status(authorization: str = Header(...)):
 
 
 @router.post("/increment-usage")
-async def increment_usage(authorization: str = Header(...)):
+@limiter.limit("30/minute")
+async def increment_usage(request: Request, authorization: str = Header(...)):
     """Increment worksheet usage count. Called after successful generation."""
     user_id = get_user_id_from_token(authorization)
     sub = ensure_subscription_exists(user_id)
@@ -133,21 +136,9 @@ async def increment_usage(authorization: str = Header(...)):
 
 
 @router.post("/upgrade")
-async def upgrade_to_paid(authorization: str = Header(...)):
-    """Upgrade user to paid tier. (Placeholder - integrate with payment provider)"""
-    user_id = get_user_id_from_token(authorization)
-
-    # TODO: Integrate with Stripe/Razorpay for actual payment
-    # For now, this is a placeholder that upgrades immediately
-
-    result = supabase.table("user_subscriptions") \
-        .update({
-            "tier": "paid",
-            "updated_at": datetime.now().isoformat()
-        }) \
-        .eq("user_id", user_id) \
-        .execute()
-
-    if result.data:
-        return {"success": True, "tier": "paid"}
-    raise HTTPException(status_code=500, detail="Failed to upgrade")
+@limiter.limit("10/minute")
+async def upgrade_to_paid(request: Request, authorization: str = Header(...)):
+    """Upgrade user to paid tier. Disabled until payment integration is live."""
+    # Authenticate so the route still validates the token
+    get_user_id_from_token(authorization)
+    raise HTTPException(status_code=503, detail="Payment integration coming soon")
