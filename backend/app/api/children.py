@@ -1,19 +1,15 @@
-import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import sanitize_string
 
 router = APIRouter(prefix="/api/children", tags=["children"])
-logger = logging.getLogger("skolar.children")
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.children")
 
 
 class CreateChildRequest(BaseModel):
@@ -55,31 +51,14 @@ class Child(BaseModel):
     updated_at: str
 
 
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error("Auth verification failed: %s", e)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
 @router.post("/")
 @limiter.limit("30/minute")
-async def create_child(request: Request, body: CreateChildRequest, authorization: str = Header(...)):
+async def create_child(request: Request, body: CreateChildRequest, user_id: UserId, db: DbClient):
     """Create a new child profile."""
-    user_id = get_user_id_from_token(authorization)
 
     try:
         result = (
-            supabase.table("children")
+            db.table("children")
             .insert(
                 {
                     "user_id": user_id,
@@ -106,12 +85,10 @@ async def create_child(request: Request, body: CreateChildRequest, authorization
 
 @router.get("/")
 @limiter.limit("60/minute")
-async def list_children(request: Request, authorization: str = Header(...)):
+async def list_children(request: Request, user_id: UserId, db: DbClient):
     """List all children for the authenticated user."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
-        result = supabase.table("children").select("*").eq("user_id", user_id).order("created_at", desc=False).execute()
+        result = db.table("children").select("*").eq("user_id", user_id).order("created_at", desc=False).execute()
 
         return {"children": result.data}
 
@@ -124,12 +101,10 @@ async def list_children(request: Request, authorization: str = Header(...)):
 
 @router.get("/{child_id}")
 @limiter.limit("60/minute")
-async def get_child(request: Request, child_id: str, authorization: str = Header(...)):
+async def get_child(request: Request, child_id: str, user_id: UserId, db: DbClient):
     """Get a single child profile by ID."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
-        result = supabase.table("children").select("*").eq("id", child_id).eq("user_id", user_id).single().execute()
+        result = db.table("children").select("*").eq("id", child_id).eq("user_id", user_id).single().execute()
 
         if not result.data:
             raise HTTPException(status_code=404, detail="Child not found")
@@ -145,9 +120,8 @@ async def get_child(request: Request, child_id: str, authorization: str = Header
 
 @router.put("/{child_id}")
 @limiter.limit("30/minute")
-async def update_child(request: Request, child_id: str, body: UpdateChildRequest, authorization: str = Header(...)):
+async def update_child(request: Request, child_id: str, body: UpdateChildRequest, user_id: UserId, db: DbClient):
     """Update a child profile."""
-    user_id = get_user_id_from_token(authorization)
 
     try:
         # Build update data with only provided fields
@@ -166,7 +140,7 @@ async def update_child(request: Request, child_id: str, body: UpdateChildRequest
 
         update_data["updated_at"] = datetime.now().isoformat()
 
-        result = supabase.table("children").update(update_data).eq("id", child_id).eq("user_id", user_id).execute()
+        result = db.table("children").update(update_data).eq("id", child_id).eq("user_id", user_id).execute()
 
         if result.data:
             return {"success": True, "child": result.data[0]}
@@ -182,12 +156,10 @@ async def update_child(request: Request, child_id: str, body: UpdateChildRequest
 
 @router.delete("/{child_id}")
 @limiter.limit("30/minute")
-async def delete_child(request: Request, child_id: str, authorization: str = Header(...)):
+async def delete_child(request: Request, child_id: str, user_id: UserId, db: DbClient):
     """Delete a child profile."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
-        supabase.table("children").delete().eq("id", child_id).eq("user_id", user_id).execute()
+        db.table("children").delete().eq("id", child_id).eq("user_id", user_id).execute()
 
         return {"success": True, "deleted": child_id}
 

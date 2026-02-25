@@ -290,15 +290,16 @@ class TestExpiredTokenEndpoint:
     """Uses FastAPI TestClient and monkeypatches the module-level supabase client."""
 
     def _make_reports_client(self, monkeypatch, table_rows: list):
-        """Build a TestClient for the reports router with a mocked supabase."""
+        """Build a TestClient for the reports router with a mocked supabase via DI override."""
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
         from app.api import reports as reports_mod
+        from app.core.deps import get_supabase_client
 
         mock_sb = _FakeSupabase({"class_reports": table_rows})
-        monkeypatch.setattr(reports_mod, "supabase", mock_sb)
 
         app = FastAPI()
+        app.dependency_overrides[get_supabase_client] = lambda: mock_sb
         app.include_router(reports_mod.router)
         return TestClient(app, raise_server_exceptions=False)
 

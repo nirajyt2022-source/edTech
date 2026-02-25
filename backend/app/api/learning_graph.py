@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import logging
 from typing import Optional
 
-from fastapi import APIRouter, Header, HTTPException, Query
-from supabase import create_client
+import structlog
+from fastapi import APIRouter, HTTPException, Query
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.services.learning_graph import (
     _build_recommendation_reason,
     _build_report_text,
@@ -14,41 +13,16 @@ from app.services.learning_graph import (
     get_learning_graph_service,
 )
 
-logger = logging.getLogger(__name__)
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.learning_graph")
 
 router = APIRouter(prefix="/api/children", tags=["learning-graph"])
 
 
-# ---------------------------------------------------------------------------
-# Auth helpers (same pattern as children.py)
-# ---------------------------------------------------------------------------
-
-
-def _get_user_id(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    token = authorization.replace("Bearer ", "")
-    try:
-        resp = supabase.auth.get_user(token)
-        if not resp or not resp.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return resp.user.id
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error("Auth verification failed: %s", exc)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
-def _verify_ownership(child_id: str, user_id: str) -> dict:
+def _verify_ownership(db: DbClient, child_id: str, user_id: str) -> dict:
     """Raise 403 if the user does not own this child. Returns the child row."""
     try:
         r = (
-            supabase.table("children")
+            db.table("children")
             .select("id, name, grade, user_id")
             .eq("id", child_id)
             .eq("user_id", user_id)
@@ -57,7 +31,7 @@ def _verify_ownership(child_id: str, user_id: str) -> dict:
         )
         child = getattr(r, "data", None)
     except Exception as exc:
-        logger.error("[learning_graph._verify_ownership] DB error: %s", exc)
+        logger.error("verify_ownership_failed", error=str(exc))
         raise HTTPException(status_code=500, detail="Database error verifying ownership")
     if not child:
         raise HTTPException(status_code=403, detail="Access denied or child not found")
@@ -70,13 +44,13 @@ def _verify_ownership(child_id: str, user_id: str) -> dict:
 
 
 @router.get("/{child_id}/graph")
-def get_child_graph(
+async def get_child_graph(
     child_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Return the full learning graph for a child, grouped by subject."""
-    user_id = _get_user_id(authorization)
-    _verify_ownership(child_id, user_id)
+    _verify_ownership(db, child_id, user_id)
     try:
         svc = get_learning_graph_service()
         graph = svc.get_child_graph(child_id)
@@ -92,13 +66,13 @@ def get_child_graph(
 
 
 @router.get("/{child_id}/graph/summary")
-def get_child_graph_summary(
+async def get_child_graph_summary(
     child_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Return the mastery summary (mastered/improving/needs_attention lists)."""
-    user_id = _get_user_id(authorization)
-    _verify_ownership(child_id, user_id)
+    _verify_ownership(db, child_id, user_id)
     try:
         svc = get_learning_graph_service()
         summary = svc.get_child_summary(child_id)
@@ -114,17 +88,17 @@ def get_child_graph_summary(
 
 
 @router.get("/{child_id}/graph/history")
-def get_child_graph_history(
+async def get_child_graph_history(
     child_id: str,
+    user_id: UserId,
+    db: DbClient,
     limit: int = Query(default=20, ge=1, le=50),
-    authorization: str = Header(...),
 ):
     """Return recent learning sessions for a child, newest first."""
-    user_id = _get_user_id(authorization)
-    _verify_ownership(child_id, user_id)
+    _verify_ownership(db, child_id, user_id)
     try:
         r = (
-            supabase.table("learning_sessions")
+            db.table("learning_sessions")
             .select(
                 "topic_slug, subject, score_pct, mastery_before, mastery_after, "
                 "created_at, questions_total, questions_correct"
@@ -165,16 +139,16 @@ def _pick_recommendation(rows: list[dict]) -> Optional[dict]:
 
 
 @router.get("/{child_id}/graph/recommendation")
-def get_child_next_recommendation(
+async def get_child_next_recommendation(
     child_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Return the single highest-priority topic to practice next."""
-    user_id = _get_user_id(authorization)
-    _verify_ownership(child_id, user_id)
+    _verify_ownership(db, child_id, user_id)
     try:
         r = (
-            supabase.table("topic_mastery")
+            db.table("topic_mastery")
             .select("topic_slug, subject, mastery_level, last_practiced_at")
             .eq("child_id", child_id)
             .execute()
@@ -218,9 +192,10 @@ def get_child_next_recommendation(
 
 
 @router.get("/{child_id}/graph/report")
-def get_child_graph_report(
+async def get_child_graph_report(
     child_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Return a plain-English parent-friendly progress report.
 
@@ -229,8 +204,7 @@ def get_child_graph_report(
         { child_name, report_text,
           recommendation: { topic_slug, topic_name, reason, subject } | null }
     """
-    user_id = _get_user_id(authorization)
-    child = _verify_ownership(child_id, user_id)
+    child = _verify_ownership(db, child_id, user_id)
     child_name: str = child.get("name", "Your child")
 
     # ── 1. Fetch mastery summary (mastered / improving lists) ────────────
@@ -255,7 +229,7 @@ def get_child_graph_report(
     recommendation: Optional[dict] = None
     try:
         r = (
-            supabase.table("topic_mastery")
+            db.table("topic_mastery")
             .select("topic_slug, subject, mastery_level, streak, sessions_total, last_practiced_at")
             .eq("child_id", child_id)
             .execute()

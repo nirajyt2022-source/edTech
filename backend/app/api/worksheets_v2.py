@@ -7,13 +7,12 @@ Mounts at /api/v2/worksheets. The old /api/worksheets (v1) is untouched.
 from __future__ import annotations
 
 import asyncio
-import logging
 
-from fastapi import APIRouter, Header, HTTPException, Request
-from supabase import create_client
+import sentry_sdk
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 
-from app.core.config import get_settings
-from app.core.deps import get_current_user_id
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.models.worksheet import (
     Question,
@@ -25,11 +24,9 @@ from app.services.ai_client import get_openai_compat_client
 from app.services.subscription_check import check_and_increment_usage
 from app.services.worksheet_generator import generate_worksheet
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/api/v2/worksheets", tags=["worksheets-v2"])
 
-_settings = get_settings()
-_supabase = create_client(_settings.supabase_url, _settings.supabase_service_key)
 client = get_openai_compat_client()
 
 
@@ -66,13 +63,13 @@ def _infer_render_format(q_type: str, options: list | None) -> str:
 
 @router.post("/generate", response_model=WorksheetGenerationResponse)
 @limiter.limit("10/minute")
-async def generate_worksheet_v2(request: Request, body: WorksheetGenerationRequest, authorization: str = Header(...)):
+async def generate_worksheet_v2(request: Request, body: WorksheetGenerationRequest, user_id: UserId, db: DbClient):
     """Generate a worksheet using the simplified v2 pipeline."""
+    sentry_sdk.set_tag("topic", body.topic)
+    sentry_sdk.set_tag("subject", body.subject)
 
     # ── Auth + Subscription enforcement ───────────────────────
-    user_id = get_current_user_id(authorization)
-
-    usage = await check_and_increment_usage(user_id, _supabase)
+    usage = await check_and_increment_usage(user_id, db)
     if not usage["allowed"]:
         raise HTTPException(status_code=402, detail=usage["message"])
     # ── End subscription enforcement ──────────────────────────

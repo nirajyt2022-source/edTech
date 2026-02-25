@@ -1,18 +1,14 @@
-import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/topic-preferences", tags=["topic-preferences"])
-logger = logging.getLogger("skolar.topic_preferences")
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.topic_preferences")
 
 
 class TopicSelection(BaseModel):
@@ -33,45 +29,20 @@ class TopicPreferences(BaseModel):
     selected_topics: list[TopicSelection]
 
 
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error("Auth verification failed: %s", e)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
 @router.get("/{child_id}/{subject}")
 @limiter.limit("60/minute")
-async def get_topic_preferences(request: Request, child_id: str, subject: str, authorization: str = Header(...)):
+async def get_topic_preferences(request: Request, child_id: str, subject: str, user_id: UserId, db: DbClient):
     """Get saved topic preferences for a child and subject."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
         # Verify child belongs to user
-        child_result = (
-            supabase.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
-        )
+        child_result = db.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
 
         if not child_result.data:
             raise HTTPException(status_code=404, detail="Child not found")
 
         # Get preferences
         result = (
-            supabase.table("topic_preferences")
-            .select("*")
-            .eq("child_id", child_id)
-            .eq("subject", subject)
-            .single()
-            .execute()
+            db.table("topic_preferences").select("*").eq("child_id", child_id).eq("subject", subject).single().execute()
         )
 
         if not result.data:
@@ -103,14 +74,12 @@ async def get_topic_preferences(request: Request, child_id: str, subject: str, a
 
 @router.post("/")
 @limiter.limit("30/minute")
-async def save_topic_preferences(request: Request, body: SavePreferencesRequest, authorization: str = Header(...)):
+async def save_topic_preferences(request: Request, body: SavePreferencesRequest, user_id: UserId, db: DbClient):
     """Save topic preferences for a child and subject."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
         # Verify child belongs to user
         child_result = (
-            supabase.table("children").select("id").eq("id", body.child_id).eq("user_id", user_id).single().execute()
+            db.table("children").select("id").eq("id", body.child_id).eq("user_id", user_id).single().execute()
         )
 
         if not child_result.data:
@@ -121,7 +90,7 @@ async def save_topic_preferences(request: Request, body: SavePreferencesRequest,
 
         # Upsert preferences
         result = (
-            supabase.table("topic_preferences")
+            db.table("topic_preferences")
             .upsert(
                 {
                     "user_id": user_id,
@@ -149,12 +118,10 @@ async def save_topic_preferences(request: Request, body: SavePreferencesRequest,
 
 @router.delete("/{child_id}/{subject}")
 @limiter.limit("30/minute")
-async def clear_topic_preferences(request: Request, child_id: str, subject: str, authorization: str = Header(...)):
+async def clear_topic_preferences(request: Request, child_id: str, subject: str, user_id: UserId, db: DbClient):
     """Clear topic preferences (reset to all selected)."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
-        supabase.table("topic_preferences").delete().eq("child_id", child_id).eq("subject", subject).eq(
+        db.table("topic_preferences").delete().eq("child_id", child_id).eq("subject", subject).eq(
             "user_id", user_id
         ).execute()
 

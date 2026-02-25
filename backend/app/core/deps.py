@@ -1,12 +1,15 @@
-import logging
-from functools import lru_cache
+from __future__ import annotations
 
-from fastapi import HTTPException
+from functools import lru_cache
+from typing import Annotated
+
+import structlog
+from fastapi import Depends, Header, HTTPException
 from supabase import Client, create_client
 
 from app.core.config import get_settings
 
-logger = logging.getLogger("skolar.deps")
+logger = structlog.get_logger("skolar.deps")
 
 
 @lru_cache
@@ -36,6 +39,19 @@ def get_current_user_id(authorization: str) -> str:
     except Exception as e:
         logger.error("Auth verification failed: %s", e)
         raise HTTPException(status_code=401, detail="Authentication failed")
+
+
+async def get_user_id(authorization: str = Header(...)) -> str:
+    """FastAPI dependency that extracts user_id from JWT.
+
+    Usage: user_id: str = Depends(get_user_id)
+    """
+    return get_current_user_id(authorization)
+
+
+# Typed aliases for FastAPI Depends() — use in endpoint signatures.
+DbClient = Annotated[Client, Depends(get_supabase_client)]
+UserId = Annotated[str, Depends(get_user_id)]
 
 
 def verify_child_ownership(user_id: str, child_id: str) -> None:

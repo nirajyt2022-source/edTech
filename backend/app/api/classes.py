@@ -1,19 +1,15 @@
-import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import sanitize_string
 
 router = APIRouter(prefix="/api/classes", tags=["classes"])
-logger = logging.getLogger("skolar.classes")
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.classes")
 
 
 class CreateClassRequest(BaseModel):
@@ -48,34 +44,16 @@ class UpdateClassRequest(BaseModel):
         return sanitize_string(v, "name")
 
 
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error("Auth verification failed: %s", e)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
 @router.post("/")
 @limiter.limit("30/minute")
-async def create_class(request: Request, body: CreateClassRequest, authorization: str = Header(...)):
+async def create_class(request: Request, body: CreateClassRequest, user_id: UserId, db: DbClient):
     """Create a new teacher class."""
-    user_id = get_user_id_from_token(authorization)
-
     if body.syllabus_source not in ("cbse", "custom"):
         raise HTTPException(status_code=400, detail="syllabus_source must be 'cbse' or 'custom'")
 
     try:
         result = (
-            supabase.table("teacher_classes")
+            db.table("teacher_classes")
             .insert(
                 {
                     "user_id": user_id,
@@ -104,17 +82,11 @@ async def create_class(request: Request, body: CreateClassRequest, authorization
 
 @router.get("/")
 @limiter.limit("60/minute")
-async def list_classes(request: Request, authorization: str = Header(...)):
+async def list_classes(request: Request, user_id: UserId, db: DbClient):
     """List all classes for the authenticated teacher."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
         result = (
-            supabase.table("teacher_classes")
-            .select("*")
-            .eq("user_id", user_id)
-            .order("created_at", desc=False)
-            .execute()
+            db.table("teacher_classes").select("*").eq("user_id", user_id).order("created_at", desc=False).execute()
         )
 
         return {"classes": result.data}
@@ -128,14 +100,10 @@ async def list_classes(request: Request, authorization: str = Header(...)):
 
 @router.get("/{class_id}")
 @limiter.limit("60/minute")
-async def get_class(request: Request, class_id: str, authorization: str = Header(...)):
+async def get_class(request: Request, class_id: str, user_id: UserId, db: DbClient):
     """Get a single class by ID."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
-        result = (
-            supabase.table("teacher_classes").select("*").eq("id", class_id).eq("user_id", user_id).single().execute()
-        )
+        result = db.table("teacher_classes").select("*").eq("id", class_id).eq("user_id", user_id).single().execute()
 
         if not result.data:
             raise HTTPException(status_code=404, detail="Class not found")
@@ -151,9 +119,8 @@ async def get_class(request: Request, class_id: str, authorization: str = Header
 
 @router.put("/{class_id}")
 @limiter.limit("30/minute")
-async def update_class(request: Request, class_id: str, body: UpdateClassRequest, authorization: str = Header(...)):
+async def update_class(request: Request, class_id: str, body: UpdateClassRequest, user_id: UserId, db: DbClient):
     """Update a class."""
-    user_id = get_user_id_from_token(authorization)
 
     try:
         update_data = {}
@@ -177,9 +144,7 @@ async def update_class(request: Request, class_id: str, body: UpdateClassRequest
 
         update_data["updated_at"] = datetime.now().isoformat()
 
-        result = (
-            supabase.table("teacher_classes").update(update_data).eq("id", class_id).eq("user_id", user_id).execute()
-        )
+        result = db.table("teacher_classes").update(update_data).eq("id", class_id).eq("user_id", user_id).execute()
 
         if result.data:
             return {"success": True, "class": result.data[0]}
@@ -198,23 +163,19 @@ async def update_class(request: Request, class_id: str, body: UpdateClassRequest
 async def get_class_dashboard(
     request: Request,
     class_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Return class mastery heatmap, weak topics, and per-student summaries.
 
     Response:
         class_name, total_students, children[], heatmap, weak_topics[], child_summaries{}
     """
-    import logging
-
-    logger = logging.getLogger(__name__)
-
-    user_id = get_user_id_from_token(authorization)
 
     # 1. Verify teacher owns this class
     try:
         cls_result = (
-            supabase.table("teacher_classes")
+            db.table("teacher_classes")
             .select("id, name, grade, subject")
             .eq("id", class_id)
             .eq("user_id", user_id)
@@ -231,7 +192,7 @@ async def get_class_dashboard(
 
     # 2. Find distinct children linked to this class via worksheets
     try:
-        ws_result = supabase.table("worksheets").select("child_id").eq("class_id", class_id).execute()
+        ws_result = db.table("worksheets").select("child_id").eq("class_id", class_id).execute()
         ws_rows = getattr(ws_result, "data", None) or []
     except Exception as e:
         logger.error("[get_class_dashboard] DB error fetching worksheets for class %s: %s", class_id, e)
@@ -251,7 +212,7 @@ async def get_class_dashboard(
 
     # 3. Get child names
     try:
-        children_result = supabase.table("children").select("id, name").in_("id", child_ids).execute()
+        children_result = db.table("children").select("id, name").in_("id", child_ids).execute()
         children_rows = getattr(children_result, "data", None) or []
     except Exception as e:
         logger.error("[get_class_dashboard] DB error fetching children for class %s: %s", class_id, e)
@@ -262,10 +223,7 @@ async def get_class_dashboard(
     # 4. Get topic_mastery for all children (service key bypasses RLS)
     try:
         mastery_result = (
-            supabase.table("topic_mastery")
-            .select("child_id, topic_slug, mastery_level")
-            .in_("child_id", child_ids)
-            .execute()
+            db.table("topic_mastery").select("child_id, topic_slug, mastery_level").in_("child_id", child_ids).execute()
         )
         mastery_rows = getattr(mastery_result, "data", None) or []
     except Exception as e:
@@ -314,12 +272,10 @@ async def get_class_dashboard(
 
 @router.delete("/{class_id}")
 @limiter.limit("30/minute")
-async def delete_class(request: Request, class_id: str, authorization: str = Header(...)):
+async def delete_class(request: Request, class_id: str, user_id: UserId, db: DbClient):
     """Delete a class."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
-        supabase.table("teacher_classes").delete().eq("id", class_id).eq("user_id", user_id).execute()
+        db.table("teacher_classes").delete().eq("id", class_id).eq("user_id", user_id).execute()
 
         return {"success": True, "deleted": class_id}
 

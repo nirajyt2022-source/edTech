@@ -8,35 +8,17 @@ from datetime import datetime
 from urllib.parse import quote
 
 import structlog
-from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 from pydantic import BaseModel
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.services.pdf import get_pdf_service
 
-logger = structlog.get_logger()
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.saved_worksheets")
 pdf_service = get_pdf_service()
 
 router = APIRouter(prefix="/api/worksheets", tags=["saved-worksheets"])
-
-
-# ── Auth helper ────────────────────────────────────────────────────────────────
-
-
-def _get_user_id(authorization: str | None) -> str:
-    """Extract user ID from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    token = authorization.replace("Bearer ", "")
-    try:
-        user = supabase.auth.get_user(token)
-        return user.user.id
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
 # ── Pydantic models ───────────────────────────────────────────────────────────
@@ -98,16 +80,15 @@ class PDFExportRequest(BaseModel):
 async def save_worksheet(
     request: Request,
     body: SaveWorksheetRequest,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Save a generated worksheet to the database."""
-    user_id = _get_user_id(authorization)
-
     try:
         questions_data = [q if isinstance(q, dict) else q.model_dump() for q in body.worksheet.questions]
 
         result = (
-            supabase.table("worksheets")
+            db.table("worksheets")
             .insert(
                 {
                     "user_id": user_id,
@@ -146,21 +127,16 @@ async def save_worksheet(
 @limiter.limit("60/minute")
 async def list_saved_worksheets(
     request: Request,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     child_id: str | None = None,
     class_id: str | None = None,
 ):
     """List user's saved worksheets."""
-    user_id = _get_user_id(authorization)
-
     try:
-        query = (
-            supabase.table("worksheets")
-            .select("*, children(id, name), teacher_classes(id, name)")
-            .eq("user_id", user_id)
-        )
+        query = db.table("worksheets").select("*, children(id, name), teacher_classes(id, name)").eq("user_id", user_id)
 
         if child_id:
             query = query.eq("child_id", child_id)
@@ -210,15 +186,12 @@ async def list_saved_worksheets(
 async def get_saved_worksheet(
     request: Request,
     worksheet_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Get a saved worksheet by ID."""
-    user_id = _get_user_id(authorization)
-
     try:
-        result = (
-            supabase.table("worksheets").select("*").eq("id", worksheet_id).eq("user_id", user_id).single().execute()
-        )
+        result = db.table("worksheets").select("*").eq("id", worksheet_id).eq("user_id", user_id).single().execute()
 
         if not result.data:
             raise HTTPException(status_code=404, detail="Worksheet not found")
@@ -240,13 +213,12 @@ async def get_saved_worksheet(
 async def delete_saved_worksheet(
     request: Request,
     worksheet_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Delete a saved worksheet."""
-    user_id = _get_user_id(authorization)
-
     try:
-        supabase.table("worksheets").delete().eq("id", worksheet_id).eq("user_id", user_id).execute()
+        db.table("worksheets").delete().eq("id", worksheet_id).eq("user_id", user_id).execute()
         return {"success": True, "deleted": worksheet_id}
 
     except Exception as exc:
@@ -259,9 +231,8 @@ async def delete_saved_worksheet(
 
 @router.post("/export-pdf")
 @limiter.limit("10/minute")
-async def export_worksheet_pdf(request: Request, body: PDFExportRequest, authorization: str = Header(...)):
+async def export_worksheet_pdf(request: Request, body: PDFExportRequest, user_id: UserId, db: DbClient):
     """Export a worksheet as a PDF file."""
-    _get_user_id(authorization)
     try:
         worksheet_dict = body.worksheet.model_dump()
 
@@ -324,16 +295,13 @@ async def export_worksheet_pdf(request: Request, body: PDFExportRequest, authori
 async def regenerate_worksheet(
     request: Request,
     worksheet_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Regenerate a worksheet with the same settings using v2 generator."""
-    user_id = _get_user_id(authorization)
-
     try:
         # Get original worksheet
-        result = (
-            supabase.table("worksheets").select("*").eq("id", worksheet_id).eq("user_id", user_id).single().execute()
-        )
+        result = db.table("worksheets").select("*").eq("id", worksheet_id).eq("user_id", user_id).single().execute()
 
         if not result.data:
             raise HTTPException(status_code=404, detail="Worksheet not found")
@@ -358,7 +326,7 @@ async def regenerate_worksheet(
 
         # Increment regeneration count
         regen_count = original.get("regeneration_count", 0)
-        supabase.table("worksheets").update(
+        db.table("worksheets").update(
             {
                 "regeneration_count": regen_count + 1,
                 "updated_at": datetime.now().isoformat(),
@@ -393,12 +361,10 @@ async def regenerate_worksheet(
 
 
 @router.get("/analytics")
-async def get_teacher_analytics(authorization: str = Header(...)):
+async def get_teacher_analytics(user_id: UserId, db: DbClient):
     """Get light analytics for a teacher."""
-    user_id = _get_user_id(authorization)
-
     try:
-        result = supabase.table("worksheets").select("topic, subject, created_at").eq("user_id", user_id).execute()
+        result = db.table("worksheets").select("topic, subject, created_at").eq("user_id", user_id).execute()
 
         rows = result.data or []
         total_worksheets = len(rows)

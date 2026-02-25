@@ -1,19 +1,15 @@
-import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, field_validator
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import sanitize_string
 
 router = APIRouter(prefix="/api/users", tags=["users"])
-logger = logging.getLogger("skolar.users")
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.users")
 
 
 class UserProfile(BaseModel):
@@ -47,30 +43,12 @@ class SwitchRoleRequest(BaseModel):
     active_role: str
 
 
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error("Auth verification failed: %s", e)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
 @router.get("/profile")
 @limiter.limit("60/minute")
-async def get_profile(request: Request, authorization: str = Header(...)):
+async def get_profile(request: Request, user_id: UserId, db: DbClient):
     """Get the current user's profile. Returns {profile: null} if no profile exists."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
-        result = supabase.table("user_profiles").select("*").eq("user_id", user_id).execute()
+        result = db.table("user_profiles").select("*").eq("user_id", user_id).execute()
 
         if result.data and len(result.data) > 0:
             return {"profile": result.data[0]}
@@ -85,10 +63,8 @@ async def get_profile(request: Request, authorization: str = Header(...)):
 
 @router.put("/profile")
 @limiter.limit("30/minute")
-async def upsert_profile(request: Request, body: UpdateProfileRequest, authorization: str = Header(...)):
+async def upsert_profile(request: Request, body: UpdateProfileRequest, user_id: UserId, db: DbClient):
     """Create or update the user's profile."""
-    user_id = get_user_id_from_token(authorization)
-
     if body.role not in ("parent", "teacher"):
         raise HTTPException(status_code=400, detail="Role must be 'parent' or 'teacher'")
 
@@ -105,19 +81,19 @@ async def upsert_profile(request: Request, body: UpdateProfileRequest, authoriza
         }
 
         # Try to get existing profile
-        existing = supabase.table("user_profiles").select("user_id").eq("user_id", user_id).execute()
+        existing = db.table("user_profiles").select("user_id").eq("user_id", user_id).execute()
 
         if existing.data and len(existing.data) > 0:
             # Update existing
             result = (
-                supabase.table("user_profiles")
+                db.table("user_profiles")
                 .update({k: v for k, v in profile_data.items() if k != "user_id"})
                 .eq("user_id", user_id)
                 .execute()
             )
         else:
             # Insert new
-            result = supabase.table("user_profiles").insert(profile_data).execute()
+            result = db.table("user_profiles").insert(profile_data).execute()
 
         if result.data:
             return {"profile": result.data[0]}
@@ -133,16 +109,14 @@ async def upsert_profile(request: Request, body: UpdateProfileRequest, authoriza
 
 @router.post("/switch-role")
 @limiter.limit("30/minute")
-async def switch_role(request: Request, body: SwitchRoleRequest, authorization: str = Header(...)):
+async def switch_role(request: Request, body: SwitchRoleRequest, user_id: UserId, db: DbClient):
     """Switch the user's active role."""
-    user_id = get_user_id_from_token(authorization)
-
     if body.active_role not in ("parent", "teacher"):
         raise HTTPException(status_code=400, detail="active_role must be 'parent' or 'teacher'")
 
     try:
         result = (
-            supabase.table("user_profiles")
+            db.table("user_profiles")
             .update(
                 {
                     "active_role": body.active_role,

@@ -1,18 +1,14 @@
-import logging
 from datetime import date, datetime
 
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/engagement", tags=["engagement"])
-logger = logging.getLogger("skolar.engagement")
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.engagement")
 
 
 class EngagementStats(BaseModel):
@@ -24,32 +20,16 @@ class EngagementStats(BaseModel):
     last_activity_date: str | None
 
 
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error("Auth verification failed: %s", e)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
-def ensure_engagement_exists(user_id: str, child_id: str) -> dict:
+def ensure_engagement_exists(db: DbClient, user_id: str, child_id: str) -> dict:
     """Ensure engagement record exists for a child."""
-    result = supabase.table("child_engagement").select("*").eq("child_id", child_id).execute()
+    result = db.table("child_engagement").select("*").eq("child_id", child_id).execute()
 
     if result.data and len(result.data) > 0:
         return result.data[0]
 
     # Create new engagement record
     insert_result = (
-        supabase.table("child_engagement")
+        db.table("child_engagement")
         .insert(
             {
                 "user_id": user_id,
@@ -72,20 +52,16 @@ def ensure_engagement_exists(user_id: str, child_id: str) -> dict:
 
 @router.get("/{child_id}", response_model=EngagementStats)
 @limiter.limit("60/minute")
-async def get_engagement(request: Request, child_id: str, authorization: str = Header(...)):
+async def get_engagement(request: Request, child_id: str, user_id: UserId, db: DbClient):
     """Get engagement stats for a child."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
         # Verify child belongs to user
-        child_result = (
-            supabase.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
-        )
+        child_result = db.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
 
         if not child_result.data:
             raise HTTPException(status_code=404, detail="Child not found")
 
-        engagement = ensure_engagement_exists(user_id, child_id)
+        engagement = ensure_engagement_exists(db, user_id, child_id)
 
         return EngagementStats(
             child_id=engagement["child_id"],
@@ -105,20 +81,16 @@ async def get_engagement(request: Request, child_id: str, authorization: str = H
 
 @router.post("/{child_id}/complete")
 @limiter.limit("30/minute")
-async def record_completion(request: Request, child_id: str, authorization: str = Header(...)):
+async def record_completion(request: Request, child_id: str, user_id: UserId, db: DbClient):
     """Record a worksheet completion (triggered on PDF download)."""
-    user_id = get_user_id_from_token(authorization)
-
     try:
         # Verify child belongs to user
-        child_result = (
-            supabase.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
-        )
+        child_result = db.table("children").select("id").eq("id", child_id).eq("user_id", user_id).single().execute()
 
         if not child_result.data:
             raise HTTPException(status_code=404, detail="Child not found")
 
-        engagement = ensure_engagement_exists(user_id, child_id)
+        engagement = ensure_engagement_exists(db, user_id, child_id)
 
         today = date.today()
         last_activity = None
@@ -150,7 +122,7 @@ async def record_completion(request: Request, child_id: str, authorization: str 
         new_total = engagement["total_worksheets_completed"] + 1
 
         # Update engagement
-        supabase.table("child_engagement").update(
+        db.table("child_engagement").update(
             {
                 "total_stars": new_stars,
                 "current_streak": current_streak,

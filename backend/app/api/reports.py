@@ -23,27 +23,24 @@ POST /api/teacher/classes/{class_id}/report/send-email
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime, timezone
 from typing import List
 
+import structlog
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Request
 from pydantic import BaseModel
-from supabase import create_client
 
 from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.services.email_service import EmailService
 from app.services.report_generator import ClassReportGenerator
 
-logger = logging.getLogger(__name__)
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.reports")
 
 router = APIRouter(prefix="/api", tags=["reports"])
 
-_SHARE_BASE = settings.frontend_url
+_SHARE_BASE = get_settings().frontend_url
 
 
 # ---------------------------------------------------------------------------
@@ -61,28 +58,6 @@ class SendEmailBody(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Auth helper (same pattern as classes.py / share.py)
-# ---------------------------------------------------------------------------
-
-
-def _get_user_id(authorization: str) -> str:
-    """Extract user_id from Supabase JWT; raise 401 on failure."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
-    token = authorization.replace("Bearer ", "")
-    try:
-        resp = supabase.auth.get_user(token)
-        if not resp or not resp.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return resp.user.id
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error("[reports._get_user_id] Auth failed: %s", exc)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
-# ---------------------------------------------------------------------------
 # Endpoint 1 — generate report (teacher only)
 # ---------------------------------------------------------------------------
 
@@ -92,13 +67,12 @@ def _get_user_id(authorization: str) -> str:
 async def generate_class_report(
     request: Request,
     class_id: str,
-    authorization: str = Header(...),
+    teacher_id: UserId,
+    db: DbClient,
 ):
     """Generate a shareable class report and store it in class_reports."""
-    teacher_id = _get_user_id(authorization)
-
     try:
-        gen = ClassReportGenerator(supabase_client=supabase)
+        gen = ClassReportGenerator(supabase_client=db)
         result = gen.generate_class_report(class_id, teacher_id)
     except ValueError as exc:
         raise HTTPException(status_code=403, detail=str(exc))
@@ -122,14 +96,14 @@ async def generate_class_report(
 # ---------------------------------------------------------------------------
 
 
-def _increment_view_count(token: str) -> None:
+def _increment_view_count(db: DbClient, token: str) -> None:
     """Fire-and-forget: bump view_count for a report by token."""
     try:
-        r = supabase.table("class_reports").select("view_count").eq("token", token).maybe_single().execute()
+        r = db.table("class_reports").select("view_count").eq("token", token).maybe_single().execute()
         row = getattr(r, "data", None)
         if row:
             new_count = (row.get("view_count") or 0) + 1
-            (supabase.table("class_reports").update({"view_count": new_count}).eq("token", token).execute())
+            (db.table("class_reports").update({"view_count": new_count}).eq("token", token).execute())
     except Exception as exc:
         logger.warning("[reports._increment_view_count] Failed for report_id %.12s…: %s", token, exc)
 
@@ -140,11 +114,12 @@ async def get_report_by_token(
     request: Request,
     token: str,
     background_tasks: BackgroundTasks,
+    db: DbClient,
 ):
     """Public endpoint. Returns report_data JSONB for a valid, non-expired token."""
     try:
         r = (
-            supabase.table("class_reports")
+            db.table("class_reports")
             .select("report_data, expires_at, view_count")
             .eq("token", token)
             .maybe_single()
@@ -173,7 +148,7 @@ async def get_report_by_token(
             logger.warning("[reports.get_report] Cannot parse expires_at %r: %s", expires_str, exc)
 
     # Increment view count in the background (fire and forget)
-    background_tasks.add_task(_increment_view_count, token)
+    background_tasks.add_task(_increment_view_count, db, token)
 
     return row["report_data"]
 
@@ -188,15 +163,15 @@ async def get_report_by_token(
 async def get_class_contacts(
     request: Request,
     class_id: str,
-    authorization: str = Header(...),
+    teacher_id: UserId,
+    db: DbClient,
 ):
     """Return [{child_id, child_name, parent_email}] for a class."""
-    teacher_id = _get_user_id(authorization)
-    _verify_class_ownership(class_id, teacher_id)
+    _verify_class_ownership(db, class_id, teacher_id)
 
     try:
         r = (
-            supabase.table("class_contacts")
+            db.table("class_contacts")
             .select("child_id, parent_email, children(name)")
             .eq("class_id", class_id)
             .execute()
@@ -227,11 +202,11 @@ async def upsert_class_contacts(
     request: Request,
     class_id: str,
     body: List[ContactItem],
-    authorization: str = Header(...),
+    teacher_id: UserId,
+    db: DbClient,
 ):
     """Upsert parent email contacts for a class."""
-    teacher_id = _get_user_id(authorization)
-    _verify_class_ownership(class_id, teacher_id)
+    _verify_class_ownership(db, class_id, teacher_id)
 
     rows = [
         {
@@ -247,7 +222,7 @@ async def upsert_class_contacts(
         return {"updated": 0}
 
     try:
-        supabase.table("class_contacts").upsert(rows, on_conflict="class_id,child_id").execute()
+        db.table("class_contacts").upsert(rows, on_conflict="class_id,child_id").execute()
     except Exception as exc:
         logger.error("[reports.upsert_class_contacts] DB error for class %s: %s", class_id, exc)
         raise HTTPException(status_code=500, detail="Failed to save contacts")
@@ -266,17 +241,18 @@ async def send_email_report(
     request: Request,
     class_id: str,
     body: SendEmailBody,
+    teacher_id: UserId,
+    db: DbClient,
     authorization: str = Header(...),
 ):
     """Send personalised report emails to parents via Resend."""
-    teacher_id = _get_user_id(authorization)
-    _verify_class_ownership(class_id, teacher_id)
+    _verify_class_ownership(db, class_id, teacher_id)
 
     # Resolve teacher display name from JWT metadata
     teacher_name = ""
     try:
         token_str = authorization.replace("Bearer ", "")
-        user_resp = supabase.auth.get_user(token_str)
+        user_resp = db.auth.get_user(token_str)
         if user_resp and user_resp.user:
             teacher_name = (user_resp.user.user_metadata or {}).get("name", "")
     except Exception as exc:
@@ -285,7 +261,7 @@ async def send_email_report(
     # Fetch report
     try:
         r = (
-            supabase.table("class_reports")
+            db.table("class_reports")
             .select("report_data, expires_at, token")
             .eq("token", body.report_token)
             .maybe_single()
@@ -305,9 +281,7 @@ async def send_email_report(
 
     # Fetch parent contacts for this class
     try:
-        contacts_r = (
-            supabase.table("class_contacts").select("child_id, parent_email").eq("class_id", class_id).execute()
-        )
+        contacts_r = db.table("class_contacts").select("child_id, parent_email").eq("class_id", class_id).execute()
         contact_rows = getattr(contacts_r, "data", None) or []
     except Exception as exc:
         logger.error("[reports.send_email_report] DB error fetching contacts: %s", exc)
@@ -322,9 +296,10 @@ async def send_email_report(
             "error": "No parent emails configured for this class.",
         }
 
+    _settings = get_settings()
     svc = EmailService(
-        api_key=settings.resend_api_key,
-        from_email=settings.resend_from_email,
+        api_key=_settings.resend_api_key,
+        from_email=_settings.resend_from_email,
     )
     result = await svc.send_class_report(report_data, parent_emails, teacher_name)
     return result
@@ -335,11 +310,11 @@ async def send_email_report(
 # ---------------------------------------------------------------------------
 
 
-def _verify_class_ownership(class_id: str, teacher_id: str) -> None:
+def _verify_class_ownership(db: DbClient, class_id: str, teacher_id: str) -> None:
     """Raise HTTPException 403 if teacher doesn't own the class."""
     try:
         r = (
-            supabase.table("teacher_classes")
+            db.table("teacher_classes")
             .select("id")
             .eq("id", class_id)
             .eq("user_id", teacher_id)

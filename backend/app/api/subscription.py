@@ -1,18 +1,14 @@
-import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/subscription", tags=["subscription"])
-logger = logging.getLogger("skolar.subscription")
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.subscription")
 
 from app.services.subscription_check import FREE_TIER_LIMIT  # noqa: E402  # 10 worksheets/month
 
@@ -27,25 +23,9 @@ class SubscriptionStatus(BaseModel):
     can_use_multi_child: bool
 
 
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error("Auth verification failed: %s", e)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
-def ensure_subscription_exists(user_id: str) -> dict:
+def ensure_subscription_exists(user_id: str, db: DbClient) -> dict:
     """Ensure user has a subscription record, create if not exists."""
-    result = supabase.table("user_subscriptions").select("*").eq("user_id", user_id).execute()
+    result = db.table("user_subscriptions").select("*").eq("user_id", user_id).execute()
 
     if result.data and len(result.data) > 0:
         sub = result.data[0]
@@ -55,7 +35,7 @@ def ensure_subscription_exists(user_id: str) -> dict:
             # Reset the monthly count
             new_reset = (datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1)
             update_result = (
-                supabase.table("user_subscriptions")
+                db.table("user_subscriptions")
                 .update(
                     {
                         "worksheets_generated_this_month": 0,
@@ -72,7 +52,7 @@ def ensure_subscription_exists(user_id: str) -> dict:
     else:
         # Create new subscription
         insert_result = (
-            supabase.table("user_subscriptions")
+            db.table("user_subscriptions")
             .insert(
                 {
                     "user_id": user_id,
@@ -92,10 +72,9 @@ from datetime import timedelta  # noqa: E402
 
 @router.get("/status", response_model=SubscriptionStatus)
 @limiter.limit("60/minute")
-async def get_subscription_status(request: Request, authorization: str = Header(...)):
+async def get_subscription_status(request: Request, user_id: UserId, db: DbClient):
     """Get current user's subscription status."""
-    user_id = get_user_id_from_token(authorization)
-    sub = ensure_subscription_exists(user_id)
+    sub = ensure_subscription_exists(user_id, db)
 
     is_paid = sub["tier"] == "paid"
     worksheets_used = sub["worksheets_generated_this_month"]
@@ -120,10 +99,9 @@ async def get_subscription_status(request: Request, authorization: str = Header(
 
 @router.post("/increment-usage")
 @limiter.limit("30/minute")
-async def increment_usage(request: Request, authorization: str = Header(...)):
+async def increment_usage(request: Request, user_id: UserId, db: DbClient):
     """Increment worksheet usage count. Called after successful generation."""
-    user_id = get_user_id_from_token(authorization)
-    sub = ensure_subscription_exists(user_id)
+    sub = ensure_subscription_exists(user_id, db)
 
     # Don't track for paid users
     if sub["tier"] == "paid":
@@ -131,7 +109,7 @@ async def increment_usage(request: Request, authorization: str = Header(...)):
 
     new_count = sub["worksheets_generated_this_month"] + 1
 
-    supabase.table("user_subscriptions").update(
+    db.table("user_subscriptions").update(
         {"worksheets_generated_this_month": new_count, "updated_at": datetime.now().isoformat()}
     ).eq("user_id", user_id).execute()
 
@@ -140,8 +118,7 @@ async def increment_usage(request: Request, authorization: str = Header(...)):
 
 @router.post("/upgrade")
 @limiter.limit("10/minute")
-async def upgrade_to_paid(request: Request, authorization: str = Header(...)):
+async def upgrade_to_paid(request: Request, user_id: UserId, db: DbClient):
     """Upgrade user to paid tier. Disabled until payment integration is live."""
-    # Authenticate so the route still validates the token
-    get_user_id_from_token(authorization)
+    # user_id dependency already validated the token
     raise HTTPException(status_code=503, detail="Payment integration coming soon")

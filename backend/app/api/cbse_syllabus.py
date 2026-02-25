@@ -1,25 +1,13 @@
-import logging
 import os
 
-from fastapi import APIRouter, Header, HTTPException
+import structlog
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from supabase import create_client
 
-from app.core.config import get_settings
-from app.core.deps import get_current_user_id
+from app.core.deps import DbClient, UserId
 
 router = APIRouter(prefix="/api/cbse-syllabus", tags=["cbse-syllabus"])
-logger = logging.getLogger("skolar.cbse_syllabus")
-
-settings = get_settings()
-
-
-def get_supabase():
-    """Create a fresh Supabase client to ensure schema is up to date."""
-    return create_client(settings.supabase_url, settings.supabase_service_key)
-
-
-supabase = get_supabase()
+logger = structlog.get_logger("skolar.cbse_syllabus")
 
 
 class SyllabusTopic(BaseModel):
@@ -40,12 +28,10 @@ class CBSESyllabus(BaseModel):
 
 
 @router.get("/{grade}/{subject}")
-async def get_cbse_syllabus(grade: str, subject: str):
+async def get_cbse_syllabus(grade: str, subject: str, db: DbClient):
     """Get CBSE syllabus for a specific grade and subject."""
     try:
-        result = (
-            supabase.table("cbse_syllabus").select("*").eq("grade", grade).eq("subject", subject).single().execute()
-        )
+        result = db.table("cbse_syllabus").select("*").eq("grade", grade).eq("subject", subject).single().execute()
 
         if not result.data:
             raise HTTPException(status_code=404, detail=f"Syllabus not found for {grade} {subject}")
@@ -60,10 +46,10 @@ async def get_cbse_syllabus(grade: str, subject: str):
 
 
 @router.get("/grades")
-async def list_available_grades():
+async def list_available_grades(db: DbClient):
     """List all grades with available syllabi."""
     try:
-        result = supabase.table("cbse_syllabus").select("grade").execute()
+        result = db.table("cbse_syllabus").select("grade").execute()
 
         grades = sorted(list(set(row["grade"] for row in result.data)))
         return {"grades": grades}
@@ -74,10 +60,10 @@ async def list_available_grades():
 
 
 @router.get("/subjects/{grade}")
-async def list_subjects_for_grade(grade: str):
+async def list_subjects_for_grade(grade: str, db: DbClient):
     """List all subjects available for a specific grade."""
     try:
-        result = supabase.table("cbse_syllabus").select("subject").eq("grade", grade).execute()
+        result = db.table("cbse_syllabus").select("subject").eq("grade", grade).execute()
 
         subjects = sorted([row["subject"] for row in result.data])
         return {"grade": grade, "subjects": subjects}
@@ -89,13 +75,12 @@ async def list_subjects_for_grade(grade: str):
 
 # Seed data endpoint (admin only - for initial setup)
 @router.post("/seed")
-async def seed_cbse_syllabus(authorization: str = Header(...)):
+async def seed_cbse_syllabus(user_id: UserId, db: DbClient):
     """Seed the CBSE syllabus data. Restricted to admin users."""
     admin_ids_raw = os.environ.get("ADMIN_USER_IDS", "")
     if not admin_ids_raw:
         raise HTTPException(status_code=503, detail="Admin endpoint disabled")
 
-    user_id = get_current_user_id(authorization)
     admin_ids = {uid.strip() for uid in admin_ids_raw.split(",") if uid.strip()}
     if user_id not in admin_ids:
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -1038,12 +1023,9 @@ async def seed_cbse_syllabus(authorization: str = Header(...)):
     ]
 
     try:
-        # Create fresh client to ensure schema is up to date
-        fresh_client = get_supabase()
-
         for syllabus in syllabus_data:
             # Upsert - insert or update if exists
-            fresh_client.table("cbse_syllabus").upsert(
+            db.table("cbse_syllabus").upsert(
                 {"grade": syllabus["grade"], "subject": syllabus["subject"], "chapters": syllabus["chapters"]},
                 on_conflict="grade,subject",
             ).execute()

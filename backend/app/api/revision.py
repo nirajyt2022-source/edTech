@@ -10,41 +10,21 @@ Flow:
 """
 
 import io
-import logging
 
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import VALID_GRADES, VALID_SUBJECTS
 from app.services.revision_pdf import generate_revision_pdf
 from app.services.subscription_check import check_ai_usage_allowed
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("skolar.revision")
 
 router = APIRouter(prefix="/api/v1/revision", tags=["revision"])
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
-
-
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error(f"Auth error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
 
 # ── Pydantic models ──────────────────────────────────────────────────────
 
@@ -115,12 +95,11 @@ class RevisionResponse(BaseModel):
 
 @router.post("/generate", response_model=RevisionResponse)
 @limiter.limit("10/minute")
-async def generate_revision_notes(request: Request, req: RevisionRequest, authorization: str = Header(...)):
+async def generate_revision_notes(request: Request, req: RevisionRequest, user_id: UserId, db: DbClient):
     """Generate structured revision notes for a given topic using Gemini 2.5 Flash."""
-    user_id = get_user_id_from_token(authorization)
 
     # -- Subscription gate --
-    usage = await check_ai_usage_allowed(user_id, supabase)
+    usage = await check_ai_usage_allowed(user_id, db)
     if not usage["allowed"]:
         raise HTTPException(status_code=402, detail=usage["message"])
 
@@ -166,9 +145,8 @@ async def generate_revision_notes(request: Request, req: RevisionRequest, author
 
 @router.post("/export-pdf")
 @limiter.limit("10/minute")
-async def export_revision_pdf(request: Request, notes: RevisionResponse, authorization: str = Header(...)):
+async def export_revision_pdf(request: Request, notes: RevisionResponse, user_id: UserId, db: DbClient):
     """Generate a PDF from revision notes and return as a downloadable file."""
-    user_id = get_user_id_from_token(authorization)
 
     import asyncio
 

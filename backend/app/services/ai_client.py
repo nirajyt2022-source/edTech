@@ -32,6 +32,7 @@ import json
 import time
 from typing import Any
 
+import sentry_sdk
 import structlog
 
 from app.core.config import get_settings
@@ -80,32 +81,41 @@ class AIClient:
         for attempt in range(1 + retries):
             start = time.perf_counter()
             try:
-                t = _types()
-                config = t.GenerateContentConfig(
-                    system_instruction=system,
-                    temperature=temperature,
-                    max_output_tokens=max_tokens,
-                    response_mime_type="application/json",
-                    thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
-                )
-                response = self.client.models.generate_content(
-                    model=self.model,
-                    contents=prompt,
-                    config=config,
-                )
-                elapsed_ms = int((time.perf_counter() - start) * 1000)
-                self._track_call(elapsed_ms)
+                with sentry_sdk.start_span(op="ai.generate", description="generate_json") as span:
+                    span.set_data("temperature", temperature)
+                    span.set_data("max_tokens", max_tokens)
+                    span.set_data("thinking_budget", thinking_budget)
+                    span.set_data("attempt", attempt + 1)
 
-                raw = response.text or ""
-                parsed = self._parse_json(raw)
+                    t = _types()
+                    config = t.GenerateContentConfig(
+                        system_instruction=system,
+                        temperature=temperature,
+                        max_output_tokens=max_tokens,
+                        response_mime_type="application/json",
+                        thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
+                    )
+                    response = self.client.models.generate_content(
+                        model=self.model,
+                        contents=prompt,
+                        config=config,
+                    )
+                    elapsed_ms = int((time.perf_counter() - start) * 1000)
+                    self._track_call(elapsed_ms)
 
-                logger.info(
-                    "generate_json OK",
-                    attempt=attempt + 1,
-                    latency_ms=elapsed_ms,
-                    response_len=len(raw),
-                )
-                return parsed
+                    raw = response.text or ""
+                    parsed = self._parse_json(raw)
+
+                    span.set_data("latency_ms", elapsed_ms)
+                    span.set_data("response_len", len(raw))
+
+                    logger.info(
+                        "generate_json OK",
+                        attempt=attempt + 1,
+                        latency_ms=elapsed_ms,
+                        response_len=len(raw),
+                    )
+                    return parsed
 
             except json.JSONDecodeError as e:
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
@@ -120,6 +130,10 @@ class AIClient:
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
                 self._track_call(elapsed_ms)
                 last_error = e
+                sentry_sdk.set_context(
+                    "ai_call", {"method": "generate_json", "model": self.model, "attempt": attempt + 1}
+                )
+                sentry_sdk.capture_exception(e)
                 logger.error(
                     "generate_json API error",
                     attempt=attempt + 1,
@@ -140,26 +154,32 @@ class AIClient:
         """Generate a plain text response."""
         start = time.perf_counter()
         try:
-            config = _types().GenerateContentConfig(
-                system_instruction=system,
-                temperature=temperature,
-                max_output_tokens=max_tokens,
-            )
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=config,
-            )
-            elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
-
-            text = response.text or ""
-            logger.info("generate_text OK", latency_ms=elapsed_ms, response_len=len(text))
-            return text
+            with sentry_sdk.start_span(op="ai.generate", description="generate_text") as span:
+                span.set_data("temperature", temperature)
+                span.set_data("max_tokens", max_tokens)
+                config = _types().GenerateContentConfig(
+                    system_instruction=system,
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                )
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=prompt,
+                    config=config,
+                )
+                elapsed_ms = int((time.perf_counter() - start) * 1000)
+                self._track_call(elapsed_ms)
+                text = response.text or ""
+                span.set_data("latency_ms", elapsed_ms)
+                span.set_data("response_len", len(text))
+                logger.info("generate_text OK", latency_ms=elapsed_ms, response_len=len(text))
+                return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
+            sentry_sdk.set_context("ai_call", {"method": "generate_text", "model": self.model})
+            sentry_sdk.capture_exception(e)
             logger.error("generate_text failed", error=str(e))
             raise ValueError(f"AI text generation failed: {e}")
 
@@ -175,35 +195,40 @@ class AIClient:
         """Generate a response from a multi-turn conversation."""
         start = time.perf_counter()
         try:
-            gemini_messages = []
-            for msg in messages:
-                gemini_messages.append(
-                    {
-                        "role": msg["role"],
-                        "parts": [{"text": msg["content"]}],
-                    }
+            with sentry_sdk.start_span(op="ai.generate", description="generate_chat") as span:
+                span.set_data("temperature", temperature)
+                span.set_data("max_tokens", max_tokens)
+                span.set_data("turns", len(messages))
+                gemini_messages = []
+                for msg in messages:
+                    gemini_messages.append(
+                        {
+                            "role": msg["role"],
+                            "parts": [{"text": msg["content"]}],
+                        }
+                    )
+                config = _types().GenerateContentConfig(
+                    system_instruction=system,
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
                 )
-
-            config = _types().GenerateContentConfig(
-                system_instruction=system,
-                temperature=temperature,
-                max_output_tokens=max_tokens,
-            )
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=gemini_messages,
-                config=config,
-            )
-            elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
-
-            text = response.text or ""
-            logger.info("generate_chat OK", latency_ms=elapsed_ms, turns=len(messages))
-            return text
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=gemini_messages,
+                    config=config,
+                )
+                elapsed_ms = int((time.perf_counter() - start) * 1000)
+                self._track_call(elapsed_ms)
+                text = response.text or ""
+                span.set_data("latency_ms", elapsed_ms)
+                logger.info("generate_chat OK", latency_ms=elapsed_ms, turns=len(messages))
+                return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
+            sentry_sdk.set_context("ai_call", {"method": "generate_chat", "model": self.model})
+            sentry_sdk.capture_exception(e)
             logger.error("generate_chat failed", error=str(e))
             raise ValueError(f"AI chat generation failed: {e}")
 
@@ -224,39 +249,42 @@ class AIClient:
         """
         start = time.perf_counter()
         try:
-            parts = image_parts + [{"text": prompt}]
-
-            config_kwargs: dict[str, Any] = {
-                "temperature": temperature,
-                "max_output_tokens": max_tokens,
-            }
-            if system:
-                config_kwargs["system_instruction"] = system
-            t = _types()
-            if response_json:
-                config_kwargs["response_mime_type"] = "application/json"
-                config_kwargs["thinking_config"] = t.ThinkingConfig(thinking_budget=0)
-
-            config = t.GenerateContentConfig(**config_kwargs)
-
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=[{"parts": parts}],
-                config=config,
-            )
-            elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
-
-            raw = response.text or ""
-            logger.info("generate_with_images OK", latency_ms=elapsed_ms, num_images=len(image_parts))
-
-            if response_json:
-                return self._parse_json(raw)
-            return raw
+            with sentry_sdk.start_span(op="ai.generate", description="generate_with_images") as span:
+                span.set_data("temperature", temperature)
+                span.set_data("max_tokens", max_tokens)
+                span.set_data("num_images", len(image_parts))
+                parts = image_parts + [{"text": prompt}]
+                config_kwargs: dict[str, Any] = {
+                    "temperature": temperature,
+                    "max_output_tokens": max_tokens,
+                }
+                if system:
+                    config_kwargs["system_instruction"] = system
+                t = _types()
+                if response_json:
+                    config_kwargs["response_mime_type"] = "application/json"
+                    config_kwargs["thinking_config"] = t.ThinkingConfig(thinking_budget=0)
+                config = t.GenerateContentConfig(**config_kwargs)
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=[{"parts": parts}],
+                    config=config,
+                )
+                elapsed_ms = int((time.perf_counter() - start) * 1000)
+                self._track_call(elapsed_ms)
+                raw = response.text or ""
+                span.set_data("latency_ms", elapsed_ms)
+                span.set_data("response_len", len(raw))
+                logger.info("generate_with_images OK", latency_ms=elapsed_ms, num_images=len(image_parts))
+                if response_json:
+                    return self._parse_json(raw)
+                return raw
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
+            sentry_sdk.set_context("ai_call", {"method": "generate_with_images", "model": self.model})
+            sentry_sdk.capture_exception(e)
             logger.error("generate_with_images failed", error=str(e))
             raise ValueError(f"AI vision generation failed: {e}")
 
@@ -275,25 +303,31 @@ class AIClient:
         """
         start = time.perf_counter()
         try:
-            config = _types().GenerateContentConfig(
-                temperature=temperature,
-                max_output_tokens=max_tokens,
-            )
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=parts,
-                config=config,
-            )
-            elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
-
-            text = response.text or ""
-            logger.info("generate_with_typed_parts OK", latency_ms=elapsed_ms)
-            return text
+            with sentry_sdk.start_span(op="ai.generate", description="generate_with_typed_parts") as span:
+                span.set_data("temperature", temperature)
+                span.set_data("max_tokens", max_tokens)
+                config = _types().GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                )
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=parts,
+                    config=config,
+                )
+                elapsed_ms = int((time.perf_counter() - start) * 1000)
+                self._track_call(elapsed_ms)
+                text = response.text or ""
+                span.set_data("latency_ms", elapsed_ms)
+                span.set_data("response_len", len(text))
+                logger.info("generate_with_typed_parts OK", latency_ms=elapsed_ms)
+                return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
+            sentry_sdk.set_context("ai_call", {"method": "generate_with_typed_parts", "model": self.model})
+            sentry_sdk.capture_exception(e)
             logger.error("generate_with_typed_parts failed", error=str(e))
             raise ValueError(f"AI typed parts generation failed: {e}")
 
@@ -321,29 +355,36 @@ class AIClient:
 
         start = time.perf_counter()
         try:
-            t = _types()
-            config = t.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=temperature,
-                max_output_tokens=max_tokens,
-                response_mime_type="application/json",
-                thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
-            )
-            response = self.client.models.generate_content(
-                model=self.model,
-                contents=user_prompt,
-                config=config,
-            )
-            elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
-
-            text = response.text or ""
-            logger.info("generate_openai_style OK", latency_ms=elapsed_ms, response_len=len(text))
-            return text
+            with sentry_sdk.start_span(op="ai.generate", description="generate_openai_style") as span:
+                span.set_data("temperature", temperature)
+                span.set_data("max_tokens", max_tokens)
+                span.set_data("thinking_budget", thinking_budget)
+                t = _types()
+                config = t.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                    response_mime_type="application/json",
+                    thinking_config=t.ThinkingConfig(thinking_budget=thinking_budget),
+                )
+                response = self.client.models.generate_content(
+                    model=self.model,
+                    contents=user_prompt,
+                    config=config,
+                )
+                elapsed_ms = int((time.perf_counter() - start) * 1000)
+                self._track_call(elapsed_ms)
+                text = response.text or ""
+                span.set_data("latency_ms", elapsed_ms)
+                span.set_data("response_len", len(text))
+                logger.info("generate_openai_style OK", latency_ms=elapsed_ms, response_len=len(text))
+                return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
             self._track_call(elapsed_ms)
+            sentry_sdk.set_context("ai_call", {"method": "generate_openai_style", "model": self.model})
+            sentry_sdk.capture_exception(e)
             logger.error("generate_openai_style failed", error=str(e))
             raise
 

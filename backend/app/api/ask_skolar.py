@@ -8,18 +8,16 @@ Flow:
 4. Multi-turn conversation supported via history
 """
 
-import logging
-
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
-from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import INJECTION_RE as _INJECTION_RE
 from app.services.subscription_check import check_ai_usage_allowed
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("skolar.ask_skolar")
 
 
 def _sanitize_question(question: str) -> str:
@@ -34,25 +32,6 @@ def _sanitize_question(question: str) -> str:
 
 
 router = APIRouter(prefix="/api/v1/ask", tags=["ask_skolar"])
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
-
-
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error(f"Auth error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
 
 # ── Pydantic models ──────────────────────────────────────────────────────
 
@@ -82,12 +61,11 @@ class AskResponse(BaseModel):
 
 @router.post("/question", response_model=AskResponse)
 @limiter.limit("20/minute")
-async def ask_question(request: Request, body: AskRequest, authorization: str = Header(...)):
+async def ask_question(request: Request, body: AskRequest, user_id: UserId, db: DbClient):
     """Answer a student's homework/study question using Gemini."""
-    user_id = get_user_id_from_token(authorization)
 
     # -- Subscription gate --
-    usage = await check_ai_usage_allowed(user_id, supabase)
+    usage = await check_ai_usage_allowed(user_id, db)
     if not usage["allowed"]:
         raise HTTPException(status_code=402, detail=usage["message"])
 

@@ -11,38 +11,19 @@ Flow:
 
 import base64
 import json
-import logging
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, Request, UploadFile
-from supabase import create_client
+import structlog
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 
-from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 from app.middleware.sanitize import validate_file_upload
 from app.services.subscription_check import check_ai_usage_allowed
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("skolar.grading")
 
 router = APIRouter(prefix="/api/v1/grading", tags=["grading"])
-
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
-
-
-def get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except Exception as e:
-        logger.error(f"Auth error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
 @router.post("/grade-photo")
@@ -52,14 +33,13 @@ async def grade_from_photo(
     images: list[UploadFile] = File(..., description="1-5 photos of filled worksheet"),
     worksheet_json: str = Form(..., description="JSON string of worksheet data including questions"),
     child_id: Optional[str] = Form(None),
-    authorization: str = Header(...),
+    user_id: UserId = ...,
+    db: DbClient = ...,
 ):
     """Grade a student's handwritten answers from photos."""
 
-    user_id = get_user_id_from_token(authorization)
-
     # -- Subscription gate --
-    usage = await check_ai_usage_allowed(user_id, supabase)
+    usage = await check_ai_usage_allowed(user_id, db)
     if not usage["allowed"]:
         raise HTTPException(status_code=402, detail=usage["message"])
 

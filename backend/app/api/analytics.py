@@ -1,52 +1,44 @@
-import logging
+import structlog
+from fastapi import APIRouter, HTTPException, Query, Request
 
-from fastapi import APIRouter, Header, Query, Request
-
-from app.core.deps import get_current_user_id, verify_child_ownership
+from app.core.deps import DbClient, UserId, verify_child_ownership
 from app.middleware.rate_limit import limiter
-from app.services.supabase_client import get_supabase_client
 
-logger = logging.getLogger("skolar.analytics")
+logger = structlog.get_logger("skolar.analytics")
 
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 
 @router.get("/skill_accuracy")
 @limiter.limit("60/minute")
-def skill_accuracy(request: Request, authorization: str = Header(...)):
-    user_id = get_current_user_id(authorization)
+async def skill_accuracy(request: Request, user_id: UserId, db: DbClient):
     try:
-        sb = get_supabase_client()
-        res = sb.table("v_skill_accuracy").select("*").execute()
+        res = db.table("v_skill_accuracy").select("*").execute()
         return res.data
     except Exception as e:
-        logger.error("skill_accuracy failed for user=%s: %s", user_id, e)
-        return []
+        logger.error("skill_accuracy_failed", user_id=user_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch skill accuracy")
 
 
 @router.get("/error_distribution")
 @limiter.limit("60/minute")
-def error_distribution(request: Request, authorization: str = Header(...), skill_tag: str | None = None):
-    user_id = get_current_user_id(authorization)
+async def error_distribution(request: Request, user_id: UserId, db: DbClient, skill_tag: str | None = None):
     try:
-        sb = get_supabase_client()
-        q = sb.table("v_error_distribution").select("*")
+        q = db.table("v_error_distribution").select("*")
         if skill_tag:
             q = q.eq("skill_tag", skill_tag)
         return q.execute().data
     except Exception as e:
-        logger.error("error_distribution failed for user=%s: %s", user_id, e)
-        return []
+        logger.error("error_distribution_failed", user_id=user_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch error distribution")
 
 
 @router.get("/student_progress")
 @limiter.limit("60/minute")
-def student_progress(request: Request, authorization: str = Header(...), student_id: str = Query(...)):
-    user_id = get_current_user_id(authorization)
+async def student_progress(request: Request, user_id: UserId, db: DbClient, student_id: str = Query(...)):
     verify_child_ownership(user_id, student_id)
     try:
-        sb = get_supabase_client()
-        return sb.table("v_student_skill_progress").select("*").eq("student_id", student_id).execute().data
+        return db.table("v_student_skill_progress").select("*").eq("student_id", student_id).execute().data
     except Exception as e:
-        logger.error("student_progress failed for user=%s student=%s: %s", user_id, student_id, e)
-        return []
+        logger.error("student_progress_failed", user_id=user_id, student_id=student_id, error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to fetch student progress")

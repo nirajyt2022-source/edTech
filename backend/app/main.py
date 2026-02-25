@@ -1,6 +1,8 @@
 import json as _json
+from contextlib import asynccontextmanager
 
 import sentry_sdk
+import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,6 +15,7 @@ from app.middleware.rate_limit import RateLimitExceeded, limiter, rate_limit_exc
 setup_logging()
 
 settings = get_settings()
+_lifespan_logger = structlog.get_logger("skolar.lifespan")
 
 # Initialize Sentry (only if DSN is configured)
 if settings.sentry_dsn:
@@ -50,6 +53,25 @@ from app.api import (  # noqa: E402
 from app.api.worksheets_v2 import router as worksheets_v2_router  # noqa: E402
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup: warm singletons so config errors surface at boot, not first request."""
+    _lifespan_logger.info("startup_begin", version="0.1.0")
+
+    from app.core.deps import get_supabase_client
+    from app.services.ai_client import get_ai_client
+
+    get_supabase_client()
+    _lifespan_logger.info("supabase_client_ready")
+
+    get_ai_client()
+    _lifespan_logger.info("ai_client_ready")
+
+    _lifespan_logger.info("startup_complete")
+    yield
+    _lifespan_logger.info("shutdown_complete")
+
+
 class UnicodeJSONResponse(JSONResponse):
     """JSONResponse that serialises with ensure_ascii=False so Devanagari
     (and all other non-ASCII Unicode) is sent as real UTF-8 characters
@@ -68,6 +90,7 @@ app = FastAPI(
     description="AI-powered worksheet generation platform for educators",
     version="0.1.0",
     default_response_class=UnicodeJSONResponse,
+    lifespan=lifespan,
 )
 
 # Rate limiting

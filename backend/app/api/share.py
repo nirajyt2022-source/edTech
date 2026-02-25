@@ -1,23 +1,20 @@
 """Share endpoints — public worksheet viewer + share URL generation."""
 
-import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Header, HTTPException, Request
+import structlog
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from supabase import create_client
 
 from app.core.config import get_settings
+from app.core.deps import DbClient, UserId
 from app.middleware.rate_limit import limiter
 
 router = APIRouter(prefix="/api/worksheets", tags=["share"])
 
-settings = get_settings()
-supabase = create_client(settings.supabase_url, settings.supabase_service_key)
+logger = structlog.get_logger("skolar.share")
 
-logger = logging.getLogger("skolar.share")
-
-SHARE_BASE_URL = settings.frontend_url
+SHARE_BASE_URL = get_settings().frontend_url
 
 
 class ShareResponse(BaseModel):
@@ -36,36 +33,17 @@ class SharedWorksheetResponse(BaseModel):
     learning_objectives: list[str] | None = None
 
 
-def _get_user_id_from_token(authorization: str) -> str:
-    """Extract user_id from Supabase JWT token."""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
-
-    token = authorization.replace("Bearer ", "")
-    try:
-        user_response = supabase.auth.get_user(token)
-        if not user_response or not user_response.user:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_response.user.id
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error("Auth verification failed: %s", e)
-        raise HTTPException(status_code=401, detail="Authentication failed")
-
-
 @router.post("/{worksheet_id}/share", response_model=ShareResponse)
 @limiter.limit("30/minute")
 async def create_share_link(
     request: Request,
     worksheet_id: str,
-    authorization: str = Header(...),
+    user_id: UserId,
+    db: DbClient,
 ):
     """Generate a public share URL for a worksheet. Owner only."""
-    user_id = _get_user_id_from_token(authorization)
-
     try:
-        result = supabase.table("worksheets").select("id, user_id").eq("id", worksheet_id).execute()
+        result = db.table("worksheets").select("id, user_id").eq("id", worksheet_id).execute()
     except Exception as e:
         logger.error("DB query failed for worksheet %s: %s", worksheet_id, e)
         raise HTTPException(status_code=500, detail="Failed to look up worksheet")
@@ -78,7 +56,7 @@ async def create_share_link(
         raise HTTPException(status_code=403, detail="You can only share your own worksheets")
 
     # Mark worksheet as shared
-    supabase.table("worksheets").update(
+    db.table("worksheets").update(
         {
             "shared_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -90,11 +68,11 @@ async def create_share_link(
 
 @router.get("/shared/{worksheet_id}", response_model=SharedWorksheetResponse)
 @limiter.limit("60/minute")
-async def get_shared_worksheet(request: Request, worksheet_id: str):
+async def get_shared_worksheet(request: Request, worksheet_id: str, db: DbClient):
     """Public endpoint — fetch a shared worksheet without auth."""
     try:
         result = (
-            supabase.table("worksheets")
+            db.table("worksheets")
             .select("id, title, grade, subject, topic, difficulty, language, questions")
             .eq("id", worksheet_id)
             .not_.is_("shared_at", "null")
