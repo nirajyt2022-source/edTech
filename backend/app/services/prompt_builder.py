@@ -21,11 +21,11 @@ token-efficient and fully dependency-free.
 
 from __future__ import annotations
 
-import logging
+import structlog
 
 from app.services.topic_intelligence import GenerationContext
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("skolar.prompt_builder")
 
 # ---------------------------------------------------------------------------
 # Bloom's taxonomy directives
@@ -42,7 +42,9 @@ _BLOOM_DIRECTIVES: dict[str, str] = {
     ),
     "reasoning": (
         "REASONING-LEVEL question: ask the child to analyse, justify, compare, or "
-        "evaluate. Multi-step thinking is required and expected."
+        "evaluate. Multi-step thinking is required. "
+        "For Maths: design the question so the child must show working steps "
+        "(e.g. 'Show your working' or 'Explain how you got your answer')."
     ),
 }
 

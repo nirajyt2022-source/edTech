@@ -14,7 +14,6 @@ Architecture:
 from __future__ import annotations
 
 import json
-import logging
 import math
 import random
 import re
@@ -22,10 +21,12 @@ import string
 import time
 from typing import Any
 
+import structlog
+
 from app.data.image_registry import get_keywords_for_subject
 from app.services.prompt_builder import _BLOOM_DIRECTIVES
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("skolar.worksheet_generator")
 
 # ---------------------------------------------------------------------------
 # 1A  System Prompt — composable blocks
@@ -125,21 +126,22 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
   ]
 }
 
-EXAMPLE question (MCQ):
-{
-  "id": "q1",
-  "type": "mcq",
-  "role": "recognition",
-  "text": "Which of these is the largest 3-digit number?",
-  "options": ["999", "100", "909", "990"],
-  "correct_answer": "999",
-  "explanation": "The largest 3-digit number has 9 in all places: 999.",
-  "difficulty": "easy",
-  "hint": "Think about the biggest digit you can put in each place.",
-  "image_keywords": null,
-  "visual_type": null,
-  "visual_data": null
-}"""
+FEW-SHOT EXAMPLES (follow these formats exactly):
+
+MCQ example:
+{"id":"q1","type":"mcq","role":"recognition","text":"Which of these is the largest 3-digit number?","options":["999","100","909","990"],"correct_answer":"999","explanation":"The largest 3-digit number has 9 in all places: 999.","difficulty":"easy","hint":"Think about the biggest digit you can put in each place.","image_keywords":null,"visual_type":null,"visual_data":null}
+
+Fill-in-the-blank example:
+{"id":"q2","type":"fill_blank","role":"application","text":"456 + 238 = ______","options":null,"correct_answer":"694","explanation":"Add ones: 6+8=14, write 4 carry 1. Tens: 5+3+1=9. Hundreds: 4+2=6. Answer: 694.","difficulty":"medium","hint":"Start adding from the ones place.","image_keywords":null,"visual_type":null,"visual_data":null}
+
+True/False example:
+{"id":"q3","type":"true_false","role":"error_detection","text":"True or False: 45 × 6 = __(240)__. Is this correct?","options":["True","False"],"correct_answer":"False","explanation":"45 × 6 = 270, not 240.","difficulty":"medium","hint":"Multiply step by step: 40×6 then 5×6.","image_keywords":null,"visual_type":null,"visual_data":null}
+
+Word problem example:
+{"id":"q4","type":"word_problem","role":"application","text":"Aarav has ₹500. He buys a notebook for ₹85 and a pen for ₹35. How much money does he have left?","options":null,"correct_answer":"₹380","explanation":"500 - 85 - 35 = 380 rupees.","difficulty":"medium","hint":"Subtract each item's cost one at a time.","image_keywords":null,"visual_type":null,"visual_data":null}
+
+Error detection example:
+{"id":"q5","type":"error_detection","role":"thinking","text":"Priya solved: 302 - 168 = 246. Find and correct her mistake.","options":null,"correct_answer":"134","explanation":"302 - 168: ones 2-8 needs borrowing → 12-8=4. Tens: 9-6=3. Hundreds: 2-1=1. Answer: 134.","difficulty":"hard","hint":"Check each column carefully — did she borrow correctly?","image_keywords":null,"visual_type":null,"visual_data":null}"""
 
 _OUTPUT_FORMAT_VISUAL = """\
 
@@ -168,21 +170,22 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
   ]
 }
 
-EXAMPLE question (MCQ with visual):
-{
-  "id": "q1",
-  "type": "mcq",
-  "role": "application",
-  "text": "What is the total value of these coins?",
-  "options": ["₹15", "₹20", "₹25", "₹30"],
-  "correct_answer": "₹25",
-  "explanation": "5+5+5+10 = 25 rupees.",
-  "difficulty": "medium",
-  "hint": "Add up each coin's value one by one.",
-  "image_keywords": null,
-  "visual_type": "money_coins",
-  "visual_data": {"coins": [{"value": 5, "count": 3}, {"value": 10, "count": 1}]}
-}"""
+FEW-SHOT EXAMPLES (follow these formats exactly):
+
+MCQ with visual:
+{"id":"q1","type":"mcq","role":"application","text":"What is the total value of these coins?","options":["₹15","₹20","₹25","₹30"],"correct_answer":"₹25","explanation":"5+5+5+10 = 25 rupees.","difficulty":"medium","hint":"Add up each coin's value one by one.","image_keywords":null,"visual_type":"money_coins","visual_data":{"coins":[{"value":5,"count":3},{"value":10,"count":1}]}}
+
+Fill-in-the-blank:
+{"id":"q2","type":"fill_blank","role":"application","text":"456 + 238 = ______","options":null,"correct_answer":"694","explanation":"Add ones: 6+8=14, write 4 carry 1. Tens: 5+3+1=9. Hundreds: 4+2=6.","difficulty":"medium","hint":"Start from the ones place.","image_keywords":null,"visual_type":null,"visual_data":null}
+
+True/False:
+{"id":"q3","type":"true_false","role":"error_detection","text":"True or False: 45 × 6 = 240","options":["True","False"],"correct_answer":"False","explanation":"45 × 6 = 270, not 240.","difficulty":"medium","hint":"Multiply step by step.","image_keywords":null,"visual_type":null,"visual_data":null}
+
+Word problem:
+{"id":"q4","type":"word_problem","role":"application","text":"Aarav has ₹500. He buys a notebook for ₹85 and a pen for ₹35. How much money does he have left?","options":null,"correct_answer":"₹380","explanation":"500 - 85 - 35 = 380.","difficulty":"medium","hint":"Subtract each cost one at a time.","image_keywords":null,"visual_type":null,"visual_data":null}
+
+Error detection:
+{"id":"q5","type":"error_detection","role":"thinking","text":"Priya solved: 302 - 168 = 246. Find and correct her mistake.","options":null,"correct_answer":"134","explanation":"302 - 168: borrow to get 12-8=4, 9-6=3, 2-1=1 → 134.","difficulty":"hard","hint":"Check each column — did she borrow correctly?","image_keywords":null,"visual_type":null,"visual_data":null}"""
 
 
 def build_system_prompt(problem_style: str, subject: str) -> str:
@@ -220,6 +223,58 @@ SYSTEM_PROMPT = build_system_prompt("visual", "EVS")
 # ---------------------------------------------------------------------------
 
 
+_INDIAN_NAMES = [
+    "Aarav",
+    "Ananya",
+    "Vihaan",
+    "Diya",
+    "Reyansh",
+    "Saanvi",
+    "Arjun",
+    "Isha",
+    "Kabir",
+    "Myra",
+    "Aditya",
+    "Kiara",
+    "Rohan",
+    "Priya",
+    "Vivaan",
+    "Anika",
+    "Krishna",
+    "Zara",
+    "Rudra",
+    "Pari",
+    "Atharv",
+    "Navya",
+    "Shaurya",
+    "Aadhya",
+    "Dhruv",
+    "Riya",
+    "Arnav",
+    "Sara",
+    "Dev",
+    "Anvi",
+    "Ishan",
+    "Tara",
+    "Kian",
+    "Meera",
+    "Yash",
+    "Nisha",
+    "Aryan",
+    "Siya",
+    "Neil",
+    "Pooja",
+    "Rahul",
+    "Sneha",
+    "Manav",
+    "Kavya",
+    "Sameer",
+    "Tanvi",
+    "Kunal",
+    "Ritika",
+]
+
+
 def build_user_prompt(
     board: str,
     grade_level: str,
@@ -235,86 +290,20 @@ def build_user_prompt(
     style_hint = {
         "visual": "visual (include visual elements in most questions)",
         "mixed": "mixed (include some visual questions)",
-        "standard": "standard (text-based, minimize visuals)",
+        "standard": "standard (text-based, no visuals)",
     }.get(problem_style, "standard")
 
-    # Random seed to force variety across generations
     seed = "".join(random.choices(string.ascii_lowercase, k=6))
-
-    # Random Indian names to use in word problems (different each time)
-    all_names = [
-        "Aarav",
-        "Ananya",
-        "Vihaan",
-        "Diya",
-        "Reyansh",
-        "Saanvi",
-        "Arjun",
-        "Isha",
-        "Kabir",
-        "Myra",
-        "Aditya",
-        "Kiara",
-        "Rohan",
-        "Priya",
-        "Vivaan",
-        "Anika",
-        "Krishna",
-        "Zara",
-        "Rudra",
-        "Pari",
-        "Atharv",
-        "Navya",
-        "Shaurya",
-        "Aadhya",
-        "Dhruv",
-        "Riya",
-        "Arnav",
-        "Sara",
-        "Dev",
-        "Anvi",
-        "Ishan",
-        "Tara",
-        "Kian",
-        "Meera",
-        "Yash",
-        "Nisha",
-        "Aryan",
-        "Siya",
-        "Neil",
-        "Pooja",
-        "Rahul",
-        "Sneha",
-        "Manav",
-        "Kavya",
-        "Sameer",
-        "Tanvi",
-        "Kunal",
-        "Ritika",
-    ]
-    names_for_this_worksheet = random.sample(all_names, min(6, len(all_names)))
-    names_str = ", ".join(names_for_this_worksheet)
+    names_str = ", ".join(random.sample(_INDIAN_NAMES, 6))
 
     prompt = (
-        f"Board: {board}\n"
-        f"Class: {grade_level}\n"
-        f"Subject: {subject}\n"
-        f"Topic: {topic}\n"
-        f"Difficulty: {difficulty}\n"
-        f"Number of questions: {num_questions}\n"
-        f"Language: {language}\n"
-        f"Problem style: {style_hint}\n"
-        f"Variation seed: {seed}\n\n"
-        f"Generate a FRESH and CREATIVE worksheet following the system instructions. "
-        f'Every single question must be strictly about "{topic}" and nothing else.\n\n'
-        f"IMPORTANT — UNIQUENESS RULES:\n"
-        f"- Create ORIGINAL questions you have NOT generated before. Be creative.\n"
-        f"- Use different SCENARIOS for word problems each time (market, school, park, zoo, kitchen, garden, playground, train station, bus stop, festival, birthday party, sports day).\n"
-        f"- Use these Indian names in your questions: {names_str}\n"
-        f"- For Maths: vary the NUMBERS each time. Don't always use the same examples.\n"
-        f"- For EVS/Science: ask about DIFFERENT animals, plants, or phenomena each time.\n"
-        f"- For MCQs: vary the DISTRACTORS (wrong options). Don't always use the same set.\n"
-        f"- Each worksheet should feel completely new and different from any previous one.\n"
+        f"Board: {board} | Class: {grade_level} | Subject: {subject}\n"
+        f"Topic: {topic} | Difficulty: {difficulty} | Questions: {num_questions}\n"
+        f"Language: {language} | Style: {style_hint} | Seed: {seed}\n\n"
+        f'Generate {num_questions} ORIGINAL questions strictly about "{topic}". '
+        f"Use these names: {names_str}. "
+        f"Vary scenarios (market, school, park, zoo, kitchen, festival, playground, train station), "
+        f"numbers, and distractors across questions.\n"
     )
 
     # Problem-style specific image instructions
@@ -374,6 +363,15 @@ def call_gemini(
 
     # Enable chain-of-thought for Maths medium/hard (reduces auto-corrections)
     thinking_budget = 1024 if is_maths and difficulty.lower() in ("medium", "hard") else 0
+
+    # When thinking is enabled, add explicit CoT directive so the model
+    # verifies arithmetic before committing to an answer
+    if thinking_budget > 0:
+        user_prompt = (
+            user_prompt + "\n\nCHAIN-OF-THOUGHT: Before writing each answer, mentally compute "
+            "the arithmetic step by step. Verify your answer is correct before "
+            "writing it. For subtraction with borrowing, check each column."
+        )
 
     response = client.chat.completions.create(
         model="gemini-2.5-flash",
