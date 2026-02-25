@@ -1,4 +1,4 @@
-import { useRef, useCallback, useMemo } from 'react'
+import { memo, useRef, useCallback, useMemo } from 'react'
 
 interface VisualProblemProps {
   visualType: string
@@ -8,7 +8,7 @@ interface VisualProblemProps {
   onStudentAnswerChange?: (val: string) => void
 }
 
-export default function VisualProblem({ visualType, visualData, colorMode = 'mono', studentAnswer, onStudentAnswerChange }: VisualProblemProps) {
+export default memo(function VisualProblem({ visualType, visualData, colorMode = 'mono', studentAnswer, onStudentAnswerChange }: VisualProblemProps) {
   const useColor = colorMode === 'color'
   switch (visualType) {
     case 'clock':
@@ -34,7 +34,7 @@ export default function VisualProblem({ visualType, visualData, colorMode = 'mon
     default:
       return null
   }
-}
+})
 
 /* ── Token Icons ── */
 
@@ -52,7 +52,7 @@ const TOKEN_COLORS: Record<string, string> = {
   generic: 'none',
 }
 
-function TokenIcon({ type, useColor }: { type: string; useColor?: boolean }) {
+const TokenIcon = memo(function TokenIcon({ type, useColor }: { type: string; useColor?: boolean }) {
   const fill = useColor ? (TOKEN_COLORS[type] || 'none') : 'none'
   const cf = fill !== 'none' ? 'token-cf' : undefined
 
@@ -149,7 +149,7 @@ function TokenIcon({ type, useColor }: { type: string; useColor?: boolean }) {
         </svg>
       )
   }
-}
+})
 
 const TOKEN_KEYWORDS: Record<string, string[]> = {
   fruit: ['mango', 'mangoes', 'apple', 'apples', 'orange', 'oranges', 'banana', 'bananas', 'fruit', 'fruits', 'guava', 'guavas'],

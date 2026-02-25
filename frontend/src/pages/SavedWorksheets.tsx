@@ -606,7 +606,7 @@ export default function SavedWorksheets() {
                   </h2>
                   <div className="grid gap-4">
                     {groupedWorksheets[date].map((worksheet) => (
-                      <Card key={worksheet.id} className="card-hover border-border/50 bg-card/50 overflow-hidden rounded-2xl hover:shadow-lg transition-all duration-300">
+                      <Card key={worksheet.id} className="worksheet-list-item card-hover border-border/50 bg-card/50 overflow-hidden rounded-2xl hover:shadow-lg transition-all duration-300">
                         <CardContent className="p-0">
                           <div className="flex flex-col md:flex-row justify-between items-stretch">
                             <div className="p-6 md:p-7 flex-1 space-y-4">

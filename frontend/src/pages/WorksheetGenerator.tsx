@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -519,8 +519,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   // Get available chapters from syllabus or use default subjects
   const availableChapters = syllabus ? syllabus.chapters : []
 
-  // Get available topics based on selection
-  const getAvailableTopics = () => {
+  // Get available topics based on selection (memoized to avoid re-computation every render)
+  const availableTopics = useMemo(() => {
     if (syllabus && chapter) {
       const selectedChapter = syllabus.chapters.find(ch => ch.name === chapter)
       return selectedChapter ? selectedChapter.topics.map(t => t.name) : []
@@ -585,15 +585,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       return DEFAULT_TOPICS[subject] || []
     }
     return []
-  }
-
-  const availableTopics = getAvailableTopics()
+  }, [syllabus, chapter, subject, grade])
 
   const handleGenerate = async () => {
-    // Refresh subscription status to get accurate count before generation
-    await refreshSubscription()
+    // Fire subscription refresh early, await only when needed (avoid waterfall)
+    const subRefresh = refreshSubscription()
 
-    // Check subscription limits
+    // Check subscription limits (await the refresh before reading subscription)
+    await subRefresh
     if (subscription && !subscription.can_generate) {
       setError('You have reached your free tier limit. Upgrade to continue generating worksheets.')
       return
@@ -674,8 +673,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       setMobileView('preview')
       notify.success('Worksheet ready!')
 
-      // Track usage for free tier
-      await incrementUsage()
+      // Track usage for free tier (fire-and-forget — don't block UI)
+      void incrementUsage()
     } catch (err: unknown) {
       if (selectionVersionRef.current !== requestVersion) return
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate worksheet'
@@ -746,9 +745,9 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
 
-      // Record completion for engagement tracking (if child selected)
+      // Record completion for engagement tracking (fire-and-forget — don't block PDF download)
       if (activeChildId) {
-        await recordCompletion(activeChildId)
+        void recordCompletion(activeChildId)
       }
     } catch (err) {
       console.error('Failed to download PDF:', err)

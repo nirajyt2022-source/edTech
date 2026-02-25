@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react'
-import Auth from './pages/Auth'
-import Landing from './pages/Landing'
-import HomeDashboard from './pages/HomeDashboard'
 
-// Lazy load pages not needed on first paint
+// Lazy load all pages — only the active page is loaded
+const Auth = lazy(() => import('./pages/Auth'))
+const Landing = lazy(() => import('./pages/Landing'))
+const HomeDashboard = lazy(() => import('./pages/HomeDashboard'))
 const SharedWorksheet = lazy(() => import('./pages/SharedWorksheet'))
 const ClassReport = lazy(() => import('./pages/ClassReport'))
 const WorksheetGenerator = lazy(() => import('./pages/WorksheetGenerator'))
@@ -139,14 +139,21 @@ function AppContent() {
 
   // Show landing or auth page if not logged in
   if (!user) {
-    if (showAuth) {
-      return <Auth defaultMode={authDefaultMode} onBack={() => setShowAuth(false)} />
-    }
     return (
-      <Landing
-        onGetStarted={() => { setAuthDefaultMode('signup'); setShowAuth(true) }}
-        onSignIn={() => { setAuthDefaultMode('login'); setShowAuth(true) }}
-      />
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="spinner" />
+        </div>
+      }>
+        {showAuth ? (
+          <Auth defaultMode={authDefaultMode} onBack={() => setShowAuth(false)} />
+        ) : (
+          <Landing
+            onGetStarted={() => { setAuthDefaultMode('signup'); setShowAuth(true) }}
+            onSignIn={() => { setAuthDefaultMode('login'); setShowAuth(true) }}
+          />
+        )}
+      </Suspense>
     )
   }
 

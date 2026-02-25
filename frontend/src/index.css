@@ -622,6 +622,24 @@ textarea::placeholder {
   }
 }
 
+/* ─── content-visibility: skip layout/paint for off-screen question cards ── */
+.question-card-container {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
+
+/* Saved worksheets list items */
+.worksheet-list-item {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 120px;
+}
+
+/* Landing page stagger children: skip rendering until scrolled into view */
+.stagger-child {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200px;
+}
+
 @container answer-key (min-width: 640px) {
   .answer-key-grid {
     grid-template-columns: repeat(4, 1fr);
