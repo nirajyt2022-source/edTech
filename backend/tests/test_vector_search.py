@@ -11,16 +11,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import asyncio
-from types import SimpleNamespace
 
 from app.services.vector_search import (
-    VectorSearchService,
-    _reciprocal_rank_fusion,
-    SEMANTIC_WEIGHT,
     KEYWORD_WEIGHT,
     RRF_K,
+    SEMANTIC_WEIGHT,
+    VectorSearchService,
+    _reciprocal_rank_fusion,
 )
-
 
 # ---------------------------------------------------------------------------
 # RRF Unit Tests
