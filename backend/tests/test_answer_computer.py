@@ -2,10 +2,13 @@
 Tests for answer_computer.py — every function, every specified case.
 """
 from app.utils.answer_computer import (
-    add, subtract, multiply,
-    clock_time, time_after_duration, duration_between,
+    add,
+    clock_time,
+    duration_between,
+    multiply,
+    subtract,
+    time_after_duration,
 )
-
 
 # ── clock_time ────────────────────────────────────────────────────────────────
 

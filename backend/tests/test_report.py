@@ -4,20 +4,19 @@ Tests for the plain-English report helpers in learning_graph service.
 All tests are FULLY OFFLINE — no Supabase connection, no OpenAI call required.
 The functions under test are pure Python string templates.
 """
-import sys
 import os
+import sys
 
 # Ensure backend/ is on sys.path when running from project root
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.services.learning_graph import (
-    _clean_topic_name,
     _build_recommendation_reason,
     _build_report_text,
+    _clean_topic_name,
 )
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # _clean_topic_name
@@ -227,6 +226,7 @@ class TestNoLLMCall:
     def test_no_openai_module_imported_by_report_helpers(self):
         """openai must not be loaded as a side-effect of importing the helpers."""
         import importlib
+
         # Re-import to reset any cached state
         import app.services.learning_graph as mod
         importlib.reload(mod)

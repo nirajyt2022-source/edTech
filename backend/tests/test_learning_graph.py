@@ -2,20 +2,20 @@
 Tests for the pure mastery-transition logic in learning_graph.py.
 No Supabase connection required — all tests run fully offline.
 """
-import sys
 import os
+import sys
 
 # Ensure the backend/ directory is on the path when running from project root
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from datetime import datetime, timedelta, timezone
+
 from app.services.learning_graph import (
+    _apply_decay,
+    _build_format_mix,
     _compute_mastery_transition,
     _find_weakest_format,
-    _build_format_mix,
-    _apply_decay,
 )
-from datetime import datetime, timezone, timedelta
-
 
 # ---------------------------------------------------------------------------
 # _compute_mastery_transition — the 5 required cases

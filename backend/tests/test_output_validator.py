@@ -1,6 +1,8 @@
 """Tests for AI output validation."""
 import pytest
+
 from app.services.output_validator import OutputValidator
+
 
 @pytest.fixture
 def validator():

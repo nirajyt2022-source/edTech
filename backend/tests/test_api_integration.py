@@ -13,19 +13,17 @@ All tests run FULLY OFFLINE using dependency overrides.
 
 from __future__ import annotations
 
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.core.deps import get_supabase_client, get_user_id, get_ai_client, get_openai_compat_client
+from app.core.deps import get_ai_client, get_openai_compat_client, get_supabase_client, get_user_id
 from app.services.pdf import get_pdf_service
 
 # Import conftest fixtures/helpers
-from tests.conftest import FakeSupabase, FakeAIClient, FakeOpenAICompat, TEST_USER_ID
-
+from tests.conftest import TEST_USER_ID, FakeAIClient, FakeOpenAICompat, FakeSupabase
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fixture: build a fresh TestClient per test
@@ -44,8 +42,8 @@ def _build_client(
         user_id: The user_id returned by the auth override.
         require_auth: If True, does NOT override get_user_id (auth required).
     """
-    from app.api.health import router as health_router
     from app.api.children import router as children_router
+    from app.api.health import router as health_router
     from app.api.saved_worksheets import router as saved_ws_router
     from app.api.worksheets_v2 import router as ws_v2_router
 

@@ -24,9 +24,9 @@ os.environ.setdefault("SUPABASE_SERVICE_KEY", "fake-service-key")
 os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "fake-service-key")
 os.environ.setdefault("OPENAI_API_KEY", "sk-fake-key-for-tests")
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
+import pytest
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FakeSupabase — chainable in-memory mock
@@ -280,14 +280,14 @@ def app_client(fake_db, fake_ai, fake_openai):
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
 
-    from app.core.deps import get_supabase_client, get_user_id, get_ai_client, get_openai_compat_client
-    from app.services.pdf import get_pdf_service
+    from app.api.children import router as children_router
 
     # Import all routers
     from app.api.health import router as health_router
-    from app.api.children import router as children_router
     from app.api.saved_worksheets import router as saved_ws_router
     from app.api.worksheets_v2 import router as ws_v2_router
+    from app.core.deps import get_ai_client, get_openai_compat_client, get_supabase_client, get_user_id
+    from app.services.pdf import get_pdf_service
 
     app = FastAPI()
     app.include_router(health_router)

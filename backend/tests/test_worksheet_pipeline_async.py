@@ -19,13 +19,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from app.api.worksheets_v2 import _infer_render_format, _map_question
 from app.services.worksheet_generator import (
     build_system_prompt,
     build_user_prompt,
     validate_response,
 )
-from app.api.worksheets_v2 import _map_question, _infer_render_format
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers

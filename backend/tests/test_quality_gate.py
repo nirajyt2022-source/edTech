@@ -1,9 +1,12 @@
 """Tests for quality_gate.run_quality_gate() — all 12 checks."""
 from app.utils.quality_gate import (
-    run_quality_gate, jaccard, extract_times, _content_words, _is_mcq_letter,
     _OCLOCK_RE,
+    _content_words,
+    _is_mcq_letter,
+    extract_times,
+    jaccard,
+    run_quality_gate,
 )
-
 
 # ── Helper builders ───────────────────────────────────────────────────────────
 

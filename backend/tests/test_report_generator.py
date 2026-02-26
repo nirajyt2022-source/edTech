@@ -9,9 +9,9 @@ Coverage:
   4. GET /api/reports/{expired_token} returns HTTP 410
 """
 
+import os
 import re
 import sys
-import os
 
 # ── Ensure backend/ is importable when pytest runs from project root ──────────
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -22,10 +22,9 @@ os.environ.setdefault("SUPABASE_SERVICE_KEY", "fake-service-key")
 os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "fake-service-key")
 os.environ.setdefault("OPENAI_API_KEY", "sk-fake-key-for-tests")
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.services.report_generator import ClassReportGenerator
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Offline Supabase mock
@@ -293,6 +292,7 @@ class TestExpiredTokenEndpoint:
         """Build a TestClient for the reports router with a mocked supabase via DI override."""
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
+
         from app.api import reports as reports_mod
         from app.core.deps import get_supabase_client
 

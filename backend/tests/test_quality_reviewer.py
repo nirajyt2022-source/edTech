@@ -4,18 +4,18 @@ Tests for QualityReviewerAgent.
 All tests run fully offline — no Supabase or LLM calls required.
 Uses a minimal GenerationContext (Maths, Grade 3) for all test cases.
 """
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.services.quality_reviewer import (
     QualityReviewerAgent,
     ReviewResult,
-    get_quality_reviewer,
-    _safe_eval,
-    _extract_simple_arithmetic,
     _answers_match,
+    _extract_simple_arithmetic,
+    _safe_eval,
+    get_quality_reviewer,
 )
 from app.services.topic_intelligence import GenerationContext
 

@@ -3,19 +3,18 @@ Tests for DifficultyCalibrator.
 
 All tests run fully offline — no Supabase or LLM calls required.
 """
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.services.difficulty_calibrator import (
     DifficultyCalibrator,
-    get_difficulty_calibrator,
-    _sort_key,
     _make_hint,
+    _sort_key,
+    get_difficulty_calibrator,
 )
 from app.services.topic_intelligence import GenerationContext
-
 
 # ---------------------------------------------------------------------------
 # Fixtures / helpers

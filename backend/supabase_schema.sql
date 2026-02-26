@@ -17,25 +17,26 @@ CREATE TABLE IF NOT EXISTS worksheets (
 -- Index for faster user queries
 CREATE INDEX IF NOT EXISTS idx_worksheets_user_id ON worksheets(user_id);
 CREATE INDEX IF NOT EXISTS idx_worksheets_created_at ON worksheets(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_worksheets_user_created ON worksheets(user_id, created_at DESC);
 
 -- Enable Row Level Security
 ALTER TABLE worksheets ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can only see their own worksheets
 CREATE POLICY "Users can view own worksheets" ON worksheets
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((select auth.uid()) = user_id);
 
 -- Policy: Users can insert their own worksheets
 CREATE POLICY "Users can insert own worksheets" ON worksheets
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
 
 -- Policy: Users can delete their own worksheets
 CREATE POLICY "Users can delete own worksheets" ON worksheets
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING ((select auth.uid()) = user_id);
 
 -- Policy: Users can update their own worksheets
 CREATE POLICY "Users can update own worksheets" ON worksheets
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id);
 
 -- Add regeneration tracking column
 ALTER TABLE worksheets
@@ -58,13 +59,13 @@ CREATE INDEX IF NOT EXISTS idx_children_user_id ON children(user_id);
 ALTER TABLE children ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own children" ON children
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can insert own children" ON children
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY "Users can update own children" ON children
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can delete own children" ON children
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING ((select auth.uid()) = user_id);
 
 -- Add child_id to worksheets table (run as ALTER if table already exists)
 ALTER TABLE worksheets
@@ -88,11 +89,11 @@ CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(
 ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own subscription" ON user_subscriptions
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can insert own subscription" ON user_subscriptions
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY "Users can update own subscription" ON user_subscriptions
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id);
 
 -- Function to auto-create subscription for new users
 CREATE OR REPLACE FUNCTION create_user_subscription()
@@ -147,13 +148,13 @@ CREATE INDEX IF NOT EXISTS idx_topic_preferences_child_subject ON topic_preferen
 ALTER TABLE topic_preferences ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own topic preferences" ON topic_preferences
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can insert own topic preferences" ON topic_preferences
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY "Users can update own topic preferences" ON topic_preferences
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can delete own topic preferences" ON topic_preferences
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING ((select auth.uid()) = user_id);
 
 -- Child engagement tracking table
 CREATE TABLE IF NOT EXISTS child_engagement (
@@ -174,11 +175,11 @@ CREATE INDEX IF NOT EXISTS idx_child_engagement_child_id ON child_engagement(chi
 ALTER TABLE child_engagement ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own child engagement" ON child_engagement
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can insert own child engagement" ON child_engagement
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY "Users can update own child engagement" ON child_engagement
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id);
 
 -- User profiles table for role system (Phase 3)
 CREATE TABLE IF NOT EXISTS user_profiles (
@@ -195,11 +196,11 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own profile" ON user_profiles
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can insert own profile" ON user_profiles
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY "Users can update own profile" ON user_profiles
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id);
 
 -- Teacher classes table (Phase 3 - Step 2)
 CREATE TABLE IF NOT EXISTS teacher_classes (
@@ -220,19 +221,20 @@ CREATE INDEX IF NOT EXISTS idx_teacher_classes_user_id ON teacher_classes(user_i
 ALTER TABLE teacher_classes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own classes" ON teacher_classes
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can insert own classes" ON teacher_classes
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY "Users can update own classes" ON teacher_classes
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id);
 CREATE POLICY "Users can delete own classes" ON teacher_classes
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING ((select auth.uid()) = user_id);
 
 -- Add class_id to worksheets table (Phase 3 - Step 3)
 ALTER TABLE worksheets
 ADD COLUMN IF NOT EXISTS class_id UUID REFERENCES teacher_classes(id) ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS idx_worksheets_class_id ON worksheets(class_id);
+CREATE INDEX IF NOT EXISTS idx_worksheets_class_child ON worksheets(class_id, child_id) WHERE class_id IS NOT NULL;
 
 -- ============================================================
 -- PHASE 1: CHILD LEARNING GRAPH TABLES
@@ -298,8 +300,11 @@ CREATE TABLE IF NOT EXISTS child_learning_summary (
 -- INDEXES
 CREATE INDEX IF NOT EXISTS idx_ls_child ON learning_sessions(child_id);
 CREATE INDEX IF NOT EXISTS idx_ls_child_topic ON learning_sessions(child_id, topic_slug);
+CREATE INDEX IF NOT EXISTS idx_ls_child_created ON learning_sessions(child_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_tm_child ON topic_mastery(child_id);
 CREATE INDEX IF NOT EXISTS idx_tm_child_slug ON topic_mastery(child_id, topic_slug);
+CREATE INDEX IF NOT EXISTS idx_tm_child_level ON topic_mastery(child_id, mastery_level);
+CREATE INDEX IF NOT EXISTS idx_tm_revision_due ON topic_mastery(revision_due_at) WHERE revision_due_at IS NOT NULL;
 
 -- RLS POLICIES (users only see their own children's data)
 ALTER TABLE learning_sessions ENABLE ROW LEVEL SECURITY;
@@ -307,10 +312,28 @@ ALTER TABLE topic_mastery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE child_learning_summary ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "users_see_own_child_sessions" ON learning_sessions
-  FOR ALL USING (child_id IN (SELECT id FROM children WHERE user_id = auth.uid()));
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM children
+      WHERE children.id = learning_sessions.child_id
+        AND children.user_id = (select auth.uid())
+    )
+  );
 
 CREATE POLICY "users_see_own_topic_mastery" ON topic_mastery
-  FOR ALL USING (child_id IN (SELECT id FROM children WHERE user_id = auth.uid()));
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM children
+      WHERE children.id = topic_mastery.child_id
+        AND children.user_id = (select auth.uid())
+    )
+  );
 
 CREATE POLICY "users_see_own_summary" ON child_learning_summary
-  FOR ALL USING (child_id IN (SELECT id FROM children WHERE user_id = auth.uid()));
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM children
+      WHERE children.id = child_learning_summary.child_id
+        AND children.user_id = (select auth.uid())
+    )
+  );

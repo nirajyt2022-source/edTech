@@ -210,25 +210,26 @@ async def get_class_dashboard(
             "child_summaries": {},
         }
 
-    # 3. Get child names
-    try:
-        children_result = db.table("children").select("id, name").in_("id", child_ids).execute()
-        children_rows = getattr(children_result, "data", None) or []
-    except Exception as e:
-        logger.error("[get_class_dashboard] DB error fetching children for class %s: %s", class_id, e)
-        raise HTTPException(status_code=500, detail="Database error fetching children")
+    # 3 + 4. Fetch children names AND topic mastery in parallel (fixes N+1)
+    import asyncio
 
-    child_name_map = {c["id"]: c["name"] for c in children_rows}
+    async def _fetch_children():
+        return db.table("children").select("id, name").in_("id", child_ids).execute()
 
-    # 4. Get topic_mastery for all children (service key bypasses RLS)
-    try:
-        mastery_result = (
+    async def _fetch_mastery():
+        return (
             db.table("topic_mastery").select("child_id, topic_slug, mastery_level").in_("child_id", child_ids).execute()
         )
+
+    try:
+        children_result, mastery_result = await asyncio.gather(_fetch_children(), _fetch_mastery())
+        children_rows = getattr(children_result, "data", None) or []
         mastery_rows = getattr(mastery_result, "data", None) or []
     except Exception as e:
-        logger.error("[get_class_dashboard] DB error fetching mastery for class %s: %s", class_id, e)
-        raise HTTPException(status_code=500, detail="Database error fetching mastery data")
+        logger.error("[get_class_dashboard] DB error fetching children/mastery for class %s: %s", class_id, e)
+        raise HTTPException(status_code=500, detail="Database error fetching class data")
+
+    child_name_map = {c["id"]: c["name"] for c in children_rows}
 
     # 5. Build heatmap: {topic_slug: {child_id: mastery_level}}
     heatmap: dict = {}

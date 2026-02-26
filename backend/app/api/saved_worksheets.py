@@ -364,7 +364,7 @@ async def regenerate_worksheet(
 async def get_teacher_analytics(request: Request, user_id: UserId, db: DbClient):
     """Get light analytics for a teacher."""
     try:
-        result = db.table("worksheets").select("topic, subject, created_at").eq("user_id", user_id).execute()
+        result = db.table("worksheets").select("topic, subject, created_at").eq("user_id", user_id).limit(500).execute()
 
         rows = result.data or []
         total_worksheets = len(rows)

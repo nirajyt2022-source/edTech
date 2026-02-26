@@ -5,26 +5,25 @@ All tests run fully offline — no Supabase connection, no LLM calls needed.
 Async build_context is exercised via asyncio.run() in sync wrappers, avoiding
 any pytest-asyncio mode configuration requirements.
 """
-import sys
-import os
 import asyncio
+import os
+import sys
 from unittest.mock import MagicMock, patch
 
 # Ensure backend/ is on the path when running from project root
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.services.topic_intelligence import (
-    TopicIntelligenceAgent,
-    GenerationContext,
-    _lookup_canon,
-    _get_skill_tags,
-    _get_subtopics,
     _DEFAULT_BLOOM,
+    _DEFAULT_CHALLENGE,
     _DEFAULT_FORMAT_MIX,
     _DEFAULT_SCAFFOLDING,
-    _DEFAULT_CHALLENGE,
+    GenerationContext,
+    TopicIntelligenceAgent,
+    _get_skill_tags,
+    _get_subtopics,
+    _lookup_canon,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helper: run a coroutine synchronously

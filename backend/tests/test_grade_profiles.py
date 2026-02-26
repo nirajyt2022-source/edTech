@@ -11,13 +11,12 @@ Covers:
 
 All tests are fully offline — no LLM or Supabase calls.
 """
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from app.services.quality_reviewer import GRADE_PROFILES, validate_grade_appropriateness
-
 
 # ── 1. grade_profiles.json structure ────────────────────────────────────────
 
