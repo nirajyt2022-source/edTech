@@ -79,6 +79,27 @@ async def deep_health(request: Request):
     }
 
 
+@router.get("/health/ai-metrics")
+async def ai_metrics(request: Request):
+    """LLMOps metrics: calls, latency, tokens, cost, cache hit rate, errors.
+
+    Protected by the same X-Health-Token as /health/deep.
+    """
+    expected_token = os.environ.get("HEALTH_CHECK_TOKEN", "")
+    if expected_token:
+        provided = request.headers.get("X-Health-Token", "")
+        if provided != expected_token:
+            raise HTTPException(status_code=403, detail="Forbidden")
+
+    try:
+        from app.services.ai_client import get_llm_metrics
+
+        return get_llm_metrics()
+    except Exception as e:
+        logger.error("ai_metrics_failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get AI metrics")
+
+
 @router.get("/api/v1/curriculum/check")
 async def check_curriculum(grade: str = "Class 3", subject: str = "Maths", topic: str = "Fractions"):
     """Check if curriculum content exists for a topic (debug endpoint)."""

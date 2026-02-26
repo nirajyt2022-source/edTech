@@ -86,10 +86,22 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         _lifespan_logger.warning("gemini_cache_clear_failed", error=str(e))
 
-    # 2. Log AI client stats summary
+    # 2. Log AI client stats summary (with full LLMOps metrics)
     try:
-        ai = get_ai_client()
-        _lifespan_logger.info("ai_client_stats", **ai.stats)
+        from app.services.ai_client import get_llm_metrics
+
+        metrics = get_llm_metrics()
+        _lifespan_logger.info(
+            "ai_client_stats",
+            total_calls=metrics["total_calls"],
+            total_errors=metrics["total_errors"],
+            error_rate=metrics["error_rate"],
+            avg_latency_ms=metrics["avg_latency_ms"],
+            total_input_tokens=metrics["total_input_tokens"],
+            total_output_tokens=metrics["total_output_tokens"],
+            estimated_cost_usd=metrics["estimated_cost_usd"],
+            cache_hit_rate=metrics["cache_hit_rate"],
+        )
     except Exception as e:
         _lifespan_logger.warning("ai_stats_log_failed", error=str(e))
 

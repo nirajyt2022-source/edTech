@@ -23,6 +23,9 @@ from app.services.subscription_check import check_ai_usage_allowed
 
 logger = structlog.get_logger("skolar.grading")
 
+# Prompt version — bump when changing grading prompt content
+GRADING_PROMPT_VERSION = "v1.0"
+
 router = APIRouter(prefix="/api/v1/grading", tags=["grading"])
 
 
@@ -189,12 +192,29 @@ async def call_gemini_vision_for_grading(image_data: list[dict], prompt: str, ex
             prompt=prompt,
             temperature=0.1,
         )
-    except ValueError as e:
-        logger.error(f"AI grading error: {e}")
-        raise HTTPException(502, "Could not parse grading results. Please try again with a clearer photo.")
     except Exception as e:
-        logger.error(f"AI grading service error: {e}")
-        raise HTTPException(502, "AI grading service unavailable. Please try again.")
+        logger.error("ai_grading_error", error=str(e), prompt_version=GRADING_PROMPT_VERSION)
+        # Graceful fallback: mark all questions for parent review
+        return {
+            "results": [
+                {
+                    "question_number": i + 1,
+                    "question_format": "unknown",
+                    "student_answer": "Unable to read",
+                    "correct_answer": "",
+                    "is_correct": False,
+                    "confidence": 0.0,
+                    "needs_review": True,
+                    "feedback": "Auto-grading unavailable. Please review manually.",
+                }
+                for i in range(expected_total)
+            ],
+            "score": 0,
+            "total": expected_total,
+            "needs_review_questions": list(range(1, expected_total + 1)),
+            "summary": "Auto-grading was unavailable. All answers have been marked for parent review.",
+            "_fallback": True,
+        }
 
     # Validate and compute score
     question_results = results.get("results", [])

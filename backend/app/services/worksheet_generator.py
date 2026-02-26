@@ -29,6 +29,12 @@ from app.services.prompt_builder import _BLOOM_DIRECTIVES
 logger = structlog.get_logger("skolar.worksheet_generator")
 
 # ---------------------------------------------------------------------------
+# Prompt versions — bump when changing prompt content, logged with every call
+# ---------------------------------------------------------------------------
+SYSTEM_PROMPT_VERSION = "v2.3"
+USER_PROMPT_VERSION = "v2.3"
+
+# ---------------------------------------------------------------------------
 # 1A  System Prompt — composable blocks
 # ---------------------------------------------------------------------------
 
@@ -948,6 +954,8 @@ def generate_worksheet(
                 len(data.get("questions", [])),
                 elapsed_ms,
                 attempt,
+                system_prompt_version=SYSTEM_PROMPT_VERSION,
+                user_prompt_version=USER_PROMPT_VERSION,
             )
             return data, elapsed_ms, all_warnings
 

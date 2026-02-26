@@ -2,12 +2,11 @@
 Centralized AI client for all Gemini calls.
 
 ALL AI interactions go through this module. This gives us one place for:
-- Rate limiting (future)
-- Response caching (future)
-- Cost tracking (future)
+- LLMOps metrics (latency, tokens, cost, cache hit rate, retry/error rates)
 - Retry logic
 - Structured logging
 - Model swapping
+- Prompt versioning (via caller-supplied prompt_version tag)
 
 Usage:
     from app.services.ai_client import get_ai_client
@@ -31,6 +30,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from collections import defaultdict
 from typing import Any
 
 import sentry_sdk
@@ -46,6 +46,125 @@ DEFAULT_MODEL = "gemini-2.5-flash"
 # In-memory cache for Gemini CachedContent objects (keyed by system prompt hash)
 _cached_contents: dict[str, Any] = {}
 _CACHE_TTL_MINUTES = 60
+
+# ── Token estimation ──────────────────────────────────────────────────────────
+# Gemini uses ~4 chars per token (similar to GPT). This is an approximation
+# used for budget guarding and cost estimation — not billing-grade.
+_CHARS_PER_TOKEN = 4
+
+# Gemini 2.5 Flash pricing (per 1M tokens, as of 2026-02)
+_INPUT_COST_PER_M = 0.15  # $0.15 per 1M input tokens
+_OUTPUT_COST_PER_M = 0.60  # $0.60 per 1M output tokens
+_CACHED_INPUT_COST_PER_M = 0.04  # $0.04 per 1M cached input tokens
+
+# Context window limit (Gemini 2.5 Flash)
+_MAX_CONTEXT_TOKENS = 1_000_000
+
+
+def estimate_tokens(text: str) -> int:
+    """Estimate token count from text length. ~4 chars per token for Gemini."""
+    return max(1, len(text) // _CHARS_PER_TOKEN)
+
+
+def estimate_cost(input_tokens: int, output_tokens: int, cached_tokens: int = 0) -> float:
+    """Estimate cost in USD for a single LLM call."""
+    uncached_input = max(0, input_tokens - cached_tokens)
+    return (
+        uncached_input * _INPUT_COST_PER_M / 1_000_000
+        + cached_tokens * _CACHED_INPUT_COST_PER_M / 1_000_000
+        + output_tokens * _OUTPUT_COST_PER_M / 1_000_000
+    )
+
+
+class LLMMetrics:
+    """Thread-safe LLMOps metrics collector.
+
+    Tracks per-method and aggregate stats: calls, latency, tokens, cost,
+    cache hits, retries, errors.
+    """
+
+    def __init__(self):
+        self._calls: dict[str, int] = defaultdict(int)
+        self._errors: dict[str, int] = defaultdict(int)
+        self._retries: dict[str, int] = defaultdict(int)
+        self._latency_ms: dict[str, int] = defaultdict(int)
+        self._input_tokens: dict[str, int] = defaultdict(int)
+        self._output_tokens: dict[str, int] = defaultdict(int)
+        self._cached_tokens: dict[str, int] = defaultdict(int)
+        self._cost_usd: dict[str, float] = defaultdict(float)
+        self._cache_hits = 0
+        self._cache_misses = 0
+
+    def record_call(
+        self,
+        method: str,
+        latency_ms: int,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+        cached_tokens: int = 0,
+        is_error: bool = False,
+        is_retry: bool = False,
+    ) -> None:
+        self._calls[method] += 1
+        self._latency_ms[method] += latency_ms
+        self._input_tokens[method] += input_tokens
+        self._output_tokens[method] += output_tokens
+        self._cached_tokens[method] += cached_tokens
+        self._cost_usd[method] += estimate_cost(input_tokens, output_tokens, cached_tokens)
+        if is_error:
+            self._errors[method] += 1
+        if is_retry:
+            self._retries[method] += 1
+
+    def record_cache_hit(self, hit: bool) -> None:
+        if hit:
+            self._cache_hits += 1
+        else:
+            self._cache_misses += 1
+
+    def snapshot(self) -> dict[str, Any]:
+        """Return a point-in-time snapshot of all metrics."""
+        total_calls = sum(self._calls.values())
+        total_latency = sum(self._latency_ms.values())
+        total_errors = sum(self._errors.values())
+        total_retries = sum(self._retries.values())
+        total_input = sum(self._input_tokens.values())
+        total_output = sum(self._output_tokens.values())
+        total_cached = sum(self._cached_tokens.values())
+        total_cost = sum(self._cost_usd.values())
+        cache_total = self._cache_hits + self._cache_misses
+
+        return {
+            "total_calls": total_calls,
+            "total_errors": total_errors,
+            "total_retries": total_retries,
+            "error_rate": round(total_errors / total_calls, 4) if total_calls else 0,
+            "retry_rate": round(total_retries / total_calls, 4) if total_calls else 0,
+            "avg_latency_ms": total_latency // total_calls if total_calls else 0,
+            "total_input_tokens": total_input,
+            "total_output_tokens": total_output,
+            "total_cached_tokens": total_cached,
+            "estimated_cost_usd": round(total_cost, 4),
+            "cache_hit_rate": round(self._cache_hits / cache_total, 4) if cache_total else 0,
+            "cache_hits": self._cache_hits,
+            "cache_misses": self._cache_misses,
+            "by_method": {
+                method: {
+                    "calls": self._calls[method],
+                    "errors": self._errors[method],
+                    "retries": self._retries[method],
+                    "avg_latency_ms": self._latency_ms[method] // self._calls[method] if self._calls[method] else 0,
+                    "input_tokens": self._input_tokens[method],
+                    "output_tokens": self._output_tokens[method],
+                    "cost_usd": round(self._cost_usd[method], 4),
+                }
+                for method in sorted(self._calls.keys())
+            },
+        }
+
+
+# Global metrics instance — shared across all AIClient instances
+_metrics = LLMMetrics()
 
 
 def _types():
@@ -63,8 +182,7 @@ class AIClient:
 
         self.client = _genai.Client(api_key=api_key)
         self.model = model
-        self._call_count = 0
-        self._total_latency_ms = 0
+        self.metrics = _metrics
         logger.info("AIClient initialized", model=model)
 
     # -- JSON generation (worksheets, flashcards, revision, etc.) -----------
@@ -82,8 +200,11 @@ class AIClient:
 
         Parses the response, strips markdown fences, retries on parse failure.
         """
+        input_tokens = estimate_tokens(prompt + (system or ""))
+
         last_error: Exception | None = None
         for attempt in range(1 + retries):
+            is_retry = attempt > 0
             start = time.perf_counter()
             try:
                 with sentry_sdk.start_span(op="ai.generate", description="generate_json") as span:
@@ -91,6 +212,7 @@ class AIClient:
                     span.set_data("max_tokens", max_tokens)
                     span.set_data("thinking_budget", thinking_budget)
                     span.set_data("attempt", attempt + 1)
+                    span.set_data("input_tokens_est", input_tokens)
 
                     t = _types()
                     config = t.GenerateContentConfig(
@@ -106,25 +228,40 @@ class AIClient:
                         config=config,
                     )
                     elapsed_ms = int((time.perf_counter() - start) * 1000)
-                    self._track_call(elapsed_ms)
 
                     raw = response.text or ""
+                    output_tokens = estimate_tokens(raw)
                     parsed = self._parse_json(raw)
 
+                    self.metrics.record_call(
+                        "generate_json",
+                        elapsed_ms,
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                        is_retry=is_retry,
+                    )
                     span.set_data("latency_ms", elapsed_ms)
                     span.set_data("response_len", len(raw))
+                    span.set_data("output_tokens_est", output_tokens)
 
                     logger.info(
                         "generate_json OK",
                         attempt=attempt + 1,
                         latency_ms=elapsed_ms,
-                        response_len=len(raw),
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
                     )
                     return parsed
 
             except json.JSONDecodeError as e:
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
-                self._track_call(elapsed_ms)
+                self.metrics.record_call(
+                    "generate_json",
+                    elapsed_ms,
+                    input_tokens=input_tokens,
+                    is_error=True,
+                    is_retry=is_retry,
+                )
                 last_error = e
                 logger.warning(
                     "generate_json parse failed, retrying",
@@ -133,7 +270,13 @@ class AIClient:
                 )
             except Exception as e:
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
-                self._track_call(elapsed_ms)
+                self.metrics.record_call(
+                    "generate_json",
+                    elapsed_ms,
+                    input_tokens=input_tokens,
+                    is_error=True,
+                    is_retry=is_retry,
+                )
                 last_error = e
                 sentry_sdk.set_context(
                     "ai_call", {"method": "generate_json", "model": self.model, "attempt": attempt + 1}
@@ -157,11 +300,13 @@ class AIClient:
         max_tokens: int = 2048,
     ) -> str:
         """Generate a plain text response."""
+        input_tokens = estimate_tokens(prompt + (system or ""))
         start = time.perf_counter()
         try:
             with sentry_sdk.start_span(op="ai.generate", description="generate_text") as span:
                 span.set_data("temperature", temperature)
                 span.set_data("max_tokens", max_tokens)
+                span.set_data("input_tokens_est", input_tokens)
                 config = _types().GenerateContentConfig(
                     system_instruction=system,
                     temperature=temperature,
@@ -173,16 +318,29 @@ class AIClient:
                     config=config,
                 )
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
-                self._track_call(elapsed_ms)
                 text = response.text or ""
+                output_tokens = estimate_tokens(text)
+                self.metrics.record_call(
+                    "generate_text",
+                    elapsed_ms,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                )
                 span.set_data("latency_ms", elapsed_ms)
                 span.set_data("response_len", len(text))
-                logger.info("generate_text OK", latency_ms=elapsed_ms, response_len=len(text))
+                logger.info(
+                    "generate_text OK", latency_ms=elapsed_ms, input_tokens=input_tokens, output_tokens=output_tokens
+                )
                 return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
+            self.metrics.record_call(
+                "generate_text",
+                elapsed_ms,
+                input_tokens=input_tokens,
+                is_error=True,
+            )
             sentry_sdk.set_context("ai_call", {"method": "generate_text", "model": self.model})
             sentry_sdk.capture_exception(e)
             logger.error("generate_text failed", error=str(e))
@@ -198,12 +356,25 @@ class AIClient:
         max_tokens: int = 2048,
     ) -> str:
         """Generate a response from a multi-turn conversation."""
+        all_text = (system or "") + " ".join(m.get("content", "") for m in messages)
+        input_tokens = estimate_tokens(all_text)
+
+        # Guard context window — warn if approaching limit
+        if input_tokens > _MAX_CONTEXT_TOKENS * 0.8:
+            logger.warning(
+                "context_window_warning",
+                input_tokens=input_tokens,
+                limit=_MAX_CONTEXT_TOKENS,
+                turns=len(messages),
+            )
+
         start = time.perf_counter()
         try:
             with sentry_sdk.start_span(op="ai.generate", description="generate_chat") as span:
                 span.set_data("temperature", temperature)
                 span.set_data("max_tokens", max_tokens)
                 span.set_data("turns", len(messages))
+                span.set_data("input_tokens_est", input_tokens)
                 gemini_messages = []
                 for msg in messages:
                     gemini_messages.append(
@@ -223,15 +394,26 @@ class AIClient:
                     config=config,
                 )
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
-                self._track_call(elapsed_ms)
                 text = response.text or ""
+                output_tokens = estimate_tokens(text)
+                self.metrics.record_call(
+                    "generate_chat",
+                    elapsed_ms,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                )
                 span.set_data("latency_ms", elapsed_ms)
-                logger.info("generate_chat OK", latency_ms=elapsed_ms, turns=len(messages))
+                logger.info("generate_chat OK", latency_ms=elapsed_ms, turns=len(messages), input_tokens=input_tokens)
                 return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
+            self.metrics.record_call(
+                "generate_chat",
+                elapsed_ms,
+                input_tokens=input_tokens,
+                is_error=True,
+            )
             sentry_sdk.set_context("ai_call", {"method": "generate_chat", "model": self.model})
             sentry_sdk.capture_exception(e)
             logger.error("generate_chat failed", error=str(e))
@@ -252,12 +434,18 @@ class AIClient:
 
         image_parts: list of {"inline_data": {"mime_type": "image/jpeg", "data": base64_string}}
         """
+        # Estimate tokens: text + ~258 tokens per image (Gemini standard)
+        text_tokens = estimate_tokens(prompt + (system or ""))
+        image_tokens = len(image_parts) * 258
+        input_tokens = text_tokens + image_tokens
+
         start = time.perf_counter()
         try:
             with sentry_sdk.start_span(op="ai.generate", description="generate_with_images") as span:
                 span.set_data("temperature", temperature)
                 span.set_data("max_tokens", max_tokens)
                 span.set_data("num_images", len(image_parts))
+                span.set_data("input_tokens_est", input_tokens)
                 parts = image_parts + [{"text": prompt}]
                 config_kwargs: dict[str, Any] = {
                     "temperature": temperature,
@@ -276,18 +464,34 @@ class AIClient:
                     config=config,
                 )
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
-                self._track_call(elapsed_ms)
                 raw = response.text or ""
+                output_tokens = estimate_tokens(raw)
+                self.metrics.record_call(
+                    "generate_with_images",
+                    elapsed_ms,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                )
                 span.set_data("latency_ms", elapsed_ms)
                 span.set_data("response_len", len(raw))
-                logger.info("generate_with_images OK", latency_ms=elapsed_ms, num_images=len(image_parts))
+                logger.info(
+                    "generate_with_images OK",
+                    latency_ms=elapsed_ms,
+                    num_images=len(image_parts),
+                    input_tokens=input_tokens,
+                )
                 if response_json:
                     return self._parse_json(raw)
                 return raw
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
+            self.metrics.record_call(
+                "generate_with_images",
+                elapsed_ms,
+                input_tokens=input_tokens,
+                is_error=True,
+            )
             sentry_sdk.set_context("ai_call", {"method": "generate_with_images", "model": self.model})
             sentry_sdk.capture_exception(e)
             logger.error("generate_with_images failed", error=str(e))
@@ -321,16 +525,25 @@ class AIClient:
                     config=config,
                 )
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
-                self._track_call(elapsed_ms)
                 text = response.text or ""
+                output_tokens = estimate_tokens(text)
+                self.metrics.record_call(
+                    "generate_with_typed_parts",
+                    elapsed_ms,
+                    output_tokens=output_tokens,
+                )
                 span.set_data("latency_ms", elapsed_ms)
                 span.set_data("response_len", len(text))
-                logger.info("generate_with_typed_parts OK", latency_ms=elapsed_ms)
+                logger.info("generate_with_typed_parts OK", latency_ms=elapsed_ms, output_tokens=output_tokens)
                 return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
+            self.metrics.record_call(
+                "generate_with_typed_parts",
+                elapsed_ms,
+                is_error=True,
+            )
             sentry_sdk.set_context("ai_call", {"method": "generate_with_typed_parts", "model": self.model})
             sentry_sdk.capture_exception(e)
             logger.error("generate_with_typed_parts failed", error=str(e))
@@ -401,22 +614,32 @@ class AIClient:
         system_instruction = "\n\n".join(system_parts) or None
         user_prompt = "\n\n".join(user_parts)
 
+        system_tokens = estimate_tokens(system_instruction) if system_instruction else 0
+        user_tokens = estimate_tokens(user_prompt)
+        input_tokens = system_tokens + user_tokens
+
         start = time.perf_counter()
         try:
             with sentry_sdk.start_span(op="ai.generate", description="generate_openai_style") as span:
                 span.set_data("temperature", temperature)
                 span.set_data("max_tokens", max_tokens)
                 span.set_data("thinking_budget", thinking_budget)
+                span.set_data("input_tokens_est", input_tokens)
                 t = _types()
 
                 # Try to use cached system prompt
                 cached_content = None
+                cached_tokens = 0
                 if system_instruction:
                     cached_content = self._get_or_create_cache(system_instruction)
+
+                cache_hit = cached_content is not None
+                self.metrics.record_cache_hit(cache_hit)
 
                 if cached_content:
                     # Use cached content — system prompt is already server-side
                     span.set_data("cache_hit", True)
+                    cached_tokens = system_tokens
                     config = t.GenerateContentConfig(
                         temperature=temperature,
                         max_output_tokens=max_tokens,
@@ -446,16 +669,35 @@ class AIClient:
                     )
 
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
-                self._track_call(elapsed_ms)
                 text = response.text or ""
+                output_tokens = estimate_tokens(text)
+                self.metrics.record_call(
+                    "generate_openai_style",
+                    elapsed_ms,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    cached_tokens=cached_tokens,
+                )
                 span.set_data("latency_ms", elapsed_ms)
                 span.set_data("response_len", len(text))
-                logger.info("generate_openai_style OK", latency_ms=elapsed_ms, response_len=len(text))
+                span.set_data("cached_tokens", cached_tokens)
+                logger.info(
+                    "generate_openai_style OK",
+                    latency_ms=elapsed_ms,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    cache_hit=cache_hit,
+                )
                 return text
 
         except Exception as e:
             elapsed_ms = int((time.perf_counter() - start) * 1000)
-            self._track_call(elapsed_ms)
+            self.metrics.record_call(
+                "generate_openai_style",
+                elapsed_ms,
+                input_tokens=input_tokens,
+                is_error=True,
+            )
             sentry_sdk.set_context("ai_call", {"method": "generate_openai_style", "model": self.model})
             sentry_sdk.capture_exception(e)
             logger.error("generate_openai_style failed", error=str(e))
@@ -475,18 +717,20 @@ class AIClient:
             text = text[:-3]
         return json.loads(text.strip())
 
-    def _track_call(self, elapsed_ms: int) -> None:
-        """Track call count and latency for monitoring."""
-        self._call_count += 1
-        self._total_latency_ms += elapsed_ms
-
     @property
     def stats(self) -> dict:
-        """Get usage stats."""
+        """Get usage stats (backward-compatible + new metrics)."""
+        snapshot = self.metrics.snapshot()
         return {
-            "total_calls": self._call_count,
-            "total_latency_ms": self._total_latency_ms,
-            "avg_latency_ms": (self._total_latency_ms // self._call_count if self._call_count else 0),
+            "total_calls": snapshot["total_calls"],
+            "total_latency_ms": sum(self.metrics._latency_ms.values()),
+            "avg_latency_ms": snapshot["avg_latency_ms"],
+            "total_input_tokens": snapshot["total_input_tokens"],
+            "total_output_tokens": snapshot["total_output_tokens"],
+            "estimated_cost_usd": snapshot["estimated_cost_usd"],
+            "cache_hit_rate": snapshot["cache_hit_rate"],
+            "error_rate": snapshot["error_rate"],
+            "retry_rate": snapshot["retry_rate"],
         }
 
 
@@ -551,3 +795,8 @@ def get_ai_client() -> AIClient:
 def get_openai_compat_client() -> OpenAICompatAdapter:
     """Get an OpenAI-compatible adapter wrapping the centralized AI client."""
     return OpenAICompatAdapter(get_ai_client())
+
+
+def get_llm_metrics() -> dict[str, Any]:
+    """Get the global LLM metrics snapshot. Used by /health/ai-metrics."""
+    return _metrics.snapshot()

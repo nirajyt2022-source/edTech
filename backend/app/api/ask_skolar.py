@@ -19,6 +19,9 @@ from app.services.subscription_check import check_ai_usage_allowed
 
 logger = structlog.get_logger("skolar.ask_skolar")
 
+# Prompt version — bump when changing system prompt or instruction content
+ASK_SKOLAR_PROMPT_VERSION = "v1.0"
+
 
 def _sanitize_question(question: str) -> str:
     """Strip prompt injection attempts from student questions."""
@@ -133,7 +136,12 @@ RULES:
     # Detect topic for Practice/Revise links
     topic_detection = await _detect_topic(safe_question, body.grade, ai=ai)
 
-    logger.info(f"Ask Skolar answered for user={user_id}: {safe_question[:80]}...")
+    logger.info(
+        "ask_skolar_answered",
+        user_id=user_id,
+        question_preview=safe_question[:80],
+        prompt_version=ASK_SKOLAR_PROMPT_VERSION,
+    )
 
     return AskResponse(
         answer=answer_text,
@@ -172,8 +180,16 @@ async def _call_gemini_chat(system_prompt: str, history: list[ChatMessage], ques
             max_tokens=2048,
         )
     except Exception as e:
-        logger.error(f"AI chat error: {e}")
-        raise HTTPException(502, "AI tutor unavailable. Please try again.")
+        logger.error("ai_chat_error", error=str(e), prompt_version=ASK_SKOLAR_PROMPT_VERSION)
+        # Graceful fallback: return a helpful message instead of 502
+        return (
+            "I'm sorry, I'm having trouble thinking right now! 🤔\n\n"
+            "Here are some things you can try:\n"
+            "1. **Ask your question again** in a moment\n"
+            "2. **Check your textbook** for the chapter on this topic\n"
+            "3. **Try the Practice tab** to work on worksheets\n\n"
+            "I'll be back to help soon!"
+        )
 
 
 async def _detect_topic(question: str, grade: str, *, ai) -> dict:

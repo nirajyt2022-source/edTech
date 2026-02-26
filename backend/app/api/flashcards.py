@@ -24,6 +24,9 @@ from app.services.subscription_check import check_ai_usage_allowed
 
 logger = structlog.get_logger("skolar.flashcards")
 
+# Prompt version — bump when changing flashcard prompt content
+FLASHCARD_PROMPT_VERSION = "v1.0"
+
 router = APIRouter(prefix="/api/v1/flashcards", tags=["flashcards"])
 
 # ── Pydantic models ──────────────────────────────────────────────────────
@@ -217,9 +220,17 @@ async def _call_gemini_for_flashcards(prompt: str) -> dict:
     try:
         ai = get_ai_client()
         return await asyncio.to_thread(ai.generate_json, prompt=prompt, temperature=0.7, max_tokens=4096)
-    except ValueError as e:
-        logger.error(f"AI flashcard error: {e}")
-        raise HTTPException(502, "Could not parse flashcards. Please try again.")
     except Exception as e:
-        logger.error(f"AI flashcard service error: {e}")
-        raise HTTPException(502, "AI flashcard service unavailable. Please try again.")
+        logger.error("ai_flashcard_error", error=str(e), prompt_version=FLASHCARD_PROMPT_VERSION)
+        # Graceful fallback: return a minimal set of placeholder flashcards
+        return {
+            "flashcards": [
+                {
+                    "front": "Flashcard generation is temporarily unavailable",
+                    "back": "Please try again in a moment. Your study session will be ready soon!",
+                    "category": "concept",
+                    "difficulty": "easy",
+                },
+            ],
+            "_fallback": True,
+        }

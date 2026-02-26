@@ -24,6 +24,9 @@ from app.services.subscription_check import check_ai_usage_allowed
 
 logger = structlog.get_logger("skolar.revision")
 
+# Prompt version — bump when changing revision notes prompt content
+REVISION_PROMPT_VERSION = "v1.0"
+
 router = APIRouter(prefix="/api/v1/revision", tags=["revision"])
 
 # ── Pydantic models ──────────────────────────────────────────────────────
@@ -250,9 +253,13 @@ async def _call_gemini_for_revision(prompt: str) -> dict:
     try:
         ai = get_ai_client()
         return await asyncio.to_thread(ai.generate_json, prompt=prompt, temperature=0.3, max_tokens=4096)
-    except ValueError as e:
-        logger.error(f"AI revision error: {e}")
-        raise HTTPException(502, "Could not parse revision notes. Please try again.")
     except Exception as e:
-        logger.error(f"AI revision service error: {e}")
-        raise HTTPException(502, "AI revision service unavailable. Please try again.")
+        logger.error("ai_revision_error", error=str(e), prompt_version=REVISION_PROMPT_VERSION)
+        # Graceful fallback: return minimal placeholder notes
+        return {
+            "title": "Revision Notes",
+            "summary": "Revision notes generation is temporarily unavailable. Please try again in a moment.",
+            "key_points": ["Please try again shortly — our AI tutor is warming up!"],
+            "practice_questions": [],
+            "_fallback": True,
+        }
