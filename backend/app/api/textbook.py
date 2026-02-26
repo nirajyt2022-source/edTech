@@ -30,14 +30,14 @@ router = APIRouter(prefix="/api/v1/textbook", tags=["textbook"])
 class TextbookAnalysis(BaseModel):
     """What Gemini extracted from the textbook photo."""
 
-    detected_grade: str  # "Class 4"
-    detected_subject: str  # "Maths"
-    detected_topic: str  # "Fractions"
-    detected_chapter: str  # "Chapter 8: Fractions"
-    key_concepts: list[str]  # ["Like fractions", "Unlike fractions", ...]
-    content_summary: str  # 2-3 sentence summary
-    language: str  # "English" or "Hindi"
-    raw_text: str  # Full extracted text from the page
+    detected_grade: str = ""  # "Class 4"
+    detected_subject: str = ""  # "Maths"
+    detected_topic: str = ""  # "Fractions"
+    detected_chapter: str = ""  # "Chapter 8: Fractions"
+    key_concepts: list[str] = []  # ["Like fractions", "Unlike fractions", ...]
+    content_summary: str = ""  # 2-3 sentence summary
+    language: str = "English"  # "English" or "Hindi"
+    raw_text: str = ""  # Full extracted text from the page
 
 
 class TextbookGenerateRequest(BaseModel):
