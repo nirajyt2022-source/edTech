@@ -306,6 +306,54 @@ class OutputValidator:
                     errors.append(f"Number '{num_str}' appears in {cnt} questions (max 2 per worksheet)")
                     break  # one error is enough
 
+        # 12. Round number cap — ≤30% of numbers may be multiples of 5 or 10
+        if len(questions) >= 5 and subject.lower() in ("maths", "mathematics", "math"):
+            all_nums: list[int] = []
+            _NUM_RE_12 = re.compile(r"\b(\d+)\b")
+            for q in questions:
+                text = q.get("text", "")
+                for n_str in _NUM_RE_12.findall(text):
+                    n = int(n_str)
+                    if n > 1:  # skip 0 and 1
+                        all_nums.append(n)
+            if len(all_nums) >= 5:
+                round_count = sum(1 for n in all_nums if n % 5 == 0)
+                round_pct = round_count / len(all_nums)
+                if round_pct > 0.30:
+                    errors.append(
+                        f"Round number overuse: {round_count}/{len(all_nums)} "
+                        f"({round_pct:.0%}) are multiples of 5 or 10 (max 30%)"
+                    )
+
+        # 13. Number pair diversity — addition/subtraction pairs need digit variety
+        if len(questions) >= 5 and subject.lower() in ("maths", "mathematics", "math"):
+            _PAIR_RE = re.compile(r"(\d+)\s*[+\-]\s*(\d+)")
+            pairs_seen: list[tuple[int, int]] = []
+            for q in questions:
+                text = q.get("text", "")
+                m = _PAIR_RE.search(text)
+                if m:
+                    pairs_seen.append((int(m.group(1)), int(m.group(2))))
+            if len(pairs_seen) >= 3:
+                last_digits = set()
+                for a, b in pairs_seen:
+                    last_digits.add(a % 10)
+                    last_digits.add(b % 10)
+                if len(last_digits) < 3:
+                    errors.append(
+                        f"Number pair monotony: only {len(last_digits)} unique last digits "
+                        f"across {len(pairs_seen)} pairs (need ≥3)"
+                    )
+
+        # 14. Engagement framing — at least 1 question should use warm framing
+        if len(questions) >= 5:
+            _ENGAGEMENT_RE = re.compile(
+                r"(?i)^(help|can you|try to|figure out|let'?s|guess)",
+            )
+            engagement_count = sum(1 for q in questions if _ENGAGEMENT_RE.match(q.get("text", "").strip()))
+            if engagement_count == 0:
+                errors.append("No engagement framing: 0 questions use 'Help…'/'Can you…' style (recommend ≥20%)")
+
         is_valid = len(errors) == 0
         if not is_valid:
             logger.warning("Worksheet validation failed", extra={"errors": errors, "topic": topic, "grade": grade})

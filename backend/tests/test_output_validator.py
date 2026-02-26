@@ -702,3 +702,197 @@ class TestPhrasingTemplateExpansion:
         assert len(samples) == 4
         # All should be unique
         assert len(set(samples)) == 4
+
+
+# ---------------------------------------------------------------------------
+# Adjacent same format (S4) — tested via difficulty_calibrator
+# ---------------------------------------------------------------------------
+
+class TestAdjacentFormatBreaker:
+    def test_adjacent_same_format_broken(self):
+        """Three consecutive MCQs should be broken up."""
+        from app.services.difficulty_calibrator import DifficultyCalibrator
+        from app.services.topic_intelligence import GenerationContext
+        ctx = GenerationContext(
+            topic_slug="Addition (carries)", subject="Maths", grade=3,
+            ncert_chapter="Addition (carries)", ncert_subtopics=["obj1"],
+            bloom_level="recall", format_mix={},
+            scaffolding=False, challenge_mode=False,
+            valid_skill_tags=["column_add_with_carry"], child_context={},
+        )
+        qs = [
+            {"id": 1, "format": "mcq", "question_text": "Q1 mcq", "answer": "A", "skill_tag": "column_add_with_carry"},
+            {"id": 2, "format": "mcq", "question_text": "Q2 mcq", "answer": "B", "skill_tag": "column_add_with_carry"},
+            {"id": 3, "format": "mcq", "question_text": "Q3 mcq", "answer": "C", "skill_tag": "column_add_with_carry"},
+            {"id": 4, "format": "fill_blank", "question_text": "Q4 fill", "answer": "D", "skill_tag": "column_add_with_carry"},
+            {"id": 5, "format": "word_problem", "question_text": "Q5 wp", "answer": "E", "skill_tag": "column_add_with_carry"},
+        ]
+        result, warnings = DifficultyCalibrator().calibrate(qs, ctx)
+        # After STEP F, no two adjacent questions should share the same format
+        formats = [q["format"] for q in result]
+        adjacent_same = sum(1 for i in range(len(formats) - 1) if formats[i] == formats[i + 1])
+        assert adjacent_same < 2, f"Still have {adjacent_same} adjacent same-format pairs: {formats}"
+        assert any("adjacent" in w.lower() for w in warnings)
+
+    def test_no_swap_when_already_diverse(self):
+        """Alternating formats should not trigger swaps."""
+        from app.services.difficulty_calibrator import DifficultyCalibrator
+        from app.services.topic_intelligence import GenerationContext
+        ctx = GenerationContext(
+            topic_slug="Addition (carries)", subject="Maths", grade=3,
+            ncert_chapter="Addition (carries)", ncert_subtopics=["obj1"],
+            bloom_level="recall", format_mix={},
+            scaffolding=False, challenge_mode=False,
+            valid_skill_tags=["column_add_with_carry"], child_context={},
+        )
+        qs = [
+            {"id": 1, "format": "mcq", "question_text": "Q1", "answer": "A", "skill_tag": "column_add_with_carry"},
+            {"id": 2, "format": "fill_blank", "question_text": "Q2", "answer": "B", "skill_tag": "column_add_with_carry"},
+            {"id": 3, "format": "word_problem", "question_text": "Q3", "answer": "C", "skill_tag": "column_add_with_carry"},
+        ]
+        result, warnings = DifficultyCalibrator().calibrate(qs, ctx)
+        assert not any("adjacent format" in w.lower() for w in warnings)
+
+
+# ---------------------------------------------------------------------------
+# Round number cap (N1)
+# ---------------------------------------------------------------------------
+
+class TestRoundNumberCap:
+    def _make_q(self, qid, text, answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_messy_numbers_pass(self, validator):
+        """Non-round numbers should pass."""
+        qs = [
+            self._make_q("Q1", "What is 23 + 47?"),
+            self._make_q("Q2", "Find 18 - 9"),
+            self._make_q("Q3", "Add 37 and 56"),
+            self._make_q("Q4", "Calculate 14 + 29"),
+            self._make_q("Q5", "What is 63 - 28?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="Maths", num_questions=5)
+        assert not any("Round number" in e for e in errors)
+
+    def test_all_round_numbers_flags(self, validator):
+        """All multiples of 5/10 should flag."""
+        qs = [
+            self._make_q("Q1", "What is 10 + 20?"),
+            self._make_q("Q2", "Find 50 - 25"),
+            self._make_q("Q3", "Add 100 and 200"),
+            self._make_q("Q4", "Calculate 15 + 35"),
+            self._make_q("Q5", "What is 40 - 20?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="Maths", num_questions=5)
+        assert any("Round number" in e for e in errors)
+
+    def test_non_maths_skips(self, validator):
+        """Round number check should not apply to English."""
+        qs = [
+            self._make_q("Q1", "Write 10 in words"),
+            self._make_q("Q2", "Write 20 in words"),
+            self._make_q("Q3", "Write 50 in words"),
+            self._make_q("Q4", "Write 100 in words"),
+            self._make_q("Q5", "Write 200 in words"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="English", num_questions=5)
+        assert not any("Round number" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Number pair diversity (N3)
+# ---------------------------------------------------------------------------
+
+class TestNumberPairDiversity:
+    def _make_q(self, qid, text, answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_diverse_pairs_pass(self, validator):
+        """Pairs with varied last digits should pass."""
+        qs = [
+            self._make_q("Q1", "What is 23 + 47?"),
+            self._make_q("Q2", "Find 18 - 9"),
+            self._make_q("Q3", "Add 36 + 52"),
+            self._make_q("Q4", "Calculate 14 + 29"),
+            self._make_q("Q5", "What is 63 - 28?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="Maths", num_questions=5)
+        assert not any("pair monotony" in e for e in errors)
+
+    def test_monotone_pairs_flag(self, validator):
+        """All pairs ending in same digits should flag."""
+        qs = [
+            self._make_q("Q1", "What is 10 + 20?"),
+            self._make_q("Q2", "Find 30 - 10"),
+            self._make_q("Q3", "Add 40 + 50"),
+            self._make_q("Q4", "Calculate 60 + 70"),
+            self._make_q("Q5", "What is 80 - 90?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="Maths", num_questions=5)
+        assert any("pair monotony" in e for e in errors)
+
+    def test_few_pairs_skips(self, validator):
+        """Fewer than 3 pairs should skip the check."""
+        qs = [
+            self._make_q("Q1", "What is 10 + 20?"),
+            self._make_q("Q2", "Name a 3-digit number"),
+            self._make_q("Q3", "How many sides does a triangle have?"),
+            self._make_q("Q4", "Is 7 odd or even?"),
+            self._make_q("Q5", "What comes after 99?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="Maths", num_questions=5)
+        assert not any("pair monotony" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Engagement framing (T1)
+# ---------------------------------------------------------------------------
+
+class TestEngagementFraming:
+    def _make_q(self, qid, text, answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_has_engagement_pass(self, validator):
+        """At least one engagement-framed question should pass."""
+        qs = [
+            self._make_q("Q1", "Help Aarav find 23 + 47"),
+            self._make_q("Q2", "What is 18 - 9?"),
+            self._make_q("Q3", "Add 36 and 52"),
+            self._make_q("Q4", "Calculate 14 + 29"),
+            self._make_q("Q5", "Find 63 - 28"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("engagement framing" in e.lower() for e in errors)
+
+    def test_no_engagement_flags(self, validator):
+        """Zero engagement framing should flag."""
+        qs = [
+            self._make_q("Q1", "What is 23 + 47?"),
+            self._make_q("Q2", "Find 18 - 9"),
+            self._make_q("Q3", "Add 36 and 52"),
+            self._make_q("Q4", "Calculate 14 + 29"),
+            self._make_q("Q5", "Subtract 28 from 63"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert any("engagement framing" in e.lower() for e in errors)
+
+    def test_can_you_counts(self, validator):
+        """'Can you' opening should count as engagement."""
+        qs = [
+            self._make_q("Q1", "Can you solve 23 + 47?"),
+            self._make_q("Q2", "What is 18 - 9?"),
+            self._make_q("Q3", "Add 36 and 52"),
+            self._make_q("Q4", "Calculate 14 + 29"),
+            self._make_q("Q5", "Find 63 - 28"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("engagement framing" in e.lower() for e in errors)

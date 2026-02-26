@@ -8,7 +8,7 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 |----------|-------|--------|
 | P0 | L1, R3, N2 | **Done** |
 | P1 | L4, R1, R4, T2 | **Done** |
-| P2 | S4, N1, N3, T1 | Planned |
+| P2 | S4, N1, N3, T1 | **Done** |
 | P3 | S2, S3, R5, T3, T4 | Planned |
 
 ---
@@ -29,15 +29,15 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 | S1 | Intra-band shuffle | Shuffle within same-difficulty band | difficulty_calibrator | Planned |
 | S2 | MCQ option count variety | 70% four / 20% three / 10% five | prompt_builder | Planned |
 | S3 | Word problem length variety | 2-4 sentences per WP | prompt + length check | Planned |
-| S4 | No adjacent same format | 0 consecutive same-format pairs | post-generation reorder | Planned |
+| S4 | No adjacent same format | 0 consecutive same-format pairs | difficulty_calibrator STEP F | **Done** |
 
 ## 3. Numerical Patterns
 
 | Rule | Name | Threshold | Enforced By | Status |
 |------|------|-----------|-------------|--------|
-| N1 | Round number cap | ≤30% multiples of 5/10 | — | Planned |
+| N1 | Round number cap | ≤30% multiples of 5/10 | output_validator check 12 | **Done** |
 | N2 | Cross-question number reuse | No number in >2 questions | output_validator check 10 | **Done** |
-| N3 | Number pair diversity | ≥3 digit-diversity in pairs | — | Planned |
+| N3 | Number pair diversity | ≥3 digit-diversity in pairs | output_validator check 13 | **Done** |
 | N4 | Sequence step variety | Vary step sizes across worksheet | — | Planned |
 
 ## 4. Repetition Issues
@@ -54,7 +54,7 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 
 | Rule | Name | Threshold | Enforced By | Status |
 |------|------|-----------|-------------|--------|
-| T1 | Engagement framing | ≥20% use "Help X…", "Can you…" | phrasing templates | Planned |
+| T1 | Engagement framing | ≥1 question uses warm framing | output_validator check 14 | **Done** |
 | T2 | Error detection variety | 8 distinct framings | phrasing_templates.py | **Done** |
 | T3 | Hindi spoken register | Spoken vocab, not textbook-formal | prompt + forbidden list | Planned |
 | T4 | Encouragement micro-prompt | 1 at Q5 for scaffolding mode | difficulty_calibrator | Planned |

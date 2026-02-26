@@ -28,6 +28,11 @@ Runs four deterministic post-processing steps on the assembled question list:
     Swaps questions so warm-up (Q1-3) uses smaller numbers and stretch
     (Q8+) uses larger numbers.
 
+  STEP F — Break adjacent same-format runs (all modes)
+    When two or more consecutive questions share the same format, swaps
+    the second one with the nearest question of a different format. This
+    prevents format-clustering that makes worksheets feel formulaic.
+
 All steps are fail-open: exceptions are logged and skipped so calibration
 never blocks generation.
 """
@@ -278,6 +283,46 @@ def _fix_number_range_by_position(questions: list) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Adjacent same-format breaker (STEP F)
+# ---------------------------------------------------------------------------
+
+
+def _break_adjacent_formats(questions: list) -> list[str]:
+    """Swap questions to eliminate consecutive same-format runs.
+
+    When Q[i] and Q[i+1] share the same format, find the nearest Q[j]
+    (j > i+1) with a different format and swap Q[i+1] ↔ Q[j].
+
+    Returns action log strings.
+    """
+    if len(questions) < 3:
+        return []
+
+    warnings: list[str] = []
+    swaps = 0
+
+    for i in range(len(questions) - 1):
+        fmt_i = questions[i].get("format", "")
+        fmt_next = questions[i + 1].get("format", "")
+        if fmt_i and fmt_i == fmt_next:
+            # Find nearest different-format question after i+1
+            best_j = None
+            for j in range(i + 2, len(questions)):
+                if questions[j].get("format", "") != fmt_i:
+                    best_j = j
+                    break
+            if best_j is not None:
+                questions[i + 1], questions[best_j] = questions[best_j], questions[i + 1]
+                warnings.append(f"Swapped Q{i + 2} ↔ Q{best_j + 1} (adjacent format '{fmt_i}' broken)")
+                swaps += 1
+
+    if swaps:
+        logger.info("[difficulty_calibrator] STEP F: %d swap(s) to break adjacent formats", swaps)
+
+    return warnings
+
+
+# ---------------------------------------------------------------------------
 # DifficultyCalibrator
 # ---------------------------------------------------------------------------
 
@@ -370,10 +415,19 @@ class DifficultyCalibrator:
         except Exception as exc:
             logger.warning("[difficulty_calibrator] STEP E number range fix failed: %s", exc)
 
+        # ── STEP F: Break adjacent same-format runs (all modes) ───────────
+        adj_swaps = 0
+        try:
+            adj_warnings = _break_adjacent_formats(result)
+            adj_swaps = sum(1 for w in adj_warnings if "Swapped" in w)
+            calibration_warnings.extend(adj_warnings)
+        except Exception as exc:
+            logger.warning("[difficulty_calibrator] STEP F adjacent format fix failed: %s", exc)
+
         # ── Pre-correction quality score ──────────────────────────────────
-        total_corrections = fmt_swaps + nr_swaps
+        total_corrections = fmt_swaps + nr_swaps + adj_swaps
         calibration_warnings.append(
-            f"[calibration_score] corrections={total_corrections} (format_swaps={fmt_swaps}, number_swaps={nr_swaps})"
+            f"[calibration_score] corrections={total_corrections} (format_swaps={fmt_swaps}, number_swaps={nr_swaps}, adjacent_swaps={adj_swaps})"
         )
 
         return result, calibration_warnings
