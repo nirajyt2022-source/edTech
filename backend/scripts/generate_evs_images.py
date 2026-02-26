@@ -11,8 +11,8 @@ Requires: GEMINI_API_KEY env var (same one used for worksheet generation)
 import os
 import sys
 import time
-from pathlib import Path
 from io import BytesIO
+from pathlib import Path
 
 # pip install google-genai Pillow
 from google import genai

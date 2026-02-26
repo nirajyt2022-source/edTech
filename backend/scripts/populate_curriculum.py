@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.config import get_settings
 from app.core.deps import get_supabase_client
-from app.data.topic_profiles import TOPIC_PROFILES
 from app.data.learning_objectives import LEARNING_OBJECTIVES
+from app.data.topic_profiles import TOPIC_PROFILES
 
 settings = get_settings()
 

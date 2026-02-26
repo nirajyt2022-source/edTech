@@ -31,8 +31,8 @@ Requires: GEMINI_API_KEY environment variable
 import os
 import sys
 import time
-from pathlib import Path
 from io import BytesIO
+from pathlib import Path
 
 try:
     from google import genai

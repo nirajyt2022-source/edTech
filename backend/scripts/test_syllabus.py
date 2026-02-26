@@ -4,8 +4,8 @@ Test the hardcoded CBSE syllabus endpoint logic.
 Deterministic — no API calls, no DB required.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
