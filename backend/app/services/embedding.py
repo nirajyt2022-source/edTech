@@ -1,5 +1,5 @@
 """
-Embedding service — Gemini text-embedding-004 wrapper.
+Embedding service — Gemini gemini-embedding-001 wrapper.
 
 Uses the google-genai SDK (already a dependency) with TTL caching to avoid
 redundant embedding calls for repeated queries.
@@ -8,7 +8,7 @@ Usage:
     from app.services.embedding import get_embedding_service
 
     svc = get_embedding_service()
-    vec = await svc.embed_text("How do I add fractions?")  # 768-dim
+    vec = await svc.embed_text("How do I add fractions?")  # 3072-dim
 """
 
 from __future__ import annotations
@@ -22,13 +22,13 @@ from app.core.config import get_settings
 
 logger = structlog.get_logger("skolar.embedding")
 
-EMBEDDING_MODEL = "text-embedding-004"
-EMBEDDING_DIMS = 768
+EMBEDDING_MODEL = "gemini-embedding-001"
+EMBEDDING_DIMS = 3072
 BATCH_SIZE = 20
 
 
 class EmbeddingService:
-    """Thin wrapper around Gemini text-embedding-004."""
+    """Thin wrapper around Gemini gemini-embedding-001."""
 
     def __init__(self, api_key: str) -> None:
         from google import genai
@@ -38,7 +38,7 @@ class EmbeddingService:
         logger.info("embedding_service_init", model=EMBEDDING_MODEL)
 
     async def embed_text(self, text: str) -> list[float]:
-        """Embed a single text string. Returns 768-dim vector. Cached by text."""
+        """Embed a single text string. Returns 3072-dim vector. Cached by text."""
         text = text.strip()
         if not text:
             return [0.0] * EMBEDDING_DIMS

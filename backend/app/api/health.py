@@ -77,7 +77,7 @@ async def deep_health(request: Request):
 
         svc = get_embedding_service()
         vec = await svc.embed_text("health check")
-        checks["embedding"] = "ok" if len(vec) == 768 else f"unexpected dims: {len(vec)}"
+        checks["embedding"] = "ok" if len(vec) == 3072 else f"unexpected dims: {len(vec)}"
     except Exception as e:
         logger.debug("embedding_check_failed", error=str(e))
         checks["embedding"] = f"error: {str(e)[:100]}"

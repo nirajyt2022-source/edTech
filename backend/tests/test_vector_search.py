@@ -94,7 +94,7 @@ class TestSemanticSearch:
 
         # Mock embedding
         embed_instance = MagicMock()
-        embed_instance.embed_text = AsyncMock(return_value=[0.1] * 768)
+        embed_instance.embed_text = AsyncMock(return_value=[0.1] * 3072)
         mock_embed_svc.return_value = embed_instance
 
         # Mock Supabase RPC
@@ -162,7 +162,7 @@ class TestHybridSearch:
 
         # Mock embedding
         embed_instance = MagicMock()
-        embed_instance.embed_text = AsyncMock(return_value=[0.1] * 768)
+        embed_instance.embed_text = AsyncMock(return_value=[0.1] * 3072)
         mock_embed_svc.return_value = embed_instance
 
         # Mock Supabase (both RPC and table calls)

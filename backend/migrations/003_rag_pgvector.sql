@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Add embedding column to existing curriculum_content table
 ALTER TABLE curriculum_content
-  ADD COLUMN IF NOT EXISTS embedding vector(768);
+  ADD COLUMN IF NOT EXISTS embedding vector(3072);
 
 -- HNSW index for fast cosine similarity
 CREATE INDEX IF NOT EXISTS idx_curriculum_content_embedding
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS curriculum_embeddings (
   chunk_text text NOT NULL,
   chunk_index int NOT NULL DEFAULT 0,
   metadata jsonb DEFAULT '{}',
-  embedding vector(768) NOT NULL,
+  embedding vector(3072) NOT NULL,
   created_at timestamptz DEFAULT now()
 );
 
@@ -56,7 +56,7 @@ END $$;
 
 -- RPC: match_curriculum — cosine similarity search on curriculum_content
 CREATE OR REPLACE FUNCTION match_curriculum(
-  query_embedding vector(768),
+  query_embedding vector(3072),
   match_count int DEFAULT 5,
   filter_grade text DEFAULT NULL,
   filter_subject text DEFAULT NULL,
