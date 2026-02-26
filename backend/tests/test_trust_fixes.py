@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
-import pytest
-
 from app.services.quality_reviewer import (
     QualityReviewerAgent,
     _extract_arithmetic_expression,
