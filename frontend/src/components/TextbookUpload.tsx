@@ -98,7 +98,13 @@ export default function TextbookUpload({
       setStep("analysis")
       notify.success("Textbook page analyzed!")
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to analyze textbook page"
+      let msg = "Failed to analyze textbook page"
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosErr = err as { response?: { data?: { detail?: string } } }
+        msg = axiosErr.response?.data?.detail || (err instanceof Error ? err.message : msg)
+      } else if (err instanceof Error) {
+        msg = err.message
+      }
       notify.error(msg)
     } finally {
       setAnalyzing(false)
@@ -134,7 +140,13 @@ export default function TextbookUpload({
         "Flashcards ready!"
       )
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : `Failed to generate ${outputType}`
+      let msg = `Failed to generate ${outputType}`
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosErr = err as { response?: { data?: { detail?: string } } }
+        msg = axiosErr.response?.data?.detail || (err instanceof Error ? err.message : msg)
+      } else if (err instanceof Error) {
+        msg = err.message
+      }
       notify.error(msg)
       setStep("analysis") // Go back to let user retry
     } finally {

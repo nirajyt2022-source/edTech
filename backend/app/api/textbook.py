@@ -12,7 +12,7 @@ import base64
 from typing import Literal
 
 import structlog
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 
 from app.core.deps import DbClient, UserId
@@ -59,6 +59,7 @@ async def analyze_textbook_page(
     request: Request,
     user_id: UserId,
     db: DbClient,
+    background_tasks: BackgroundTasks,
     images: list[UploadFile] = File(..., description="1-3 photos of textbook pages"),
 ):
     """
@@ -116,11 +117,17 @@ If you cannot determine a field with confidence, make your best guess based on t
 
     result = await _call_gemini_vision(image_parts, prompt)
 
+    analysis = TextbookAnalysis(**result)
+
     logger.info(
         f"Textbook analyzed for user={user_id}: "
-        f"{result.get('detected_grade')}/{result.get('detected_subject')}/{result.get('detected_topic')}"
+        f"{analysis.detected_grade}/{analysis.detected_subject}/{analysis.detected_topic}"
     )
-    return TextbookAnalysis(**result)
+
+    # Fire-and-forget: ingest extracted text into RAG vector store
+    background_tasks.add_task(_ingest_textbook_content, analysis)
+
+    return analysis
 
 
 @router.post("/generate")
@@ -153,6 +160,46 @@ async def generate_from_textbook(
     return result
 
 
+# ── Background ingestion ──────────────────────────────────────────────────
+
+
+async def _ingest_textbook_content(analysis: TextbookAnalysis) -> None:
+    """Ingest extracted textbook text into curriculum_embeddings for RAG.
+
+    Runs as a BackgroundTask — failures are logged but never surface to the user.
+    """
+    if not analysis.raw_text or not analysis.raw_text.strip():
+        logger.debug("textbook_ingest_skip", reason="empty raw_text")
+        return
+
+    try:
+        from app.services.pdf_ingestion import get_pdf_ingestion_service
+
+        svc = get_pdf_ingestion_service()
+        metadata = {
+            "chapter": analysis.detected_chapter,
+            "key_concepts": analysis.key_concepts,
+            "content_summary": analysis.content_summary,
+            "language": analysis.language,
+        }
+
+        count = await svc.ingest_text(
+            raw_text=analysis.raw_text,
+            grade=analysis.detected_grade,
+            subject=analysis.detected_subject,
+            topic=analysis.detected_topic,
+            source_type="textbook_upload",
+            metadata=metadata,
+        )
+        logger.info(
+            "textbook_ingest_complete",
+            topic=analysis.detected_topic,
+            chunks_stored=count,
+        )
+    except Exception as e:
+        logger.error("textbook_ingest_error", error=str(e))
+
+
 # ── Gemini helpers ────────────────────────────────────────────────────────
 
 
@@ -171,11 +218,11 @@ async def _call_gemini_vision(image_parts: list, prompt: str) -> dict:
             temperature=0.2,
         )
     except ValueError as e:
-        logger.error(f"AI textbook analysis parse error: {e}")
-        raise HTTPException(502, "Could not parse textbook analysis. Please try again.")
+        logger.error("AI textbook analysis parse error", error=str(e))
+        raise HTTPException(502, f"Could not parse textbook analysis: {e}")
     except Exception as e:
-        logger.error(f"AI textbook analysis error: {e}")
-        raise HTTPException(502, "AI textbook analysis unavailable. Please try again.")
+        logger.error("AI textbook analysis error", error=str(e), error_type=type(e).__name__)
+        raise HTTPException(502, f"AI textbook analysis failed: {e}")
 
 
 async def _call_gemini_text(prompt: str, temperature: float = 0.7, max_tokens: int = 8192) -> dict:

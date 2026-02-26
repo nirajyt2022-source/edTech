@@ -1,3 +1,4 @@
+import asyncio
 import io
 import json
 import uuid
@@ -111,20 +112,21 @@ async def extract_text_from_image(file_content: bytes, filename: str, ai: AIClie
     try:
         if ai is None:
             ai = get_ai_client()
-        text = ai.generate_with_typed_parts(
-            parts=[
-                gtypes.Part.from_text(
-                    "Extract all text from this syllabus image. "
-                    "Preserve the structure (chapters, topics, etc.) as much as possible. "
-                    "Return only the extracted text."
-                ),
-                gtypes.Part.from_bytes(data=file_content, mime_type=mime_type),
-            ],
-        )
+        # Build parts — from_text/from_bytes require keyword-only args (google-genai >=1.x)
+        parts = [
+            gtypes.Part.from_text(
+                text="Extract all text from this syllabus image. "
+                "Preserve the structure (chapters, topics, etc.) as much as possible. "
+                "Return only the extracted text."
+            ),
+            gtypes.Part.from_bytes(data=file_content, mime_type=mime_type),
+        ]
+        # Run blocking Gemini call in a thread to avoid blocking the event loop
+        text = await asyncio.to_thread(ai.generate_with_typed_parts, parts=parts)
         return text
     except Exception as e:
-        logger.error("Failed to process image: %s", e)
-        raise HTTPException(status_code=500, detail="Failed to process image. Please try a different file.")
+        logger.error("Failed to process image", error=str(e), filename=filename, error_type=type(e).__name__)
+        raise HTTPException(status_code=502, detail=f"AI image analysis failed: {e}")
 
 
 @router.post("/parse", response_model=SyllabusParseResponse)
@@ -236,8 +238,8 @@ Return ONLY valid JSON, no markdown."""
     except HTTPException:
         raise
     except Exception as e:
-        logger.error("Failed to parse syllabus: %s", e)
-        raise HTTPException(status_code=500, detail="Something went wrong. Please try again.")
+        logger.error("Failed to parse syllabus", error=str(e), error_type=type(e).__name__)
+        raise HTTPException(status_code=502, detail=f"AI syllabus parsing failed: {e}")
 
 
 @router.get("/{syllabus_id}")

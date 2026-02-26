@@ -177,7 +177,14 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
       setSyllabus(response.data.syllabus)
       setConfidenceScore(response.data.confidence_score)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to parse syllabus'
+      // Extract detail from axios error response, fall back to message
+      let errorMessage = 'Failed to parse syllabus'
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { detail?: string } } }
+        errorMessage = axiosErr.response?.data?.detail || (err instanceof Error ? err.message : errorMessage)
+      } else if (err instanceof Error) {
+        errorMessage = err.message
+      }
       setError(errorMessage)
     } finally {
       setLoading(false)
