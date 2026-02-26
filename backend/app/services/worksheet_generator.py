@@ -14,7 +14,6 @@ Architecture:
 from __future__ import annotations
 
 import json
-import math
 import random
 import re
 import string
@@ -33,8 +32,8 @@ logger = structlog.get_logger("skolar.worksheet_generator")
 # ---------------------------------------------------------------------------
 # Prompt versions — bump when changing prompt content, logged with every call
 # ---------------------------------------------------------------------------
-SYSTEM_PROMPT_VERSION = "v2.4"
-USER_PROMPT_VERSION = "v2.4"
+SYSTEM_PROMPT_VERSION = "v2.5"
+USER_PROMPT_VERSION = "v2.5"
 
 # ---------------------------------------------------------------------------
 # 1A  System Prompt — composable blocks
@@ -501,6 +500,15 @@ def build_user_prompt(
     if bloom_directive:
         prompt += f"\nCOGNITIVE LEVEL: {bloom_directive}\n"
 
+    # -- NCERT terminology injection --
+    _grade_match = re.search(r"\d+", grade_level)
+    if _grade_match:
+        from app.data.ncert_terminology import get_terminology_instructions
+
+        term_block = get_terminology_instructions(subject, int(_grade_match.group()))
+        if term_block:
+            prompt += f"\n{term_block}\n"
+
     # -- Skill-tag recipe injection --
     profile = get_topic_profile(topic, subject)
     if profile:
@@ -674,48 +682,25 @@ def _is_question_on_topic(question_text: str, topic_category: str | None) -> boo
 
 
 def _verify_maths_answer(question: dict) -> str | None:
-    """For simple arithmetic questions, compute the answer and auto-correct if wrong.
+    """For arithmetic questions, compute the answer and auto-correct if wrong.
 
+    Delegates to the multi-step parser in quality_reviewer for a+b+c, a*b+c, etc.
     Returns the corrected answer, or None if no correction was needed/possible.
     """
+    from app.services.quality_reviewer import _answers_match, _extract_arithmetic_expression
+
     text = question.get("text", "")
     answer = str(question.get("correct_answer", ""))
 
-    # Try to find a simple arithmetic expression in the question
-    # Match patterns like "234 + 567", "45 × 8", "100 - 37", "84 ÷ 4"
-    pattern = r"(\d+(?:\.\d+)?)\s*([+\-×÷*/])\s*(\d+(?:\.\d+)?)"
-    match = re.search(pattern, text)
-    if not match:
+    extracted = _extract_arithmetic_expression(text)
+    if extracted is None:
         return None
 
-    a_str, op, b_str = match.groups()
-    try:
-        a, b = float(a_str), float(b_str)
-    except ValueError:
+    _expr, computed = extracted
+    if _answers_match(answer, computed):
         return None
 
-    op_map = {"+": a + b, "-": a - b, "×": a * b, "*": a * b}
-    if op in ("÷", "/") and b != 0:
-        op_map[op] = a / b
-
-    computed = op_map.get(op)
-    if computed is None:
-        return None
-
-    # Format: prefer integer if whole number
-    if computed == int(computed):
-        computed_str = str(int(computed))
-    else:
-        computed_str = str(round(computed, 2))
-
-    # Check if the LLM answer matches
-    try:
-        llm_val = float(answer.replace(",", "").strip())
-        if math.isclose(llm_val, computed, rel_tol=1e-6):
-            return None  # correct — no fix needed
-    except (ValueError, TypeError):
-        pass
-
+    computed_str = str(int(computed)) if computed == int(computed) else str(round(computed, 2))
     logger.warning(
         "Maths auto-correct: Q '%s' — LLM said '%s', computed '%s'",
         text[:60],
@@ -1126,6 +1111,18 @@ def generate_worksheet(
         logger.info("[v2] Curriculum context injected for %s / %s", topic, grade_level)
     # -- End RAG --
 
+    # -- Chapter name for PDF curriculum badge --
+    chapter_name = None
+    try:
+        import concurrent.futures as _cf
+
+        from app.services.curriculum import get_chapter_name as _get_ch
+
+        with _cf.ThreadPoolExecutor() as _pool:
+            chapter_name = _pool.submit(lambda: asyncio.run(_get_ch(grade_level, subject, topic))).result(timeout=3)
+    except Exception as exc:
+        logger.debug("Chapter name fetch skipped: %s", exc)
+
     max_attempts = 3
     last_error: Exception | None = None
     all_warnings: list[str] = []
@@ -1193,6 +1190,7 @@ def generate_worksheet(
                 system_prompt_version=SYSTEM_PROMPT_VERSION,
                 user_prompt_version=USER_PROMPT_VERSION,
             )
+            data["chapter_ref"] = chapter_name
             return data, elapsed_ms, all_warnings
 
         except (json.JSONDecodeError, ValueError) as exc:

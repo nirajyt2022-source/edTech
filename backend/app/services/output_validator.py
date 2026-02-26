@@ -365,50 +365,37 @@ class OutputValidator:
     @staticmethod
     def _verify_math_answer(q: dict) -> bool | None:
         """
-        Try to verify simple math answers.
+        Try to verify math answers (simple and multi-step).
         Returns True (correct), False (wrong), or None (can't verify).
         """
+        from app.services.quality_reviewer import _extract_arithmetic_expression
+
         text = q.get("text", "")
         answer = q.get("correct_answer", "")
         q_type = q.get("type", "")
 
-        # Only verify fill_blank math questions with numeric answers
+        # Only verify fill_blank/short_answer math questions with numeric answers
         if q_type not in ("fill_blank", "short_answer"):
             return None
 
-        # Try to extract a simple arithmetic expression
-        patterns = [
-            r"(\d+)\s*\+\s*(\d+)",  # addition
-            r"(\d+)\s*[-−]\s*(\d+)",  # subtraction
-            r"(\d+)\s*[×x]\s*(\d+)",  # multiplication
-        ]
+        extracted = _extract_arithmetic_expression(text)
+        if extracted is None:
+            return None
 
+        _expr, expected = extracted
         try:
             answer_num = float(str(answer).replace(",", "").strip())
         except (ValueError, TypeError):
-            return None  # Can't parse answer as number
+            return None
 
-        for pattern in patterns:
-            match = re.search(pattern, text)
-            if match:
-                a, b = int(match.group(1)), int(match.group(2))
-                if "+" in pattern:
-                    expected = a + b
-                elif "-" in pattern or "−" in pattern:
-                    expected = a - b
-                else:
-                    expected = a * b
+        if abs(answer_num - expected) < 0.01:
+            return True
 
-                if abs(answer_num - expected) < 0.01:
-                    return True
-                else:
-                    logger.warning(
-                        "Math verification failed",
-                        extra={"question": text[:80], "expected": expected, "got": answer_num},
-                    )
-                    return False
-
-        return None  # Can't verify (complex problem)
+        logger.warning(
+            "Math verification failed",
+            extra={"question": text[:80], "expected": expected, "got": answer_num},
+        )
+        return False
 
 
 # Singleton

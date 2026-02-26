@@ -119,6 +119,7 @@ class Worksheet(BaseModel):
     common_mistake: str = ""
     parent_tip: str = ""
     learning_objectives: list[str] = []
+    chapter_ref: str | None = None  # NCERT chapter reference for PDF badge
     skill_coverage: dict[str, int] | None = None
     mastery_snapshot: dict | None = None  # Gold-G2: child's mastery state at generation time
 

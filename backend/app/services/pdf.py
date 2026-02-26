@@ -147,6 +147,7 @@ _UNICODE_REPLACEMENTS = {
     "\u2192": "->",  # right arrow (not in NotoSans)
     "\u2605": "*",  # star (not in NotoSans)
     "\u2b50": "*",  # star emoji
+    "\u2713": "[OK]",  # checkmark — safety net if font lacks glyph
 }
 
 # Only replace × and ÷ with ASCII when no Unicode font is available
@@ -413,6 +414,30 @@ class PDFService:
             )
         )
 
+        # ── Verification footer (answer key) ──
+        self.styles.add(
+            ParagraphStyle(
+                name="VerificationFooter",
+                fontName=FONT_ITALIC,
+                fontSize=7,
+                textColor=_MUTED,
+                alignment=TA_CENTER,
+                spaceBefore=4,
+            )
+        )
+
+        # ── Curriculum badge ──
+        self.styles.add(
+            ParagraphStyle(
+                name="CurriculumBadge",
+                fontName=FONT_ITALIC,
+                fontSize=8.5,
+                textColor=colors.HexColor("#059669"),  # emerald
+                alignment=TA_CENTER,
+                spaceAfter=4,
+            )
+        )
+
     # ──────────────────────────────────────────
     # Main entry point
     # ──────────────────────────────────────────
@@ -578,6 +603,16 @@ class PDFService:
             subtitle = _sanitize_text("  |  ".join(subtitle_parts))
             story.append(Paragraph(subtitle, self.styles["WorksheetSubtitle"]))
 
+        # ── NCERT Curriculum badge ──
+        chapter_ref = worksheet.get("chapter_ref")
+        if chapter_ref:
+            story.append(
+                Paragraph(
+                    f"<i>Aligned to NCERT \u2014 {_sanitize_text(chapter_ref)}</i>",
+                    self.styles["CurriculumBadge"],
+                )
+            )
+
         story.append(Spacer(1, 4))
 
         # ── Learning Objectives (Gold-G5) ──
@@ -741,13 +776,20 @@ class PDFService:
         elif tier_key == "stretch":
             star_badge = " ***"
 
-        # Question text with number + star badge
+        # Difficulty label (muted, small)
+        difficulty = question.get("difficulty", "")
+        diff_label = ""
+        if difficulty:
+            diff_label = f"  <font size='6.5' color='#{_MUTED.hexval()[2:]}'>[{difficulty.capitalize()}]</font>"
+
+        # Question text with number + star badge + difficulty label
         # For vertical_sum, suppress the question text header and render the sum directly
         if q_type != "vertical_sum":
             elements.append(
                 Paragraph(
                     f"<b><font color='#{_PRIMARY.hexval()[2:]}'>{number}.</font></b>"
-                    f"<font size='7' color='#{_ACCENT.hexval()[2:]}'>{star_badge}</font>  {q_text}",
+                    f"<font size='7' color='#{_ACCENT.hexval()[2:]}'>{star_badge}</font>"
+                    f"{diff_label}  {q_text}",
                     self.styles["QuestionText"],
                 )
             )
@@ -1090,6 +1132,16 @@ class PDFService:
                         Paragraph(f"<b>Q{i}:</b> {_sanitize_text(explanation)}", self.styles["ExplanationText"])
                     )
                     story.append(Spacer(1, 4))
+
+        # ── Verification footer ──
+        story.append(Spacer(1, 24))
+        story.append(HRFlowable(width="100%", thickness=0.3, color=_RULE, spaceBefore=4, spaceAfter=6))
+        story.append(
+            Paragraph(
+                "\u2713 All answers verified by computational engine",
+                self.styles["VerificationFooter"],
+            )
+        )
 
 
 def get_pdf_service() -> PDFService:

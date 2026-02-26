@@ -119,6 +119,7 @@ async def generate_worksheet_v2(
         common_mistake=data.get("common_mistake", ""),
         parent_tip=data.get("parent_tip", ""),
         learning_objectives=data.get("learning_objectives", []),
+        chapter_ref=data.get("chapter_ref"),
         skill_coverage=skill_coverage or None,
     )
 

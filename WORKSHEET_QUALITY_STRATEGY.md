@@ -113,7 +113,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 - [x] `_verify_math_answer()` in output_validator (pattern)
 - [x] Quality Reviewer with AST safe eval
 - [x] Scenario pools with pre-computed answers
-- [ ] **Multi-step expression parser** — handle `a + b + c`, `a × b + c`
+- [x] **Multi-step expression parser** — handle `a + b + c`, `a × b + c`
 - [ ] **Word problem answer extraction** — parse operations from context
 
 ### Pillar 6: No Repetitive Patterns
@@ -130,7 +130,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 - [x] Indian names and contexts injected
 - [x] Scenario variety (market, school, park, zoo, etc.)
 - [x] **Opening verb rotation in `_CORE_RULES`**
-- [ ] **NCERT preferred terminology** mapping per topic
+- [x] **NCERT preferred terminology** mapping per topic
 
 ---
 
@@ -140,10 +140,10 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 
 | Signal | Description | Status |
 |---|---|---|
-| Curriculum badge | "Aligned to NCERT Class 3, Ch.7: Time" on PDF header | [ ] Not implemented |
+| Curriculum badge | "Aligned to NCERT Class 3, Ch.7: Time" on PDF header | [x] Done |
 | Answer key + explanations | Step-by-step working in parent-facing answer page | [x] `explanation` generated, needs PDF formatting |
-| Difficulty badge | ★/★★/★★★ labels on each question | [ ] Not implemented |
-| Zero-error footer | "All answers verified by computational engine" | [ ] Not implemented |
+| Difficulty badge | ★/★★/★★★ labels on each question | [x] Done |
+| Zero-error footer | "All answers verified by computational engine" | [x] Done |
 
 ### Teacher Trust Signals
 
@@ -151,7 +151,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 |---|---|---|
 | Skill coverage report | "Clock reading (3), Word problems (3), ..." after generation | [x] `skill_coverage` in API response |
 | Predictable customization | Question count change scales recipe proportionally | [x] `_scale_recipe()` shipped |
-| NCERT vocabulary | "Regrouping" not "carrying", exact textbook terms | [ ] Not implemented |
+| NCERT vocabulary | "Regrouping" not "carrying", exact textbook terms | [x] Done |
 
 ### Academic Feel
 
@@ -176,7 +176,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 
 | # | Task | Effort | Files | Status |
 |---|---|---|---|---|
-| 3 | Surface curriculum metadata in PDF header | 0.5 day | PDF renderer | [ ] TODO |
+| 3 | Surface curriculum metadata in PDF header | 0.5 day | PDF renderer | [x] Done |
 | 4 | Opening verb rotation in system prompt | 0.5 day | `_CORE_RULES` in `worksheet_generator.py` | [x] Done |
 | 5 | Skill coverage summary in API response | 0.5 day | `worksheets_v2.py` API router, `worksheet.py` model | [x] Done |
 
@@ -192,10 +192,10 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 
 | # | Task | Effort | Files | Status |
 |---|---|---|---|---|
-| 9 | Multi-step expression parser for math verification | 2 days | Validator pipeline | [ ] TODO |
-| 10 | NCERT preferred terminology mapping | 2 days | Topic profiles | [ ] TODO |
-| 11 | Difficulty badge (★/★★/★★★) on PDF questions | 1 day | PDF renderer | [ ] TODO |
-| 12 | Zero-error verification footer on PDF | 0.5 day | PDF renderer | [ ] TODO |
+| 9 | Multi-step expression parser for math verification | 2 days | Validator pipeline | [x] Done |
+| 10 | NCERT preferred terminology mapping | 2 days | Topic profiles | [x] Done |
+| 11 | Difficulty badge (★/★★/★★★) on PDF questions | 1 day | PDF renderer | [x] Done |
+| 12 | Zero-error verification footer on PDF | 0.5 day | PDF renderer | [x] Done |
 
 ---
 

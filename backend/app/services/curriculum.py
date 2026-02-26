@@ -25,6 +25,7 @@ logger = structlog.get_logger("skolar.curriculum")
 
 # In-memory cache -- curriculum doesn't change during app lifetime
 _cache: dict[str, str | None] = {}
+_raw_cache: dict[str, dict | None] = {}  # raw DB rows for get_chapter_name()
 
 
 def _cache_key(grade: str, subject: str, topic: str) -> str:
@@ -82,6 +83,7 @@ async def get_curriculum_context(
                     vector_results = await vs.hybrid_search(topic, grade=grade, subject=subject, top_k=1)
                     if vector_results:
                         data = vector_results[0]
+                        _raw_cache[key] = data
                         context = _format_context(data)
                         _cache[key] = context
                         logger.info(
@@ -96,12 +98,14 @@ async def get_curriculum_context(
 
                 logger.info("curriculum_not_found", grade=grade, subject=subject, topic=topic)
                 _cache[key] = None
+                _raw_cache[key] = None
                 return None
 
             data = result.data[0] if isinstance(result.data, list) else result.data
         else:
             data = result.data
 
+        _raw_cache[key] = data
         context = _format_context(data)
         _cache[key] = context
         logger.info("curriculum_loaded", topic=topic, grade=grade)
@@ -110,6 +114,7 @@ async def get_curriculum_context(
     except Exception as e:
         logger.error("curriculum_fetch_error", error=str(e), topic=topic)
         _cache[key] = None
+        _raw_cache[key] = None
         return None
 
 
@@ -177,6 +182,17 @@ def _format_context(data: dict[str, Any]) -> str:
     return "\n".join(parts)
 
 
+async def get_chapter_name(grade: str, subject: str, topic: str) -> str | None:
+    """Return just the chapter_name from curriculum_content, or None."""
+    key = _cache_key(grade, subject, topic)
+    if key not in _raw_cache:
+        await get_curriculum_context(grade, subject, topic)  # populates both caches
+    raw = _raw_cache.get(key)
+    if raw and isinstance(raw, dict) and raw.get("chapter_name"):
+        return raw["chapter_name"]
+    return None
+
+
 async def get_semantic_curriculum_context(
     query: str,
     grade: str | None = None,
@@ -227,4 +243,5 @@ async def get_semantic_curriculum_context(
 def clear_cache() -> None:
     """Clear the curriculum cache (for testing or after population)."""
     _cache.clear()
+    _raw_cache.clear()
     logger.info("curriculum_cache_cleared")

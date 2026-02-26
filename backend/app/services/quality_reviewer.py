@@ -153,6 +153,38 @@ def _extract_simple_arithmetic(question_text: str) -> Optional[tuple[str, float]
     return (expr, result) if result is not None else None
 
 
+# Regex: a run of digits, operators (+−*/), optional parens, with ≥1 operator
+_MULTI_EXPR_RE = re.compile(
+    r"(?<![a-zA-Z\d])"
+    r"(\(?\d+(?:\.\d+)?\)?"
+    r"(?:\s*[+\-*/]\s*\(?\d+(?:\.\d+)?\)?)+)"
+    r"(?![a-zA-Z\d])"
+)
+
+
+def _extract_arithmetic_expression(question_text: str) -> Optional[tuple[str, float]]:
+    """Extract a (possibly multi-step) arithmetic expression from question text.
+
+    Handles: a+b+c, a*b+c, (a+b)*c. Falls back to _extract_simple_arithmetic.
+    Skips word problems and blank-marker questions (same guards).
+    """
+    if _NARRATIVE_WORDS.search(question_text):
+        return None
+    if re.search(r"_+|\?{2,}", question_text):
+        return None
+
+    normalised = question_text.translate(_OP_NORMALISE)
+    matches = _MULTI_EXPR_RE.findall(normalised)
+    if matches:
+        best = max(matches, key=len).strip()
+        result = _safe_eval(best)
+        if result is not None:
+            return (best, result)
+
+    # Fallback to simple binary extraction
+    return _extract_simple_arithmetic(question_text)
+
+
 def _answers_match(stored: str, computed: float) -> bool:
     """
     Return True if the stored answer (string) matches the computed result.
@@ -467,7 +499,7 @@ class QualityReviewerAgent:
             # ── CHECK 1: Maths arithmetic validation ─────────────────────
             if is_maths and slot_type != "error_detection":
                 try:
-                    extracted = _extract_simple_arithmetic(question_text)
+                    extracted = _extract_arithmetic_expression(question_text)
                     if extracted is not None:
                         expr, computed = extracted
                         stored = q.get("answer", "")
