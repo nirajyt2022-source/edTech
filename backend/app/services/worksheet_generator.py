@@ -50,6 +50,10 @@ RULES:
 5. Never repeat the same question pattern. Vary formats, angles, and phrasings.
 6. Use Indian context (₹ for money, Indian names, Indian festivals, Indian cities, etc.)
 7. VARIETY IS CRITICAL: rotate through scenarios (home, school, market, park, farm, zoo, kitchen, playground, festival, hospital, train station), mix question styles, and vary sentence structures.
+8. OPENING VERB ROTATION — Never start two consecutive questions the same way. Rotate through:
+   Easy: What|Which|Name|Tell|Find|Show|Write|Count|Circle|Look at
+   Medium: Calculate|Solve|Compare|Arrange|Explain|Complete|Fill in|How many|How much|If
+   Hard: Analyze|Explain why|Prove|Is this correct|What mistake|Generalize|Predict|Justify
 
 DIFFICULTY LEVELS & ROLE DISTRIBUTION:
 - Easy: 60% Foundation (★ recognition/representation), 30% Application (★★), 10% Stretch (★★★ error_detection/thinking)

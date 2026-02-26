@@ -101,6 +101,12 @@ async def generate_worksheet_v2(
     raw_questions = data.get("questions", [])
     questions = [_map_question(q, i) for i, q in enumerate(raw_questions)]
 
+    skill_coverage: dict[str, int] = {}
+    for q in raw_questions:
+        tag = q.get("skill_tag")
+        if tag:
+            skill_coverage[tag] = skill_coverage.get(tag, 0) + 1
+
     worksheet = Worksheet(
         title=data.get("title", f"Worksheet: {body.topic}"),
         grade=body.grade_level,
@@ -113,6 +119,7 @@ async def generate_worksheet_v2(
         common_mistake=data.get("common_mistake", ""),
         parent_tip=data.get("parent_tip", ""),
         learning_objectives=data.get("learning_objectives", []),
+        skill_coverage=skill_coverage or None,
     )
 
     has_warnings = bool(warnings)
