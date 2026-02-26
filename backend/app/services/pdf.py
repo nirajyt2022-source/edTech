@@ -669,7 +669,9 @@ class PDFService:
                 story.append(Paragraph(tier_desc, self.styles["TierDesc"]))
 
             for question in tier_qs:
-                elements = self._build_single_question(question, q_number, tier_key)
+                elements = self._build_single_question(
+                    question, q_number, tier_key, subject=worksheet.get("subject", "")
+                )
                 # KeepTogether prevents a question from breaking across pages
                 story.append(KeepTogether(elements))
                 story.append(Spacer(1, 6))
@@ -758,7 +760,7 @@ class PDFService:
         )
         story.append(obj_table)
 
-    def _build_single_question(self, question: dict, number: int, tier_key: str = "all") -> list:
+    def _build_single_question(self, question: dict, number: int, tier_key: str = "all", subject: str = "") -> list:
         """Build elements for a single question. Returns list of flowables."""
         import re as _re
 
@@ -998,6 +1000,32 @@ class PDFService:
             if hint:
                 hint_text = _sanitize_text(hint)
                 elements.append(Paragraph(f"<i>Hint: {hint_text}</i>", self.styles["HintText"]))
+
+        # ── Working area (maths subjects, medium/hard difficulty) ─────────
+        if subject.lower() in ("maths", "mathematics", "math"):
+            difficulty = question.get("difficulty", "")
+            role = question.get("role", "")
+            # Skip easy recognition Qs — they don't need working space
+            if difficulty.lower() in ("medium", "hard") or role in ("thinking", "error_detection"):
+                elements.append(Spacer(1, 6))
+                elements.append(
+                    Paragraph(
+                        "<i>Show your working:</i>",
+                        self.styles["HintText"],
+                    )
+                )
+                elements.append(Spacer(1, 4))
+                elements.append(
+                    HRFlowable(
+                        width="70%",
+                        thickness=0.3,
+                        color=_MUTED,
+                        dash=(2, 3),
+                        spaceBefore=2,
+                        spaceAfter=2,
+                    )
+                )
+                elements.append(Spacer(1, 14))
 
         return elements
 

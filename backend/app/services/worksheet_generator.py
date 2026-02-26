@@ -33,7 +33,7 @@ logger = structlog.get_logger("skolar.worksheet_generator")
 # Prompt versions — bump when changing prompt content, logged with every call
 # ---------------------------------------------------------------------------
 SYSTEM_PROMPT_VERSION = "v2.5"
-USER_PROMPT_VERSION = "v2.5"
+USER_PROMPT_VERSION = "v2.6"
 
 # ---------------------------------------------------------------------------
 # 1A  System Prompt — composable blocks
@@ -559,6 +559,16 @@ def build_user_prompt(
             "All Hindi words must use proper Devanagari Unicode characters.\n"
         )
 
+    # ── Number progression directive ──
+    if subject.lower() in ("maths", "mathematics", "math") and num_questions >= 5:
+        prompt += """
+NUMBER PROGRESSION RULE:
+- Questions 1-3 (warm-up): Use small, friendly numbers appropriate for the grade level
+- Questions 4-7 (practice): Use medium-range numbers that require more thought
+- Questions 8-10 (stretch): Use larger numbers that challenge the student
+This creates a natural difficulty ramp within the worksheet.
+"""
+
     if custom_instructions:
         prompt += f"\nAdditional teacher instructions: {custom_instructions}"
 
@@ -687,14 +697,20 @@ def _verify_maths_answer(question: dict) -> str | None:
     Delegates to the multi-step parser in quality_reviewer for a+b+c, a*b+c, etc.
     Returns the corrected answer, or None if no correction was needed/possible.
     """
-    from app.services.quality_reviewer import _answers_match, _extract_arithmetic_expression
+    from app.services.quality_reviewer import (
+        _answers_match,
+        _extract_arithmetic_expression,
+        _extract_word_problem_arithmetic,
+    )
 
     text = question.get("text", "")
     answer = str(question.get("correct_answer", ""))
 
     extracted = _extract_arithmetic_expression(text)
     if extracted is None:
-        return None
+        extracted = _extract_word_problem_arithmetic(text)
+        if extracted is None:
+            return None
 
     _expr, computed = extracted
     if _answers_match(answer, computed):

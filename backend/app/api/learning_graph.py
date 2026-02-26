@@ -196,7 +196,33 @@ async def get_child_next_recommendation(
 
 
 # ---------------------------------------------------------------------------
-# Endpoint 5: Plain-English Report
+# Endpoint 5: Skill Gaps
+# ---------------------------------------------------------------------------
+
+
+@router.get("/{child_id}/graph/gaps")
+@limiter.limit("60/minute")
+async def get_child_skill_gaps(
+    request: Request,
+    child_id: str,
+    user_id: UserId,
+    db: DbClient,
+    subject: Optional[str] = Query(default=None),
+):
+    """Return skill gaps for a child — skills below 75% mastery with 3+ attempts."""
+    _verify_ownership(db, child_id, user_id)
+    try:
+        from app.services.mastery_dashboard import get_skill_gaps
+
+        gaps = get_skill_gaps(child_id, subject)
+    except Exception as exc:
+        logger.error("[learning_graph.get_child_skill_gaps] Error for child %s: %s", child_id, exc)
+        raise HTTPException(status_code=500, detail="Failed to load skill gaps")
+    return {"child_id": child_id, "gaps": gaps, "count": len(gaps)}
+
+
+# ---------------------------------------------------------------------------
+# Endpoint 6: Plain-English Report
 # ---------------------------------------------------------------------------
 
 

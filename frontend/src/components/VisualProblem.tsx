@@ -1,5 +1,28 @@
 import { memo, useRef, useCallback, useMemo } from 'react'
 
+/* ── Standardized visual sizes ── */
+const VISUAL_SIZE: Record<string, string> = {
+  clock: "w-28 h-28",
+  number_line: "w-full max-w-[280px] h-10",
+  base_ten_regrouping: "w-40",
+  grid_symmetry: "w-36 h-36",
+  shapes: "w-28 h-28",
+  pie_fraction: "w-28 h-32",
+  money_coins: "w-full max-w-[300px]",
+  pattern_tiles: "w-full max-w-[300px]",
+  object_group: "w-fit",
+  abacus: "w-40 h-28",
+}
+
+function VisualContainer({ type, children }: { type: string; children: React.ReactNode }) {
+  const size = VISUAL_SIZE[type] ?? "w-40 h-28"
+  return (
+    <div className={`flex items-center justify-center ${size} mx-auto my-2`}>
+      {children}
+    </div>
+  )
+}
+
 interface VisualProblemProps {
   visualType: string
   visualData: Record<string, unknown>
@@ -12,25 +35,25 @@ export default memo(function VisualProblem({ visualType, visualData, colorMode =
   const useColor = colorMode === 'color'
   switch (visualType) {
     case 'clock':
-      return <ClockVisual hour={Number(visualData.hour) || 12} minute={Number(visualData.minute) || 0} />
+      return <VisualContainer type="clock"><ClockVisual hour={Number(visualData.hour) || 12} minute={Number(visualData.minute) || 0} /></VisualContainer>
     case 'object_group':
-      return <ObjectGroupVisual groups={(visualData.groups as GroupItem[]) || []} operation={String(visualData.operation || '+')} useColor={useColor} />
+      return <VisualContainer type="object_group"><ObjectGroupVisual groups={(visualData.groups as GroupItem[]) || []} operation={String(visualData.operation || '+')} useColor={useColor} /></VisualContainer>
     case 'shapes':
-      return <ShapeVisual shape={String(visualData.shape || 'circle')} sides={(visualData.sides as number[]) || []} />
+      return <VisualContainer type="shapes"><ShapeVisual shape={String(visualData.shape || 'circle')} sides={(visualData.sides as number[]) || []} /></VisualContainer>
     case 'number_line':
-      return <NumberLineVisual start={Number(visualData.start) || 0} end={Number(visualData.end) || 20} step={Number(visualData.step) || 2} highlight={visualData.highlight != null ? Number(visualData.highlight) : undefined} useColor={useColor} />
+      return <VisualContainer type="number_line"><NumberLineVisual start={Number(visualData.start) || 0} end={Number(visualData.end) || 20} step={Number(visualData.step) || 2} highlight={visualData.highlight != null ? Number(visualData.highlight) : undefined} useColor={useColor} /></VisualContainer>
     case 'base_ten_regrouping':
-      return <BaseTenRegroupingVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'addition')} studentAnswer={studentAnswer} onStudentAnswerChange={onStudentAnswerChange} />
+      return <VisualContainer type="base_ten_regrouping"><BaseTenRegroupingVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'addition')} studentAnswer={studentAnswer} onStudentAnswerChange={onStudentAnswerChange} /></VisualContainer>
     case 'pie_fraction':
-      return <PieFractionVisual numerator={Number(visualData.numerator) || 1} denominator={Number(visualData.denominator) || 2} />
+      return <VisualContainer type="pie_fraction"><PieFractionVisual numerator={Number(visualData.numerator) || 1} denominator={Number(visualData.denominator) || 2} /></VisualContainer>
     case 'grid_symmetry':
-      return <GridSymmetryVisual gridSize={Number(visualData.grid_size) || 6} filledCells={(visualData.filled_cells as number[][]) || []} foldAxis={(visualData.fold_axis as 'vertical' | 'horizontal') || 'vertical'} />
+      return <VisualContainer type="grid_symmetry"><GridSymmetryVisual gridSize={Number(visualData.grid_size) || 6} filledCells={(visualData.filled_cells as number[][]) || []} foldAxis={(visualData.fold_axis as 'vertical' | 'horizontal') || 'vertical'} /></VisualContainer>
     case 'money_coins':
-      return <MoneyCoinsVisual coins={(visualData.coins as { value: number; count: number }[]) || []} />
+      return <VisualContainer type="money_coins"><MoneyCoinsVisual coins={(visualData.coins as { value: number; count: number }[]) || []} /></VisualContainer>
     case 'pattern_tiles':
-      return <PatternTilesVisual tiles={(visualData.tiles as string[]) || []} blankPosition={visualData.blank_position != null ? Number(visualData.blank_position) : -1} />
+      return <VisualContainer type="pattern_tiles"><PatternTilesVisual tiles={(visualData.tiles as string[]) || []} blankPosition={visualData.blank_position != null ? Number(visualData.blank_position) : -1} /></VisualContainer>
     case 'abacus':
-      return <AbacusVisual hundreds={Number(visualData.hundreds) || 0} tens={Number(visualData.tens) || 0} ones={Number(visualData.ones) || 0} />
+      return <VisualContainer type="abacus"><AbacusVisual hundreds={Number(visualData.hundreds) || 0} tens={Number(visualData.tens) || 0} ones={Number(visualData.ones) || 0} /></VisualContainer>
     default:
       return null
   }
@@ -181,7 +204,7 @@ function ClockVisual({ hour, minute }: { hour: number; minute: number }) {
   const rad = (d: number) => d * Math.PI / 180
 
   return (
-    <svg viewBox="0 0 100 100" className="w-24 h-24 text-foreground print:text-black" role="img" aria-label={`Clock showing ${hour}:${String(minute).padStart(2, '0')}`}>
+    <svg viewBox="0 0 100 100" className="w-full h-full text-foreground print:text-black" role="img" aria-label={`Clock showing ${hour}:${String(minute).padStart(2, '0')}`}>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth="1.5" />
       {[...Array(12)].map((_, i) => {
         const a = rad(i * 30 - 90)
@@ -277,7 +300,7 @@ function ShapeVisual({ shape, sides }: { shape: string; sides: number[] }) {
   })()
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="w-20 h-20 text-foreground print:text-black" role="img" aria-label={`${shape}${sides.length ? ` with sides ${sides.join(', ')}` : ''}`}>
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full text-foreground print:text-black" role="img" aria-label={`${shape}${sides.length ? ` with sides ${sides.join(', ')}` : ''}`}>
       {shapeElement}
     </svg>
   )
@@ -394,7 +417,7 @@ function NumberLineVisual({ start, end, step, highlight, useColor }: { start: nu
   for (let v = start; v <= end; v += step) ticks.push(v)
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full max-w-[280px] h-10 text-foreground print:text-black" role="img" aria-label={`Number line from ${start} to ${end}${highlight != null ? `, ${highlight} highlighted` : ''}`}>
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full text-foreground print:text-black" role="img" aria-label={`Number line from ${start} to ${end}${highlight != null ? `, ${highlight} highlighted` : ''}`}>
       <line x1={pad} y1={lineY} x2={w - pad} y2={lineY} stroke="currentColor" strokeWidth="1.2" />
       <polygon points={`${w - pad},${lineY} ${w - pad - 5},${lineY - 3} ${w - pad - 5},${lineY + 3}`} fill="currentColor" />
       {ticks.map(v => (
@@ -430,7 +453,7 @@ function PieFractionVisual({ numerator, denominator }: { numerator: number; deno
   })
 
   return (
-    <svg viewBox="0 0 120 140" className="w-28 h-32 text-foreground print:text-black" role="img" aria-label={`Fraction ${clampedNum} out of ${clampedDen}: ${clampedNum}/${clampedDen} of a circle shaded`}>
+    <svg viewBox="0 0 120 140" className="w-full h-full text-foreground print:text-black" role="img" aria-label={`Fraction ${clampedNum} out of ${clampedDen}: ${clampedNum}/${clampedDen} of a circle shaded`}>
       {wedges.map((w, i) => (
         <path
           key={i}
@@ -461,7 +484,7 @@ function GridSymmetryVisual({ gridSize, filledCells, foldAxis }: { gridSize: num
   const foldCoord = pad + midIndex * cellSize
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="w-36 h-36 text-foreground print:text-black" role="img" aria-label={`${gridSize}x${gridSize} symmetry grid with ${foldAxis} fold line`}>
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full text-foreground print:text-black" role="img" aria-label={`${gridSize}x${gridSize} symmetry grid with ${foldAxis} fold line`}>
       {/* Dot grid */}
       {Array.from({ length: gridSize + 1 }, (_, row) =>
         Array.from({ length: gridSize + 1 }, (_, col) => (
@@ -532,7 +555,7 @@ function MoneyCoinsVisual({ coins }: { coins: { value: number; count: number }[]
   return (
     <svg
       viewBox={`0 0 ${totalW} ${h}`}
-      className="w-full max-w-[300px] text-foreground print:text-black"
+      className="w-full h-full text-foreground print:text-black"
       role="img"
       aria-label={coins.map(c => `${c.count} x ₹${c.value}`).join(', ')}
     >
@@ -581,7 +604,7 @@ function PatternTilesVisual({ tiles, blankPosition }: { tiles: string[]; blankPo
   return (
     <svg
       viewBox={`0 0 ${totalW} ${totalH}`}
-      className="w-full max-w-[300px] text-foreground print:text-black"
+      className="w-full h-full text-foreground print:text-black"
       role="img"
       aria-label={`Pattern sequence: ${tiles.join(', ')}${blankPosition >= 0 ? `, blank at position ${blankPosition + 1}` : ''}`}
     >
@@ -642,7 +665,7 @@ function AbacusVisual({ hundreds, tens, ones }: { hundreds: number; ones: number
   const maxBeads = 9
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-40 h-28 text-foreground print:text-black" role="img" aria-label={`Abacus: ${hundreds} hundreds, ${tens} tens, ${ones} ones`}>
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full text-foreground print:text-black" role="img" aria-label={`Abacus: ${hundreds} hundreds, ${tens} tens, ${ones} ones`}>
       {/* Frame */}
       <rect x={frameX} y={frameY} width={frameW} height={frameH} rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
       {/* Top and bottom bars */}

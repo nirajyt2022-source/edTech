@@ -120,6 +120,35 @@ _NARRATIVE_WORDS = re.compile(
 )
 
 
+# ── Word-problem operation keywords ──────────────────────────────────────
+_WP_ADD_WORDS = re.compile(r"\b(total|altogether|combined|in all|sum|more than|added|gave .* more)\b", re.I)
+_WP_SUB_WORDS = re.compile(r"\b(left|remaining|gave away|took away|fewer|less than|difference|ate|lost|spent)\b", re.I)
+_WP_MUL_WORDS = re.compile(r"\b(each|every|per|times|groups of|rows of|sets of)\b", re.I)
+
+
+def _extract_word_problem_arithmetic(question_text: str) -> Optional[tuple[str, float]]:
+    """Try to extract operation + numbers from a word problem.
+
+    Returns (expression_str, computed_value) or None.
+    Only handles simple 2-number word problems (most common in Class 1-5).
+    """
+    numbers = [int(n) for n in re.findall(r"\b(\d+)\b", question_text) if 0 < int(n) < 100000]
+    if len(numbers) != 2:
+        return None  # Only handle exactly 2-number problems
+
+    a, b = numbers
+
+    if _WP_SUB_WORDS.search(question_text):
+        big, small = max(a, b), min(a, b)
+        return (f"{big} - {small}", float(big - small))
+    elif _WP_MUL_WORDS.search(question_text):
+        return (f"{a} * {b}", float(a * b))
+    elif _WP_ADD_WORDS.search(question_text):
+        return (f"{a} + {b}", float(a + b))
+
+    return None
+
+
 def _extract_simple_arithmetic(question_text: str) -> Optional[tuple[str, float]]:
     """
     Try to extract a simple A op B expression from question text.
@@ -604,6 +633,30 @@ class QualityReviewerAgent:
                         result.corrections.append(msg)
                 except Exception as exc:
                     logger.debug("[quality_reviewer] Check 7 skipped for Q%s: %s", q_id, exc)
+
+            # ── CHECK 8: Word problem answer verification ─────────────────
+            if is_maths and slot_type != "error_detection":
+                try:
+                    # Only fire if the arithmetic extractor didn't already handle it
+                    extracted = _extract_arithmetic_expression(question_text)
+                    if extracted is None:
+                        wp_result = _extract_word_problem_arithmetic(question_text)
+                        if wp_result is not None:
+                            _wp_expr, wp_computed = wp_result
+                            answer = q.get("answer", "")
+                            if not _answers_match(answer, wp_computed):
+                                computed_str = (
+                                    str(int(wp_computed))
+                                    if wp_computed == int(wp_computed)
+                                    else str(round(wp_computed, 2))
+                                )
+                                msg = f"Q{q_id}: word problem auto-correct ('{answer}' → '{computed_str}')"
+                                logger.warning("[quality_reviewer] %s", msg)
+                                q["answer"] = computed_str
+                                q["_answer_corrected"] = True
+                                result.corrections.append(msg)
+                except Exception as exc:
+                    logger.debug("[quality_reviewer] Check 8 skipped for Q%s: %s", q_id, exc)
 
         logger.info(
             "[quality_reviewer] Review complete: %d question(s), %d correction(s), %d warning(s), %d error(s)",

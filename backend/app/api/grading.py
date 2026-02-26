@@ -85,6 +85,27 @@ async def grade_from_photo(
     if not is_valid:
         logger.warning("Grading validation issues", extra={"errors": val_errors})
 
+    # ── Update mastery after grading ──
+    if child_id:
+        try:
+            from app.services.mastery_store import update_mastery_from_grade
+
+            for r in results.get("results", []):
+                skill_tag = r.get("skill_tag", "")
+                if not skill_tag:
+                    # Try to find skill_tag from the original question data
+                    q_num = r.get("question_number", 0)
+                    if 0 < q_num <= len(questions):
+                        skill_tag = questions[q_num - 1].get("skill_tag", "")
+                if skill_tag:
+                    update_mastery_from_grade(
+                        student_id=child_id,
+                        skill_tag=skill_tag,
+                        grade={"is_correct": r.get("is_correct", False)},
+                    )
+        except Exception as exc:
+            logger.warning("Mastery update failed (non-blocking): %s", exc)
+
     # Invalidate dashboard cache so fresh stats are shown
     if child_id:
         from app.services.cache import invalidate_dashboard

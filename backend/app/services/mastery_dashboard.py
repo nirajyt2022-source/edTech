@@ -49,6 +49,47 @@ def topic_summary(student_id: str, topic: str):
     }
 
 
+def get_skill_gaps(student_id: str, subject: str | None = None) -> list[dict]:
+    """Return skills below mastery threshold, sorted weakest-first.
+
+    Each entry: {skill_tag, accuracy, attempts, topic, status}
+    Only includes skills with 3+ attempts (enough data to judge).
+    """
+    MASTERY_THRESHOLD = 75.0  # percent
+
+    store = get_mastery_store()
+    states = store.list_student(student_id)
+    if not states:
+        return []
+
+    gaps = []
+    for s in states:
+        if s.total_attempts < 3:
+            continue
+        accuracy = round(
+            (s.correct_attempts / s.total_attempts * 100) if s.total_attempts else 0.0,
+            1,
+        )
+        if accuracy < MASTERY_THRESHOLD:
+            topic = topic_for_skill(s.skill_tag)
+            # Optional subject filter
+            if subject and topic != "Unknown":
+                # topic_for_skill returns topic names not subjects, so skip filter if unclear
+                pass
+            gaps.append(
+                {
+                    "skill_tag": s.skill_tag,
+                    "accuracy": accuracy,
+                    "attempts": s.total_attempts,
+                    "topic": topic,
+                    "status": s.mastery_level,
+                }
+            )
+
+    gaps.sort(key=lambda g: g["accuracy"])
+    return gaps
+
+
 def reset_skill(student_id: str, skill_tag: str):
     store = get_mastery_store()
     store.reset(student_id, skill_tag)

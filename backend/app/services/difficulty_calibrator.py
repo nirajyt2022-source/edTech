@@ -32,11 +32,15 @@ never blocks generation.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Optional
 
 from app.services.topic_intelligence import GenerationContext
 
 logger = logging.getLogger(__name__)
+
+# ── Number-range extraction helper (STEP E) ──
+_NUMBER_RE = re.compile(r"\b\d+\b")
 
 # ---------------------------------------------------------------------------
 # Sort helpers (STEP A)
@@ -152,6 +156,35 @@ def _log_format_distribution(questions: list, context: GenerationContext) -> Non
 
 
 # ---------------------------------------------------------------------------
+# Number-range-by-position audit (STEP E)
+# ---------------------------------------------------------------------------
+
+
+def _extract_max_number(text: str) -> int:
+    """Extract the largest number from question text."""
+    nums = [int(n) for n in _NUMBER_RE.findall(text) if len(n) <= 6]
+    return max(nums) if nums else 0
+
+
+def _audit_number_range_by_position(questions: list) -> list[str]:
+    """Warn if number magnitudes violate the warm-up/stretch position rule.
+
+    Questions 1-3: warm-up (flag if max number > 100)
+    Questions 8+:  stretch (flag if max number < 10 and > 0)
+    Never modifies questions — only returns warning strings.
+    """
+    warnings: list[str] = []
+    for i, q in enumerate(questions):
+        pos = i + 1
+        max_num = _extract_max_number(q.get("question_text", ""))
+        if pos <= 3 and max_num > 100:
+            warnings.append(f"Q{pos} warm-up has large number ({max_num})")
+        elif pos >= 8 and 0 < max_num < 10:
+            warnings.append(f"Q{pos} stretch uses very small number ({max_num})")
+    return warnings
+
+
+# ---------------------------------------------------------------------------
 # DifficultyCalibrator
 # ---------------------------------------------------------------------------
 
@@ -229,6 +262,14 @@ class DifficultyCalibrator:
             _log_format_distribution(result, context)
         except Exception as exc:
             logger.warning("[difficulty_calibrator] STEP D distribution log failed: %s", exc)
+
+        # ── STEP E: Number-range-by-position audit ────────────────────────
+        try:
+            _number_range_warnings = _audit_number_range_by_position(result)
+            for w in _number_range_warnings:
+                logger.warning("[difficulty_calibrator] STEP E: %s", w)
+        except Exception as exc:
+            logger.warning("[difficulty_calibrator] STEP E number range audit failed: %s", exc)
 
         return result
 

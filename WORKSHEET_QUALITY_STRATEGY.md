@@ -88,7 +88,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 - [x] Role distribution (recognition → application → thinking)
 - [x] `ensure_roles()` sorts by tier
 - [x] **Intra-tier progression** — numbers get harder within application tier
-- [ ] **`number_range_by_position`** — position 1-3 small, 4-7 medium, 8-10 large
+- [x] **`number_range_by_position`** — position 1-3 small, 4-7 medium, 8-10 large
 
 ### Pillar 3: Skill Tagging
 **Rule:** Every question maps to exactly one assessable micro-skill.
@@ -96,7 +96,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 - [x] 198 topic profiles with `allowed_skill_tags`
 - [x] Skill-tag recipes with exact counts
 - [x] **`skill_tag` in question output schema** — validate against recipe
-- [ ] **Per-skill mastery tracking** — gap analysis per child
+- [x] **Per-skill mastery tracking** — gap analysis per child
 
 ### Pillar 4: Visual Clarity
 **Rule:** Every visual is functionally necessary and schema-correct.
@@ -114,7 +114,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 - [x] Quality Reviewer with AST safe eval
 - [x] Scenario pools with pre-computed answers
 - [x] **Multi-step expression parser** — handle `a + b + c`, `a × b + c`
-- [ ] **Word problem answer extraction** — parse operations from context
+- [x] **Word problem answer extraction** — parse operations from context
 
 ### Pillar 6: No Repetitive Patterns
 **Rule:** Template similarity across questions stays below 33%.
@@ -158,8 +158,8 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 - [x] Fixed Q1, Q2... numbering
 - [x] Professional typography (Fraunces serif headings)
 - [x] Clean SVG visuals (no clip art, no emojis)
-- [ ] Consistent visual sizing (clocks same diameter)
-- [ ] Whitespace for working area in PDF
+- [x] Consistent visual sizing (clocks same diameter)
+- [x] Whitespace for working area in PDF
 
 ---
 
