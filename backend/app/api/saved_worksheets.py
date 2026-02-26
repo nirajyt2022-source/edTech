@@ -262,11 +262,27 @@ async def export_worksheet_pdf(
         except Exception as _qg_exc:
             logger.warning("quality_gate_skipped", error=str(_qg_exc))
 
+        # Determine user tier for watermark
+        _watermark = "Skolar"  # default: free tier watermark
+        try:
+            _sub = db.table("user_subscriptions").select("tier").eq("user_id", user_id).maybe_single().execute()
+            if _sub.data and _sub.data.get("tier") == "paid":
+                _watermark = None  # paid users get clean PDFs
+        except Exception as _tier_exc:
+            logger.warning("tier_lookup_failed", error=str(_tier_exc))
+
+        # Encrypt answer keys with user_id prefix
+        _encrypt = None
+        if body.pdf_type == "answer_key":
+            _encrypt = user_id[:8]
+
         # Generate PDF
         worksheet_dict["visual_theme"] = body.visual_theme or "color"
         pdf_bytes = pdf_service.generate_worksheet_pdf(
             worksheet_dict,
             pdf_type=body.pdf_type,
+            watermark=_watermark,
+            encrypt_password=_encrypt,
         )
 
         # Create safe filename

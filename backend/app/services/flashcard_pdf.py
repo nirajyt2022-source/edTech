@@ -25,18 +25,22 @@ logger = logging.getLogger(__name__)
 
 _FONT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "fonts")
 _NOTO_VARIABLE = os.path.join(_FONT_DIR, "NotoSans-Variable.ttf")
+_NOTO_BOLD = os.path.join(_FONT_DIR, "NotoSans-Bold.ttf")
 _DEJAVU = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 _DEJAVU_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
 _USE_UNICODE_FONT = False
 
 from reportlab.pdfbase import pdfmetrics  # noqa: E402
+from reportlab.pdfbase.pdfmetrics import registerFontFamily  # noqa: E402
 from reportlab.pdfbase.ttfonts import TTFont  # noqa: E402
 
 if os.path.exists(_NOTO_VARIABLE):
     try:
         pdfmetrics.registerFont(TTFont("FlashcardFont", _NOTO_VARIABLE))
-        pdfmetrics.registerFont(TTFont("FlashcardFont-Bold", _NOTO_VARIABLE))
+        _bold_path = _NOTO_BOLD if os.path.exists(_NOTO_BOLD) else _NOTO_VARIABLE
+        pdfmetrics.registerFont(TTFont("FlashcardFont-Bold", _bold_path))
+        registerFontFamily("FlashcardFont", normal="FlashcardFont", bold="FlashcardFont-Bold")
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register Noto Sans font for flashcards: %s", e)
@@ -45,6 +49,7 @@ if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
     try:
         pdfmetrics.registerFont(TTFont("FlashcardFont", _DEJAVU))
         pdfmetrics.registerFont(TTFont("FlashcardFont-Bold", _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
+        registerFontFamily("FlashcardFont", normal="FlashcardFont", bold="FlashcardFont-Bold")
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register DejaVu font for flashcards: %s", e)
@@ -130,18 +135,19 @@ class FlashcardPDFService:
     """Generate a 2-page flashcard PDF: fronts + mirrored backs."""
 
     @staticmethod
-    def generate(data: dict) -> bytes:
+    def generate(data: dict, watermark: str | None = None) -> bytes:
         """Generate flashcard PDF from a FlashcardSet dict.
 
         Args:
             data: dict with keys 'title', 'grade', 'subject', 'topic', 'cards'.
                   Each card: {'front', 'back', 'category'}.
+            watermark: Text to draw as diagonal watermark (e.g. "Skolar", "SAMPLE").
 
         Returns:
             PDF file as bytes.
         """
         buf = io.BytesIO()
-        c = pdf_canvas.Canvas(buf, pagesize=A4)
+        c = pdf_canvas.Canvas(buf, pagesize=A4, pageCompression=1)
         c.setTitle(f"{data.get('title', 'Flashcards')}")
         c.setAuthor("Skolar")
 
@@ -159,16 +165,31 @@ class FlashcardPDFService:
         _draw_header(c, title, "FRONTS — Print this side first")
         _draw_grid(c, cards, side="front")
         _draw_footer(c)
+        if watermark:
+            _draw_watermark(c, watermark)
         c.showPage()
 
         # ── Page 2: BACKS (columns mirrored for double-sided printing) ─
         _draw_header(c, title, "BACKS — Print on reverse side")
         _draw_grid(c, cards, side="back")
         _draw_footer(c)
+        if watermark:
+            _draw_watermark(c, watermark)
         c.showPage()
 
         c.save()
         return buf.getvalue()
+
+
+def _draw_watermark(c, text: str):
+    """Draw a diagonal watermark on the current page."""
+    c.saveState()
+    c.setFont(FONT_BOLD, 54)
+    c.setFillColor(colors.Color(0.7, 0.7, 0.7, alpha=0.35))
+    c.translate(PAGE_WIDTH / 2, PAGE_HEIGHT / 2)
+    c.rotate(45)
+    c.drawCentredString(0, 0, text)
+    c.restoreState()
 
 
 def _draw_header(c, title: str, subtitle: str):

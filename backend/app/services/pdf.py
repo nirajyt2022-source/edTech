@@ -19,6 +19,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.pdfmetrics import registerFontFamily
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     HRFlowable,
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 # ── Register Unicode font (Latin + Devanagari + ₹) ──────────────────────
 _FONT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "fonts")
 _NOTO_VARIABLE = os.path.join(_FONT_DIR, "NotoSans-Variable.ttf")
+_NOTO_BOLD = os.path.join(_FONT_DIR, "NotoSans-Bold.ttf")
 _DEJAVU = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 _DEJAVU_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 _DEJAVU_OBLIQUE = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"
@@ -46,8 +48,11 @@ _USE_UNICODE_FONT = False
 if os.path.exists(_NOTO_VARIABLE):
     try:
         pdfmetrics.registerFont(TTFont("SkolarFont", _NOTO_VARIABLE))
-        pdfmetrics.registerFont(TTFont("SkolarFont-Bold", _NOTO_VARIABLE))
+        # Use dedicated bold file if available; fall back to Variable
+        _bold_path = _NOTO_BOLD if os.path.exists(_NOTO_BOLD) else _NOTO_VARIABLE
+        pdfmetrics.registerFont(TTFont("SkolarFont-Bold", _bold_path))
         pdfmetrics.registerFont(TTFont("SkolarFont-Italic", _NOTO_VARIABLE))
+        registerFontFamily("SkolarFont", normal="SkolarFont", bold="SkolarFont-Bold", italic="SkolarFont-Italic")
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register Noto Sans font: %s", e)
@@ -60,6 +65,7 @@ if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
         pdfmetrics.registerFont(
             TTFont("SkolarFont-Italic", _DEJAVU_OBLIQUE if os.path.exists(_DEJAVU_OBLIQUE) else _DEJAVU)
         )
+        registerFontFamily("SkolarFont", normal="SkolarFont", bold="SkolarFont-Bold", italic="SkolarFont-Italic")
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register DejaVu font: %s", e)
@@ -71,7 +77,12 @@ FONT_ITALIC = "SkolarFont-Italic" if _USE_UNICODE_FONT else "Helvetica-Oblique"
 
 
 def _flatten_image_alpha(local_path: str) -> str:
-    """Convert RGBA images to RGB with white background. Returns path to temp file."""
+    """Convert RGBA images to RGB with white background and optimize size.
+
+    - Non-alpha RGB images: saved as JPEG quality=75 (60-80% smaller)
+    - Alpha images: flattened to RGB, saved as JPEG quality=75
+    Returns path to temp file (or original if no conversion needed).
+    """
     try:
         from PIL import Image as PILImage
 
@@ -82,9 +93,14 @@ def _flatten_image_alpha(local_path: str) -> str:
                 background.paste(img, mask=img.split()[3])
             else:
                 background.paste(img)
-            flat_path = os.path.join(tempfile.gettempdir(), f"skolar_{os.path.basename(local_path)}.png")
-            background.save(flat_path, "PNG")
+            flat_path = os.path.join(tempfile.gettempdir(), f"skolar_{os.path.basename(local_path)}.jpg")
+            background.save(flat_path, "JPEG", quality=75, optimize=True)
             return flat_path
+        elif img.mode == "RGB":
+            # Already RGB — save as optimized JPEG
+            opt_path = os.path.join(tempfile.gettempdir(), f"skolar_{os.path.basename(local_path)}.jpg")
+            img.save(opt_path, "JPEG", quality=75, optimize=True)
+            return opt_path
         return local_path
     except Exception as e:
         logger.warning("Failed to flatten image alpha for %s: %s", local_path, e)
@@ -121,22 +137,23 @@ _UNICODE_REPLACEMENTS = {
     "\u201c": '"',  # left double quote
     "\u201d": '"',  # right double quote
     "\u2026": "...",  # ellipsis
-    "\u00d7": "x",  # multiplication sign
-    "\u00f7": "/",  # division sign
-    "\u2264": "<=",  # less than or equal
+    # ×, ÷ are preserved when Unicode font is available (glyphs exist)
+    "\u2264": "<=",  # less than or equal (not in NotoSans)
     "\u2265": ">=",  # greater than or equal
     "\u2260": "!=",  # not equal
     "\u25a1": "___",  # white square (blank marker) — wider for writing
     "\u25a2": "___",  # white square with rounded corners
     "\u2610": "___",  # ballot box
-    "\u2192": "->",  # right arrow
-    "\u2605": "*",  # star
+    "\u2192": "->",  # right arrow (not in NotoSans)
+    "\u2605": "*",  # star (not in NotoSans)
     "\u2b50": "*",  # star emoji
 }
 
-# If no Unicode font, add ₹ → "Rs." fallback
+# Only replace × and ÷ with ASCII when no Unicode font is available
 if not _USE_UNICODE_FONT:
-    _UNICODE_REPLACEMENTS["\u20b9"] = "Rs."
+    _UNICODE_REPLACEMENTS["\u00d7"] = "x"  # multiplication sign
+    _UNICODE_REPLACEMENTS["\u00f7"] = "/"  # division sign
+    _UNICODE_REPLACEMENTS["\u20b9"] = "Rs."  # rupee sign
 
 
 def _sanitize_text(text: str) -> str:
@@ -399,18 +416,29 @@ class PDFService:
     # ──────────────────────────────────────────
     # Main entry point
     # ──────────────────────────────────────────
-    def generate_worksheet_pdf(self, worksheet: dict, pdf_type: str = "full", show_hints: bool = True) -> bytes:
+    def generate_worksheet_pdf(
+        self,
+        worksheet: dict,
+        pdf_type: str = "full",
+        show_hints: bool = True,
+        watermark: str | None = None,
+        encrypt_password: str | None = None,
+    ) -> bytes:
         """Generate a premium PDF from a worksheet.
 
         Args:
             worksheet: Worksheet data with title, questions, etc.
             pdf_type: "full" (questions + answer key), "student" (questions only),
                       "answer_key" (answer key only)
+            watermark: Text to draw as diagonal watermark (e.g. "Skolar", "SAMPLE").
+                       None means no watermark.
+            encrypt_password: If set, encrypt the PDF with this password (for answer keys).
 
         Returns:
             PDF file as bytes
         """
         self._show_hints = show_hints
+        self._watermark = watermark
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
             buffer,
@@ -419,6 +447,7 @@ class PDFService:
             leftMargin=2.0 * cm,
             topMargin=2.0 * cm,
             bottomMargin=2.0 * cm,
+            pageCompression=1,
         )
 
         # Store worksheet metadata for header/footer callbacks
@@ -464,7 +493,25 @@ class PDFService:
             onLaterPages=self._draw_page_furniture,
         )
         buffer.seek(0)
-        return buffer.getvalue()
+        pdf_bytes = buffer.getvalue()
+
+        # Optional password encryption (for answer key PDFs)
+        if encrypt_password:
+            try:
+                from PyPDF2 import PdfReader, PdfWriter
+
+                reader = PdfReader(io.BytesIO(pdf_bytes))
+                writer = PdfWriter()
+                for page in reader.pages:
+                    writer.add_page(page)
+                writer.encrypt(user_password=encrypt_password, owner_password=encrypt_password)
+                enc_buffer = io.BytesIO()
+                writer.write(enc_buffer)
+                pdf_bytes = enc_buffer.getvalue()
+            except Exception as e:
+                logger.warning("PDF encryption failed, returning unencrypted: %s", e)
+
+        return pdf_bytes
 
     # ──────────────────────────────────────────
     # Page furniture (header rule + footer)
@@ -474,6 +521,17 @@ class PDFService:
         canvas.saveState()
         page_width, page_height = A4
         self._page_count += 1
+
+        # ── Watermark (drawn first, behind content) ──
+        watermark = getattr(self, "_watermark", None)
+        if watermark:
+            canvas.saveState()
+            canvas.setFont(FONT_BOLD, 54)
+            canvas.setFillColor(colors.Color(0.7, 0.7, 0.7, alpha=0.35))
+            canvas.translate(page_width / 2, page_height / 2)
+            canvas.rotate(45)
+            canvas.drawCentredString(0, 0, watermark)
+            canvas.restoreState()
 
         # ── Top rule line ──
         canvas.setStrokeColor(_PRIMARY)

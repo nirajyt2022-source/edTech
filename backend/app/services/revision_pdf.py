@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 _FONT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "fonts")
 _NOTO_VARIABLE = os.path.join(_FONT_DIR, "NotoSans-Variable.ttf")
+_NOTO_BOLD = os.path.join(_FONT_DIR, "NotoSans-Bold.ttf")
 _DEJAVU = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 _DEJAVU_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
@@ -47,7 +48,11 @@ _USE_UNICODE_FONT = False
 if os.path.exists(_NOTO_VARIABLE):
     try:
         pdfmetrics.registerFont(TTFont("RevisionFont", _NOTO_VARIABLE))
-        pdfmetrics.registerFont(TTFont("RevisionFont-Bold", _NOTO_VARIABLE))
+        _bold_path = _NOTO_BOLD if os.path.exists(_NOTO_BOLD) else _NOTO_VARIABLE
+        pdfmetrics.registerFont(TTFont("RevisionFont-Bold", _bold_path))
+        from reportlab.pdfbase.pdfmetrics import registerFontFamily
+
+        registerFontFamily("RevisionFont", normal="RevisionFont", bold="RevisionFont-Bold")
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register Noto Sans font for revision PDF: %s", e)
@@ -56,6 +61,9 @@ if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
     try:
         pdfmetrics.registerFont(TTFont("RevisionFont", _DEJAVU))
         pdfmetrics.registerFont(TTFont("RevisionFont-Bold", _DEJAVU_BOLD if os.path.exists(_DEJAVU_BOLD) else _DEJAVU))
+        from reportlab.pdfbase.pdfmetrics import registerFontFamily
+
+        registerFontFamily("RevisionFont", normal="RevisionFont", bold="RevisionFont-Bold")
         _USE_UNICODE_FONT = True
     except Exception as e:
         logger.warning("Failed to register DejaVu font for revision PDF: %s", e)
@@ -213,11 +221,12 @@ def _esc(text: str) -> str:
 # ── Main PDF generation ──────────────────────────────────────────────────
 
 
-def generate_revision_pdf(notes) -> bytes:
+def generate_revision_pdf(notes, watermark: str | None = None) -> bytes:
     """Generate a revision notes PDF and return raw bytes.
 
     Args:
         notes: RevisionResponse Pydantic model (or duck-typed object with same attrs).
+        watermark: Text to draw as diagonal watermark (e.g. "Skolar", "SAMPLE").
 
     Returns:
         PDF file as bytes.
@@ -234,6 +243,7 @@ def generate_revision_pdf(notes) -> bytes:
         bottomMargin=2.0 * cm,
         title=f"{notes.topic} - Revision Notes",
         author="Skolar",
+        pageCompression=1,
     )
 
     story = []
@@ -445,9 +455,20 @@ def generate_revision_pdf(notes) -> bytes:
         story.append(Spacer(1, 8))
 
     # ── Build with footer ─────────────────────────────────────────────
+    _wm = watermark  # capture for closure
+
     def _add_footer(canvas, doc):
-        """Draw footer on every page."""
+        """Draw watermark + footer on every page."""
         canvas.saveState()
+        # Watermark
+        if _wm:
+            canvas.saveState()
+            canvas.setFont(FONT_BOLD, 54)
+            canvas.setFillColor(colors.Color(0.7, 0.7, 0.7, alpha=0.35))
+            canvas.translate(PAGE_WIDTH / 2, PAGE_HEIGHT / 2)
+            canvas.rotate(45)
+            canvas.drawCentredString(0, 0, _wm)
+            canvas.restoreState()
         # Branding
         canvas.setFont(FONT_REGULAR, 8)
         canvas.setFillColor(_MUTED_TEXT)
