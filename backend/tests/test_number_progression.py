@@ -1,9 +1,5 @@
 """Tests for intra-tier number progression in scenario blocks."""
 
-import json
-from pathlib import Path
-from unittest.mock import patch
-
 from app.services.worksheet_generator import _build_scenario_block, build_system_prompt
 
 
