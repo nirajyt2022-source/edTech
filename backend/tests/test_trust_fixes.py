@@ -5,11 +5,7 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
-from app.services.quality_reviewer import (
-    QualityReviewerAgent,
-    _extract_arithmetic_expression,
-    _extract_word_problem_arithmetic,
-)
+from app.services.quality_reviewer import QualityReviewerAgent
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
