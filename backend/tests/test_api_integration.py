@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -371,8 +370,9 @@ class TestAuthEnforcement:
 
 
 class TestSubscriptionCheck:
-    @pytest.mark.asyncio
-    async def test_check_and_increment_allowed(self):
+    def test_check_and_increment_allowed(self):
+        import asyncio
+
         from app.services.subscription_check import check_and_increment_usage
 
         db = FakeSupabase(
@@ -380,12 +380,13 @@ class TestSubscriptionCheck:
                 "increment_worksheet_usage": [{"allowed": True, "tier": "free", "remaining": 8, "message": ""}],
             },
         )
-        result = await check_and_increment_usage("user-123", db)
+        result = asyncio.run(check_and_increment_usage("user-123", db))
         assert result["allowed"] is True
         assert result["tier"] == "free"
 
-    @pytest.mark.asyncio
-    async def test_check_and_increment_denied(self):
+    def test_check_and_increment_denied(self):
+        import asyncio
+
         from app.services.subscription_check import check_and_increment_usage
 
         db = FakeSupabase(
@@ -393,16 +394,17 @@ class TestSubscriptionCheck:
                 "increment_worksheet_usage": [{"allowed": False, "tier": "free", "remaining": 0, "message": "Limit reached"}],
             },
         )
-        result = await check_and_increment_usage("user-123", db)
+        result = asyncio.run(check_and_increment_usage("user-123", db))
         assert result["allowed"] is False
 
-    @pytest.mark.asyncio
-    async def test_db_failure_fails_closed(self):
+    def test_db_failure_fails_closed(self):
+        import asyncio
+
         from app.services.subscription_check import check_and_increment_usage
 
         # A client that raises on rpc()
         db = MagicMock()
         db.rpc.side_effect = Exception("DB down")
-        result = await check_and_increment_usage("user-123", db)
+        result = asyncio.run(check_and_increment_usage("user-123", db))
         assert result["allowed"] is False
         assert result["tier"] == "unknown"

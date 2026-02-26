@@ -336,8 +336,7 @@ class TestGenerateWorksheetAsync:
         assert isinstance(warnings, list)
         mock_client.chat.completions.create.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_generate_worksheet_async_wrapper(self):
+    def test_generate_worksheet_async_wrapper(self):
         """Test the asyncio.to_thread pattern used by the v2 endpoint."""
         from app.services.worksheet_generator import generate_worksheet
 
@@ -347,8 +346,8 @@ class TestGenerateWorksheetAsync:
             choices=[MagicMock(message=MagicMock(content=raw_response))]
         )
 
-        with patch("app.services.curriculum.get_curriculum_context", return_value=None):
-            data, elapsed_ms, warnings = await asyncio.to_thread(
+        async def _run():
+            return await asyncio.to_thread(
                 generate_worksheet,
                 client=mock_client,
                 board="CBSE",
@@ -358,6 +357,9 @@ class TestGenerateWorksheetAsync:
                 difficulty="medium",
                 num_questions=3,
             )
+
+        with patch("app.services.curriculum.get_curriculum_context", return_value=None):
+            data, elapsed_ms, warnings = asyncio.run(_run())
 
         assert len(data["questions"]) == 3
 
