@@ -1231,6 +1231,32 @@ def generate_worksheet(
                 logger.warning("[v2] Attempt %d: %d unverified math answers, retrying", attempt, len(unverified))
                 continue
 
+            # Generic validation error retry — catch math incorrect, MCQ answer
+            # not in options, empty text, etc. that weren't caught by specific checks above
+            serious_errors = [
+                e
+                for e in validation_errors
+                if "[count_mismatch]" not in e  # already handled above
+                and "Near-duplicate" not in e  # already handled above
+                and any(kw in e for kw in ("math answer", "empty question", "MCQ answer", "MCQ needs"))
+            ]
+            if serious_errors and attempt < max_attempts:
+                feedback = "; ".join(serious_errors[:3])
+                user_prompt += (
+                    f"\n\nFIX THESE ERRORS in your next attempt:\n{feedback}\n"
+                    "Every MCQ answer must be one of the options. "
+                    "Every question must have non-empty text. "
+                    "Every math answer must be correct."
+                )
+                all_warnings.append(f"Retry {attempt}: {len(serious_errors)} validation error(s)")
+                logger.warning(
+                    "[v2] Attempt %d: %d serious validation errors, retrying: %s",
+                    attempt,
+                    len(serious_errors),
+                    feedback,
+                )
+                continue
+
             logger.info(
                 "[v2] Generated %d questions in %d ms (attempt %d)",
                 len(data.get("questions", [])),

@@ -1,8 +1,8 @@
-"""Tests for number range by position audit (Item A)."""
+"""Tests for number range by position fix (Item A)."""
 
 from app.services.difficulty_calibrator import (
-    _audit_number_range_by_position,
     _extract_max_number,
+    _fix_number_range_by_position,
 )
 
 
@@ -19,38 +19,38 @@ def test_extract_max_number_ignores_long_numbers():
     assert _extract_max_number("ID 1234567 has 5 items") == 5
 
 
-def test_small_numbers_in_warmup_no_warning():
+def test_small_numbers_in_warmup_no_swap():
     questions = [
         {"question_text": "What is 3 + 5?"},
         {"question_text": "What is 7 + 2?"},
         {"question_text": "What is 4 + 6?"},
     ]
-    warnings = _audit_number_range_by_position(questions)
+    # Less than 5 questions — skip
+    warnings = _fix_number_range_by_position(questions)
     assert len(warnings) == 0
 
 
-def test_large_numbers_in_warmup_warns():
+def test_large_number_in_warmup_gets_swapped():
     questions = [
-        {"question_text": "What is 345 + 678?"},  # Q1 warm-up, large number
-        {"question_text": "What is 5 + 3?"},
-        {"question_text": "What is 2 + 1?"},
+        {"question_text": "What is 345 + 678?", "id": "q1"},  # Q1 warm-up, large
+        {"question_text": "What is 5 + 3?", "id": "q2"},
+        {"question_text": "What is 2 + 1?", "id": "q3"},
+        {"question_text": "What is 10 + 20?", "id": "q4"},
+        {"question_text": "What is 15 + 25?", "id": "q5"},
     ]
-    warnings = _audit_number_range_by_position(questions)
-    assert len(warnings) == 1
-    assert "Q1" in warnings[0]
-    assert "warm-up" in warnings[0]
+    warnings = _fix_number_range_by_position(questions)
+    # Q1 should have been swapped with a later Q that has smaller numbers
+    assert _extract_max_number(questions[0]["question_text"]) <= 100
+    assert len(warnings) >= 1
+    assert "Swapped" in warnings[0]
 
 
-def test_small_numbers_in_stretch_warns():
-    questions = [{"question_text": f"Q{i} text"} for i in range(7)]
-    questions.extend([
-        {"question_text": "What is 3 + 2?"},  # Q8 stretch, tiny number
-        {"question_text": "What is 4 + 1?"},  # Q9 stretch, tiny number
-    ])
-    warnings = _audit_number_range_by_position(questions)
-    assert len(warnings) == 2
-    assert "Q8" in warnings[0]
-    assert "stretch" in warnings[0]
+def test_no_swap_when_all_small():
+    questions = [
+        {"question_text": f"What is {i} + {i+1}?"} for i in range(1, 11)
+    ]
+    warnings = _fix_number_range_by_position(questions)
+    assert len(warnings) == 0
 
 
 def test_prompt_contains_number_progression_rule():

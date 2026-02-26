@@ -18,9 +18,9 @@
 
 | # | Weakness | Fix | Status |
 |---|---|---|---|
-| 3 | Calibrator Steps D/E only log, never fix | Step D: swap excess format types; Step E: reorder by number magnitude | [ ] |
-| 8 | Retry only on drift/duplicates | Add validation_errors to retry trigger conditions | [ ] |
-| 9 | Recipe skill_tags not validated against allowed_skill_tags | Add startup validation script + CI check | [ ] |
+| 3 | Calibrator Steps D/E only log, never fix | Step D: swap excess format types; Step E: reorder by number magnitude | [x] Done |
+| 8 | Retry only on drift/duplicates | Add validation_errors to retry trigger conditions | [x] Done |
+| 9 | Recipe skill_tags not validated against allowed_skill_tags | Add startup validation script + CI check | [x] Done |
 
 ## Fix Later (Design Decisions Required)
 

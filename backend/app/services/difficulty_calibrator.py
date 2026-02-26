@@ -19,11 +19,14 @@ Runs four deterministic post-processing steps on the assembled question list:
     item signals to the frontend/PDF renderer that an extension problem is
     present. It is never validated against the slot plan.
 
-  STEP D — Log format distribution (all modes)
-    Counts actual question formats (word_problem, fill_blank, etc.) and
-    compares to context.format_mix.  Emits a WARNING for any format whose
-    actual share drifts more than 20 percentage points from the target.
-    Never modifies questions.
+  STEP D — Fix format distribution (all modes)
+    Counts actual question formats and compares to context.format_mix.
+    When a format drifts more than 20pp from target, actively swaps excess
+    questions to the most underrepresented format.
+
+  STEP E — Fix number-range-by-position (all modes)
+    Swaps questions so warm-up (Q1-3) uses smaller numbers and stretch
+    (Q8+) uses larger numbers.
 
 All steps are fail-open: exceptions are logged and skipped so calibration
 never blocks generation.
@@ -104,55 +107,109 @@ def _make_hint(topic_slug: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _log_format_distribution(questions: list, context: GenerationContext) -> None:
-    """
-    Count actual format distribution and warn on large drifts from target.
+_FMT_TO_KEY: dict[str, str] = {
+    "word_problem": "word_problem",
+    "word_problem_english": "word_problem",
+    "word_problem_science": "word_problem",
+    "word_problem_hindi": "word_problem",
+    "fill_in_blank": "fill_blank",
+    "fill_blank": "fill_blank",
+    "paragraph_cloze": "fill_blank",
+}
 
-    Only the three canonical format_mix keys (mcq, fill_blank, word_problem)
-    are checked; any extra formats are bucketed under 'other'.
+# Reverse: canonical key → preferred concrete format name
+_KEY_TO_FMT: dict[str, str] = {
+    "word_problem": "word_problem",
+    "fill_blank": "fill_blank",
+    "mcq": "mcq",
+}
+
+
+def _fix_format_distribution(questions: list, context: GenerationContext) -> list[str]:
     """
-    if not questions:
-        return
+    Check actual format distribution and swap excess formats toward the target.
+
+    Returns list of warning/action strings.
+    """
+    if not questions or not context.format_mix:
+        return []
 
     total = len(questions)
-    counts: dict[str, int] = {}
+    target = context.format_mix
+
+    # Build per-question canonical key mapping
+    q_keys = []
     for q in questions:
         fmt = q.get("format", "other")
-        counts[fmt] = counts.get(fmt, 0) + 1
+        q_keys.append(_FMT_TO_KEY.get(fmt, fmt))
 
-    # Map actual format names → canonical mix keys for comparison
-    _FMT_TO_KEY: dict[str, str] = {
-        "word_problem": "word_problem",
-        "word_problem_english": "word_problem",
-        "word_problem_science": "word_problem",
-        "word_problem_hindi": "word_problem",
-        "fill_in_blank": "fill_blank",
-        "fill_blank": "fill_blank",
-        "paragraph_cloze": "fill_blank",
-    }
+    # Count actuals
+    from collections import Counter
 
-    actual_pct: dict[str, float] = {}
-    for fmt, cnt in counts.items():
-        key = _FMT_TO_KEY.get(fmt, fmt)
-        actual_pct[key] = actual_pct.get(key, 0.0) + (cnt / total * 100)
+    actual_counts = Counter(q_keys)
+    warnings: list[str] = []
 
-    target = context.format_mix or {}
-    for key, target_pct in target.items():
-        actual = actual_pct.get(key, 0.0)
-        drift = abs(actual - target_pct)
-        if drift > 20:
-            logger.warning(
-                "[difficulty_calibrator] Format drift: '%s' target=%d%% actual=%.0f%% drift=%.0f%%",
-                key,
-                target_pct,
-                actual,
-                drift,
-            )
+    # Compute target counts (rounded)
+    target_counts: dict[str, int] = {}
+    for key, pct in target.items():
+        target_counts[key] = max(0, round(total * pct / 100))
+
+    # Find over- and under-represented keys
+    over: list[tuple[str, int]] = []  # (key, excess)
+    under: list[tuple[str, int]] = []  # (key, deficit)
+
+    for key in set(list(target_counts.keys()) + list(actual_counts.keys())):
+        actual = actual_counts.get(key, 0)
+        expected = target_counts.get(key, 0)
+        diff = actual - expected
+        drift_pct = abs(diff) / max(total, 1) * 100
+        if drift_pct > 20 and diff > 0:
+            over.append((key, diff))
+        elif drift_pct > 20 and diff < 0:
+            under.append((key, abs(diff)))
+
+    if not over or not under:
+        # No actionable drift
+        for key, pct in target.items():
+            actual_pct = actual_counts.get(key, 0) / max(total, 1) * 100
+            drift = abs(actual_pct - pct)
+            if drift > 20:
+                warnings.append(f"Format drift: '{key}' target={pct}% actual={actual_pct:.0f}% (no swap target)")
+        return warnings
+
+    # Sort: swap from most-over to most-under
+    over.sort(key=lambda x: -x[1])
+    under.sort(key=lambda x: -x[1])
+
+    swaps = 0
+    for over_key, excess in over:
+        for under_key, deficit in under:
+            if deficit <= 0:
+                continue
+            # Find questions with over_key and swap their format
+            for i, qk in enumerate(q_keys):
+                if qk == over_key and excess > 0 and deficit > 0:
+                    new_fmt = _KEY_TO_FMT.get(under_key, under_key)
+                    old_fmt = questions[i].get("format", "other")
+                    questions[i]["format"] = new_fmt
+                    q_keys[i] = under_key
+                    excess -= 1
+                    deficit -= 1
+                    swaps += 1
+                    warnings.append(f"Q{i + 1}: format swapped '{old_fmt}' → '{new_fmt}' (drift fix)")
+            # Update remaining deficit
+            for j, (uk, ud) in enumerate(under):
+                if uk == under_key:
+                    under[j] = (uk, deficit)
+
+    if swaps:
+        logger.info("[difficulty_calibrator] STEP D: swapped %d question format(s) to reduce drift", swaps)
 
     logger.debug(
         "[difficulty_calibrator] Format distribution: %s",
-        {k: f"{v:.0f}%" for k, v in actual_pct.items()},
+        dict(Counter(q_keys)),
     )
+    return warnings
 
 
 # ---------------------------------------------------------------------------
@@ -166,21 +223,57 @@ def _extract_max_number(text: str) -> int:
     return max(nums) if nums else 0
 
 
-def _audit_number_range_by_position(questions: list) -> list[str]:
-    """Warn if number magnitudes violate the warm-up/stretch position rule.
+def _fix_number_range_by_position(questions: list) -> list[str]:
+    """Reorder questions so number magnitudes match the position rule.
 
-    Questions 1-3: warm-up (flag if max number > 100)
-    Questions 8+:  stretch (flag if max number < 10 and > 0)
-    Never modifies questions — only returns warning strings.
+    Questions 1-3: warm-up (smaller numbers)
+    Questions 4-7: practice (medium)
+    Questions 8+:  stretch (larger numbers)
+
+    Swaps violating questions into correct zones. Returns action log.
     """
+    if len(questions) < 5:
+        return []
+
     warnings: list[str] = []
-    for i, q in enumerate(questions):
-        pos = i + 1
-        max_num = _extract_max_number(q.get("question_text", ""))
-        if pos <= 3 and max_num > 100:
-            warnings.append(f"Q{pos} warm-up has large number ({max_num})")
-        elif pos >= 8 and 0 < max_num < 10:
-            warnings.append(f"Q{pos} stretch uses very small number ({max_num})")
+
+    # Annotate each question with its max number
+    magnitudes = [_extract_max_number(q.get("question_text", "")) for q in questions]
+
+    # Find violations and try pairwise swaps
+    swaps = 0
+    for i in range(min(3, len(questions))):
+        # Warm-up zone: if this Q has a large number, find a later Q with smaller
+        if magnitudes[i] > 100:
+            # Find best swap candidate from positions 3+
+            best_j = None
+            for j in range(3, len(questions)):
+                if magnitudes[j] <= 100:
+                    if best_j is None or magnitudes[j] < magnitudes[best_j]:
+                        best_j = j
+            if best_j is not None:
+                questions[i], questions[best_j] = questions[best_j], questions[i]
+                magnitudes[i], magnitudes[best_j] = magnitudes[best_j], magnitudes[i]
+                warnings.append(f"Swapped Q{i + 1} ↔ Q{best_j + 1} (warm-up had large number)")
+                swaps += 1
+
+    for i in range(max(7, len(questions) - 1), len(questions)):
+        # Stretch zone: if this Q has tiny numbers, find an earlier Q with bigger
+        if 0 < magnitudes[i] < 10:
+            best_j = None
+            for j in range(3, 7):
+                if j < len(questions) and magnitudes[j] >= 10:
+                    if best_j is None or magnitudes[j] > magnitudes[best_j]:
+                        best_j = j
+            if best_j is not None:
+                questions[i], questions[best_j] = questions[best_j], questions[i]
+                magnitudes[i], magnitudes[best_j] = magnitudes[best_j], magnitudes[i]
+                warnings.append(f"Swapped Q{i + 1} ↔ Q{best_j + 1} (stretch had tiny number)")
+                swaps += 1
+
+    if swaps:
+        logger.info("[difficulty_calibrator] STEP E: %d swap(s) to fix number progression", swaps)
+
     return warnings
 
 
@@ -201,7 +294,7 @@ class DifficultyCalibrator:
         self,
         questions: list,
         context: GenerationContext,
-    ) -> list:
+    ) -> tuple[list, list[str]]:
         """
         Calibrate the question list for this child's learning context.
 
@@ -210,9 +303,11 @@ class DifficultyCalibrator:
             context:   GenerationContext from TopicIntelligenceAgent.
 
         Returns:
-            Calibrated question list (may be longer if challenge_mode=True).
+            (calibrated_questions, calibration_warnings) — questions may be
+            longer if challenge_mode=True; warnings include any swaps made.
         """
         result = list(questions)  # shallow copy — dicts are mutated in place for hints
+        calibration_warnings: list[str] = []
 
         # ── STEP A: Sort by difficulty (scaffolding only) ─────────────────
         if context.scaffolding:
@@ -257,21 +352,21 @@ class DifficultyCalibrator:
             except Exception as exc:
                 logger.warning("[difficulty_calibrator] STEP C bonus append failed: %s", exc)
 
-        # ── STEP D: Log format distribution ───────────────────────────────
+        # ── STEP D: Fix format distribution (active swap) ─────────────────
         try:
-            _log_format_distribution(result, context)
+            fmt_warnings = _fix_format_distribution(result, context)
+            calibration_warnings.extend(fmt_warnings)
         except Exception as exc:
-            logger.warning("[difficulty_calibrator] STEP D distribution log failed: %s", exc)
+            logger.warning("[difficulty_calibrator] STEP D format fix failed: %s", exc)
 
-        # ── STEP E: Number-range-by-position audit ────────────────────────
+        # ── STEP E: Fix number-range-by-position (active reorder) ─────────
         try:
-            _number_range_warnings = _audit_number_range_by_position(result)
-            for w in _number_range_warnings:
-                logger.warning("[difficulty_calibrator] STEP E: %s", w)
+            nr_warnings = _fix_number_range_by_position(result)
+            calibration_warnings.extend(nr_warnings)
         except Exception as exc:
-            logger.warning("[difficulty_calibrator] STEP E number range audit failed: %s", exc)
+            logger.warning("[difficulty_calibrator] STEP E number range fix failed: %s", exc)
 
-        return result
+        return result, calibration_warnings
 
 
 # ---------------------------------------------------------------------------
