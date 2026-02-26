@@ -673,6 +673,47 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
 }
 
 
+# ---------------------------------------------------------------------------
+# Warning severity categorization
+# ---------------------------------------------------------------------------
+
+_CRITICAL_WARNING_RE = re.compile(r"(?i)(math.*unverified|BLOCKED|_needs_regen|empty question|missing answer)")
+_MODERATE_WARNING_RE = re.compile(r"(?i)(retry|format.*drift|curriculum.*unavailable|skill.*tag|validation)")
+
+
+def _categorize_warnings(warnings: list[str]) -> dict:
+    """Classify warnings into critical/moderate/info and compute severity score.
+
+    Returns dict with keys: critical, moderate, info (counts),
+    severity_score (int), and quality_tier ("high"/"medium"/"low").
+    """
+    crit = mod = info = 0
+    for w in warnings:
+        if _CRITICAL_WARNING_RE.search(w):
+            crit += 1
+        elif _MODERATE_WARNING_RE.search(w):
+            mod += 1
+        else:
+            info += 1
+
+    score = crit * 3 + mod * 2 + info * 1
+
+    if crit > 0 or score >= 6:
+        tier = "low"
+    elif mod > 0 or score >= 3:
+        tier = "medium"
+    else:
+        tier = "high"
+
+    return {
+        "critical": crit,
+        "moderate": mod,
+        "info": info,
+        "severity_score": score,
+        "quality_tier": tier,
+    }
+
+
 def _detect_topic_category(topic: str) -> str | None:
     """Return the broad topic category for a given topic string."""
     t_lower = topic.lower()
@@ -1272,6 +1313,10 @@ def generate_worksheet(
                 user_prompt_version=USER_PROMPT_VERSION,
             )
             data["chapter_ref"] = chapter_name
+
+            # ── Warning severity categorization ──
+            data["_warning_severity"] = _categorize_warnings(all_warnings)
+
             return data, elapsed_ms, all_warnings
 
         except (json.JSONDecodeError, ValueError) as exc:

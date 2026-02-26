@@ -21,6 +21,7 @@ import pytest
 
 from app.api.worksheets_v2 import _infer_render_format, _map_question
 from app.services.worksheet_generator import (
+    _categorize_warnings,
     build_system_prompt,
     build_user_prompt,
     validate_response,
@@ -392,3 +393,42 @@ class TestGenerateWorksheetAsync:
 
         assert "questions" in data
         assert call_count >= 2  # retried at least once after bad JSON
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Warning severity categorization
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestCategorizeWarnings:
+    def test_no_warnings_high(self):
+        result = _categorize_warnings([])
+        assert result["quality_tier"] == "high"
+        assert result["severity_score"] == 0
+
+    def test_critical_warning_low(self):
+        result = _categorize_warnings(["Q3: math answer unverified"])
+        assert result["quality_tier"] == "low"
+        assert result["critical"] == 1
+
+    def test_moderate_warning_medium(self):
+        result = _categorize_warnings(["Retry 2: 1 validation error(s)"])
+        assert result["quality_tier"] == "medium"
+        assert result["moderate"] == 1
+
+    def test_info_only_stays_high(self):
+        result = _categorize_warnings(["some minor note"])
+        assert result["quality_tier"] == "high"
+        assert result["info"] == 1
+        assert result["severity_score"] == 1
+
+    def test_mixed_warnings(self):
+        result = _categorize_warnings([
+            "Q1: math answer unverified",  # critical
+            "Retry 1: format drift",        # moderate
+            "something else",               # info
+        ])
+        assert result["critical"] == 1
+        assert result["moderate"] == 1
+        assert result["info"] == 1
+        assert result["quality_tier"] == "low"  # critical present → low

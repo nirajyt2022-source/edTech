@@ -129,5 +129,7 @@ class WorksheetGenerationResponse(BaseModel):
     generation_time_ms: int
     warnings: dict | None = None
     verdict: str = "ok"
+    quality_stamps: dict | None = None  # warning severity breakdown
+    quality_tier: str | None = None  # "high" | "medium" | "low"
     worksheets: list[Worksheet] | None = None
     capped_q_count: int | None = None  # Set if q_count was reduced due to topic limit

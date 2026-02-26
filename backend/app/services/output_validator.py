@@ -145,7 +145,26 @@ class OutputValidator:
                     )
                     break  # one error is enough
 
-        # 6. Maths answer verification (basic checks)
+        # 6. Disallowed keyword check (from topic profile)
+        if topic:
+            try:
+                from app.data.topic_profiles import get_topic_profile
+
+                profile = get_topic_profile(topic, subject or None)
+                if profile:
+                    disallowed = profile.get("disallowed_keywords", [])
+                    if disallowed:
+                        for i, q in enumerate(questions):
+                            qid = q.get("id", f"Q{i + 1}")
+                            text_lower = q.get("text", "").lower()
+                            for kw in disallowed:
+                                if kw.lower() in text_lower:
+                                    errors.append(f"{qid}: disallowed keyword '{kw}' for topic '{topic}'")
+                                    break  # one keyword per question is enough
+            except Exception as exc:
+                logger.debug("Disallowed keyword check skipped for topic '%s': %s", topic, exc)
+
+        # 7. Maths answer verification (basic checks)
         if subject.lower() in ("maths", "mathematics", "math"):
             for i, q in enumerate(questions):
                 qid = q.get("id", f"Q{i + 1}")
@@ -153,7 +172,7 @@ class OutputValidator:
                 if verified is False:
                     errors.append(f"{qid}: math answer appears incorrect")
 
-        # 6b. Visual-answer coherence
+        # 7b. Visual-answer coherence
         for i, q in enumerate(questions):
             if q.get("visual_type"):
                 qid = q.get("id", f"Q{i + 1}")
@@ -161,7 +180,7 @@ class OutputValidator:
                 if coherence is False:
                     errors.append(f"{qid}: visual data does not match correct_answer")
 
-        # 7. Must have answer_key or answers extractable from questions
+        # 8. Must have answer_key or answers extractable from questions
         answer_key = data.get("answer_key", {})
         if not answer_key and all(not q.get("correct_answer") for q in questions):
             errors.append("No answer key and no answers in questions")

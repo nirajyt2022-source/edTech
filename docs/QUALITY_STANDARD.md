@@ -112,7 +112,7 @@ Measurable quality contract for PracticeCraft AI worksheets. 6 dimensions, each 
 | LLM artifact detection | P1 | **Done** | quality_reviewer CHECK 9 |
 | Hindi purity check | P1 | **Done** | quality_reviewer CHECK 10 |
 | Type diversity cap (40%) | P1 | **Done** | output_validator check 5 |
-| Disallowed keyword validation | P2 | Missing | output_validator |
-| Warning severity categorization | P2 | Missing | worksheet_generator (before return) |
+| Disallowed keyword validation | P2 | **Done** | output_validator check 6 |
+| Warning severity categorization | P2 | **Done** | worksheet_generator `_categorize_warnings()` |
 | Pre-correction quality scoring | P3 | Missing | difficulty_calibrator (count corrections) |
 | Visual-topic appropriateness | P3 | Missing | output_validator |

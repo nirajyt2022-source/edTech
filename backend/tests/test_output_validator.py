@@ -356,3 +356,40 @@ class TestTypeDiversity:
         data = {"questions": qs, "answer_key": {}}
         _, errors = validator.validate_worksheet(data, num_questions=3)
         assert not any("Type diversity" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Disallowed keyword check
+# ---------------------------------------------------------------------------
+
+class TestDisallowedKeywords:
+    def _make_q(self, qid, text="What is 2+2?", answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_clean_topic_passes(self, validator):
+        """Questions without disallowed keywords should pass."""
+        qs = [self._make_q("Q1", text="What is 23 + 45?")]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(
+            data, subject="Maths", topic="Addition (carries)", num_questions=1
+        )
+        assert not any("disallowed keyword" in e for e in errors)
+
+    def test_disallowed_keyword_flagged(self, validator):
+        """A question containing a disallowed keyword should be flagged."""
+        # "Multiplication (tables 2-10)" disallows "carry", "borrow", "add", etc.
+        qs = [self._make_q("Q1", text="Use the carry method to solve 6 x 7")]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(
+            data, subject="Maths", topic="Multiplication (tables 2-10)", num_questions=1
+        )
+        assert any("disallowed keyword" in e for e in errors)
+
+    def test_unknown_topic_skips(self, validator):
+        """Unknown topic should not crash — fail-open."""
+        qs = [self._make_q("Q1", text="carry the one")]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(
+            data, subject="Maths", topic="Nonexistent Topic XYZ", num_questions=1
+        )
+        assert not any("disallowed keyword" in e for e in errors)

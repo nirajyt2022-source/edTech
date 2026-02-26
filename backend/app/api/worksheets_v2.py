@@ -123,10 +123,15 @@ async def generate_worksheet_v2(
         skill_coverage=skill_coverage or None,
     )
 
+    severity = data.get("_warning_severity", {})
+    quality_tier = severity.get("quality_tier", "high")
+
     has_warnings = bool(warnings)
     return WorksheetGenerationResponse(
         worksheet=worksheet,
         generation_time_ms=elapsed_ms,
         warnings={"generation": warnings} if has_warnings else None,
         verdict="best_effort" if has_warnings else "ok",
+        quality_stamps=severity or None,
+        quality_tier=quality_tier,
     )
