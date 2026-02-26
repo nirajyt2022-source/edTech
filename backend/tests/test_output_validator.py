@@ -121,6 +121,109 @@ class TestWorksheetValidation:
         assert validator._make_template(text1) == validator._make_template(text2)
 
 
+class TestVisualAnswerCoherence:
+    def test_clock_match(self, validator):
+        q = {
+            "id": "Q1", "type": "mcq", "text": "What time does the clock show?",
+            "options": ["3:30", "4:00", "3:00", "4:30"],
+            "correct_answer": "3:30",
+            "visual_type": "clock",
+            "visual_data": {"hour": 3, "minute": 30},
+        }
+        result = validator._verify_clock_answer(q)
+        assert result is True
+
+    def test_clock_mismatch(self, validator):
+        q = {
+            "id": "Q1", "type": "mcq", "text": "What time does the clock show?",
+            "options": ["3:30", "4:00", "3:00", "4:30"],
+            "correct_answer": "3:30",
+            "visual_type": "clock",
+            "visual_data": {"hour": 4, "minute": 0},
+        }
+        result = validator._verify_clock_answer(q)
+        assert result is False
+
+    def test_clock_mismatch_in_worksheet(self, validator):
+        """Clock mismatch should produce an error in validate_worksheet."""
+        data = {"questions": [{
+            "id": "Q1", "type": "mcq", "text": "What time?",
+            "options": ["3:30", "4:00"], "correct_answer": "3:30",
+            "visual_type": "clock",
+            "visual_data": {"hour": 4, "minute": 0},
+        }]}
+        is_valid, errors = validator.validate_worksheet(data, num_questions=1)
+        assert not is_valid
+        assert any("visual data does not match" in e for e in errors)
+
+    def test_object_group_match(self, validator):
+        q = {
+            "id": "Q1", "type": "short_answer",
+            "text": "Count the total objects.",
+            "correct_answer": "8",
+            "visual_type": "object_group",
+            "visual_data": {"groups": [{"count": 5}, {"count": 3}], "operation": "+"},
+        }
+        result = validator._verify_object_group_answer(q)
+        assert result is True
+
+    def test_object_group_mismatch(self, validator):
+        q = {
+            "id": "Q1", "type": "short_answer",
+            "text": "Count the total objects.",
+            "correct_answer": "7",
+            "visual_type": "object_group",
+            "visual_data": {"groups": [{"count": 5}, {"count": 3}], "operation": "+"},
+        }
+        result = validator._verify_object_group_answer(q)
+        assert result is False
+
+    def test_object_group_subtraction(self, validator):
+        q = {
+            "id": "Q1", "type": "short_answer",
+            "text": "How many are left?",
+            "correct_answer": "2",
+            "visual_type": "object_group",
+            "visual_data": {"groups": [{"count": 5}, {"count": 3}], "operation": "-"},
+        }
+        result = validator._verify_object_group_answer(q)
+        assert result is True
+
+    def test_no_visual_skipped(self, validator):
+        """Questions without visual_type should return None (no error)."""
+        q = {
+            "id": "Q1", "type": "fill_blank",
+            "text": "5 + 3 = ______",
+            "correct_answer": "8",
+        }
+        result = validator._verify_visual_answer_coherence(q)
+        assert result is None
+
+    def test_unknown_visual_type_skipped(self, validator):
+        """Unknown visual types should return None (no error)."""
+        q = {
+            "id": "Q1", "type": "short_answer",
+            "text": "Look at the bar chart.",
+            "correct_answer": "5",
+            "visual_type": "bar_chart",
+            "visual_data": {"bars": [5, 3, 7]},
+        }
+        result = validator._verify_visual_answer_coherence(q)
+        assert result is None
+
+    def test_currency_answer_object_group(self, validator):
+        """Object group with ₹ prefix in answer should still match."""
+        q = {
+            "id": "Q1", "type": "short_answer",
+            "text": "Total coins?",
+            "correct_answer": "₹15",
+            "visual_type": "object_group",
+            "visual_data": {"groups": [{"count": 10}, {"count": 5}], "operation": "+"},
+        }
+        result = validator._verify_object_group_answer(q)
+        assert result is True
+
+
 class TestFlashcardValidation:
     def test_valid_flashcards(self, validator):
         data = {"cards": [{"front": f"Q{i}", "back": f"A{i}"} for i in range(12)]}

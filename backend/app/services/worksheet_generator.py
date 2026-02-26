@@ -126,6 +126,7 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
       "explanation": "<brief explanation>",
       "difficulty": "<easy|medium|hard>",
       "hint": "<helpful hint>",
+      "skill_tag": "<from SKILL-TAG PLAN, or null if no plan>",
       "image_keywords": null,
       "visual_type": null,
       "visual_data": null
@@ -136,19 +137,19 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 FEW-SHOT EXAMPLES (follow these formats exactly):
 
 MCQ example:
-{"id":"q1","type":"mcq","role":"recognition","text":"Which of these is the largest 3-digit number?","options":["999","100","909","990"],"correct_answer":"999","explanation":"The largest 3-digit number has 9 in all places: 999.","difficulty":"easy","hint":"Think about the biggest digit you can put in each place.","image_keywords":null,"visual_type":null,"visual_data":null}
+{"id":"q1","type":"mcq","role":"recognition","text":"Which of these is the largest 3-digit number?","options":["999","100","909","990"],"correct_answer":"999","explanation":"The largest 3-digit number has 9 in all places: 999.","difficulty":"easy","hint":"Think about the biggest digit you can put in each place.","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}
 
 Fill-in-the-blank example:
-{"id":"q2","type":"fill_blank","role":"application","text":"456 + 238 = ______","options":null,"correct_answer":"694","explanation":"Add ones: 6+8=14, write 4 carry 1. Tens: 5+3+1=9. Hundreds: 4+2=6. Answer: 694.","difficulty":"medium","hint":"Start adding from the ones place.","image_keywords":null,"visual_type":null,"visual_data":null}
+{"id":"q2","type":"fill_blank","role":"application","text":"456 + 238 = ______","options":null,"correct_answer":"694","explanation":"Add ones: 6+8=14, write 4 carry 1. Tens: 5+3+1=9. Hundreds: 4+2=6. Answer: 694.","difficulty":"medium","hint":"Start adding from the ones place.","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}
 
 True/False example:
-{"id":"q3","type":"true_false","role":"error_detection","text":"True or False: 45 × 6 = __(240)__. Is this correct?","options":["True","False"],"correct_answer":"False","explanation":"45 × 6 = 270, not 240.","difficulty":"medium","hint":"Multiply step by step: 40×6 then 5×6.","image_keywords":null,"visual_type":null,"visual_data":null}
+{"id":"q3","type":"true_false","role":"error_detection","text":"True or False: 45 × 6 = __(240)__. Is this correct?","options":["True","False"],"correct_answer":"False","explanation":"45 × 6 = 270, not 240.","difficulty":"medium","hint":"Multiply step by step: 40×6 then 5×6.","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}
 
 Word problem example:
-{"id":"q4","type":"word_problem","role":"application","text":"Aarav has ₹500. He buys a notebook for ₹85 and a pen for ₹35. How much money does he have left?","options":null,"correct_answer":"₹380","explanation":"500 - 85 - 35 = 380 rupees.","difficulty":"medium","hint":"Subtract each item's cost one at a time.","image_keywords":null,"visual_type":null,"visual_data":null}
+{"id":"q4","type":"word_problem","role":"application","text":"Aarav has ₹500. He buys a notebook for ₹85 and a pen for ₹35. How much money does he have left?","options":null,"correct_answer":"₹380","explanation":"500 - 85 - 35 = 380 rupees.","difficulty":"medium","hint":"Subtract each item's cost one at a time.","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}
 
 Error detection example:
-{"id":"q5","type":"error_detection","role":"thinking","text":"Priya solved: 302 - 168 = 246. Find and correct her mistake.","options":null,"correct_answer":"134","explanation":"302 - 168: ones 2-8 needs borrowing → 12-8=4. Tens: 9-6=3. Hundreds: 2-1=1. Answer: 134.","difficulty":"hard","hint":"Check each column carefully — did she borrow correctly?","image_keywords":null,"visual_type":null,"visual_data":null}"""
+{"id":"q5","type":"error_detection","role":"thinking","text":"Priya solved: 302 - 168 = 246. Find and correct her mistake.","options":null,"correct_answer":"134","explanation":"302 - 168: ones 2-8 needs borrowing → 12-8=4. Tens: 9-6=3. Hundreds: 2-1=1. Answer: 134.","difficulty":"hard","hint":"Check each column carefully — did she borrow correctly?","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}"""
 
 _OUTPUT_FORMAT_VISUAL = """\
 
@@ -170,6 +171,7 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
       "explanation": "<brief explanation>",
       "difficulty": "<easy|medium|hard>",
       "hint": "<helpful hint>",
+      "skill_tag": "<from SKILL-TAG PLAN, or null if no plan>",
       "image_keywords": ["<keyword>"] or null,
       "visual_type": "<type or null>",
       "visual_data": { ... } or null
@@ -180,19 +182,19 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 FEW-SHOT EXAMPLES (follow these formats exactly):
 
 MCQ with visual:
-{"id":"q1","type":"mcq","role":"application","text":"What is the total value of these coins?","options":["₹15","₹20","₹25","₹30"],"correct_answer":"₹25","explanation":"5+5+5+10 = 25 rupees.","difficulty":"medium","hint":"Add up each coin's value one by one.","image_keywords":null,"visual_type":"money_coins","visual_data":{"coins":[{"value":5,"count":3},{"value":10,"count":1}]}}
+{"id":"q1","type":"mcq","role":"application","text":"What is the total value of these coins?","options":["₹15","₹20","₹25","₹30"],"correct_answer":"₹25","explanation":"5+5+5+10 = 25 rupees.","difficulty":"medium","hint":"Add up each coin's value one by one.","skill_tag":null,"image_keywords":null,"visual_type":"money_coins","visual_data":{"coins":[{"value":5,"count":3},{"value":10,"count":1}]}}
 
 Fill-in-the-blank:
-{"id":"q2","type":"fill_blank","role":"application","text":"456 + 238 = ______","options":null,"correct_answer":"694","explanation":"Add ones: 6+8=14, write 4 carry 1. Tens: 5+3+1=9. Hundreds: 4+2=6.","difficulty":"medium","hint":"Start from the ones place.","image_keywords":null,"visual_type":null,"visual_data":null}
+{"id":"q2","type":"fill_blank","role":"application","text":"456 + 238 = ______","options":null,"correct_answer":"694","explanation":"Add ones: 6+8=14, write 4 carry 1. Tens: 5+3+1=9. Hundreds: 4+2=6.","difficulty":"medium","hint":"Start from the ones place.","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}
 
 True/False:
-{"id":"q3","type":"true_false","role":"error_detection","text":"True or False: 45 × 6 = 240","options":["True","False"],"correct_answer":"False","explanation":"45 × 6 = 270, not 240.","difficulty":"medium","hint":"Multiply step by step.","image_keywords":null,"visual_type":null,"visual_data":null}
+{"id":"q3","type":"true_false","role":"error_detection","text":"True or False: 45 × 6 = 240","options":["True","False"],"correct_answer":"False","explanation":"45 × 6 = 270, not 240.","difficulty":"medium","hint":"Multiply step by step.","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}
 
 Word problem:
-{"id":"q4","type":"word_problem","role":"application","text":"Aarav has ₹500. He buys a notebook for ₹85 and a pen for ₹35. How much money does he have left?","options":null,"correct_answer":"₹380","explanation":"500 - 85 - 35 = 380.","difficulty":"medium","hint":"Subtract each cost one at a time.","image_keywords":null,"visual_type":null,"visual_data":null}
+{"id":"q4","type":"word_problem","role":"application","text":"Aarav has ₹500. He buys a notebook for ₹85 and a pen for ₹35. How much money does he have left?","options":null,"correct_answer":"₹380","explanation":"500 - 85 - 35 = 380.","difficulty":"medium","hint":"Subtract each cost one at a time.","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}
 
 Error detection:
-{"id":"q5","type":"error_detection","role":"thinking","text":"Priya solved: 302 - 168 = 246. Find and correct her mistake.","options":null,"correct_answer":"134","explanation":"302 - 168: borrow to get 12-8=4, 9-6=3, 2-1=1 → 134.","difficulty":"hard","hint":"Check each column — did she borrow correctly?","image_keywords":null,"visual_type":null,"visual_data":null}"""
+{"id":"q5","type":"error_detection","role":"thinking","text":"Priya solved: 302 - 168 = 246. Find and correct her mistake.","options":null,"correct_answer":"134","explanation":"302 - 168: borrow to get 12-8=4, 9-6=3, 2-1=1 → 134.","difficulty":"hard","hint":"Check each column — did she borrow correctly?","skill_tag":null,"image_keywords":null,"visual_type":null,"visual_data":null}"""
 
 
 def build_system_prompt(problem_style: str, subject: str) -> str:
@@ -498,6 +500,7 @@ def build_user_prompt(
                 lines.append(f"  - {count}x {tag}: {hint}")
             prompt += (
                 "\nSKILL-TAG PLAN (follow this EXACTLY — generate this many of each type):\n" + "\n".join(lines) + "\n"
+                'Each question MUST include a "skill_tag" field matching one tag from the plan above.\n'
             )
 
     # -- Scenario pool injection --

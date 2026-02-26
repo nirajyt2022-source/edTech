@@ -141,6 +141,14 @@ class OutputValidator:
                 if verified is False:
                     errors.append(f"{qid}: math answer appears incorrect")
 
+        # 5b. Visual-answer coherence
+        for i, q in enumerate(questions):
+            if q.get("visual_type"):
+                qid = q.get("id", f"Q{i + 1}")
+                coherence = self._verify_visual_answer_coherence(q)
+                if coherence is False:
+                    errors.append(f"{qid}: visual data does not match correct_answer")
+
         # 6. Must have answer_key or answers extractable from questions
         answer_key = data.get("answer_key", {})
         if not answer_key and all(not q.get("correct_answer") for q in questions):
@@ -269,6 +277,90 @@ class OutputValidator:
         """Extract number from 'Class 4' -> 4."""
         match = re.search(r"\d+", grade)
         return int(match.group()) if match else None
+
+    @staticmethod
+    def _verify_clock_answer(q: dict) -> bool | None:
+        """Verify that clock visual_data matches the correct_answer.
+
+        Returns True (match), False (mismatch), or None (can't verify).
+        """
+        vd = q.get("visual_data")
+        answer = str(q.get("correct_answer", ""))
+        if not vd or not isinstance(vd, dict):
+            return None
+        hour = vd.get("hour")
+        minute = vd.get("minute")
+        if hour is None or minute is None:
+            return None
+        match = re.search(r"(\d{1,2}):(\d{2})", answer)
+        if not match:
+            return None
+        ans_hour = int(match.group(1))
+        ans_minute = int(match.group(2))
+        if ans_hour == int(hour) and ans_minute == int(minute):
+            return True
+        logger.warning(
+            "Clock coherence failed",
+            extra={"visual": {"hour": hour, "minute": minute}, "answer": answer},
+        )
+        return False
+
+    @staticmethod
+    def _verify_object_group_answer(q: dict) -> bool | None:
+        """Verify that object_group visual_data matches the correct_answer.
+
+        Returns True (match), False (mismatch), or None (can't verify).
+        """
+        vd = q.get("visual_data")
+        answer = str(q.get("correct_answer", ""))
+        if not vd or not isinstance(vd, dict):
+            return None
+        groups = vd.get("groups")
+        operation = vd.get("operation", "+")
+        if not groups or not isinstance(groups, list):
+            return None
+        counts = []
+        for g in groups:
+            c = g.get("count")
+            if c is None:
+                return None
+            counts.append(int(c))
+        if not counts:
+            return None
+        if operation == "+":
+            expected = sum(counts)
+        elif operation == "-":
+            expected = counts[0] - sum(counts[1:])
+        else:
+            return None
+        # Parse numeric answer (strip ₹ prefix, commas)
+        cleaned = re.sub(r"[₹,\s]", "", answer)
+        num_match = re.search(r"-?\d+", cleaned)
+        if not num_match:
+            return None
+        ans_num = int(num_match.group())
+        if ans_num == expected:
+            return True
+        logger.warning(
+            "Object group coherence failed",
+            extra={"expected": expected, "answer": answer, "operation": operation},
+        )
+        return False
+
+    @classmethod
+    def _verify_visual_answer_coherence(cls, q: dict) -> bool | None:
+        """Dispatch visual-answer coherence check based on visual_type.
+
+        Returns True (match), False (mismatch), or None (can't verify / not applicable).
+        """
+        vtype = q.get("visual_type", "")
+        if not vtype:
+            return None
+        if vtype == "clock":
+            return cls._verify_clock_answer(q)
+        if vtype == "object_group":
+            return cls._verify_object_group_answer(q)
+        return None
 
     @staticmethod
     def _verify_math_answer(q: dict) -> bool | None:
