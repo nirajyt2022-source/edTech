@@ -132,7 +132,20 @@ class OutputValidator:
                     if used_complex:
                         errors.append(f"{qid}: complex vocabulary for {grade}: {', '.join(used_complex)}")
 
-        # 5. Maths answer verification (basic checks)
+        # 5. Type diversity — no single question type > 40% of the worksheet
+        if len(questions) >= 5:
+            from collections import Counter as _Counter
+
+            type_counts = _Counter(q.get("type", "unknown") for q in questions)
+            for qtype, cnt in type_counts.items():
+                if cnt / len(questions) > 0.40:
+                    errors.append(
+                        f"Type diversity: '{qtype}' is {cnt}/{len(questions)} "
+                        f"({cnt * 100 // len(questions)}%), max allowed is 40%"
+                    )
+                    break  # one error is enough
+
+        # 6. Maths answer verification (basic checks)
         if subject.lower() in ("maths", "mathematics", "math"):
             for i, q in enumerate(questions):
                 qid = q.get("id", f"Q{i + 1}")
@@ -140,7 +153,7 @@ class OutputValidator:
                 if verified is False:
                     errors.append(f"{qid}: math answer appears incorrect")
 
-        # 5b. Visual-answer coherence
+        # 6b. Visual-answer coherence
         for i, q in enumerate(questions):
             if q.get("visual_type"):
                 qid = q.get("id", f"Q{i + 1}")
@@ -148,7 +161,7 @@ class OutputValidator:
                 if coherence is False:
                     errors.append(f"{qid}: visual data does not match correct_answer")
 
-        # 6. Must have answer_key or answers extractable from questions
+        # 7. Must have answer_key or answers extractable from questions
         answer_key = data.get("answer_key", {})
         if not answer_key and all(not q.get("correct_answer") for q in questions):
             errors.append("No answer key and no answers in questions")

@@ -379,3 +379,53 @@ class TestSingleton:
 
     def test_get_quality_reviewer_is_correct_type(self):
         assert isinstance(get_quality_reviewer(), QualityReviewerAgent)
+
+
+# ---------------------------------------------------------------------------
+# CHECK 9: LLM artifact detection
+# ---------------------------------------------------------------------------
+
+class TestLLMartifactDetection:
+    def test_clean_question_no_warning(self):
+        q = _make_q(question_text="What is 5 + 7?")
+        result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
+        assert not any("LLM artifact" in w for w in result.warnings)
+
+    def test_as_an_ai_flagged(self):
+        q = _make_q(question_text="As an AI, I think 5 + 7 = 12. What is 5 + 7?")
+        result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
+        assert any("LLM artifact" in w for w in result.warnings)
+
+    def test_heres_a_flagged(self):
+        q = _make_q(question_text="Here's a fun question: What is 5 + 7?")
+        result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
+        assert any("LLM artifact" in w for w in result.warnings)
+
+    def test_hint_artifact_nulled(self):
+        q = _make_q(question_text="What is 5 + 7?")
+        q["hint"] = "Sure! Let me help you solve this."
+        result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
+        assert q["hint"] is None
+        assert any("LLM artifact in hint" in w for w in result.warnings)
+
+
+# ---------------------------------------------------------------------------
+# CHECK 10: Hindi language purity
+# ---------------------------------------------------------------------------
+
+class TestHindiPurity:
+    def test_pure_devanagari_no_warning(self):
+        q = _make_q(question_text="पाँच और सात का योग क्या है?")
+        result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
+        assert not any("Hindi code-mixing" in w for w in result.warnings)
+
+    def test_code_mixing_flagged(self):
+        q = _make_q(question_text="कितने pencils हैं?")
+        result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
+        assert any("Hindi code-mixing" in w for w in result.warnings)
+
+    def test_english_text_not_flagged(self):
+        """Pure English text should not trigger Hindi purity check."""
+        q = _make_q(question_text="How many pencils are there?")
+        result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
+        assert not any("Hindi code-mixing" in w for w in result.warnings)

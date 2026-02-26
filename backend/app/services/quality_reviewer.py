@@ -26,6 +26,14 @@ Runs four deterministic checks on the assembled question list, in order:
     C) error_detection answer agrees with the shown wrong answer instead of
        computing the real one ("334.0" → "434" for "289 + 145 = 334")
 
+  CHECK 9 — LLM artifact detection (all subjects)
+    Flags questions containing LLM conversational patterns ("As an AI…",
+    "Here's a…", "Let me…").  Nulls hint if artifact found there.
+
+  CHECK 10 — Hindi language purity (Hindi worksheets)
+    Flags questions where Devanagari text contains Latin-script words
+    (code-mixing like "कितने pencils हैं?").
+
 CHECK 1 is fail-CLOSED for arithmetic: if extraction succeeds but correction
 throws, the question is marked _math_unverified=True so the caller can act.
 All other checks are fail-open: an exception is logged and skipped.
@@ -486,6 +494,36 @@ def _word_limit(grade: int) -> int:
 
 
 # ---------------------------------------------------------------------------
+# LLM artifact detection (CHECK 9)
+# ---------------------------------------------------------------------------
+
+_LLM_ARTIFACT_RE = re.compile(
+    r"(?i)\b(as an ai|here'?s a|let me|i'?ll help|i am a language model"
+    r"|sure!? (?:here|let)|certainly!? (?:here|let)|i'?d be happy to)",
+)
+
+
+def _contains_llm_artifact(text: str) -> bool:
+    """Return True if text contains LLM conversational artifacts."""
+    return bool(_LLM_ARTIFACT_RE.search(text))
+
+
+# ---------------------------------------------------------------------------
+# Hindi language purity check (CHECK 10)
+# ---------------------------------------------------------------------------
+
+_LATIN_IN_DEVANAGARI_RE = re.compile(r"[a-zA-Z]{2,}")
+_DEVANAGARI_CHAR_RE = re.compile(r"[\u0900-\u097F]")
+
+
+def _has_hindi_code_mixing(text: str) -> bool:
+    """Return True if Devanagari text contains Latin-script words (code-mixing)."""
+    if not _DEVANAGARI_CHAR_RE.search(text):
+        return False  # Not Hindi text — skip
+    return bool(_LATIN_IN_DEVANAGARI_RE.search(text))
+
+
+# ---------------------------------------------------------------------------
 # Self-contradiction detector (CHECK 7)
 # ---------------------------------------------------------------------------
 
@@ -704,6 +742,30 @@ class QualityReviewerAgent:
                     logger.error("[quality_reviewer] Check 8 FAILED for Q%s — marking unverified: %s", q_id, exc)
                     q["_math_unverified"] = True
                     result.warnings.append(f"Q{q_id}: word problem answer could not be verified ({exc})")
+
+            # ── CHECK 9: LLM artifact detection ────────────────────────────
+            try:
+                if _contains_llm_artifact(question_text):
+                    msg = f"Q{q_id}: LLM artifact detected in question text"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    result.warnings.append(msg)
+                hint = q.get("hint") or ""
+                if hint and _contains_llm_artifact(hint):
+                    msg = f"Q{q_id}: LLM artifact in hint — nulled"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    q["hint"] = None
+                    result.warnings.append(msg)
+            except Exception as exc:
+                logger.debug("[quality_reviewer] Check 9 skipped for Q%s: %s", q_id, exc)
+
+            # ── CHECK 10: Hindi language purity ─────────────────────────────
+            try:
+                if _has_hindi_code_mixing(question_text):
+                    msg = f"Q{q_id}: Hindi code-mixing detected (Latin script in Devanagari text)"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    result.warnings.append(msg)
+            except Exception as exc:
+                logger.debug("[quality_reviewer] Check 10 skipped for Q%s: %s", q_id, exc)
 
         logger.info(
             "[quality_reviewer] Review complete: %d question(s), %d correction(s), %d warning(s), %d error(s)",

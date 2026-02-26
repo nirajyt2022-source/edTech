@@ -310,3 +310,49 @@ class TestGradingValidation:
         is_valid, errors = validator.validate_grading(data)
         assert not is_valid
         assert any("No grading results" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Type diversity check
+# ---------------------------------------------------------------------------
+
+class TestTypeDiversity:
+    def _make_q(self, qid, qtype, text="What is 2+2?", answer="4"):
+        return {"id": qid, "type": qtype, "text": text, "correct_answer": answer}
+
+    def test_diverse_types_pass(self, validator):
+        """Mixed types under 40% each should pass."""
+        qs = [
+            self._make_q("Q1", "mcq"),
+            self._make_q("Q2", "fill_blank"),
+            self._make_q("Q3", "word_problem"),
+            self._make_q("Q4", "short_answer"),
+            self._make_q("Q5", "true_false", answer="True"),
+        ]
+        qs[0]["options"] = ["3", "4", "5", "6"]
+        qs[4]["options"] = ["True", "False"]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("Type diversity" in e for e in errors)
+
+    def test_all_same_type_fails(self, validator):
+        """5 MCQs = 100% > 40% → should flag."""
+        qs = [
+            {"id": f"Q{i}", "type": "mcq", "text": f"Q {i}?",
+             "options": ["A", "B", "C", "D"], "correct_answer": "A"}
+            for i in range(1, 6)
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert any("Type diversity" in e for e in errors)
+
+    def test_small_worksheet_skips_check(self, validator):
+        """Fewer than 5 questions should skip the diversity check."""
+        qs = [
+            {"id": f"Q{i}", "type": "mcq", "text": f"Q {i}?",
+             "options": ["A", "B", "C", "D"], "correct_answer": "A"}
+            for i in range(1, 4)
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=3)
+        assert not any("Type diversity" in e for e in errors)
