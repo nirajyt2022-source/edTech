@@ -698,7 +698,8 @@ def resolve_question_images(questions: list[dict]) -> list[dict]:
 
     for q in questions:
         keywords = q.pop("image_keywords", None) or []
-        if keywords:
+        # Skip image resolution when an SVG visual already exists (avoids duplicate visuals)
+        if keywords and not q.get("visual_type"):
             images = resolve_keywords(keywords)
             if images:
                 q["images"] = images  # [{path, alt, category}, ...]

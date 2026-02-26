@@ -1955,7 +1955,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                             <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
                                           </div>
                                         )}
-                                        {question.images && question.images.length > 0 && (
+                                        {!question.visual_type && question.images && question.images.length > 0 && (
                                           <div className="flex gap-3 mt-3 flex-wrap">
                                             {question.images.map((img, i) => (
                                               <img
