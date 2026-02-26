@@ -49,6 +49,7 @@ class GenerationContext(BaseModel):
     challenge_mode: bool
     valid_skill_tags: list[str]  # from TOPIC_PROFILES["allowed_skill_tags"]
     child_context: dict  # ≤200 tokens of child-specific state (empty if no child_id)
+    adaptive_fallback: bool = False  # True when adaptive difficulty couldn't be loaded
 
 
 # ---------------------------------------------------------------------------
@@ -196,12 +197,13 @@ class TopicIntelligenceAgent:
         # 3. Valid skill tags from topic profile
         valid_skill_tags: list[str] = _get_skill_tags(topic_slug)
 
-        # 4. Adaptive difficulty from Learning Graph (fail-open)
+        # 4. Adaptive difficulty from Learning Graph (fail-open with flag)
         bloom_level: str = _DEFAULT_BLOOM
         format_mix: dict = dict(_DEFAULT_FORMAT_MIX)
         scaffolding: bool = _DEFAULT_SCAFFOLDING
         challenge_mode: bool = _DEFAULT_CHALLENGE
         child_context: dict = {}
+        adaptive_fallback: bool = False
 
         if child_id:
             try:
@@ -221,13 +223,17 @@ class TopicIntelligenceAgent:
                     "format_mix": format_mix,
                 }
             except Exception as exc:
+                adaptive_fallback = True
                 logger.warning(
                     "[topic_intelligence] get_adaptive_difficulty failed for child=%s topic=%r; "
-                    "using defaults. Error: %s",
+                    "using defaults (adaptive_fallback=True). Error: %s",
                     child_id,
                     topic_slug,
                     exc,
                 )
+        else:
+            # No child_id — personalization not possible
+            adaptive_fallback = True
 
         return GenerationContext(
             topic_slug=topic_slug,
@@ -241,6 +247,7 @@ class TopicIntelligenceAgent:
             challenge_mode=challenge_mode,
             valid_skill_tags=valid_skill_tags,
             child_context=child_context,
+            adaptive_fallback=adaptive_fallback,
         )
 
 

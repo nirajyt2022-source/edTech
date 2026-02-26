@@ -1105,6 +1105,8 @@ def generate_worksheet(
     # -- RAG: Inject curriculum context --
     import asyncio
 
+    curriculum_context = None
+    curriculum_warnings: list[str] = []
     try:
         from app.services.curriculum import get_curriculum_context
 
@@ -1120,7 +1122,9 @@ def generate_worksheet(
             curriculum_context = asyncio.run(get_curriculum_context(grade_level, subject, topic))
     except Exception as e:
         logger.warning("Failed to fetch curriculum context for %s/%s: %s", topic, grade_level, e)
-        curriculum_context = None
+        curriculum_warnings.append(
+            f"[curriculum] NCERT context unavailable for {topic} — worksheet generated without curriculum grounding"
+        )
 
     if curriculum_context:
         user_prompt = f"{curriculum_context}\n\n{user_prompt}"
@@ -1137,11 +1141,13 @@ def generate_worksheet(
         with _cf.ThreadPoolExecutor() as _pool:
             chapter_name = _pool.submit(lambda: asyncio.run(_get_ch(grade_level, subject, topic))).result(timeout=3)
     except Exception as exc:
-        logger.debug("Chapter name fetch skipped: %s", exc)
+        logger.warning("Chapter name fetch failed: %s", exc)
+        # Don't set chapter_name — PDF will skip the NCERT badge
+        curriculum_warnings.append("[curriculum] Chapter reference unavailable — PDF badge removed")
 
     max_attempts = 3
     last_error: Exception | None = None
-    all_warnings: list[str] = []
+    all_warnings: list[str] = list(curriculum_warnings)
 
     for attempt in range(1, max_attempts + 1):
         t0 = time.perf_counter()

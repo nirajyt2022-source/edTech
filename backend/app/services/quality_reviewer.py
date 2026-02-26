@@ -131,22 +131,59 @@ def _extract_word_problem_arithmetic(question_text: str) -> Optional[tuple[str, 
     """Try to extract operation + numbers from a word problem.
 
     Returns (expression_str, computed_value) or None.
-    Only handles simple 2-number word problems (most common in Class 1-5).
+    Handles 2-number and 3-number word problems (Class 1-5).
+
+    3-number patterns handled:
+      - "X items at Y each and Z more" → X*Y + Z
+      - "had X, gave Y, then gave Z"  → X - Y - Z
+      - "X + Y + Z altogether"        → X + Y + Z
+      - "X groups of Y each, ate Z"   → X*Y - Z
     """
     numbers = [int(n) for n in re.findall(r"\b(\d+)\b", question_text) if 0 < int(n) < 100000]
-    if len(numbers) != 2:
-        return None  # Only handle exactly 2-number problems
 
-    a, b = numbers
+    if len(numbers) == 2:
+        a, b = numbers
+        if _WP_SUB_WORDS.search(question_text):
+            big, small = max(a, b), min(a, b)
+            return (f"{big} - {small}", float(big - small))
+        elif _WP_MUL_WORDS.search(question_text):
+            return (f"{a} * {b}", float(a * b))
+        elif _WP_ADD_WORDS.search(question_text):
+            return (f"{a} + {b}", float(a + b))
+        return None
 
-    if _WP_SUB_WORDS.search(question_text):
-        big, small = max(a, b), min(a, b)
-        return (f"{big} - {small}", float(big - small))
-    elif _WP_MUL_WORDS.search(question_text):
-        return (f"{a} * {b}", float(a * b))
-    elif _WP_ADD_WORDS.search(question_text):
-        return (f"{a} + {b}", float(a + b))
+    if len(numbers) == 3:
+        a, b, c = numbers
+        has_mul = _WP_MUL_WORDS.search(question_text)
+        has_sub = _WP_SUB_WORDS.search(question_text)
+        has_add = _WP_ADD_WORDS.search(question_text)
 
+        # Pattern: "X items at Y each, then spent/gave/lost Z" → X*Y - Z
+        if has_mul and has_sub:
+            return (f"{a} * {b} - {c}", float(a * b - c))
+
+        # Pattern: "X items at Y each, plus Z more" → X*Y + Z
+        if has_mul and has_add:
+            return (f"{a} * {b} + {c}", float(a * b + c))
+
+        # Pattern: "X groups/sets of Y each" (c is the question number, e.g. "how many")
+        # Only if multiplication is clear and no other operation
+        if has_mul and not has_sub and not has_add:
+            return (f"{a} * {b}", float(a * b))
+
+        # Pattern: "had X, gave Y, then gave Z" → X - Y - Z
+        if has_sub and not has_mul:
+            big = max(numbers)
+            rest = sorted([n for n in numbers if n != big], reverse=True)
+            result = big - sum(rest)
+            expr = f"{big} - {rest[0]} - {rest[1]}"
+            return (expr, float(result))
+
+        # Pattern: "X + Y + Z altogether/total/in all" → sum
+        if has_add and not has_sub and not has_mul:
+            return (f"{a} + {b} + {c}", float(a + b + c))
+
+    # 4+ numbers — too ambiguous, skip
     return None
 
 

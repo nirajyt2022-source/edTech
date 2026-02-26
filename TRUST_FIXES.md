@@ -26,9 +26,9 @@
 
 | # | Weakness | Fix | Status |
 |---|---|---|---|
-| 4 | Curriculum context silently optional | Decision: hard-fail or remove badge when context missing | [ ] |
-| 6 | Adaptive difficulty defaults to recall | Requires mastery data pipeline to be reliable first | [ ] |
-| 7 | Math verification gaps on 3+ number problems | Extend parser to handle chained operations | [ ] |
+| 4 | Curriculum context silently optional | Remove badge when context missing; surface warning | [x] Done |
+| 6 | Adaptive difficulty defaults to recall | Surface adaptive_fallback flag; warning when personalization unavailable | [x] Done |
+| 7 | Math verification gaps on 3+ number problems | Extend parser to handle 3-number chained operations (mul+sub, mul+add, sub-chain, add-chain) | [x] Done |
 
 ---
 
