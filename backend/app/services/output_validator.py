@@ -42,10 +42,9 @@ class OutputValidator:
         errors: list[str] = []
         questions = data.get("questions", [])
 
-        # 1. Question count — allow 80% minimum
-        min_required = max(1, int(num_questions * 0.8))
-        if len(questions) < min_required:
-            errors.append(f"Too few questions: got {len(questions)}, need at least {min_required}")
+        # 1. Question count — exact match required (retry trigger)
+        if len(questions) < num_questions:
+            errors.append(f"[count_mismatch] Too few questions: got {len(questions)}, need {num_questions}")
 
         # 2. Every question needs required fields
         for i, q in enumerate(questions):

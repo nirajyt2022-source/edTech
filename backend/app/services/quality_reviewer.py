@@ -26,8 +26,9 @@ Runs four deterministic checks on the assembled question list, in order:
     C) error_detection answer agrees with the shown wrong answer instead of
        computing the real one ("334.0" → "434" for "289 + 145 = 334")
 
-All checks are fail-open: an exception in any check is logged and skipped
-so that generation is never blocked by the review layer.
+CHECK 1 is fail-CLOSED for arithmetic: if extraction succeeds but correction
+throws, the question is marked _math_unverified=True so the caller can act.
+All other checks are fail-open: an exception is logged and skipped.
 """
 
 from __future__ import annotations
@@ -525,7 +526,10 @@ class QualityReviewerAgent:
             slot_type = q.get("slot_type", "")
             question_text = q.get("question_text", "")
 
-            # ── CHECK 1: Maths arithmetic validation ─────────────────────
+            # ── CHECK 1: Maths arithmetic validation (HARD BLOCK) ────────
+            # Unlike other checks, CHECK 1 does NOT silently skip on error.
+            # If extraction succeeds but correction throws, the question is
+            # marked _math_unverified so the caller can trigger a retry.
             if is_maths and slot_type != "error_detection":
                 try:
                     extracted = _extract_arithmetic_expression(question_text)
@@ -544,7 +548,10 @@ class QualityReviewerAgent:
                             q["_answer_corrected"] = True
                             result.corrections.append(msg)
                 except Exception as exc:
-                    logger.debug("[quality_reviewer] Check 1 skipped for Q%s: %s", q_id, exc)
+                    # HARD BLOCK: mark question as unverified instead of silently skipping
+                    logger.error("[quality_reviewer] Check 1 FAILED for Q%s — marking unverified: %s", q_id, exc)
+                    q["_math_unverified"] = True
+                    result.warnings.append(f"Q{q_id}: math answer could not be verified ({exc})")
 
             # ── CHECK 2: Skill tag validation ────────────────────────────
             try:
@@ -634,7 +641,7 @@ class QualityReviewerAgent:
                 except Exception as exc:
                     logger.debug("[quality_reviewer] Check 7 skipped for Q%s: %s", q_id, exc)
 
-            # ── CHECK 8: Word problem answer verification ─────────────────
+            # ── CHECK 8: Word problem answer verification (HARD BLOCK) ────
             if is_maths and slot_type != "error_detection":
                 try:
                     # Only fire if the arithmetic extractor didn't already handle it
@@ -656,7 +663,10 @@ class QualityReviewerAgent:
                                 q["_answer_corrected"] = True
                                 result.corrections.append(msg)
                 except Exception as exc:
-                    logger.debug("[quality_reviewer] Check 8 skipped for Q%s: %s", q_id, exc)
+                    # HARD BLOCK: mark question as unverified
+                    logger.error("[quality_reviewer] Check 8 FAILED for Q%s — marking unverified: %s", q_id, exc)
+                    q["_math_unverified"] = True
+                    result.warnings.append(f"Q{q_id}: word problem answer could not be verified ({exc})")
 
         logger.info(
             "[quality_reviewer] Review complete: %d question(s), %d correction(s), %d warning(s), %d error(s)",

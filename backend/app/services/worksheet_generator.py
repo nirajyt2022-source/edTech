@@ -1001,7 +1001,7 @@ def validate_response(
         q_type = q.get("type", "short_answer")
         if q_type not in valid_types:
             q["type"] = "short_answer"
-            warnings.append(f"{qid}: unknown type '{q_type}', defaulted to short_answer")
+            warnings.append(f"[type_error] {qid}: unknown type '{q_type}', defaulted to short_answer")
 
         if q_type == "mcq":
             opts = q.get("options") or []
@@ -1197,6 +1197,39 @@ def generate_worksheet(
                     all_warnings.append(f"Retry {attempt}: near-duplicate patterns detected")
                     logger.warning("[v2] Attempt %d: near-duplicates, retrying", attempt)
                     continue
+
+            # Unknown type retry — LLM returned types we don't support
+            type_errors = [w for w in warnings if "[type_error]" in w]
+            if type_errors and attempt < max_attempts:
+                user_prompt += (
+                    "\n\nIMPORTANT: Only use these question types: "
+                    "mcq, fill_blank, true_false, short_answer, word_problem, error_detection. "
+                    "Do NOT invent new question types."
+                )
+                all_warnings.append(f"Retry {attempt}: unknown question types detected")
+                logger.warning("[v2] Attempt %d: unknown types %s, retrying", attempt, type_errors)
+                continue
+
+            # Count mismatch retry — got fewer questions than requested
+            count_errors = [e for e in validation_errors if "[count_mismatch]" in e]
+            if count_errors and attempt < max_attempts:
+                user_prompt += (
+                    f"\n\nYou MUST generate EXACTLY {num_questions} questions. Not fewer, not more. Count carefully."
+                )
+                all_warnings.append(f"Retry {attempt}: question count mismatch")
+                logger.warning("[v2] Attempt %d: count mismatch, retrying", attempt)
+                continue
+
+            # Math unverified retry — questions where arithmetic check failed
+            unverified = [q for q in data.get("questions", []) if q.get("_math_unverified")]
+            if len(unverified) > 2 and attempt < max_attempts:
+                user_prompt += (
+                    "\n\nCRITICAL: Every arithmetic question must have a verifiably correct answer. "
+                    "Show your working: state the expression and its result clearly."
+                )
+                all_warnings.append(f"Retry {attempt}: {len(unverified)} math answers unverifiable")
+                logger.warning("[v2] Attempt %d: %d unverified math answers, retrying", attempt, len(unverified))
+                continue
 
             logger.info(
                 "[v2] Generated %d questions in %d ms (attempt %d)",
