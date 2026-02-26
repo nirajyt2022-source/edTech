@@ -24,6 +24,7 @@ from typing import Any
 import structlog
 
 from app.data.image_registry import get_keywords_for_subject
+from app.data.topic_profiles import get_topic_profile
 from app.services.prompt_builder import _BLOOM_DIRECTIVES
 
 logger = structlog.get_logger("skolar.worksheet_generator")
@@ -281,6 +282,155 @@ _INDIAN_NAMES = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Skill-tag recipe helpers
+# ---------------------------------------------------------------------------
+
+# Suffix-based hints so we don't need 959 entries — just common suffixes
+_SKILL_TAG_HINTS: dict[str, str] = {
+    # Exact tags
+    "clock_reading": "Show a clock face; student reads the time shown",
+    "calendar_reading": "Read dates, days, or months from a calendar",
+    "column_add_with_carry": "Column addition with carrying/regrouping",
+    "column_sub_with_borrow": "Column subtraction with borrowing/regrouping",
+    "missing_number": "Fill in the missing number in an equation",
+    "estimation": "Estimate the answer before calculating",
+    "thinking": "Multi-step reasoning or explain-your-thinking question",
+}
+
+# Suffix fallbacks — matched if no exact key found
+_SKILL_TAG_SUFFIX_HINTS: dict[str, str] = {
+    "_word_problem": "Word problem with a real-life scenario",
+    "_fill_blank": "Fill-in-the-blank about the topic",
+    "_error_spot": "Show a worked solution with a mistake; student finds the error",
+    "_thinking": "Multi-step reasoning or explain-your-thinking question",
+    "_reading": "Read and interpret information presented visually",
+    "_match": "Match items from two columns",
+    "_identify": "Identify or classify the given item",
+    "_compare": "Compare two quantities or items",
+    "_sequence": "Put items in the correct order or find the pattern",
+}
+
+
+def _get_skill_tag_hint(tag: str) -> str:
+    """Return a 1-line description for a skill tag using exact match or suffix fallback."""
+    if tag in _SKILL_TAG_HINTS:
+        return _SKILL_TAG_HINTS[tag]
+    for suffix, hint in _SKILL_TAG_SUFFIX_HINTS.items():
+        if tag.endswith(suffix):
+            return hint
+    # Generic fallback: humanize the tag name
+    return tag.replace("_", " ").capitalize()
+
+
+def _scale_recipe(recipe: list[dict], target: int) -> list[dict]:
+    """Scale a 10-question recipe to any target count, preserving proportions.
+
+    Guarantees min-1-per-tag and exact sum == target.
+    """
+    total = sum(entry["count"] for entry in recipe)
+    if total == target:
+        return [dict(entry) for entry in recipe]
+
+    # Start with min-1 per tag
+    scaled = []
+    for entry in recipe:
+        scaled.append({"skill_tag": entry["skill_tag"], "count": 1})
+
+    remaining = target - len(scaled)
+    if remaining <= 0:
+        # More tags than target — truncate to target, keeping first N
+        return scaled[:target]
+
+    # Distribute remaining proportionally
+    weights = [entry["count"] / total for entry in recipe]
+    extra = [int(w * remaining) for w in weights]
+
+    # Distribute rounding remainder to largest tags first
+    leftover = remaining - sum(extra)
+    indices = sorted(range(len(weights)), key=lambda i: weights[i], reverse=True)
+    for i in range(leftover):
+        extra[indices[i % len(indices)]] += 1
+
+    for i, entry in enumerate(scaled):
+        entry["count"] += extra[i]
+
+    return scaled
+
+
+# Topic-to-scenario-pool mapping
+_TOPIC_POOL_MAP: dict[str, str] = {
+    "time": "maths_time.json",
+    "clock": "maths_time.json",
+    "calendar": "maths_time.json",
+    "addition": "maths_addition.json",
+    "add": "maths_addition.json",
+    "carry": "maths_addition.json",
+}
+
+
+def _build_scenario_block(topic: str, grade_level: str) -> str | None:
+    """Load scenario pool for the topic and return a prompt block with sampled data."""
+    import json
+    from pathlib import Path
+
+    t_lower = topic.lower()
+    pool_file = None
+    for keyword, filename in _TOPIC_POOL_MAP.items():
+        if keyword in t_lower:
+            pool_file = filename
+            break
+    if not pool_file:
+        return None
+
+    pools_dir = Path(__file__).resolve().parent.parent / "data" / "scenario_pools"
+    pool_path = pools_dir / pool_file
+    if not pool_path.exists():
+        return None
+
+    pool_data = json.loads(pool_path.read_text())
+
+    # Extract class number from grade_level (e.g. "Class 3" -> "class_3")
+    class_key = None
+    import re as _re
+
+    m = _re.search(r"\d+", grade_level)
+    if m:
+        class_key = f"class_{m.group()}"
+    if not class_key or class_key not in pool_data:
+        return None
+
+    class_data = pool_data[class_key]
+    lines = ["\nSCENARIO DATA (use these for variety — sample from these values):"]
+
+    # Time pool
+    if "clock_read" in class_data:
+        clocks = class_data["clock_read"]
+        sampled_clocks = random.sample(clocks, min(3, len(clocks)))
+        lines.append("  Clock times: " + ", ".join(c["answer"] for c in sampled_clocks))
+    if "duration" in class_data and class_data["duration"]:
+        durations = class_data["duration"]
+        sampled_durations = random.sample(durations, min(2, len(durations)))
+        lines.append("  Durations: " + "; ".join(f"{d['start']} to {d['end']} = {d['dur']}" for d in sampled_durations))
+
+    # Addition pool
+    if "pairs" in class_data:
+        pairs = class_data["pairs"]
+        sampled_pairs = random.sample(pairs, min(3, len(pairs)))
+        lines.append("  Number pairs: " + ", ".join(f"{p['a']}+{p['b']}={p['sum']}" for p in sampled_pairs))
+
+    # Common fields
+    if "contexts" in class_data:
+        contexts = class_data["contexts"]
+        sampled_contexts = random.sample(contexts, min(4, len(contexts)))
+        lines.append("  Contexts: " + ", ".join(sampled_contexts))
+
+    if len(lines) <= 1:
+        return None
+
+    return "\n".join(lines) + "\n"
+
+
 def build_user_prompt(
     board: str,
     grade_level: str,
@@ -328,6 +478,35 @@ def build_user_prompt(
     bloom_directive = _BLOOM_DIRECTIVES.get(bloom_key)
     if bloom_directive:
         prompt += f"\nCOGNITIVE LEVEL: {bloom_directive}\n"
+
+    # -- Skill-tag recipe injection --
+    profile = get_topic_profile(topic, subject)
+    if profile:
+        # Use recipes_by_count if available, otherwise scale default_recipe
+        recipes_by_count = profile.get("recipes_by_count", {})
+        if num_questions in recipes_by_count:
+            recipe = recipes_by_count[num_questions]
+        else:
+            recipe = _scale_recipe(profile.get("default_recipe", []), num_questions)
+
+        if recipe:
+            lines = []
+            for entry in recipe:
+                tag = entry["skill_tag"]
+                count = entry["count"]
+                hint = _get_skill_tag_hint(tag)
+                lines.append(f"  - {count}x {tag}: {hint}")
+            prompt += (
+                "\nSKILL-TAG PLAN (follow this EXACTLY — generate this many of each type):\n" + "\n".join(lines) + "\n"
+            )
+
+    # -- Scenario pool injection --
+    try:
+        scenario_block = _build_scenario_block(topic, grade_level)
+        if scenario_block:
+            prompt += scenario_block
+    except Exception as exc:
+        logger.debug("Scenario pool injection skipped: %s", exc)
 
     # -- Fractions constraint --
     if "fraction" in topic.lower():

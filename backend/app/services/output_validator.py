@@ -77,7 +77,7 @@ class OutputValidator:
                 if answer not in options_text and answer.upper() not in letters:
                     errors.append(f"{qid}: MCQ answer '{answer}' not in options")
 
-        # 3. Duplicate detection
+        # 3. Duplicate detection — exact + pattern-based near-duplicates
         texts = [q.get("text", "").strip().lower() for q in questions if q.get("text")]
         seen = set()
         for t in texts:
@@ -87,6 +87,24 @@ class OutputValidator:
                 errors.append("Duplicate question detected")
                 break
             seen.add(normalized)
+
+        # 3b. Near-duplicate detection — strip names/numbers/times to create templates
+        if len(questions) >= 4:
+            templates: list[str] = []
+            for q in questions:
+                text = q.get("text", "").strip().lower()
+                tmpl = self._make_template(text)
+                templates.append(tmpl)
+            from collections import Counter
+
+            counts = Counter(templates)
+            threshold = max(3, int(len(questions) * 0.33) + 1)
+            for tmpl, cnt in counts.items():
+                if cnt >= threshold:
+                    errors.append(
+                        f"Near-duplicate pattern detected: {cnt}/{len(questions)} questions share the same structure"
+                    )
+                    break
 
         # 4. Grade-level appropriateness
         grade_num = self._parse_grade_num(grade)
@@ -220,6 +238,31 @@ class OutputValidator:
         return is_valid, errors
 
     # ── Helpers ───────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _make_template(text: str) -> str:
+        """Strip names, numbers, and times from question text to create a structural template.
+
+        Used for near-duplicate detection — two questions that differ only in
+        names/numbers/times will produce the same template.
+        """
+        # Replace time patterns (e.g. "3:45 PM", "10:30 AM")
+        tmpl = re.sub(r"\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?", "<TIME>", text)
+        # Replace numbers (including currency like ₹500)
+        tmpl = re.sub(r"₹?\d+(?:\.\d+)?", "<NUM>", tmpl)
+        # Replace common Indian names (case-insensitive)
+        _NAMES_PATTERN = (
+            r"\b(?:aarav|ananya|vihaan|diya|reyansh|saanvi|arjun|isha|kabir|myra|"
+            r"aditya|kiara|rohan|priya|vivaan|anika|krishna|zara|rudra|pari|"
+            r"atharv|navya|shaurya|aadhya|dhruv|riya|arnav|sara|dev|anvi|"
+            r"ishan|tara|kian|meera|yash|nisha|aryan|siya|neil|pooja|"
+            r"rahul|sneha|manav|kavya|sameer|tanvi|kunal|ritika|"
+            r"ravi|kiran|anita|deepa|suresh|sunita|mohan)\b"
+        )
+        tmpl = re.sub(_NAMES_PATTERN, "<NAME>", tmpl, flags=re.IGNORECASE)
+        # Collapse whitespace
+        tmpl = re.sub(r"\s+", " ", tmpl).strip()
+        return tmpl
 
     @staticmethod
     def _parse_grade_num(grade: str) -> int | None:

@@ -81,6 +81,46 @@ class TestWorksheetValidation:
         assert any("empty question text" in e for e in errors)
 
 
+    def test_near_duplicate_detection_flags(self, validator):
+        """5/10 questions with same pattern (only names differ) should flag."""
+        questions = []
+        names = ["Aarav", "Priya", "Rohan", "Diya", "Kabir"]
+        # 5 near-duplicates: only the name changes
+        for i, name in enumerate(names):
+            questions.append({
+                "id": f"Q{i+1}", "type": "word_problem",
+                "text": f"{name} goes to the market and buys 5 apples for ₹10 each. How much does {name} pay?",
+                "correct_answer": "₹50",
+            })
+        # 5 diverse questions
+        questions.append({"id": "Q6", "type": "mcq", "text": "What is 2+2?", "options": ["3","4","5","6"], "correct_answer": "4"})
+        questions.append({"id": "Q7", "type": "fill_blank", "text": "15 - 7 = ______", "correct_answer": "8"})
+        questions.append({"id": "Q8", "type": "true_false", "text": "True or False: 5 × 3 = 15", "options": ["True","False"], "correct_answer": "True"})
+        questions.append({"id": "Q9", "type": "short_answer", "text": "Name a 3-digit number", "correct_answer": "100"})
+        questions.append({"id": "Q10", "type": "error_detection", "text": "Find the mistake: 25+18=42", "correct_answer": "43"})
+
+        data = {"questions": questions}
+        is_valid, errors = validator.validate_worksheet(data, num_questions=10)
+        assert any("Near-duplicate" in e for e in errors)
+
+    def test_near_duplicate_detection_passes_diverse(self, validator):
+        """4 diverse questions should pass near-duplicate check."""
+        data = {"questions": [
+            {"id": "Q1", "type": "mcq", "text": "What time does the clock show?", "options": ["3:00","4:00","5:00","6:00"], "correct_answer": "3:00"},
+            {"id": "Q2", "type": "word_problem", "text": "Aarav starts homework at 4:30 PM and finishes at 5:15 PM. How long did it take?", "correct_answer": "45 minutes"},
+            {"id": "Q3", "type": "fill_blank", "text": "1 hour = ______ minutes", "correct_answer": "60"},
+            {"id": "Q4", "type": "true_false", "text": "True or False: 90 minutes = 1 hour 30 minutes", "options": ["True","False"], "correct_answer": "True"},
+        ]}
+        is_valid, errors = validator.validate_worksheet(data, num_questions=4)
+        assert not any("Near-duplicate" in e for e in errors)
+
+    def test_make_template(self, validator):
+        """_make_template should normalize names, numbers, and times."""
+        text1 = "Aarav goes to school at 8:30 AM and comes back at 3:15 PM"
+        text2 = "Priya goes to school at 9:00 AM and comes back at 2:45 PM"
+        assert validator._make_template(text1) == validator._make_template(text2)
+
+
 class TestFlashcardValidation:
     def test_valid_flashcards(self, validator):
         data = {"cards": [{"front": f"Q{i}", "back": f"A{i}"} for i in range(12)]}
