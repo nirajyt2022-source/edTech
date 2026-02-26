@@ -1,19 +1,20 @@
--- Migration 003a: Fix embedding dimensions from 768 → 3072
--- gemini-embedding-001 returns 3072 dimensions, not 768.
--- Run this in Supabase SQL Editor if you already ran 003_rag_pgvector.sql with 768 dims.
+-- Migration 003a: Ensure embedding columns are vector(768)
+-- gemini-embedding-001 outputs 3072 natively, but we use output_dimensionality=768
+-- to stay within pgvector's HNSW limit of 2000 dims.
+-- Run this in Supabase SQL Editor if you previously altered columns to 3072.
 
--- Drop old indexes (they reference the old vector size)
+-- Drop indexes that may reference wrong size
 DROP INDEX IF EXISTS idx_curriculum_content_embedding;
 DROP INDEX IF EXISTS idx_curriculum_embeddings_hnsw;
 
--- Alter columns from vector(768) to vector(3072)
+-- Ensure columns are vector(768)
 ALTER TABLE curriculum_content
-  ALTER COLUMN embedding TYPE vector(3072);
+  ALTER COLUMN embedding TYPE vector(768);
 
 ALTER TABLE curriculum_embeddings
-  ALTER COLUMN embedding TYPE vector(3072);
+  ALTER COLUMN embedding TYPE vector(768);
 
--- Recreate HNSW indexes with correct dimensions
+-- Recreate HNSW indexes
 CREATE INDEX IF NOT EXISTS idx_curriculum_content_embedding
   ON curriculum_content USING hnsw (embedding vector_cosine_ops)
   WITH (m = 16, ef_construction = 64);
@@ -22,9 +23,9 @@ CREATE INDEX IF NOT EXISTS idx_curriculum_embeddings_hnsw
   ON curriculum_embeddings USING hnsw (embedding vector_cosine_ops)
   WITH (m = 16, ef_construction = 64);
 
--- Recreate RPC with correct vector size
+-- Recreate RPC with vector(768)
 CREATE OR REPLACE FUNCTION match_curriculum(
-  query_embedding vector(3072),
+  query_embedding vector(768),
   match_count int DEFAULT 5,
   filter_grade text DEFAULT NULL,
   filter_subject text DEFAULT NULL,

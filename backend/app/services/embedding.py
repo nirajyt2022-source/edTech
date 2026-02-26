@@ -2,13 +2,15 @@
 Embedding service — Gemini gemini-embedding-001 wrapper.
 
 Uses the google-genai SDK (already a dependency) with TTL caching to avoid
-redundant embedding calls for repeated queries.
+redundant embedding calls for repeated queries. Output is truncated to 768
+dimensions via output_dimensionality to stay within pgvector's HNSW limit
+of 2000 dims.
 
 Usage:
     from app.services.embedding import get_embedding_service
 
     svc = get_embedding_service()
-    vec = await svc.embed_text("How do I add fractions?")  # 3072-dim
+    vec = await svc.embed_text("How do I add fractions?")  # 768-dim
 """
 
 from __future__ import annotations
@@ -23,22 +25,24 @@ from app.core.config import get_settings
 logger = structlog.get_logger("skolar.embedding")
 
 EMBEDDING_MODEL = "gemini-embedding-001"
-EMBEDDING_DIMS = 3072
+# Native model outputs 3072 dims, but pgvector HNSW caps at 2000.
+# Gemini supports output_dimensionality to truncate server-side.
+EMBEDDING_DIMS = 768
 BATCH_SIZE = 20
 
 
 class EmbeddingService:
-    """Thin wrapper around Gemini gemini-embedding-001."""
+    """Thin wrapper around Gemini gemini-embedding-001 (768-dim output)."""
 
     def __init__(self, api_key: str) -> None:
         from google import genai
 
         self._client = genai.Client(api_key=api_key)
         self._cache: TTLCache[str, list[float]] = TTLCache(maxsize=500, ttl=3600)
-        logger.info("embedding_service_init", model=EMBEDDING_MODEL)
+        logger.info("embedding_service_init", model=EMBEDDING_MODEL, dims=EMBEDDING_DIMS)
 
     async def embed_text(self, text: str) -> list[float]:
-        """Embed a single text string. Returns 3072-dim vector. Cached by text."""
+        """Embed a single text string. Returns 768-dim vector. Cached by text."""
         text = text.strip()
         if not text:
             return [0.0] * EMBEDDING_DIMS
@@ -70,11 +74,14 @@ class EmbeddingService:
 
     async def _call_embed(self, texts: list[str]) -> list[list[float]]:
         """Call the Gemini embedding API (blocking SDK, run in thread)."""
+        from google.genai import types
+
         try:
             response = await asyncio.to_thread(
                 self._client.models.embed_content,
                 model=EMBEDDING_MODEL,
                 contents=texts,
+                config=types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMS),
             )
             return [e.values for e in response.embeddings]
         except Exception as e:

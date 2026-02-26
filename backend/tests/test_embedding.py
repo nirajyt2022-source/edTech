@@ -18,12 +18,12 @@ from types import SimpleNamespace
 # Fixtures
 # ---------------------------------------------------------------------------
 
-def _make_mock_embedding(dims=3072):
+def _make_mock_embedding(dims=768):
     """Create a mock embedding response."""
     return SimpleNamespace(values=[0.1] * dims)
 
 
-def _make_mock_response(count=1, dims=3072):
+def _make_mock_response(count=1, dims=768):
     """Create a mock embed_content response."""
     return SimpleNamespace(
         embeddings=[_make_mock_embedding(dims) for _ in range(count)]
@@ -52,23 +52,23 @@ def _get_service():
 # ---------------------------------------------------------------------------
 
 class TestEmbedText:
-    def test_returns_3072_dims(self):
+    def test_returns_768_dims(self):
         svc = _get_service()
-        svc._client.models.embed_content.return_value = _make_mock_response(1, 3072)
+        svc._client.models.embed_content.return_value = _make_mock_response(1, 768)
 
         result = asyncio.run(svc.embed_text("How do I add fractions?"))
-        assert len(result) == 3072
+        assert len(result) == 768
         assert all(isinstance(v, float) for v in result)
 
     def test_empty_text_returns_zeros(self):
         svc = _get_service()
         result = asyncio.run(svc.embed_text(""))
-        assert len(result) == 3072
+        assert len(result) == 768
         assert all(v == 0.0 for v in result)
 
     def test_caching_avoids_second_call(self):
         svc = _get_service()
-        svc._client.models.embed_content.return_value = _make_mock_response(1, 3072)
+        svc._client.models.embed_content.return_value = _make_mock_response(1, 768)
 
         # First call — hits API
         result1 = asyncio.run(svc.embed_text("test query"))
@@ -81,7 +81,7 @@ class TestEmbedText:
 
     def test_different_texts_not_cached(self):
         svc = _get_service()
-        svc._client.models.embed_content.return_value = _make_mock_response(1, 3072)
+        svc._client.models.embed_content.return_value = _make_mock_response(1, 768)
 
         asyncio.run(svc.embed_text("query one"))
         asyncio.run(svc.embed_text("query two"))
@@ -92,11 +92,11 @@ class TestEmbedBatch:
     def test_returns_correct_count(self):
         svc = _get_service()
         texts = ["text 1", "text 2", "text 3"]
-        svc._client.models.embed_content.return_value = _make_mock_response(3, 3072)
+        svc._client.models.embed_content.return_value = _make_mock_response(3, 768)
 
         results = asyncio.run(svc.embed_batch(texts))
         assert len(results) == 3
-        assert all(len(v) == 3072 for v in results)
+        assert all(len(v) == 768 for v in results)
 
     def test_empty_batch_returns_empty(self):
         svc = _get_service()
@@ -106,16 +106,16 @@ class TestEmbedBatch:
     def test_batch_caches_individual_texts(self):
         svc = _get_service()
         texts = ["alpha", "beta"]
-        svc._client.models.embed_content.return_value = _make_mock_response(2, 3072)
+        svc._client.models.embed_content.return_value = _make_mock_response(2, 768)
 
         asyncio.run(svc.embed_batch(texts))
 
         # Now individual lookups should be cached
-        svc._client.models.embed_content.return_value = _make_mock_response(1, 3072)
+        svc._client.models.embed_content.return_value = _make_mock_response(1, 768)
         result = asyncio.run(svc.embed_text("alpha"))
         # Should not have made an additional API call for "alpha" (cached from batch)
         assert svc._client.models.embed_content.call_count == 1
-        assert len(result) == 3072
+        assert len(result) == 768
 
 
 class TestEmbedError:
