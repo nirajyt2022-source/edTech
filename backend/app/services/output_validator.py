@@ -180,6 +180,24 @@ class OutputValidator:
                 if coherence is False:
                     errors.append(f"{qid}: visual data does not match correct_answer")
 
+        # 7c. Visual-topic appropriateness (disallowed visual types)
+        if topic:
+            try:
+                from app.data.topic_profiles import get_topic_profile
+
+                profile = get_topic_profile(topic, subject or None)
+                if profile:
+                    disallowed_visuals = profile.get("disallowed_visual_types", [])
+                    if disallowed_visuals:
+                        disallowed_set = set(v.lower() for v in disallowed_visuals)
+                        for i, q in enumerate(questions):
+                            vtype = q.get("visual_type", "")
+                            if vtype and vtype.lower() in disallowed_set:
+                                qid = q.get("id", f"Q{i + 1}")
+                                errors.append(f"{qid}: visual type '{vtype}' is disallowed for topic '{topic}'")
+            except Exception as exc:
+                logger.debug("Visual-topic check skipped for topic '%s': %s", topic, exc)
+
         # 8. Must have answer_key or answers extractable from questions
         answer_key = data.get("answer_key", {})
         if not answer_key and all(not q.get("correct_answer") for q in questions):

@@ -339,3 +339,38 @@ class TestReturnType:
 
     def test_singleton_correct_type(self):
         assert isinstance(get_difficulty_calibrator(), DifficultyCalibrator)
+
+
+# ---------------------------------------------------------------------------
+# Pre-correction quality score
+# ---------------------------------------------------------------------------
+
+class TestCalibrationScore:
+    def test_score_present_in_warnings(self):
+        """calibrate() should always append a calibration_score warning."""
+        ctx = _ctx()
+        qs = [{"question_text": f"What is {i}+1?", "format": "mcq", "skill_tag": "column_add_with_carry"}
+              for i in range(5)]
+        _, warnings = DifficultyCalibrator().calibrate(qs, ctx)
+        score_warnings = [w for w in warnings if "[calibration_score]" in w]
+        assert len(score_warnings) == 1
+        assert "corrections=" in score_warnings[0]
+
+    def test_zero_corrections_when_clean(self):
+        """No swaps needed → corrections=0."""
+        ctx = _ctx(format_mix={})  # no target → no drift
+        qs = [{"question_text": "What is 2+3?", "format": "mcq", "skill_tag": "column_add_with_carry"}]
+        _, warnings = DifficultyCalibrator().calibrate(qs, ctx)
+        score_line = [w for w in warnings if "[calibration_score]" in w][0]
+        assert "corrections=0" in score_line
+
+    def test_nonzero_corrections_on_drift(self):
+        """Heavy format drift should produce corrections > 0."""
+        ctx = _ctx(format_mix={"mcq": 10, "fill_blank": 10, "word_problem": 80})
+        # All MCQ → heavy drift from 80% word_problem target
+        qs = [{"question_text": f"Q{i}: What is {i}+1?", "format": "mcq",
+               "skill_tag": "column_add_with_carry"} for i in range(10)]
+        _, warnings = DifficultyCalibrator().calibrate(qs, ctx)
+        score_line = [w for w in warnings if "[calibration_score]" in w][0]
+        # Should have some format swaps
+        assert "format_swaps=" in score_line

@@ -353,18 +353,28 @@ class DifficultyCalibrator:
                 logger.warning("[difficulty_calibrator] STEP C bonus append failed: %s", exc)
 
         # ── STEP D: Fix format distribution (active swap) ─────────────────
+        fmt_swaps = 0
         try:
             fmt_warnings = _fix_format_distribution(result, context)
+            fmt_swaps = sum(1 for w in fmt_warnings if "swapped" in w.lower())
             calibration_warnings.extend(fmt_warnings)
         except Exception as exc:
             logger.warning("[difficulty_calibrator] STEP D format fix failed: %s", exc)
 
         # ── STEP E: Fix number-range-by-position (active reorder) ─────────
+        nr_swaps = 0
         try:
             nr_warnings = _fix_number_range_by_position(result)
+            nr_swaps = sum(1 for w in nr_warnings if "Swapped" in w)
             calibration_warnings.extend(nr_warnings)
         except Exception as exc:
             logger.warning("[difficulty_calibrator] STEP E number range fix failed: %s", exc)
+
+        # ── Pre-correction quality score ──────────────────────────────────
+        total_corrections = fmt_swaps + nr_swaps
+        calibration_warnings.append(
+            f"[calibration_score] corrections={total_corrections} (format_swaps={fmt_swaps}, number_swaps={nr_swaps})"
+        )
 
         return result, calibration_warnings
 

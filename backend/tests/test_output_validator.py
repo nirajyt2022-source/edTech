@@ -393,3 +393,50 @@ class TestDisallowedKeywords:
             data, subject="Maths", topic="Nonexistent Topic XYZ", num_questions=1
         )
         assert not any("disallowed keyword" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Visual-topic appropriateness check
+# ---------------------------------------------------------------------------
+
+class TestVisualTopicAppropriateness:
+    def _make_q(self, qid, visual_type=None, text="What is 2+2?", answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text,
+                "correct_answer": answer, "visual_type": visual_type}
+
+    def test_allowed_visual_passes(self, validator):
+        """A visual type not in disallowed list should pass."""
+        qs = [self._make_q("Q1", visual_type="number_line")]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(
+            data, subject="Maths", topic="Addition (carries)", num_questions=1
+        )
+        assert not any("disallowed" in e and "visual" in e for e in errors)
+
+    def test_disallowed_visual_flagged(self, validator):
+        """A disallowed visual type should produce an error."""
+        # "Multiplication (tables 2-10)" disallows base_ten_regrouping
+        qs = [self._make_q("Q1", visual_type="base_ten_regrouping")]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(
+            data, subject="Maths", topic="Multiplication (tables 2-10)", num_questions=1
+        )
+        assert any("visual type" in e and "disallowed" in e for e in errors)
+
+    def test_no_visual_skips(self, validator):
+        """Questions without visual_type should not trigger the check."""
+        qs = [self._make_q("Q1")]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(
+            data, subject="Maths", topic="Multiplication (tables 2-10)", num_questions=1
+        )
+        assert not any("visual type" in e and "disallowed" in e for e in errors)
+
+    def test_unknown_topic_skips(self, validator):
+        """Unknown topic should not crash."""
+        qs = [self._make_q("Q1", visual_type="base_ten_regrouping")]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(
+            data, subject="Maths", topic="Nonexistent Topic", num_questions=1
+        )
+        assert not any("visual type" in e and "disallowed" in e for e in errors)
