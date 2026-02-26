@@ -373,3 +373,33 @@ class TestCalibrationScore:
         score_line = [w for w in warnings if "[calibration_score]" in w][0]
         # Should have some format swaps
         assert "format_swaps=" in score_line
+
+
+# ---------------------------------------------------------------------------
+# STEP B2 — Encouragement micro-prompt (T4)
+# ---------------------------------------------------------------------------
+
+class TestStepB2Encouragement:
+    def test_scaffolding_adds_encouragement_at_q5(self):
+        """With scaffolding=True and ≥5 questions, Q5 gets encouragement."""
+        ctx = _ctx(scaffolding=True, format_mix={})
+        fmts = ["mcq", "fill_blank", "word_problem", "missing_number", "estimation"]
+        qs = [_q(id=i, fmt=fmts[i - 1]) for i in range(1, 6)]
+        result, _warnings = DifficultyCalibrator().calibrate(qs, ctx)
+        encouraged = [q for q in result if q.get("_encouragement")]
+        assert len(encouraged) == 1
+        assert "great" in encouraged[0]["_encouragement"].lower()
+
+    def test_scaffolding_false_no_encouragement(self):
+        """With scaffolding=False, no encouragement should be added."""
+        ctx = _ctx(scaffolding=False, format_mix={})
+        qs = [_q(id=i) for i in range(1, 6)]
+        result, _warnings = DifficultyCalibrator().calibrate(qs, ctx)
+        assert not any(q.get("_encouragement") for q in result)
+
+    def test_fewer_than_5_no_encouragement(self):
+        """With fewer than 5 questions, no encouragement added."""
+        ctx = _ctx(scaffolding=True, format_mix={})
+        qs = [_q(id=i) for i in range(1, 4)]
+        result, _warnings = DifficultyCalibrator().calibrate(qs, ctx)
+        assert not any(q.get("_encouragement") for q in result)

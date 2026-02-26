@@ -9,7 +9,7 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 | P0 | L1, R3, N2 | **Done** |
 | P1 | L4, R1, R4, T2 | **Done** |
 | P2 | S4, N1, N3, T1 | **Done** |
-| P3 | S2, S3, R5, T3, T4 | Planned |
+| P3 | S2, S3, R5, T3, T4 | **Done** |
 
 ---
 
@@ -27,8 +27,8 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 | Rule | Name | Threshold | Enforced By | Status |
 |------|------|-----------|-------------|--------|
 | S1 | Intra-band shuffle | Shuffle within same-difficulty band | difficulty_calibrator | Planned |
-| S2 | MCQ option count variety | 70% four / 20% three / 10% five | prompt_builder | Planned |
-| S3 | Word problem length variety | 2-4 sentences per WP | prompt + length check | Planned |
+| S2 | MCQ option count variety | 70% four / 20% three / 10% five | prompt instruction | **Done** |
+| S3 | Word problem length variety | 2-4 sentences per WP | prompt instruction | **Done** |
 | S4 | No adjacent same format | 0 consecutive same-format pairs | difficulty_calibrator STEP F | **Done** |
 
 ## 3. Numerical Patterns
@@ -48,7 +48,7 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 | R2 | No scenario repeat | 0 duplicate scenarios per worksheet | — | Planned |
 | R3 | Tighter near-duplicate | 50% similarity triggers flag (was 33%) | output_validator check 3b | **Done** |
 | R4 | Object uniqueness | No countable object in >1 question | output_validator check 10 | **Done** |
-| R5 | Cross-worksheet rotation | Track scenarios per child | session-level | Planned |
+| R5 | Cross-worksheet rotation | 20 scenarios, no repeat per worksheet | prompt instruction | **Done** |
 
 ## 5. Tone Issues
 
@@ -56,5 +56,5 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 |------|------|-----------|-------------|--------|
 | T1 | Engagement framing | ≥1 question uses warm framing | output_validator check 14 | **Done** |
 | T2 | Error detection variety | 8 distinct framings | phrasing_templates.py | **Done** |
-| T3 | Hindi spoken register | Spoken vocab, not textbook-formal | prompt + forbidden list | Planned |
-| T4 | Encouragement micro-prompt | 1 at Q5 for scaffolding mode | difficulty_calibrator | Planned |
+| T3 | Hindi spoken register | Spoken vocab, not textbook-formal | prompt + forbidden list | **Done** |
+| T4 | Encouragement micro-prompt | 1 at Q5 for scaffolding mode | difficulty_calibrator STEP B2 | **Done** |

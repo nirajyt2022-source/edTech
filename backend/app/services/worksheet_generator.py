@@ -479,8 +479,11 @@ def build_user_prompt(
         f"Language: {language} | Style: {style_hint} | Seed: {seed}\n\n"
         f'Generate {num_questions} ORIGINAL questions strictly about "{topic}". '
         f"Use these names: {names_str}. "
-        f"Vary scenarios (market, school, park, zoo, kitchen, festival, playground, train station), "
-        f"numbers, and distractors across questions.\n"
+        f"Vary scenarios, numbers, and distractors across questions.\n"
+        f"SCENARIO VARIETY: Use DIFFERENT settings for each word problem — choose from: "
+        f"market, school, park, zoo, kitchen, festival, playground, train station, "
+        f"library, farm, bakery, hospital, garden, sports field, birthday party, "
+        f"bus stop, temple, beach, museum, cinema. NEVER repeat a scenario within one worksheet.\n"
     )
 
     # Problem-style specific image instructions
@@ -499,6 +502,21 @@ def build_user_prompt(
     bloom_directive = _BLOOM_DIRECTIVES.get(bloom_key)
     if bloom_directive:
         prompt += f"\nCOGNITIVE LEVEL: {bloom_directive}\n"
+
+    # -- MCQ option count variety (S2) --
+    prompt += (
+        "\nMCQ VARIETY: Not all MCQs should have exactly 4 options. "
+        "Use this mix: ~70% with 4 options, ~20% with 3 options, ~10% with 5 options. "
+        "This makes the worksheet feel less mechanical.\n"
+    )
+
+    # -- Word problem length variety (S3) --
+    prompt += (
+        "\nWORD PROBLEM LENGTH: Vary sentence count in word problems. "
+        "Some should be 2 sentences (short), some 3 sentences (medium), "
+        "and at least one should be 4 sentences (detailed context). "
+        "Do NOT make every word problem the same length.\n"
+    )
 
     # -- NCERT terminology injection --
     _grade_match = re.search(r"\d+", grade_level)
@@ -557,6 +575,14 @@ def build_user_prompt(
             "\nHINDI SCRIPT: Generate ALL question content in Devanagari script. "
             "NEVER use transliterated Hindi (Roman script for Hindi words). "
             "All Hindi words must use proper Devanagari Unicode characters.\n"
+        )
+        # T3: Hindi spoken register — child-friendly, not textbook-formal
+        prompt += (
+            "\nHINDI REGISTER: Use spoken, child-friendly Hindi — NOT textbook-formal. "
+            "AVOID formal words like: अतः, अभिव्यक्त, निर्धारित, परिभाषित, व्याख्या, "
+            "तत्पश्चात, अनुसार, प्रयुक्त, उपर्युक्त, निम्नलिखित. "
+            "USE simple words like: तो, बताओ, लिखो, सोचो, गिनो, देखो, पढ़ो. "
+            "Write as a friendly teacher would speak to a child, not as a textbook.\n"
         )
 
     # ── Number progression directive ──

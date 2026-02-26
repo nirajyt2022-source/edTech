@@ -14,6 +14,10 @@ Runs four deterministic post-processing steps on the assembled question list:
     does not require an LLM call.
     Format: "Think about: <first meaningful word from topic_slug>"
 
+  STEP B2 — Add encouragement at Q5 (scaffolding=True only)
+    Stamps '_encouragement' on the 5th question to provide a mid-worksheet
+    motivational boost for struggling learners.
+
   STEP C — Add bonus challenge question (challenge_mode=True only)
     Appends a single extra dict marked with '_is_bonus: True'.  The bonus
     item signals to the frontend/PDF renderer that an extension problem is
@@ -380,6 +384,17 @@ class DifficultyCalibrator:
                 logger.debug("[difficulty_calibrator] STEP B: added %d hint(s)", hints_added)
             except Exception as exc:
                 logger.warning("[difficulty_calibrator] STEP B hint injection failed: %s", exc)
+
+        # ── STEP B2: Add encouragement at Q5 (scaffolding only, T4) ───────
+        if context.scaffolding:
+            try:
+                if len(result) >= 5:
+                    q5 = result[4]  # 0-indexed position 4 = Q5
+                    if not q5.get("_encouragement"):
+                        q5["_encouragement"] = "You're doing great! Keep going!"
+                        logger.debug("[difficulty_calibrator] STEP B2: encouragement added at Q5")
+            except Exception as exc:
+                logger.warning("[difficulty_calibrator] STEP B2 encouragement failed: %s", exc)
 
         # ── STEP C: Add bonus challenge question (challenge_mode only) ────
         if context.challenge_mode:

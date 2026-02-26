@@ -896,3 +896,60 @@ class TestEngagementFraming:
         data = {"questions": qs, "answer_key": {}}
         _, errors = validator.validate_worksheet(data, num_questions=5)
         assert not any("engagement framing" in e.lower() for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Prompt-level anti-artificiality instructions (S2, S3, R5, T3)
+# ---------------------------------------------------------------------------
+
+class TestPromptAntiArtificiality:
+    """Test that prompt builder includes anti-artificiality instructions."""
+
+    def _build_prompt(self, **kwargs):
+        from app.services.worksheet_generator import build_user_prompt
+        defaults = dict(
+            board="CBSE", grade_level="Class 3", subject="Maths",
+            topic="Addition (carries)", difficulty="medium",
+            num_questions=10, language="English",
+        )
+        defaults.update(kwargs)
+        return build_user_prompt(**defaults)
+
+    def test_mcq_variety_instruction_present(self):
+        """S2: Prompt should instruct varied MCQ option counts."""
+        prompt = self._build_prompt()
+        assert "MCQ VARIETY" in prompt
+        assert "3 options" in prompt
+        assert "5 options" in prompt
+
+    def test_word_problem_length_instruction_present(self):
+        """S3: Prompt should instruct varied word problem lengths."""
+        prompt = self._build_prompt()
+        assert "WORD PROBLEM LENGTH" in prompt
+        assert "2 sentences" in prompt
+        assert "4 sentences" in prompt
+
+    def test_scenario_variety_expanded(self):
+        """R5: Prompt should include expanded scenario list (>8 locations)."""
+        prompt = self._build_prompt()
+        assert "SCENARIO VARIETY" in prompt
+        # Check at least some of the new scenarios beyond the original 8
+        assert "library" in prompt
+        assert "bakery" in prompt
+        assert "museum" in prompt
+        assert "NEVER repeat a scenario" in prompt
+
+    def test_hindi_register_instruction_present(self):
+        """T3: Hindi prompt should include spoken register instruction."""
+        prompt = self._build_prompt(language="Hindi", subject="Hindi",
+                                     topic="Nouns (Class 3)")
+        assert "HINDI REGISTER" in prompt
+        assert "child-friendly" in prompt.lower()
+        # Should contain forbidden formal words
+        assert "निम्नलिखित" in prompt
+
+    def test_hindi_register_absent_for_english(self):
+        """T3: English prompt should NOT include Hindi register instruction."""
+        prompt = self._build_prompt(language="English", subject="English",
+                                     topic="Nouns (Class 3)")
+        assert "HINDI REGISTER" not in prompt
