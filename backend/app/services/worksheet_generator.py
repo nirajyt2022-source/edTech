@@ -24,6 +24,7 @@ from typing import Any
 import structlog
 
 from app.data.image_registry import get_keywords_for_subject
+from app.data.phrasing_templates import get_phrasing_samples
 from app.data.topic_profiles import get_topic_profile
 from app.services.prompt_builder import _BLOOM_DIRECTIVES
 
@@ -32,8 +33,8 @@ logger = structlog.get_logger("skolar.worksheet_generator")
 # ---------------------------------------------------------------------------
 # Prompt versions — bump when changing prompt content, logged with every call
 # ---------------------------------------------------------------------------
-SYSTEM_PROMPT_VERSION = "v2.3"
-USER_PROMPT_VERSION = "v2.3"
+SYSTEM_PROMPT_VERSION = "v2.4"
+USER_PROMPT_VERSION = "v2.4"
 
 # ---------------------------------------------------------------------------
 # 1A  System Prompt — composable blocks
@@ -54,6 +55,9 @@ RULES:
    Easy: What|Which|Name|Tell|Find|Show|Write|Count|Circle|Look at
    Medium: Calculate|Solve|Compare|Arrange|Explain|Complete|Fill in|How many|How much|If
    Hard: Analyze|Explain why|Prove|Is this correct|What mistake|Generalize|Predict|Justify
+9. NUMBER PROGRESSION — Within each group (Foundation, Application, Stretch), start with
+   smaller/simpler numbers and progress to larger ones. First question in a group uses the
+   easiest numbers; last question uses the hardest.
 
 DIFFICULTY LEVELS & ROLE DISTRIBUTION:
 - Easy: 60% Foundation (★ recognition/representation), 30% Application (★★), 10% Stretch (★★★ error_detection/thinking)
@@ -407,9 +411,9 @@ def _build_scenario_block(topic: str, grade_level: str) -> str | None:
         return None
 
     class_data = pool_data[class_key]
-    lines = ["\nSCENARIO DATA (use these for variety — sample from these values):"]
+    lines = ["\nSCENARIO DATA (use these for variety — use smaller numbers first, larger later):"]
 
-    # Time pool
+    # Time pool — sort by hour then minute for progression
     if "clock_read" in class_data:
         clocks = class_data["clock_read"]
         sampled_clocks = random.sample(clocks, min(3, len(clocks)))
@@ -419,11 +423,23 @@ def _build_scenario_block(topic: str, grade_level: str) -> str | None:
         sampled_durations = random.sample(durations, min(2, len(durations)))
         lines.append("  Durations: " + "; ".join(f"{d['start']} to {d['end']} = {d['dur']}" for d in sampled_durations))
 
-    # Addition pool
+    # Addition pool — sort pairs by sum for number progression
     if "pairs" in class_data:
         pairs = class_data["pairs"]
-        sampled_pairs = random.sample(pairs, min(3, len(pairs)))
-        lines.append("  Number pairs: " + ", ".join(f"{p['a']}+{p['b']}={p['sum']}" for p in sampled_pairs))
+        sorted_pairs = sorted(pairs, key=lambda p: p.get("sum", p.get("a", 0) + p.get("b", 0)))
+        n = len(sorted_pairs)
+        # Pick from bottom half (Foundation) and top half (Stretch)
+        half = max(1, n // 2)
+        foundation = sorted_pairs[:half]
+        stretch = sorted_pairs[half:]
+        f_sample = random.sample(foundation, min(2, len(foundation)))
+        s_sample = random.sample(stretch, min(2, len(stretch)))
+        f_sample.sort(key=lambda p: p.get("sum", 0))
+        s_sample.sort(key=lambda p: p.get("sum", 0))
+        if f_sample:
+            lines.append("  Foundation pairs: " + ", ".join(f"{p['a']}+{p['b']}={p['sum']}" for p in f_sample))
+        if s_sample:
+            lines.append("  Stretch pairs: " + ", ".join(f"{p['a']}+{p['b']}={p['sum']}" for p in s_sample))
 
     # Common fields
     if "contexts" in class_data:
@@ -501,7 +517,12 @@ def build_user_prompt(
                 tag = entry["skill_tag"]
                 count = entry["count"]
                 hint = _get_skill_tag_hint(tag)
-                lines.append(f"  - {count}x {tag}: {hint}")
+                line = f"  - {count}x {tag}: {hint}"
+                phrasings = get_phrasing_samples(tag, count=2)
+                if phrasings:
+                    examples = " | ".join(f'"{p}"' for p in phrasings)
+                    line += f"\n    Phrasing ideas: {examples}"
+                lines.append(line)
             prompt += (
                 "\nSKILL-TAG PLAN (follow this EXACTLY — generate this many of each type):\n" + "\n".join(lines) + "\n"
                 'Each question MUST include a "skill_tag" field matching one tag from the plan above.\n'
@@ -1033,8 +1054,22 @@ def validate_response(
 
 
 # ---------------------------------------------------------------------------
-# 1E  Generate — single entry-point
+# 1E  Helpers + Generate — single entry-point
 # ---------------------------------------------------------------------------
+
+
+def _extract_repeated_templates(questions: list[dict], threshold: int = 3) -> list[str]:
+    """Return template strings that appear >= *threshold* times in *questions*.
+
+    Uses OutputValidator._make_template to normalise names/numbers/times.
+    """
+    from collections import Counter
+
+    from app.services.output_validator import OutputValidator
+
+    templates = [OutputValidator._make_template(q.get("text", "")) for q in questions]
+    counts = Counter(templates)
+    return [tmpl for tmpl, cnt in counts.most_common() if cnt >= threshold]
 
 
 def generate_worksheet(
@@ -1091,7 +1126,7 @@ def generate_worksheet(
         logger.info("[v2] Curriculum context injected for %s / %s", topic, grade_level)
     # -- End RAG --
 
-    max_attempts = 2
+    max_attempts = 3
     last_error: Exception | None = None
     all_warnings: list[str] = []
 
@@ -1135,6 +1170,20 @@ def generate_worksheet(
                 )
                 all_warnings.append(f"Retry {attempt}: topic drift detected")
                 continue
+
+            # Near-duplicate retry
+            dup_errors = [e for e in validation_errors if "Near-duplicate" in e]
+            if dup_errors and attempt < max_attempts:
+                repeated = _extract_repeated_templates(data.get("questions", []))
+                if repeated:
+                    neg = "\n\nDO NOT repeat these question patterns:\n"
+                    for tmpl in repeated[:3]:
+                        neg += f'  - "{tmpl}"\n'
+                    neg += "Each question MUST have a DIFFERENT sentence structure.\n"
+                    user_prompt += neg
+                    all_warnings.append(f"Retry {attempt}: near-duplicate patterns detected")
+                    logger.warning("[v2] Attempt %d: near-duplicates, retrying", attempt)
+                    continue
 
             logger.info(
                 "[v2] Generated %d questions in %d ms (attempt %d)",

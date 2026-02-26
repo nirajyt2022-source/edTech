@@ -79,7 +79,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 
 - [x] Skill-tag recipes enforce different question types
 - [x] Scenario pools inject varied contexts
-- [ ] **Phrasing templates** — 3-5 templates per skill tag, sampled per question
+- [x] **Phrasing templates** — 3-5 templates per skill tag, sampled per question
 - [x] **Opening verb rotation** — inject variety constraint into system prompt
 
 ### Pillar 2: Progressive Difficulty Scaffolding
@@ -87,7 +87,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 
 - [x] Role distribution (recognition → application → thinking)
 - [x] `ensure_roles()` sorts by tier
-- [ ] **Intra-tier progression** — numbers get harder within application tier
+- [x] **Intra-tier progression** — numbers get harder within application tier
 - [ ] **`number_range_by_position`** — position 1-3 small, 4-7 medium, 8-10 large
 
 ### Pillar 3: Skill Tagging
@@ -122,7 +122,7 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 - [x] Exact duplicate detection
 - [x] Pattern-based near-duplicate detection (`_make_template()`)
 - [x] Skill-tag recipes enforce type diversity
-- [ ] **Retry with negative constraint** — on duplicate, inject "do NOT repeat [template]"
+- [x] **Retry with negative constraint** — on duplicate, inject "do NOT repeat [template]"
 
 ### Pillar 7: No Robotic Phrasing
 **Rule:** Questions sound like a teacher wrote them.
@@ -184,9 +184,9 @@ Most competitors: 100% on LLM. PracticeCraft: 75% on deterministic infrastructur
 
 | # | Task | Effort | Files | Status |
 |---|---|---|---|---|
-| 6 | Phrasing templates per skill tag (top 10 topics) | 3 days | Topic profiles | [ ] TODO |
-| 7 | Intra-tier number progression via scenario pools | 2 days | Scenario pools | [ ] TODO |
-| 8 | Near-duplicate retry with negative constraint | 1 day | `generate_worksheet()` | [ ] TODO |
+| 6 | Phrasing templates per skill tag (top 10 topics) | 3 days | Topic profiles | [x] Done |
+| 7 | Intra-tier number progression via scenario pools | 2 days | Scenario pools | [x] Done |
+| 8 | Near-duplicate retry with negative constraint | 1 day | `generate_worksheet()` | [x] Done |
 
 ### P3 — Ship in 1 Month
 
