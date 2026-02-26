@@ -74,6 +74,26 @@ async def get_curriculum_context(
             )
 
             if not result.data or len(result.data) == 0:
+                # Try semantic vector search as final fallback
+                try:
+                    from app.services.vector_search import get_vector_search
+
+                    vs = get_vector_search()
+                    vector_results = await vs.hybrid_search(topic, grade=grade, subject=subject, top_k=1)
+                    if vector_results:
+                        data = vector_results[0]
+                        context = _format_context(data)
+                        _cache[key] = context
+                        logger.info(
+                            "curriculum_loaded_via_vector",
+                            topic=topic,
+                            grade=grade,
+                            matched_topic=data.get("topic"),
+                        )
+                        return context
+                except Exception as ve:
+                    logger.debug("vector_search_fallback_failed", error=str(ve))
+
                 logger.info("curriculum_not_found", grade=grade, subject=subject, topic=topic)
                 _cache[key] = None
                 return None
@@ -155,6 +175,53 @@ def _format_context(data: dict[str, Any]) -> str:
     parts.append("[/CURRICULUM]")
 
     return "\n".join(parts)
+
+
+async def get_semantic_curriculum_context(
+    query: str,
+    grade: str | None = None,
+    subject: str | None = None,
+    top_k: int = 3,
+) -> str | None:
+    """
+    Multi-result semantic retrieval for open-ended questions.
+
+    Unlike get_curriculum_context() which looks up a single (grade, subject, topic),
+    this function searches across the entire curriculum using vector similarity,
+    returning the top-K most relevant curriculum entries as a combined context block.
+
+    Used by Ask Skolar for free-form student questions.
+    """
+    try:
+        from app.services.vector_search import get_vector_search
+
+        vs = get_vector_search()
+        results = await vs.hybrid_search(query, grade=grade, subject=subject, top_k=top_k)
+
+        if not results:
+            logger.info("semantic_curriculum_no_results", query_preview=query[:60])
+            return None
+
+        # Format each result and combine
+        parts = []
+        for i, data in enumerate(results, 1):
+            formatted = _format_context(data)
+            if len(results) > 1:
+                # Label each result when returning multiple
+                formatted = formatted.replace("[CURRICULUM]", f"[CURRICULUM #{i}]")
+                formatted = formatted.replace("[/CURRICULUM]", f"[/CURRICULUM #{i}]")
+            parts.append(formatted)
+
+        combined = "\n\n".join(parts)
+        logger.info(
+            "semantic_curriculum_loaded",
+            query_preview=query[:60],
+            result_count=len(results),
+        )
+        return combined
+    except Exception as e:
+        logger.error("semantic_curriculum_error", error=str(e), query_preview=query[:60])
+        return None
 
 
 def clear_cache() -> None:

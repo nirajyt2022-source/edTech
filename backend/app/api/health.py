@@ -71,6 +71,28 @@ async def deep_health(request: Request):
         logger.debug("cache_check_failed", error=str(e))
         checks["cache"] = "unavailable"
 
+    # 6. Embedding service
+    try:
+        from app.services.embedding import get_embedding_service
+
+        svc = get_embedding_service()
+        vec = await svc.embed_text("health check")
+        checks["embedding"] = "ok" if len(vec) == 768 else f"unexpected dims: {len(vec)}"
+    except Exception as e:
+        logger.debug("embedding_check_failed", error=str(e))
+        checks["embedding"] = f"error: {str(e)[:100]}"
+
+    # 7. Vector search (pgvector)
+    try:
+        from app.services.vector_search import get_vector_search
+
+        vs = get_vector_search()
+        results = await vs.semantic_search("test query", top_k=1)
+        checks["vector_search"] = "ok" if isinstance(results, list) else "unexpected"
+    except Exception as e:
+        logger.debug("vector_search_check_failed", error=str(e))
+        checks["vector_search"] = f"error: {str(e)[:100]}"
+
     all_ok = all(v == "ok" for k, v in checks.items() if k not in ("ai_stats", "curriculum_topics", "cache"))
 
     return {

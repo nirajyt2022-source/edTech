@@ -9,6 +9,7 @@ from supabase import Client, create_client
 
 from app.core.config import get_settings
 from app.services.ai_client import AIClient, OpenAICompatAdapter, get_ai_client, get_openai_compat_client
+from app.services.embedding import EmbeddingService, get_embedding_service
 from app.services.pdf import PDFService, get_pdf_service
 
 logger = structlog.get_logger("skolar.deps")
@@ -57,6 +58,7 @@ UserId = Annotated[str, Depends(get_user_id)]
 AiClient = Annotated[AIClient, Depends(get_ai_client)]
 OpenAICompat = Annotated[OpenAICompatAdapter, Depends(get_openai_compat_client)]
 PdfDep = Annotated[PDFService, Depends(get_pdf_service)]
+EmbedDep = Annotated[EmbeddingService, Depends(get_embedding_service)]
 
 
 def verify_child_ownership(user_id: str, child_id: str) -> None:

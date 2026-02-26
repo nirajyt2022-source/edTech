@@ -120,15 +120,41 @@ RULES:
     Instead say: "I'm here to help with your school studies! Ask me about any subject."
 12. Keep responses concise — max 200 words for simple questions, max 400 for complex ones."""
 
-    # -- RAG: Inject curriculum context if grade+subject available --
-    if body.grade and body.subject:
-        from app.services.curriculum import get_curriculum_context
+    # -- RAG: Three-tier curriculum context retrieval --
+    curriculum_ctx = None
+    rag_source = None
 
-        # Use detected topic from question or fall back to empty
+    if body.grade and body.subject:
+        from app.services.curriculum import get_curriculum_context, get_semantic_curriculum_context
+
+        # Tier 1: Exact match on (grade, subject, topic-from-question)
         curriculum_ctx = await get_curriculum_context(body.grade, body.subject, safe_question[:50])
         if curriculum_ctx:
-            system_prompt = f"{system_prompt}\n\n{curriculum_ctx}"
-            logger.info("Curriculum context injected for Ask Skolar: %s/%s", body.grade, body.subject)
+            rag_source = "exact_or_fuzzy"
+        else:
+            # Tier 2: Semantic search with grade+subject filters
+            curriculum_ctx = await get_semantic_curriculum_context(
+                safe_question, grade=body.grade, subject=body.subject, top_k=2
+            )
+            if curriculum_ctx:
+                rag_source = "semantic_filtered"
+
+    if not curriculum_ctx:
+        from app.services.curriculum import get_semantic_curriculum_context
+
+        # Tier 3: Pure semantic search (no grade/subject filter)
+        curriculum_ctx = await get_semantic_curriculum_context(safe_question, top_k=2)
+        if curriculum_ctx:
+            rag_source = "semantic_unfiltered"
+
+    if curriculum_ctx:
+        system_prompt = f"{system_prompt}\n\n{curriculum_ctx}"
+        logger.info(
+            "curriculum_context_injected",
+            source=rag_source,
+            grade=body.grade or "none",
+            subject=body.subject or "none",
+        )
     # -- End RAG --
 
     answer_text = await _call_gemini_chat(system_prompt, safe_history, safe_question, ai=ai)
