@@ -609,3 +609,96 @@ class TestNumberReuse:
         data = {"questions": qs, "answer_key": {}}
         _, errors = validator.validate_worksheet(data, num_questions=3)
         assert not any("Number" in e and "appears in" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Countable object uniqueness (R4)
+# ---------------------------------------------------------------------------
+
+class TestObjectUniqueness:
+    def _make_q(self, qid, text, answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_unique_objects_pass(self, validator):
+        """Different objects across questions should pass."""
+        qs = [
+            self._make_q("Q1", "Aarav has 5 apples."),
+            self._make_q("Q2", "Priya bought 3 pencils."),
+            self._make_q("Q3", "There are 8 birds in the tree."),
+            self._make_q("Q4", "Rohan collected 12 marbles."),
+            self._make_q("Q5", "The box has 6 cookies."),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("Countable object" in e for e in errors)
+
+    def test_repeated_object_flags(self, validator):
+        """Same countable object in 2 questions should flag."""
+        qs = [
+            self._make_q("Q1", "Aarav has 5 apples and eats 2."),
+            self._make_q("Q2", "Priya bought 8 apples at the market."),
+            self._make_q("Q3", "There are 7 birds in the tree."),
+            self._make_q("Q4", "Rohan collected 12 marbles."),
+            self._make_q("Q5", "The box has 6 cookies."),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert any("apples" in e and "Countable object" in e for e in errors)
+
+    def test_non_countable_words_ignored(self, validator):
+        """Regular plural words not in the countable set should be ignored."""
+        qs = [
+            self._make_q("Q1", "The students played games."),
+            self._make_q("Q2", "The students went to the playground."),
+            self._make_q("Q3", "What are the students learning?"),
+            self._make_q("Q4", "How many fingers on 2 hands?"),
+            self._make_q("Q5", "Count the circles."),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("Countable object" in e for e in errors)
+
+    def test_small_worksheet_skips(self, validator):
+        """Fewer than 5 questions should skip the check."""
+        qs = [
+            self._make_q("Q1", "Aarav has 5 apples."),
+            self._make_q("Q2", "Priya also has 8 apples."),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=2)
+        assert not any("Countable object" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Phrasing template expansion (L4 + T2)
+# ---------------------------------------------------------------------------
+
+class TestPhrasingTemplateExpansion:
+    def test_exact_match_has_8_plus(self):
+        """Every exact-match skill tag should have 8+ templates."""
+        from app.data.phrasing_templates import PHRASING_TEMPLATES
+        for tag, templates in PHRASING_TEMPLATES.items():
+            assert len(templates) >= 8, f"'{tag}' has only {len(templates)} templates (need ≥8)"
+
+    def test_suffix_match_has_8_plus(self):
+        """Every suffix-fallback should have 8+ templates."""
+        from app.data.phrasing_templates import PHRASING_TEMPLATES_BY_SUFFIX
+        for suffix, templates in PHRASING_TEMPLATES_BY_SUFFIX.items():
+            assert len(templates) >= 8, f"'{suffix}' has only {len(templates)} templates (need ≥8)"
+
+    def test_error_spot_has_variety(self):
+        """Error detection templates should have diverse framings."""
+        from app.data.phrasing_templates import PHRASING_TEMPLATES_BY_SUFFIX
+        templates = PHRASING_TEMPLATES_BY_SUFFIX["_error_spot"]
+        assert len(templates) >= 8
+        # Check that at least 3 different opening words are used
+        openers = set(t.split()[0].lower().rstrip("{") for t in templates)
+        assert len(openers) >= 3, f"Only {len(openers)} unique openers: {openers}"
+
+    def test_get_phrasing_samples_returns_requested_count(self):
+        """get_phrasing_samples should return the requested number of samples."""
+        from app.data.phrasing_templates import get_phrasing_samples
+        samples = get_phrasing_samples("column_add_with_carry", count=4)
+        assert len(samples) == 4
+        # All should be unique
+        assert len(set(samples)) == 4

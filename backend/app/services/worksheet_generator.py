@@ -471,7 +471,7 @@ def build_user_prompt(
     }.get(problem_style, "standard")
 
     seed = "".join(random.choices(string.ascii_lowercase, k=6))
-    names_str = ", ".join(random.sample(_INDIAN_NAMES, 6))
+    names_str = ", ".join(random.sample(_INDIAN_NAMES, min(10, len(_INDIAN_NAMES))))
 
     prompt = (
         f"Board: {board} | Class: {grade_level} | Subject: {subject}\n"

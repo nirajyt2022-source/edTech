@@ -219,7 +219,78 @@ class OutputValidator:
                     if cnt > 2:
                         errors.append(f"Opening verb '{verb}' repeats {cnt} times (max 2 per worksheet)")
 
-        # 10. Number reuse across questions — no number in >2 questions
+        # 10. Countable object uniqueness — no object noun in >1 question
+        if len(questions) >= 5:
+            _OBJECT_RE = re.compile(
+                r"\b(\w+(?:es|s))\b"  # plural nouns (rough heuristic)
+            )
+            _COUNTABLE_OBJECTS = frozenset(
+                {
+                    "apples",
+                    "oranges",
+                    "mangoes",
+                    "bananas",
+                    "pencils",
+                    "pens",
+                    "erasers",
+                    "books",
+                    "notebooks",
+                    "pages",
+                    "marbles",
+                    "balls",
+                    "sweets",
+                    "toffees",
+                    "chocolates",
+                    "stickers",
+                    "stamps",
+                    "coins",
+                    "rupees",
+                    "toys",
+                    "flowers",
+                    "leaves",
+                    "trees",
+                    "birds",
+                    "fishes",
+                    "eggs",
+                    "cups",
+                    "plates",
+                    "bottles",
+                    "bags",
+                    "boxes",
+                    "beads",
+                    "shells",
+                    "stones",
+                    "buttons",
+                    "seeds",
+                    "cookies",
+                    "cakes",
+                    "candies",
+                    "balloons",
+                    "candles",
+                    "ribbons",
+                    "stars",
+                    "tickets",
+                    "cards",
+                    "crayons",
+                    "colours",
+                    "colors",
+                    "caps",
+                    "cars",
+                    "buses",
+                }
+            )
+            object_to_questions: dict[str, int] = {}
+            for q in questions:
+                text = q.get("text", "").lower()
+                found_objects = set(_OBJECT_RE.findall(text)) & _COUNTABLE_OBJECTS
+                for obj in found_objects:
+                    object_to_questions[obj] = object_to_questions.get(obj, 0) + 1
+            for obj, cnt in object_to_questions.items():
+                if cnt > 1:
+                    errors.append(f"Countable object '{obj}' appears in {cnt} questions (max 1 per worksheet)")
+                    break  # one error is enough
+
+        # 11. Number reuse across questions — no number in >2 questions
         if len(questions) >= 5:
             number_to_questions: dict[str, int] = {}
             _NUM_RE = re.compile(r"\b(\d+)\b")

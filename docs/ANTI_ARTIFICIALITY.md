@@ -6,8 +6,8 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 
 | Priority | Rules | Status |
 |----------|-------|--------|
-| P0 | L1, R3, N2 | **In Progress** |
-| P1 | L4, R1, R4, T2 | Planned |
+| P0 | L1, R3, N2 | **Done** |
+| P1 | L4, R1, R4, T2 | **Done** |
 | P2 | S4, N1, N3, T1 | Planned |
 | P3 | S2, S3, R5, T3, T4 | Planned |
 
@@ -20,7 +20,7 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 | L1 | Opening verb diversity | No verb >2× per worksheet | output_validator check 9 | **Done** |
 | L2 | Sentence structure diversity | ≥3 distinct structures per 10Q | — | Planned |
 | L3 | Filler phrase ban | 0 "the following"/"given below" (unless visual) | — | Planned |
-| L4 | Expand phrasing pools | 8-10 templates per skill tag | phrasing_templates.py | Planned |
+| L4 | Expand phrasing pools | 8-10 templates per skill tag | phrasing_templates.py | **Done** |
 
 ## 2. Structural Patterns
 
@@ -44,10 +44,10 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 
 | Rule | Name | Threshold | Enforced By | Status |
 |------|------|-----------|-------------|--------|
-| R1 | Expand name bank | ≥10 unique names per worksheet | prompt_builder | Planned |
+| R1 | Expand name bank | ≥10 unique names per worksheet | worksheet_generator | **Done** |
 | R2 | No scenario repeat | 0 duplicate scenarios per worksheet | — | Planned |
 | R3 | Tighter near-duplicate | 50% similarity triggers flag (was 33%) | output_validator check 3b | **Done** |
-| R4 | Object uniqueness | No countable object in >1 question | — | Planned |
+| R4 | Object uniqueness | No countable object in >1 question | output_validator check 10 | **Done** |
 | R5 | Cross-worksheet rotation | Track scenarios per child | session-level | Planned |
 
 ## 5. Tone Issues
@@ -55,6 +55,6 @@ Concrete rules to eliminate the "AI feel" from generated worksheets. Organized b
 | Rule | Name | Threshold | Enforced By | Status |
 |------|------|-----------|-------------|--------|
 | T1 | Engagement framing | ≥20% use "Help X…", "Can you…" | phrasing templates | Planned |
-| T2 | Error detection variety | 3+ distinct framings | template pool | Planned |
+| T2 | Error detection variety | 8 distinct framings | phrasing_templates.py | **Done** |
 | T3 | Hindi spoken register | Spoken vocab, not textbook-formal | prompt + forbidden list | Planned |
 | T4 | Encouragement micro-prompt | 1 at Q5 for scaffolding mode | difficulty_calibrator | Planned |
