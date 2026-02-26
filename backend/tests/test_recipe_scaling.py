@@ -1,6 +1,4 @@
 """Tests for recipe scaling and skill-tag hint helpers."""
-import pytest
-
 from app.services.worksheet_generator import _scale_recipe, _get_skill_tag_hint
 
 
