@@ -19,7 +19,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import asyncio
 import copy
-from dataclasses import asdict
 
 # ── Pipeline imports ──────────────────────────────────────────────────────
 from app.services.topic_intelligence import (
@@ -577,7 +576,7 @@ def test_skill_tag_validation():
 
     # The validate_topic_profiles script should be importable and runnable
     try:
-        from scripts.validate_topic_profiles import main as validate_main
+        from scripts.validate_topic_profiles import main as validate_main  # noqa: F401
         check("validate_topic_profiles.py imports OK", True)
     except ImportError:
         # Script might not be importable as module — that's OK
