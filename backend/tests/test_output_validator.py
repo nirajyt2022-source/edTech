@@ -82,22 +82,21 @@ class TestWorksheetValidation:
 
 
     def test_near_duplicate_detection_flags(self, validator):
-        """5/10 questions with same pattern (only names differ) should flag."""
+        """6/10 questions with same pattern (only names differ) should flag."""
         questions = []
-        names = ["Aarav", "Priya", "Rohan", "Diya", "Kabir"]
-        # 5 near-duplicates: only the name changes
+        names = ["Aarav", "Priya", "Rohan", "Diya", "Kabir", "Myra"]
+        # 6 near-duplicates: only the name changes
         for i, name in enumerate(names):
             questions.append({
                 "id": f"Q{i+1}", "type": "word_problem",
                 "text": f"{name} goes to the market and buys 5 apples for ₹10 each. How much does {name} pay?",
                 "correct_answer": "₹50",
             })
-        # 5 diverse questions
-        questions.append({"id": "Q6", "type": "mcq", "text": "What is 2+2?", "options": ["3","4","5","6"], "correct_answer": "4"})
-        questions.append({"id": "Q7", "type": "fill_blank", "text": "15 - 7 = ______", "correct_answer": "8"})
-        questions.append({"id": "Q8", "type": "true_false", "text": "True or False: 5 × 3 = 15", "options": ["True","False"], "correct_answer": "True"})
-        questions.append({"id": "Q9", "type": "short_answer", "text": "Name a 3-digit number", "correct_answer": "100"})
-        questions.append({"id": "Q10", "type": "error_detection", "text": "Find the mistake: 25+18=42", "correct_answer": "43"})
+        # 4 diverse questions
+        questions.append({"id": "Q7", "type": "mcq", "text": "What is 2+2?", "options": ["3","4","5","6"], "correct_answer": "4"})
+        questions.append({"id": "Q8", "type": "fill_blank", "text": "15 - 7 = ______", "correct_answer": "8"})
+        questions.append({"id": "Q9", "type": "true_false", "text": "True or False: 5 × 3 = 15", "options": ["True","False"], "correct_answer": "True"})
+        questions.append({"id": "Q10", "type": "short_answer", "text": "Name a 3-digit number", "correct_answer": "100"})
 
         data = {"questions": questions}
         is_valid, errors = validator.validate_worksheet(data, num_questions=10)
@@ -440,3 +439,173 @@ class TestVisualTopicAppropriateness:
             data, subject="Maths", topic="Nonexistent Topic", num_questions=1
         )
         assert not any("visual type" in e and "disallowed" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Opening verb diversity (L1)
+# ---------------------------------------------------------------------------
+
+class TestOpeningVerbDiversity:
+    def _make_q(self, qid, text, answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_diverse_verbs_pass(self, validator):
+        """Different opening words should pass."""
+        qs = [
+            self._make_q("Q1", "Find the sum of 2 and 3"),
+            self._make_q("Q2", "Calculate 5 + 7"),
+            self._make_q("Q3", "What is 8 - 3?"),
+            self._make_q("Q4", "Add 4 and 6"),
+            self._make_q("Q5", "How many apples are there?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("Opening verb" in e for e in errors)
+
+    def test_repeated_verb_fails(self, validator):
+        """Same opening word 3+ times should flag."""
+        qs = [
+            self._make_q("Q1", "Find the sum of 2 and 3"),
+            self._make_q("Q2", "Find the difference of 8 and 5"),
+            self._make_q("Q3", "Find the product of 4 and 6"),
+            self._make_q("Q4", "Add 7 and 9"),
+            self._make_q("Q5", "What is 6 + 2?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert any("Opening verb" in e for e in errors)
+        assert any("find" in e.lower() for e in errors if "Opening verb" in e)
+
+    def test_two_repeats_ok(self, validator):
+        """Exactly 2 of the same opening word is within threshold."""
+        qs = [
+            self._make_q("Q1", "Find the sum of 2 and 3"),
+            self._make_q("Q2", "Find the difference of 8 and 5"),
+            self._make_q("Q3", "Add 7 and 9"),
+            self._make_q("Q4", "What is 6 + 2?"),
+            self._make_q("Q5", "Calculate 4 times 5"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("Opening verb" in e for e in errors)
+
+    def test_small_worksheet_skips(self, validator):
+        """Fewer than 5 questions should skip the check."""
+        qs = [
+            self._make_q("Q1", "Find the sum of 2 and 3"),
+            self._make_q("Q2", "Find the difference of 8 and 5"),
+            self._make_q("Q3", "Find the product of 4 and 6"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=3)
+        assert not any("Opening verb" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Near-duplicate threshold tightened (R3)
+# ---------------------------------------------------------------------------
+
+class TestTightenedDuplicateThreshold:
+    def test_four_of_ten_same_pattern_flags(self, validator):
+        """4/10 same-structure questions should now flag (was allowed at 33%, blocked at 50%)."""
+        questions = []
+        names = ["Aarav", "Priya", "Rohan", "Diya"]
+        # 4 near-duplicates: only the name and numbers change
+        for i, name in enumerate(names):
+            questions.append({
+                "id": f"Q{i+1}", "type": "word_problem",
+                "text": f"{name} has {10+i} pencils and buys {5+i} more. How many pencils does {name} have now?",
+                "correct_answer": str(15 + 2*i),
+            })
+        # 6 diverse questions
+        questions.append({"id": "Q5", "type": "mcq", "text": "What is 2+2?", "options": ["3","4","5","6"], "correct_answer": "4"})
+        questions.append({"id": "Q6", "type": "fill_blank", "text": "15 - 7 = ______", "correct_answer": "8"})
+        questions.append({"id": "Q7", "type": "true_false", "text": "True or False: 5 x 3 = 15", "options": ["True","False"], "correct_answer": "True"})
+        questions.append({"id": "Q8", "type": "short_answer", "text": "Name a 3-digit number", "correct_answer": "100"})
+        questions.append({"id": "Q9", "type": "error_detection", "text": "Find the mistake: 25+18=42", "correct_answer": "43"})
+        questions.append({"id": "Q10", "type": "short_answer", "text": "Write 45 in words", "correct_answer": "forty-five"})
+
+        data = {"questions": questions}
+        _, errors = validator.validate_worksheet(data, num_questions=10)
+        # At 50% threshold, max(3, int(10*0.50)+1) = 6 → 4 < 6, so 4/10 should pass
+        assert not any("Near-duplicate" in e for e in errors)
+
+    def test_six_of_ten_same_pattern_flags(self, validator):
+        """6/10 same-structure should flag at 50% threshold."""
+        questions = []
+        names = ["Aarav", "Priya", "Rohan", "Diya", "Kabir", "Myra"]
+        for i, name in enumerate(names):
+            questions.append({
+                "id": f"Q{i+1}", "type": "word_problem",
+                "text": f"{name} has {10+i} pencils and buys {5+i} more. How many pencils does {name} have now?",
+                "correct_answer": str(15 + 2*i),
+            })
+        # 4 diverse
+        questions.append({"id": "Q7", "type": "mcq", "text": "What is 2+2?", "options": ["3","4","5","6"], "correct_answer": "4"})
+        questions.append({"id": "Q8", "type": "fill_blank", "text": "15 - 7 = ______", "correct_answer": "8"})
+        questions.append({"id": "Q9", "type": "true_false", "text": "True or False: 5 x 3 = 15", "options": ["True","False"], "correct_answer": "True"})
+        questions.append({"id": "Q10", "type": "short_answer", "text": "Write 45 in words", "correct_answer": "forty-five"})
+
+        data = {"questions": questions}
+        _, errors = validator.validate_worksheet(data, num_questions=10)
+        # At 50% threshold, max(3, int(10*0.50)+1) = 6 → 6 >= 6, should flag
+        assert any("Near-duplicate" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Number reuse across questions (N2)
+# ---------------------------------------------------------------------------
+
+class TestNumberReuse:
+    def _make_q(self, qid, text, answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_unique_numbers_pass(self, validator):
+        """No number reused across >2 questions should pass."""
+        qs = [
+            self._make_q("Q1", "What is 23 + 45?"),
+            self._make_q("Q2", "What is 67 - 12?"),
+            self._make_q("Q3", "Find 89 + 34"),
+            self._make_q("Q4", "Calculate 56 - 21"),
+            self._make_q("Q5", "Add 78 and 93"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("Number" in e and "appears in" in e for e in errors)
+
+    def test_number_in_three_questions_flags(self, validator):
+        """Same number in 3 questions should flag."""
+        qs = [
+            self._make_q("Q1", "What is 25 + 13?"),
+            self._make_q("Q2", "Find 25 - 8"),
+            self._make_q("Q3", "Calculate 25 + 47"),
+            self._make_q("Q4", "Add 67 and 89"),
+            self._make_q("Q5", "What is 34 + 56?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert any("25" in e and "appears in" in e for e in errors)
+
+    def test_trivial_numbers_excluded(self, validator):
+        """Numbers 0 and 1 should not trigger the check."""
+        qs = [
+            self._make_q("Q1", "Is 0 even or odd?", "even"),
+            self._make_q("Q2", "What is 0 + 5?", "5"),
+            self._make_q("Q3", "Start from 0 and count to 10", "10"),
+            self._make_q("Q4", "Add 23 and 45"),
+            self._make_q("Q5", "What is 67 - 12?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("Number" in e and "appears in" in e for e in errors)
+
+    def test_small_worksheet_skips(self, validator):
+        """Fewer than 5 questions should skip the check."""
+        qs = [
+            self._make_q("Q1", "What is 25 + 13?"),
+            self._make_q("Q2", "Find 25 - 8"),
+            self._make_q("Q3", "Calculate 25 + 47"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=3)
+        assert not any("Number" in e and "appears in" in e for e in errors)

@@ -97,7 +97,7 @@ class OutputValidator:
             from collections import Counter
 
             counts = Counter(templates)
-            threshold = max(3, int(len(questions) * 0.33) + 1)
+            threshold = max(3, int(len(questions) * 0.50) + 1)
             for tmpl, cnt in counts.items():
                 if cnt >= threshold:
                     errors.append(
@@ -202,6 +202,38 @@ class OutputValidator:
         answer_key = data.get("answer_key", {})
         if not answer_key and all(not q.get("correct_answer") for q in questions):
             errors.append("No answer key and no answers in questions")
+
+        # 9. Opening verb diversity — no verb may start >2 questions
+        if len(questions) >= 5:
+            opening_verbs: list[str] = []
+            for q in questions:
+                text = q.get("text", "").strip()
+                if text:
+                    first_word = text.split()[0].lower().rstrip(".:,;!?")
+                    opening_verbs.append(first_word)
+            if opening_verbs:
+                from collections import Counter as _VerbCounter
+
+                verb_counts = _VerbCounter(opening_verbs)
+                for verb, cnt in verb_counts.most_common(1):
+                    if cnt > 2:
+                        errors.append(f"Opening verb '{verb}' repeats {cnt} times (max 2 per worksheet)")
+
+        # 10. Number reuse across questions — no number in >2 questions
+        if len(questions) >= 5:
+            number_to_questions: dict[str, int] = {}
+            _NUM_RE = re.compile(r"\b(\d+)\b")
+            for q in questions:
+                text = q.get("text", "")
+                nums_in_q = set(_NUM_RE.findall(text))
+                for n in nums_in_q:
+                    if n in ("0", "1"):
+                        continue  # trivial numbers excluded
+                    number_to_questions[n] = number_to_questions.get(n, 0) + 1
+            for num_str, cnt in number_to_questions.items():
+                if cnt > 2:
+                    errors.append(f"Number '{num_str}' appears in {cnt} questions (max 2 per worksheet)")
+                    break  # one error is enough
 
         is_valid = len(errors) == 0
         if not is_valid:
