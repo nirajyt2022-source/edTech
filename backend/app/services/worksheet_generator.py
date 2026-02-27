@@ -1371,6 +1371,7 @@ def generate_worksheet(
 
             # ── Warning severity categorization ──
             data["_warning_severity"] = _categorize_warnings(all_warnings)
+            data["_quality_tier"] = data["_warning_severity"].get("quality_tier", "high")
 
             return data, elapsed_ms, all_warnings
 

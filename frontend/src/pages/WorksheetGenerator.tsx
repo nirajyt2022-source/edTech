@@ -206,6 +206,9 @@ interface Worksheet {
   language: string
   questions: Question[]
   learning_objectives?: string[]
+  parent_tip?: string
+  common_mistake?: string
+  skill_coverage?: Record<string, number>
   mastery_snapshot?: {
     mastery_level: string
     last_error_type: string | null
@@ -269,6 +272,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [activeIdx, setActiveIdx] = useState(0)
   const [error, setError] = useState('')
   const [generationWarnings, setGenerationWarnings] = useState<string[]>([])
+  const [qualityTier, setQualityTier] = useState<string>('high')
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [savedWorksheetId, setSavedWorksheetId] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
@@ -677,6 +681,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       // Surface quality warnings from the API
       const apiWarnings: string[] = response.data.warnings?.generation || []
       setGenerationWarnings(apiWarnings)
+      setQualityTier(response.data.quality_tier || 'high')
       if (response.data.verdict === 'best_effort') {
         notify.success('Worksheet ready (with quality notes)')
       } else {
@@ -1694,6 +1699,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         ))}
                       </div>
 
+                      {/* Parent Tip (Trust P0) */}
+                      {worksheet.parent_tip && (
+                        <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900 print:bg-amber-50">
+                          <span className="font-semibold">For Parents: </span>
+                          {worksheet.parent_tip}
+                        </div>
+                      )}
+
                       {/* Multi-skill tabs */}
                       {worksheets && worksheets.length > 1 && (
                         <div className="flex flex-wrap gap-1.5 print:hidden">
@@ -2200,7 +2213,38 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                           </div>
                         ))}
                       </div>
-                      <p className="mt-4 text-[10px] text-muted-foreground italic">Use this section for evaluation or guidance.</p>
+                      {/* Common Mistake (Trust P0) */}
+                      {worksheet.common_mistake && (
+                        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+                          <span className="font-semibold">Watch For: </span>
+                          {worksheet.common_mistake}
+                        </div>
+                      )}
+
+                      {/* Skills Tested (Trust P0) */}
+                      {worksheet.skill_coverage && Object.keys(worksheet.skill_coverage).length > 0 && (
+                        <div className="mt-6 pt-4 border-t border-border/30">
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Skills Tested</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(worksheet.skill_coverage).map(([skill, count]) => (
+                              <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary text-secondary-foreground border border-border/50">
+                                {skill.replace(/_/g, ' ')} <span className="text-muted-foreground">({count})</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quality badge (Trust P0) */}
+                      <p className="mt-4 text-[10px] text-muted-foreground italic flex items-center gap-1">
+                        {qualityTier === 'high' ? (
+                          <><span className="text-emerald-600">✓</span> All answers verified | Quality: High</>
+                        ) : qualityTier === 'medium' ? (
+                          <><span className="text-amber-600">✓</span> Answers verified | Quality: Standard</>
+                        ) : (
+                          <>Answers provided as best effort</>
+                        )}
+                      </p>
                     </div>
                   )}
 

@@ -336,6 +336,17 @@ class PDFService:
             )
         )
 
+        # ── Parent tip (Trust P0) ──
+        self.styles.add(
+            ParagraphStyle(
+                name="ParentTip",
+                fontName=FONT_REGULAR,
+                fontSize=9,
+                leading=13,
+                textColor=colors.Color(0.2, 0.2, 0.2),
+            )
+        )
+
         # ── Header fields (Name/Date/Score) ──
         self.styles.add(
             ParagraphStyle(
@@ -619,6 +630,36 @@ class PDFService:
         objectives = worksheet.get("learning_objectives", [])
         if objectives:
             self._build_learning_objectives(story, objectives)
+            story.append(Spacer(1, 6))
+
+        # ── Parent Tip (Trust P0) ──
+        parent_tip = worksheet.get("parent_tip", "")
+        if parent_tip:
+            page_w = A4[0] - 4.0 * cm
+            tip_table = Table(
+                [
+                    [
+                        Paragraph(
+                            f"<b>For Parents:</b> {_sanitize_text(parent_tip)}",
+                            self.styles["ParentTip"],
+                        )
+                    ]
+                ],
+                colWidths=[page_w],
+            )
+            tip_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FEF3C7")),
+                        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#D97706")),
+                        ("TOPPADDING", (0, 0), (-1, -1), 8),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ]
+                )
+            )
+            story.append(tip_table)
             story.append(Spacer(1, 6))
 
         # ── Name / Date / Score header fields ──
@@ -1161,15 +1202,56 @@ class PDFService:
                     )
                     story.append(Spacer(1, 4))
 
+        # ── Common Mistake callout (Trust P0) ──
+        common_mistake = worksheet.get("common_mistake", "")
+        if common_mistake:
+            story.append(Spacer(1, 12))
+            page_w = A4[0] - 4.0 * cm
+            cm_table = Table(
+                [
+                    [
+                        Paragraph(
+                            f"<b>Watch For:</b> {_sanitize_text(common_mistake)}",
+                            self.styles["ParentTip"],
+                        )
+                    ]
+                ],
+                colWidths=[page_w],
+            )
+            cm_table.setStyle(
+                TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FEF2F2")),
+                        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#DC2626")),
+                        ("TOPPADDING", (0, 0), (-1, -1), 8),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ]
+                )
+            )
+            story.append(cm_table)
+
+        # ── Skills Tested (Trust P0) ──
+        skill_coverage = worksheet.get("skill_coverage")
+        if skill_coverage:
+            story.append(Spacer(1, 12))
+            story.append(Paragraph("<b>Skills Tested</b>", self.styles["AnswerKeyTitle"]))
+            story.append(HRFlowable(width="100%", thickness=0.3, color=_RULE, spaceBefore=2, spaceAfter=6))
+            skill_text = "  |  ".join(f"{_sanitize_text(skill)} ({count})" for skill, count in skill_coverage.items())
+            story.append(Paragraph(skill_text, self.styles["AnswerText"]))
+
         # ── Verification footer ──
         story.append(Spacer(1, 24))
         story.append(HRFlowable(width="100%", thickness=0.3, color=_RULE, spaceBefore=4, spaceAfter=6))
-        story.append(
-            Paragraph(
-                "\u2713 All answers verified by computational engine",
-                self.styles["VerificationFooter"],
-            )
-        )
+        quality_tier = worksheet.get("_quality_tier", "high")
+        if quality_tier == "high":
+            badge_text = "\u2713 All answers verified  |  Quality: High"
+        elif quality_tier == "medium":
+            badge_text = "\u2713 Answers verified  |  Quality: Standard"
+        else:
+            badge_text = "Answers provided as best effort"
+        story.append(Paragraph(badge_text, self.styles["VerificationFooter"]))
 
 
 def get_pdf_service() -> PDFService:
