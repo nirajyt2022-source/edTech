@@ -2310,11 +2310,17 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         <div className="mt-6 pt-4 border-t border-border/30">
                           <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Skills Tested</h4>
                           <div className="flex flex-wrap gap-2">
-                            {Object.entries(worksheet.skill_coverage).map(([skill, count]) => (
-                              <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary text-secondary-foreground border border-border/50">
-                                {skill.replace(/_/g, ' ')} <span className="text-muted-foreground">({count})</span>
-                              </span>
-                            ))}
+                            {Object.entries(worksheet.skill_coverage).map(([skill, count]) => {
+                              // Extract just the skill keyword (last segment): hin_c5_paryay_identify → Identify
+                              const parts = skill.split('_')
+                              const keyword = parts[parts.length - 1]
+                              const label = keyword.charAt(0).toUpperCase() + keyword.slice(1)
+                              return (
+                                <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary text-secondary-foreground border border-border/50">
+                                  {label} <span className="text-muted-foreground">({count})</span>
+                                </span>
+                              )
+                            })}
                           </div>
                         </div>
                       )}
