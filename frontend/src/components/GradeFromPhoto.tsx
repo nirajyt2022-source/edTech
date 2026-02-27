@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
+import WorksheetFeedback from '@/components/WorksheetFeedback'
 
 interface Question {
   id: string
@@ -13,6 +14,7 @@ interface Question {
 }
 
 interface WorksheetData {
+  id?: string
   title: string
   grade: string
   subject: string
@@ -357,6 +359,12 @@ export default function GradeFromPhoto({ open, onOpenChange, worksheet, childId 
                   )
                 })}
               </div>
+
+              {/* Feedback */}
+              <WorksheetFeedback
+                worksheetId={worksheet.id ?? worksheet.title}
+                childId={childId}
+              />
 
               {/* Actions */}
               <div className="flex gap-2 pt-2">

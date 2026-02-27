@@ -11,6 +11,7 @@ import asyncio
 import sentry_sdk
 import structlog
 from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, Field
 
 from app.core.deps import DbClient, OpenAICompat, UserId
 from app.middleware.rate_limit import limiter
@@ -155,3 +156,44 @@ async def generate_worksheet_v2(
         quality_stamps=merged_stamps or None,
         quality_tier=quality_tier,
     )
+
+
+# ── Worksheet Feedback ─────────────────────────────────────────────────────
+
+
+class WorksheetFeedbackRequest(BaseModel):
+    child_id: str | None = Field(default=None, max_length=100)
+    difficulty_rating: str = Field(..., pattern=r"^(too_easy|just_right|too_hard)$")
+    comment: str | None = Field(default=None, max_length=200)
+
+
+@router.post("/{worksheet_id}/feedback", status_code=201)
+@limiter.limit("10/minute")
+async def submit_feedback(
+    request: Request,
+    worksheet_id: str,
+    body: WorksheetFeedbackRequest,
+    user_id: UserId,
+    db: DbClient,
+):
+    """Submit difficulty feedback for a graded worksheet."""
+    try:
+        db.table("worksheet_feedback").insert(
+            {
+                "worksheet_id": worksheet_id,
+                "child_id": body.child_id,
+                "user_id": user_id,
+                "difficulty_rating": body.difficulty_rating,
+                "comment": body.comment,
+            }
+        ).execute()
+    except Exception:
+        logger.error(
+            "Failed to insert worksheet feedback",
+            worksheet_id=worksheet_id,
+            user_id=user_id,
+            exc_info=True,
+        )
+        raise HTTPException(status_code=500, detail="Failed to save feedback.")
+
+    return {"status": "ok"}

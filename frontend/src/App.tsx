@@ -16,6 +16,7 @@ const History = lazy(() => import('./pages/History'))
 const ParentDashboard = lazy(() => import('./pages/ParentDashboard'))
 const AskSkolar = lazy(() => import('./pages/AskSkolar'))
 import RoleSelector from '@/components/RoleSelector'
+import OnboardingWizard from '@/components/OnboardingWizard'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -182,6 +183,10 @@ function AppContent() {
     <div className="min-h-screen" style={{ backgroundColor: '#FAFAF9' }}>
       <Toaster position="top-right" richColors />
       <RoleSelector />
+      <OnboardingWizard onNavigate={(page, preFill) => {
+        if (preFill) setGeneratorPreFill(preFill)
+        setCurrentPage(page as Page)
+      }} />
       {/* Navigation */}
       <nav className="backdrop-blur-xl border-b border-border/30 sticky top-0 z-50 print:hidden" style={{ backgroundColor: '#1E1B4B' }}>
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
