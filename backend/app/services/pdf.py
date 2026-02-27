@@ -1167,6 +1167,34 @@ class PDFService:
             )
             story.append(Spacer(1, 8))
 
+        # Format diversity (Trust P4)
+        _fmt_labels = {
+            "mcq": "MCQ",
+            "fill_blank": "Fill in the Blank",
+            "true_false": "True/False",
+            "short_answer": "Short Answer",
+            "word_problem": "Word Problem",
+            "error_spot": "Error Spot",
+            "column_setup": "Column Sum",
+            "missing_number": "Missing Number",
+            "place_value": "Place Value",
+            "thinking": "Thinking",
+            "match_columns": "Match Columns",
+        }
+        fmt_counts: dict[str, int] = {}
+        for q in questions:
+            t = q.get("type", "short_answer")
+            fmt_counts[t] = fmt_counts.get(t, 0) + 1
+        if len(fmt_counts) > 1:
+            fmt_parts = [f"{_fmt_labels.get(k, k.replace('_', ' '))}: {v}" for k, v in fmt_counts.items()]
+            story.append(
+                Paragraph(
+                    f"<font size='8' color='#{_MUTED.hexval()[2:]}'>Formats: {' &nbsp;|&nbsp; '.join(fmt_parts)}</font>",
+                    self.styles["AnswerText"],
+                )
+            )
+            story.append(Spacer(1, 8))
+
         # Answer grid — 3 columns
         answer_data = []
         row = []

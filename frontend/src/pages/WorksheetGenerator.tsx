@@ -1950,6 +1950,37 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     <p className="text-sm text-muted-foreground">Read each question carefully. Show your working in the space provided. Answer all questions.</p>
                   </div>
 
+                  {/* Format Diversity (Trust P4) */}
+                  {(() => {
+                    const formatLabels: Record<string, string> = {
+                      mcq: 'MCQ', fill_blank: 'Fill in the Blank', true_false: 'True/False',
+                      short_answer: 'Short Answer', word_problem: 'Word Problem',
+                      error_spot: 'Error Spot', sequence_question: 'Sequence',
+                      column_setup: 'Column Sum', missing_number: 'Missing Number',
+                      place_value: 'Place Value', estimation: 'Estimation',
+                      growing_pattern: 'Pattern', multi_step: 'Multi-Step',
+                      thinking: 'Thinking', match_columns: 'Match Columns',
+                      rewrite: 'Rewrite', sentence_completion: 'Sentence Completion',
+                      label_diagram: 'Label Diagram', classify: 'Classify',
+                    }
+                    const counts = new Map<string, number>()
+                    for (const q of worksheet.questions) {
+                      const t = q.type || 'short_answer'
+                      counts.set(t, (counts.get(t) || 0) + 1)
+                    }
+                    if (counts.size <= 1) return null
+                    return (
+                      <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground/60 uppercase tracking-wider text-[10px]">Formats:</span>
+                        {[...counts.entries()].map(([fmt, count]) => (
+                          <span key={fmt} className="px-2 py-0.5 rounded bg-secondary/60 border border-border/40">
+                            {formatLabels[fmt] || fmt.replace(/_/g, ' ')} <b>{count}</b>
+                          </span>
+                        ))}
+                      </div>
+                    )
+                  })()}
+
                   {/* Difficulty Breakdown (Trust P3) */}
                   {(() => {
                     const normal = worksheet.questions.filter(q => !q.is_bonus)
@@ -2313,6 +2344,37 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                               {fCount > 0 && <span className="px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700">&#9733; Foundation: {fCount}</span>}
                               {aCount > 0 && <span className="px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700">&#9733;&#9733; Application: {aCount}</span>}
                               {sCount > 0 && <span className="px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700">&#9733;&#9733;&#9733; Stretch: {sCount}</span>}
+                            </div>
+                          </div>
+                        )
+                      })()}
+
+                      {/* Format Diversity in Answer Key (Trust P4) */}
+                      {(() => {
+                        const formatLabels: Record<string, string> = {
+                          mcq: 'MCQ', fill_blank: 'Fill in the Blank', true_false: 'True/False',
+                          short_answer: 'Short Answer', word_problem: 'Word Problem',
+                          error_spot: 'Error Spot', sequence_question: 'Sequence',
+                          column_setup: 'Column Sum', missing_number: 'Missing Number',
+                          place_value: 'Place Value', thinking: 'Thinking',
+                          match_columns: 'Match Columns', rewrite: 'Rewrite',
+                          label_diagram: 'Label Diagram', classify: 'Classify',
+                        }
+                        const counts = new Map<string, number>()
+                        for (const q of worksheet.questions) {
+                          const t = q.type || 'short_answer'
+                          counts.set(t, (counts.get(t) || 0) + 1)
+                        }
+                        if (counts.size <= 1) return null
+                        return (
+                          <div className="mt-6 pt-4 border-t border-border/30">
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Question Formats</h4>
+                            <div className="flex flex-wrap gap-2 text-xs">
+                              {[...counts.entries()].map(([fmt, count]) => (
+                                <span key={fmt} className="px-2 py-1 rounded-md bg-secondary/60 border border-border/40">
+                                  {formatLabels[fmt] || fmt.replace(/_/g, ' ')} ({count})
+                                </span>
+                              ))}
                             </div>
                           </div>
                         )

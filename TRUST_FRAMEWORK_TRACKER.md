@@ -53,9 +53,16 @@ Show explicit counts: "3 Foundation, 4 Application, 3 Stretch" — derived from 
 
 ---
 
-## P4 — Format Diversity Summary ⬜ TODO
+## P4 — Format Diversity Summary ✅ SHIPPED
 
 Show question format mix: "2 MCQ, 3 Word Problems, 2 Fill-in-the-Blank, 1 Error Spot, 2 Short Answer" — derived from `type` field.
+
+**What P4 added:**
+| Item | File | Status |
+|------|------|--------|
+| Format pills above questions (only when 2+ formats) | `WorksheetGenerator.tsx` | ✅ |
+| "Question Formats" section in answer key | `WorksheetGenerator.tsx` | ✅ |
+| Format summary line in PDF answer key | `pdf.py` | ✅ |
 
 ---
 
