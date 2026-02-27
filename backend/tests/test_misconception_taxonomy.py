@@ -1,7 +1,5 @@
 """Tests for D-03: Misconception Taxonomy + classify_misconception()."""
 
-import pytest
-
 from app.data.misconception_taxonomy import (
     MISCONCEPTION_TAXONOMY,
     classify_misconception,

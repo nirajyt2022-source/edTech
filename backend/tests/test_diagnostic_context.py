@@ -1,7 +1,5 @@
 """Tests for D-05: Diagnostic Context Builder — pure logic tests."""
 
-import pytest
-
 from app.services.diagnostic_context import DiagnosticContext, build_diagnostic_context
 
 

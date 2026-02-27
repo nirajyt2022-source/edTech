@@ -1,14 +1,10 @@
 """Tests for D-04: Error Pattern Detection — pure helpers only (no DB)."""
 
-import pytest
-
 from app.services.error_pattern_detector import (
     ErrorPattern,
     SkillDiagnostic,
     classify_patterns,
     compute_trend,
-    SYSTEMATIC_MIN_OCCURRENCES,
-    SYSTEMATIC_MIN_ERROR_RATE,
 )
 
 

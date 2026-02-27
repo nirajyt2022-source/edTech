@@ -1,7 +1,5 @@
 """Tests for D-06: Insight Generator — template and helper tests."""
 
-import pytest
-
 from app.services.insight_generator import (
     ChildInsight,
     InsightItem,
