@@ -274,7 +274,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [worksheets, setWorksheets] = useState<Worksheet[] | null>(null)
   const [activeIdx, setActiveIdx] = useState(0)
   const [error, setError] = useState('')
-  const [generationWarnings, setGenerationWarnings] = useState<string[]>([])
+  // generationWarnings removed from UI — internal quality signals logged to console only
   const [qualityTier, setQualityTier] = useState<string>('high')
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [savedWorksheetId, setSavedWorksheetId] = useState<string | null>(null)
@@ -640,7 +640,6 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
 
     setLoading(true)
     setError('')
-    setGenerationWarnings([])
     setWorksheet(null)
     setWorksheets(null)
     setActiveIdx(0)
@@ -681,15 +680,13 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       setWorksheet(wsList[0])
       setMobileView('preview')
 
-      // Surface quality warnings from the API
+      // Internal quality warnings — log for admin, don't show to users
       const apiWarnings: string[] = response.data.warnings?.generation || []
-      setGenerationWarnings(apiWarnings)
-      setQualityTier(response.data.quality_tier || 'high')
-      if (response.data.verdict === 'best_effort') {
-        notify.success('Worksheet ready (with quality notes)')
-      } else {
-        notify.success('Worksheet ready!')
+      if (apiWarnings.length > 0) {
+        console.debug('[quality_warnings]', apiWarnings)
       }
+      setQualityTier(response.data.quality_tier || 'high')
+      notify.success('Worksheet ready!')
 
       // Track usage for free tier (fire-and-forget — don't block UI)
       void incrementUsage()
@@ -1469,24 +1466,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
               </div>
             )}
 
-            {generationWarnings.length > 0 && !error && (
-              <div role="status" className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-xl animate-fade-in">
-                <div className="flex items-center gap-2 font-semibold mb-1">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Quality Notes
-                </div>
-                <ul className="list-disc list-inside space-y-0.5 text-amber-700">
-                  {generationWarnings.slice(0, 3).map((w, i) => (
-                    <li key={i}>{w.replace(/^\[.*?\]\s*/, '')}</li>
-                  ))}
-                  {generationWarnings.length > 3 && (
-                    <li className="text-amber-500">{generationWarnings.length - 3} more note(s)</li>
-                  )}
-                </ul>
-              </div>
-            )}
+            {/* Quality warnings are internal — logged to console for admin debugging.
+                View in browser DevTools: Console → filter "[quality_warnings]" */}
 
             {mode === 'worksheet' ? (
               <>
