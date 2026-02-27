@@ -195,6 +195,7 @@ interface Question {
   role?: string
   difficulty?: string
   is_bonus?: boolean
+  skill_tag?: string
 }
 
 interface Worksheet {
@@ -1989,6 +1990,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                         <span className="text-[9px] text-amber-500 leading-none print:text-black/40" title={`${tier.label} (${starCount} star${starCount > 1 ? 's' : ''})`}>
                                           {'\u2605'.repeat(starCount)}
                                         </span>
+                                        {question.skill_tag && (
+                                          <span className="text-[8px] text-muted-foreground/70 leading-none max-w-[60px] text-center truncate" title={question.skill_tag.replace(/_/g, ' ')}>
+                                            {question.skill_tag.replace(/_/g, ' ')}
+                                          </span>
+                                        )}
                                       </div>
                                       <div className="flex-grow space-y-4">
                                         <p className={`text-lg font-medium text-foreground leading-snug${hasDevanagari(question.text ?? '') ? ' devanagari' : ''}`}>{question.text}</p>
@@ -2070,7 +2076,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                             {allQuestions.map((question, index) => (
                               <div key={question.id} className="relative group stagger-item question-card-container" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                                 <div className="flex gap-5">
-                                  <span className="flex-shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold mt-0.5 print:border-black/30 print:text-black/60">{index + 1}</span>
+                                  <div className="flex-shrink-0 flex flex-col items-center gap-0.5 mt-0.5">
+                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold print:border-black/30 print:text-black/60">{index + 1}</span>
+                                    {question.skill_tag && (
+                                      <span className="text-[8px] text-muted-foreground/70 leading-none max-w-[60px] text-center truncate" title={question.skill_tag.replace(/_/g, ' ')}>
+                                        {question.skill_tag.replace(/_/g, ' ')}
+                                      </span>
+                                    )}
+                                  </div>
                                   <div className="flex-grow space-y-4">
                                     <p className={`text-lg font-medium text-foreground leading-snug${hasDevanagari(question.text ?? '') ? ' devanagari' : ''}`}>{question.text}</p>
                                     {question.visual_type && question.visual_data && (
@@ -2198,18 +2211,30 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         </svg>
                         Answer Key Reference
                       </h3>
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {worksheet.questions.map((question, index) => (
-                          <div key={question.id} className="flex items-center gap-3 p-3 bg-secondary/20 rounded-lg text-sm border border-border/50 print:bg-gray-100 print:border-black/15 print:rounded-none">
-                            <span className="font-bold text-primary">Q{index + 1}</span>
-                            <span className="text-foreground font-medium">
-                              {question.correct_answer
-                                ? question.correct_answer
-                                : question.explanation || question.sample_answer
-                                  ? <span className="italic text-xs text-muted-foreground">{question.explanation || question.sample_answer}</span>
-                                  : <span className="text-muted-foreground/40">&mdash;</span>
-                              }
-                            </span>
+                          <div key={question.id} className="p-3 bg-secondary/20 rounded-lg text-sm border border-border/50 print:bg-gray-100 print:border-black/15 print:rounded-none">
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-primary">Q{index + 1}</span>
+                              <span className="text-foreground font-medium">
+                                {question.correct_answer
+                                  ? question.correct_answer
+                                  : question.explanation || question.sample_answer
+                                    ? <span className="italic text-xs text-muted-foreground">{question.explanation || question.sample_answer}</span>
+                                    : <span className="text-muted-foreground/40">&mdash;</span>
+                                }
+                              </span>
+                              {question.skill_tag && (
+                                <span className="ml-auto text-[9px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                                  {question.skill_tag.replace(/_/g, ' ')}
+                                </span>
+                              )}
+                            </div>
+                            {question.explanation && question.correct_answer && (
+                              <p className="mt-2 text-xs text-muted-foreground italic pl-8">
+                                {question.explanation}
+                              </p>
+                            )}
                           </div>
                         ))}
                       </div>

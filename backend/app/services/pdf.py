@@ -1151,7 +1151,13 @@ class PDFService:
             answer = question.get("correct_answer", "N/A")
             if isinstance(answer, list):
                 answer = ", ".join(str(a) for a in answer)
-            row.append(Paragraph(f"<b>Q{i}:</b> {_sanitize_text(str(answer))}", self.styles["AnswerText"]))
+            skill_tag = question.get("skill_tag", "")
+            tag_suffix = (
+                f"  <font size='7' color='#{_MUTED.hexval()[2:]}'>[{skill_tag.replace('_', ' ')}]</font>"
+                if skill_tag
+                else ""
+            )
+            row.append(Paragraph(f"<b>Q{i}:</b> {_sanitize_text(str(answer))}{tag_suffix}", self.styles["AnswerText"]))
             if len(row) == 3:
                 answer_data.append(row)
                 row = []
