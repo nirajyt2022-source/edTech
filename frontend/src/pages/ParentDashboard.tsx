@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { ProgressTimeline, type TimelineSession } from '@/components/ProgressTimeline'
 import { StreakCard } from '@/components/StreakCard'
 import { InsightCard } from '@/components/InsightCard'
+import { DiagnosticInsightsCard } from '@/components/DiagnosticInsightsCard'
 import GradeFromPhoto from '@/components/GradeFromPhoto'
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
@@ -880,6 +881,13 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
           <InsightCard
             childId={activeChildId ?? ''}
             onNavigate={onNavigate ? () => onNavigate('generator') : undefined}
+          />
+
+          {/* Diagnostic insights — strengths, struggles, tips, weekly digest */}
+          <DiagnosticInsightsCard
+            childId={activeChildId ?? ''}
+            childName={activeChild?.name ?? ''}
+            onNavigate={onNavigate}
           />
 
           {/* Learning Health Card */}
