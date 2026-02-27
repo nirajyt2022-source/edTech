@@ -1,8 +1,13 @@
 -- D-04c: Analytics views referenced by backend/app/api/analytics.py.
 -- These query question_attempts to power the analytics dashboard.
+-- Drop existing views first (column rename not allowed via CREATE OR REPLACE).
+
+DROP VIEW IF EXISTS v_skill_accuracy;
+DROP VIEW IF EXISTS v_error_distribution;
+DROP VIEW IF EXISTS v_student_skill_progress;
 
 -- View 1: Per-skill accuracy breakdown
-CREATE OR REPLACE VIEW v_skill_accuracy AS
+CREATE VIEW v_skill_accuracy AS
 SELECT
     child_id AS student_id,
     skill_tag,
@@ -17,7 +22,7 @@ FROM question_attempts
 GROUP BY child_id, skill_tag;
 
 -- View 2: Error distribution by misconception type
-CREATE OR REPLACE VIEW v_error_distribution AS
+CREATE VIEW v_error_distribution AS
 SELECT
     child_id AS student_id,
     skill_tag,
@@ -31,7 +36,7 @@ WHERE is_correct = FALSE
 GROUP BY child_id, skill_tag, misconception_id;
 
 -- View 3: Student skill progress over time (weekly buckets)
-CREATE OR REPLACE VIEW v_student_skill_progress AS
+CREATE VIEW v_student_skill_progress AS
 SELECT
     child_id AS student_id,
     skill_tag,
