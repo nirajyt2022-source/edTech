@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api'
+import { formatSkillTag } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
 import { useChildren } from '@/lib/children'
 import { getTopicName } from '@/lib/curriculum'
@@ -67,18 +68,7 @@ interface GraphSummary {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function formatSkillTag(tag: string): string {
-  return tag
-    .replace(/^(mth|eng|sci|hin|comp|gk|moral|health)_c\d+_/, '')
-    .replace(/_/g, ' ')
-    .split(' ')
-    .map((w, i) => {
-      if (i === 0) return w.charAt(0).toUpperCase() + w.slice(1)
-      if (['and', 'or', 'of', 'in', 'the', 'a'].includes(w)) return w
-      return w.charAt(0).toUpperCase() + w.slice(1)
-    })
-    .join(' ')
-}
+// formatSkillTag imported from @/lib/utils
 
 function getGreeting(): string {
   const h = new Date().getHours()

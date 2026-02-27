@@ -180,6 +180,58 @@ _TIER_CONFIG = [
     ("stretch", _STRETCH_ROLES, "Stretch", "I can think and reason"),
 ]
 
+_TIER_CONFIG_HINDI = [
+    (
+        "foundation",
+        _FOUNDATION_ROLES,
+        "\u0906\u0927\u093e\u0930",
+        "\u092e\u0948\u0902 \u092a\u0939\u091a\u093e\u0928 \u0938\u0915\u0924\u093e/\u0938\u0915\u0924\u0940 \u0939\u0942\u0902",
+    ),
+    (
+        "application",
+        _APPLICATION_ROLES,
+        "\u0905\u0928\u0941\u092a\u094d\u0930\u092f\u094b\u0917",
+        "\u092e\u0948\u0902 \u0907\u0938\u094d\u0924\u0947\u092e\u093e\u0932 \u0915\u0930 \u0938\u0915\u0924\u093e/\u0938\u0915\u0924\u0940 \u0939\u0942\u0902",
+    ),
+    (
+        "stretch",
+        _STRETCH_ROLES,
+        "\u091a\u0941\u0928\u094c\u0924\u0940",
+        "\u092e\u0948\u0902 \u0938\u094b\u091a \u0938\u0915\u0924\u093e/\u0938\u0915\u0924\u0940 \u0939\u0942\u0902",
+    ),
+]
+
+# Hindi labels for PDF UI chrome
+_HINDI_LABELS = {
+    "learning_goal": "\u0906\u091c \u0915\u093e \u0905\u0927\u094d\u092f\u092f\u0928 \u0932\u0915\u094d\u0937\u094d\u092f",
+    "instructions": "\u0928\u093f\u0930\u094d\u0926\u0947\u0936:",
+    "instructions_body": "\u092a\u094d\u0930\u0924\u094d\u092f\u0947\u0915 \u092a\u094d\u0930\u0936\u094d\u0928 \u0915\u094b \u0927\u094d\u092f\u093e\u0928 \u0938\u0947 \u092a\u0922\u093c\u0947\u0902\u0964 \u0926\u0940 \u0917\u0908 \u091c\u0917\u0939 \u092e\u0947\u0902 \u0905\u092a\u0928\u093e \u0915\u093e\u092e \u0926\u093f\u0916\u093e\u090f\u0902\u0964 \u0938\u092d\u0940 \u092a\u094d\u0930\u0936\u094d\u0928\u094b\u0902 \u0915\u0947 \u0909\u0924\u094d\u0924\u0930 \u0926\u0947\u0902\u0964",
+    "for_parents": "\u0905\u092d\u093f\u092d\u093e\u0935\u0915\u094b\u0902 \u0915\u0947 \u0932\u093f\u090f:",
+    "difficulty": "\u0915\u0920\u093f\u0928\u093e\u0908:",
+    "formats": "\u092a\u094d\u0930\u093e\u0930\u0942\u092a:",
+    "foundation": "\u0906\u0927\u093e\u0930",
+    "application": "\u0905\u0928\u0941\u092a\u094d\u0930\u092f\u094b\u0917",
+    "stretch": "\u091a\u0941\u0928\u094c\u0924\u0940",
+}
+
+_FMT_LABELS_HINDI = {
+    "mcq": "\u092c\u0939\u0941\u0935\u093f\u0915\u0932\u094d\u092a\u0940",
+    "fill_blank": "\u0930\u093f\u0915\u094d\u0924 \u0938\u094d\u0925\u093e\u0928 \u092d\u0930\u0947\u0902",
+    "true_false": "\u0938\u0939\u0940/\u0917\u0932\u0924",
+    "short_answer": "\u0932\u0918\u0941 \u0909\u0924\u094d\u0924\u0930",
+    "error_spot": "\u0924\u094d\u0930\u0941\u091f\u093f \u0916\u094b\u091c\u0947\u0902",
+    "thinking": "\u091a\u093f\u0902\u0924\u0928",
+    "match_columns": "\u0938\u0941\u092e\u0947\u0932\u093f\u0924 \u0915\u0930\u0947\u0902",
+    "rewrite": "\u092a\u0941\u0928\u0930\u094d\u0932\u0947\u0916\u0928",
+    "sentence_completion": "\u0935\u093e\u0915\u094d\u092f \u092a\u0942\u0930\u094d\u0924\u093f",
+    "classify": "\u0935\u0930\u094d\u0917\u0940\u0915\u0930\u0923",
+}
+
+
+def _is_hindi(worksheet: dict) -> bool:
+    return (worksheet.get("subject") or "").lower() == "hindi"
+
+
 # Star labels for each tier
 _TIER_STARS = {
     "foundation": "*",
@@ -188,7 +240,7 @@ _TIER_STARS = {
 }
 
 
-def _group_questions_by_tier(questions: list) -> list[tuple[str, str, str, list]]:
+def _group_questions_by_tier(questions: list, hindi: bool = False) -> list[tuple[str, str, str, list]]:
     """Group questions into Foundation / Application / Stretch tiers.
 
     Returns list of (tier_key, tier_label, tier_desc, questions) tuples.
@@ -196,8 +248,9 @@ def _group_questions_by_tier(questions: list) -> list[tuple[str, str, str, list]
     they are rendered separately by _build_questions().
     """
     normal_questions = [q for q in questions if not q.get("is_bonus") and not q.get("_is_bonus")]
+    config = _TIER_CONFIG_HINDI if hindi else _TIER_CONFIG
     tiers = []
-    for tier_key, roles, label, desc in _TIER_CONFIG:
+    for tier_key, roles, label, desc in config:
         tier_qs = [q for q in normal_questions if q.get("role", "") in roles]
         if tier_qs:
             tiers.append((tier_key, label, desc, tier_qs))
@@ -489,6 +542,8 @@ class PDFService:
         # Store worksheet metadata for header/footer callbacks
         self._current_worksheet = worksheet
         self._page_count = 0
+        self._hindi = _is_hindi(worksheet)
+        self._goal_title = _HINDI_LABELS["learning_goal"] if self._hindi else "Today's Learning Goal"
 
         story = []
         questions = worksheet.get("questions", [])
@@ -640,7 +695,7 @@ class PDFService:
                 [
                     [
                         Paragraph(
-                            f"<b>For Parents:</b> {_sanitize_text(parent_tip)}",
+                            f"<b>{_HINDI_LABELS['for_parents'] if self._hindi else 'For Parents:'}</b> {_sanitize_text(parent_tip)}",
                             self.styles["ParentTip"],
                         )
                     ]
@@ -670,7 +725,9 @@ class PDFService:
         # ── Instructions ──
         story.append(
             Paragraph(
-                "<b>Instructions:</b> Read each question carefully. "
+                f"<b>{_HINDI_LABELS['instructions']}</b> {_HINDI_LABELS['instructions_body']}"
+                if self._hindi
+                else "<b>Instructions:</b> Read each question carefully. "
                 "Show your working in the space provided. Answer all questions.",
                 self.styles["Instructions"],
             )
@@ -688,13 +745,18 @@ class PDFService:
         )
 
         # ── Group questions by tier and render ──
-        tiers = _group_questions_by_tier(questions)
+        tiers = _group_questions_by_tier(questions, hindi=self._hindi)
         q_number = 1  # continuous question numbering across tiers
 
+        _TIER_COLORS_BY_KEY = {
+            "foundation": TIER_COLORS["Foundation"],
+            "application": TIER_COLORS["Application"],
+            "stretch": TIER_COLORS["Stretch"],
+        }
         for tier_key, tier_label, tier_desc, tier_qs in tiers:
             if tier_label:
                 stars = _TIER_STARS.get(tier_key, "")
-                tier_color = TIER_COLORS.get(tier_label, _PRIMARY)
+                tier_color = _TIER_COLORS_BY_KEY.get(tier_key, _PRIMARY)
                 # Colored indicator line before tier header
                 story.append(
                     HRFlowable(
@@ -775,7 +837,7 @@ class PDFService:
 
         # Build content: title + bullet items
         obj_elements = []
-        obj_elements.append(Paragraph("Today's Learning Goal", self.styles["ObjectiveTitle"]))
+        obj_elements.append(Paragraph(self._goal_title, self.styles["ObjectiveTitle"]))
         for obj in objectives:
             obj_elements.append(
                 Paragraph(f"<bullet>&bull;</bullet> {_sanitize_text(obj)}", self.styles["ObjectiveItem"])
@@ -1152,23 +1214,25 @@ class PDFService:
         a_count = sum(1 for q in questions if q.get("role") in _application_roles)
         s_count = sum(1 for q in questions if q.get("role") in _stretch_roles)
         if f_count + a_count + s_count > 0:
+            _hl = _HINDI_LABELS if self._hindi else None
             parts = []
             if f_count:
-                parts.append(f"\u2605 Foundation: {f_count}")
+                parts.append(f"\u2605 {_hl['foundation'] if _hl else 'Foundation'}: {f_count}")
             if a_count:
-                parts.append(f"\u2605\u2605 Application: {a_count}")
+                parts.append(f"\u2605\u2605 {_hl['application'] if _hl else 'Application'}: {a_count}")
             if s_count:
-                parts.append(f"\u2605\u2605\u2605 Stretch: {s_count}")
+                parts.append(f"\u2605\u2605\u2605 {_hl['stretch'] if _hl else 'Stretch'}: {s_count}")
+            _diff_label = _hl["difficulty"] if _hl else "Difficulty:"
             story.append(
                 Paragraph(
-                    f"<font size='8' color='#{_MUTED.hexval()[2:]}'>Difficulty: {' &nbsp;|&nbsp; '.join(parts)}</font>",
+                    f"<font size='8' color='#{_MUTED.hexval()[2:]}'>{_diff_label} {' &nbsp;|&nbsp; '.join(parts)}</font>",
                     self.styles["AnswerText"],
                 )
             )
             story.append(Spacer(1, 8))
 
         # Format diversity (Trust P4)
-        _fmt_labels = {
+        _fmt_labels_en = {
             "mcq": "MCQ",
             "fill_blank": "Fill in the Blank",
             "true_false": "True/False",
@@ -1181,15 +1245,17 @@ class PDFService:
             "thinking": "Thinking",
             "match_columns": "Match Columns",
         }
+        _active_fmt = _FMT_LABELS_HINDI if self._hindi else _fmt_labels_en
         fmt_counts: dict[str, int] = {}
         for q in questions:
             t = q.get("type", "short_answer")
             fmt_counts[t] = fmt_counts.get(t, 0) + 1
         if len(fmt_counts) > 1:
-            fmt_parts = [f"{_fmt_labels.get(k, k.replace('_', ' '))}: {v}" for k, v in fmt_counts.items()]
+            fmt_parts = [f"{_active_fmt.get(k, k.replace('_', ' '))}: {v}" for k, v in fmt_counts.items()]
+            _fmt_heading = _HINDI_LABELS["formats"] if self._hindi else "Formats:"
             story.append(
                 Paragraph(
-                    f"<font size='8' color='#{_MUTED.hexval()[2:]}'>Formats: {' &nbsp;|&nbsp; '.join(fmt_parts)}</font>",
+                    f"<font size='8' color='#{_MUTED.hexval()[2:]}'>{_fmt_heading} {' &nbsp;|&nbsp; '.join(fmt_parts)}</font>",
                     self.styles["AnswerText"],
                 )
             )

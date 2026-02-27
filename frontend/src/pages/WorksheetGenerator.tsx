@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/ui/page-header'
 import { api } from '@/lib/api'
+import { formatSkillTag } from '@/lib/utils'
 import { useChildren } from '@/lib/children'
 import { useClasses } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
@@ -40,6 +41,68 @@ const VISUAL_THEMES = [
   { value: 'mono', label: 'Print-safe (Monochrome)' },
   { value: 'color', label: 'Color on screen' },
 ]
+
+// ─── Localization labels ─────────────────────────────────────────────────────
+const LABELS_EN = {
+  learningGoal: "Today's Learning Goal",
+  instructionsTitle: 'Instructions for Student',
+  instructionsBody: 'Read each question carefully. Show your working in the space provided. Answer all questions.',
+  forParents: 'For Parents: ',
+  forParentsNext: 'For Parents: What to Do Next',
+  formats: 'Formats:',
+  difficulty: 'Difficulty:',
+  skillsTested: 'Skills Tested',
+  foundation: 'Foundation',
+  application: 'Application',
+  stretch: 'Stretch',
+  foundationDesc: 'I can recall and recognise',
+  applicationDesc: 'I can use what I know',
+  stretchDesc: 'I can think and reason',
+}
+const LABELS_HINDI = {
+  learningGoal: 'आज का अध्ययन लक्ष्य',
+  instructionsTitle: 'छात्र के लिए निर्देश',
+  instructionsBody: 'प्रत्येक प्रश्न को ध्यान से पढ़ें। दी गई जगह में अपना काम दिखाएं। सभी प्रश्नों के उत्तर दें।',
+  forParents: 'अभिभावकों के लिए: ',
+  forParentsNext: 'अभिभावकों के लिए: आगे क्या करें',
+  formats: 'प्रारूप:',
+  difficulty: 'कठिनाई:',
+  skillsTested: 'परखी गई कुशलताएं',
+  foundation: 'आधार',
+  application: 'अनुप्रयोग',
+  stretch: 'चुनौती',
+  foundationDesc: 'मैं पहचान सकता/सकती हूं',
+  applicationDesc: 'मैं इस्तेमाल कर सकता/सकती हूं',
+  stretchDesc: 'मैं सोच सकता/सकती हूं',
+}
+const FORMAT_LABELS_EN: Record<string, string> = {
+  mcq: 'MCQ', fill_blank: 'Fill in the Blank', true_false: 'True/False',
+  short_answer: 'Short Answer', word_problem: 'Word Problem',
+  error_spot: 'Error Spot', sequence_question: 'Sequence',
+  column_setup: 'Column Sum', missing_number: 'Missing Number',
+  place_value: 'Place Value', estimation: 'Estimation',
+  growing_pattern: 'Pattern', multi_step: 'Multi-Step',
+  thinking: 'Thinking', match_columns: 'Match Columns',
+  rewrite: 'Rewrite', sentence_completion: 'Sentence Completion',
+  label_diagram: 'Label Diagram', classify: 'Classify',
+}
+const FORMAT_LABELS_HINDI: Record<string, string> = {
+  mcq: 'बहुविकल्पी', fill_blank: 'रिक्त स्थान भरें', true_false: 'सही/गलत',
+  short_answer: 'लघु उत्तर', word_problem: 'शब्द समस्या',
+  error_spot: 'त्रुटि खोजें', sequence_question: 'क्रम',
+  column_setup: 'स्तंभ जोड़', missing_number: 'लुप्त संख्या',
+  place_value: 'स्थान मान', estimation: 'अनुमान',
+  growing_pattern: 'पैटर्न', multi_step: 'बहु-चरण',
+  thinking: 'चिंतन', match_columns: 'सुमेलित करें',
+  rewrite: 'पुनर्लेखन', sentence_completion: 'वाक्य पूर्ति',
+  label_diagram: 'चित्र लेबल', classify: 'वर्गीकरण',
+}
+function getLabels(subject?: string) {
+  return subject?.toLowerCase() === 'hindi' ? LABELS_HINDI : LABELS_EN
+}
+function getFormatLabels(subject?: string) {
+  return subject?.toLowerCase() === 'hindi' ? FORMAT_LABELS_HINDI : FORMAT_LABELS_EN
+}
 
 // Fallback topics for when curriculum API is unavailable
 const DEFAULT_TOPICS: Record<string, string[]> = {
@@ -1686,7 +1749,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                       {/* Parent Tip (Trust P0) */}
                       {worksheet.parent_tip && (
                         <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900 print:bg-amber-50">
-                          <span className="font-semibold">For Parents: </span>
+                          <span className="font-semibold">{getLabels(worksheet.subject).forParents}</span>
                           {worksheet.parent_tip}
                         </div>
                       )}
@@ -1894,7 +1957,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   {/* Learning Objectives (Gold-G5) */}
                   {worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && (
                     <div className="mb-8 p-5 border border-primary/20 rounded-xl bg-primary/[0.03] print:border-primary/30 print:rounded-none print:p-4">
-                      <p className="font-bold text-primary text-sm mb-2 tracking-tight">Today's Learning Goal</p>
+                      <p className="font-bold text-primary text-sm mb-2 tracking-tight">{getLabels(worksheet.subject).learningGoal}</p>
                       <ul className="space-y-1">
                         {worksheet.learning_objectives.map((obj, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
@@ -1927,24 +1990,15 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
 
                   <div className="mb-10 p-5 bg-secondary/30 border border-border/30 rounded-xl print:border-border print:bg-gray-100 print:rounded-none print:p-4">
                     <p className="font-semibold text-foreground/80 flex items-center gap-2 mb-1 text-xs">
-                      Instructions for Student
+                      {getLabels(worksheet.subject).instructionsTitle}
                     </p>
-                    <p className="text-sm text-muted-foreground">Read each question carefully. Show your working in the space provided. Answer all questions.</p>
+                    <p className="text-sm text-muted-foreground">{getLabels(worksheet.subject).instructionsBody}</p>
                   </div>
 
                   {/* Format Diversity (Trust P4) */}
                   {(() => {
-                    const formatLabels: Record<string, string> = {
-                      mcq: 'MCQ', fill_blank: 'Fill in the Blank', true_false: 'True/False',
-                      short_answer: 'Short Answer', word_problem: 'Word Problem',
-                      error_spot: 'Error Spot', sequence_question: 'Sequence',
-                      column_setup: 'Column Sum', missing_number: 'Missing Number',
-                      place_value: 'Place Value', estimation: 'Estimation',
-                      growing_pattern: 'Pattern', multi_step: 'Multi-Step',
-                      thinking: 'Thinking', match_columns: 'Match Columns',
-                      rewrite: 'Rewrite', sentence_completion: 'Sentence Completion',
-                      label_diagram: 'Label Diagram', classify: 'Classify',
-                    }
+                    const fmtLabels = getFormatLabels(worksheet.subject)
+                    const L = getLabels(worksheet.subject)
                     const counts = new Map<string, number>()
                     for (const q of worksheet.questions) {
                       const t = q.type || 'short_answer'
@@ -1953,10 +2007,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     if (counts.size <= 1) return null
                     return (
                       <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span className="font-semibold text-foreground/60 uppercase tracking-wider text-[10px]">Formats:</span>
+                        <span className="font-semibold text-foreground/60 uppercase tracking-wider text-[10px]">{L.formats}</span>
                         {[...counts.entries()].map(([fmt, count]) => (
                           <span key={fmt} className="px-2 py-0.5 rounded bg-secondary/60 border border-border/40">
-                            {formatLabels[fmt] || fmt.replace(/_/g, ' ')} <b>{count}</b>
+                            {fmtLabels[fmt] || fmt.replace(/_/g, ' ')} <b>{count}</b>
                           </span>
                         ))}
                       </div>
@@ -1973,10 +2027,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     if (!hasRoleData) return null
                     return (
                       <div className="mb-8 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                        <span className="font-semibold text-foreground/60 uppercase tracking-wider text-[10px]">Difficulty:</span>
-                        {fCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733; Foundation <b>{fCount}</b></span>}
-                        {aCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733;&#9733; Application <b>{aCount}</b></span>}
-                        {sCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733;&#9733;&#9733; Stretch <b>{sCount}</b></span>}
+                        <span className="font-semibold text-foreground/60 uppercase tracking-wider text-[10px]">{getLabels(worksheet.subject).difficulty}</span>
+                        {fCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733; {getLabels(worksheet.subject).foundation} <b>{fCount}</b></span>}
+                        {aCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733;&#9733; {getLabels(worksheet.subject).application} <b>{aCount}</b></span>}
+                        {sCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733;&#9733;&#9733; {getLabels(worksheet.subject).stretch} <b>{sCount}</b></span>}
                       </div>
                     )
                   })()}
@@ -1995,9 +2049,10 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     const applicationQs = normalQuestions.filter(q => applicationRoles.has(q.role || ''))
                     const stretchQs = normalQuestions.filter(q => stretchRoles.has(q.role || ''))
 
-                    if (foundationQs.length) tiers.push({ key: 'foundation', label: 'Foundation', desc: 'I can recall and recognise', stars: '\u2605', questions: foundationQs })
-                    if (applicationQs.length) tiers.push({ key: 'application', label: 'Application', desc: 'I can use what I know', stars: '\u2605\u2605', questions: applicationQs })
-                    if (stretchQs.length) tiers.push({ key: 'stretch', label: 'Stretch', desc: 'I can think and reason', stars: '\u2605\u2605\u2605', questions: stretchQs })
+                    const _L = getLabels(worksheet.subject)
+                    if (foundationQs.length) tiers.push({ key: 'foundation', label: _L.foundation, desc: _L.foundationDesc, stars: '\u2605', questions: foundationQs })
+                    if (applicationQs.length) tiers.push({ key: 'application', label: _L.application, desc: _L.applicationDesc, stars: '\u2605\u2605', questions: applicationQs })
+                    if (stretchQs.length) tiers.push({ key: 'stretch', label: _L.stretch, desc: _L.stretchDesc, stars: '\u2605\u2605\u2605', questions: stretchQs })
 
                     // Fallback: if no role data, render flat
                     const hasRoles = tiers.length > 0
@@ -2033,8 +2088,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                           {'\u2605'.repeat(starCount)}
                                         </span>
                                         {question.skill_tag && (
-                                          <span className="text-[8px] text-muted-foreground/70 leading-none max-w-[60px] text-center truncate" title={question.skill_tag.replace(/_/g, ' ')}>
-                                            {question.skill_tag.replace(/_/g, ' ')}
+                                          <span className="text-[8px] text-muted-foreground/70 leading-none max-w-[60px] text-center truncate" title={formatSkillTag(question.skill_tag)}>
+                                            {formatSkillTag(question.skill_tag)}
                                           </span>
                                         )}
                                       </div>
@@ -2121,8 +2176,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                   <div className="flex-shrink-0 flex flex-col items-center gap-0.5 mt-0.5">
                                     <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold print:border-black/30 print:text-black/60">{index + 1}</span>
                                     {question.skill_tag && (
-                                      <span className="text-[8px] text-muted-foreground/70 leading-none max-w-[60px] text-center truncate" title={question.skill_tag.replace(/_/g, ' ')}>
-                                        {question.skill_tag.replace(/_/g, ' ')}
+                                      <span className="text-[8px] text-muted-foreground/70 leading-none max-w-[60px] text-center truncate" title={formatSkillTag(question.skill_tag)}>
+                                        {formatSkillTag(question.skill_tag)}
                                       </span>
                                     )}
                                   </div>
@@ -2285,7 +2340,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                               </span>
                               {question.skill_tag && (
                                 <span className="ml-auto text-[9px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
-                                  {question.skill_tag.replace(/_/g, ' ')}
+                                  {formatSkillTag(question.skill_tag)}
                                 </span>
                               )}
                             </div>
@@ -2308,16 +2363,12 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                       {/* Skills Tested (Trust P0) */}
                       {worksheet.skill_coverage && Object.keys(worksheet.skill_coverage).length > 0 && (
                         <div className="mt-6 pt-4 border-t border-border/30">
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Skills Tested</h4>
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{getLabels(worksheet.subject).skillsTested}</h4>
                           <div className="flex flex-wrap gap-2">
                             {Object.entries(worksheet.skill_coverage).map(([skill, count]) => {
-                              // Extract just the skill keyword (last segment): hin_c5_paryay_identify → Identify
-                              const parts = skill.split('_')
-                              const keyword = parts[parts.length - 1]
-                              const label = keyword.charAt(0).toUpperCase() + keyword.slice(1)
                               return (
                                 <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary text-secondary-foreground border border-border/50">
-                                  {label} <span className="text-muted-foreground">({count})</span>
+                                  {formatSkillTag(skill)} <span className="text-muted-foreground">({count})</span>
                                 </span>
                               )
                             })}
@@ -2336,9 +2387,9 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                           <div className="mt-6 pt-4 border-t border-border/30">
                             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Difficulty Breakdown</h4>
                             <div className="flex flex-wrap gap-2 text-xs">
-                              {fCount > 0 && <span className="px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700">&#9733; Foundation: {fCount}</span>}
-                              {aCount > 0 && <span className="px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700">&#9733;&#9733; Application: {aCount}</span>}
-                              {sCount > 0 && <span className="px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700">&#9733;&#9733;&#9733; Stretch: {sCount}</span>}
+                              {fCount > 0 && <span className="px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700">&#9733; {getLabels(worksheet.subject).foundation}: {fCount}</span>}
+                              {aCount > 0 && <span className="px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700">&#9733;&#9733; {getLabels(worksheet.subject).application}: {aCount}</span>}
+                              {sCount > 0 && <span className="px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700">&#9733;&#9733;&#9733; {getLabels(worksheet.subject).stretch}: {sCount}</span>}
                             </div>
                           </div>
                         )
@@ -2346,15 +2397,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
 
                       {/* Format Diversity in Answer Key (Trust P4) */}
                       {(() => {
-                        const formatLabels: Record<string, string> = {
-                          mcq: 'MCQ', fill_blank: 'Fill in the Blank', true_false: 'True/False',
-                          short_answer: 'Short Answer', word_problem: 'Word Problem',
-                          error_spot: 'Error Spot', sequence_question: 'Sequence',
-                          column_setup: 'Column Sum', missing_number: 'Missing Number',
-                          place_value: 'Place Value', thinking: 'Thinking',
-                          match_columns: 'Match Columns', rewrite: 'Rewrite',
-                          label_diagram: 'Label Diagram', classify: 'Classify',
-                        }
+                        const fmtLabels = getFormatLabels(worksheet.subject)
                         const counts = new Map<string, number>()
                         for (const q of worksheet.questions) {
                           const t = q.type || 'short_answer'
@@ -2363,11 +2406,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         if (counts.size <= 1) return null
                         return (
                           <div className="mt-6 pt-4 border-t border-border/30">
-                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Question Formats</h4>
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{getLabels(worksheet.subject).formats}</h4>
                             <div className="flex flex-wrap gap-2 text-xs">
                               {[...counts.entries()].map(([fmt, count]) => (
                                 <span key={fmt} className="px-2 py-1 rounded-md bg-secondary/60 border border-border/40">
-                                  {formatLabels[fmt] || fmt.replace(/_/g, ' ')} ({count})
+                                  {fmtLabels[fmt] || fmt.replace(/_/g, ' ')} ({count})
                                 </span>
                               ))}
                             </div>
@@ -2395,7 +2438,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   {/* Parent Insight Footer (Gold-G7) — screen only */}
                   {worksheet.mastery_snapshot && (
                     <div className="mt-10 p-5 border border-primary/15 rounded-xl bg-primary/[0.02] print:hidden">
-                      <p className="font-bold text-primary text-sm mb-3">For Parents: What to Do Next</p>
+                      <p className="font-bold text-primary text-sm mb-3">{getLabels(worksheet.subject).forParentsNext}</p>
                       {worksheet.mastery_snapshot.last_error_type && (
                         <div className="mb-3">
                           <p className="text-xs font-semibold text-foreground/60 mb-1">Watch For</p>

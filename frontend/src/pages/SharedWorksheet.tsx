@@ -3,6 +3,10 @@ import axios from 'axios'
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+function getLearningGoalLabel(subject?: string) {
+  return subject?.toLowerCase() === 'hindi' ? 'आज का अध्ययन लक्ष्य' : "Today's Learning Goal"
+}
+
 /** Returns true when the string contains at least one Devanagari character. */
 const hasDevanagari = (text: string) => /[\u0900-\u097F]/.test(text)
 
@@ -182,7 +186,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           {/* Learning objectives */}
           {worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && (
             <div className="mx-6 sm:mx-10 mt-6 p-5 border border-emerald-200/60 rounded-xl bg-emerald-50/30">
-              <p className="font-bold text-emerald-800 text-sm mb-2 tracking-tight">Today's Learning Goal</p>
+              <p className="font-bold text-emerald-800 text-sm mb-2 tracking-tight">{getLearningGoalLabel(worksheet.subject)}</p>
               <ul className="space-y-1">
                 {worksheet.learning_objectives.map((obj, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-stone-700">
