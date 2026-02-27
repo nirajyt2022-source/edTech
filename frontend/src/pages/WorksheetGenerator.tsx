@@ -210,6 +210,7 @@ interface Worksheet {
   parent_tip?: string
   common_mistake?: string
   skill_coverage?: Record<string, number>
+  chapter_ref?: string
   mastery_snapshot?: {
     mastery_level: string
     last_error_type: string | null
@@ -1898,6 +1899,16 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     <span className="text-sm">Score: _____ / {worksheet.questions.length}</span>
                   </div>
 
+                  {/* NCERT Chapter Badge (Trust P2) */}
+                  {worksheet.chapter_ref && (
+                    <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200/60 text-sm text-emerald-800 print:bg-gray-50 print:border-gray-300 print:text-gray-700">
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                      </svg>
+                      <span className="italic">Aligned to NCERT — {worksheet.chapter_ref}</span>
+                    </div>
+                  )}
+
                   {/* Learning Objectives (Gold-G5) */}
                   {worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && (
                     <div className="mb-8 p-5 border border-primary/20 rounded-xl bg-primary/[0.03] print:border-primary/30 print:rounded-none print:p-4">
@@ -2211,6 +2222,16 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         </svg>
                         Answer Key Reference
                       </h3>
+                      {/* Curriculum summary (Trust P2) */}
+                      {(worksheet.chapter_ref || (worksheet.learning_objectives && worksheet.learning_objectives.length > 0)) && (
+                        <p className="text-xs text-muted-foreground mb-4 -mt-3">
+                          {worksheet.chapter_ref && <span className="italic">{worksheet.chapter_ref}</span>}
+                          {worksheet.chapter_ref && worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && ' — '}
+                          {worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && (
+                            <span>Covers: {worksheet.learning_objectives.join(', ')}</span>
+                          )}
+                        </p>
+                      )}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {worksheet.questions.map((question, index) => (
                           <div key={question.id} className="p-3 bg-secondary/20 rounded-lg text-sm border border-border/50 print:bg-gray-100 print:border-black/15 print:rounded-none">
