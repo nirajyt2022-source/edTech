@@ -127,15 +127,15 @@ class TestStepASorting:
         assert result[0]["id"] == 1
         assert result[1]["id"] == 2
 
-    def test_sort_is_stable_for_equal_keys(self):
-        """Questions with identical sort keys should retain relative order."""
+    def test_equal_keys_stay_in_same_band(self):
+        """Questions with identical sort keys should all remain (shuffled within band)."""
         ctx = _ctx(scaffolding=True)
         q1 = _q(fmt="missing_number", text="Same text here", id=1)
         q2 = _q(fmt="missing_number", text="Same text here", id=2)
         q3 = _q(fmt="missing_number", text="Same text here", id=3)
         result, _warnings = DifficultyCalibrator().calibrate([q1, q2, q3], ctx)
-        # sorted() is stable in CPython — relative order preserved
-        ids = [q["id"] for q in result]
+        # All items should still be present (STEP A2 shuffles within the band)
+        ids = sorted([q["id"] for q in result])
         assert ids == [1, 2, 3]
 
     def test_word_problem_sorted_after_fill_blank(self):

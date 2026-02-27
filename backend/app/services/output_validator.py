@@ -354,6 +354,112 @@ class OutputValidator:
             if engagement_count == 0:
                 errors.append("No engagement framing: 0 questions use 'Help…'/'Can you…' style (recommend ≥20%)")
 
+        # 15. Sentence structure diversity (L2) — ≥3 distinct structures per 10Q
+        if len(questions) >= 5:
+            _QUESTION_WORD_RE = re.compile(r"(?i)^(what|which|how|who|where|when|why)\b")
+            _IMPERATIVE_RE = re.compile(
+                r"(?i)^(find|solve|write|fill|complete|calculate|match|draw|circle|count|add|subtract|multiply|divide|arrange|list|name|identify)\b"
+            )
+            _CONDITIONAL_RE = re.compile(r"(?i)^(if|suppose|imagine|given|when)\b")
+            structures: set[str] = set()
+            for q in questions:
+                text = q.get("text", "").strip()
+                if not text:
+                    continue
+                if _QUESTION_WORD_RE.match(text):
+                    structures.add("question_word")
+                elif _IMPERATIVE_RE.match(text):
+                    structures.add("imperative")
+                elif _CONDITIONAL_RE.match(text):
+                    structures.add("conditional")
+                else:
+                    structures.add("statement")
+            min_structures = 3 if len(questions) >= 10 else 2
+            if len(structures) < min_structures:
+                errors.append(
+                    f"Sentence structure monotony: only {len(structures)} structure type(s) "
+                    f"({', '.join(sorted(structures))}), need ≥{min_structures}"
+                )
+
+        # 16. Filler phrase ban (L3) — no "the following"/"given below" unless visual
+        _FILLER_PHRASES = ["the following", "given below", "mentioned below", "shown below", "listed below"]
+        for i, q in enumerate(questions):
+            text = q.get("text", "").lower()
+            has_visual = bool(q.get("visual_type") or q.get("visual_data"))
+            if not has_visual:
+                for filler in _FILLER_PHRASES:
+                    if filler in text:
+                        qid = q.get("id", f"Q{i + 1}")
+                        errors.append(f"{qid}: filler phrase '{filler}' without visual context")
+                        break
+
+        # 17. Sequence step variety (N4) — pattern/sequence questions should vary step sizes
+        if len(questions) >= 5 and subject.lower() in ("maths", "mathematics", "math"):
+            _SEQ_RE = re.compile(r"(\d+)\s*,\s*(\d+)\s*,\s*(\d+)")
+            step_sizes: list[int] = []
+            for q in questions:
+                text = q.get("text", "")
+                m = _SEQ_RE.search(text)
+                if m:
+                    a, b, c = int(m.group(1)), int(m.group(2)), int(m.group(3))
+                    step1 = b - a
+                    step2 = c - b
+                    if step1 == step2 and step1 != 0:
+                        step_sizes.append(abs(step1))
+            if len(step_sizes) >= 3:
+                unique_steps = set(step_sizes)
+                if len(unique_steps) == 1:
+                    errors.append(
+                        f"Sequence step monotony: all {len(step_sizes)} sequences use step={step_sizes[0]}, "
+                        f"need variety"
+                    )
+
+        # 18. No scenario repeat (R2) — word problems should use unique scenarios
+        if len(questions) >= 5:
+            _SCENARIO_WORDS = frozenset(
+                {
+                    "market",
+                    "shop",
+                    "store",
+                    "school",
+                    "park",
+                    "zoo",
+                    "kitchen",
+                    "festival",
+                    "playground",
+                    "station",
+                    "library",
+                    "farm",
+                    "bakery",
+                    "hospital",
+                    "garden",
+                    "field",
+                    "party",
+                    "temple",
+                    "beach",
+                    "museum",
+                    "cinema",
+                    "restaurant",
+                    "home",
+                    "classroom",
+                    "bus",
+                    "train",
+                }
+            )
+            scenario_counts: dict[str, int] = {}
+            for q in questions:
+                text = q.get("text", "").lower()
+                words = set(re.findall(r"\b\w+\b", text))
+                found_scenarios = words & _SCENARIO_WORDS
+                for sc in found_scenarios:
+                    scenario_counts[sc] = scenario_counts.get(sc, 0) + 1
+            for sc, cnt in scenario_counts.items():
+                if cnt > 1:
+                    errors.append(
+                        f"Scenario '{sc}' repeated in {cnt} questions (each word problem should use a unique setting)"
+                    )
+                    break  # one error is enough
+
         is_valid = len(errors) == 0
         if not is_valid:
             logger.warning("Worksheet validation failed", extra={"errors": errors, "topic": topic, "grade": grade})

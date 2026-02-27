@@ -8,6 +8,10 @@ Runs four deterministic post-processing steps on the assembled question list:
     ascending, then word_problem format last. This gives struggling learners
     a warm-up ramp before harder formats.
 
+  STEP A2 — Intra-band shuffle (scaffolding=True only)
+    After sorting, questions with the same difficulty key are shuffled within
+    their band so worksheets feel varied even with identical difficulty profiles.
+
   STEP B — Add scaffolding hints (scaffolding=True only)
     Injects a simple template hint into the first 2 questions that do not
     already have a non-empty 'hint' field.  The hint is deterministic and
@@ -44,6 +48,7 @@ never blocks generation.
 from __future__ import annotations
 
 import logging
+import random
 import re
 from typing import Optional
 
@@ -287,6 +292,48 @@ def _fix_number_range_by_position(questions: list) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Intra-band shuffle (STEP A2)
+# ---------------------------------------------------------------------------
+
+
+def _shuffle_within_bands(questions: list) -> list:
+    """Shuffle questions within same-difficulty bands to add variety.
+
+    After STEP A sorts by difficulty, questions with the same sort key are
+    in a deterministic order. This step shuffles within each band so that
+    worksheets with identical difficulty profiles still feel different.
+
+    Returns a new list with bands internally shuffled.
+    """
+    if len(questions) < 3:
+        return questions
+
+    # Group consecutive questions that share the same sort key
+    bands: list[list[dict]] = []
+    current_band: list[dict] = [questions[0]]
+    current_key = _sort_key(questions[0])
+
+    for q in questions[1:]:
+        key = _sort_key(q)
+        if key == current_key:
+            current_band.append(q)
+        else:
+            bands.append(current_band)
+            current_band = [q]
+            current_key = key
+    bands.append(current_band)
+
+    # Shuffle each band internally
+    result: list[dict] = []
+    for band in bands:
+        if len(band) > 1:
+            random.shuffle(band)
+        result.extend(band)
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Adjacent same-format breaker (STEP F)
 # ---------------------------------------------------------------------------
 
@@ -368,6 +415,16 @@ class DifficultyCalibrator:
                 )
             except Exception as exc:
                 logger.warning("[difficulty_calibrator] STEP A sort failed: %s", exc)
+
+        # ── STEP A2: Intra-band shuffle (scaffolding only, S1) ─────────────
+        if context.scaffolding:
+            try:
+                result = _shuffle_within_bands(result)
+                logger.debug(
+                    "[difficulty_calibrator] STEP A2: shuffled within difficulty bands",
+                )
+            except Exception as exc:
+                logger.warning("[difficulty_calibrator] STEP A2 intra-band shuffle failed: %s", exc)
 
         # ── STEP B: Add hints for first 2 questions (scaffolding only) ────
         if context.scaffolding:

@@ -953,3 +953,258 @@ class TestPromptAntiArtificiality:
         prompt = self._build_prompt(language="English", subject="English",
                                      topic="Nouns (Class 3)")
         assert "HINDI REGISTER" not in prompt
+
+
+# ---------------------------------------------------------------------------
+# Sentence structure diversity (L2)
+# ---------------------------------------------------------------------------
+
+class TestSentenceStructureDiversity:
+    def _make_q(self, qid, text, answer="4"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_diverse_structures_pass(self, validator):
+        """Multiple structure types should pass."""
+        qs = [
+            self._make_q("Q1", "What is 2 + 3?"),               # question_word
+            self._make_q("Q2", "Find the sum of 7 and 8"),       # imperative
+            self._make_q("Q3", "If Ravi has 5, how many left?"), # conditional
+            self._make_q("Q4", "23 + 47 = ___"),                 # statement
+            self._make_q("Q5", "How many tens in 50?"),          # question_word
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("structure monotony" in e.lower() for e in errors)
+
+    def test_all_imperative_flags(self, validator):
+        """All imperative openings should flag for monotony."""
+        qs = [
+            self._make_q("Q1", "Find the sum of 2 and 3"),
+            self._make_q("Q2", "Solve 5 + 7"),
+            self._make_q("Q3", "Calculate 8 - 3"),
+            self._make_q("Q4", "Add 4 and 6"),
+            self._make_q("Q5", "Subtract 2 from 9"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert any("structure monotony" in e.lower() for e in errors)
+
+    def test_two_types_ok_for_small(self, validator):
+        """5-9 questions need only 2 distinct structures."""
+        qs = [
+            self._make_q("Q1", "What is 2 + 3?"),
+            self._make_q("Q2", "Find the sum of 7 and 8"),
+            self._make_q("Q3", "What is 8 - 3?"),
+            self._make_q("Q4", "Find 4 + 6"),
+            self._make_q("Q5", "What is 9 - 1?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("structure monotony" in e.lower() for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Filler phrase ban (L3)
+# ---------------------------------------------------------------------------
+
+class TestFillerPhraseBan:
+    def _make_q(self, qid, text, answer="4", visual_type=None, visual_data=None):
+        q = {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+        if visual_type:
+            q["visual_type"] = visual_type
+        if visual_data:
+            q["visual_data"] = visual_data
+        return q
+
+    def test_no_fillers_pass(self, validator):
+        """Questions without filler phrases should pass."""
+        qs = [self._make_q(f"Q{i}", f"What is {i} + {i+1}?") for i in range(1, 6)]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("filler phrase" in e.lower() for e in errors)
+
+    def test_filler_without_visual_flags(self, validator):
+        """'the following' without a visual should flag."""
+        qs = [
+            self._make_q("Q1", "Look at the following numbers: 3, 6, 9"),
+            self._make_q("Q2", "What is 5 + 3?"),
+            self._make_q("Q3", "Find 8 - 2"),
+            self._make_q("Q4", "Add 4 and 7"),
+            self._make_q("Q5", "Solve 9 - 3"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert any("filler phrase" in e.lower() and "the following" in e for e in errors)
+
+    def test_filler_with_visual_ok(self, validator):
+        """'the following' WITH a visual context should be allowed."""
+        qs = [
+            self._make_q("Q1", "Look at the following picture and count", visual_type="object_group"),
+            self._make_q("Q2", "What is 5 + 3?"),
+            self._make_q("Q3", "Find 8 - 2"),
+            self._make_q("Q4", "Add 4 and 7"),
+            self._make_q("Q5", "Solve 9 - 3"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("filler phrase" in e.lower() and "the following" in e for e in errors)
+
+    def test_given_below_flags(self, validator):
+        """'given below' should also flag."""
+        qs = [
+            self._make_q("Q1", "Read the passage given below and answer"),
+            self._make_q("Q2", "What is 5 + 3?"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=2)
+        assert any("filler phrase" in e.lower() and "given below" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Sequence step variety (N4)
+# ---------------------------------------------------------------------------
+
+class TestSequenceStepVariety:
+    def _make_q(self, qid, text, answer="?"):
+        return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
+
+    def test_varied_steps_pass(self, validator):
+        """Sequences with different step sizes should pass."""
+        qs = [
+            self._make_q("Q1", "Complete: 2, 4, 6, __, __"),         # step 2
+            self._make_q("Q2", "Complete: 5, 10, 15, __, __"),       # step 5
+            self._make_q("Q3", "Complete: 3, 6, 9, __, __"),         # step 3
+            self._make_q("Q4", "What is 7 + 8?"),
+            self._make_q("Q5", "Find 12 - 5"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="Maths", num_questions=5)
+        assert not any("step monotony" in e.lower() for e in errors)
+
+    def test_all_same_step_flags(self, validator):
+        """All sequences with step=5 should flag."""
+        qs = [
+            self._make_q("Q1", "Complete: 5, 10, 15, __, __"),
+            self._make_q("Q2", "Complete: 10, 15, 20, __, __"),
+            self._make_q("Q3", "Complete: 20, 25, 30, __, __"),
+            self._make_q("Q4", "What is 7 + 8?"),
+            self._make_q("Q5", "Find 12 - 5"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="Maths", num_questions=5)
+        assert any("step monotony" in e.lower() for e in errors)
+
+    def test_few_sequences_skips(self, validator):
+        """Fewer than 3 sequences should skip the check."""
+        qs = [
+            self._make_q("Q1", "Complete: 5, 10, 15, __, __"),
+            self._make_q("Q2", "What is 7 + 8?"),
+            self._make_q("Q3", "Find 12 - 5"),
+            self._make_q("Q4", "Add 23 and 45"),
+            self._make_q("Q5", "Subtract 8 from 19"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, subject="Maths", num_questions=5)
+        assert not any("step monotony" in e.lower() for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# No scenario repeat (R2)
+# ---------------------------------------------------------------------------
+
+class TestNoScenarioRepeat:
+    def _make_q(self, qid, text, answer="4"):
+        return {"id": qid, "type": "word_problem", "text": text, "correct_answer": answer}
+
+    def test_unique_scenarios_pass(self, validator):
+        """Different scenario locations should pass."""
+        qs = [
+            self._make_q("Q1", "At the market, Aarav bought 5 apples"),
+            self._make_q("Q2", "In school, Priya counted 8 books"),
+            self._make_q("Q3", "At the park, Rohan saw 12 birds"),
+            self._make_q("Q4", "In the kitchen, Diya baked 6 cakes"),
+            self._make_q("Q5", "At the zoo, Kabir saw 3 elephants"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert not any("Scenario" in e and "repeated" in e for e in errors)
+
+    def test_repeated_scenario_flags(self, validator):
+        """Same scenario in 2 questions should flag."""
+        qs = [
+            self._make_q("Q1", "At the market, Aarav bought 5 oranges"),
+            self._make_q("Q2", "At the market, Priya sold 8 bananas"),
+            self._make_q("Q3", "In the park, Rohan played for 2 hours"),
+            self._make_q("Q4", "At school, Diya read 4 stories"),
+            self._make_q("Q5", "In the garden, Kabir planted 7 seeds"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=5)
+        assert any("market" in e and "repeated" in e for e in errors)
+
+    def test_small_worksheet_skips(self, validator):
+        """Fewer than 5 questions should skip the check."""
+        qs = [
+            self._make_q("Q1", "At the market, Aarav bought 5 oranges"),
+            self._make_q("Q2", "At the market, Priya sold 8 bananas"),
+        ]
+        data = {"questions": qs, "answer_key": {}}
+        _, errors = validator.validate_worksheet(data, num_questions=2)
+        assert not any("Scenario" in e and "repeated" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# Intra-band shuffle (S1) — tested via difficulty_calibrator
+# ---------------------------------------------------------------------------
+
+class TestIntraBandShuffle:
+    def test_shuffle_preserves_difficulty_order(self):
+        """After shuffle, short questions should still come before long ones."""
+        from app.services.difficulty_calibrator import DifficultyCalibrator
+        from app.services.topic_intelligence import GenerationContext
+        ctx = GenerationContext(
+            topic_slug="Addition (carries)", subject="Maths", grade=3,
+            ncert_chapter="Addition (carries)", ncert_subtopics=["obj1"],
+            bloom_level="recall", format_mix={},
+            scaffolding=True, challenge_mode=False,
+            valid_skill_tags=["column_add_with_carry"], child_context={},
+        )
+        # 3 short (2-3 words) + 3 medium (5-6 words) + 3 long (8+ words)
+        qs = [
+            {"format": "mcq", "question_text": "Add 2 3", "answer": "5", "skill_tag": "a"},
+            {"format": "fill_blank", "question_text": "Sum of 4 5", "answer": "9", "skill_tag": "b"},
+            {"format": "mcq", "question_text": "Find 7 8", "answer": "15", "skill_tag": "c"},
+            {"format": "fill_blank", "question_text": "What is the sum of 12 and 18", "answer": "30", "skill_tag": "a"},
+            {"format": "mcq", "question_text": "Calculate the total of 23 and 45", "answer": "68", "skill_tag": "b"},
+            {"format": "word_problem", "question_text": "Aarav had 15 pencils and bought 10 more pencils from shop", "answer": "25", "skill_tag": "c"},
+        ]
+        result, _ = DifficultyCalibrator().calibrate(qs, ctx)
+        # Word counts should still be non-decreasing (approximately)
+        word_counts = [len(q.get("question_text", "").split()) for q in result]
+        # First 3 should be shorter than last 3 on average
+        avg_first = sum(word_counts[:3]) / 3
+        avg_last = sum(word_counts[3:]) / 3
+        assert avg_first <= avg_last, f"Difficulty order broken: first avg={avg_first}, last avg={avg_last}"
+
+    def test_shuffle_only_in_scaffolding(self):
+        """Non-scaffolding mode should not shuffle."""
+        from app.services.difficulty_calibrator import DifficultyCalibrator
+        from app.services.topic_intelligence import GenerationContext
+        ctx = GenerationContext(
+            topic_slug="Addition (carries)", subject="Maths", grade=3,
+            ncert_chapter="Addition (carries)", ncert_subtopics=["obj1"],
+            bloom_level="recall", format_mix={},
+            scaffolding=False, challenge_mode=False,
+            valid_skill_tags=["column_add_with_carry"], child_context={},
+        )
+        qs = [
+            {"format": "mcq", "question_text": "Q1 short", "answer": "A", "skill_tag": "a"},
+            {"format": "fill_blank", "question_text": "Q2 short", "answer": "B", "skill_tag": "b"},
+            {"format": "word_problem", "question_text": "Q3 short", "answer": "C", "skill_tag": "c"},
+        ]
+        original_ids = [q["question_text"] for q in qs]
+        result, _ = DifficultyCalibrator().calibrate(list(qs), ctx)
+        result_ids = [q["question_text"] for q in result]
+        # Without scaffolding, STEP A and A2 don't run, so order is preserved
+        # (STEP F may swap but with 3 different formats, no swap needed)
+        assert result_ids == original_ids
