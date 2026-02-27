@@ -17,6 +17,7 @@ const ParentDashboard = lazy(() => import('./pages/ParentDashboard'))
 const AskSkolar = lazy(() => import('./pages/AskSkolar'))
 import RoleSelector from '@/components/RoleSelector'
 import OnboardingWizard from '@/components/OnboardingWizard'
+import AppFeedback from '@/components/AppFeedback'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -102,6 +103,7 @@ function AppContent() {
   const [syllabus, setSyllabus] = useState<ParsedSyllabus | null>(null)
   const [showAuth, setShowAuth] = useState(false)
   const [authDefaultMode, setAuthDefaultMode] = useState<'login' | 'signup'>('login')
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const { user, loading, signOut } = useAuth()
   const profileCtx = useProfile()
   const { activeRole, profile } = profileCtx
@@ -281,6 +283,16 @@ function AppContent() {
                 )}
 
 
+                <DropdownMenuItem
+                  onClick={() => setShowFeedbackDialog(true)}
+                  className="cursor-pointer rounded-lg py-2 px-3 text-sm"
+                >
+                  <svg className="w-4 h-4 mr-2.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Send Feedback
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator className="mx-1.5" />
                 <DropdownMenuItem
                   onClick={() => { setShowAuth(false); signOut() }}
@@ -368,6 +380,12 @@ function AppContent() {
         {currentPage === 'children' && <ChildProfiles />}
         </Suspense>
       </main>
+
+      <AppFeedback
+        currentPage={currentPage}
+        open={showFeedbackDialog}
+        onOpenChange={setShowFeedbackDialog}
+      />
     </div>
   )
 }
