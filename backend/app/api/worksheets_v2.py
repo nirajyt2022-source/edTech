@@ -91,10 +91,10 @@ async def generate_worksheet_v2(
                 problem_style=body.problem_style,
                 custom_instructions=body.custom_instructions,
             ),
-            timeout=45.0,
+            timeout=90.0,
         )
     except asyncio.TimeoutError:
-        logger.error("[v2] Generation timed out (45s) topic=%s", body.topic)
+        logger.error("[v2] Generation timed out (90s) topic=%s", body.topic)
         raise HTTPException(status_code=504, detail="Worksheet generation timed out. Please try again.")
     except ValueError as exc:
         logger.error("[v2] Generation failed: %s", exc)

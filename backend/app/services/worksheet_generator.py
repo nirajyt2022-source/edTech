@@ -650,6 +650,7 @@ def call_gemini(
     user_prompt: str,
     subject: str = "",
     difficulty: str = "medium",
+    num_questions: int = 10,
 ) -> str:
     """Call the LLM via the existing adapter and return raw text."""
     # Lower temperature for Maths to maintain accuracy, higher for creative subjects
@@ -668,6 +669,12 @@ def call_gemini(
             "writing it. For subtraction with borrowing, check each column."
         )
 
+    # Scale max_tokens for larger question counts — Devanagari/Hindi text
+    # uses ~250-350 tokens per question; 4096 truncates at ~12-14 questions.
+    base_tokens = 4096
+    if num_questions > 10:
+        base_tokens = min(8192, 4096 + (num_questions - 10) * 400)
+
     response = client.chat.completions.create(
         model="gemini-2.5-flash",
         messages=[
@@ -675,7 +682,7 @@ def call_gemini(
             {"role": "user", "content": user_prompt},
         ],
         temperature=temp,
-        max_tokens=4096,
+        max_tokens=base_tokens,
         thinking_budget=thinking_budget,
     )
     return response.choices[0].message.content or ""
@@ -1285,7 +1292,9 @@ def generate_worksheet(
         t0 = time.perf_counter()
         try:
             system_prompt = build_system_prompt(problem_style, subject)
-            raw = call_gemini(client, system_prompt, user_prompt, subject=subject, difficulty=difficulty)
+            raw = call_gemini(
+                client, system_prompt, user_prompt, subject=subject, difficulty=difficulty, num_questions=num_questions
+            )
             data, warnings = validate_response(raw, subject, topic, num_questions, difficulty)
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)
