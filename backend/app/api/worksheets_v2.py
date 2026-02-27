@@ -100,6 +100,18 @@ async def generate_worksheet_v2(
         raise HTTPException(status_code=502, detail="Worksheet generation failed. Please try again.")
 
     raw_questions = data.get("questions", [])
+
+    # Correction corpus logging (D-02) — must run before _map_question strips internal flags
+    from app.services.correction_corpus import log_corrections
+
+    log_corrections(
+        raw_questions,
+        user_id=user_id,
+        topic=body.topic,
+        subject=body.subject,
+        grade=body.grade_level,
+    )
+
     questions = [_map_question(q, i) for i, q in enumerate(raw_questions)]
 
     skill_coverage: dict[str, int] = {}
