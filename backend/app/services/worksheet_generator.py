@@ -1340,6 +1340,35 @@ def generate_worksheet(
             )
             data["chapter_ref"] = chapter_name
 
+            # ── Release Gate (final enforcement) ──
+            from app.services.release_gate import run_release_gate
+
+            release = run_release_gate(
+                questions=data.get("questions", []),
+                grade_level=grade_level,
+                subject=subject,
+                topic=topic,
+                num_questions=num_questions,
+                difficulty=difficulty,
+                warnings=all_warnings,
+                generation_context=None,
+                curriculum_available=bool(chapter_name),
+            )
+            data["_release_stamps"] = release.stamps
+            data["_release_verdict"] = release.verdict
+
+            if release.verdict == "blocked" and attempt < max_attempts:
+                feedback = "; ".join(release.block_reasons[:3])
+                user_prompt += f"\n\nQUALITY GATE REJECTED: {feedback}\nFix these issues."
+                all_warnings.append(f"[release_gate] BLOCKED: {feedback}")
+                continue
+
+            if release.verdict == "blocked":
+                all_warnings.extend(release.block_reasons)
+                raise ValueError(f"Release gate blocked after {max_attempts} attempts: {release.block_reasons}")
+
+            all_warnings.extend(release.degrade_reasons)
+
             # ── Warning severity categorization ──
             data["_warning_severity"] = _categorize_warnings(all_warnings)
 

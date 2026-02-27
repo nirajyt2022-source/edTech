@@ -123,15 +123,22 @@ async def generate_worksheet_v2(
         skill_coverage=skill_coverage or None,
     )
 
+    release_stamps = data.get("_release_stamps", {})
+    release_verdict = data.get("_release_verdict", "released")
     severity = data.get("_warning_severity", {})
-    quality_tier = severity.get("quality_tier", "high")
+
+    # Merge release stamps into severity for backward compat
+    merged_stamps = {**severity, **release_stamps}
+    quality_tier = merged_stamps.get("quality_tier", "high")
 
     has_warnings = bool(warnings)
+    api_verdict = "best_effort" if (release_verdict == "best_effort" or has_warnings) else "ok"
+
     return WorksheetGenerationResponse(
         worksheet=worksheet,
         generation_time_ms=elapsed_ms,
         warnings={"generation": warnings} if has_warnings else None,
-        verdict="best_effort" if has_warnings else "ok",
-        quality_stamps=severity or None,
+        verdict=api_verdict,
+        quality_stamps=merged_stamps or None,
         quality_tier=quality_tier,
     )
