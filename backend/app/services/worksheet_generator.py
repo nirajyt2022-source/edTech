@@ -613,6 +613,15 @@ def build_user_prompt(
             "USE simple words like: तो, बताओ, लिखो, सोचो, गिनो, देखो, पढ़ो. "
             "Write as a friendly teacher would speak to a child, not as a textbook.\n"
         )
+        # 4a: Inject Devanagari word anchors from topic profile
+        try:
+            _profile = get_topic_profile(topic, subject)
+            _deva = (_profile or {}).get("devanagari_examples", [])
+            if _deva:
+                anchors = ", ".join(_deva[:12])
+                prompt += f"\nHINDI EXAMPLES: Use these Devanagari words as anchors: {anchors}\n"
+        except Exception as exc:
+            logger.warning("[v2] Failed to load Devanagari examples for %s: %s", topic, exc)
 
     # ── Number progression directive ──
     if subject.lower() in ("maths", "mathematics", "math") and num_questions >= 5:
@@ -709,7 +718,32 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
     "grammar": ["noun", "verb", "pronoun", "adjective", "adverb", "tense", "sentence", "punctuation"],
     "comprehension": ["passage", "read", "comprehension", "paragraph", "story"],
     "vocabulary": ["word", "meaning", "synonym", "antonym", "spelling"],
-    "hindi": ["matra", "shabd", "vakya", "kaal", "sangya", "sarvanam", "kriya", "varnamala"],
+    "hindi": [
+        "matra",
+        "shabd",
+        "vakya",
+        "kaal",
+        "sangya",
+        "sarvanam",
+        "kriya",
+        "varnamala",
+        "मात्रा",
+        "शब्द",
+        "वाक्य",
+        "काल",
+        "संज्ञा",
+        "सर्वनाम",
+        "क्रिया",
+        "वर्णमाला",
+        "अक्षर",
+        "व्याकरण",
+        "विलोम",
+        "पर्यायवाची",
+        "मुहावरा",
+        "लेख",
+        "कहानी",
+        "कविता",
+    ],
     "science": [
         "plant",
         "animal",
@@ -1256,6 +1290,33 @@ def generate_worksheet(
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)
 
+            # ── Question count top-up ──
+            questions = data.get("questions", [])
+            shortfall = num_questions - len(questions)
+            if 0 < shortfall <= 3:
+                try:
+                    topup_prompt = (
+                        f"Generate exactly {shortfall} more questions about '{topic}' "
+                        f"for Class {grade_level} {subject} at {difficulty} difficulty. "
+                        f"Return ONLY a JSON array of question objects with the same schema "
+                        f"as before (id, type, text, correct_answer, options if MCQ)."
+                    )
+                    topup_raw = call_gemini(client, system_prompt, topup_prompt, subject=subject, difficulty=difficulty)
+                    # Extract JSON array from response
+                    topup_match = re.search(r"\[.*\]", topup_raw, re.DOTALL)
+                    if topup_match:
+                        topup_qs = json.loads(topup_match.group())
+                        for idx, tq in enumerate(topup_qs):
+                            tq["id"] = f"q{len(questions) + idx + 1}"
+                        data["questions"] = questions + topup_qs
+                        all_warnings.append(
+                            f"[topup] Generated {len(topup_qs)} extra question(s) to reach {num_questions}"
+                        )
+                        logger.info("[topup] Generated %d extra question(s)", len(topup_qs))
+                except Exception as exc:
+                    logger.warning("[topup] Failed to backfill %d question(s): %s", shortfall, exc)
+                    all_warnings.append(f"[topup] Backfill failed: {exc}")
+
             # ── Output validation ──
             from app.services.output_validator import get_validator
 
@@ -1269,6 +1330,61 @@ def generate_worksheet(
                     "Worksheet validation issues",
                     extra={"errors": validation_errors, "topic": topic, "grade": grade_level},
                 )
+
+            # ── QualityReviewer (Agent 3) ──
+            try:
+                from app.services.quality_reviewer import get_quality_reviewer
+                from app.services.topic_intelligence import GenerationContext
+
+                # Build minimal GenerationContext from available params
+                _profile = get_topic_profile(topic, subject) or {}
+                _grade_int = (
+                    int(re.search(r"\d+", str(grade_level)).group()) if re.search(r"\d+", str(grade_level)) else 3
+                )
+                _gen_ctx = GenerationContext(
+                    topic_slug=topic,
+                    subject=subject,
+                    grade=_grade_int,
+                    ncert_chapter=topic,
+                    ncert_subtopics=[],
+                    bloom_level="recall",
+                    format_mix={"mcq": 40, "fill_blank": 30, "word_problem": 30},
+                    scaffolding=False,
+                    challenge_mode=False,
+                    valid_skill_tags=list(_profile.get("allowed_skill_tags", [])),
+                    child_context={},
+                )
+
+                # Map v2 field names → v1 for QualityReviewer
+                _v2_questions = data.get("questions", [])
+                for _q in _v2_questions:
+                    if "text" in _q and "question_text" not in _q:
+                        _q["question_text"] = _q["text"]
+                    if "correct_answer" in _q and "answer" not in _q:
+                        _q["answer"] = _q["correct_answer"]
+                    if "type" in _q and "slot_type" not in _q:
+                        _q["slot_type"] = _q["type"]
+
+                _review = get_quality_reviewer().review_worksheet(_v2_questions, _gen_ctx)
+
+                # Map v1 corrections back → v2
+                for _q in _review.questions:
+                    if "_answer_corrected" in _q and "answer" in _q:
+                        _q["correct_answer"] = _q["answer"]
+                    if "question_text" in _q:
+                        _q["text"] = _q["question_text"]
+
+                data["questions"] = _review.questions
+                all_warnings.extend([f"[quality_reviewer] {c}" for c in _review.corrections])
+                all_warnings.extend([f"[quality_reviewer] {w}" for w in _review.warnings])
+                logger.info(
+                    "[quality_reviewer] %d correction(s), %d warning(s)",
+                    len(_review.corrections),
+                    len(_review.warnings),
+                )
+            except Exception as exc:
+                logger.warning("[quality_reviewer] Agent failed (non-blocking): %s", exc)
+                all_warnings.append(f"[quality_reviewer] Skipped: {exc}")
 
             # Safety net: strip all images in standard mode
             if problem_style == "standard":
@@ -1370,6 +1486,45 @@ def generate_worksheet(
                 user_prompt_version=USER_PROMPT_VERSION,
             )
             data["chapter_ref"] = chapter_name
+
+            # ── DifficultyCalibrator (Agent 4) ──
+            try:
+                from app.services.difficulty_calibrator import get_difficulty_calibrator
+
+                # Reuse _gen_ctx from QualityReviewer if available, else build fresh
+                if "_gen_ctx" not in dir():
+                    from app.services.topic_intelligence import GenerationContext as _GC
+
+                    _profile = get_topic_profile(topic, subject) or {}
+                    _grade_int = (
+                        int(re.search(r"\d+", str(grade_level)).group()) if re.search(r"\d+", str(grade_level)) else 3
+                    )
+                    _gen_ctx = _GC(
+                        topic_slug=topic,
+                        subject=subject,
+                        grade=_grade_int,
+                        ncert_chapter=topic,
+                        ncert_subtopics=[],
+                        bloom_level="recall",
+                        format_mix={"mcq": 40, "fill_blank": 30, "word_problem": 30},
+                        scaffolding=False,
+                        challenge_mode=False,
+                        valid_skill_tags=list(_profile.get("allowed_skill_tags", [])),
+                        child_context={},
+                    )
+
+                # Map v2 fields for calibrator (expects question_text)
+                for _q in data.get("questions", []):
+                    if "text" in _q and "question_text" not in _q:
+                        _q["question_text"] = _q["text"]
+
+                calibrated, cal_warnings = get_difficulty_calibrator().calibrate(data.get("questions", []), _gen_ctx)
+                data["questions"] = calibrated
+                all_warnings.extend([f"[difficulty_calibrator] {w}" for w in cal_warnings])
+                logger.info("[difficulty_calibrator] %d warning(s)", len(cal_warnings))
+            except Exception as exc:
+                logger.warning("[difficulty_calibrator] Agent failed (non-blocking): %s", exc)
+                all_warnings.append(f"[difficulty_calibrator] Skipped: {exc}")
 
             # ── Release Gate (final enforcement) ──
             from app.services.release_gate import run_release_gate
