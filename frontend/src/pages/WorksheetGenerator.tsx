@@ -196,6 +196,7 @@ interface Question {
   difficulty?: string
   is_bonus?: boolean
   skill_tag?: string
+  verified?: boolean
 }
 
 interface Worksheet {
@@ -2285,7 +2286,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         {worksheet.questions.map((question, index) => (
                           <div key={question.id} className="p-3 bg-secondary/20 rounded-lg text-sm border border-border/50 print:bg-gray-100 print:border-black/15 print:rounded-none">
                             <div className="flex items-center gap-3">
-                              <span className="font-bold text-primary">Q{index + 1}</span>
+                              <span className="font-bold text-primary flex items-center gap-1">
+                                Q{index + 1}
+                                {question.verified !== false ? (
+                                  <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                                ) : (
+                                  <svg className="w-3 h-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                                )}
+                              </span>
                               <span className="text-foreground font-medium">
                                 {question.correct_answer
                                   ? question.correct_answer
@@ -2380,16 +2388,20 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         )
                       })()}
 
-                      {/* Quality badge (Trust P0) */}
-                      <p className="mt-4 text-[10px] text-muted-foreground italic flex items-center gap-1">
-                        {qualityTier === 'high' ? (
-                          <><span className="text-emerald-600">✓</span> All answers verified | Quality: High</>
-                        ) : qualityTier === 'medium' ? (
-                          <><span className="text-amber-600">✓</span> Answers verified | Quality: Standard</>
-                        ) : (
-                          <>Answers provided as best effort</>
-                        )}
-                      </p>
+                      {/* Quality badge (Trust P0 + P5) */}
+                      {(() => {
+                        const verifiedCount = worksheet.questions.filter(q => q.verified !== false).length
+                        const total = worksheet.questions.length
+                        return (
+                          <p className="mt-4 text-[10px] text-muted-foreground italic flex items-center gap-1">
+                            {verifiedCount === total ? (
+                              <><span className="text-emerald-600">✓</span> {verifiedCount}/{total} answers verified | Quality: {qualityTier === 'high' ? 'High' : qualityTier === 'medium' ? 'Standard' : 'Best effort'}</>
+                            ) : (
+                              <><span className="text-amber-600">!</span> {verifiedCount}/{total} answers verified | Quality: {qualityTier === 'high' ? 'High' : qualityTier === 'medium' ? 'Standard' : 'Best effort'}</>
+                            )}
+                          </p>
+                        )
+                      })()}
                     </div>
                   )}
 

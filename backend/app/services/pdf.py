@@ -1208,7 +1208,15 @@ class PDFService:
                 if skill_tag
                 else ""
             )
-            row.append(Paragraph(f"<b>Q{i}:</b> {_sanitize_text(str(answer))}{tag_suffix}", self.styles["AnswerText"]))
+            verified = question.get("verified", True)
+            v_icon = "\u2713" if verified else "!"
+            v_color = "228B22" if verified else "D97706"
+            v_prefix = f"<font size='8' color='#{v_color}'>{v_icon}</font> "
+            row.append(
+                Paragraph(
+                    f"{v_prefix}<b>Q{i}:</b> {_sanitize_text(str(answer))}{tag_suffix}", self.styles["AnswerText"]
+                )
+            )
             if len(row) == 3:
                 answer_data.append(row)
                 row = []

@@ -105,6 +105,7 @@ class Question(BaseModel):
     hint: str | None = None  # Optional hint (separate from question_text)
     images: list[dict] | None = None  # [{path, alt, category}] — cartoon images for EVS/Science
     format: str = "short_answer"  # PDF render format: fill_blank|mcq_3|mcq_4|vertical_sum|true_false|short_answer
+    verified: bool = True  # Trust P5: per-question answer verification status
 
 
 class Worksheet(BaseModel):

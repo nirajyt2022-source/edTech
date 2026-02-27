@@ -66,6 +66,16 @@ Show question format mix: "2 MCQ, 3 Word Problems, 2 Fill-in-the-Blank, 1 Error 
 
 ---
 
-## P5 — Per-Question Verification Badge ⬜ TODO
+## P5 — Per-Question Verification Badge ✅ SHIPPED
 
-Checkmark on each verified answer (requires threading verification status from Release Gate through to frontend).
+Checkmark on each verified answer — threads `_math_unverified` flag from Quality Reviewer through API to frontend.
+
+**What P5 added:**
+| Item | File | Status |
+|------|------|--------|
+| Add `verified: bool` to Question model | `models/worksheet.py` | ✅ |
+| Thread `_math_unverified` → `verified` in API mapper | `worksheets_v2.py` | ✅ |
+| Add `verified` to frontend Question interface | `WorksheetGenerator.tsx` | ✅ |
+| Green checkmark / amber warning per answer in answer key | `WorksheetGenerator.tsx` | ✅ |
+| Quality badge shows "X/Y answers verified" count | `WorksheetGenerator.tsx` | ✅ |
+| Verification icon per answer in PDF answer key | `pdf.py` | ✅ |

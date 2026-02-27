@@ -44,6 +44,7 @@ def _map_question(q: dict, index: int) -> Question:
         visual_data=q.get("visual_data"),
         skill_tag=q.get("skill_tag"),
         format=_infer_render_format(q.get("type", "short_answer"), q.get("options")),
+        verified=not q.get("_math_unverified", False),
     )
 
 
