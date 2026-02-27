@@ -1950,6 +1950,24 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     <p className="text-sm text-muted-foreground">Read each question carefully. Show your working in the space provided. Answer all questions.</p>
                   </div>
 
+                  {/* Difficulty Breakdown (Trust P3) */}
+                  {(() => {
+                    const normal = worksheet.questions.filter(q => !q.is_bonus)
+                    const fCount = normal.filter(q => q.role === 'recognition' || q.role === 'representation').length
+                    const aCount = normal.filter(q => q.role === 'application').length
+                    const sCount = normal.filter(q => q.role === 'error_detection' || q.role === 'thinking').length
+                    const hasRoleData = fCount + aCount + sCount > 0
+                    if (!hasRoleData) return null
+                    return (
+                      <div className="mb-8 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground/60 uppercase tracking-wider text-[10px]">Difficulty:</span>
+                        {fCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733; Foundation <b>{fCount}</b></span>}
+                        {aCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733;&#9733; Application <b>{aCount}</b></span>}
+                        {sCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733;&#9733;&#9733; Stretch <b>{sCount}</b></span>}
+                      </div>
+                    )
+                  })()}
+
                   {/* Tiered question rendering */}
                   {(() => {
                     const normalQuestions = worksheet.questions.filter(q => !q.is_bonus)
@@ -2280,6 +2298,25 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                           </div>
                         </div>
                       )}
+
+                      {/* Difficulty Breakdown in Answer Key (Trust P3) */}
+                      {(() => {
+                        const normal = worksheet.questions.filter(q => !q.is_bonus)
+                        const fCount = normal.filter(q => q.role === 'recognition' || q.role === 'representation').length
+                        const aCount = normal.filter(q => q.role === 'application').length
+                        const sCount = normal.filter(q => q.role === 'error_detection' || q.role === 'thinking').length
+                        if (fCount + aCount + sCount === 0) return null
+                        return (
+                          <div className="mt-6 pt-4 border-t border-border/30">
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Difficulty Breakdown</h4>
+                            <div className="flex flex-wrap gap-2 text-xs">
+                              {fCount > 0 && <span className="px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700">&#9733; Foundation: {fCount}</span>}
+                              {aCount > 0 && <span className="px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700">&#9733;&#9733; Application: {aCount}</span>}
+                              {sCount > 0 && <span className="px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700">&#9733;&#9733;&#9733; Stretch: {sCount}</span>}
+                            </div>
+                          </div>
+                        )
+                      })()}
 
                       {/* Quality badge (Trust P0) */}
                       <p className="mt-4 text-[10px] text-muted-foreground italic flex items-center gap-1">

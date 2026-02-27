@@ -1144,6 +1144,29 @@ class PDFService:
             )
         )
 
+        # Difficulty breakdown (Trust P3)
+        _foundation_roles = {"recognition", "representation"}
+        _application_roles = {"application"}
+        _stretch_roles = {"error_detection", "thinking"}
+        f_count = sum(1 for q in questions if q.get("role") in _foundation_roles)
+        a_count = sum(1 for q in questions if q.get("role") in _application_roles)
+        s_count = sum(1 for q in questions if q.get("role") in _stretch_roles)
+        if f_count + a_count + s_count > 0:
+            parts = []
+            if f_count:
+                parts.append(f"\u2605 Foundation: {f_count}")
+            if a_count:
+                parts.append(f"\u2605\u2605 Application: {a_count}")
+            if s_count:
+                parts.append(f"\u2605\u2605\u2605 Stretch: {s_count}")
+            story.append(
+                Paragraph(
+                    f"<font size='8' color='#{_MUTED.hexval()[2:]}'>Difficulty: {' &nbsp;|&nbsp; '.join(parts)}</font>",
+                    self.styles["AnswerText"],
+                )
+            )
+            story.append(Spacer(1, 8))
+
         # Answer grid — 3 columns
         answer_data = []
         row = []

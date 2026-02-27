@@ -40,9 +40,16 @@ Product signals that build parent confidence and teacher credibility. No marketi
 
 ---
 
-## P3 — Difficulty Breakdown Summary ⬜ TODO
+## P3 — Difficulty Breakdown Summary ✅ SHIPPED
 
 Show explicit counts: "3 Foundation, 4 Application, 3 Stretch" — derived from `role` data already on each question.
+
+**What P3 added:**
+| Item | File | Status |
+|------|------|--------|
+| Color-coded difficulty bar above questions | `WorksheetGenerator.tsx` | ✅ |
+| Difficulty breakdown in answer key section | `WorksheetGenerator.tsx` | ✅ |
+| Difficulty line in PDF answer key | `pdf.py` | ✅ |
 
 ---
 
