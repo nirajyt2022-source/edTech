@@ -2,12 +2,9 @@
 Tests for the Release Gate Engine — 10 rules + integration tests.
 """
 
-import pytest
-
 from app.services.release_gate import (
     Enforcement,
     GateContext,
-    RuleResult,
     VALID_QUESTION_TYPES,
     r01_arithmetic_verified,
     r02_known_types_only,
