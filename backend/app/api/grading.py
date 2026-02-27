@@ -106,6 +106,21 @@ async def grade_from_photo(
         except Exception as exc:
             logger.warning("Mastery update failed (non-blocking): %s", exc)
 
+    # ── Record per-question diagnostic data ──
+    if child_id:
+        try:
+            from app.services.diagnostic_recorder import record_question_attempts
+
+            record_question_attempts(
+                child_id=child_id,
+                worksheet_data=worksheet,
+                grading_results=results.get("results", []),
+                questions=questions,
+                worksheet_id=worksheet.get("id"),
+            )
+        except Exception as exc:
+            logger.warning("Diagnostic recording failed (non-blocking): %s", exc)
+
     # Invalidate dashboard cache so fresh stats are shown
     if child_id:
         from app.services.cache import invalidate_dashboard

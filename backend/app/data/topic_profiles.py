@@ -5385,6 +5385,50 @@ def _profile_subject_group(profile: dict) -> str:
     return "Maths"
 
 
+def apply_diagnostic_weights(
+    recipe: list[dict],
+    skill_tag_weights: dict[str, float],
+    total_questions: int,
+) -> list[dict]:
+    """Adjust recipe counts based on diagnostic weights. Preserves total.
+
+    Each recipe item is {"skill_tag": str, "count": int}.
+    skill_tag_weights maps skill_tag → weight multiplier (default 1.0).
+    Weight > 1 → more questions; weight < 1 → fewer.
+
+    Returns a new recipe list with adjusted counts summing to total_questions.
+    """
+    if not recipe or not skill_tag_weights:
+        return recipe
+
+    # Apply weights
+    weighted: list[tuple[dict, float]] = []
+    for item in recipe:
+        w = skill_tag_weights.get(item["skill_tag"], 1.0)
+        weighted.append((item, item["count"] * w))
+
+    # Normalise to total_questions
+    raw_total = sum(w for _, w in weighted)
+    if raw_total <= 0:
+        return recipe
+
+    result = []
+    assigned = 0
+    for item, w in weighted:
+        count = max(1, round(w * total_questions / raw_total))
+        result.append({"skill_tag": item["skill_tag"], "count": count})
+        assigned += count
+
+    # Fix rounding: adjust the largest bucket
+    diff = total_questions - assigned
+    if diff != 0 and result:
+        # Find the item with the largest count
+        largest_idx = max(range(len(result)), key=lambda i: result[i]["count"])
+        result[largest_idx]["count"] = max(1, result[largest_idx]["count"] + diff)
+
+    return result
+
+
 def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
     """Return the TOPIC_PROFILES entry for topic.
 

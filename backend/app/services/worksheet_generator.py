@@ -462,6 +462,7 @@ def build_user_prompt(
     language: str,
     problem_style: str = "standard",
     custom_instructions: str | None = None,
+    diagnostic_context: object | None = None,
 ) -> str:
     """Build a concise user prompt that reinforces the topic constraint."""
     style_hint = {
@@ -537,6 +538,14 @@ def build_user_prompt(
         else:
             recipe = _scale_recipe(profile.get("default_recipe", []), num_questions)
 
+        # D-05: Apply diagnostic weights to recipe if available
+        if recipe and diagnostic_context and hasattr(diagnostic_context, "skill_tag_weights"):
+            weights = getattr(diagnostic_context, "skill_tag_weights", {})
+            if weights:
+                from app.data.topic_profiles import apply_diagnostic_weights
+
+                recipe = apply_diagnostic_weights(recipe, weights, num_questions)
+
         if recipe:
             lines = []
             for entry in recipe:
@@ -553,6 +562,26 @@ def build_user_prompt(
                 "\nSKILL-TAG PLAN (follow this EXACTLY — generate this many of each type):\n" + "\n".join(lines) + "\n"
                 'Each question MUST include a "skill_tag" field matching one tag from the plan above.\n'
             )
+
+        # D-05: Inject misconception-targeting instructions in remediation mode
+        if diagnostic_context and hasattr(diagnostic_context, "mode"):
+            diag_mode = getattr(diagnostic_context, "mode", "normal")
+            misconceptions = getattr(diagnostic_context, "misconceptions_to_target", [])
+            if diag_mode == "remediation" and misconceptions:
+                from app.data.misconception_taxonomy import MISCONCEPTION_TAXONOMY
+
+                misc_lines = []
+                for mid in misconceptions[:3]:
+                    entry = MISCONCEPTION_TAXONOMY.get(mid, {})
+                    display = entry.get("display", mid)
+                    misc_lines.append(f"  - {display}")
+                prompt += (
+                    "\nREMEDIATION MODE: This student has systematic errors. "
+                    "Design questions that help diagnose and address these misconceptions:\n"
+                    + "\n".join(misc_lines)
+                    + "\n"
+                    "Include step-by-step worked examples and scaffolded questions.\n"
+                )
 
     # -- Scenario pool injection --
     try:
@@ -1151,6 +1180,7 @@ def generate_worksheet(
     language: str = "English",
     problem_style: str = "standard",
     custom_instructions: str | None = None,
+    diagnostic_context: object | None = None,
 ) -> tuple[dict[str, Any], int, list[str]]:
     """Generate a validated worksheet via Gemini.
 
@@ -1167,6 +1197,7 @@ def generate_worksheet(
         language=language,
         problem_style=problem_style,
         custom_instructions=custom_instructions,
+        diagnostic_context=diagnostic_context,
     )
 
     # -- RAG: Inject curriculum context --

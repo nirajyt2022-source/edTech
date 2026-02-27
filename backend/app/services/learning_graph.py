@@ -327,6 +327,33 @@ class LearningGraphService:
         except Exception as exc:
             logger.error("[learning_graph.record_session] Failed to upsert topic_mastery row: %s", exc)
 
+        # --- Update diagnostic columns on topic_mastery (best-effort) ---
+        try:
+            import os
+
+            if os.getenv("ENABLE_DIAGNOSTIC_DB", "0") == "1":
+                from app.services.error_pattern_detector import get_error_pattern_detector
+
+                detector = get_error_pattern_detector()
+                patterns = detector.detect_patterns(child_id, lookback_days=30)
+                systematic_ids = [p.misconception_id for p in patterns if p.is_systematic]
+                pattern_summary = {
+                    p.misconception_id: {
+                        "display": p.misconception_display,
+                        "occurrences": p.occurrences,
+                        "error_rate": p.error_rate,
+                    }
+                    for p in patterns[:5]
+                }
+                sb.table("topic_mastery").update(
+                    {
+                        "misconception_pattern": pattern_summary,
+                        "systematic_errors": systematic_ids,
+                    }
+                ).eq("child_id", child_id).eq("topic_slug", topic_slug).execute()
+        except Exception as exc:
+            logger.error("[learning_graph.record_session] Diagnostic update failed (non-blocking): %s", exc)
+
         # --- Update child summary ---
         try:
             self._update_child_summary(child_id)

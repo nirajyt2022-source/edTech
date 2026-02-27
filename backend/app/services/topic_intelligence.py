@@ -50,6 +50,10 @@ class GenerationContext(BaseModel):
     valid_skill_tags: list[str]  # from TOPIC_PROFILES["allowed_skill_tags"]
     child_context: dict  # ≤200 tokens of child-specific state (empty if no child_id)
     adaptive_fallback: bool = False  # True when adaptive difficulty couldn't be loaded
+    # D-05: Diagnostic fields
+    diagnostic_mode: str = "normal"  # "normal" | "remediation" | "reinforcement"
+    target_misconceptions: list[str] = []  # misconception IDs to target
+    skill_tag_weights: dict = {}  # {skill_tag: float weight} for recipe adjustment
 
 
 # ---------------------------------------------------------------------------
@@ -235,6 +239,43 @@ class TopicIntelligenceAgent:
             # No child_id — personalization not possible
             adaptive_fallback = True
 
+        # 5. Diagnostic context (D-05 — fail-open)
+        diagnostic_mode = "normal"
+        target_misconceptions: list[str] = []
+        skill_tag_weights: dict = {}
+
+        if child_id:
+            try:
+                from app.services.diagnostic_context import build_diagnostic_context
+
+                diag = await asyncio.to_thread(build_diagnostic_context, child_id, topic_slug, subject, grade)
+                diagnostic_mode = diag.mode
+                target_misconceptions = diag.misconceptions_to_target
+
+                # Build skill_tag_weights: boost targeted skills, reduce avoided
+                for st in diag.target_skill_tags:
+                    skill_tag_weights[st] = 2.0
+                for st in diag.avoid_skill_tags:
+                    skill_tag_weights[st] = 0.3
+
+                # Override difficulty if diagnostic says so
+                if diag.difficulty_override:
+                    bloom_map = {"easy": "recall", "medium": "application", "hard": "reasoning"}
+                    bloom_level = bloom_map.get(diag.difficulty_override, bloom_level)
+
+                if diag.mode == "remediation":
+                    scaffolding = True
+                    challenge_mode = False
+                elif diag.mode == "reinforcement":
+                    scaffolding = False
+                    challenge_mode = True
+            except Exception as exc:
+                logger.warning(
+                    "[topic_intelligence] diagnostic_context failed for child=%s: %s",
+                    child_id,
+                    exc,
+                )
+
         return GenerationContext(
             topic_slug=topic_slug,
             subject=subject,
@@ -248,6 +289,9 @@ class TopicIntelligenceAgent:
             valid_skill_tags=valid_skill_tags,
             child_context=child_context,
             adaptive_fallback=adaptive_fallback,
+            diagnostic_mode=diagnostic_mode,
+            target_misconceptions=target_misconceptions,
+            skill_tag_weights=skill_tag_weights,
         )
 
 

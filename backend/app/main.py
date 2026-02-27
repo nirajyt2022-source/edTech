@@ -39,6 +39,7 @@ from app.api import (  # noqa: E402
     flashcards,
     grading,
     health,
+    insights,
     learning_graph,
     reports,
     revision,
@@ -191,6 +192,7 @@ app.include_router(revision.router)
 app.include_router(flashcards.router)
 app.include_router(textbook.router)
 app.include_router(ask_skolar.router)
+app.include_router(insights.router)
 
 
 @app.get("/")
