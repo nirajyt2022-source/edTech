@@ -127,6 +127,14 @@ _ERROR_CLASSIFIERS: list[tuple[str, str, str, str, float]] = [
     (r"math answer appears incorrect", "content", "CONTENT_08", "critical", 0.40),
     (r"visual data does not match", "content", "CONTENT_05", "major", 0.15),
     (r"visual type .* is disallowed", "content", "CONTENT_09", "minor", 0.05),
+    (r"Hindi code-mixing|Hindi transliterat", "content", "CONTENT_10", "major", 0.20),
+    (
+        r"fill.blank.ambig|missing blank marker|subjective.fill|generic.fill.blank",
+        "content",
+        "CONTENT_11",
+        "minor",
+        0.10,
+    ),
     # Pedagogical
     (r"Type diversity", "pedagogical", "PED_02", "major", 0.15),
 ]
@@ -261,6 +269,32 @@ def _run_content_checks(
                     message="Fallback stub question — LLM failed all retries",
                     question_ids=[qid],
                     points_deducted=0.30,
+                )
+            )
+
+        # CONTENT_10: Hindi script impurity flag
+        if q.get("_hindi_impure"):
+            buckets["content"].append(
+                FailureReason(
+                    dimension="content",
+                    check_id="CONTENT_10",
+                    severity="major",
+                    message="Hindi script impurity in answer/hint/explanation",
+                    question_ids=[qid],
+                    points_deducted=0.20,
+                )
+            )
+
+        # CONTENT_11: Fill-blank ambiguity flag
+        if q.get("_fill_blank_ambiguous"):
+            buckets["content"].append(
+                FailureReason(
+                    dimension="content",
+                    check_id="CONTENT_11",
+                    severity="minor",
+                    message="Fill-in-the-blank question is ambiguous",
+                    question_ids=[qid],
+                    points_deducted=0.10,
                 )
             )
 

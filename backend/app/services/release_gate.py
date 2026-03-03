@@ -637,6 +637,50 @@ def r16_mcq_quality_guard(ctx: GateContext) -> RuleResult:
         return RuleResult("R16_MCQ_QUALITY_GUARD", False, Enforcement.DEGRADE, detail)
 
 
+# ---------------------------------------------------------------------------
+# R17 — HINDI_SCRIPT_PURITY (BLOCK for Hindi, DEGRADE for others)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R17_HINDI_SCRIPT_PURITY", Enforcement.BLOCK)
+def r17_hindi_script_purity(ctx: GateContext) -> RuleResult:
+    """Block Hindi worksheets with script impurity; degrade others."""
+    impure = [q for q in ctx.questions if q.get("_hindi_impure")]
+    if not impure:
+        return RuleResult("R17_HINDI_SCRIPT_PURITY", True, Enforcement.BLOCK, "No Hindi impurity")
+
+    detail = f"{len(impure)} question(s) with Hindi script impurity"
+    if ctx.subject.lower() == "hindi":
+        return RuleResult("R17_HINDI_SCRIPT_PURITY", False, Enforcement.BLOCK, detail)
+    else:
+        return RuleResult("R17_HINDI_SCRIPT_PURITY", False, Enforcement.DEGRADE, detail)
+
+
+# ---------------------------------------------------------------------------
+# R18 — FILL_BLANK_AMBIGUITY (DEGRADE)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R18_FILL_BLANK_AMBIGUITY", Enforcement.DEGRADE)
+def r18_fill_blank_ambiguity(ctx: GateContext) -> RuleResult:
+    """Degrade if >30% of fill_blank questions are ambiguous."""
+    fill_blanks = [q for q in ctx.questions if q.get("type", q.get("format", "")) in ("fill_blank", "fill_in_blank")]
+    if len(fill_blanks) < 2:
+        return RuleResult("R18_FILL_BLANK_AMBIGUITY", True, Enforcement.DEGRADE, "Too few fill_blank questions")
+
+    flagged = [q for q in fill_blanks if q.get("_fill_blank_ambiguous")]
+    ratio = len(flagged) / len(fill_blanks)
+    passed = ratio <= 0.30
+    return RuleResult(
+        "R18_FILL_BLANK_AMBIGUITY",
+        passed,
+        Enforcement.DEGRADE,
+        f"{len(flagged)}/{len(fill_blanks)} ambiguous ({ratio:.0%})"
+        if not passed
+        else f"{len(flagged)}/{len(fill_blanks)} within tolerance",
+    )
+
+
 @register_rule("R15_ANSWER_AUTHORITY", Enforcement.BLOCK)
 def r15_answer_authority(ctx: GateContext) -> RuleResult:
     """Block if any question has _answer_mismatch (wrong math answer)."""

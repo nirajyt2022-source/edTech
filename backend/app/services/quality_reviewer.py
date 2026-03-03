@@ -660,6 +660,49 @@ def _has_hindi_transliteration(text: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Fill-in-the-blank ambiguity patterns (CHECK 20)
+# ---------------------------------------------------------------------------
+
+_FB_BLANK_RE = re.compile(r"_{2,}|\.{3,}|\?{2,}|______|\[blank\]|\[___\]", re.IGNORECASE)
+_FB_GENERIC_ANSWERS = frozenset(
+    {
+        "a",
+        "an",
+        "the",
+        "is",
+        "are",
+        "was",
+        "were",
+        "it",
+        "this",
+        "that",
+        "of",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "with",
+        "by",
+        "from",
+        "and",
+        "or",
+        "but",
+        "not",
+        "yes",
+        "no",
+        "very",
+        "so",
+        "too",
+    }
+)
+_FB_SUBJECTIVE_RE = re.compile(
+    r"(?i)(write a|write any|give an example|give a|name a|name any|"
+    r"your own|your favou?rite|anything|any word|any name|any number|any suitable)"
+)
+
+
+# ---------------------------------------------------------------------------
 # Self-contradiction detector (CHECK 7)
 # ---------------------------------------------------------------------------
 
@@ -925,6 +968,25 @@ class QualityReviewerAgent:
                     result.warnings.append(msg)
                     q["_needs_regen"] = True
                     result.corrections.append(f"Q{q_id}: flagged for regen (transliterated English)")
+
+                # CHECK 10b: Scan answer, hint, explanation for Hindi impurity
+                _impure_found = False
+                for _field_name in ("answer", "correct_answer", "explanation", "hint"):
+                    _field_val = str(q.get(_field_name, "") or "")
+                    if not _field_val.strip():
+                        continue
+                    if _has_hindi_code_mixing(_field_val):
+                        msg = f"Q{q_id}: Hindi code-mixing in {_field_name}"
+                        logger.warning("[quality_reviewer] %s", msg)
+                        result.warnings.append(msg)
+                        _impure_found = True
+                    elif context.subject.lower() == "hindi" and _has_hindi_transliteration(_field_val):
+                        msg = f"Q{q_id}: Hindi transliteration in {_field_name}"
+                        logger.warning("[quality_reviewer] %s", msg)
+                        result.warnings.append(msg)
+                        _impure_found = True
+                if _impure_found:
+                    q["_hindi_impure"] = True
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 10 skipped for Q%s: %s", q_id, exc)
 
@@ -949,6 +1011,26 @@ class QualityReviewerAgent:
                         result.corrections.append(f"Q{q_id}: flagged for regen (subject contamination)")
                 except Exception as exc:
                     logger.debug("[quality_reviewer] Check 19 skipped for Q%s: %s", q_id, exc)
+
+            # ── CHECK 20: Fill-in-the-blank ambiguity ────────────────────
+            try:
+                q_type = q.get("type", q.get("format", ""))
+                if q_type in ("fill_blank", "fill_in_blank"):
+                    _fb_issues = []
+                    if not _FB_BLANK_RE.search(question_text):
+                        _fb_issues.append("missing blank marker")
+                    if _FB_SUBJECTIVE_RE.search(question_text):
+                        _fb_issues.append("subjective/open-ended prompt")
+                    _fb_answer = str(q.get("answer", q.get("correct_answer", "")) or "").strip().lower()
+                    if _fb_answer in _FB_GENERIC_ANSWERS:
+                        _fb_issues.append(f"generic answer '{_fb_answer}'")
+                    if _fb_issues:
+                        q["_fill_blank_ambiguous"] = True
+                        msg = f"Q{q_id}: fill-blank ambiguity ({', '.join(_fb_issues)})"
+                        logger.warning("[quality_reviewer] %s", msg)
+                        result.warnings.append(msg)
+            except Exception as exc:
+                logger.debug("[quality_reviewer] Check 20 skipped for Q%s: %s", q_id, exc)
 
         # ── CHECK 11: Engagement framing injection (P0-A) ──────────────
         # If <20% of questions use warm framing, inject it on eligible questions.

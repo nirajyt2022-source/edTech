@@ -594,6 +594,58 @@ class OutputValidator:
                     errors.append(f"{qid}: [mcq_quality] Banned option '{opt}'")
                     break
 
+        # 22. Fill-in-the-blank ambiguity detection
+        _FB_BLANK_RE_22 = re.compile(r"_{2,}|\.{3,}|\?{2,}|______|\[blank\]|\[___\]", re.IGNORECASE)
+        _FB_GENERIC_22 = frozenset(
+            {
+                "a",
+                "an",
+                "the",
+                "is",
+                "are",
+                "was",
+                "were",
+                "it",
+                "this",
+                "that",
+                "of",
+                "in",
+                "on",
+                "at",
+                "to",
+                "for",
+                "with",
+                "by",
+                "from",
+                "and",
+                "or",
+                "but",
+                "not",
+                "yes",
+                "no",
+                "very",
+                "so",
+                "too",
+            }
+        )
+        _FB_SUBJECTIVE_22 = re.compile(
+            r"(?i)(write a|write any|give an example|give a|name a|name any|"
+            r"your own|your favou?rite|anything|any word|any name|any number|any suitable)"
+        )
+        for i, q in enumerate(questions):
+            q_type = q.get("type", "")
+            if q_type not in ("fill_blank", "fill_in_blank"):
+                continue
+            qid = q.get("id", f"Q{i + 1}")
+            text = q.get("text", "")
+            if not _FB_BLANK_RE_22.search(text):
+                errors.append(f"{qid}: fill-blank ambiguity — missing blank marker")
+            if _FB_SUBJECTIVE_22.search(text):
+                errors.append(f"{qid}: fill-blank ambiguity — subjective fill prompt")
+            ans = str(q.get("correct_answer", "") or "").strip().lower()
+            if ans in _FB_GENERIC_22:
+                errors.append(f"{qid}: fill-blank ambiguity — generic fill-blank answer '{ans}'")
+
         is_valid = len(errors) == 0
         if not is_valid:
             logger.warning("Worksheet validation failed", extra={"errors": errors, "topic": topic, "grade": grade})

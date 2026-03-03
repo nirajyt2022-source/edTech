@@ -212,6 +212,14 @@ _HINDI_LABELS = {
     "foundation": "\u0906\u0927\u093e\u0930",
     "application": "\u0905\u0928\u0941\u092a\u094d\u0930\u092f\u094b\u0917",
     "stretch": "\u091a\u0941\u0928\u094c\u0924\u0940",
+    "skill_focus": "\u0915\u094c\u0936\u0932 \u092b\u094b\u0915\u0938",
+    "spot_success": "\u0938\u092b\u0932\u0924\u093e \u0915\u0940 \u092a\u0939\u091a\u093e\u0928",
+    "common_mistake_label": "\u0938\u093e\u092e\u093e\u0928\u094d\u092f \u0917\u0932\u0924\u0940",
+    "todays_focus": "\u0906\u091c \u0915\u093e \u092b\u094b\u0915\u0938",
+    "skills_tested": "\u092a\u0930\u0940\u0915\u094d\u0937\u093f\u0924 \u0915\u094c\u0936\u0932",
+    "answer_verified_high": "\u0938\u092d\u0940 \u0909\u0924\u094d\u0924\u0930 \u0938\u0924\u094d\u092f\u093e\u092a\u093f\u0924",
+    "answer_verified_medium": "\u0909\u0924\u094d\u0924\u0930 \u0938\u0924\u094d\u092f\u093e\u092a\u093f\u0924",
+    "answer_best_effort": "\u0909\u0924\u094d\u0924\u0930 \u0938\u0930\u094d\u0935\u094b\u0924\u094d\u0924\u092e \u092a\u094d\u0930\u092f\u093e\u0938",
 }
 
 _FMT_LABELS_HINDI = {
@@ -687,6 +695,22 @@ class PDFService:
             self._build_learning_objectives(story, objectives)
             story.append(Spacer(1, 6))
 
+        # ── Today's Focus (Trust S2.1) ──
+        self._build_todays_focus(story, worksheet)
+
+        # ── Skill coverage one-liner (Trust S2.1) ──
+        skill_coverage = worksheet.get("skill_coverage")
+        if skill_coverage:
+            _sc_label = _HINDI_LABELS["skills_tested"] if self._hindi else "Skills tested"
+            sc_parts = [f"{_sanitize_text(skill)} ({count})" for skill, count in skill_coverage.items()]
+            story.append(
+                Paragraph(
+                    f"<font size='8' color='#6B7280'><b>{_sc_label}:</b> {' | '.join(sc_parts)}</font>",
+                    self.styles["AnswerText"],
+                )
+            )
+            story.append(Spacer(1, 6))
+
         # ── Parent Tip (Trust P0) ──
         parent_tip = worksheet.get("parent_tip", "")
         if parent_tip:
@@ -862,6 +886,69 @@ class PDFService:
             )
         )
         story.append(obj_table)
+
+    def _build_todays_focus(self, story: list, worksheet: dict) -> None:
+        """Render a light-green Today's Focus box with skill focus, success indicator, and common mistake."""
+        skill_focus = worksheet.get("skill_focus", "")
+        common_mistake = worksheet.get("common_mistake", "")
+        objectives = worksheet.get("learning_objectives", [])
+
+        if not skill_focus and not common_mistake:
+            return  # Nothing to show
+
+        page_width = A4[0] - 4.0 * cm
+        focus_elements = []
+
+        _hl = _HINDI_LABELS if self._hindi else None
+        focus_title = _hl["todays_focus"] if _hl else "Today's Focus"
+        focus_elements.append(Paragraph(f"<b>{focus_title}</b>", self.styles["ObjectiveTitle"]))
+
+        if skill_focus:
+            _sf_label = _hl["skill_focus"] if _hl else "Skill Focus"
+            focus_elements.append(
+                Paragraph(
+                    f"<bullet>&bull;</bullet> <b>{_sf_label}:</b> {_sanitize_text(skill_focus)}",
+                    self.styles["ObjectiveItem"],
+                )
+            )
+
+        if objectives:
+            _ss_label = _hl["spot_success"] if _hl else "How to Spot Success"
+            focus_elements.append(
+                Paragraph(
+                    f"<bullet>&bull;</bullet> <b>{_ss_label}:</b> Your child can {_sanitize_text(objectives[0]).lower()}",
+                    self.styles["ObjectiveItem"],
+                )
+            )
+
+        if common_mistake:
+            _cm_label = _hl["common_mistake_label"] if _hl else "Common Mistake"
+            focus_elements.append(
+                Paragraph(
+                    f"<bullet>&bull;</bullet> <b>{_cm_label}:</b> {_sanitize_text(common_mistake)}",
+                    self.styles["ObjectiveItem"],
+                )
+            )
+
+        focus_table = Table(
+            [[focus_elements]],
+            colWidths=[page_width - 1.0 * cm],
+        )
+        focus_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F0FDF4")),
+                    ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#16A34A")),
+                    ("TOPPADDING", (0, 0), (-1, -1), 8),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
+        story.append(focus_table)
+        story.append(Spacer(1, 6))
 
     def _build_single_question(self, question: dict, number: int, tier_key: str = "all", subject: str = "") -> list:
         """Build elements for a single question. Returns list of flowables."""
@@ -1376,12 +1463,21 @@ class PDFService:
         story.append(Spacer(1, 24))
         story.append(HRFlowable(width="100%", thickness=0.3, color=_RULE, spaceBefore=4, spaceAfter=6))
         quality_tier = worksheet.get("_quality_tier", "high")
-        if quality_tier == "high":
-            badge_text = "\u2713 All answers verified  |  Quality: High"
-        elif quality_tier == "medium":
-            badge_text = "\u2713 Answers verified  |  Quality: Standard"
+        if self._hindi:
+            _hl = _HINDI_LABELS
+            if quality_tier == "high":
+                badge_text = f"\u2713 {_hl['answer_verified_high']}"
+            elif quality_tier == "medium":
+                badge_text = f"\u2713 {_hl['answer_verified_medium']}"
+            else:
+                badge_text = _hl["answer_best_effort"]
         else:
-            badge_text = "Answers provided as best effort"
+            if quality_tier == "high":
+                badge_text = "\u2713 All answers verified by deterministic solver  |  Quality: High"
+            elif quality_tier == "medium":
+                badge_text = "\u2713 Answers verified where possible  |  Quality: Standard"
+            else:
+                badge_text = "Best-effort answers \u2014 please verify"
         story.append(Paragraph(badge_text, self.styles["VerificationFooter"]))
 
 

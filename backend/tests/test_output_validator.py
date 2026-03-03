@@ -13,7 +13,7 @@ class TestWorksheetValidation:
         data = {
             "questions": [
                 {"id": "Q1", "type": "mcq", "text": "What is 2+2?", "options": ["3","4","5","6"], "correct_answer": "4"},
-                {"id": "Q2", "type": "fill_blank", "text": "5+3 = ?", "correct_answer": "8"},
+                {"id": "Q2", "type": "fill_blank", "text": "5+3 = ______", "correct_answer": "8"},
             ],
             "answer_key": {"Q1": "4", "Q2": "8"},
         }
