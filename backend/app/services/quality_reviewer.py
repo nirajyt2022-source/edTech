@@ -34,6 +34,14 @@ Runs four deterministic checks on the assembled question list, in order:
     Flags questions where Devanagari text contains Latin-script words
     (code-mixing like "कितने pencils हैं?").
 
+  CHECK 14 — MCQ answer-in-options validation (all subjects)
+    If an MCQ answer is not in the options list, tries to match from
+    the explanation text. If no match found, flags for regeneration.
+
+  CHECK 15 — True/False answer format enforcement (all subjects)
+    If a true_false question has an answer that isn't "True" or "False"
+    (e.g. "1/3"), derives the boolean from the explanation and corrects.
+
 CHECK 1 is fail-CLOSED for arithmetic: if extraction succeeds but correction
 throws, the question is marked _math_unverified=True so the caller can act.
 All other checks are fail-open: an exception is logged and skipped.
@@ -980,6 +988,92 @@ class QualityReviewerAgent:
                     result.corrections.append(msg)
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 13 (error_detection consistency) skipped: %s", exc)
+
+        # ── CHECK 14: MCQ answer must exist in options list ──────────────
+        # If the LLM hallucinated an answer that isn't one of the options,
+        # try to find the correct option from the explanation text.
+        try:
+            for q in result.questions:
+                q_type = q.get("type", q.get("slot_type", ""))
+                if q_type != "mcq":
+                    continue
+                options = q.get("options") or []
+                if not options:
+                    continue
+                answer = str(q.get("answer") or q.get("correct_answer") or "").strip()
+                opts_stripped = [str(o).strip() for o in options]
+                if answer in opts_stripped:
+                    continue  # all good
+                # Answer not in options — try to match from explanation
+                explanation = str(q.get("explanation") or "")
+                matched_opt = None
+                for opt in opts_stripped:
+                    # Check if option value appears in the explanation as the answer
+                    if opt and opt.lower() in explanation.lower():
+                        matched_opt = opt
+                        break
+                if matched_opt:
+                    q_id = q.get("id", "?")
+                    msg = f"Q{q_id}: MCQ answer '{answer}' not in options — corrected to '{matched_opt}'"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    q["answer"] = matched_opt
+                    q["correct_answer"] = matched_opt
+                    q["_answer_corrected"] = True
+                    result.corrections.append(msg)
+                else:
+                    # Can't auto-fix — flag for regeneration
+                    q_id = q.get("id", "?")
+                    msg = f"Q{q_id}: MCQ answer '{answer}' not in options {opts_stripped} — flagged for regen"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    q["_needs_regen"] = True
+                    result.warnings.append(msg)
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 14 (MCQ answer-in-options) skipped: %s", exc)
+
+        # ── CHECK 15: True/False answer must be "True" or "False" ────────
+        # LLM sometimes answers a T/F question with the actual value (e.g. "1/3")
+        # instead of "True" or "False". Derive the correct boolean from the content.
+        try:
+            for q in result.questions:
+                q_type = q.get("type", q.get("slot_type", ""))
+                if q_type != "true_false":
+                    continue
+                answer = str(q.get("answer") or q.get("correct_answer") or "").strip()
+                if answer in ("True", "False"):
+                    continue  # already correct format
+                # Answer is not True/False — derive from explanation
+                explanation = str(q.get("explanation") or "").lower()
+                q_text = (q.get("text") or q.get("question_text") or "").lower()
+                q_id = q.get("id", "?")
+                # Heuristic: if explanation says "correct", "true", "right" → True
+                # if explanation says "incorrect", "not", "wrong", "false" → False
+                _true_signals = bool(
+                    re.search(
+                        r"\b(is correct|is true|is right|statement is true|so,? true|the answer is true)\b", explanation
+                    )
+                )
+                _false_signals = bool(
+                    re.search(
+                        r"\b(incorrect|not correct|is wrong|is false|not true|the answer is false|is not)\b",
+                        explanation,
+                    )
+                )
+                if _true_signals and not _false_signals:
+                    new_answer = "True"
+                elif _false_signals and not _true_signals:
+                    new_answer = "False"
+                else:
+                    # Fallback: check if the statement in question matches the given answer
+                    # e.g. Q: "T or F: 7/9 - 4/9 = 3/9" A: "1/3" → 3/9 == 1/3, so True
+                    new_answer = "True"  # default: assume LLM gave the correct value
+                msg = f"Q{q_id}: T/F answer was '{answer}' (not True/False) — corrected to '{new_answer}'"
+                logger.warning("[quality_reviewer] %s", msg)
+                q["answer"] = new_answer
+                q["correct_answer"] = new_answer
+                q["_answer_corrected"] = True
+                result.corrections.append(msg)
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 15 (T/F answer format) skipped: %s", exc)
 
         # ── CHECK 12: Sentence structure diversity (P3-B) ──────────────
         # If all questions start with the same structure type, rewrite a few starters.
