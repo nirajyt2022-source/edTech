@@ -332,6 +332,35 @@ def _get_skill_tag_hint(tag: str) -> str:
     return tag.replace("_", " ").capitalize()
 
 
+def _build_fallback_recipe(subject: str, topic: str, num_questions: int) -> list[dict]:
+    """Build a generic skill-tag recipe when no topic profile exists (P2-C).
+
+    Returns a balanced recipe for Science, Hindi, and other subjects that lack
+    curated profiles. Uses subject-aware defaults rather than leaving skill_tags
+    empty (which causes downstream warnings).
+    """
+    subj = subject.lower()
+    if subj in ("science", "evs"):
+        tags = ["recall", "identify", "explain", "classify", "apply"]
+    elif subj in ("hindi",):
+        tags = ["recall", "identify", "fill_in", "match", "write"]
+    elif subj in ("english",):
+        tags = ["recall", "identify", "fill_in", "grammar_apply", "write"]
+    else:
+        # Generic fallback for any subject
+        tags = ["recall", "identify", "apply", "explain"]
+
+    # Build recipe: distribute num_questions across tags
+    base_count = num_questions // len(tags)
+    remainder = num_questions % len(tags)
+    recipe = []
+    for i, tag in enumerate(tags):
+        count = base_count + (1 if i < remainder else 0)
+        if count > 0:
+            recipe.append({"skill_tag": tag, "count": count})
+    return recipe
+
+
 def _scale_recipe(recipe: list[dict], target: int) -> list[dict]:
     """Scale a 10-question recipe to any target count, preserving proportions.
 
@@ -588,6 +617,9 @@ def build_user_prompt(
             recipe = recipes_by_count[num_questions]
         else:
             recipe = _scale_recipe(profile.get("default_recipe", []), num_questions)
+    else:
+        # Fallback: generate generic skill tags based on subject (P2-C)
+        recipe = _build_fallback_recipe(subject, topic, num_questions)
 
         # D-05: Apply diagnostic weights to recipe if available
         if recipe and diagnostic_context and hasattr(diagnostic_context, "skill_tag_weights"):
@@ -1599,6 +1631,9 @@ def generate_worksheet(
                         _q["question_text"] = _q["text"]
 
                 calibrated, cal_warnings = get_difficulty_calibrator().calibrate(data.get("questions", []), _gen_ctx)
+                # Renumber question IDs to match final position (P2-B)
+                for _i, _q in enumerate(calibrated):
+                    _q["id"] = f"q{_i + 1}"
                 data["questions"] = calibrated
                 all_warnings.extend([f"[difficulty_calibrator] {w}" for w in cal_warnings])
                 logger.info("[difficulty_calibrator] %d warning(s)", len(cal_warnings))
@@ -1634,6 +1669,17 @@ def generate_worksheet(
                 raise ValueError(f"Release gate blocked after {max_attempts} attempts: {release.block_reasons}")
 
             all_warnings.extend(release.degrade_reasons)
+
+            # ── Quality Score (P2-D) ──
+            try:
+                from app.services.quality_scorer import score_worksheet as _score_ws
+
+                _qs = _score_ws(data, expected_count=num_questions)
+                data["_quality_score"] = _qs.total_score
+                data["_quality_export_allowed"] = _qs.export_allowed
+            except Exception as _qs_exc:
+                logger.warning("quality_score in generator failed: %s", _qs_exc)
+                data["_quality_score"] = None
 
             # ── Warning severity categorization ──
             data["_warning_severity"] = _categorize_warnings(all_warnings)

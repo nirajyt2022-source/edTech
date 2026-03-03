@@ -513,9 +513,11 @@ def _word_limit(grade: int) -> int:
 # Filler phrases that can be removed without changing question meaning
 _FILLER_PATTERNS = [
     (re.compile(r"\b[Ii]n the following\s*", re.I), ""),
-    (re.compile(r"\bLook at the (?:picture|diagram|image)\.\s*", re.I), ""),
+    (re.compile(r"\bthe following\s+", re.I), "the "),  # bare "the following X" → "the X"
+    (re.compile(r"\bLook at the (?:picture|diagram|image|triangle|figure|shape)(?:\s+given)?\.\s*", re.I), ""),
     (re.compile(r"\bRead the (?:passage|text|paragraph) (?:below|given)\s*(?:and|\.)\s*", re.I), ""),
     (re.compile(r"\bGiven (?:below|that)\s*,?\s*", re.I), ""),
+    (re.compile(r"\b(?:mentioned|shown|listed) below\s*,?\s*", re.I), ""),
 ]
 
 
