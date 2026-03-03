@@ -89,7 +89,7 @@ class TestReplacementBehavior:
         assert replaced.get("verified") is True
         assert replaced["id"] == 2  # preserved
         assert replaced["display_number"] == 2  # preserved
-        assert any("[fallback_bank] Replaced" in l for l in logs)
+        assert any("[fallback_bank] Replaced" in msg for msg in logs)
 
     def test_two_regens_both_replaced(self):
         questions = [
@@ -105,7 +105,7 @@ class TestReplacementBehavior:
         assert result[2].get("is_fallback") is None or result[2].get("is_fallback") is not True
         # Both should have different text (deduplication via shuffle)
         # Note: with shuffle there's a tiny chance they're the same, but bank has 5 entries
-        assert len([l for l in logs if "Replaced" in l]) == 2
+        assert len([msg for msg in logs if "Replaced" in msg]) == 2
 
     def test_three_regens_skipped(self):
         questions = [
@@ -118,7 +118,7 @@ class TestReplacementBehavior:
 
         # All should be unchanged (skipped because >MAX_REPLACEMENTS)
         assert all(q.get("_needs_regen") is True for q in result)
-        assert any("exceeds max" in l for l in logs)
+        assert any("exceeds max" in msg for msg in logs)
 
     def test_id_and_display_number_preserved(self):
         questions = [_make_question(7, needs_regen=True, display_number=7)]
@@ -164,7 +164,7 @@ class TestSubjectDispatchers:
         ctx = _make_context("art", 3)
         result, logs = replace_regen_questions(questions, ctx)
         assert result[0].get("_needs_regen") is True
-        assert any("No bank" in l for l in logs)
+        assert any("No bank" in msg for msg in logs)
 
 
 # ---------------------------------------------------------------------------
@@ -195,7 +195,7 @@ class TestFailOpen:
         result, logs = replace_regen_questions(questions, None)
         # With None context, subject="" → no bank → keeps original
         assert result[0].get("_needs_regen") is True
-        assert any("No bank" in l for l in logs)
+        assert any("No bank" in msg for msg in logs)
 
     def test_grade_clamped_to_range(self):
         bank = _get_bank("maths", 0)
