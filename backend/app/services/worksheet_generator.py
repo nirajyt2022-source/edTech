@@ -1632,6 +1632,17 @@ def generate_worksheet(
                 logger.warning("[quality_reviewer] Agent failed (non-blocking): %s", exc)
                 all_warnings.append(f"[quality_reviewer] Skipped: {exc}")
 
+            # ── Fallback Bank (replace _needs_regen questions) ──
+            try:
+                from app.services.fallback_bank import replace_regen_questions
+
+                _v2_questions = data.get("questions", [])
+                _v2_questions, _fb_logs = replace_regen_questions(_v2_questions, _gen_ctx)
+                data["questions"] = _v2_questions
+                all_warnings.extend(_fb_logs)
+            except Exception as exc:
+                logger.warning("[fallback_bank] Skipped (non-blocking): %s", exc)
+
             # Safety net: strip all images in standard mode
             if problem_style == "standard":
                 for q in data.get("questions", []):
