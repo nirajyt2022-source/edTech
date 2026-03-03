@@ -55,11 +55,13 @@ def _diverse_questions(n: int = 10) -> list[dict]:
         "Which number comes after 99?",
         "Write the place value of 5 in 357.",
     ]
+    answers = ["68", "33", "31", "23", "28", "12", "45 + 17 = 62", "15", "100", "50"]
     qs = []
     for i in range(min(n, 10)):
         q = _q(
             i + 1,
             text=texts[i],
+            answer=answers[i],
             role=roles[i],
             qtype=types[i],
             skill_tag=tags[i],
@@ -114,7 +116,7 @@ class TestScoreWorksheet:
         assert total_weight == 100
 
     def test_perfect_worksheet_scores_high(self):
-        result = score_worksheet(_worksheet())
+        result = score_worksheet(_worksheet(), export_threshold=70)
         assert result.total_score >= 70, f"Expected ≥70, got {result.total_score}"
         assert result.export_allowed is True
 
@@ -199,6 +201,34 @@ class TestContentDimension:
         content = result.dimensions["content"]
         assert any(f.check_id == "CONTENT_01" for f in content.failures)
 
+    def test_needs_regen_flag_deducts(self):
+        """CONTENT_03: _needs_regen flag should deduct 0.30."""
+        qs = _diverse_questions()
+        qs[0]["_needs_regen"] = True
+        result = score_worksheet(_worksheet(qs))
+        content = result.dimensions["content"]
+        regen_failures = [f for f in content.failures if f.check_id == "CONTENT_03"]
+        assert len(regen_failures) == 1
+        assert regen_failures[0].points_deducted == 0.30
+
+    def test_math_unverified_deducts_030(self):
+        """CONTENT_01 recalibrated to 0.30."""
+        qs = _diverse_questions()
+        qs[0]["_math_unverified"] = True
+        result = score_worksheet(_worksheet(qs))
+        content = result.dimensions["content"]
+        unverified = [f for f in content.failures if f.check_id == "CONTENT_01"]
+        assert unverified[0].points_deducted == 0.30
+
+    def test_fallback_deducts_030(self):
+        """CONTENT_06 recalibrated to 0.30."""
+        qs = _diverse_questions()
+        qs[0]["is_fallback"] = True
+        result = score_worksheet(_worksheet(qs))
+        content = result.dimensions["content"]
+        fb = [f for f in content.failures if f.check_id == "CONTENT_06"]
+        assert fb[0].points_deducted == 0.30
+
 
 # ── AI Smell dimension ───────────────────────────────────────────────────────
 
@@ -264,6 +294,72 @@ class TestCurriculumDimension:
         result = score_worksheet(_worksheet(skill_focus=""))
         cur = result.dimensions["curriculum"]
         assert any(f.check_id == "CUR_06" for f in cur.failures)
+
+    def test_missing_chapter_ref_deducts_020(self):
+        """CUR_02 recalibrated to 0.20."""
+        result = score_worksheet(_worksheet(chapter_ref=None))
+        cur = result.dimensions["curriculum"]
+        ch = [f for f in cur.failures if f.check_id == "CUR_02"]
+        assert ch[0].points_deducted == 0.20
+
+    def test_missing_objectives_deducts_020(self):
+        """CUR_01 recalibrated to 0.20."""
+        result = score_worksheet(_worksheet(learning_objectives=[]))
+        cur = result.dimensions["curriculum"]
+        obj = [f for f in cur.failures if f.check_id == "CUR_01"]
+        assert obj[0].points_deducted == 0.20
+
+    def test_word_count_violation_class1(self):
+        """CUR_05B: Class 1 limit is 15 words; >22 words should trigger."""
+        long_text = "This is a very long question with way too many words for a young class one student to read"
+        qs = _diverse_questions()
+        qs[0]["text"] = long_text  # 19 words, >15*1.5=22.5? Let's count...
+        # Actually need >22 words for Class 1
+        qs[0]["text"] = " ".join(["word"] * 25)  # 25 words > 22.5
+        result = score_worksheet(_worksheet(qs, grade="Class 1"))
+        cur = result.dimensions["curriculum"]
+        wc_failures = [f for f in cur.failures if f.check_id == "CUR_05B"]
+        assert len(wc_failures) >= 1
+        assert wc_failures[0].points_deducted == 0.10
+
+    def test_word_count_ok_class3(self):
+        """CUR_05B: Class 3 limit is 25; 30 words should be OK (< 37.5)."""
+        qs = _diverse_questions()
+        qs[0]["text"] = " ".join(["word"] * 30)  # 30 < 37.5
+        result = score_worksheet(_worksheet(qs, grade="Class 3"))
+        cur = result.dimensions["curriculum"]
+        wc_failures = [f for f in cur.failures if f.check_id == "CUR_05B"]
+        # 30 words should NOT trigger for Class 3 (limit 25, threshold 37.5)
+        assert not any(f.question_ids == ["Q1"] for f in wc_failures)
+
+    def test_word_count_violation_class3(self):
+        """CUR_05B: Class 3 limit is 25; 40 words should trigger (> 37.5)."""
+        qs = _diverse_questions()
+        qs[0]["text"] = " ".join(["word"] * 40)  # 40 > 37.5
+        result = score_worksheet(_worksheet(qs, grade="Class 3"))
+        cur = result.dimensions["curriculum"]
+        wc_failures = [f for f in cur.failures if f.check_id == "CUR_05B" and "Q1" in f.question_ids]
+        assert len(wc_failures) == 1
+
+
+# ── Recalibration integration ────────────────────────────────────────────────
+
+
+class TestRecalibration:
+    def test_flawed_worksheet_blocked_at_70(self):
+        """A worksheet with wrong answer + no chapter + word count violations should score < 70."""
+        long = " ".join(["word"] * 25)  # > 15*1.5=22.5 for Class 1
+        qs = [_q(i + 1, text=long, role="application") for i in range(10)]
+        qs[0]["_needs_regen"] = True
+        ws = _worksheet(
+            qs,
+            grade="Class 1",
+            chapter_ref=None,
+            learning_objectives=[],
+        )
+        result = score_worksheet(ws, export_threshold=70)
+        assert result.total_score < 70, f"Expected < 70, got {result.total_score}"
+        assert result.export_allowed is False
 
 
 # ── FailureReason structure ──────────────────────────────────────────────────

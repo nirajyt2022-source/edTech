@@ -121,7 +121,7 @@ _ERROR_CLASSIFIERS: list[tuple[str, str, str, str, float]] = [
     (r"question too long", "curriculum", "CUR_05", "minor", 0.05),
     # Content
     (r"disallowed keyword", "content", "CONTENT_07", "minor", 0.05),
-    (r"math answer appears incorrect", "content", "CONTENT_08", "major", 0.15),
+    (r"math answer appears incorrect", "content", "CONTENT_08", "critical", 0.40),
     (r"visual data does not match", "content", "CONTENT_05", "major", 0.15),
     (r"visual type .* is disallowed", "content", "CONTENT_09", "minor", 0.05),
     # Pedagogical
@@ -205,7 +205,20 @@ def _run_content_checks(
                     severity="critical",
                     message="Math answer unverified by AST checker",
                     question_ids=[qid],
-                    points_deducted=0.20,
+                    points_deducted=0.30,
+                )
+            )
+
+        # CONTENT_03: _needs_regen flag from quality reviewer
+        if q.get("_needs_regen"):
+            buckets["content"].append(
+                FailureReason(
+                    dimension="content",
+                    check_id="CONTENT_03",
+                    severity="critical",
+                    message="Question flagged for regeneration by quality reviewer",
+                    question_ids=[qid],
+                    points_deducted=0.30,
                 )
             )
 
@@ -231,7 +244,7 @@ def _run_content_checks(
                     severity="critical",
                     message="Fallback stub question — LLM failed all retries",
                     question_ids=[qid],
-                    points_deducted=0.20,
+                    points_deducted=0.30,
                 )
             )
 
@@ -323,9 +336,9 @@ def _run_curriculum_checks(
             FailureReason(
                 dimension="curriculum",
                 check_id="CUR_01",
-                severity="minor",
+                severity="major",
                 message="No learning objectives provided",
-                points_deducted=0.15,
+                points_deducted=0.20,
             )
         )
 
@@ -335,9 +348,9 @@ def _run_curriculum_checks(
             FailureReason(
                 dimension="curriculum",
                 check_id="CUR_02",
-                severity="minor",
+                severity="major",
                 message="No NCERT chapter reference",
-                points_deducted=0.10,
+                points_deducted=0.20,
             )
         )
 
@@ -352,6 +365,25 @@ def _run_curriculum_checks(
                 points_deducted=0.05,
             )
         )
+
+    # CUR_05B: Word count violations per grade limit
+    grade_match = re.search(r"\d+", worksheet.get("grade", "3"))
+    grade_num = int(grade_match.group()) if grade_match else 3
+    word_limit = 15 if grade_num <= 2 else 25
+    for q in questions:
+        text = q.get("text", q.get("question_text", ""))
+        wc = len(text.split())
+        if wc > word_limit * 1.5:
+            buckets["curriculum"].append(
+                FailureReason(
+                    dimension="curriculum",
+                    check_id="CUR_05B",
+                    severity="major",
+                    message=f"Question has {wc} words (limit {word_limit})",
+                    question_ids=[q.get("id", "?")],
+                    points_deducted=0.10,
+                )
+            )
 
     # CUR_03: Skill tags valid per topic profile
     if topic:

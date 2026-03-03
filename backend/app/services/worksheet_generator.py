@@ -1280,8 +1280,20 @@ def generate_worksheet(
         with _cf.ThreadPoolExecutor() as _pool:
             chapter_name = _pool.submit(lambda: asyncio.run(_get_ch(grade_level, subject, topic))).result(timeout=3)
     except Exception as exc:
-        logger.warning("Chapter name fetch failed: %s", exc)
-        # Don't set chapter_name — PDF will skip the NCERT badge
+        logger.warning("Chapter name fetch failed (DB): %s", exc)
+
+    # Fallback to static NCERT chapter map if DB returned nothing
+    if chapter_name is None:
+        try:
+            from app.data.ncert_chapter_map import get_static_chapter
+
+            chapter_name = get_static_chapter(grade_level, subject, topic)
+            if chapter_name:
+                logger.info("Chapter name resolved via static map: %s", chapter_name)
+        except Exception as exc2:
+            logger.warning("Static chapter map lookup failed: %s", exc2)
+
+    if chapter_name is None:
         curriculum_warnings.append("[curriculum] Chapter reference unavailable — PDF badge removed")
 
     max_attempts = 3
