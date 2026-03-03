@@ -146,17 +146,24 @@ async def generate_worksheet_v2(
     quality_tier = merged_stamps.get("quality_tier", "high")
 
     has_warnings = bool(warnings)
-    api_verdict = "best_effort" if (release_verdict == "best_effort" or has_warnings) else "ok"
+    # Preserve release gate verdict; downgrade "released" to "best_effort" only if warnings exist
+    if release_verdict == "blocked":
+        api_verdict = "blocked"
+    elif release_verdict == "best_effort" or has_warnings:
+        api_verdict = "best_effort"
+    else:
+        api_verdict = "ok"
 
-    # Compute composite quality score (deterministic, no LLM)
-    _quality_score: float | None = None
-    try:
-        from app.services.quality_scorer import score_worksheet as _score_ws
+    # Use pre-computed quality score from generator; recompute only as fallback
+    _quality_score: float | None = data.get("_quality_score")
+    if _quality_score is None:
+        try:
+            from app.services.quality_scorer import score_worksheet as _score_ws
 
-        _qs = _score_ws(data, expected_count=body.num_questions)
-        _quality_score = _qs.total_score
-    except Exception as _qs_exc:
-        logger.warning("quality_score_failed", error=str(_qs_exc))
+            _qs = _score_ws(data, expected_count=body.num_questions)
+            _quality_score = _qs.total_score
+        except Exception as _qs_exc:
+            logger.warning("quality_score_failed", error=str(_qs_exc))
 
     return WorksheetGenerationResponse(
         worksheet=worksheet,

@@ -535,6 +535,10 @@ _FILLER_PATTERNS = [
     (re.compile(r"\bRead the (?:passage|text|paragraph) (?:below|given)\s*(?:and|\.)\s*", re.I), ""),
     (re.compile(r"\bGiven (?:below|that)\s*,?\s*", re.I), ""),
     (re.compile(r"\b(?:mentioned|shown|listed) below\s*,?\s*", re.I), ""),
+    # LLM-ism prefixes: "Help X figure out:", "Can you find:", "Let's figure out:"
+    (re.compile(r"\bHelp \w+ (?:figure out|solve this|find)[:\s]*", re.I), ""),
+    (re.compile(r"\bCan you (?:find|solve|figure out)[:\s]*", re.I), ""),
+    (re.compile(r"\bLet'?s (?:figure out|find out|solve)[:\s]*", re.I), ""),
 ]
 
 
@@ -606,12 +610,57 @@ def _contains_llm_artifact(text: str) -> bool:
 _LATIN_IN_DEVANAGARI_RE = re.compile(r"[a-zA-Z]{2,}")
 _DEVANAGARI_CHAR_RE = re.compile(r"[\u0900-\u097F]")
 
+# Devanagari transliterations of common English words that LLMs inject into
+# Hindi text.  These are pure Devanagari Unicode but semantically English.
+_HINDI_TRANSLITERATION_BLOCKLIST = {
+    # LLM-isms
+    "हेल्प",
+    "फिगर",
+    "आउट",
+    "फाइंड",
+    "सॉल्व",
+    "लेट्स",
+    # English nouns commonly transliterated instead of using Hindi words
+    "लोटस",
+    "सन",
+    "स्टार",
+    "मून",
+    "फ्लावर",
+    "ट्री",
+    "पेंसिल",
+    "पेंसिल्स",
+    "बुक",
+    "बुक्स",
+    "बॉल",
+    "बॉक्स",
+    "टेबल",
+    "चेयर",
+    "बैग",
+    "बस",
+    "ट्रेन",
+    "कंप्यूटर",
+    "प्रोजेक्ट",
+    "डिज़ाइन",
+    "पैटर्न",
+    # LLM conversational patterns in Devanagari
+    "ज़रूर",
+    "बिल्कुल",
+}
+
 
 def _has_hindi_code_mixing(text: str) -> bool:
     """Return True if Devanagari text contains Latin-script words (code-mixing)."""
     if not _DEVANAGARI_CHAR_RE.search(text):
         return False  # Not Hindi text — skip
     return bool(_LATIN_IN_DEVANAGARI_RE.search(text))
+
+
+def _has_hindi_transliteration(text: str) -> bool:
+    """Return True if Hindi text contains Devanagari-transliterated English words."""
+    if not _DEVANAGARI_CHAR_RE.search(text):
+        return False
+    words = set(text.split())
+    return bool(words & _HINDI_TRANSLITERATION_BLOCKLIST)
 
 
 # ---------------------------------------------------------------------------
@@ -868,6 +917,29 @@ class QualityReviewerAgent:
                     q["_math_unverified"] = True
                     result.warnings.append(f"Q{q_id}: word problem answer could not be verified ({exc})")
 
+            # ── CHECK 18: Grade-appropriate arithmetic bounds ─────────────
+            # Class 1 single-digit addition: answer must be ≤ 18 (9+9).
+            # Class 1-2: flag answers that exceed grade expectations.
+            if is_maths and slot_type != "error_detection":
+                try:
+                    answer_str = q.get("answer", "")
+                    if answer_str and answer_str.lstrip("-").isdigit():
+                        answer_val = int(answer_str)
+                        grade = context.grade
+                        topic_lower = context.topic_slug.lower() if hasattr(context, "topic_slug") else ""
+                        if grade == 1 and "single" in topic_lower and answer_val > 18:
+                            q["_needs_regen"] = True
+                            msg = f"Q{q_id}: answer {answer_val} exceeds Class 1 single-digit range (max 18)"
+                            result.corrections.append(msg)
+                            logger.warning("[quality_reviewer] %s", msg)
+                        elif grade == 1 and answer_val > 20:
+                            q["_needs_regen"] = True
+                            msg = f"Q{q_id}: answer {answer_val} exceeds Class 1 range (max 20)"
+                            result.corrections.append(msg)
+                            logger.warning("[quality_reviewer] %s", msg)
+                except Exception as exc:
+                    logger.debug("[quality_reviewer] Check 18 skipped for Q%s: %s", q_id, exc)
+
             # ── CHECK 9: LLM artifact detection ────────────────────────────
             try:
                 if _contains_llm_artifact(question_text):
@@ -889,8 +961,38 @@ class QualityReviewerAgent:
                     msg = f"Q{q_id}: Hindi code-mixing detected (Latin script in Devanagari text)"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)
+                    q["_needs_regen"] = True
+                    result.corrections.append(f"Q{q_id}: flagged for regen (Latin code-mixing)")
+                elif _has_hindi_transliteration(question_text):
+                    msg = f"Q{q_id}: Hindi transliterated English detected (Devanagari-English words)"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    result.warnings.append(msg)
+                    q["_needs_regen"] = True
+                    result.corrections.append(f"Q{q_id}: flagged for regen (transliterated English)")
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 10 skipped for Q%s: %s", q_id, exc)
+
+            # ── CHECK 19: Science/EVS subject contamination ───────────────
+            # Flag questions that are purely arithmetic in Science/EVS worksheets.
+            if context.subject.lower() in ("science", "evs"):
+                try:
+                    qt_lower = question_text.lower()
+                    # Detect pure arithmetic: "How many X" + answer is a plain integer
+                    ans = q.get("answer", "")
+                    is_pure_math = (
+                        bool(re.search(r"how many|total|in all|altogether", qt_lower))
+                        and isinstance(ans, str)
+                        and ans.strip().isdigit()
+                        and not re.search(r"species|type|kind|name|organ|part|group|nutrient|vitamin", qt_lower)
+                    )
+                    if is_pure_math:
+                        msg = f"Q{q_id}: Science/EVS question appears to be pure arithmetic"
+                        logger.warning("[quality_reviewer] %s", msg)
+                        result.warnings.append(msg)
+                        q["_needs_regen"] = True
+                        result.corrections.append(f"Q{q_id}: flagged for regen (subject contamination)")
+                except Exception as exc:
+                    logger.debug("[quality_reviewer] Check 19 skipped for Q%s: %s", q_id, exc)
 
         # ── CHECK 11: Engagement framing injection (P0-A) ──────────────
         # If <20% of questions use warm framing, inject it on eligible questions.

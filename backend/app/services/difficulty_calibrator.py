@@ -528,6 +528,22 @@ class DifficultyCalibrator:
         except Exception as exc:
             logger.warning("[difficulty_calibrator] STEP G difficulty variety failed: %s", exc)
 
+        # ── STEP G2: Clamp difficulty to requested bloom level ────────────
+        # When user requests "easy" (bloom=recall), cap at medium.
+        # When "medium" (bloom=application), allow up to hard but limit to 20%.
+        try:
+            bloom = context.bloom_level
+            if bloom == "recall":
+                # Easy worksheet: no "hard" questions
+                for q in result:
+                    if q.get("difficulty") == "hard" and not q.get("_is_bonus"):
+                        q["difficulty"] = "medium"
+                        calibration_warnings.append(
+                            f"Q{q.get('id', '?')}: difficulty clamped 'hard' → 'medium' (easy worksheet)"
+                        )
+        except Exception as exc:
+            logger.warning("[difficulty_calibrator] STEP G2 difficulty clamp failed: %s", exc)
+
         # ── STEP H: MCQ cap — max 40% MCQ for 10Q worksheets ────────────
         # If MCQ dominates, relabel excess to fill_blank or short_answer.
         try:

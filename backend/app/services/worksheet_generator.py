@@ -50,6 +50,12 @@ RULES:
 5. Never repeat the same question pattern. Vary formats, angles, and phrasings.
 6. Use Indian context: ₹ for money, Indian names, Indian scenarios (mandi, chai stall, auto-rickshaw, Diwali shopping, cricket match, rangoli, school assembly, temple). Avoid Western scenarios (supermarket, Halloween, Thanksgiving, baseball).
 7. VARIETY IS CRITICAL: rotate through scenarios (home, school, market, park, farm, zoo, kitchen, playground, festival, hospital, train station), mix question styles, and vary sentence structures.
+   SENTENCE STRUCTURE — Use at least 3 of these structures across the worksheet:
+   (a) Direct question: "What is 5 + 3?"
+   (b) Imperative: "Find the sum of 12 and 8."
+   (c) Contextual/story: "Ravi has 4 apples. His sister gives him 3 more."
+   (d) Error-check: "Priya says 7 + 5 = 11. Is she correct?"
+   (e) Fill-in: "Complete: 9 + ___ = 15"
 8. OPENING VERB ROTATION — Never start two consecutive questions the same way. Rotate through:
    Easy: What|Which|Name|Tell|Find|Show|Write|Count|Circle|Look at
    Medium: Calculate|Solve|Compare|Arrange|Explain|Complete|Fill in|How many|How much|If
@@ -1310,9 +1316,11 @@ def validate_response(
     try:
         data = json.loads(raw_text)
     except json.JSONDecodeError:
-        # Try stripping markdown fences
+        # Try stripping markdown fences and control characters
         cleaned = re.sub(r"^```(?:json)?\s*", "", raw_text.strip())
         cleaned = re.sub(r"\s*```$", "", cleaned)
+        # Strip control characters (except \n, \r, \t) that LLMs sometimes inject
+        cleaned = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", cleaned)
         data = json.loads(cleaned)  # let it raise if still bad
 
     questions = data.get("questions", [])
@@ -1336,10 +1344,35 @@ def validate_response(
             q["type"] = "short_answer"
             warnings.append(f"[type_error] {qid}: unknown type '{q_type}', defaulted to short_answer")
 
+        # Sync format ← type so downstream consumers (difficulty_calibrator,
+        # release_gate) see the correct format instead of defaulting to "other".
+        q["format"] = q["type"]
+
         if q_type == "mcq":
             opts = q.get("options") or []
             if len(opts) != 4:
                 warnings.append(f"{qid}: MCQ should have 4 options, got {len(opts)}")
+                # Auto-fix: trim to 4 (keep correct answer) or pad with "None of the above"
+                correct = q.get("correct_answer", "")
+                if len(opts) > 4:
+                    # Keep correct answer + first 3 others
+                    others = [o for o in opts if o != correct][:3]
+                    q["options"] = others + [correct] if correct not in others else opts[:4]
+                elif 1 <= len(opts) < 4:
+                    # Pad with generic distractors
+                    _fillers = [
+                        "None of the above",
+                        "Cannot be determined",
+                        "All of the above",
+                        "Not enough information",
+                    ]
+                    while len(opts) < 4:
+                        filler = _fillers[len(opts) - 1] if len(opts) - 1 < len(_fillers) else f"Option {len(opts) + 1}"
+                        if filler not in opts:
+                            opts.append(filler)
+                        else:
+                            opts.append(f"Option {len(opts) + 1}")
+                    q["options"] = opts
 
     # --- Count check ---
     count_diff = abs(len(questions) - num_questions)
@@ -1355,15 +1388,20 @@ def validate_response(
                 warnings.append(f"{q['id']}: answer auto-corrected to {correction}")
 
     # --- Topic drift check ---
-    topic_cat = _detect_topic_category(topic)
-    if topic_cat:
-        off_topic_count = sum(1 for q in questions if not _is_question_on_topic(q.get("text", ""), topic_cat))
-        drift_ratio = off_topic_count / max(len(questions), 1)
-        if drift_ratio > 0.3:
-            warnings.append(
-                f"Topic drift: {off_topic_count}/{len(questions)} questions "
-                f"appear off-topic for '{topic}' (category: {topic_cat})"
-            )
+    # Only run keyword-based drift detection for Maths topics.  Non-Maths
+    # subjects (English, Hindi, Science, EVS) produce rampant false positives
+    # because question text rarely contains explicit grammar/science keywords.
+    _drift_subjects = {"maths", "mathematics", "math"}
+    if subject.lower() in _drift_subjects:
+        topic_cat = _detect_topic_category(topic)
+        if topic_cat:
+            off_topic_count = sum(1 for q in questions if not _is_question_on_topic(q.get("text", ""), topic_cat))
+            drift_ratio = off_topic_count / max(len(questions), 1)
+            if drift_ratio > 0.3:
+                warnings.append(
+                    f"Topic drift: {off_topic_count}/{len(questions)} questions "
+                    f"appear off-topic for '{topic}' (category: {topic_cat})"
+                )
 
     # --- Visual type fix-up ---
     questions = fix_visual_types(questions)
