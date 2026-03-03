@@ -464,6 +464,29 @@ class OutputValidator:
                     )
                     break  # one error is enough
 
+        # 19. Visual mandatory compliance (informational warnings, non-blocking)
+        if subject.lower() == "maths":
+            from app.data.topic_profiles import get_topic_profile
+
+            _profile = get_topic_profile(topic)
+            _mandatory = _profile.get("mandatory_visuals") if _profile else None
+            if _mandatory:
+                from app.services.worksheet_generator import effective_min_count
+
+                _req_types = _mandatory.get("required_types", [])
+                _min_ct = effective_min_count(_mandatory.get("min_count", 0), num_questions)
+                _found: dict[str, int] = {}
+                for q in questions:
+                    _vt = q.get("visual_type")
+                    if _vt:
+                        _found[_vt] = _found.get(_vt, 0) + 1
+                _total_vis = sum(_found.values())
+                _missing_req = [t for t in _req_types if t not in _found]
+                if _missing_req:
+                    errors.append(f"[visual_mandatory] Missing required visual types: {', '.join(_missing_req)}")
+                if _total_vis < _min_ct:
+                    errors.append(f"[visual_mandatory] {_total_vis}/{_min_ct} visual questions (below minimum)")
+
         is_valid = len(errors) == 0
         if not is_valid:
             logger.warning("Worksheet validation failed", extra={"errors": errors, "topic": topic, "grade": grade})

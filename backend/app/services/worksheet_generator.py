@@ -536,6 +536,19 @@ def build_user_prompt(
     elif problem_style == "visual":
         prompt += "\nIMPORTANT: EVERY question MUST have at least one image_keyword from the provided list.\n"
 
+    # -- Mandatory visual hint (pre-LLM nudge) --
+    if problem_style != "standard" and subject.lower() == "maths":
+        profile = get_topic_profile(topic)
+        mandatory = profile.get("mandatory_visuals") if profile else None
+        if mandatory and mandatory.get("required_types"):
+            types_str = ", ".join(mandatory["required_types"])
+            min_n = effective_min_count(mandatory.get("min_count", 0), num_questions)
+            prompt += (
+                f"\nMANDATORY VISUALS: At least {min_n} questions MUST include visual_type. "
+                f"Required visual types: {types_str}. "
+                f"Set visual_type and visual_data for these questions.\n"
+            )
+
     # -- Bloom's taxonomy directive (from prompt_builder.py) --
     bloom_map = {"easy": "recall", "medium": "application", "hard": "reasoning"}
     bloom_key = bloom_map.get(difficulty.lower(), "application")
@@ -1298,12 +1311,254 @@ def validate_visual_data(questions: list[dict]) -> list[dict]:
     return questions
 
 
+# ---------------------------------------------------------------------------
+# 1D-bis  Mandatory Visual Enforcement
+# ---------------------------------------------------------------------------
+
+# Regex patterns for extracting visual data from question text (module level)
+_RE_TIME = re.compile(r"(\d{1,2})\s*:\s*(\d{2})")
+_RE_FRACTION = re.compile(r"(\d+)\s*/\s*(\d+)")
+_RE_AMOUNT = re.compile(r"₹?\s*(\d+)")
+_RE_NUMBERS = re.compile(r"\b(\d+)\b")
+_RE_SHAPE = re.compile(
+    r"\b(circle|square|rectangle|triangle|hexagon|pentagon|rhombus|oval)\b",
+    re.IGNORECASE,
+)
+
+# Role priority for injection — prefer recognition questions (visual is most natural)
+_ROLE_PRIORITY = {"recognition": 0, "representation": 1, "application": 2, "error_detection": 3, "thinking": 4}
+
+
+def effective_min_count(base_min: int, num_questions: int) -> int:
+    """Scale mandatory visual min_count proportionally to worksheet size.
+
+    Base is calibrated for 10 questions. 5q → halved, 20q → doubled.
+    Always returns at least 1 if base_min > 0.
+    """
+    if base_min == 0:
+        return 0
+    return max(1, round(base_min * num_questions / 10))
+
+
+def _generate_default_visual_data(visual_type: str, question: dict, topic: str) -> dict | None:
+    """Build minimal valid visual_data deterministically from question text.
+
+    Returns None if extraction fails — caller should skip injection.
+    """
+    text = question.get("text", "")
+
+    if visual_type == "clock":
+        m = _RE_TIME.search(text)
+        if m:
+            return {"hour": int(m.group(1)), "minute": int(m.group(2))}
+        # Fallback: simple time
+        return {"hour": random.randint(1, 12), "minute": random.choice([0, 15, 30, 45])}
+
+    if visual_type == "pie_fraction":
+        m = _RE_FRACTION.search(text)
+        if m:
+            num, den = int(m.group(1)), int(m.group(2))
+            if den > 0 and num <= den:
+                return {"numerator": num, "denominator": den}
+        return {"numerator": 1, "denominator": 2}
+
+    if visual_type == "money_coins":
+        amounts = _RE_AMOUNT.findall(text)
+        if amounts:
+            total = int(amounts[0])
+            # Decompose into Indian coin denominations
+            coins = []
+            for denom in [10, 5, 2, 1]:
+                count = total // denom
+                if count > 0:
+                    coins.extend([denom] * min(count, 5))
+                    total -= denom * min(count, 5)
+                if total <= 0:
+                    break
+            if coins:
+                return {"coins": coins}
+        return {"coins": [5, 2, 2, 1]}
+
+    if visual_type == "shapes":
+        m = _RE_SHAPE.search(text)
+        shape = m.group(1).lower() if m else "square"
+        return {"shape": shape}
+
+    if visual_type == "grid_symmetry":
+        return {
+            "grid_size": 6,
+            "filled_cells": [[0, 0], [0, 1], [1, 0], [1, 1]],
+            "fold_axis": "vertical",
+        }
+
+    if visual_type == "pattern_tiles":
+        return {"tiles": ["A", "B", "A", "B", "A"], "blank_position": 4}
+
+    if visual_type == "number_line":
+        nums = [int(x) for x in _RE_NUMBERS.findall(text) if x.isdigit()]
+        if len(nums) >= 2:
+            lo, hi = min(nums), max(nums)
+            step = max(1, (hi - lo) // 10) if hi > lo else 1
+            return {"start": lo, "end": hi, "step": step}
+        return {"start": 0, "end": 10, "step": 1}
+
+    if visual_type == "abacus":
+        nums = [int(x) for x in _RE_NUMBERS.findall(text) if int(x) >= 10]
+        if nums:
+            n = nums[0]
+            return {"hundreds": n // 100, "tens": (n % 100) // 10, "ones": n % 10}
+        return {"hundreds": 0, "tens": 5, "ones": 3}
+
+    if visual_type == "object_group":
+        nums = [int(x) for x in _RE_NUMBERS.findall(text)]
+        if len(nums) >= 2:
+            return {"groups": [nums[0], nums[1]], "operation": "add"}
+        return {"groups": [3, 2], "operation": "add"}
+
+    if visual_type == "base_ten_regrouping":
+        nums = [int(x) for x in _RE_NUMBERS.findall(text) if int(x) >= 10]
+        if len(nums) >= 2:
+            return {"numbers": [nums[0], nums[1]], "operation": "add"}
+        if nums:
+            return {"numbers": [nums[0], 10], "operation": "add"}
+        return None
+
+    return None
+
+
+def enforce_mandatory_visuals(
+    questions: list[dict],
+    topic: str,
+    subject: str,
+    problem_style: str,
+    num_questions: int,
+) -> tuple[list[dict], dict | None]:
+    """Enforce mandatory visual minimums for the topic.
+
+    Returns (questions, visual_compliance_dict | None).
+    Only acts when problem_style != 'standard' and topic has mandatory_visuals.
+    """
+    # Non-Maths subjects: no SVG visuals
+    if subject.lower() != "maths":
+        return questions, None
+
+    # Standard mode: no visuals expected
+    if problem_style == "standard":
+        return questions, None
+
+    profile = get_topic_profile(topic)
+    if not profile:
+        return questions, None
+
+    mandatory = profile.get("mandatory_visuals")
+    if not mandatory:
+        return questions, None
+
+    required_types: list[str] = mandatory.get("required_types", [])
+    preferred_types: list[str] = mandatory.get("preferred_types", [])
+    base_min: int = mandatory.get("min_count", 0)
+    min_count = effective_min_count(base_min, num_questions)
+
+    if min_count == 0 and not required_types:
+        return questions, None
+
+    # Count current visuals
+    found_types: dict[str, int] = {}
+    for q in questions:
+        vt = q.get("visual_type")
+        if vt:
+            found_types[vt] = found_types.get(vt, 0) + 1
+    total_visual = sum(found_types.values())
+
+    repairs: list[str] = []
+
+    # Find missing required types
+    missing_required = [t for t in required_types if t not in found_types]
+
+    # Find eligible questions (no existing visual, sorted by role priority)
+    eligible = [(i, q) for i, q in enumerate(questions) if not q.get("visual_type")]
+    eligible.sort(key=lambda x: _ROLE_PRIORITY.get(x[1].get("role", "application"), 2))
+
+    eligible_idx = 0
+
+    # Step 1: Inject missing required types
+    for req_type in missing_required:
+        if eligible_idx >= len(eligible):
+            logger.warning(
+                "mandatory_visual_no_eligible",
+                type=req_type,
+                topic=topic,
+                msg="No eligible questions to inject required visual type",
+            )
+            break
+        idx, q = eligible[eligible_idx]
+        vd = _generate_default_visual_data(req_type, q, topic)
+        if vd is not None:
+            questions[idx]["visual_type"] = req_type
+            questions[idx]["visual_data"] = vd
+            found_types[req_type] = found_types.get(req_type, 0) + 1
+            total_visual += 1
+            repairs.append(f"Injected {req_type} on q{idx + 1}")
+            logger.info("mandatory_visual_injected", type=req_type, question_idx=idx, topic=topic)
+        eligible_idx += 1
+
+    # Step 2: Fill remaining shortfall with preferred types, then required types
+    shortfall = min_count - total_visual
+    fill_types = preferred_types + required_types
+    fill_cycle = 0
+    while shortfall > 0 and eligible_idx < len(eligible) and fill_cycle < len(fill_types):
+        fill_type = fill_types[fill_cycle % len(fill_types)]
+        idx, q = eligible[eligible_idx]
+        vd = _generate_default_visual_data(fill_type, q, topic)
+        if vd is not None:
+            questions[idx]["visual_type"] = fill_type
+            questions[idx]["visual_data"] = vd
+            found_types[fill_type] = found_types.get(fill_type, 0) + 1
+            total_visual += 1
+            shortfall -= 1
+            repairs.append(f"Injected {fill_type} on q{idx + 1} (shortfall fill)")
+            logger.info("mandatory_visual_shortfall_fill", type=fill_type, question_idx=idx, topic=topic)
+        eligible_idx += 1
+        fill_cycle += 1
+
+    if shortfall > 0:
+        logger.warning(
+            "mandatory_visual_shortfall_remaining",
+            shortfall=shortfall,
+            min_count=min_count,
+            actual=total_visual,
+            topic=topic,
+        )
+
+    # Recount after injection
+    found_types_final: dict[str, int] = {}
+    for q in questions:
+        vt = q.get("visual_type")
+        if vt:
+            found_types_final[vt] = found_types_final.get(vt, 0) + 1
+    total_visual_final = sum(found_types_final.values())
+
+    still_missing = [t for t in required_types if t not in found_types_final]
+
+    compliance = {
+        "required_types": required_types,
+        "found_types": found_types_final,
+        "min_count": min_count,
+        "actual_count": total_visual_final,
+        "compliant": total_visual_final >= min_count and len(still_missing) == 0,
+        "repairs": repairs,
+    }
+
+    return questions, compliance
+
+
 def validate_response(
     raw_text: str,
     subject: str,
     topic: str,
     num_questions: int,
     difficulty: str = "medium",
+    problem_style: str = "standard",
 ) -> tuple[dict[str, Any], list[str]]:
     """Validate and repair the LLM response.
 
@@ -1406,6 +1661,27 @@ def validate_response(
     # --- Visual type fix-up ---
     questions = fix_visual_types(questions)
     questions = validate_visual_data(questions)
+
+    # --- Mandatory visual enforcement ---
+    questions, visual_compliance = enforce_mandatory_visuals(
+        questions,
+        topic,
+        subject,
+        problem_style,
+        num_questions,
+    )
+    if visual_compliance is not None:
+        data["_visual_compliance"] = visual_compliance
+        if visual_compliance.get("repairs"):
+            warnings.append(
+                f"[visual_mandatory] Injected {len(visual_compliance['repairs'])} visuals: "
+                + "; ".join(visual_compliance["repairs"])
+            )
+        if not visual_compliance.get("compliant"):
+            warnings.append(
+                f"[visual_mandatory] Non-compliant: "
+                f"{visual_compliance['actual_count']}/{visual_compliance['min_count']} visuals"
+            )
 
     # --- Image keyword resolution ---
     questions = resolve_question_images(questions)
@@ -1549,7 +1825,7 @@ def generate_worksheet(
             raw = call_gemini(
                 client, system_prompt, user_prompt, subject=subject, difficulty=difficulty, num_questions=num_questions
             )
-            data, warnings = validate_response(raw, subject, topic, num_questions, difficulty)
+            data, warnings = validate_response(raw, subject, topic, num_questions, difficulty, problem_style)
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)
 

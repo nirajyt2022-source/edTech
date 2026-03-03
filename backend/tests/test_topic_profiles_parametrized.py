@@ -23,6 +23,7 @@ OPTIONAL_KEYS = {
     "disallowed_keywords",
     "disallowed_visual_types",
     "allowed_visual_types",
+    "mandatory_visuals",
     "recipes_by_count",
     "max_questions",
     "subject",

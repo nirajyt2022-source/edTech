@@ -174,6 +174,7 @@ async def generate_worksheet_v2(
         quality_stamps=merged_stamps or None,
         quality_tier=quality_tier,
         quality_score=_quality_score,
+        visual_compliance=data.get("_visual_compliance"),
     )
 
 

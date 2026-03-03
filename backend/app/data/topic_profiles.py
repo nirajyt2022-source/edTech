@@ -220,6 +220,11 @@ TOPIC_PROFILES: dict[str, dict] = {
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "clock_face"],
         "allowed_visual_types": [None, "fraction_circle", "fraction_rectangle"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["pie_fraction"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "fraction_identify_half", "count": 2},
             {"skill_tag": "fraction_identify_quarter", "count": 1},
@@ -242,6 +247,11 @@ TOPIC_PROFILES: dict[str, dict] = {
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "decimal", "percentage"],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 1,
+            "required_types": ["pie_fraction"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "fraction_identify_half", "count": 2},
             {"skill_tag": "fraction_identify_quarter", "count": 1},
@@ -279,6 +289,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "borrow",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["clock"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "clock_reading", "count": 3},
             {"skill_tag": "time_word_problem", "count": 3},
@@ -300,6 +315,11 @@ TOPIC_PROFILES: dict[str, dict] = {
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "fraction"],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 1,
+            "required_types": ["money_coins"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "money_recognition", "count": 2},
             {"skill_tag": "money_word_problem", "count": 3},
@@ -331,6 +351,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "column",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["grid_symmetry"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "symmetry_identify", "count": 3},
             {"skill_tag": "symmetry_draw", "count": 2},
@@ -351,6 +376,11 @@ TOPIC_PROFILES: dict[str, dict] = {
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "symmetry", "fraction"],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 1,
+            "required_types": ["pattern_tiles"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "number_pattern", "count": 3},
             {"skill_tag": "shape_pattern", "count": 3},
@@ -467,6 +497,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "column",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["shapes"],
+            "preferred_types": [],
+        },
         "max_questions": 10,
         "default_recipe": [
             {"skill_tag": "c1_shape_identify", "count": 3},
@@ -567,6 +602,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "bills",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 1,
+            "required_types": ["money_coins"],
+            "preferred_types": [],
+        },
         "max_questions": 10,
         "default_recipe": [
             {"skill_tag": "c1_money_identify", "count": 3},
@@ -639,6 +679,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "10000",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 1,
+            "required_types": ["number_line"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "c2_place_value_identify", "count": 3},
             {"skill_tag": "c2_number_compare", "count": 2},
@@ -759,6 +804,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "column",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["shapes"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "c2_shape_identify", "count": 3},
             {"skill_tag": "c2_shape_word_problem", "count": 3},
@@ -818,6 +868,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "thousand",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["clock"],
+            "preferred_types": [],
+        },
         "max_questions": 10,
         "default_recipe": [
             {"skill_tag": "c2_clock_reading", "count": 3},
@@ -839,6 +894,11 @@ TOPIC_PROFILES: dict[str, dict] = {
         "allowed_slot_types": ["recognition", "application", "representation", "error_detection", "thinking"],
         "disallowed_keywords": ["carry", "borrow", "fraction", "bills"],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["money_coins"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "c2_money_identify", "count": 2},
             {"skill_tag": "c2_money_word_problem", "count": 3},
@@ -1011,6 +1071,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "perimeter",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["pie_fraction"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "c4_fraction_identify", "count": 2},
             {"skill_tag": "c4_fraction_compare", "count": 2},
@@ -1073,6 +1138,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "decimal",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "mandatory_visuals": {
+            "min_count": 1,
+            "required_types": ["shapes"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "c4_geometry_identify", "count": 3},
             {"skill_tag": "c4_geometry_classify", "count": 3},
@@ -1134,6 +1204,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "perimeter",
         ],
         "disallowed_visual_types": ["base_ten_regrouping", "number_line"],
+        "mandatory_visuals": {
+            "min_count": 2,
+            "required_types": ["clock"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "c4_time_reading", "count": 2},
             {"skill_tag": "c4_time_word_problem", "count": 3},
@@ -1163,6 +1238,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "perimeter",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 1,
+            "required_types": ["money_coins"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "c4_money_identify", "count": 2},
             {"skill_tag": "c4_money_word_problem", "count": 2},
@@ -1283,6 +1363,11 @@ TOPIC_PROFILES: dict[str, dict] = {
             "symmetry",
         ],
         "disallowed_visual_types": ["base_ten_regrouping"],
+        "mandatory_visuals": {
+            "min_count": 1,
+            "required_types": ["pie_fraction"],
+            "preferred_types": [],
+        },
         "default_recipe": [
             {"skill_tag": "c5_frac_identify", "count": 3},
             {"skill_tag": "c5_frac_apply", "count": 3},
