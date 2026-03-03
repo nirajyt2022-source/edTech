@@ -898,10 +898,12 @@ class QualityReviewerAgent:
                 if _ENGAGEMENT_RE.match((q.get("text") or q.get("question_text") or "").strip())
                 or _HINDI_ENGAGEMENT_RE.search((q.get("text") or q.get("question_text") or ""))
             )
-            target = max(2, len(result.questions) // 5)
-            if engagement_count < target:
-                import random as _rng
+            import random as _rng
 
+            # P3-A: Vary engagement target (2-3 for 10Q) instead of fixed 2
+            _base = max(2, len(result.questions) // 5)
+            target = _rng.choice([_base, _base + 1]) if len(result.questions) >= 8 else _base
+            if engagement_count < target:
                 from app.services.worksheet_generator import _INDIAN_NAMES
 
                 names_pool = list(_INDIAN_NAMES)
@@ -1117,13 +1119,16 @@ class QualityReviewerAgent:
                 r"|add|subtract|multiply|divide|arrange|list|name|identify)\b"
             )
             _COND_RE = re.compile(r"(?i)^(if|suppose|imagine|given|when)\b")
+            # Hindi question word starters
+            _HINDI_QW_RE = re.compile(r"^(किस|कौन|कैसे|क्या|कितन|कहाँ|कब)")
+            _HINDI_IMP_RE = re.compile(r"^(लिख|बताओ|चुन|मिला|पूरा कर|ढूँढ|गिन)")
 
             structure_counts: dict[str, int] = {"question_word": 0, "imperative": 0, "conditional": 0, "statement": 0}
             for q in result.questions:
                 text = (q.get("text") or q.get("question_text") or "").strip()
-                if _QW_RE.match(text):
+                if _QW_RE.match(text) or _HINDI_QW_RE.match(text):
                     structure_counts["question_word"] += 1
-                elif _IMP_RE.match(text):
+                elif _IMP_RE.match(text) or _HINDI_IMP_RE.match(text):
                     structure_counts["imperative"] += 1
                 elif _COND_RE.match(text):
                     structure_counts["conditional"] += 1
@@ -1135,7 +1140,11 @@ class QualityReviewerAgent:
             if distinct < min_needed and len(result.questions) >= 5:
                 # Find the dominant structure and rewrite a few questions
                 dominant = max(structure_counts, key=structure_counts.get)  # type: ignore[arg-type]
-                # Imperative rewrites for question_word-heavy sets
+                # Detect if this is a Hindi worksheet
+                _sample = result.questions[0].get("text") or result.questions[0].get("question_text") or ""
+                _is_hindi_ws = bool(re.search(r"[\u0900-\u097F]", _sample))
+
+                # Rewrite maps — English and Hindi
                 _REWRITE_MAP = {
                     "question_word": [
                         ("What is ", "Find "),
@@ -1151,12 +1160,21 @@ class QualityReviewerAgent:
                         ("There are ", "How many are there if there are "),
                     ],
                 }
+                _HINDI_REWRITE_MAP = {
+                    "statement": [
+                        ("'", "किस शब्द में '"),  # statement → question_word
+                    ],
+                    "imperative": [
+                        ("लिख", "कौन सा शब्द "),
+                    ],
+                }
+                rewrite_map = _HINDI_REWRITE_MAP if _is_hindi_ws else _REWRITE_MAP
                 rewrites_done = 0
                 for q in result.questions:
                     if rewrites_done >= 2:
                         break
                     text = (q.get("text") or q.get("question_text") or "").strip()
-                    for old_prefix, new_prefix in _REWRITE_MAP.get(dominant, []):
+                    for old_prefix, new_prefix in rewrite_map.get(dominant, []):
                         if text.startswith(old_prefix) and rewrites_done < 2:
                             new_text = new_prefix + text[len(old_prefix) :]
                             q["text"] = new_text

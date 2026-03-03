@@ -527,6 +527,35 @@ class DifficultyCalibrator:
         except Exception as exc:
             logger.warning("[difficulty_calibrator] STEP G difficulty variety failed: %s", exc)
 
+        # ── STEP H: MCQ cap — max 40% MCQ for 10Q worksheets ────────────
+        # If MCQ dominates, relabel excess to fill_blank or short_answer.
+        try:
+            non_bonus = [q for q in result if not q.get("_is_bonus")]
+            mcq_indices = [i for i, q in enumerate(result) if q.get("type") == "mcq" and not q.get("_is_bonus")]
+            mcq_cap = max(4, len(non_bonus) * 40 // 100)  # 40% cap, min 4
+            if len(mcq_indices) > mcq_cap:
+                # Relabel excess MCQs (from the end) to fill_blank or short_answer
+                _alt_types = ["fill_blank", "short_answer"]
+                excess = mcq_indices[mcq_cap:]  # indices to relabel
+                for j, idx in enumerate(excess):
+                    new_type = _alt_types[j % len(_alt_types)]
+                    old_type = result[idx].get("type", "mcq")
+                    result[idx]["type"] = new_type
+                    # Remove options for non-MCQ types
+                    if new_type != "mcq":
+                        result[idx].pop("options", None)
+                    calibration_warnings.append(
+                        f"Q{result[idx].get('id', idx + 1)}: type changed '{old_type}' → '{new_type}' (MCQ cap {mcq_cap}/{len(non_bonus)})"
+                    )
+                    logger.info(
+                        "[difficulty_calibrator] STEP H: Q%s type %s → %s (MCQ cap)",
+                        result[idx].get("id", idx + 1),
+                        old_type,
+                        new_type,
+                    )
+        except Exception as exc:
+            logger.warning("[difficulty_calibrator] STEP H MCQ cap failed: %s", exc)
+
         # ── Pre-correction quality score ──────────────────────────────────
         total_corrections = fmt_swaps + nr_swaps + adj_swaps
         calibration_warnings.append(

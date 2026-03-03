@@ -774,6 +774,13 @@ This creates a natural difficulty ramp within the worksheet.
                 "Do NOT always use :00, :05, :10, :15, :30, :45. "
                 "Mix durations: 17 minutes, 23 minutes, 43 minutes — not just 15, 20, 30.\n"
             )
+        elif "decimal" in _t:
+            prompt += (
+                "\nDECIMAL NUMBERS: Use varied decimal places like 3.47, 8.63, 2.19, 14.86, 7.32. "
+                "Do NOT always use .0 or .5 endings (like 2.5, 3.0, 7.5). "
+                "At least 60% of decimals should have non-zero, non-five hundredths digits "
+                "(e.g., 4.83 not 4.50, 12.67 not 12.00). This tests true decimal understanding.\n"
+            )
 
     if custom_instructions:
         prompt += f"\nAdditional teacher instructions: {custom_instructions}"
