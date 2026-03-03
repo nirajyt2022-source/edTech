@@ -203,6 +203,65 @@ async def get_saved_worksheet(
         raise HTTPException(status_code=500, detail="Failed to get worksheet")
 
 
+# ── 3b. Quality score for a saved worksheet ──────────────────────────────────
+
+
+@router.get("/saved/{worksheet_id}/quality-score")
+@limiter.limit("30/minute")
+async def get_worksheet_quality_score(
+    request: Request,
+    worksheet_id: str,
+    user_id: UserId,
+    db: DbClient,
+):
+    """Score a saved worksheet's quality. Returns 0-100 with dimension breakdowns."""
+    try:
+        result = db.table("worksheets").select("*").eq("id", worksheet_id).eq("user_id", user_id).single().execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Worksheet not found")
+
+        from app.services.quality_scorer import score_worksheet as _score_ws
+
+        ws_data = result.data
+        score = _score_ws(ws_data)
+
+        return {
+            "worksheet_id": worksheet_id,
+            "total_score": score.total_score,
+            "export_allowed": score.export_allowed,
+            "export_threshold": score.export_threshold,
+            "question_count": score.question_count,
+            "dimensions": {
+                name: {
+                    "weight": dim.weight,
+                    "raw_score": dim.raw_score,
+                    "weighted_score": dim.weighted_score,
+                    "failure_count": len(dim.failures),
+                    "failures": [
+                        {
+                            "check_id": f.check_id,
+                            "severity": f.severity,
+                            "message": f.message,
+                            "question_ids": f.question_ids,
+                        }
+                        for f in dim.failures
+                    ],
+                }
+                for name, dim in score.dimensions.items()
+            },
+            "ai_smell_flags": [
+                {"check_id": f.check_id, "severity": f.severity, "message": f.message} for f in score.ai_smell_flags
+            ],
+            "total_failures": len(score.failures),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("quality_score_failed", error=str(exc), worksheet_id=worksheet_id)
+        raise HTTPException(status_code=500, detail="Failed to compute quality score")
+
+
 # ── 4. Delete saved worksheet ─────────────────────────────────────────────────
 
 
@@ -236,31 +295,32 @@ async def export_worksheet_pdf(
     try:
         worksheet_dict = body.worksheet.model_dump()
 
-        # Quality gate (log-only)
+        # Quality score gate — block export if below threshold
         try:
-            from app.utils.quality_gate import run_quality_gate as _run_qg
+            from app.services.quality_scorer import score_worksheet as _score_ws
 
-            _gate_qs = []
-            for _i, _q in enumerate(worksheet_dict.get("questions", []), 1):
-                _gq = dict(_q)
-                if "question" not in _gq:
-                    _gq["question"] = _gq.get("text", "")
-                if _gq.get("display_number") is None and _gq.get("number") is None:
-                    try:
-                        _gq["display_number"] = int(str(_gq.get("id", _i)).lower().replace("q", "").strip())
-                    except (ValueError, TypeError):
-                        _gq["display_number"] = _i
-                _gate_qs.append(_gq)
-            _gate_ws = {
-                **worksheet_dict,
-                "questions": _gate_qs,
-                "requested_count": len(_gate_qs),
-            }
-            _qg_passed, _qg_issues = _run_qg(_gate_ws)
-            if not _qg_passed:
-                logger.warning("quality_gate_issues", count=len(_qg_issues), issues=_qg_issues)
-        except Exception as _qg_exc:
-            logger.warning("quality_gate_skipped", error=str(_qg_exc))
+            _qs = _score_ws(worksheet_dict)
+            if not _qs.export_allowed:
+                top_failures = sorted(_qs.failures, key=lambda f: f.points_deducted, reverse=True)[:5]
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        "error": "quality_below_threshold",
+                        "total_score": _qs.total_score,
+                        "threshold": _qs.export_threshold,
+                        "dimensions": {
+                            name: {"weighted_score": dim.weighted_score, "weight": dim.weight}
+                            for name, dim in _qs.dimensions.items()
+                        },
+                        "top_failures": [
+                            {"check_id": f.check_id, "severity": f.severity, "message": f.message} for f in top_failures
+                        ],
+                    },
+                )
+        except HTTPException:
+            raise  # re-raise the 422
+        except Exception as _qs_exc:
+            logger.warning("quality_score_skipped", error=str(_qs_exc))
 
         # Determine user tier for watermark
         _watermark = "Skolar"  # default: free tier watermark

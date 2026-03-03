@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_json: bool = True  # JSON in prod, human-readable in dev
 
+    # Quality scoring
+    worksheet_export_min_score: int = 40  # 0-100; PDF export blocked below this
+
     # CORS — comma-separated allowed origins
     frontend_url: str = "https://ed-tech-drab.vercel.app"
     cors_origins: str = (
