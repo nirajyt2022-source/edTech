@@ -100,7 +100,7 @@ VISUAL RULES:
 - visual_data must EXACTLY match the schema — no extra or missing fields.
 - For "standard" problem_style: visual_type=null, visual_data=null for ALL questions.
 - For "visual": EVERY question MUST have a visual. For "mixed": ~50% should have visuals.
-- NEVER write "look at the image/picture" — question text must be self-contained.
+- NEVER write "look at the image/picture", "In the following", "Read the passage below", or "Given below" — question text must be self-contained.
 - Visual must directly help answer the question. No visual is better than a misleading one."""
 
 _IMAGE_BLOCK_TEMPLATE = """\
@@ -519,6 +519,18 @@ def build_user_prompt(
         "Do NOT make every word problem the same length.\n"
     )
 
+    # -- Engagement framing (P2-A) --
+    prompt += (
+        "\nENGAGEMENT FRAMING: At least 20% of questions MUST use warm, child-friendly framing. "
+        "Mix in these styles:\n"
+        '  - "Help [name] figure out..."\n'
+        '  - "Can you find/spot/solve..."\n'
+        '  - "[Name] is trying to... Can you help?"\n'
+        '  - "Let\'s figure out..."\n'
+        '  - "Try to find..."\n'
+        "Use the Indian names provided. Do NOT make every question warm — keep ~80% direct.\n"
+    )
+
     # -- NCERT terminology injection --
     _grade_match = re.search(r"\d+", grade_level)
     if _grade_match:
@@ -632,6 +644,14 @@ NUMBER PROGRESSION RULE:
 - Questions 8-10 (stretch): Use larger numbers that challenge the student
 This creates a natural difficulty ramp within the worksheet.
 """
+
+    # -- Number diversity (P2-C) --
+    if subject.lower() in ("maths", "mathematics", "math"):
+        prompt += (
+            "\nNUMBER DIVERSITY: At most 30% of numbers may be multiples of 5 or 10. "
+            "Use varied numbers like 13, 27, 38, 46, 72, 84, 91 — NOT just 10, 15, 20, 25, 30, 50. "
+            "Round numbers feel mechanical and reduce learning variety.\n"
+        )
 
     if custom_instructions:
         prompt += f"\nAdditional teacher instructions: {custom_instructions}"

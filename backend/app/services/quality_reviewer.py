@@ -519,15 +519,21 @@ _FILLER_PATTERNS = [
 ]
 
 
+def _strip_filler_phrases(text: str) -> str:
+    """Remove phantom-reference filler phrases unconditionally."""
+    cleaned = text
+    for pattern, replacement in _FILLER_PATTERNS:
+        cleaned = pattern.sub(replacement, cleaned).strip()
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    return cleaned
+
+
 def _trim_question_text(text: str, limit: int) -> str | None:
     """Remove common filler phrases to reduce word count.
 
     Returns trimmed text if any filler was removed, else None.
     """
-    trimmed = text
-    for pattern, replacement in _FILLER_PATTERNS:
-        trimmed = pattern.sub(replacement, trimmed).strip()
-    trimmed = re.sub(r"\s{2,}", " ", trimmed)
+    trimmed = _strip_filler_phrases(text)
     return trimmed if len(trimmed.split()) < len(text.split()) else None
 
 
@@ -633,6 +639,16 @@ class QualityReviewerAgent:
         """
         result = ReviewResult(questions=list(questions))
         is_maths = context.subject.lower() in ("maths", "mathematics", "math")
+
+        # P2-B: Unconditional filler stripping (before word-count check)
+        for q in result.questions:
+            qt = q.get("question_text", q.get("text", ""))
+            cleaned = _strip_filler_phrases(qt)
+            # Only update if filler was actually removed (ignore whitespace-only diffs)
+            if cleaned != re.sub(r"\s{2,}", " ", qt).strip():
+                q["question_text"] = cleaned
+                q["text"] = cleaned
+                result.corrections.append(f"Q{q.get('id', '?')}: removed filler phrases")
 
         for q in result.questions:
             q_id = q.get("id", "?")

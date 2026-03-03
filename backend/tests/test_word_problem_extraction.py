@@ -195,18 +195,20 @@ def test_word_count_trim_between_1_5x_and_2x():
     ctx.subject = "english"
     ctx.valid_skill_tags = []
 
-    # "In the following " adds 3 words of filler; total ~24 words, limit 15, ratio 1.6
+    # "In the following " adds 3 words of filler; total ~24 words, limit 15
+    # P2-B: filler is stripped unconditionally BEFORE word-count check,
+    # so effective count is 21 words, ratio = 21/15 = 1.4 → warning only (no regen)
     filler = "In the following "
     core = " ".join(["word"] * 21)  # 21 words
-    text = filler + core  # 24 words total, ratio 1.6
+    text = filler + core  # 24 words total
     questions = [{"id": 1, "slot_type": "recognition", "question_text": text, "answer": "ok"}]
 
     reviewer = QualityReviewerAgent()
     result = reviewer.review_worksheet(questions, ctx)
     q = result.questions[0]
-    # Should have trimmed, not regen-flagged (trimmed is 21 words, still > 15 so regen)
-    # Actually 21 > 15, trim won't bring it under limit → regen
-    assert q.get("_needs_regen") is True
+    # Filler stripped unconditionally → 21 words remain, ratio 1.4 → just a warning
+    assert "removed filler phrases" in " ".join(result.corrections)
+    assert q.get("_needs_regen") is None  # no regen needed after filler removal
 
 
 def test_word_count_trim_successful():
@@ -218,18 +220,17 @@ def test_word_count_trim_successful():
     ctx.subject = "english"
     ctx.valid_skill_tags = []
 
-    # 30 words with "In the following" and "Look at the picture." filler (7 words)
-    # After trim: 23 words → under limit
+    # P2-B: filler is stripped unconditionally BEFORE word-count check.
+    # "In the following Look at the picture." = ~8 words of filler.
+    # After filler removal, only the core words remain for word-count check.
     filler = "In the following Look at the picture. "
-    core = " ".join(["word"] * 23)  # 23 words
-    _text = filler + core  # 30 words total, ratio 1.2 → under 1.5, just warning  # noqa: F841
-    # Need ratio > 1.5: 39 words for limit 25 → 1.56
-    core2 = " ".join(["word"] * 32)  # 32 words
-    text2 = filler + core2  # 39 words total, ratio 1.56
-    questions = [{"id": 1, "slot_type": "recognition", "question_text": text2, "answer": "ok"}]
+    core = " ".join(["word"] * 32)  # 32 words
+    text = filler + core  # ~39 words total
+    questions = [{"id": 1, "slot_type": "recognition", "question_text": text, "answer": "ok"}]
 
     reviewer = QualityReviewerAgent()
     result = reviewer.review_worksheet(questions, ctx)
     q = result.questions[0]
-    # Trimmed removes ~7 words → 32 words, still > 25 → regen
-    assert q.get("_needs_regen") is True
+    # Filler stripped → 32 words remain, ratio 32/25 = 1.28 → warning only (no regen)
+    assert "removed filler phrases" in " ".join(result.corrections)
+    assert q.get("_needs_regen") is None  # no regen after filler removal

@@ -107,7 +107,7 @@ _ERROR_CLASSIFIERS: list[tuple[str, str, str, str, float]] = [
     (r"Duplicate question detected", "ai_smell", "AI_01", "critical", 0.25),
     (r"Near-duplicate pattern", "ai_smell", "AI_02", "major", 0.20),
     (r"Opening verb .* repeats", "ai_smell", "AI_03", "minor", 0.10),
-    (r"Round number overuse", "ai_smell", "AI_04", "minor", 0.10),
+    (r"Round number overuse", "ai_smell", "AI_04", "major", 0.15),
     (r"Number pair monotony", "ai_smell", "AI_05", "minor", 0.10),
     (r"Countable object .* appears", "ai_smell", "AI_09", "minor", 0.05),
     (r"Sentence structure monotony", "ai_smell", "AI_10", "minor", 0.10),
