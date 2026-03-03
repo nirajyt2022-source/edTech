@@ -40,11 +40,20 @@ def log_corrections(
                 "difficulty": q.get("difficulty"),
             }
 
-            if q.get("_answer_corrected"):
+            if q.get("_answer_mismatch"):
                 rows.append(
                     {
                         **base,
-                        "correction_type": "arithmetic_corrected",
+                        "correction_type": "answer_mismatch",
+                        "before_value": q.get("answer", q.get("correct_answer")),
+                        "after_value": str(q.get("_answer_mismatch_debug", {}).get("computed", "")),
+                    }
+                )
+            if q.get("_format_corrected"):
+                rows.append(
+                    {
+                        **base,
+                        "correction_type": "format_corrected",
                         "before_value": q.get("_original_answer"),
                         "after_value": q.get("correct_answer"),
                     }

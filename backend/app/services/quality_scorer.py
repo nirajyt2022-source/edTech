@@ -118,6 +118,7 @@ _ERROR_CLASSIFIERS: list[tuple[str, str, str, str, float]] = [
     (r"Sequence step monotony", "ai_smell", "AI_13", "minor", 0.05),
     (r"\[sentence_diversity\] Low diversity", "ai_smell", "AI_14", "major", 0.20),
     (r"\[sentence_diversity\] Dominant template", "ai_smell", "AI_15", "major", 0.15),
+    (r"\[mcq_quality\] Banned option", "ai_smell", "AI_16", "major", 0.15),
     # Curriculum
     (r"complex vocabulary", "curriculum", "CUR_04", "minor", 0.05),
     (r"question too long", "curriculum", "CUR_05", "minor", 0.05),
@@ -224,14 +225,27 @@ def _run_content_checks(
                 )
             )
 
-        # CONTENT_02: _answer_corrected (was wrong, got auto-fixed)
-        if q.get("_answer_corrected"):
+        # CONTENT_02: _answer_mismatch — wrong math answer (P0 critical)
+        if q.get("_answer_mismatch"):
             buckets["content"].append(
                 FailureReason(
                     dimension="content",
                     check_id="CONTENT_02",
+                    severity="critical",
+                    message="Math answer mismatch — LLM answer disagrees with solver",
+                    question_ids=[qid],
+                    points_deducted=1.0,
+                )
+            )
+
+        # CONTENT_02B: _format_corrected (format normalization, minor)
+        if q.get("_format_corrected"):
+            buckets["content"].append(
+                FailureReason(
+                    dimension="content",
+                    check_id="CONTENT_02B",
                     severity="minor",
-                    message="Answer was auto-corrected by QualityReviewer",
+                    message="Answer format was normalized by QualityReviewer",
                     question_ids=[qid],
                     points_deducted=0.05,
                 )
@@ -546,13 +560,47 @@ def score_worksheet(
     _run_curriculum_checks(worksheet, q_dicts, subject, topic, buckets)
     _run_pedagogical_checks(worksheet, q_dicts, buckets)
 
-    # Step 3: Compute dimension scores
-    dimensions: dict[str, DimensionResult] = {}
+    # Step 3: Check for P0 (critical) failures — instant zero
+    all_failures = [f for fs in buckets.values() for f in fs]
+    p0_failures = [f for f in all_failures if f.severity == "critical"]
+
+    if p0_failures:
+        # P0 kill switch — any critical failure zeros the entire score
+        dimensions: dict[str, DimensionResult] = {}
+        for dim_name, weight in _DIMENSION_WEIGHTS.items():
+            dimensions[dim_name] = DimensionResult(
+                name=dim_name,
+                weight=weight,
+                raw_score=0.0,
+                weighted_score=0.0,
+                failures=buckets[dim_name],
+            )
+
+        ai_smell_flags = buckets.get("ai_smell", [])
+        return QualityScore(
+            total_score=0.0,
+            dimensions=dimensions,
+            failures=all_failures,
+            export_allowed=False,
+            export_threshold=threshold,
+            ai_smell_flags=ai_smell_flags,
+            question_count=len(q_dicts),
+            grade=grade_str,
+            subject=subject,
+        )
+
+    # Step 4: Multiplicative scoring — additive base with compounding penalty
+    # 1. Compute weighted sum as before (additive base)
+    # 2. Apply multiplicative penalty for any dimension with major+ failures
+    dimensions = {}
+    additive_total = 0.0
+    penalty_multiplier = 1.0
     for dim_name, weight in _DIMENSION_WEIGHTS.items():
         failures = buckets[dim_name]
         total_deduction = min(1.0, sum(f.points_deducted for f in failures))
         raw_score = max(0.0, 1.0 - total_deduction)
         weighted = round(raw_score * weight, 2)
+        additive_total += weighted
         dimensions[dim_name] = DimensionResult(
             name=dim_name,
             weight=weight,
@@ -560,10 +608,15 @@ def score_worksheet(
             weighted_score=weighted,
             failures=failures,
         )
+        # Multiplicative penalty: each dimension's deduction compounds
+        # Only apply if there are actual major+ failures (not just minor)
+        major_deduction = min(1.0, sum(f.points_deducted for f in failures if f.severity in ("critical", "major")))
+        if major_deduction > 0:
+            penalty_multiplier *= 1.0 - major_deduction
 
-    # Step 4: Compute total
-    total = round(sum(d.weighted_score for d in dimensions.values()), 1)
-    all_failures = [f for fs in buckets.values() for f in fs]
+    # Final score = additive base * penalty multiplier
+    # This ensures major issues compound rather than just subtract
+    total = round(additive_total * penalty_multiplier, 1)
     ai_smell_flags = buckets.get("ai_smell", [])
 
     return QualityScore(

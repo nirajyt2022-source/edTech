@@ -45,25 +45,27 @@ class TestHardBlockArithmetic:
         q = _make_q(question_text="What is 5 + 3?", answer="8")
         result = reviewer.review_worksheet([q], ctx)
         assert not result.questions[0].get("_math_unverified")
-        assert not result.questions[0].get("_answer_corrected")
+        assert not result.questions[0].get("_answer_mismatch")
 
-    def test_wrong_answer_corrected(self):
+    def test_wrong_answer_flagged(self):
+        """Wrong answers should be flagged with _answer_mismatch, NOT auto-corrected."""
         reviewer = QualityReviewerAgent()
         ctx = _make_context()
         q = _make_q(question_text="What is 5 + 3?", answer="9")
         result = reviewer.review_worksheet([q], ctx)
-        assert result.questions[0]["answer"] == "8"
-        assert result.questions[0]["_answer_corrected"] is True
+        # Answer should NOT be changed (verify-and-block, not auto-correct)
+        assert result.questions[0]["answer"] == "9"
+        assert result.questions[0]["_answer_mismatch"] is True
         assert len(result.corrections) == 1
 
     def test_error_detection_skipped(self):
-        """error_detection questions should not be math-checked."""
+        """error_detection questions should not be arithmetic-checked."""
         reviewer = QualityReviewerAgent()
         ctx = _make_context()
         q = _make_q(slot_type="error_detection", question_text="5 + 3 = 9. Is this correct?", answer="No")
         result = reviewer.review_worksheet([q], ctx)
         assert not result.questions[0].get("_math_unverified")
-        assert not result.questions[0].get("_answer_corrected")
+        assert not result.questions[0].get("_answer_mismatch")
 
     def test_non_maths_skipped(self):
         """Non-maths subjects should not trigger CHECK 1."""
@@ -72,7 +74,7 @@ class TestHardBlockArithmetic:
         q = _make_q(question_text="What is 5 + 3?", answer="9")
         result = reviewer.review_worksheet([q], ctx)
         # English questions are not math-checked
-        assert not result.questions[0].get("_answer_corrected")
+        assert not result.questions[0].get("_answer_mismatch")
 
 
 # ── Fix 2: Unknown type gets [type_error] tag ───────────────────────────────

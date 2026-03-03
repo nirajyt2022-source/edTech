@@ -248,8 +248,8 @@ class TestR07WordProblemVerified:
         result = r07_word_problem_verified(ctx)
         assert result.passed
 
-    def test_complex_wps_degrade(self):
-        # 3 word problems, all with 4+ numbers, none answer-corrected
+    def test_complex_wps_with_mismatches_degrade(self):
+        # 3 word problems with 4+ numbers, all with answer mismatches
         qs = [
             _q(1, qtype="word_problem", text="Ram has 12 apples, 15 oranges, 20 bananas and 8 grapes"),
             _q(2, qtype="word_problem", text="Sita bought 10 books for 25 rupees each and 30 pens for 5 rupees"),
@@ -257,6 +257,7 @@ class TestR07WordProblemVerified:
         ]
         for q in qs:
             q["format"] = "word_problem"
+            q["_answer_mismatch"] = True
         ctx = _ctx(questions=qs, subject="Maths", num_questions=3)
         result = r07_word_problem_verified(ctx)
         assert not result.passed

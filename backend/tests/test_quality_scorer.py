@@ -120,7 +120,8 @@ class TestScoreWorksheet:
         assert result.total_score >= 70, f"Expected ≥70, got {result.total_score}"
         assert result.export_allowed is True
 
-    def test_empty_worksheet_loses_structural_points(self):
+    def test_empty_worksheet_scores_zero(self):
+        """Empty worksheet has STRUCT_01 (critical) → P0 kill switch → score 0."""
         ws = {
             "title": "Empty",
             "grade": "Class 3",
@@ -135,10 +136,9 @@ class TestScoreWorksheet:
         }
         result = score_worksheet(ws, expected_count=10)
         assert result.question_count == 0
-        # Structural dimension should be heavily penalized
-        struct = result.dimensions["structural"]
-        assert struct.raw_score < 0.5
-        assert any(f.check_id == "STRUCT_01" for f in struct.failures)
+        assert result.total_score == 0.0
+        assert result.export_allowed is False
+        assert any(f.check_id == "STRUCT_01" for f in result.failures)
 
     def test_export_threshold_respected(self):
         result = score_worksheet(_worksheet(), export_threshold=99)

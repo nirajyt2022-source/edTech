@@ -265,7 +265,7 @@ def r06_adaptive_explicit(ctx: GateContext) -> RuleResult:
 
 @register_rule("R07_WORD_PROBLEM_VERIFIED", Enforcement.DEGRADE)
 def r07_word_problem_verified(ctx: GateContext) -> RuleResult:
-    """Maths: ≤20% of word problems with 4+ numbers and no _answer_corrected."""
+    """Maths: ≤20% of word problems with 4+ numbers that have answer mismatches."""
     if ctx.subject.lower() != "maths":
         return RuleResult("R07_WORD_PROBLEM_VERIFIED", True, Enforcement.DEGRADE, "Non-Maths: skipped")
 
@@ -275,20 +275,20 @@ def r07_word_problem_verified(ctx: GateContext) -> RuleResult:
     if not word_problems:
         return RuleResult("R07_WORD_PROBLEM_VERIFIED", True, Enforcement.DEGRADE, "No word problems")
 
-    complex_unverified = 0
+    complex_problematic = 0
     for q in word_problems:
         text = q.get("question_text", q.get("text", ""))
         nums = _NUMBER_RE.findall(text)
-        if len(nums) >= 4 and not q.get("_answer_corrected"):
-            complex_unverified += 1
+        if len(nums) >= 4 and (q.get("_answer_mismatch") or q.get("_math_unverified")):
+            complex_problematic += 1
 
-    ratio = complex_unverified / len(word_problems) if word_problems else 0
+    ratio = complex_problematic / len(word_problems) if word_problems else 0
     passed = ratio <= 0.20
     return RuleResult(
         "R07_WORD_PROBLEM_VERIFIED",
         passed,
         Enforcement.DEGRADE,
-        f"{complex_unverified}/{len(word_problems)} complex WPs unverified ({ratio:.0%})",
+        f"{complex_problematic}/{len(word_problems)} complex WPs with issues ({ratio:.0%})",
     )
 
 
@@ -585,6 +585,77 @@ def r14_sentence_diversity_guard(ctx: GateContext) -> RuleResult:
         passed,
         Enforcement.BLOCK,
         "; ".join(issues) if not passed else f"diversity={diversity_score:.0%} — OK",
+    )
+
+
+# ---------------------------------------------------------------------------
+# R15 — ANSWER_AUTHORITY (BLOCK)
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# R16 — MCQ_QUALITY_GUARD (BLOCK for Classes 1-3, DEGRADE for 4-5)
+# ---------------------------------------------------------------------------
+
+_BANNED_MCQ_PHRASES = frozenset(
+    {
+        "all of the above",
+        "none of the above",
+        "both a and b",
+        "all the above",
+        "none of above",
+        "both (a) and (b)",
+        "all of these",
+        "none of these",
+    }
+)
+
+
+@register_rule("R16_MCQ_QUALITY_GUARD", Enforcement.BLOCK)
+def r16_mcq_quality_guard(ctx: GateContext) -> RuleResult:
+    """Block (Class 1-3) or degrade (4-5) if MCQ has banned meta-options."""
+    offending = []
+    for q in ctx.questions:
+        q_type = q.get("type", q.get("slot_type", ""))
+        if q_type != "mcq":
+            continue
+        options = [str(o).strip().lower() for o in q.get("options", [])]
+        for opt in options:
+            if opt in _BANNED_MCQ_PHRASES:
+                offending.append(f"Q{q.get('id', '?')}: '{opt}'")
+                break
+
+    if not offending:
+        return RuleResult("R16_MCQ_QUALITY_GUARD", True, Enforcement.BLOCK, "No banned MCQ options")
+
+    detail = f"{len(offending)} banned MCQ option(s): {'; '.join(offending[:3])}"
+
+    # Classes 1-3: BLOCK; 4-5: DEGRADE
+    if ctx.grade_num <= 3:
+        return RuleResult("R16_MCQ_QUALITY_GUARD", False, Enforcement.BLOCK, detail)
+    else:
+        return RuleResult("R16_MCQ_QUALITY_GUARD", False, Enforcement.DEGRADE, detail)
+
+
+@register_rule("R15_ANSWER_AUTHORITY", Enforcement.BLOCK)
+def r15_answer_authority(ctx: GateContext) -> RuleResult:
+    """Block if any question has _answer_mismatch (wrong math answer)."""
+    if ctx.subject.lower() not in ("maths", "mathematics", "math"):
+        return RuleResult("R15_ANSWER_AUTHORITY", True, Enforcement.BLOCK, "Non-Maths: skipped")
+
+    mismatches = [q for q in ctx.questions if q.get("_answer_mismatch")]
+    passed = len(mismatches) == 0
+    details = []
+    for q in mismatches[:3]:
+        qid = q.get("id", "?")
+        debug = q.get("_answer_mismatch_debug", {})
+        details.append(f"Q{qid}: declared='{q.get('answer', '')}' expected='{debug.get('computed', '?')}'")
+
+    return RuleResult(
+        "R15_ANSWER_AUTHORITY",
+        passed,
+        Enforcement.BLOCK,
+        f"{len(mismatches)} answer mismatch(es): {'; '.join(details)}" if not passed else "All answers verified",
     )
 
 

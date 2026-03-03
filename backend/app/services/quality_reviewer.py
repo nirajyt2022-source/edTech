@@ -3,11 +3,10 @@ Quality Reviewer Agent — Agent 3 of 4 in the generation pipeline.
 
 Runs four deterministic checks on the assembled question list, in order:
 
-  CHECK 1 — Maths arithmetic validation (Maths subject only)
-    Extracts simple A op B expressions from question text, computes the
-    result via safe AST evaluation, and auto-corrects the stored answer
-    if it is wrong. Marks q['_answer_corrected'] = True on any correction.
-    Skips word problems and error_detection questions (intentionally wrong).
+  CHECK 1 — Maths answer verification (Maths subject only)
+    Uses AnswerAuthority to verify ALL maths answers (including error_detection)
+    via AST evaluation. Sets q['_answer_mismatch'] = True on mismatch
+    (does NOT auto-correct — verify-and-block approach).
 
   CHECK 2 — Skill tag validation (all subjects)
     If q['skill_tag'] is not in context.valid_skill_tags, replaces it with
@@ -748,27 +747,28 @@ class QualityReviewerAgent:
             slot_type = q.get("slot_type", "")
             question_text = q.get("question_text", "")
 
-            # ── CHECK 1: Maths arithmetic validation (HARD BLOCK) ────────
-            # Unlike other checks, CHECK 1 does NOT silently skip on error.
-            # If extraction succeeds but correction throws, the question is
-            # marked _math_unverified so the caller can trigger a retry.
-            if is_maths and slot_type != "error_detection":
+            # ── CHECK 1: Maths answer verification (HARD BLOCK) ────────────
+            # Uses AnswerAuthority to verify ALL maths answers (including
+            # error_detection) WITHOUT auto-correcting.
+            # If mismatch: sets _answer_mismatch=True (downstream R15 blocks).
+            # If extraction fails: sets _math_unverified=True.
+            if is_maths:
                 try:
-                    extracted = _extract_arithmetic_expression(question_text)
-                    if extracted is not None:
-                        expr, computed = extracted
-                        stored = q.get("answer", "")
-                        if not _answers_match(stored, computed):
-                            correct_str = (
-                                str(int(computed))
-                                if computed == int(computed)
-                                else f"{computed:.4f}".rstrip("0").rstrip(".")
-                            )
-                            msg = f"Q{q_id}: arithmetic corrected ({expr} = {correct_str}, stored was '{stored}')"
-                            logger.warning("[quality_reviewer] %s", msg)
-                            q["answer"] = correct_str
-                            q["_answer_corrected"] = True
-                            result.corrections.append(msg)
+                    from app.services.answer_authority import get_answer_authority
+
+                    verdict = get_answer_authority().verify_question(q, context.subject)
+                    if verdict.match is False:
+                        msg = (
+                            f"Q{q_id}: answer mismatch — declared '{verdict.declared_answer}', "
+                            f"authoritative '{verdict.authoritative_answer}' (method={verdict.method})"
+                        )
+                        logger.warning("[quality_reviewer] %s", msg)
+                        q["_answer_mismatch"] = True
+                        q["_answer_mismatch_debug"] = verdict.debug
+                        result.corrections.append(msg)
+                    elif verdict.match is None and verdict.method not in ("unverifiable", "error_detection"):
+                        q["_math_unverified"] = True
+                        result.warnings.append(f"Q{q_id}: math answer could not be verified ({verdict.debug})")
                 except Exception as exc:
                     # HARD BLOCK: mark question as unverified instead of silently skipping
                     logger.error("[quality_reviewer] Check 1 FAILED for Q%s — marking unverified: %s", q_id, exc)
@@ -825,30 +825,9 @@ class QualityReviewerAgent:
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 3 skipped for Q%s: %s", q_id, exc)
 
-            # ── CHECK 4: Fraction and decimal answer format ───────────────
-            if is_maths:
-                try:
-                    stored_answer = q.get("answer", "")
-                    correction: Optional[str] = None
-
-                    if slot_type == "error_detection":
-                        # Bug C: LLM agrees with the wrong answer shown in Q
-                        correction = _validate_error_detection_answer(question_text, stored_answer)
-                    else:
-                        # Bug A: fraction addition stored as decimal float
-                        correction = _validate_fraction_answer(question_text, stored_answer)
-                        # Bug B: fraction-to-decimal stored with wrong magnitude
-                        if correction is None:
-                            correction = _validate_fraction_to_decimal(question_text, stored_answer)
-
-                    if correction is not None:
-                        msg = f"Q{q_id}: answer format corrected ('{stored_answer}' → '{correction}')"
-                        logger.warning("[quality_reviewer] %s", msg)
-                        q["answer"] = correction
-                        q["_answer_corrected"] = True
-                        result.corrections.append(msg)
-                except Exception as exc:
-                    logger.debug("[quality_reviewer] Check 4 skipped for Q%s: %s", q_id, exc)
+            # ── CHECK 4: Fraction and decimal answer verification ──────────
+            # Handled by AnswerAuthority in CHECK 1 above (unified verification).
+            # No separate auto-correction pass needed.
 
             # ── CHECK 5: Time fact answer validation ─────────────────────
             try:
@@ -858,7 +837,7 @@ class QualityReviewerAgent:
                     msg = f"Q{q_id}: time-fact answer corrected ('{stored_answer}' → '{tf_correction}')"
                     logger.warning("[quality_reviewer] %s", msg)
                     q["answer"] = tf_correction
-                    q["_answer_corrected"] = True
+                    q["_format_corrected"] = True
                     result.corrections.append(msg)
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 5 skipped for Q%s: %s", q_id, exc)
@@ -887,32 +866,9 @@ class QualityReviewerAgent:
                 except Exception as exc:
                     logger.debug("[quality_reviewer] Check 7 skipped for Q%s: %s", q_id, exc)
 
-            # ── CHECK 8: Word problem answer verification (HARD BLOCK) ────
-            if is_maths and slot_type != "error_detection":
-                try:
-                    # Only fire if the arithmetic extractor didn't already handle it
-                    extracted = _extract_arithmetic_expression(question_text)
-                    if extracted is None:
-                        wp_result = _extract_word_problem_arithmetic(question_text)
-                        if wp_result is not None:
-                            _wp_expr, wp_computed = wp_result
-                            answer = q.get("answer", "")
-                            if not _answers_match(answer, wp_computed):
-                                computed_str = (
-                                    str(int(wp_computed))
-                                    if wp_computed == int(wp_computed)
-                                    else str(round(wp_computed, 2))
-                                )
-                                msg = f"Q{q_id}: word problem auto-correct ('{answer}' → '{computed_str}')"
-                                logger.warning("[quality_reviewer] %s", msg)
-                                q["answer"] = computed_str
-                                q["_answer_corrected"] = True
-                                result.corrections.append(msg)
-                except Exception as exc:
-                    # HARD BLOCK: mark question as unverified
-                    logger.error("[quality_reviewer] Check 8 FAILED for Q%s — marking unverified: %s", q_id, exc)
-                    q["_math_unverified"] = True
-                    result.warnings.append(f"Q{q_id}: word problem answer could not be verified ({exc})")
+            # ── CHECK 8: Word problem answer verification ──────────────────
+            # Handled by AnswerAuthority in CHECK 1 above (unified verification).
+            # No separate auto-correction pass needed.
 
             # ── CHECK 18: Grade-appropriate arithmetic bounds ─────────────
             # Class 1 single-digit addition: answer must be ≤ 18 (9+9).
@@ -1131,7 +1087,7 @@ class QualityReviewerAgent:
                     logger.warning("[quality_reviewer] %s", msg)
                     q["answer"] = matched_opt
                     q["correct_answer"] = matched_opt
-                    q["_answer_corrected"] = True
+                    q["_format_corrected"] = True
                     result.corrections.append(msg)
                 else:
                     # Can't auto-fix — flag for regeneration
@@ -1183,7 +1139,7 @@ class QualityReviewerAgent:
                 logger.warning("[quality_reviewer] %s", msg)
                 q["answer"] = new_answer
                 q["correct_answer"] = new_answer
-                q["_answer_corrected"] = True
+                q["_format_corrected"] = True
                 result.corrections.append(msg)
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 15 (T/F answer format) skipped: %s", exc)

@@ -563,6 +563,15 @@ def build_user_prompt(
         "This makes the worksheet feel less mechanical.\n"
     )
 
+    # -- MCQ quality rules (S1.2) --
+    prompt += (
+        "\nMCQ RULES (MANDATORY): "
+        "NEVER use 'All of the above', 'None of the above', 'Both A and B', "
+        "'All of these', or 'None of these' as options. "
+        "Each option must be distinct and only ONE option should be correct. "
+        "Lazy meta-options confuse young learners and are banned.\n"
+    )
+
     # -- Word problem length variety (S3) --
     prompt += (
         "\nWORD PROBLEM LENGTH: Vary sentence count in word problems. "
@@ -1973,8 +1982,10 @@ def generate_worksheet(
 
                 # Map v1 corrections back → v2
                 for _q in _review.questions:
-                    if "_answer_corrected" in _q and "answer" in _q:
+                    if "_format_corrected" in _q and "answer" in _q:
                         _q["correct_answer"] = _q["answer"]
+                    # Do NOT sync answer→correct_answer if _answer_mismatch
+                    # (the LLM answer is wrong — let retry handle it)
                     if "question_text" in _q:
                         _q["text"] = _q["question_text"]
 
@@ -2069,6 +2080,28 @@ def generate_worksheet(
                 logger.warning("[v2] Attempt %d: count mismatch, retrying", attempt)
                 continue
 
+            # Answer mismatch retry — AnswerAuthority found wrong math answers
+            mismatched = [q for q in data.get("questions", []) if q.get("_answer_mismatch")]
+            if mismatched and attempt < max_attempts:
+                feedback_parts = []
+                for mq in mismatched[:3]:
+                    debug = mq.get("_answer_mismatch_debug", {})
+                    feedback_parts.append(
+                        f"Q{mq.get('id', '?')}: your answer was '{mq.get('answer', '')}', "
+                        f"correct is '{debug.get('computed', '?')}'"
+                    )
+                feedback = "; ".join(feedback_parts)
+                user_prompt += (
+                    f"\n\nCRITICAL — WRONG ANSWERS DETECTED:\n{feedback}\n"
+                    "Regenerate these questions with the CORRECT answers. "
+                    "Double-check every arithmetic calculation."
+                )
+                all_warnings.append(f"Retry {attempt}: {len(mismatched)} answer mismatch(es)")
+                logger.warning(
+                    "[v2] Attempt %d: %d answer mismatches, retrying: %s", attempt, len(mismatched), feedback
+                )
+                continue
+
             # Math unverified retry — questions where arithmetic check failed
             unverified = [q for q in data.get("questions", []) if q.get("_math_unverified")]
             if len(unverified) > 2 and attempt < max_attempts:
@@ -2087,7 +2120,7 @@ def generate_worksheet(
                 for e in validation_errors
                 if "[count_mismatch]" not in e  # already handled above
                 and "Near-duplicate" not in e  # already handled above
-                and any(kw in e for kw in ("math answer", "empty question", "MCQ answer", "MCQ needs"))
+                and any(kw in e for kw in ("math answer", "empty question", "MCQ answer", "MCQ needs", "[mcq_quality]"))
             ]
             if serious_errors and attempt < max_attempts:
                 feedback = "; ".join(serious_errors[:3])

@@ -159,16 +159,17 @@ class TestAnswersMatch:
 # CHECK 1: Arithmetic correction
 # ---------------------------------------------------------------------------
 
-class TestCheck1ArithmeticCorrection:
-    def test_wrong_answer_corrected(self):
-        """'5 + 7 = 11' should be corrected to '12'."""
+class TestCheck1ArithmeticVerification:
+    def test_wrong_answer_flagged(self):
+        """'5 + 7 = 11' should be flagged as mismatch, NOT auto-corrected."""
         reviewer = QualityReviewerAgent()
         q = _make_q(question_text="What is 5 + 7?", answer="11")
         result = reviewer.review_worksheet([q], _DEFAULT_CTX)
 
         assert len(result.corrections) == 1
-        assert result.questions[0]["answer"] == "12"
-        assert result.questions[0].get("_answer_corrected") is True
+        # Answer should NOT be changed — verify-and-block approach
+        assert result.questions[0]["answer"] == "11"
+        assert result.questions[0].get("_answer_mismatch") is True
 
     def test_correct_answer_untouched(self):
         """A correct answer must pass through unchanged."""
@@ -178,23 +179,24 @@ class TestCheck1ArithmeticCorrection:
 
         assert len(result.corrections) == 0
         assert result.questions[0]["answer"] == "12"
-        assert result.questions[0].get("_answer_corrected") is None
+        assert result.questions[0].get("_answer_mismatch") is None
 
-    def test_error_detection_slot_skipped(self):
-        """CHECK 1 skips error_detection, but CHECK 4 corrects the stored answer
-        to the true computed value ('answer' must be the correct answer; the wrong
-        value shown in the question lives in 'student_wrong_answer')."""
+    def test_error_detection_slot_verified(self):
+        """Error_detection is verified via AnswerAuthority but does not auto-correct.
+        If error_detection answer agrees with the wrong value shown in Q, it gets
+        flagged as _answer_mismatch."""
         reviewer = QualityReviewerAgent()
         q = _make_q(
             slot_type="error_detection",
             question_text="Spot the error: 5 + 7 = 11",
-            answer="11",  # LLM agreed with the wrong value — CHECK 4 fixes this
+            answer="11",  # LLM agreed with the wrong value
         )
         result = reviewer.review_worksheet([q], _DEFAULT_CTX)
 
-        # CHECK 4 corrects the stored answer to the real computed value
-        assert len(result.corrections) == 1
-        assert result.questions[0]["answer"] == "12"
+        # AnswerAuthority flags the mismatch, does NOT auto-correct
+        assert result.questions[0].get("_answer_mismatch") is True
+        # Answer should NOT be changed
+        assert result.questions[0]["answer"] == "11"
 
     def test_word_problem_not_corrected(self):
         """Word problems (narrative words) are skipped by CHECK 1."""
@@ -355,7 +357,8 @@ class TestReviewResult:
         assert result.errors == []
 
     def test_multiple_questions(self):
-        """Multiple questions all pass through the review loop."""
+        """Multiple questions all pass through the review loop.
+        Wrong answers get _answer_mismatch flag, NOT auto-corrected."""
         reviewer = QualityReviewerAgent()
         questions = [
             _make_q(q_id=1, question_text="What is 3 + 4?", answer="7"),
@@ -364,7 +367,9 @@ class TestReviewResult:
         result = reviewer.review_worksheet(questions, _DEFAULT_CTX)
         assert len(result.questions) == 2
         assert len(result.corrections) == 1
-        assert result.questions[1]["answer"] == "11"
+        # Answer should NOT be changed — verify-and-block
+        assert result.questions[1]["answer"] == "99"
+        assert result.questions[1]["_answer_mismatch"] is True
 
 
 # ---------------------------------------------------------------------------

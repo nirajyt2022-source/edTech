@@ -570,6 +570,30 @@ class OutputValidator:
                 if cnt > max(2, int(len(questions) * 0.4)):
                     errors.append(f"[sentence_diversity] Dominant template covers {cnt}/{len(questions)} questions")
 
+        # 21. MCQ option quality — ban "all/none of the above" and lazy meta-options
+        _BANNED_MCQ_PHRASES = frozenset(
+            {
+                "all of the above",
+                "none of the above",
+                "both a and b",
+                "all the above",
+                "none of above",
+                "both (a) and (b)",
+                "all of these",
+                "none of these",
+            }
+        )
+        for i, q in enumerate(questions):
+            q_type = q.get("type", "")
+            if q_type != "mcq":
+                continue
+            options = [str(o).strip().lower() for o in q.get("options", [])]
+            for opt in options:
+                if opt in _BANNED_MCQ_PHRASES:
+                    qid = q.get("id", f"Q{i + 1}")
+                    errors.append(f"{qid}: [mcq_quality] Banned option '{opt}'")
+                    break
+
         is_valid = len(errors) == 0
         if not is_valid:
             logger.warning("Worksheet validation failed", extra={"errors": errors, "topic": topic, "grade": grade})
