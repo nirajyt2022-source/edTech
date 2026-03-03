@@ -222,7 +222,7 @@ def test_word_count_trim_successful():
     # After trim: 23 words → under limit
     filler = "In the following Look at the picture. "
     core = " ".join(["word"] * 23)  # 23 words
-    text = filler + core  # 30 words total, ratio 1.2 → under 1.5, just warning
+    _text = filler + core  # 30 words total, ratio 1.2 → under 1.5, just warning  # noqa: F841
     # Need ratio > 1.5: 39 words for limit 25 → 1.56
     core2 = " ".join(["word"] * 32)  # 32 words
     text2 = filler + core2  # 39 words total, ratio 1.56
