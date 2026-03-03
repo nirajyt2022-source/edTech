@@ -496,6 +496,37 @@ class DifficultyCalibrator:
         except Exception as exc:
             logger.warning("[difficulty_calibrator] STEP F adjacent format fix failed: %s", exc)
 
+        # ── STEP G: Ensure difficulty variety (all modes) ────────────────
+        # If ALL questions have the same difficulty, relabel first 1-2 to
+        # provide scaffolding. Even a "hard" worksheet needs a warmup.
+        try:
+            difficulties = [q.get("difficulty", "medium") for q in result if not q.get("_is_bonus")]
+            unique_diffs = set(difficulties)
+            if len(unique_diffs) == 1 and len(result) >= 5:
+                sole_diff = difficulties[0]
+                # Map: what to relabel the first questions as
+                _RELABEL_MAP = {
+                    "hard": ["medium", "medium"],
+                    "medium": ["easy"],
+                    "easy": [],  # all-easy is fine
+                }
+                relabels = _RELABEL_MAP.get(sole_diff, [])
+                for i, new_diff in enumerate(relabels):
+                    if i < len(result) and not result[i].get("_is_bonus"):
+                        old_diff = result[i].get("difficulty", sole_diff)
+                        result[i]["difficulty"] = new_diff
+                        calibration_warnings.append(
+                            f"Q{result[i].get('id', i + 1)}: difficulty relabeled '{old_diff}' → '{new_diff}' (scaffolding warmup)"
+                        )
+                        logger.info(
+                            "[difficulty_calibrator] STEP G: Q%s relabeled %s → %s",
+                            result[i].get("id", i + 1),
+                            old_diff,
+                            new_diff,
+                        )
+        except Exception as exc:
+            logger.warning("[difficulty_calibrator] STEP G difficulty variety failed: %s", exc)
+
         # ── Pre-correction quality score ──────────────────────────────────
         total_corrections = fmt_swaps + nr_swaps + adj_swaps
         calibration_warnings.append(

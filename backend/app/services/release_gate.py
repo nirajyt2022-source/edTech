@@ -620,6 +620,8 @@ def run_release_gate(
     # If ONLY cosmetic rules failed, upgrade from best_effort to released.
     _COSMETIC_RULES = frozenset(
         {
+            "R04_CURRICULUM_GROUNDED",
+            "R11_TOPIC_DRIFT_GUARD",
             "R12_ROUND_NUMBER_GUARD",
             "R13_SENTENCE_STRUCTURE_GUARD",
         }

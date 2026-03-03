@@ -851,11 +851,11 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
         "day",
         "week",
     ],
-    "addition": ["add", "sum", "plus", "carry", "total", "+"],
-    "subtraction": ["subtract", "minus", "borrow", "difference", "take away", "-"],
-    "multiplication": ["multiply", "times", "product", "table", "×"],
-    "division": ["divide", "share", "quotient", "remainder", "÷"],
-    "fraction": ["fraction", "half", "quarter", "numerator", "denominator", "/"],
+    "addition": ["add", "sum", "plus", "carry", "total"],
+    "subtraction": ["subtract", "minus", "borrow", "difference", "take away"],
+    "multiplication": ["multiply", "multiplication", "times", "product", "table"],
+    "division": ["divide", "division", "share", "quotient", "remainder"],
+    "fraction": ["fraction", "decimal", "half", "quarter", "numerator", "denominator"],
     "money": ["money", "coin", "rupee", "₹", "price", "cost", "change", "buy", "sell"],
     "shape": ["shape", "triangle", "circle", "square", "rectangle", "side", "corner", "edge"],
     "measurement": ["measure", "length", "weight", "height", "cm", "metre", "kg", "gram", "litre"],
@@ -895,6 +895,8 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
         "sarvanam",
         "kriya",
         "varnamala",
+        "vachan",
+        "ling",
         "मात्रा",
         "शब्द",
         "वाक्य",
@@ -911,6 +913,10 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
         "लेख",
         "कहानी",
         "कविता",
+        "वचन",
+        "एकवचन",
+        "बहुवचन",
+        "लिंग",
     ],
     "science": [
         "plant",
@@ -972,12 +978,34 @@ def _categorize_warnings(warnings: list[str]) -> dict:
 
 
 def _detect_topic_category(topic: str) -> str | None:
-    """Return the broad topic category for a given topic string."""
+    """Return the broad topic category for a given topic string.
+
+    Prioritises the topic's primary name (before any parenthetical qualifier)
+    and uses word-boundary matching for short keywords to avoid false positives.
+    """
     t_lower = topic.lower()
+    # Extract primary topic name (before parentheses) for priority matching
+    primary = t_lower.split("(")[0].strip() if "(" in t_lower else t_lower
+
+    best_match: str | None = None
+    best_score = 0
     for category, keywords in _TOPIC_KEYWORDS.items():
-        if any(kw in t_lower for kw in keywords):
-            return category
-    return None
+        score = 0
+        for kw in keywords:
+            if len(kw) <= 2:
+                # Short keywords need word boundary
+                if re.search(rf"\b{re.escape(kw)}\b", t_lower):
+                    score += 1
+            else:
+                # Primary name match scores 3x (the topic IS about this)
+                if kw in primary:
+                    score += 3
+                elif kw in t_lower:
+                    score += 1
+        if score > best_score:
+            best_score = score
+            best_match = category
+    return best_match if best_score > 0 else None
 
 
 def _is_question_on_topic(question_text: str, topic_category: str | None) -> bool:

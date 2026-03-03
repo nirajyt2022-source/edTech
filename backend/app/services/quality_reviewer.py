@@ -42,6 +42,10 @@ Runs four deterministic checks on the assembled question list, in order:
     If a true_false question has an answer that isn't "True" or "False"
     (e.g. "1/3"), derives the boolean from the explanation and corrects.
 
+  CHECK 16 — Hindi question instruction vs answer consistency
+    If a Hindi question asks for बहुवचन (plural) but the answer/explanation
+    gives एकवचन (singular), flags for regeneration.
+
 CHECK 1 is fail-CLOSED for arithmetic: if extraction succeeds but correction
 throws, the question is marked _math_unverified=True so the caller can act.
 All other checks are fail-open: an exception is logged and skipped.
@@ -1074,6 +1078,35 @@ class QualityReviewerAgent:
                 result.corrections.append(msg)
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 15 (T/F answer format) skipped: %s", exc)
+
+        # ── CHECK 16: Hindi question instruction vs answer consistency ───
+        # If a Hindi question asks for बहुवचन (plural) but answer is singular
+        # (or vice versa), flag for regeneration since auto-fix is unreliable.
+        try:
+            _BAHUVACHAN_RE = re.compile(r"बहुवचन|plural", re.IGNORECASE)
+            _EKVACHAN_RE = re.compile(r"एकवचन|singular", re.IGNORECASE)
+            for q in result.questions:
+                q_text = q.get("text") or q.get("question_text") or ""
+                # Only check if question explicitly mentions vachan terms
+                asks_plural = bool(_BAHUVACHAN_RE.search(q_text))
+                asks_singular = bool(_EKVACHAN_RE.search(q_text))
+                if not asks_plural and not asks_singular:
+                    continue
+                explanation = str(q.get("explanation") or "").lower()
+                q_id = q.get("id", "?")
+                # Check contradiction: question asks for plural but explanation says singular
+                if asks_plural and "एकवचन" in explanation and "बहुवचन" not in explanation:
+                    msg = f"Q{q_id}: question asks for बहुवचन but answer/explanation gives एकवचन — flagged for regen"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    q["_needs_regen"] = True
+                    result.warnings.append(msg)
+                elif asks_singular and "बहुवचन" in explanation and "एकवचन" not in explanation:
+                    msg = f"Q{q_id}: question asks for एकवचन but answer/explanation gives बहुवचन — flagged for regen"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    q["_needs_regen"] = True
+                    result.warnings.append(msg)
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 16 (Hindi vachan consistency) skipped: %s", exc)
 
         # ── CHECK 12: Sentence structure diversity (P3-B) ──────────────
         # If all questions start with the same structure type, rewrite a few starters.

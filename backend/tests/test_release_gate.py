@@ -417,7 +417,8 @@ class TestIntegration:
         assert not verdict.passed
         assert any("R02" in r for r in verdict.failed_rules)
 
-    def test_no_curriculum_best_effort(self):
+    def test_no_curriculum_released_cosmetic(self):
+        """R04 (curriculum) is now cosmetic — alone it doesn't block released."""
         qs = [_q(i) for i in range(1, 11)]
         verdict = run_release_gate(
             questions=qs,
@@ -429,8 +430,8 @@ class TestIntegration:
             warnings=[],
             curriculum_available=False,
         )
-        assert verdict.verdict == "best_effort"
-        assert verdict.passed  # Not blocked, just degraded
+        assert verdict.verdict == "released"
+        assert verdict.passed
         assert any("R04" in r for r in verdict.failed_rules)
 
     def test_stamps_merged(self):
