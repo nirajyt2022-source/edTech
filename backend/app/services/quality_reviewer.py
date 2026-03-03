@@ -741,20 +741,22 @@ class QualityReviewerAgent:
                         result.corrections.append(
                             f"Q{q_id}: word count {word_count} is >{limit * 2}, flagged for regeneration"
                         )
-                    elif ratio > 1.5:
-                        # >1.5x limit: try trimming filler, else flag for regen
+                    else:
+                        # >1.0x limit: try aggressive trimming, else flag for regen
                         trimmed = _trim_question_text(question_text, limit)
                         if trimmed and len(trimmed.split()) <= limit:
                             q["question_text"] = trimmed
                             q["text"] = trimmed
+                            question_text = trimmed  # update for downstream checks
                             result.corrections.append(
                                 f"Q{q_id}: question trimmed from {word_count} to {len(trimmed.split())} words"
                             )
-                        else:
+                        elif ratio > 1.5:
                             q["_needs_regen"] = True
                             result.corrections.append(
                                 f"Q{q_id}: word count {word_count} exceeds limit, flagged for regeneration"
                             )
+                        # 1.0-1.5x with failed trim: warn only (soft violation)
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 3 skipped for Q%s: %s", q_id, exc)
 

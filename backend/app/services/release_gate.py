@@ -437,6 +437,76 @@ def r10_warnings_transparent(ctx: GateContext) -> RuleResult:
 
 
 # ---------------------------------------------------------------------------
+# R11 — TOPIC_DRIFT_GUARD (DEGRADE)
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# R12 — ROUND_NUMBER_GUARD (DEGRADE)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R12_ROUND_NUMBER_GUARD", Enforcement.DEGRADE)
+def r12_round_number_guard(ctx: GateContext) -> RuleResult:
+    """Degrade if >40% of numbers are round (multiples of 5/10). Only for Maths."""
+    import re as _re
+
+    if ctx.subject.lower() not in ("maths", "mathematics", "math"):
+        return RuleResult("R12_ROUND_NUMBER_GUARD", True, Enforcement.DEGRADE, "Non-maths — skipped")
+
+    all_nums: list[int] = []
+    for q in ctx.questions:
+        text = q.get("text", q.get("question_text", ""))
+        for n_str in _re.findall(r"\b(\d+)\b", text):
+            n = int(n_str)
+            if n > 1:
+                all_nums.append(n)
+
+    if len(all_nums) < 5:
+        return RuleResult("R12_ROUND_NUMBER_GUARD", True, Enforcement.DEGRADE, "Too few numbers to check")
+
+    round_count = sum(1 for n in all_nums if n % 5 == 0)
+    ratio = round_count / len(all_nums)
+    passed = ratio <= 0.40
+    return RuleResult(
+        "R12_ROUND_NUMBER_GUARD",
+        passed,
+        Enforcement.DEGRADE,
+        f"{round_count}/{len(all_nums)} round ({ratio:.0%})"
+        if not passed
+        else f"{round_count}/{len(all_nums)} within tolerance",
+    )
+
+
+@register_rule("R11_TOPIC_DRIFT_GUARD", Enforcement.DEGRADE)
+def r11_topic_drift_guard(ctx: GateContext) -> RuleResult:
+    """Degrade if >50% of questions appear off-topic based on warnings."""
+    import re as _re
+
+    drift_match = None
+    for w in ctx.warnings:
+        m = _re.search(r"Topic drift:\s*(\d+)/(\d+)", w)
+        if m:
+            drift_match = m
+            break
+
+    if not drift_match:
+        return RuleResult("R11_TOPIC_DRIFT_GUARD", True, Enforcement.DEGRADE, "No drift detected")
+
+    off_topic = int(drift_match.group(1))
+    total = int(drift_match.group(2))
+    ratio = off_topic / max(total, 1)
+
+    passed = ratio <= 0.50
+    return RuleResult(
+        "R11_TOPIC_DRIFT_GUARD",
+        passed,
+        Enforcement.DEGRADE,
+        f"{off_topic}/{total} off-topic ({ratio:.0%})" if not passed else f"{off_topic}/{total} within tolerance",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
 
