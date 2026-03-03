@@ -396,10 +396,12 @@ class TestLLMartifactDetection:
         result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
         assert any("LLM artifact" in w for w in result.warnings)
 
-    def test_heres_a_flagged(self):
+    def test_heres_a_stripped(self):
         q = _make_q(question_text="Here's a fun question: What is 5 + 7?")
         result = QualityReviewerAgent().review_worksheet([q], _DEFAULT_CTX)
-        assert any("LLM artifact" in w for w in result.warnings)
+        # Filler stripping removes "Here's a" before CHECK 9 runs
+        assert "Here's a" not in q.get("question_text", "")
+        assert any("removed filler" in c for c in result.corrections)
 
     def test_hint_artifact_nulled(self):
         q = _make_q(question_text="What is 5 + 7?")

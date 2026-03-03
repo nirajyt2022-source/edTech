@@ -1864,6 +1864,21 @@ def generate_worksheet(
                 logger.warning("quality_score in generator failed: %s", _qs_exc)
                 data["_quality_score"] = None
 
+            # ── Final safety-net: strip LLM-ism fillers from all questions ──
+            # Quality reviewer strips these, but retries can regenerate them.
+            try:
+                from app.services.quality_reviewer import _strip_filler_phrases
+
+                for _q in data.get("questions", []):
+                    for _field in ("question_text", "text"):
+                        _val = _q.get(_field, "")
+                        if _val:
+                            _cleaned = _strip_filler_phrases(_val)
+                            if _cleaned != re.sub(r"\s{2,}", " ", _val).strip():
+                                _q[_field] = _cleaned
+            except Exception as _filler_exc:
+                logger.debug("[filler_strip] Safety-net skipped: %s", _filler_exc)
+
             # ── Warning severity categorization ──
             data["_warning_severity"] = _categorize_warnings(all_warnings)
             data["_quality_tier"] = data["_warning_severity"].get("quality_tier", "high")

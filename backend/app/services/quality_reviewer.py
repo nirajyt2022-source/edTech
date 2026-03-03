@@ -536,9 +536,10 @@ _FILLER_PATTERNS = [
     (re.compile(r"\bGiven (?:below|that)\s*,?\s*", re.I), ""),
     (re.compile(r"\b(?:mentioned|shown|listed) below\s*,?\s*", re.I), ""),
     # LLM-ism prefixes: "Help X figure out:", "Can you find:", "Let's figure out:"
-    (re.compile(r"\bHelp \w+ (?:figure out|solve this|find)[:\s]*", re.I), ""),
-    (re.compile(r"\bCan you (?:find|solve|figure out)[:\s]*", re.I), ""),
-    (re.compile(r"\bLet'?s (?:figure out|find out|solve)[:\s]*", re.I), ""),
+    (re.compile(r"\bHelp \w+ (?:figure out|solve this|solve|find|at the|with the|during)\b[:\.\s]*", re.I), ""),
+    (re.compile(r"\bCan you (?:find|solve|figure out|help|tell)\b[:\.\s]*", re.I), ""),
+    (re.compile(r"\bLet'?s (?:figure out|find out|solve|help|try)\b[:\.\s]*", re.I), ""),
+    (re.compile(r"\bHere'?s a\b[:\.\s]*", re.I), ""),
 ]
 
 
