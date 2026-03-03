@@ -46,6 +46,11 @@ Runs four deterministic checks on the assembled question list, in order:
     If a Hindi question asks for बहुवचन (plural) but the answer/explanation
     gives एकवचन (singular), flags for regeneration.
 
+  CHECK 17 — Round number auto-fix for simple arithmetic (Maths only)
+    If a simple A op B question has both operands as multiples of 5,
+    nudges one operand by +1..3 and recomputes the answer. Skips word
+    problems, error_detection, and complex expressions.
+
 CHECK 1 is fail-CLOSED for arithmetic: if extraction succeeds but correction
 throws, the question is marked _math_unverified=True so the caller can act.
 All other checks are fail-open: an exception is logged and skipped.
@@ -1110,84 +1115,173 @@ class QualityReviewerAgent:
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 16 (Hindi vachan consistency) skipped: %s", exc)
 
-        # ── CHECK 12: Sentence structure diversity (P3-B) ──────────────
-        # If all questions start with the same structure type, rewrite a few starters.
+        # ── CHECK 12: Sentence structure diversity (P4-A upgrade) ──────
+        # Ensure ≥3 distinct structure types for 10Q, ≥2 for <10Q.
+        # Rewrites question openings to add missing types.
         try:
             _QW_RE = re.compile(r"(?i)^(what|which|how|who|where|when|why)\b")
             _IMP_RE = re.compile(
                 r"(?i)^(find|solve|write|fill|complete|calculate|match|draw|circle|count"
-                r"|add|subtract|multiply|divide|arrange|list|name|identify)\b"
+                r"|add|subtract|multiply|divide|arrange|list|name|identify|help|can you|try to|let'?s)\b"
             )
-            _COND_RE = re.compile(r"(?i)^(if|suppose|imagine|given|when)\b")
-            # Hindi question word starters
+            _COND_RE = re.compile(r"(?i)^(if|suppose|imagine|given)\b")
             _HINDI_QW_RE = re.compile(r"^(किस|कौन|कैसे|क्या|कितन|कहाँ|कब)")
             _HINDI_IMP_RE = re.compile(r"^(लिख|बताओ|चुन|मिला|पूरा कर|ढूँढ|गिन)")
 
+            def _classify(txt: str) -> str:
+                if _QW_RE.match(txt) or _HINDI_QW_RE.match(txt):
+                    return "question_word"
+                if _IMP_RE.match(txt) or _HINDI_IMP_RE.match(txt):
+                    return "imperative"
+                if _COND_RE.match(txt):
+                    return "conditional"
+                return "statement"
+
             structure_counts: dict[str, int] = {"question_word": 0, "imperative": 0, "conditional": 0, "statement": 0}
+            q_types: list[str] = []
             for q in result.questions:
                 text = (q.get("text") or q.get("question_text") or "").strip()
-                if _QW_RE.match(text) or _HINDI_QW_RE.match(text):
-                    structure_counts["question_word"] += 1
-                elif _IMP_RE.match(text) or _HINDI_IMP_RE.match(text):
-                    structure_counts["imperative"] += 1
-                elif _COND_RE.match(text):
-                    structure_counts["conditional"] += 1
-                else:
-                    structure_counts["statement"] += 1
+                stype = _classify(text)
+                structure_counts[stype] += 1
+                q_types.append(stype)
 
             distinct = sum(1 for v in structure_counts.values() if v > 0)
             min_needed = 3 if len(result.questions) >= 10 else 2
             if distinct < min_needed and len(result.questions) >= 5:
-                # Find the dominant structure and rewrite a few questions
-                dominant = max(structure_counts, key=structure_counts.get)  # type: ignore[arg-type]
-                # Detect if this is a Hindi worksheet
                 _sample = result.questions[0].get("text") or result.questions[0].get("question_text") or ""
                 _is_hindi_ws = bool(re.search(r"[\u0900-\u097F]", _sample))
 
-                # Rewrite maps — English and Hindi
-                _REWRITE_MAP = {
+                # Rewrite map: source_type → [(old_prefix, new_prefix, target_type), ...]
+                _REWRITE_MAP: dict[str, list[tuple[str, str, str]]] = {
                     "question_word": [
-                        ("What is ", "Find "),
-                        ("How many ", "Count the number of "),
-                        ("Which ", "Identify the "),
+                        ("What is ", "Find ", "imperative"),
+                        ("How many ", "Count the number of ", "imperative"),
+                        ("Which ", "Identify the ", "imperative"),
+                        ("What ", "If we look at ", "conditional"),
                     ],
                     "imperative": [
-                        ("Find ", "What is "),
-                        ("Solve ", "What is the answer to "),
-                        ("Calculate ", "What is "),
+                        ("Find ", "What is ", "question_word"),
+                        ("Solve ", "What is the answer to ", "question_word"),
+                        ("Calculate ", "What is ", "question_word"),
+                        ("Find ", "If you find ", "conditional"),
                     ],
                     "statement": [
-                        ("There are ", "How many are there if there are "),
+                        ("There are ", "How many are there if there are ", "conditional"),
+                        ("A ", "What happens when a ", "question_word"),
+                    ],
+                    "conditional": [
+                        ("If ", "Find out: if ", "imperative"),
                     ],
                 }
-                _HINDI_REWRITE_MAP = {
+                _HINDI_REWRITE_MAP: dict[str, list[tuple[str, str, str]]] = {
                     "statement": [
-                        ("'", "किस शब्द में '"),  # statement → question_word
+                        ("'", "किस शब्द में '", "question_word"),
                     ],
                     "imperative": [
-                        ("लिख", "कौन सा शब्द "),
+                        ("लिख", "कौन सा शब्द ", "question_word"),
                     ],
                 }
                 rewrite_map = _HINDI_REWRITE_MAP if _is_hindi_ws else _REWRITE_MAP
+
+                # Find which types are missing and which are dominant
+                missing = [
+                    t for t in ("question_word", "imperative", "conditional", "statement") if structure_counts[t] == 0
+                ]
+                dominant = max(structure_counts, key=structure_counts.get)  # type: ignore[arg-type]
+
                 rewrites_done = 0
-                for q in result.questions:
-                    if rewrites_done >= 2:
+                for target_type in missing:
+                    if distinct + rewrites_done >= min_needed:
                         break
-                    text = (q.get("text") or q.get("question_text") or "").strip()
-                    for old_prefix, new_prefix in rewrite_map.get(dominant, []):
-                        if text.startswith(old_prefix) and rewrites_done < 2:
-                            new_text = new_prefix + text[len(old_prefix) :]
-                            q["text"] = new_text
-                            q["question_text"] = new_text
-                            rewrites_done += 1
-                            result.corrections.append(
-                                f"Q{q.get('id', '?')}: sentence starter diversified ('{old_prefix.strip()}' → '{new_prefix.strip()}')"
-                            )
+                    # Find a question of the dominant type and rewrite to target_type
+                    for i, q in enumerate(result.questions):
+                        if q_types[i] != dominant:
+                            continue
+                        text = (q.get("text") or q.get("question_text") or "").strip()
+                        rewritten = False
+                        for old_pf, new_pf, tgt in rewrite_map.get(dominant, []):
+                            if tgt == target_type and text.startswith(old_pf):
+                                new_text = new_pf + text[len(old_pf) :]
+                                q["text"] = new_text
+                                q["question_text"] = new_text
+                                q_types[i] = target_type
+                                structure_counts[dominant] -= 1
+                                structure_counts[target_type] += 1
+                                rewrites_done += 1
+                                result.corrections.append(
+                                    f"Q{q.get('id', '?')}: starter diversified '{old_pf.strip()}' → '{new_pf.strip()}' ({dominant}→{target_type})"
+                                )
+                                rewritten = True
+                                break
+                        if rewritten:
                             break
                 if rewrites_done > 0:
-                    logger.info("[quality_reviewer] Diversified %d sentence starter(s)", rewrites_done)
+                    logger.info(
+                        "[quality_reviewer] CHECK 12: diversified %d sentence starter(s) → %d types",
+                        rewrites_done,
+                        distinct + rewrites_done,
+                    )
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 12 (sentence diversity) skipped: %s", exc)
+
+        # ── CHECK 17: Round number auto-fix for simple arithmetic (P4-B) ──
+        # For simple "A op B" questions, if both numbers are round (mult of 5),
+        # nudge one number by ±1..3 and recompute the answer.
+        try:
+            if is_maths:
+                import random as _rng17
+
+                _SIMPLE_ARITH_RE = re.compile(r"^.*?(\d+)\s*([+\-×÷xX*/])\s*(\d+)")
+                _round_fixes = 0
+                for q in result.questions:
+                    if q.get("_is_bonus") or q.get("_math_unverified"):
+                        continue
+                    qtype = (q.get("type") or q.get("format") or "").lower()
+                    if qtype in ("word_problem", "error_detection"):
+                        continue
+                    text = (q.get("text") or q.get("question_text") or "").strip()
+                    m = _SIMPLE_ARITH_RE.match(text)
+                    if not m:
+                        continue
+                    a_str, op, b_str = m.group(1), m.group(2), m.group(3)
+                    a, b = int(a_str), int(b_str)
+                    if a <= 1 or b <= 1:
+                        continue
+                    both_round = (a % 5 == 0) and (b % 5 == 0)
+                    if not both_round:
+                        continue
+                    # Nudge one of them
+                    nudge = _rng17.choice([1, 2, 3])
+                    new_a = a + nudge
+                    # Recompute answer
+                    if op in ("+",):
+                        new_ans = new_a + b
+                    elif op in ("-",):
+                        if new_a < b:
+                            continue  # skip if result would go negative
+                        new_ans = new_a - b
+                    elif op in ("×", "x", "X", "*"):
+                        new_ans = new_a * b
+                    elif op in ("÷", "/"):
+                        if b == 0 or new_a % b != 0:
+                            continue  # skip if not evenly divisible
+                        new_ans = new_a // b
+                    else:
+                        continue
+                    new_text = text.replace(a_str, str(new_a), 1)
+                    q["text"] = new_text
+                    q["question_text"] = new_text
+                    q["answer"] = str(new_ans)
+                    q["correct_answer"] = str(new_ans)
+                    _round_fixes += 1
+                    if _round_fixes >= 3:
+                        break  # Don't over-correct
+                if _round_fixes > 0:
+                    logger.info(
+                        "[quality_reviewer] CHECK 17: de-rounded %d simple arithmetic question(s)", _round_fixes
+                    )
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 17 (round number fix) skipped: %s", exc)
 
         logger.info(
             "[quality_reviewer] Review complete: %d question(s), %d correction(s), %d warning(s), %d error(s)",

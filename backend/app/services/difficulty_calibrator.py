@@ -460,6 +460,7 @@ class DifficultyCalibrator:
                 bonus = {
                     "question_text": f"BONUS: {context.topic_slug} challenge problem",
                     "format": "word_problem",
+                    "difficulty": "hard",
                     "skill_tag": skill_tag,
                     "answer": "See working",
                     "_is_bonus": True,
