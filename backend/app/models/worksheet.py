@@ -85,6 +85,14 @@ class WorksheetGenerationRequest(BaseModel):
         return self
 
 
+class NcertAlignment(BaseModel):
+    chapter_number: int | None = None
+    exercise_id: str | None = None
+    learning_objective: str | None = None
+    ncert_question_type: str | None = None
+    page_ref: str | None = None
+
+
 class Question(BaseModel):
     id: str
     type: str
@@ -106,6 +114,7 @@ class Question(BaseModel):
     images: list[dict] | None = None  # [{path, alt, category}] — cartoon images for EVS/Science
     format: str = "short_answer"  # PDF render format: fill_blank|mcq_3|mcq_4|vertical_sum|true_false|short_answer
     verified: bool = True  # Trust P5: per-question answer verification status
+    ncert_alignment: NcertAlignment | None = None  # NCERT chapter/exercise/page alignment
 
 
 class Worksheet(BaseModel):

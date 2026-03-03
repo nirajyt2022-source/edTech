@@ -1901,6 +1901,20 @@ def generate_worksheet(
             except Exception as _filler_exc:
                 logger.debug("[filler_strip] Safety-net skipped: %s", _filler_exc)
 
+            # ── NCERT Alignment (deterministic, no LLM) ──
+            try:
+                from app.services.ncert_alignment import NcertAlignmentService
+
+                data["questions"] = NcertAlignmentService.align_worksheet(
+                    data.get("questions", []),
+                    grade=grade_level,
+                    subject=subject,
+                    topic=topic,
+                    learning_objectives=data.get("learning_objectives", []),
+                )
+            except Exception as exc:
+                logger.warning("[ncert_alignment] Skipped (non-blocking): %s", exc)
+
             # ── Warning severity categorization ──
             data["_warning_severity"] = _categorize_warnings(all_warnings)
             data["_quality_tier"] = data["_warning_severity"].get("quality_tier", "high")

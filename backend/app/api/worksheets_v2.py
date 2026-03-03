@@ -46,6 +46,7 @@ def _map_question(q: dict, index: int) -> Question:
         skill_tag=q.get("skill_tag"),
         format=_infer_render_format(q.get("type", "short_answer"), q.get("options")),
         verified=not q.get("_math_unverified", False),
+        ncert_alignment=q.get("ncert_alignment"),
     )
 
 

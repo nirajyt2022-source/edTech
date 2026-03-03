@@ -1,0 +1,916 @@
+{
+  "Class 1|Maths|Addition up to 20": {
+    "chapter_number": 3,
+    "chapter_name": "Addition",
+    "exercises": [
+      {
+        "exercise_id": "3.1",
+        "title": "Addition of Single-Digit Numbers",
+        "page_start": 27,
+        "page_end": 32,
+        "ncert_question_types": ["computation", "fill_in_the_blank", "picture_based"]
+      }
+    ],
+    "page_range": "pp. 27-32",
+    "primary_exercise": "3.1"
+  },
+  "Class 1|Maths|Basic Shapes": {
+    "chapter_number": 6,
+    "chapter_name": "Shapes and Space",
+    "exercises": [
+      {
+        "exercise_id": "6.1",
+        "title": "Identifying Shapes",
+        "page_start": 72,
+        "page_end": 78,
+        "ncert_question_types": ["short_answer", "picture_based", "pattern_recognition"]
+      }
+    ],
+    "page_range": "pp. 72-78",
+    "primary_exercise": "6.1"
+  },
+  "Class 1|Maths|Measurement": {
+    "chapter_number": 7,
+    "chapter_name": "Measurement",
+    "exercises": [
+      {
+        "exercise_id": "7.1",
+        "title": "Comparing Lengths and Heights",
+        "page_start": 80,
+        "page_end": 86,
+        "ncert_question_types": ["short_answer", "picture_based", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 80-86",
+    "primary_exercise": "7.1"
+  },
+  "Class 1|Maths|Money": {
+    "chapter_number": 8,
+    "chapter_name": "Money",
+    "exercises": [
+      {
+        "exercise_id": "8.1",
+        "title": "Coins and Notes",
+        "page_start": 88,
+        "page_end": 92,
+        "ncert_question_types": ["picture_based", "computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 88-92",
+    "primary_exercise": "8.1"
+  },
+  "Class 1|Maths|Numbers 1 to 50": {
+    "chapter_number": 1,
+    "chapter_name": "Numbers from One to Nine",
+    "exercises": [
+      {
+        "exercise_id": "1.1",
+        "title": "Counting and Writing Numbers",
+        "page_start": 1,
+        "page_end": 14,
+        "ncert_question_types": ["fill_in_the_blank", "picture_based", "pattern_recognition"]
+      }
+    ],
+    "page_range": "pp. 1-14",
+    "primary_exercise": "1.1"
+  },
+  "Class 1|Maths|Numbers 51 to 100": {
+    "chapter_number": 5,
+    "chapter_name": "Numbers from Twenty-one to Fifty",
+    "exercises": [
+      {
+        "exercise_id": "5.1",
+        "title": "Numbers and Counting",
+        "page_start": 58,
+        "page_end": 68,
+        "ncert_question_types": ["fill_in_the_blank", "pattern_recognition", "short_answer"]
+      }
+    ],
+    "page_range": "pp. 58-68",
+    "primary_exercise": "5.1"
+  },
+  "Class 1|Maths|Subtraction within 20": {
+    "chapter_number": 4,
+    "chapter_name": "Subtraction",
+    "exercises": [
+      {
+        "exercise_id": "4.1",
+        "title": "Subtraction of Single-Digit Numbers",
+        "page_start": 35,
+        "page_end": 42,
+        "ncert_question_types": ["computation", "fill_in_the_blank", "picture_based"]
+      }
+    ],
+    "page_range": "pp. 35-42",
+    "primary_exercise": "4.1"
+  },
+  "Class 1|Maths|Time": {
+    "chapter_number": 9,
+    "chapter_name": "Time",
+    "exercises": [
+      {
+        "exercise_id": "9.1",
+        "title": "Time and Daily Routine",
+        "page_start": 94,
+        "page_end": 100,
+        "ncert_question_types": ["short_answer", "picture_based", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 94-100",
+    "primary_exercise": "9.1"
+  },
+  "Class 2|Maths|Addition (2-digit with carry)": {
+    "chapter_number": 2,
+    "chapter_name": "Addition",
+    "exercises": [
+      {
+        "exercise_id": "2.1",
+        "title": "Adding 2-Digit Numbers",
+        "page_start": 15,
+        "page_end": 24,
+        "ncert_question_types": ["computation", "word_problem", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 15-24",
+    "primary_exercise": "2.1"
+  },
+  "Class 2|Maths|Data handling (pictographs)": {
+    "chapter_number": 10,
+    "chapter_name": "Data Handling",
+    "exercises": [
+      {
+        "exercise_id": "10.1",
+        "title": "Reading Pictographs",
+        "page_start": 115,
+        "page_end": 122,
+        "ncert_question_types": ["picture_based", "short_answer", "computation"]
+      }
+    ],
+    "page_range": "pp. 115-122",
+    "primary_exercise": "10.1"
+  },
+  "Class 2|Maths|Division (sharing equally)": {
+    "chapter_number": 5,
+    "chapter_name": "Division",
+    "exercises": [
+      {
+        "exercise_id": "5.1",
+        "title": "Equal Sharing and Grouping",
+        "page_start": 52,
+        "page_end": 60,
+        "ncert_question_types": ["computation", "word_problem", "picture_based"]
+      }
+    ],
+    "page_range": "pp. 52-60",
+    "primary_exercise": "5.1"
+  },
+  "Class 2|Maths|Multiplication (tables 2-5)": {
+    "chapter_number": 4,
+    "chapter_name": "Multiplication",
+    "exercises": [
+      {
+        "exercise_id": "4.1",
+        "title": "Multiplication Tables",
+        "page_start": 40,
+        "page_end": 50,
+        "ncert_question_types": ["computation", "fill_in_the_blank", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 40-50",
+    "primary_exercise": "4.1"
+  },
+  "Class 2|Maths|Numbers up to 1000": {
+    "chapter_number": 1,
+    "chapter_name": "Numbers up to 1000",
+    "exercises": [
+      {
+        "exercise_id": "1.1",
+        "title": "Place Value and Counting",
+        "page_start": 1,
+        "page_end": 14,
+        "ncert_question_types": ["fill_in_the_blank", "pattern_recognition", "short_answer"]
+      }
+    ],
+    "page_range": "pp. 1-14",
+    "primary_exercise": "1.1"
+  },
+  "Class 2|Maths|Subtraction (2-digit with borrow)": {
+    "chapter_number": 3,
+    "chapter_name": "Subtraction",
+    "exercises": [
+      {
+        "exercise_id": "3.1",
+        "title": "Subtracting 2-Digit Numbers",
+        "page_start": 26,
+        "page_end": 36,
+        "ncert_question_types": ["computation", "word_problem", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 26-36",
+    "primary_exercise": "3.1"
+  },
+  "Class 2|Maths|Time (hour, half-hour)": {
+    "chapter_number": 8,
+    "chapter_name": "Time",
+    "exercises": [
+      {
+        "exercise_id": "8.1",
+        "title": "Reading the Clock",
+        "page_start": 90,
+        "page_end": 98,
+        "ncert_question_types": ["picture_based", "short_answer", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 90-98",
+    "primary_exercise": "8.1"
+  },
+  "Class 2|Maths|Measurement (length, weight)": {
+    "chapter_number": 7,
+    "chapter_name": "Measurement",
+    "exercises": [
+      {
+        "exercise_id": "7.1",
+        "title": "Measuring Length and Weight",
+        "page_start": 78,
+        "page_end": 88,
+        "ncert_question_types": ["short_answer", "fill_in_the_blank", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 78-88",
+    "primary_exercise": "7.1"
+  },
+  "Class 2|Maths|Money (coins and notes)": {
+    "chapter_number": 6,
+    "chapter_name": "Money",
+    "exercises": [
+      {
+        "exercise_id": "6.1",
+        "title": "Coins, Notes and Bills",
+        "page_start": 62,
+        "page_end": 72,
+        "ncert_question_types": ["computation", "word_problem", "picture_based"]
+      }
+    ],
+    "page_range": "pp. 62-72",
+    "primary_exercise": "6.1"
+  },
+  "Class 2|Maths|Shapes and space (2D)": {
+    "chapter_number": 9,
+    "chapter_name": "Shapes and Patterns",
+    "exercises": [
+      {
+        "exercise_id": "9.1",
+        "title": "2D Shapes and Patterns",
+        "page_start": 100,
+        "page_end": 112,
+        "ncert_question_types": ["picture_based", "pattern_recognition", "short_answer"]
+      }
+    ],
+    "page_range": "pp. 100-112",
+    "primary_exercise": "9.1"
+  },
+  "Class 3|Maths|Addition (carries)": {
+    "chapter_number": 2,
+    "chapter_name": "Fun with Numbers",
+    "exercises": [
+      {
+        "exercise_id": "2.1",
+        "title": "Adding by Carrying",
+        "page_start": 17,
+        "page_end": 26,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 17-26",
+    "primary_exercise": "2.1"
+  },
+  "Class 3|Maths|Addition and subtraction (3-digit)": {
+    "chapter_number": 2,
+    "chapter_name": "Fun with Numbers",
+    "exercises": [
+      {
+        "exercise_id": "2.1",
+        "title": "3-Digit Addition",
+        "page_start": 17,
+        "page_end": 22,
+        "ncert_question_types": ["computation", "word_problem"]
+      },
+      {
+        "exercise_id": "2.2",
+        "title": "3-Digit Subtraction",
+        "page_start": 22,
+        "page_end": 26,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 17-26",
+    "primary_exercise": "2.1"
+  },
+  "Class 3|Maths|Division basics": {
+    "chapter_number": 3,
+    "chapter_name": "Give and Take",
+    "exercises": [
+      {
+        "exercise_id": "3.1",
+        "title": "Division as Equal Sharing",
+        "page_start": 27,
+        "page_end": 36,
+        "ncert_question_types": ["computation", "word_problem", "picture_based"]
+      }
+    ],
+    "page_range": "pp. 27-36",
+    "primary_exercise": "3.1"
+  },
+  "Class 3|Maths|Fractions": {
+    "chapter_number": 7,
+    "chapter_name": "Time Goes On",
+    "exercises": [
+      {
+        "exercise_id": "7.1",
+        "title": "Halves and Quarters",
+        "page_start": 81,
+        "page_end": 90,
+        "ncert_question_types": ["fill_in_the_blank", "picture_based", "short_answer"]
+      }
+    ],
+    "page_range": "pp. 81-90",
+    "primary_exercise": "7.1"
+  },
+  "Class 3|Maths|Fractions (halves, quarters)": {
+    "chapter_number": 7,
+    "chapter_name": "Time Goes On",
+    "exercises": [
+      {
+        "exercise_id": "7.1",
+        "title": "Halves and Quarters",
+        "page_start": 81,
+        "page_end": 90,
+        "ncert_question_types": ["fill_in_the_blank", "picture_based", "short_answer"]
+      }
+    ],
+    "page_range": "pp. 81-90",
+    "primary_exercise": "7.1"
+  },
+  "Class 3|Maths|Measurement (length)": {
+    "chapter_number": 4,
+    "chapter_name": "Long and Short",
+    "exercises": [
+      {
+        "exercise_id": "4.1",
+        "title": "Measuring Length",
+        "page_start": 37,
+        "page_end": 46,
+        "ncert_question_types": ["short_answer", "word_problem", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 37-46",
+    "primary_exercise": "4.1"
+  },
+  "Class 3|Maths|Measurement (weight)": {
+    "chapter_number": 12,
+    "chapter_name": "Can We Share",
+    "exercises": [
+      {
+        "exercise_id": "12.1",
+        "title": "Weighing and Comparing",
+        "page_start": 155,
+        "page_end": 164,
+        "ncert_question_types": ["short_answer", "word_problem", "computation"]
+      }
+    ],
+    "page_range": "pp. 155-164",
+    "primary_exercise": "12.1"
+  },
+  "Class 3|Maths|Money (bills and change)": {
+    "chapter_number": 14,
+    "chapter_name": "Rupees and Paise",
+    "exercises": [
+      {
+        "exercise_id": "14.1",
+        "title": "Bills and Change",
+        "page_start": 175,
+        "page_end": 186,
+        "ncert_question_types": ["computation", "word_problem", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 175-186",
+    "primary_exercise": "14.1"
+  },
+  "Class 3|Maths|Multiplication (tables 2-10)": {
+    "chapter_number": 3,
+    "chapter_name": "Give and Take",
+    "exercises": [
+      {
+        "exercise_id": "3.2",
+        "title": "Multiplication Tables",
+        "page_start": 30,
+        "page_end": 36,
+        "ncert_question_types": ["computation", "fill_in_the_blank", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 30-36",
+    "primary_exercise": "3.2"
+  },
+  "Class 3|Maths|Multiplication tables (2-5)": {
+    "chapter_number": 3,
+    "chapter_name": "Give and Take",
+    "exercises": [
+      {
+        "exercise_id": "3.2",
+        "title": "Multiplication Tables",
+        "page_start": 30,
+        "page_end": 36,
+        "ncert_question_types": ["computation", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 30-36",
+    "primary_exercise": "3.2"
+  },
+  "Class 3|Maths|Numbers up to 10000": {
+    "chapter_number": 1,
+    "chapter_name": "Where to Look From",
+    "exercises": [
+      {
+        "exercise_id": "1.1",
+        "title": "Place Value and Large Numbers",
+        "page_start": 1,
+        "page_end": 14,
+        "ncert_question_types": ["fill_in_the_blank", "pattern_recognition", "short_answer"]
+      }
+    ],
+    "page_range": "pp. 1-14",
+    "primary_exercise": "1.1"
+  },
+  "Class 3|Maths|Patterns and sequences": {
+    "chapter_number": 10,
+    "chapter_name": "Play with Patterns",
+    "exercises": [
+      {
+        "exercise_id": "10.1",
+        "title": "Number and Shape Patterns",
+        "page_start": 127,
+        "page_end": 138,
+        "ncert_question_types": ["pattern_recognition", "fill_in_the_blank", "reasoning"]
+      }
+    ],
+    "page_range": "pp. 127-138",
+    "primary_exercise": "10.1"
+  },
+  "Class 3|Maths|Subtraction (borrowing)": {
+    "chapter_number": 2,
+    "chapter_name": "Fun with Numbers",
+    "exercises": [
+      {
+        "exercise_id": "2.2",
+        "title": "Subtraction with Borrowing",
+        "page_start": 22,
+        "page_end": 26,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 22-26",
+    "primary_exercise": "2.2"
+  },
+  "Class 3|Maths|Symmetry": {
+    "chapter_number": 5,
+    "chapter_name": "Shapes and Designs",
+    "exercises": [
+      {
+        "exercise_id": "5.1",
+        "title": "Lines of Symmetry",
+        "page_start": 47,
+        "page_end": 58,
+        "ncert_question_types": ["picture_based", "short_answer", "reasoning"]
+      }
+    ],
+    "page_range": "pp. 47-58",
+    "primary_exercise": "5.1"
+  },
+  "Class 3|Maths|Time (reading clock, calendar)": {
+    "chapter_number": 7,
+    "chapter_name": "Time Goes On",
+    "exercises": [
+      {
+        "exercise_id": "7.2",
+        "title": "Reading Clock and Calendar",
+        "page_start": 81,
+        "page_end": 90,
+        "ncert_question_types": ["picture_based", "short_answer", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 81-90",
+    "primary_exercise": "7.2"
+  },
+  "Class 4|Maths|Addition and subtraction (4-digit)": {
+    "chapter_number": 2,
+    "chapter_name": "Long and Short",
+    "exercises": [
+      {
+        "exercise_id": "2.1",
+        "title": "4-Digit Addition and Subtraction",
+        "page_start": 15,
+        "page_end": 26,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 15-26",
+    "primary_exercise": "2.1"
+  },
+  "Class 4|Maths|Addition and subtraction (5-digit)": {
+    "chapter_number": 2,
+    "chapter_name": "Long and Short",
+    "exercises": [
+      {
+        "exercise_id": "2.1",
+        "title": "5-Digit Addition and Subtraction",
+        "page_start": 15,
+        "page_end": 26,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 15-26",
+    "primary_exercise": "2.1"
+  },
+  "Class 4|Maths|Decimals (tenths, hundredths)": {
+    "chapter_number": 10,
+    "chapter_name": "Play with Patterns",
+    "exercises": [
+      {
+        "exercise_id": "10.1",
+        "title": "Understanding Decimals",
+        "page_start": 127,
+        "page_end": 138,
+        "ncert_question_types": ["fill_in_the_blank", "computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 127-138",
+    "primary_exercise": "10.1"
+  },
+  "Class 4|Maths|Decimals introduction": {
+    "chapter_number": 10,
+    "chapter_name": "Play with Patterns",
+    "exercises": [
+      {
+        "exercise_id": "10.1",
+        "title": "Introduction to Decimals",
+        "page_start": 127,
+        "page_end": 138,
+        "ncert_question_types": ["fill_in_the_blank", "short_answer", "computation"]
+      }
+    ],
+    "page_range": "pp. 127-138",
+    "primary_exercise": "10.1"
+  },
+  "Class 4|Maths|Division (2-digit by 1-digit)": {
+    "chapter_number": 11,
+    "chapter_name": "Tables and Shares",
+    "exercises": [
+      {
+        "exercise_id": "11.1",
+        "title": "Division with Remainder",
+        "page_start": 139,
+        "page_end": 150,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 139-150",
+    "primary_exercise": "11.1"
+  },
+  "Class 4|Maths|Division (long division)": {
+    "chapter_number": 11,
+    "chapter_name": "Tables and Shares",
+    "exercises": [
+      {
+        "exercise_id": "11.1",
+        "title": "Long Division",
+        "page_start": 139,
+        "page_end": 150,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 139-150",
+    "primary_exercise": "11.1"
+  },
+  "Class 4|Maths|Fractions (addition and subtraction)": {
+    "chapter_number": 9,
+    "chapter_name": "Halves and Quarters",
+    "exercises": [
+      {
+        "exercise_id": "9.1",
+        "title": "Adding and Subtracting Fractions",
+        "page_start": 113,
+        "page_end": 124,
+        "ncert_question_types": ["computation", "fill_in_the_blank", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 113-124",
+    "primary_exercise": "9.1"
+  },
+  "Class 4|Maths|Fractions (equivalent, comparison)": {
+    "chapter_number": 9,
+    "chapter_name": "Halves and Quarters",
+    "exercises": [
+      {
+        "exercise_id": "9.1",
+        "title": "Equivalent Fractions and Comparison",
+        "page_start": 113,
+        "page_end": 124,
+        "ncert_question_types": ["fill_in_the_blank", "short_answer", "picture_based"]
+      }
+    ],
+    "page_range": "pp. 113-124",
+    "primary_exercise": "9.1"
+  },
+  "Class 4|Maths|Geometry (angles, lines)": {
+    "chapter_number": 5,
+    "chapter_name": "The Way the World Looks",
+    "exercises": [
+      {
+        "exercise_id": "5.1",
+        "title": "Angles and Lines",
+        "page_start": 51,
+        "page_end": 62,
+        "ncert_question_types": ["short_answer", "picture_based", "reasoning"]
+      }
+    ],
+    "page_range": "pp. 51-62",
+    "primary_exercise": "5.1"
+  },
+  "Class 4|Maths|Large numbers (up to 1,00,000)": {
+    "chapter_number": 12,
+    "chapter_name": "How Heavy? How Light?",
+    "exercises": [
+      {
+        "exercise_id": "12.1",
+        "title": "Place Value and Large Numbers",
+        "page_start": 151,
+        "page_end": 162,
+        "ncert_question_types": ["fill_in_the_blank", "computation", "pattern_recognition"]
+      }
+    ],
+    "page_range": "pp. 151-162",
+    "primary_exercise": "12.1"
+  },
+  "Class 4|Maths|Large Numbers (lakhs and thousands)": {
+    "chapter_number": 12,
+    "chapter_name": "How Heavy? How Light?",
+    "exercises": [
+      {
+        "exercise_id": "12.1",
+        "title": "Lakhs and Thousands",
+        "page_start": 151,
+        "page_end": 162,
+        "ncert_question_types": ["fill_in_the_blank", "computation", "short_answer"]
+      }
+    ],
+    "page_range": "pp. 151-162",
+    "primary_exercise": "12.1"
+  },
+  "Class 4|Maths|Money (bills, profit/loss)": {
+    "chapter_number": 14,
+    "chapter_name": "Smart Charts",
+    "exercises": [
+      {
+        "exercise_id": "14.1",
+        "title": "Money and Bills",
+        "page_start": 175,
+        "page_end": 186,
+        "ncert_question_types": ["computation", "word_problem", "reasoning"]
+      }
+    ],
+    "page_range": "pp. 175-186",
+    "primary_exercise": "14.1"
+  },
+  "Class 4|Maths|Money (word problems)": {
+    "chapter_number": 14,
+    "chapter_name": "Smart Charts",
+    "exercises": [
+      {
+        "exercise_id": "14.1",
+        "title": "Money Word Problems",
+        "page_start": 175,
+        "page_end": 186,
+        "ncert_question_types": ["word_problem", "computation"]
+      }
+    ],
+    "page_range": "pp. 175-186",
+    "primary_exercise": "14.1"
+  },
+  "Class 4|Maths|Multiplication (2-digit by 1-digit)": {
+    "chapter_number": 3,
+    "chapter_name": "A Trip to Bhopal",
+    "exercises": [
+      {
+        "exercise_id": "3.1",
+        "title": "Multiplying 2-Digit Numbers",
+        "page_start": 27,
+        "page_end": 38,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 27-38",
+    "primary_exercise": "3.1"
+  },
+  "Class 4|Maths|Multiplication (3-digit × 2-digit)": {
+    "chapter_number": 3,
+    "chapter_name": "A Trip to Bhopal",
+    "exercises": [
+      {
+        "exercise_id": "3.1",
+        "title": "Multiplying Larger Numbers",
+        "page_start": 27,
+        "page_end": 38,
+        "ncert_question_types": ["computation", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 27-38",
+    "primary_exercise": "3.1"
+  },
+  "Class 4|Maths|Perimeter and area": {
+    "chapter_number": 13,
+    "chapter_name": "Fields and Fences",
+    "exercises": [
+      {
+        "exercise_id": "13.1",
+        "title": "Perimeter",
+        "page_start": 163,
+        "page_end": 170,
+        "ncert_question_types": ["computation", "word_problem", "picture_based"]
+      },
+      {
+        "exercise_id": "13.2",
+        "title": "Area",
+        "page_start": 170,
+        "page_end": 174,
+        "ncert_question_types": ["computation", "word_problem", "reasoning"]
+      }
+    ],
+    "page_range": "pp. 163-174",
+    "primary_exercise": "13.1"
+  },
+  "Class 4|Maths|Time (minutes, 24-hour clock)": {
+    "chapter_number": 4,
+    "chapter_name": "Tick-Tick-Tick",
+    "exercises": [
+      {
+        "exercise_id": "4.1",
+        "title": "Reading Time in Minutes",
+        "page_start": 39,
+        "page_end": 50,
+        "ncert_question_types": ["picture_based", "short_answer", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 39-50",
+    "primary_exercise": "4.1"
+  },
+  "Class 5|Maths|Area and volume": {
+    "chapter_number": 11,
+    "chapter_name": "Area and Its Boundary",
+    "exercises": [
+      {
+        "exercise_id": "11.1",
+        "title": "Area of Regular Shapes",
+        "page_start": 145,
+        "page_end": 156,
+        "ncert_question_types": ["computation", "word_problem", "picture_based"]
+      }
+    ],
+    "page_range": "pp. 145-156",
+    "primary_exercise": "11.1"
+  },
+  "Class 5|Maths|Data handling (pie charts)": {
+    "chapter_number": 12,
+    "chapter_name": "Smart Charts",
+    "exercises": [
+      {
+        "exercise_id": "12.1",
+        "title": "Reading and Interpreting Charts",
+        "page_start": 157,
+        "page_end": 168,
+        "ncert_question_types": ["picture_based", "short_answer", "computation"]
+      }
+    ],
+    "page_range": "pp. 157-168",
+    "primary_exercise": "12.1"
+  },
+  "Class 5|Maths|Decimals (all operations)": {
+    "chapter_number": 10,
+    "chapter_name": "Tenths and Hundredths",
+    "exercises": [
+      {
+        "exercise_id": "10.1",
+        "title": "Operations with Decimals",
+        "page_start": 131,
+        "page_end": 144,
+        "ncert_question_types": ["computation", "fill_in_the_blank", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 131-144",
+    "primary_exercise": "10.1"
+  },
+  "Class 5|Maths|Factors and multiples": {
+    "chapter_number": 6,
+    "chapter_name": "Be My Multiple, I'll Be Your Factor",
+    "exercises": [
+      {
+        "exercise_id": "6.1",
+        "title": "Factors and Multiples",
+        "page_start": 73,
+        "page_end": 86,
+        "ncert_question_types": ["computation", "fill_in_the_blank", "reasoning"]
+      }
+    ],
+    "page_range": "pp. 73-86",
+    "primary_exercise": "6.1"
+  },
+  "Class 5|Maths|Fractions (add and subtract)": {
+    "chapter_number": 4,
+    "chapter_name": "Parts and Wholes",
+    "exercises": [
+      {
+        "exercise_id": "4.1",
+        "title": "Adding and Subtracting Fractions",
+        "page_start": 43,
+        "page_end": 56,
+        "ncert_question_types": ["computation", "fill_in_the_blank", "word_problem"]
+      }
+    ],
+    "page_range": "pp. 43-56",
+    "primary_exercise": "4.1"
+  },
+  "Class 5|Maths|Geometry (circles, symmetry)": {
+    "chapter_number": 5,
+    "chapter_name": "Does It Look the Same?",
+    "exercises": [
+      {
+        "exercise_id": "5.1",
+        "title": "Symmetry and Circles",
+        "page_start": 57,
+        "page_end": 72,
+        "ncert_question_types": ["picture_based", "short_answer", "reasoning"]
+      }
+    ],
+    "page_range": "pp. 57-72",
+    "primary_exercise": "5.1"
+  },
+  "Class 5|Maths|HCF and LCM": {
+    "chapter_number": 6,
+    "chapter_name": "Be My Multiple, I'll Be Your Factor",
+    "exercises": [
+      {
+        "exercise_id": "6.2",
+        "title": "HCF and LCM",
+        "page_start": 80,
+        "page_end": 86,
+        "ncert_question_types": ["computation", "word_problem", "reasoning"]
+      }
+    ],
+    "page_range": "pp. 80-86",
+    "primary_exercise": "6.2"
+  },
+  "Class 5|Maths|Numbers up to 10 lakh": {
+    "chapter_number": 1,
+    "chapter_name": "The Fish Tale",
+    "exercises": [
+      {
+        "exercise_id": "1.1",
+        "title": "Large Numbers and Place Value",
+        "page_start": 1,
+        "page_end": 16,
+        "ncert_question_types": ["fill_in_the_blank", "computation", "pattern_recognition"]
+      }
+    ],
+    "page_range": "pp. 1-16",
+    "primary_exercise": "1.1"
+  },
+  "Class 5|Maths|Percentage": {
+    "chapter_number": 10,
+    "chapter_name": "Tenths and Hundredths",
+    "exercises": [
+      {
+        "exercise_id": "10.2",
+        "title": "Percentage",
+        "page_start": 138,
+        "page_end": 144,
+        "ncert_question_types": ["computation", "word_problem", "fill_in_the_blank"]
+      }
+    ],
+    "page_range": "pp. 138-144",
+    "primary_exercise": "10.2"
+  },
+  "Class 1|Maths|Spatial sense (in/out, near/far)": {
+    "chapter_number": 6,
+    "chapter_name": "Shapes and Space",
+    "exercises": [
+      {
+        "exercise_id": "6.2",
+        "title": "Spatial Sense",
+        "page_start": 75,
+        "page_end": 78,
+        "ncert_question_types": ["picture_based", "short_answer"]
+      }
+    ],
+    "page_range": "pp. 75-78",
+    "primary_exercise": "6.2"
+  }
+}
