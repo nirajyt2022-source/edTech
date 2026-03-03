@@ -599,6 +599,22 @@ def build_user_prompt(
             "Remove unnecessary scene-setting. Get to the maths quickly.\n"
         )
 
+    # -- Explanation vocabulary gate (P2-B) --
+    if _wc_grade <= 2:
+        prompt += (
+            "\nEXPLANATION LANGUAGE: Explanations must use ONLY words a "
+            f"{grade_level} child knows. Use simple words: big/small, same/different, "
+            "more/less, add/take away. Do NOT use: cuboid, vertex, vertices, "
+            "equidistant, tapers, perpendicular, horizontal, parallel. "
+            "If a concept needs a big word, explain it simply instead.\n"
+        )
+    elif _wc_grade <= 3:
+        prompt += (
+            "\nEXPLANATION LANGUAGE: Keep explanations in simple sentences. "
+            "Avoid technical jargon unless the topic teaches that word. "
+            "Use 'corner' not 'vertex', 'flat surface' not 'face'.\n"
+        )
+
     # -- Indian currency enforcement (P3-A) --
     _money_keywords = {"money", "coin", "rupee", "price", "cost", "buy", "sell", "change", "shopping"}
     if subject.lower() in ("maths", "mathematics", "math") and any(k in topic.lower() for k in _money_keywords):
@@ -743,6 +759,21 @@ This creates a natural difficulty ramp within the worksheet.
             "Use varied numbers like 13, 27, 38, 46, 72, 84, 91 — NOT just 10, 15, 20, 25, 30, 50. "
             "Round numbers feel mechanical and reduce learning variety.\n"
         )
+        # Topic-specific reinforcement for high-round-number topics
+        _t = topic.lower()
+        if "percent" in _t:
+            prompt += (
+                "\nPERCENTAGE NUMBERS: Use non-round percentages like 18%, 23%, 37%, 42%, 65%, 78%. "
+                "Do NOT always use 10%, 20%, 25%, 50%, 75%. "
+                "Also use non-round totals: 90 students, 150 mangoes, 250 tickets — "
+                "mix with odd totals like 80, 120, 160.\n"
+            )
+        elif "time" in _t or "clock" in _t:
+            prompt += (
+                "\nTIME NUMBERS: Use varied minutes like :07, :13, :22, :38, :47, :53. "
+                "Do NOT always use :00, :05, :10, :15, :30, :45. "
+                "Mix durations: 17 minutes, 23 minutes, 43 minutes — not just 15, 20, 30.\n"
+            )
 
     if custom_instructions:
         prompt += f"\nAdditional teacher instructions: {custom_instructions}"
@@ -1440,6 +1471,19 @@ def generate_worksheet(
             data, warnings = validate_response(raw, subject, topic, num_questions, difficulty)
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             all_warnings.extend(warnings)
+
+            # ── Common mistake length cap (P2-D) ──
+            _cm = data.get("common_mistake", "")
+            if _cm and len(_cm.split()) > 20:
+                # Keep first sentence only, or truncate to ~20 words
+                _cm_sentences = [s.strip() for s in _cm.split(".") if s.strip()]
+                if _cm_sentences:
+                    data["common_mistake"] = _cm_sentences[0] + "."
+                    logger.info(
+                        "[common_mistake] Trimmed from %d to %d words",
+                        len(_cm.split()),
+                        len(data["common_mistake"].split()),
+                    )
 
             # ── Question count top-up ──
             questions = data.get("questions", [])
