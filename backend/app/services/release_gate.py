@@ -551,6 +551,44 @@ def r13_sentence_structure_guard(ctx: GateContext) -> RuleResult:
 
 
 # ---------------------------------------------------------------------------
+# R14 — SENTENCE_DIVERSITY_GUARD (BLOCK)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R14_SENTENCE_DIVERSITY_GUARD", Enforcement.BLOCK)
+def r14_sentence_diversity_guard(ctx: GateContext) -> RuleResult:
+    """Block if deep sentence-structure diversity is critically low (≥5 questions)."""
+    if len(ctx.questions) < 5:
+        return RuleResult("R14_SENTENCE_DIVERSITY_GUARD", True, Enforcement.BLOCK, "Too few questions")
+
+    from app.services.output_validator import OutputValidator
+
+    deep_templates = [
+        OutputValidator._make_deep_template(q.get("text", q.get("question_text", ""))) for q in ctx.questions
+    ]
+    unique_count = len(set(deep_templates))
+    diversity_score = unique_count / len(deep_templates)
+
+    issues = []
+    if diversity_score < 0.5:
+        issues.append(f"diversity={diversity_score:.0%} (threshold 50%)")
+
+    # Check dominant template
+    tmpl_counts = Counter(deep_templates)
+    for tmpl, cnt in tmpl_counts.most_common(1):
+        if cnt > max(2, int(len(ctx.questions) * 0.5)):
+            issues.append(f"dominant template covers {cnt}/{len(ctx.questions)} questions")
+
+    passed = len(issues) == 0
+    return RuleResult(
+        "R14_SENTENCE_DIVERSITY_GUARD",
+        passed,
+        Enforcement.BLOCK,
+        "; ".join(issues) if not passed else f"diversity={diversity_score:.0%} — OK",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
 

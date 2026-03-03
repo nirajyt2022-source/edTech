@@ -654,6 +654,14 @@ def build_user_prompt(
         "Do NOT start every question the same way. Mix at least 3 of the 4 types above.\n"
     )
 
+    # -- Deep sentence diversity (P3-C) --
+    prompt += (
+        "\nSENTENCE DIVERSITY (CRITICAL): Do NOT use the same word-problem formula repeatedly. "
+        "Vary the sentence structure — mix direct questions, contextual stories, imperatives, "
+        "and fill-in-the-blanks. Two questions should NEVER follow the pattern "
+        "'[Name] has [N] [objects]. [Name] [verb]s [N] more. How many [objects]?'\n"
+    )
+
     # -- NCERT terminology injection --
     _grade_match = re.search(r"\d+", grade_level)
     if _grade_match:
@@ -1706,6 +1714,20 @@ def validate_response(
 # ---------------------------------------------------------------------------
 
 
+def _extract_deep_repeated_templates(questions: list[dict], threshold: int = 2) -> list[str]:
+    """Return deep template strings that appear >= *threshold* times in *questions*.
+
+    Uses OutputValidator._make_deep_template to normalise names/numbers/times/objects/verbs/places.
+    """
+    from collections import Counter
+
+    from app.services.output_validator import OutputValidator
+
+    templates = [OutputValidator._make_deep_template(q.get("text", "")) for q in questions]
+    counts = Counter(templates)
+    return [tmpl for tmpl, cnt in counts.most_common() if cnt >= threshold]
+
+
 def _extract_repeated_templates(questions: list[dict], threshold: int = 3) -> list[str]:
     """Return template strings that appear >= *threshold* times in *questions*.
 
@@ -2009,6 +2031,20 @@ def generate_worksheet(
                     user_prompt += neg
                     all_warnings.append(f"Retry {attempt}: near-duplicate patterns detected")
                     logger.warning("[v2] Attempt %d: near-duplicates, retrying", attempt)
+                    continue
+
+            # Sentence diversity retry — deep template analysis
+            diversity_errors = [e for e in validation_errors if "[sentence_diversity]" in e]
+            if diversity_errors and attempt < max_attempts:
+                deep_templates = _extract_deep_repeated_templates(data.get("questions", []))
+                if deep_templates:
+                    neg = "\n\nDO NOT reuse these sentence patterns:\n"
+                    for tmpl in deep_templates[:3]:
+                        neg += f'  - "{tmpl}"\n'
+                    neg += "Each question MUST have a DIFFERENT sentence structure.\n"
+                    user_prompt += neg
+                    all_warnings.append(f"Retry {attempt}: sentence diversity too low")
+                    logger.warning("[v2] Attempt %d: sentence diversity too low, retrying", attempt)
                     continue
 
             # Unknown type retry — LLM returned types we don't support

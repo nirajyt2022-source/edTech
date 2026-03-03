@@ -25,6 +25,69 @@ logger = logging.getLogger("skolar.validator")
 class OutputValidator:
     """Validates AI-generated outputs before they reach users."""
 
+    # ── Verb normalization for deep template ──────────────────────────────
+
+    _VERB_FORMS: dict[str, str] = {
+        "buys": "buy",
+        "bought": "buy",
+        "buying": "buy",
+        "gives": "give",
+        "gave": "give",
+        "giving": "give",
+        "given": "give",
+        "has": "have",
+        "had": "have",
+        "having": "have",
+        "gets": "get",
+        "got": "get",
+        "getting": "get",
+        "eats": "eat",
+        "ate": "eat",
+        "eating": "eat",
+        "sells": "sell",
+        "sold": "sell",
+        "selling": "sell",
+        "makes": "make",
+        "made": "make",
+        "making": "make",
+        "takes": "take",
+        "took": "take",
+        "taking": "take",
+        "reads": "read",
+        "reading": "read",
+        "writes": "write",
+        "wrote": "write",
+        "writing": "write",
+        "picks": "pick",
+        "picked": "pick",
+        "picking": "pick",
+        "shares": "share",
+        "shared": "share",
+        "sharing": "share",
+        "collects": "collect",
+        "collected": "collect",
+        "collecting": "collect",
+        "distributes": "distribute",
+        "distributed": "distribute",
+        "spends": "spend",
+        "spent": "spend",
+        "spending": "spend",
+        "saves": "save",
+        "saved": "save",
+        "saving": "save",
+        "plants": "plant",
+        "planted": "plant",
+        "planting": "plant",
+        "counts": "count",
+        "counted": "count",
+        "counting": "count",
+        "arranges": "arrange",
+        "arranged": "arrange",
+        "packs": "pack",
+        "packed": "pack",
+        "packing": "pack",
+    }
+
     # ── Worksheet Validation ──────────────────────────────────────────────
 
     def validate_worksheet(
@@ -487,6 +550,26 @@ class OutputValidator:
                 if _total_vis < _min_ct:
                     errors.append(f"[visual_mandatory] {_total_vis}/{_min_ct} visual questions (below minimum)")
 
+        # 20. Deep sentence-structure diversity — flag if too many questions share a formula
+        if len(questions) >= 5:
+            deep_templates = [self._make_deep_template(q.get("text", "")) for q in questions]
+            unique_count = len(set(deep_templates))
+            diversity_score = unique_count / len(deep_templates)
+
+            if diversity_score < 0.6:
+                errors.append(
+                    f"[sentence_diversity] Low diversity score: {diversity_score:.0%} "
+                    f"({unique_count}/{len(deep_templates)} unique structures). Threshold: 60%"
+                )
+
+            # Flag dominant template if it covers >40% of questions
+            from collections import Counter as _DivCounter
+
+            tmpl_counts = _DivCounter(deep_templates)
+            for tmpl, cnt in tmpl_counts.most_common(1):
+                if cnt > max(2, int(len(questions) * 0.4)):
+                    errors.append(f"[sentence_diversity] Dominant template covers {cnt}/{len(questions)} questions")
+
         is_valid = len(errors) == 0
         if not is_valid:
             logger.warning("Worksheet validation failed", extra={"errors": errors, "topic": topic, "grade": grade})
@@ -602,6 +685,52 @@ class OutputValidator:
         )
         tmpl = re.sub(_NAMES_PATTERN, "<NAME>", tmpl, flags=re.IGNORECASE)
         # Collapse whitespace
+        tmpl = re.sub(r"\s+", " ", tmpl).strip()
+        return tmpl
+
+    @classmethod
+    def _make_deep_template(cls, text: str) -> str:
+        """Create a deeper structural template by normalizing names, numbers,
+        times, countable objects, scenario words, and verb forms.
+
+        Two questions that differ only in surface-level details (names, numbers,
+        objects, verbs, places) will produce the same deep template.
+        """
+        # Step 1: Apply existing template (handles names, numbers, times)
+        tmpl = cls._make_template(text)
+
+        # Step 2: Normalize countable objects → <OBJ>
+        _COUNTABLE_OBJ_PATTERN = (
+            r"\b(?:apples|oranges|mangoes|bananas|pencils|pens|erasers|books|"
+            r"notebooks|pages|marbles|balls|sweets|toffees|chocolates|stickers|"
+            r"stamps|coins|rupees|toys|flowers|leaves|trees|birds|fishes|eggs|"
+            r"cups|plates|bottles|bags|boxes|beads|shells|stones|buttons|seeds|"
+            r"cookies|cakes|candies|balloons|candles|ribbons|stars|tickets|cards|"
+            r"crayons|colours|colors|caps|cars|buses)\b"
+        )
+        tmpl = re.sub(_COUNTABLE_OBJ_PATTERN, "<OBJ>", tmpl, flags=re.IGNORECASE)
+
+        # Step 3: Normalize scenario/location words → <PLACE>
+        _SCENARIO_PATTERN = (
+            r"\b(?:market|shop|store|school|park|zoo|kitchen|festival|playground|"
+            r"station|library|farm|bakery|hospital|garden|field|party|temple|"
+            r"beach|museum|cinema|restaurant|home|classroom|bus|train)\b"
+        )
+        tmpl = re.sub(_SCENARIO_PATTERN, "<PLACE>", tmpl, flags=re.IGNORECASE)
+
+        # Step 4: Normalize verb forms → <VERB>
+        def _replace_verb(m: re.Match) -> str:
+            word = m.group(0).lower()
+            return "<VERB>" if word in cls._VERB_FORMS else m.group(0)
+
+        _verb_keys = "|".join(re.escape(v) for v in cls._VERB_FORMS)
+        tmpl = re.sub(rf"\b({_verb_keys})\b", _replace_verb, tmpl, flags=re.IGNORECASE)
+
+        # Step 5: Normalize pronouns → <NAME>
+        tmpl = re.sub(r"\b(?:she|he|her|his|him|they|them|their)\b", "<NAME>", tmpl, flags=re.IGNORECASE)
+
+        # Step 6: Collapse adjacent duplicate placeholders and whitespace
+        tmpl = re.sub(r"(<(?:NAME|NUM|OBJ|PLACE|VERB|TIME)>)(\s*\1)+", r"\1", tmpl)
         tmpl = re.sub(r"\s+", " ", tmpl).strip()
         return tmpl
 

@@ -116,6 +116,8 @@ _ERROR_CLASSIFIERS: list[tuple[str, str, str, str, float]] = [
     (r"Number .* appears in .* questions", "ai_smell", "AI_09B", "minor", 0.05),
     (r"No engagement framing", "ai_smell", "AI_12", "minor", 0.05),
     (r"Sequence step monotony", "ai_smell", "AI_13", "minor", 0.05),
+    (r"\[sentence_diversity\] Low diversity", "ai_smell", "AI_14", "major", 0.20),
+    (r"\[sentence_diversity\] Dominant template", "ai_smell", "AI_15", "major", 0.15),
     # Curriculum
     (r"complex vocabulary", "curriculum", "CUR_04", "minor", 0.05),
     (r"question too long", "curriculum", "CUR_05", "minor", 0.05),

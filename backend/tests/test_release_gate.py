@@ -419,7 +419,13 @@ class TestIntegration:
 
     def test_no_curriculum_released_cosmetic(self):
         """R04 (curriculum) is now cosmetic — alone it doesn't block released."""
-        qs = [_q(i) for i in range(1, 11)]
+        _diverse_texts = [
+            "What is 2+3?", "Find the sum of 4 and 5.", "How many are left if you remove 2 from 7?",
+            "Write the number after 49.", "Is 15 greater than 12?", "Complete: 3+__=8",
+            "Arrange in order: 5, 2, 8", "Which is smaller: 23 or 32?",
+            "Count the total: 6 and 4", "Subtract 3 from 9.",
+        ]
+        qs = [_q(i, text=_diverse_texts[i - 1]) for i in range(1, 11)]
         verdict = run_release_gate(
             questions=qs,
             grade_level="Class 3",
