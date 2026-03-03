@@ -374,7 +374,20 @@ class TestR10WarningsTransparent:
 
 class TestIntegration:
     def test_clean_worksheet_released(self):
-        qs = [_q(i) for i in range(1, 11)]
+        # Use varied sentence starters to pass R13 sentence structure guard
+        _varied_texts = [
+            "What is 2+3?",          # question_word
+            "Find the sum of 4+5.",   # imperative
+            "If Riya has 3 apples, how many more does she need?",  # conditional
+            "A box has 7 balls.",     # statement
+            "How many are left?",     # question_word
+            "Solve 8+2.",            # imperative
+            "Which is greater?",      # question_word
+            "Suppose you have 6 coins.",  # conditional
+            "Count the flowers.",     # imperative
+            "There are 10 books.",    # statement
+        ]
+        qs = [_q(i, text=_varied_texts[i - 1]) for i in range(1, 11)]
         verdict = run_release_gate(
             questions=qs,
             grade_level="Class 3",

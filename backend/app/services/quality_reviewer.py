@@ -919,6 +919,69 @@ class QualityReviewerAgent:
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 11 (engagement injection) skipped: %s", exc)
 
+        # ── CHECK 12: Sentence structure diversity (P3-B) ──────────────
+        # If all questions start with the same structure type, rewrite a few starters.
+        try:
+            _QW_RE = re.compile(r"(?i)^(what|which|how|who|where|when|why)\b")
+            _IMP_RE = re.compile(
+                r"(?i)^(find|solve|write|fill|complete|calculate|match|draw|circle|count"
+                r"|add|subtract|multiply|divide|arrange|list|name|identify)\b"
+            )
+            _COND_RE = re.compile(r"(?i)^(if|suppose|imagine|given|when)\b")
+
+            structure_counts: dict[str, int] = {"question_word": 0, "imperative": 0, "conditional": 0, "statement": 0}
+            for q in result.questions:
+                text = (q.get("text") or q.get("question_text") or "").strip()
+                if _QW_RE.match(text):
+                    structure_counts["question_word"] += 1
+                elif _IMP_RE.match(text):
+                    structure_counts["imperative"] += 1
+                elif _COND_RE.match(text):
+                    structure_counts["conditional"] += 1
+                else:
+                    structure_counts["statement"] += 1
+
+            distinct = sum(1 for v in structure_counts.values() if v > 0)
+            min_needed = 3 if len(result.questions) >= 10 else 2
+            if distinct < min_needed and len(result.questions) >= 5:
+                # Find the dominant structure and rewrite a few questions
+                dominant = max(structure_counts, key=structure_counts.get)  # type: ignore[arg-type]
+                # Imperative rewrites for question_word-heavy sets
+                _REWRITE_MAP = {
+                    "question_word": [
+                        ("What is ", "Find "),
+                        ("How many ", "Count the number of "),
+                        ("Which ", "Identify the "),
+                    ],
+                    "imperative": [
+                        ("Find ", "What is "),
+                        ("Solve ", "What is the answer to "),
+                        ("Calculate ", "What is "),
+                    ],
+                    "statement": [
+                        ("There are ", "How many are there if there are "),
+                    ],
+                }
+                rewrites_done = 0
+                for q in result.questions:
+                    if rewrites_done >= 2:
+                        break
+                    text = (q.get("text") or q.get("question_text") or "").strip()
+                    for old_prefix, new_prefix in _REWRITE_MAP.get(dominant, []):
+                        if text.startswith(old_prefix) and rewrites_done < 2:
+                            new_text = new_prefix + text[len(old_prefix) :]
+                            q["text"] = new_text
+                            q["question_text"] = new_text
+                            rewrites_done += 1
+                            result.corrections.append(
+                                f"Q{q.get('id', '?')}: sentence starter diversified ('{old_prefix.strip()}' → '{new_prefix.strip()}')"
+                            )
+                            break
+                if rewrites_done > 0:
+                    logger.info("[quality_reviewer] Diversified %d sentence starter(s)", rewrites_done)
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 12 (sentence diversity) skipped: %s", exc)
+
         logger.info(
             "[quality_reviewer] Review complete: %d question(s), %d correction(s), %d warning(s), %d error(s)",
             len(result.questions),

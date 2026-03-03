@@ -599,6 +599,26 @@ def build_user_prompt(
             "Remove unnecessary scene-setting. Get to the maths quickly.\n"
         )
 
+    # -- Indian currency enforcement (P3-A) --
+    _money_keywords = {"money", "coin", "rupee", "price", "cost", "buy", "sell", "change", "shopping"}
+    if subject.lower() in ("maths", "mathematics", "math") and any(k in topic.lower() for k in _money_keywords):
+        prompt += (
+            "\nINDIAN CURRENCY (MANDATORY): ALL money amounts MUST use the ₹ symbol. "
+            "Write ₹50, ₹120, ₹5 — NEVER 'Rs.' or just numbers for money. "
+            "Use realistic Indian prices: ₹5 for a pencil, ₹10 for a notebook, "
+            "₹20 for auto fare, ₹30 for chai, ₹100 for a school bag.\n"
+        )
+
+    # -- Sentence structure variety (P3-B) --
+    prompt += (
+        "\nSENTENCE STARTERS (MANDATORY): Use at LEAST 3 different sentence structures:\n"
+        "  1. Question words: 'What is...', 'How many...', 'Which...'\n"
+        "  2. Imperatives: 'Find...', 'Solve...', 'Write...', 'Complete...'\n"
+        "  3. Conditional/scenario: 'If Riya has...', 'Suppose...'\n"
+        "  4. Statement: 'A box contains...', 'There are...'\n"
+        "Do NOT start every question the same way. Mix at least 3 of the 4 types above.\n"
+    )
+
     # -- NCERT terminology injection --
     _grade_match = re.search(r"\d+", grade_level)
     if _grade_match:

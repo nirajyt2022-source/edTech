@@ -4,7 +4,7 @@ Release Gate Engine — deterministic contract enforcement.
 Runs AFTER all 4 agents (topic intelligence → prompt builder → quality reviewer
 → difficulty calibrator), BEFORE the API serializes the response.
 
-10 rules, each a standalone function registered via decorator.
+13 rules, each a standalone function registered via decorator.
 3 enforcement levels:
   BLOCK   — reject + retry (if attempts remain)
   DEGRADE — serve as `best_effort` with degradation reasons
@@ -503,6 +503,50 @@ def r11_topic_drift_guard(ctx: GateContext) -> RuleResult:
         passed,
         Enforcement.DEGRADE,
         f"{off_topic}/{total} off-topic ({ratio:.0%})" if not passed else f"{off_topic}/{total} within tolerance",
+    )
+
+
+# ---------------------------------------------------------------------------
+# R13 — SENTENCE_STRUCTURE_GUARD (DEGRADE)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R13_SENTENCE_STRUCTURE_GUARD", Enforcement.DEGRADE)
+def r13_sentence_structure_guard(ctx: GateContext) -> RuleResult:
+    """Degrade if sentence structure diversity is too low (≥5 questions)."""
+    if len(ctx.questions) < 5:
+        return RuleResult("R13_SENTENCE_STRUCTURE_GUARD", True, Enforcement.DEGRADE, "Too few questions")
+
+    import re as _re
+
+    _qw = _re.compile(r"(?i)^(what|which|how|who|where|when|why)\b")
+    _imp = _re.compile(
+        r"(?i)^(find|solve|write|fill|complete|calculate|match|draw|circle|count"
+        r"|add|subtract|multiply|divide|arrange|list|name|identify|help|can you|try to|let'?s)\b"
+    )
+    _cond = _re.compile(r"(?i)^(if|suppose|imagine|given)\b")
+
+    types: set[str] = set()
+    for q in ctx.questions:
+        text = q.get("text", q.get("question_text", "")).strip()
+        if _qw.match(text):
+            types.add("question_word")
+        elif _imp.match(text):
+            types.add("imperative")
+        elif _cond.match(text):
+            types.add("conditional")
+        else:
+            types.add("statement")
+
+    min_needed = 3 if len(ctx.questions) >= 10 else 2
+    passed = len(types) >= min_needed
+    return RuleResult(
+        "R13_SENTENCE_STRUCTURE_GUARD",
+        passed,
+        Enforcement.DEGRADE,
+        f"Only {len(types)} structure type(s) ({', '.join(sorted(types))}), need ≥{min_needed}"
+        if not passed
+        else f"{len(types)} structure types — OK",
     )
 
 
