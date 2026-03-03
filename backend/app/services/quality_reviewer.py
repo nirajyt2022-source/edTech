@@ -623,7 +623,6 @@ _HINDI_TRANSLITERATION_BLOCKLIST = {
     "लेट्स",
     # English nouns commonly transliterated instead of using Hindi words
     "लोटस",
-    "सन",
     "स्टार",
     "मून",
     "फ्लावर",
@@ -637,15 +636,11 @@ _HINDI_TRANSLITERATION_BLOCKLIST = {
     "टेबल",
     "चेयर",
     "बैग",
-    "बस",
     "ट्रेन",
     "कंप्यूटर",
     "प्रोजेक्ट",
     "डिज़ाइन",
     "पैटर्न",
-    # LLM conversational patterns in Devanagari
-    "ज़रूर",
-    "बिल्कुल",
 }
 
 
@@ -660,7 +655,8 @@ def _has_hindi_transliteration(text: str) -> bool:
     """Return True if Hindi text contains Devanagari-transliterated English words."""
     if not _DEVANAGARI_CHAR_RE.search(text):
         return False
-    words = set(text.split())
+    # Extract Devanagari word sequences (handles punctuation like "सन," or "बॉल।")
+    words = set(re.findall(r"[\u0900-\u097F]+", text))
     return bool(words & _HINDI_TRANSLITERATION_BLOCKLIST)
 
 
@@ -957,6 +953,9 @@ class QualityReviewerAgent:
                 logger.debug("[quality_reviewer] Check 9 skipped for Q%s: %s", q_id, exc)
 
             # ── CHECK 10: Hindi language purity ─────────────────────────────
+            # Code-mixing check runs on any text with Devanagari.
+            # Transliteration blocklist only runs on Hindi subject worksheets
+            # to avoid false positives (e.g., "सन" = year in Hindi, not "sun").
             try:
                 if _has_hindi_code_mixing(question_text):
                     msg = f"Q{q_id}: Hindi code-mixing detected (Latin script in Devanagari text)"
@@ -964,7 +963,7 @@ class QualityReviewerAgent:
                     result.warnings.append(msg)
                     q["_needs_regen"] = True
                     result.corrections.append(f"Q{q_id}: flagged for regen (Latin code-mixing)")
-                elif _has_hindi_transliteration(question_text):
+                elif context.subject.lower() == "hindi" and _has_hindi_transliteration(question_text):
                     msg = f"Q{q_id}: Hindi transliterated English detected (Devanagari-English words)"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)

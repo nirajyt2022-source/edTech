@@ -1584,6 +1584,28 @@ def generate_worksheet(
                         topup_qs = json.loads(topup_match.group())
                         for idx, tq in enumerate(topup_qs):
                             tq["id"] = f"q{len(questions) + idx + 1}"
+                            # Pad/trim MCQ options (topup skips validate_response)
+                            if tq.get("type") == "mcq":
+                                opts = tq.get("options") or []
+                                correct = tq.get("correct_answer", "")
+                                if len(opts) > 4:
+                                    others = [o for o in opts if o != correct][:3]
+                                    tq["options"] = others + [correct] if correct not in others else opts[:4]
+                                elif 1 <= len(opts) < 4:
+                                    _fillers = [
+                                        "None of the above",
+                                        "Cannot be determined",
+                                        "All of the above",
+                                        "Not enough information",
+                                    ]
+                                    while len(opts) < 4:
+                                        filler = (
+                                            _fillers[len(opts) - 1]
+                                            if len(opts) - 1 < len(_fillers)
+                                            else f"Option {len(opts) + 1}"
+                                        )
+                                        opts.append(filler if filler not in opts else f"Option {len(opts) + 1}")
+                                    tq["options"] = opts
                         data["questions"] = questions + topup_qs
                         all_warnings.append(
                             f"[topup] Generated {len(topup_qs)} extra question(s) to reach {num_questions}"

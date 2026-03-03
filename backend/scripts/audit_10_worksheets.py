@@ -23,7 +23,6 @@ import json
 import os
 import re
 import sys
-import time
 import traceback
 
 # Ensure backend/ is on sys.path
@@ -52,8 +51,8 @@ TEST_CASES = [
 
 _HINDI_TRANSLIT_WORDS = {
     "हेल्प", "फिगर", "आउट", "फाइंड", "सॉल्व", "लेट्स",
-    "लोटस", "सन", "स्टार", "मून", "फ्लावर", "ट्री",
-    "टेबल", "चेयर", "बुक", "पेन", "बैग", "बॉक्स",
+    "लोटस", "स्टार", "मून", "फ्लावर", "ट्री",
+    "टेबल", "चेयर", "बुक", "बॉक्स",
     "कैट", "डॉग", "बर्ड", "फिश",
     "रेड", "ब्लू", "ग्रीन", "येलो", "पिंक", "ऑरेंज",
     "नंबर", "प्लस", "माइनस", "इक्वल",
@@ -72,6 +71,8 @@ def audit_worksheet(ws_id: str, data: dict, warnings: list[str], elapsed_ms: int
     """Run all audit checks on a generated worksheet."""
     issues = []
     questions = data.get("questions", [])
+    subject = (data.get("subject", "") or "").lower()
+    grade_str = data.get("grade_level", "") or ""
 
     # 1. quality_score populated?
     qs = data.get("_quality_score")
@@ -100,14 +101,15 @@ def audit_worksheet(ws_id: str, data: dict, warnings: list[str], elapsed_ms: int
         if topic_drift_blocks:
             issues.append(f"topic drift BLOCKED: {len(topic_drift_blocks)}")
 
-    # 5. Hindi transliteration check
+    # 5. Hindi transliteration check (only for Hindi-subject worksheets)
     hindi_leaks = 0
-    for q in questions:
-        text = q.get("question_text", "") or q.get("text", "")
-        for word in _HINDI_TRANSLIT_WORDS:
-            if word in text:
+    if subject in ("hindi",):
+        for q in questions:
+            text = q.get("question_text", "") or q.get("text", "")
+            # Extract Devanagari word sequences (handles punctuation)
+            words = set(re.findall(r"[\u0900-\u097F]+", text))
+            if words & _HINDI_TRANSLIT_WORDS:
                 hindi_leaks += 1
-                break
     if hindi_leaks:
         issues.append(f"Hindi transliteration leakage: {hindi_leaks} questions")
 
@@ -123,8 +125,6 @@ def audit_worksheet(ws_id: str, data: dict, warnings: list[str], elapsed_ms: int
         issues.append(f"LLM-ism fillers found: {llm_isms} questions")
 
     # 7. Class 1 arithmetic bounds
-    grade_str = data.get("grade_level", "") or ""
-    subject = (data.get("subject", "") or "").lower()
     if "1" in grade_str and subject in ("maths", "mathematics"):
         big_answers = 0
         for q in questions:
@@ -239,7 +239,7 @@ def main():
                 for issue in audit["issues"]:
                     print(f"  ❌ {issue}")
             else:
-                print(f"  ✅ All checks passed")
+                print("  ✅ All checks passed")
 
         except Exception as exc:
             print(f"  ❌ GENERATION FAILED: {exc}")
@@ -282,7 +282,7 @@ def main():
             all_issue_types[key] = all_issue_types.get(key, 0) + 1
 
     if all_issue_types:
-        print(f"\n  Issue breakdown:")
+        print("\n  Issue breakdown:")
         for itype, count in sorted(all_issue_types.items(), key=lambda x: -x[1]):
             print(f"    {count}x  {itype}")
 
