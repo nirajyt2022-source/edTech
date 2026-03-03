@@ -48,7 +48,7 @@ RULES:
 3. Follow NCERT/CBSE curriculum standards for the given class and subject.
 4. Every question must have a correct answer. For maths, compute the answer precisely.
 5. Never repeat the same question pattern. Vary formats, angles, and phrasings.
-6. Use Indian context (₹ for money, Indian names, Indian festivals, Indian cities, etc.)
+6. Use Indian context: ₹ for money, Indian names, Indian scenarios (mandi, chai stall, auto-rickshaw, Diwali shopping, cricket match, rangoli, school assembly, temple). Avoid Western scenarios (supermarket, Halloween, Thanksgiving, baseball).
 7. VARIETY IS CRITICAL: rotate through scenarios (home, school, market, park, farm, zoo, kitchen, playground, festival, hospital, train station), mix question styles, and vary sentence structures.
 8. OPENING VERB ROTATION — Never start two consecutive questions the same way. Rotate through:
    Easy: What|Which|Name|Tell|Find|Show|Write|Count|Circle|Look at
@@ -119,7 +119,7 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 {
   "title": "Worksheet: {topic}",
   "skill_focus": "<one-line skill summary>",
-  "common_mistake": "<one common mistake>",
+  "common_mistake": "<one common mistake students in THIS class level make on THIS specific topic — never reference higher-grade concepts>",
   "parent_tip": "<one tip for parents>",
   "learning_objectives": ["<obj 1>", "<obj 2>", "<obj 3>"],
   "questions": [
@@ -164,7 +164,7 @@ OUTPUT FORMAT — respond with ONLY this JSON, no other text:
 {
   "title": "Worksheet: {topic}",
   "skill_focus": "<one-line skill summary>",
-  "common_mistake": "<one common mistake>",
+  "common_mistake": "<one common mistake students in THIS class level make on THIS specific topic — never reference higher-grade concepts>",
   "parent_tip": "<one tip for parents>",
   "learning_objectives": ["<obj 1>", "<obj 2>", "<obj 3>"],
   "questions": [
@@ -482,9 +482,13 @@ def build_user_prompt(
         f"Use these names: {names_str}. "
         f"Vary scenarios, numbers, and distractors across questions.\n"
         f"SCENARIO VARIETY: Use DIFFERENT settings for each word problem — choose from: "
-        f"market, school, park, zoo, kitchen, festival, playground, train station, "
-        f"library, farm, bakery, hospital, garden, sports field, birthday party, "
-        f"bus stop, temple, beach, museum, cinema. NEVER repeat a scenario within one worksheet.\n"
+        f"mandi (vegetable market), school morning assembly, Diwali shopping, "
+        f"train journey, cricket match, temple festival, chai stall, "
+        f"mango orchard, rangoli making, kite flying (Makar Sankranti), "
+        f"school tiffin sharing, auto-rickshaw ride, Holi celebration, "
+        f"anganwadi class, railway platform, sabzi shopping, "
+        f"mithai/laddoo making, school sports day, puja preparation, "
+        f"family picnic to a park. NEVER repeat a scenario within one worksheet.\n"
     )
 
     # Problem-style specific image instructions
@@ -529,6 +533,16 @@ def build_user_prompt(
         '  - "Let\'s figure out..."\n'
         '  - "Try to find..."\n'
         "Use the Indian names provided. Do NOT make every question warm — keep ~80% direct.\n"
+    )
+
+    # -- Common mistake grounding (P3-B) --
+    prompt += (
+        "\nCOMMON MISTAKE FIELD: The common_mistake must describe a mistake that students "
+        f'in {grade_level} actually make on "{topic}". '
+        "Do NOT reference concepts from higher grades. "
+        "For example, Class 1 addition should mention 'counting on fingers incorrectly' "
+        "not 'forgetting to regroup' (regrouping is Class 2+). "
+        "Be specific to the topic and grade.\n"
     )
 
     # -- NCERT terminology injection --

@@ -930,13 +930,13 @@ class TestPromptAntiArtificiality:
         assert "4 sentences" in prompt
 
     def test_scenario_variety_expanded(self):
-        """R5: Prompt should include expanded scenario list (>8 locations)."""
+        """R5: Prompt should include expanded Indian scenario list (>8 locations)."""
         prompt = self._build_prompt()
         assert "SCENARIO VARIETY" in prompt
-        # Check at least some of the new scenarios beyond the original 8
-        assert "library" in prompt
-        assert "bakery" in prompt
-        assert "museum" in prompt
+        # Check at least some of the Indian-specific scenarios
+        assert "mandi" in prompt
+        assert "chai stall" in prompt
+        assert "auto-rickshaw" in prompt
         assert "NEVER repeat a scenario" in prompt
 
     def test_hindi_register_instruction_present(self):
