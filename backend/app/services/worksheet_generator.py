@@ -835,7 +835,26 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
     "spatial": ["in", "out", "near", "far", "above", "below", "left", "right", "position"],
     "grammar": ["noun", "verb", "pronoun", "adjective", "adverb", "tense", "sentence", "punctuation"],
     "comprehension": ["passage", "read", "comprehension", "paragraph", "story"],
-    "vocabulary": ["word", "meaning", "synonym", "antonym", "spelling"],
+    "vocabulary": [
+        "word",
+        "meaning",
+        "synonym",
+        "antonym",
+        "spelling",
+        "opposite",
+        "rhyming",
+        "prefix",
+        "suffix",
+        "compound",
+        "syllable",
+        # Hindi equivalents for vocabulary/vilom shabd questions
+        "विलोम",
+        "पर्यायवाची",
+        "शब्द",
+        "अर्थ",
+        "उल्टा",
+        "मतलब",
+    ],
     "hindi": [
         "matra",
         "shabd",
@@ -1473,6 +1492,14 @@ def generate_worksheet(
                 _grade_int = (
                     int(re.search(r"\d+", str(grade_level)).group()) if re.search(r"\d+", str(grade_level)) else 3
                 )
+                # Fix P1-B: Replace grade prefix in skill tags to match actual grade
+                _raw_tags = list(_profile.get("allowed_skill_tags", []))
+                _grade_fixed_tags = []
+                for _tag in _raw_tags:
+                    # Replace cN_ prefix with actual grade (e.g., c5_ → c2_ for Class 2)
+                    _fixed = re.sub(r"^(c)\d+(_)", rf"\g<1>{_grade_int}\2", _tag)
+                    _grade_fixed_tags.append(_fixed)
+
                 _gen_ctx = GenerationContext(
                     topic_slug=topic,
                     subject=subject,
@@ -1483,7 +1510,7 @@ def generate_worksheet(
                     format_mix={"mcq": 40, "fill_blank": 30, "word_problem": 30},
                     scaffolding=False,
                     challenge_mode=False,
-                    valid_skill_tags=list(_profile.get("allowed_skill_tags", [])),
+                    valid_skill_tags=_grade_fixed_tags,
                     child_context={},
                 )
 

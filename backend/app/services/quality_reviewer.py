@@ -879,10 +879,12 @@ class QualityReviewerAgent:
         # If <20% of questions use warm framing, inject it on eligible questions.
         try:
             _ENGAGEMENT_RE = re.compile(r"(?i)^(help|can you|try to|let'?s|guess)")
+            _HINDI_ENGAGEMENT_RE = re.compile(r"की मदद करो")
             engagement_count = sum(
                 1
                 for q in result.questions
                 if _ENGAGEMENT_RE.match((q.get("text") or q.get("question_text") or "").strip())
+                or _HINDI_ENGAGEMENT_RE.search((q.get("text") or q.get("question_text") or ""))
             )
             target = max(2, len(result.questions) // 5)
             if engagement_count < target:
@@ -902,22 +904,82 @@ class QualityReviewerAgent:
                     # Only inject on word_problem / fill_blank — not MCQ/true_false
                     if q_type not in ("word_problem", "fill_blank", "short_answer"):
                         continue
-                    if _ENGAGEMENT_RE.match(q_text):
+                    if _ENGAGEMENT_RE.match(q_text) or _HINDI_ENGAGEMENT_RE.search(q_text):
                         continue  # already has framing
                     name = names_pool[name_idx % len(names_pool)]
                     name_idx += 1
-                    # Lowercase the first letter of original text after "Help [name]"
-                    new_text = f"Help {name} solve this: {q_text[0].lower()}{q_text[1:]}"
+                    # Detect Hindi: check if question has Devanagari script
+                    _is_hindi = bool(re.search(r"[\u0900-\u097F]", q_text))
+                    if _is_hindi:
+                        new_text = f"{name} की मदद करो: {q_text}"
+                    else:
+                        new_text = f"Help {name} solve this: {q_text[0].lower()}{q_text[1:]}"
                     q["text"] = new_text
                     q["question_text"] = new_text
                     injected += 1
+                    _framing_label = f"{name} की मदद करो:" if _is_hindi else f"Help {name} solve this:"
                     result.corrections.append(
-                        f"Q{q.get('id', '?')}: engagement framing injected ('Help {name} solve this: …')"
+                        f"Q{q.get('id', '?')}: engagement framing injected ('{_framing_label} …')"
                     )
                 if injected > 0:
                     logger.info("[quality_reviewer] Injected engagement framing on %d question(s)", injected)
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 11 (engagement injection) skipped: %s", exc)
+
+        # ── CHECK 13: Error detection answer/explanation consistency (P0) ──
+        # If an error_detection question's answer ("No"/"Yes") contradicts its
+        # own explanation, fix the answer to match the explanation.
+        try:
+            _YES_RE = re.compile(r"(?i)\b(correct|right|yes)\b")
+            _NO_RE = re.compile(r"(?i)\b(incorrect|wrong|not correct|no)\b")
+            for q in result.questions:
+                q_type = q.get("type", q.get("slot_type", ""))
+                if q_type not in ("error_detection", "error_spot"):
+                    continue
+                answer = str(q.get("answer") or q.get("correct_answer") or "")
+                explanation = str(q.get("explanation") or "")
+                if not answer or not explanation:
+                    continue
+
+                # Determine answer sentiment
+                ans_lower = answer.lower().strip().rstrip(".")
+                ans_says_correct = _YES_RE.search(ans_lower) is not None
+                ans_says_incorrect = _NO_RE.search(ans_lower) is not None
+
+                # Determine explanation's final verdict (last sentence wins)
+                expl_sentences = [s.strip() for s in explanation.split(".") if s.strip()]
+                last_sentence = expl_sentences[-1].lower() if expl_sentences else ""
+                expl_says_correct = bool(
+                    re.search(r"\b(is correct|is right|correct)\b", last_sentence)
+                    and not re.search(r"\b(not correct|incorrect|is not right)\b", last_sentence)
+                )
+                expl_says_incorrect = bool(re.search(r"\b(incorrect|wrong|not correct|is not right)\b", last_sentence))
+
+                # Contradiction: answer says "No" but explanation says correct (or vice versa)
+                if ans_says_incorrect and expl_says_correct:
+                    # Explanation proves the statement IS correct — flip the answer
+                    new_answer = (
+                        answer.replace("No", "Yes")
+                        .replace("no", "yes")
+                        .replace("incorrect", "correct")
+                        .replace("Incorrect", "Correct")
+                    )
+                    q["answer"] = new_answer
+                    q["correct_answer"] = new_answer
+                    q_id = q.get("id", "?")
+                    msg = f"Q{q_id}: error_detection answer contradicted explanation — flipped to '{new_answer[:50]}'"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    result.corrections.append(msg)
+                elif ans_says_correct and expl_says_incorrect:
+                    new_answer = answer.replace("Yes", "No").replace("yes", "no").replace("correct", "incorrect")
+                    q["answer"] = new_answer
+                    q["correct_answer"] = new_answer
+                    q_id = q.get("id", "?")
+                    msg = f"Q{q_id}: error_detection answer contradicted explanation — flipped to '{new_answer[:50]}'"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    result.corrections.append(msg)
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 13 (error_detection consistency) skipped: %s", exc)
 
         # ── CHECK 12: Sentence structure diversity (P3-B) ──────────────
         # If all questions start with the same structure type, rewrite a few starters.
