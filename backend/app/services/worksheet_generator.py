@@ -1457,6 +1457,14 @@ def generate_worksheet(
     if chapter_name is None:
         curriculum_warnings.append("[curriculum] Chapter reference unavailable — PDF badge removed")
 
+    # P3-B: Warn when visual-dependent topics are in text-only mode
+    _VISUAL_TOPICS = {"time", "clock", "shape", "pattern", "geometry", "symmetry", "graph", "chart", "pictograph"}
+    if problem_style == "standard" and any(vt in topic.lower() for vt in _VISUAL_TOPICS):
+        curriculum_warnings.append(
+            f"[visual_recommendation] Topic '{topic}' benefits from visual elements (clock faces, "
+            "shape diagrams). Consider using problem_style='visual' or 'mixed' for better pedagogy."
+        )
+
     max_attempts = 3
     last_error: Exception | None = None
     all_warnings: list[str] = list(curriculum_warnings)

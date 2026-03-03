@@ -616,11 +616,23 @@ def run_release_gate(
                 degrade_reasons.append(f"[{name}] {result.detail}")
 
     # Determine verdict
+    # P3-A: Cosmetic degrade rules — AI-smell / polish issues, not accuracy problems.
+    # If ONLY cosmetic rules failed, upgrade from best_effort to released.
+    _COSMETIC_RULES = frozenset(
+        {
+            "R12_ROUND_NUMBER_GUARD",
+            "R13_SENTENCE_STRUCTURE_GUARD",
+        }
+    )
+    # Collect names of rules that failed with DEGRADE enforcement
+    _degrade_failures = [r.rule_name for r in results if not r.passed and r.enforcement == Enforcement.DEGRADE]
+
     if block_reasons:
         verdict = "blocked"
         passed = False
     elif degrade_reasons:
-        verdict = "best_effort"
+        all_cosmetic = all(name in _COSMETIC_RULES for name in _degrade_failures)
+        verdict = "released" if all_cosmetic else "best_effort"
         passed = True
     else:
         verdict = "released"
