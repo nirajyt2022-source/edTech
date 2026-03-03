@@ -528,12 +528,40 @@ def _strip_filler_phrases(text: str) -> str:
     return cleaned
 
 
-def _trim_question_text(text: str, limit: int) -> str | None:
-    """Remove common filler phrases to reduce word count.
+_AGGRESSIVE_TRIM_PATTERNS = [
+    # Remove "please" / "try to" / "now"
+    (re.compile(r"\bplease\b\s*", re.I), ""),
+    (re.compile(r"\bnow\b,?\s*", re.I), ""),
+    # Remove scene-setting adjectives
+    (re.compile(r"\b(big|small|little|beautiful|lovely|nice|colourful|special|favourite)\s+", re.I), ""),
+    # Remove "very" / "really"
+    (re.compile(r"\b(very|really|so)\s+", re.I), ""),
+    # Remove "his/her mother/father told him/her to" patterns
+    (re.compile(r"\b\w+ (?:told|asked|tells|asks) (?:him|her|them) to\s+", re.I), ""),
+    # Simplify "How many X does she/he have in total?" → "How many X in total?"
+    (re.compile(r"\bdoes (?:she|he|they) have\b", re.I), "are there"),
+    # Remove "one day, " / "once upon a time, "
+    (re.compile(r"\b(one day|once upon a time),?\s+", re.I), ""),
+    # Remove "together" when redundant in "how many ... together"
+    (re.compile(r"\btogether\b\s*", re.I), ""),
+]
 
-    Returns trimmed text if any filler was removed, else None.
+
+def _trim_question_text(text: str, limit: int) -> str | None:
+    """Remove common filler phrases and verbose patterns to reduce word count.
+
+    First tries light filler stripping, then aggressive trimming if needed.
+    Returns trimmed text if word count was reduced, else None.
     """
+    # Phase 1: light filler strip
     trimmed = _strip_filler_phrases(text)
+    if len(trimmed.split()) <= limit:
+        return trimmed if len(trimmed.split()) < len(text.split()) else None
+
+    # Phase 2: aggressive trimming
+    for pattern, replacement in _AGGRESSIVE_TRIM_PATTERNS:
+        trimmed = pattern.sub(replacement, trimmed).strip()
+    trimmed = re.sub(r"\s{2,}", " ", trimmed)
     return trimmed if len(trimmed.split()) < len(text.split()) else None
 
 
@@ -842,6 +870,50 @@ class QualityReviewerAgent:
                     result.warnings.append(msg)
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 10 skipped for Q%s: %s", q_id, exc)
+
+        # ── CHECK 11: Engagement framing injection (P0-A) ──────────────
+        # If <20% of questions use warm framing, inject it on eligible questions.
+        try:
+            _ENGAGEMENT_RE = re.compile(r"(?i)^(help|can you|try to|let'?s|guess)")
+            engagement_count = sum(
+                1
+                for q in result.questions
+                if _ENGAGEMENT_RE.match((q.get("text") or q.get("question_text") or "").strip())
+            )
+            target = max(2, len(result.questions) // 5)
+            if engagement_count < target:
+                import random as _rng
+
+                from app.services.worksheet_generator import _INDIAN_NAMES
+
+                names_pool = list(_INDIAN_NAMES)
+                _rng.shuffle(names_pool)
+                name_idx = 0
+                injected = 0
+                for q in result.questions:
+                    if injected >= (target - engagement_count):
+                        break
+                    q_text = (q.get("text") or q.get("question_text") or "").strip()
+                    q_type = q.get("type", "")
+                    # Only inject on word_problem / fill_blank — not MCQ/true_false
+                    if q_type not in ("word_problem", "fill_blank", "short_answer"):
+                        continue
+                    if _ENGAGEMENT_RE.match(q_text):
+                        continue  # already has framing
+                    name = names_pool[name_idx % len(names_pool)]
+                    name_idx += 1
+                    # Lowercase the first letter of original text after "Help [name]"
+                    new_text = f"Help {name} solve this: {q_text[0].lower()}{q_text[1:]}"
+                    q["text"] = new_text
+                    q["question_text"] = new_text
+                    injected += 1
+                    result.corrections.append(
+                        f"Q{q.get('id', '?')}: engagement framing injected ('Help {name} solve this: …')"
+                    )
+                if injected > 0:
+                    logger.info("[quality_reviewer] Injected engagement framing on %d question(s)", injected)
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 11 (engagement injection) skipped: %s", exc)
 
         logger.info(
             "[quality_reviewer] Review complete: %d question(s), %d correction(s), %d warning(s), %d error(s)",

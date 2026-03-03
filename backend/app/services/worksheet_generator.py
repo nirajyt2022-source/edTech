@@ -523,16 +523,18 @@ def build_user_prompt(
         "Do NOT make every word problem the same length.\n"
     )
 
-    # -- Engagement framing (P2-A) --
+    # -- Engagement framing (P2-A, P0-A) --
+    warm_count = max(2, num_questions // 5)
     prompt += (
-        "\nENGAGEMENT FRAMING: At least 20% of questions MUST use warm, child-friendly framing. "
-        "Mix in these styles:\n"
+        f"\nENGAGEMENT FRAMING (MANDATORY): Exactly {warm_count} of {num_questions} questions "
+        "MUST start with one of these warm openings:\n"
         '  - "Help [name] figure out..."\n'
         '  - "Can you find/spot/solve..."\n'
-        '  - "[Name] is trying to... Can you help?"\n'
         '  - "Let\'s figure out..."\n'
         '  - "Try to find..."\n'
-        "Use the Indian names provided. Do NOT make every question warm — keep ~80% direct.\n"
+        "Use Indian names from the list above. Apply warm framing to word_problem or fill_blank "
+        "questions ONLY — keep MCQ/true_false direct.\n"
+        "Example: Instead of 'Riya has 5 apples...', write 'Help Riya count: she has 5 apples...'\n"
     )
 
     # -- Common mistake grounding (P3-B) --
@@ -544,6 +546,29 @@ def build_user_prompt(
         "not 'forgetting to regroup' (regrouping is Class 2+). "
         "Be specific to the topic and grade.\n"
     )
+
+    # -- Word count limits (P0-B) --
+    _wc_match = re.search(r"\d+", grade_level)
+    _wc_grade = int(_wc_match.group()) if _wc_match else 3
+    _wc_limit = 15 if _wc_grade <= 2 else 25
+    prompt += (
+        f"\nWORD COUNT LIMIT (HARD): Each question MUST be ≤{_wc_limit} words. "
+        f"This is for {grade_level} students. Count every word carefully.\n"
+        f"GOOD ({_wc_limit}-word limit):\n"
+    )
+    if _wc_grade <= 2:
+        prompt += (
+            '  ✓ "What is 5 + 3?" (5 words)\n'
+            '  ✓ "Riya has 4 apples. She gets 2 more. How many?" (10 words)\n'
+            '  ✗ "Riya went to the big market near her house and she bought 5 red apples" (14 words — TOO LONG)\n'
+            "Keep sentences SHORT and SIMPLE. One clause only. No extra adjectives.\n"
+        )
+    else:
+        prompt += (
+            '  ✓ "A train travels 45 km in the first hour and 38 km in the second. Find the total." (17 words)\n'
+            '  ✗ "During their annual school trip to the hill station, Aarav noticed that the bus covered..." (15+ words of setup before the question — TOO VERBOSE)\n'
+            "Remove unnecessary scene-setting. Get to the maths quickly.\n"
+        )
 
     # -- NCERT terminology injection --
     _grade_match = re.search(r"\d+", grade_level)

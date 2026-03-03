@@ -859,10 +859,10 @@ class TestEngagementFraming:
         return {"id": qid, "type": "short_answer", "text": text, "correct_answer": answer}
 
     def test_has_engagement_pass(self, validator):
-        """At least one engagement-framed question should pass."""
+        """At least 20% engagement-framed questions should pass."""
         qs = [
             self._make_q("Q1", "Help Aarav find 23 + 47"),
-            self._make_q("Q2", "What is 18 - 9?"),
+            self._make_q("Q2", "Can you solve 18 - 9?"),
             self._make_q("Q3", "Add 36 and 52"),
             self._make_q("Q4", "Calculate 14 + 29"),
             self._make_q("Q5", "Find 63 - 28"),
@@ -888,7 +888,7 @@ class TestEngagementFraming:
         """'Can you' opening should count as engagement."""
         qs = [
             self._make_q("Q1", "Can you solve 23 + 47?"),
-            self._make_q("Q2", "What is 18 - 9?"),
+            self._make_q("Q2", "Try to find 18 - 9"),
             self._make_q("Q3", "Add 36 and 52"),
             self._make_q("Q4", "Calculate 14 + 29"),
             self._make_q("Q5", "Find 63 - 28"),

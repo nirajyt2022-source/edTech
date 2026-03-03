@@ -345,14 +345,18 @@ class OutputValidator:
                         f"across {len(pairs_seen)} pairs (need ≥3)"
                     )
 
-        # 14. Engagement framing — at least 1 question should use warm framing
+        # 14. Engagement framing — at least 20% of questions should use warm framing
         if len(questions) >= 5:
             _ENGAGEMENT_RE = re.compile(
                 r"(?i)^(help|can you|try to|figure out|let'?s|guess)",
             )
             engagement_count = sum(1 for q in questions if _ENGAGEMENT_RE.match(q.get("text", "").strip()))
-            if engagement_count == 0:
-                errors.append("No engagement framing: 0 questions use 'Help…'/'Can you…' style (recommend ≥20%)")
+            target = max(2, len(questions) // 5)
+            if engagement_count < target:
+                errors.append(
+                    f"Low engagement framing: {engagement_count}/{len(questions)} questions use "
+                    f"'Help…'/'Can you…' style (need ≥{target})"
+                )
 
         # 15. Sentence structure diversity (L2) — ≥3 distinct structures per 10Q
         if len(questions) >= 5:
