@@ -134,6 +134,14 @@ _WP_ADD_WORDS = re.compile(r"\b(total|altogether|combined|in all|sum|more than|a
 _WP_SUB_WORDS = re.compile(r"\b(left|remaining|gave away|took away|fewer|less than|difference|ate|lost|spent)\b", re.I)
 _WP_MUL_WORDS = re.compile(r"\b(each|every|per|times|groups of|rows of|sets of)\b", re.I)
 
+# Matches integers and decimals (e.g. 5, 0.75, 12.5) — not preceded/followed by word chars
+_WP_NUM_RE = re.compile(r"(?<!\w)(\d+(?:\.\d+)?)(?!\w)")
+
+
+def _fmt(n: float) -> str:
+    """Format a number: show as int if whole, else as float."""
+    return str(int(n)) if n == int(n) else str(n)
+
 
 def _extract_word_problem_arithmetic(question_text: str) -> Optional[tuple[str, float]]:
     """Try to extract operation + numbers from a word problem.
@@ -147,17 +155,26 @@ def _extract_word_problem_arithmetic(question_text: str) -> Optional[tuple[str, 
       - "X + Y + Z altogether"        → X + Y + Z
       - "X groups of Y each, ate Z"   → X*Y - Z
     """
-    numbers = [int(n) for n in re.findall(r"\b(\d+)\b", question_text) if 0 < int(n) < 100000]
+    raw_matches = _WP_NUM_RE.findall(question_text)
+    numbers = [float(n) for n in raw_matches if 0 < float(n) < 100000]
 
     if len(numbers) == 2:
         a, b = numbers
-        if _WP_SUB_WORDS.search(question_text):
+        has_add = _WP_ADD_WORDS.search(question_text)
+        has_sub = _WP_SUB_WORDS.search(question_text)
+        has_mul = _WP_MUL_WORDS.search(question_text)
+
+        # Addition keywords trump subtraction when both present
+        # e.g. "ate 2... ate 4... How many in all?" → addition
+        if has_add and has_sub:
+            return (f"{_fmt(a)} + {_fmt(b)}", float(a + b))
+        elif has_mul:
+            return (f"{_fmt(a)} * {_fmt(b)}", float(a * b))
+        elif has_sub:
             big, small = max(a, b), min(a, b)
-            return (f"{big} - {small}", float(big - small))
-        elif _WP_MUL_WORDS.search(question_text):
-            return (f"{a} * {b}", float(a * b))
-        elif _WP_ADD_WORDS.search(question_text):
-            return (f"{a} + {b}", float(a + b))
+            return (f"{_fmt(big)} - {_fmt(small)}", float(big - small))
+        elif has_add:
+            return (f"{_fmt(a)} + {_fmt(b)}", float(a + b))
         return None
 
     if len(numbers) == 3:
@@ -168,28 +185,28 @@ def _extract_word_problem_arithmetic(question_text: str) -> Optional[tuple[str, 
 
         # Pattern: "X items at Y each, then spent/gave/lost Z" → X*Y - Z
         if has_mul and has_sub:
-            return (f"{a} * {b} - {c}", float(a * b - c))
+            return (f"{_fmt(a)} * {_fmt(b)} - {_fmt(c)}", float(a * b - c))
 
         # Pattern: "X items at Y each, plus Z more" → X*Y + Z
         if has_mul and has_add:
-            return (f"{a} * {b} + {c}", float(a * b + c))
+            return (f"{_fmt(a)} * {_fmt(b)} + {_fmt(c)}", float(a * b + c))
 
         # Pattern: "X groups/sets of Y each" (c is the question number, e.g. "how many")
         # Only if multiplication is clear and no other operation
         if has_mul and not has_sub and not has_add:
-            return (f"{a} * {b}", float(a * b))
+            return (f"{_fmt(a)} * {_fmt(b)}", float(a * b))
 
         # Pattern: "had X, gave Y, then gave Z" → X - Y - Z
         if has_sub and not has_mul:
             big = max(numbers)
             rest = sorted([n for n in numbers if n != big], reverse=True)
             result = big - sum(rest)
-            expr = f"{big} - {rest[0]} - {rest[1]}"
+            expr = f"{_fmt(big)} - {_fmt(rest[0])} - {_fmt(rest[1])}"
             return (expr, float(result))
 
         # Pattern: "X + Y + Z altogether/total/in all" → sum
         if has_add and not has_sub and not has_mul:
-            return (f"{a} + {b} + {c}", float(a + b + c))
+            return (f"{_fmt(a)} + {_fmt(b)} + {_fmt(c)}", float(a + b + c))
 
     # 4+ numbers — too ambiguous, skip
     return None
@@ -493,6 +510,27 @@ def _word_limit(grade: int) -> int:
     return 15 if grade <= 2 else 25
 
 
+# Filler phrases that can be removed without changing question meaning
+_FILLER_PATTERNS = [
+    (re.compile(r"\b[Ii]n the following\s*", re.I), ""),
+    (re.compile(r"\bLook at the (?:picture|diagram|image)\.\s*", re.I), ""),
+    (re.compile(r"\bRead the (?:passage|text|paragraph) (?:below|given)\s*(?:and|\.)\s*", re.I), ""),
+    (re.compile(r"\bGiven (?:below|that)\s*,?\s*", re.I), ""),
+]
+
+
+def _trim_question_text(text: str, limit: int) -> str | None:
+    """Remove common filler phrases to reduce word count.
+
+    Returns trimmed text if any filler was removed, else None.
+    """
+    trimmed = text
+    for pattern, replacement in _FILLER_PATTERNS:
+        trimmed = pattern.sub(replacement, trimmed).strip()
+    trimmed = re.sub(r"\s{2,}", " ", trimmed)
+    return trimmed if len(trimmed.split()) < len(text.split()) else None
+
+
 # ---------------------------------------------------------------------------
 # LLM artifact detection (CHECK 9)
 # ---------------------------------------------------------------------------
@@ -642,15 +680,37 @@ class QualityReviewerAgent:
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 2 skipped for Q%s: %s", q_id, exc)
 
-            # ── CHECK 3: Grade-level word count ──────────────────────────
+            # ── CHECK 3: Grade-level word count (ENFORCED) ────────────────
             try:
                 grade = int(context.grade)
                 limit = _word_limit(grade)
                 word_count = len(question_text.split())
                 if word_count > limit:
+                    ratio = word_count / limit
                     msg = f"Q{q_id}: question has {word_count} words (Grade {grade} limit is {limit})"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)
+
+                    if ratio > 2.0:
+                        # >2x limit: unsalvageable — flag for regeneration
+                        q["_needs_regen"] = True
+                        result.corrections.append(
+                            f"Q{q_id}: word count {word_count} is >{limit * 2}, flagged for regeneration"
+                        )
+                    elif ratio > 1.5:
+                        # >1.5x limit: try trimming filler, else flag for regen
+                        trimmed = _trim_question_text(question_text, limit)
+                        if trimmed and len(trimmed.split()) <= limit:
+                            q["question_text"] = trimmed
+                            q["text"] = trimmed
+                            result.corrections.append(
+                                f"Q{q_id}: question trimmed from {word_count} to {len(trimmed.split())} words"
+                            )
+                        else:
+                            q["_needs_regen"] = True
+                            result.corrections.append(
+                                f"Q{q_id}: word count {word_count} exceeds limit, flagged for regeneration"
+                            )
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 3 skipped for Q%s: %s", q_id, exc)
 
