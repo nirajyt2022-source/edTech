@@ -53,6 +53,7 @@ from app.api import (  # noqa: E402
     users,
 )
 from app.api.worksheets_v2 import router as worksheets_v2_router  # noqa: E402
+from app.api.worksheets_v3 import router as worksheets_v3_router  # noqa: E402
 
 
 @asynccontextmanager
@@ -188,6 +189,7 @@ app.include_router(share.router)
 app.include_router(learning_graph.router)
 app.include_router(reports.router)
 app.include_router(worksheets_v2_router)
+app.include_router(worksheets_v3_router)
 app.include_router(grading.router)
 app.include_router(revision.router)
 app.include_router(flashcards.router)
