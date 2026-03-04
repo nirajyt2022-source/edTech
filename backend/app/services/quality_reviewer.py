@@ -663,6 +663,37 @@ def _contains_llm_artifact(text: str) -> bool:
 _LATIN_IN_DEVANAGARI_RE = re.compile(r"[a-zA-Z]{2,}")
 _DEVANAGARI_CHAR_RE = re.compile(r"[\u0900-\u097F]")
 
+# Legitimate English abbreviations/units that may appear in Hindi text.
+# These should NOT trigger code-mixing detection.
+_HINDI_ENGLISH_ALLOWLIST = {
+    # Units of measurement
+    "km",
+    "cm",
+    "mm",
+    "kg",
+    "mg",
+    "ml",
+    # Common abbreviations
+    "TV",
+    "AC",
+    "DNA",
+    "RNA",
+    "NCERT",
+    "CBSE",
+    "UPI",
+    "ATM",
+    "OTP",
+    "SMS",
+    "SIM",
+    "USB",
+    "CD",
+    "DVD",
+    "LED",
+    "FM",
+    "AM",
+    "PM",
+}
+
 # Devanagari transliterations of common English words that LLMs inject into
 # Hindi text.  These are pure Devanagari Unicode but semantically English.
 _HINDI_TRANSLITERATION_BLOCKLIST = {
@@ -693,14 +724,74 @@ _HINDI_TRANSLITERATION_BLOCKLIST = {
     "प्रोजेक्ट",
     "डिज़ाइन",
     "पैटर्न",
+    # Colors
+    "रेड",
+    "ब्लू",
+    "ग्रीन",
+    "यलो",
+    "पिंक",
+    "ऑरेंज",
+    "पर्पल",
+    "ब्लैक",
+    "व्हाइट",
+    "ब्राउन",
+    # Animals
+    "डॉग",
+    "कैट",
+    "रैबिट",
+    "फिश",
+    "बर्ड",
+    "लायन",
+    "टाइगर",
+    "एलिफेंट",
+    "मंकी",
+    # Body parts
+    "हैंड",
+    "फेस",
+    "नोज़",
+    "आई",
+    "ईयर",
+    "फिंगर",
+    "लेग",
+    "फुट",
+    # School items
+    "रबर",
+    "शार्पनर",
+    "स्केल",
+    "नोटबुक",
+    "क्लास",
+    "टीचर",
+    "स्टूडेंट",
+    "स्कूल",
+    # Food / kitchen
+    "गिलास",
+    "प्लेट",
+    "कप",
+    "बोतल",
+    "मिल्क",
+    "ब्रेड",
+    "केक",
+    "बिस्किट",
+    "जूस",
+    # LLM verbs (transliterated English verbs)
+    "कैलकुलेट",
+    "ऑब्ज़र्व",
+    "कंपेयर",
+    "एक्सप्लेन",
+    "अनालाइज़",
 }
 
 
 def _has_hindi_code_mixing(text: str) -> bool:
-    """Return True if Devanagari text contains Latin-script words (code-mixing)."""
+    """Return True if Devanagari text contains Latin-script words (code-mixing).
+
+    Legitimate abbreviations/units in _HINDI_ENGLISH_ALLOWLIST are excluded.
+    """
     if not _DEVANAGARI_CHAR_RE.search(text):
         return False  # Not Hindi text — skip
-    return bool(_LATIN_IN_DEVANAGARI_RE.search(text))
+    matches = _LATIN_IN_DEVANAGARI_RE.findall(text)
+    non_allowed = [m for m in matches if m not in _HINDI_ENGLISH_ALLOWLIST]
+    return bool(non_allowed)
 
 
 def _has_hindi_transliteration(text: str) -> bool:
@@ -1017,21 +1108,27 @@ class QualityReviewerAgent:
             # Transliteration blocklist only runs on Hindi subject worksheets
             # to avoid false positives (e.g., "सन" = year in Hindi, not "sun").
             try:
+                _impure_found = False
+
+                # CHECK 10a: Question text
                 if _has_hindi_code_mixing(question_text):
                     msg = f"Q{q_id}: Hindi code-mixing detected (Latin script in Devanagari text)"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)
                     q["_needs_regen"] = True
+                    q["_hindi_impure"] = True
+                    _impure_found = True
                     result.corrections.append(f"Q{q_id}: flagged for regen (Latin code-mixing)")
                 elif context.subject.lower() == "hindi" and _has_hindi_transliteration(question_text):
                     msg = f"Q{q_id}: Hindi transliterated English detected (Devanagari-English words)"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)
                     q["_needs_regen"] = True
+                    q["_hindi_impure"] = True
+                    _impure_found = True
                     result.corrections.append(f"Q{q_id}: flagged for regen (transliterated English)")
 
                 # CHECK 10b: Scan answer, hint, explanation for Hindi impurity
-                _impure_found = False
                 for _field_name in ("answer", "correct_answer", "explanation", "hint"):
                     _field_val = str(q.get(_field_name, "") or "")
                     if not _field_val.strip():
@@ -1046,6 +1143,25 @@ class QualityReviewerAgent:
                         logger.warning("[quality_reviewer] %s", msg)
                         result.warnings.append(msg)
                         _impure_found = True
+
+                # CHECK 10c: MCQ options
+                options = q.get("options")
+                if isinstance(options, list):
+                    for opt in options:
+                        opt_str = str(opt or "")
+                        if not opt_str.strip():
+                            continue
+                        if _has_hindi_code_mixing(opt_str):
+                            msg = f"Q{q_id}: Hindi code-mixing in MCQ option"
+                            logger.warning("[quality_reviewer] %s", msg)
+                            result.warnings.append(msg)
+                            _impure_found = True
+                        elif context.subject.lower() == "hindi" and _has_hindi_transliteration(opt_str):
+                            msg = f"Q{q_id}: Hindi transliteration in MCQ option"
+                            logger.warning("[quality_reviewer] %s", msg)
+                            result.warnings.append(msg)
+                            _impure_found = True
+
                 if _impure_found:
                     q["_hindi_impure"] = True
             except Exception as exc:
