@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, ".")
 
-from app.services.v3.slot_builder import Slot, SlotBuilderOutput, build_slots
+from app.services.v3.slot_builder import build_slots
 
 
 class TestBuildSlots:
