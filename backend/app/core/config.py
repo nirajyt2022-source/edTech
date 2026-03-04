@@ -30,6 +30,8 @@ class Settings(BaseSettings):
 
     # Quality scoring
     worksheet_export_min_score: int = 70  # 0-100; PDF export blocked below this
+    worksheet_export_gold_score: int = 85  # threshold for gold standard mode
+    gold_standard_mode: bool = False  # stricter export: DEGRADE→BLOCK, threshold 85
 
     # CORS — comma-separated allowed origins
     frontend_url: str = "https://ed-tech-drab.vercel.app"

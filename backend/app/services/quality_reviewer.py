@@ -336,10 +336,24 @@ def _answers_match(stored: str, computed: float) -> bool:
     """
     Return True if the stored answer (string) matches the computed result.
 
-    Compares as integers when both values are whole numbers,
-    floating-point otherwise (±0.01 tolerance).
+    Uses the centralized answer normalizer for exact comparison (handles
+    fractions, decimals, integers). Falls back to float tolerance (±0.01)
+    if normalization is unavailable.
     Returns True (no correction) when stored is not parseable as a number.
     """
+    try:
+        from app.utils.answer_normalizer import normalize_numeric
+
+        stored_norm = normalize_numeric(str(stored).strip())
+        computed_norm = normalize_numeric(str(computed))
+        if stored_norm is not None and computed_norm is not None:
+            if stored_norm == computed_norm:
+                return True
+            # Don't return False yet — fall through to float tolerance
+            # for cases like "3.33" vs 3.333... (rounding)
+    except Exception as exc:
+        logger.debug("[quality_reviewer] answer normalizer unavailable, using float fallback: %s", exc)
+
     try:
         stored_num = float(str(stored).strip().replace(",", ""))
     except (ValueError, TypeError):
@@ -1242,6 +1256,32 @@ class QualityReviewerAgent:
                     result.warnings.append(msg)
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 14 (MCQ answer-in-options) skipped: %s", exc)
+
+        # ── CHECK 23: MCQ multi-correct detection ────────────────────────
+        # If >1 option is numerically equivalent to the answer, flag it.
+        try:
+            from app.utils.answer_normalizer import normalize_numeric
+
+            for q in result.questions:
+                q_type = q.get("type", q.get("slot_type", ""))
+                if q_type != "mcq":
+                    continue
+                options = q.get("options") or []
+                if len(options) < 2:
+                    continue
+                answer = str(q.get("answer") or q.get("correct_answer") or "").strip()
+                answer_norm = normalize_numeric(answer)
+                if answer_norm is None:
+                    continue
+                equiv_count = sum(1 for opt in options if normalize_numeric(str(opt).strip()) == answer_norm)
+                if equiv_count > 1:
+                    q_id = q.get("id", "?")
+                    q["_mcq_multi_correct"] = True
+                    msg = f"Q{q_id}: MCQ has {equiv_count} equivalent correct options"
+                    logger.warning("[quality_reviewer] %s", msg)
+                    result.warnings.append(msg)
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 23 (MCQ multi-correct) skipped: %s", exc)
 
         # ── CHECK 15: True/False answer must be "True" or "False" ────────
         # LLM sometimes answers a T/F question with the actual value (e.g. "1/3")

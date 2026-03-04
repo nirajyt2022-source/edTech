@@ -73,6 +73,7 @@ class GateContext:
     generation_context: Any | None = None  # GenerationContext or None
     curriculum_available: bool = True
     worksheet_meta: dict = field(default_factory=dict)  # worksheet-level fields (skill_focus, etc.)
+    gold_standard_mode: bool = False  # stricter enforcement: DEGRADE→BLOCK for R04, R21
 
 
 # ---------------------------------------------------------------------------
@@ -198,11 +199,12 @@ def r03_format_mix_tolerance(ctx: GateContext) -> RuleResult:
 @register_rule("R04_CURRICULUM_GROUNDED", Enforcement.DEGRADE)
 def r04_curriculum_grounded(ctx: GateContext) -> RuleResult:
     """Check curriculum_available flag and warnings for unavailable curriculum."""
+    enforcement = Enforcement.BLOCK if ctx.gold_standard_mode else Enforcement.DEGRADE
     if not ctx.curriculum_available:
         return RuleResult(
             "R04_CURRICULUM_GROUNDED",
             False,
-            Enforcement.DEGRADE,
+            enforcement,
             "Curriculum not available for this topic",
         )
 
@@ -211,7 +213,7 @@ def r04_curriculum_grounded(ctx: GateContext) -> RuleResult:
     return RuleResult(
         "R04_CURRICULUM_GROUNDED",
         passed,
-        Enforcement.DEGRADE,
+        enforcement,
         f"Curriculum warnings: {curriculum_warnings[0]}" if not passed else "Curriculum grounded",
     )
 
@@ -744,13 +746,15 @@ def r21_parent_confidence(ctx: GateContext) -> RuleResult:
     """Degrade if parent confidence blocks are missing or generic."""
     from app.services.quality_reviewer import validate_parent_blocks
 
+    enforcement = Enforcement.BLOCK if ctx.gold_standard_mode else Enforcement.DEGRADE
+
     meta = ctx.worksheet_meta
     if not meta:
         # No worksheet meta available — skip silently
         return RuleResult(
             "R21_PARENT_CONFIDENCE",
             True,
-            Enforcement.DEGRADE,
+            enforcement,
             "No worksheet meta — skipped",
             stamps={"parent_blocks_complete": True},
         )
@@ -759,9 +763,34 @@ def r21_parent_confidence(ctx: GateContext) -> RuleResult:
     return RuleResult(
         "R21_PARENT_CONFIDENCE",
         all_complete,
-        Enforcement.DEGRADE,
+        enforcement,
         "; ".join(warnings) if warnings else "All parent blocks present",
         stamps={"parent_blocks_complete": all_complete},
+    )
+
+
+# ---------------------------------------------------------------------------
+# R22 — MCQ_UNIQUE_ANSWER (BLOCK)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R22_MCQ_UNIQUE_ANSWER", Enforcement.BLOCK)
+def r22_mcq_unique_answer(ctx: GateContext) -> RuleResult:
+    """Block if any MCQ has multiple options equivalent to the answer."""
+    flagged = [q for q in ctx.questions if q.get("_mcq_multi_correct")]
+    if not flagged:
+        return RuleResult("R22_MCQ_UNIQUE_ANSWER", True, Enforcement.BLOCK, "All MCQ answers unique")
+
+    details = []
+    for q in flagged[:3]:
+        qid = q.get("id", "?")
+        details.append(f"Q{qid}: multi-correct options")
+
+    return RuleResult(
+        "R22_MCQ_UNIQUE_ANSWER",
+        False,
+        Enforcement.BLOCK,
+        f"{len(flagged)} MCQ(s) with equivalent options: {'; '.join(details)}",
     )
 
 
@@ -803,6 +832,7 @@ def run_release_gate(
     generation_context: Any | None = None,
     curriculum_available: bool = True,
     worksheet_meta: dict | None = None,
+    gold_standard_mode: bool = False,
 ) -> ReleaseVerdict:
     """
     Run all registered rules and produce a ReleaseVerdict.
@@ -829,6 +859,7 @@ def run_release_gate(
         generation_context=generation_context,
         curriculum_available=curriculum_available,
         worksheet_meta=worksheet_meta or {},
+        gold_standard_mode=gold_standard_mode,
     )
 
     results: list[RuleResult] = []
@@ -879,12 +910,17 @@ def run_release_gate(
         verdict = "released"
         passed = True
 
+    # Gold standard stamps
+    merged_stamps["gold_standard_mode"] = gold_standard_mode
+    merged_stamps["gold_standard_eligible"] = passed and verdict == "released" and gold_standard_mode
+
     logger.info(
-        "[release_gate] verdict=%s failed=%d blocked=%d degraded=%d",
+        "[release_gate] verdict=%s failed=%d blocked=%d degraded=%d gold=%s",
         verdict,
         len(failed_rules),
         len(block_reasons),
         len(degrade_reasons),
+        gold_standard_mode,
     )
 
     return ReleaseVerdict(

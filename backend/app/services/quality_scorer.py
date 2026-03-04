@@ -36,13 +36,21 @@ _DIMENSION_WEIGHTS = {
 }
 
 
-def _get_export_threshold() -> int:
-    """Read threshold from settings, falling back to env var."""
+def _get_export_threshold(*, gold_standard_mode: bool = False) -> int:
+    """Read threshold from settings, falling back to env var.
+
+    In gold standard mode, returns the higher gold threshold (default 85).
+    """
     try:
         from app.core.config import get_settings
 
-        return get_settings().worksheet_export_min_score
+        settings = get_settings()
+        if gold_standard_mode:
+            return settings.worksheet_export_gold_score
+        return settings.worksheet_export_min_score
     except Exception:
+        if gold_standard_mode:
+            return 85
         return int(os.environ.get("WORKSHEET_EXPORT_MIN_SCORE", "40"))
 
 
@@ -136,6 +144,7 @@ _ERROR_CLASSIFIERS: list[tuple[str, str, str, str, float]] = [
         0.10,
     ),
     (r"render integrity|phantom visual", "content", "CONTENT_12", "major", 0.15),
+    (r"MCQ has \d+ equivalent", "content", "CONTENT_13", "critical", 0.30),
     # Pedagogical
     (r"Type diversity", "pedagogical", "PED_02", "major", 0.15),
 ]
@@ -296,6 +305,19 @@ def _run_content_checks(
                     message="Fill-in-the-blank question is ambiguous",
                     question_ids=[qid],
                     points_deducted=0.10,
+                )
+            )
+
+        # CONTENT_13: MCQ multi-correct options flag
+        if q.get("_mcq_multi_correct"):
+            buckets["content"].append(
+                FailureReason(
+                    dimension="content",
+                    check_id="CONTENT_13",
+                    severity="critical",
+                    message="MCQ has multiple equivalent correct options",
+                    question_ids=[qid],
+                    points_deducted=0.30,
                 )
             )
 
@@ -585,6 +607,7 @@ def score_worksheet(
     *,
     expected_count: int | None = None,
     export_threshold: int | None = None,
+    gold_standard_mode: bool = False,
 ) -> QualityScore:
     """
     Score a worksheet dict against all quality standards.
@@ -609,7 +632,11 @@ def score_worksheet(
     if expected_count is None:
         expected_count = len(questions)
 
-    threshold = export_threshold if export_threshold is not None else _get_export_threshold()
+    threshold = (
+        export_threshold
+        if export_threshold is not None
+        else _get_export_threshold(gold_standard_mode=gold_standard_mode)
+    )
 
     # Normalize question dicts
     q_dicts: list[dict] = []
