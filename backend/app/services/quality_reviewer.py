@@ -1797,31 +1797,40 @@ class QualityReviewerAgent:
             logger.debug("[quality_reviewer] Check 15 (T/F answer format) skipped: %s", exc)
 
         # ── CHECK 16: Hindi question instruction vs answer consistency ───
-        # If a Hindi question asks for बहुवचन (plural) but answer is singular
-        # (or vice versa), flag for regeneration since auto-fix is unreliable.
+        # If a Hindi question asks for बहुवचन (plural) but answer/explanation
+        # gives the opposite, auto-fix the question text to match the answer
+        # rather than flagging _needs_regen (which triggers P0 kill switch).
         try:
             _BAHUVACHAN_RE = re.compile(r"बहुवचन|plural", re.IGNORECASE)
             _EKVACHAN_RE = re.compile(r"एकवचन|singular", re.IGNORECASE)
             for q in result.questions:
                 q_text = q.get("text") or q.get("question_text") or ""
+                q_key = "text" if "text" in q else "question_text"
                 # Only check if question explicitly mentions vachan terms
                 asks_plural = bool(_BAHUVACHAN_RE.search(q_text))
                 asks_singular = bool(_EKVACHAN_RE.search(q_text))
                 if not asks_plural and not asks_singular:
                     continue
-                explanation = str(q.get("explanation") or "").lower()
+                explanation = str(q.get("explanation") or "")
+                explanation_lower = explanation.lower()
                 q_id = q.get("id", "?")
-                # Check contradiction: question asks for plural but explanation says singular
-                if asks_plural and "एकवचन" in explanation and "बहुवचन" not in explanation:
-                    msg = f"Q{q_id}: question asks for बहुवचन but answer/explanation gives एकवचन — flagged for regen"
+                # Contradiction: question asks for plural but explanation says singular
+                if asks_plural and "एकवचन" in explanation_lower and "बहुवचन" not in explanation_lower:
+                    # Auto-fix: swap question to ask for एकवचन instead
+                    new_text = re.sub(r"बहुवचन", "एकवचन", q_text)
+                    new_text = re.sub(r"(?i)plural", "singular", new_text)
+                    q[q_key] = new_text
+                    msg = f"Q{q_id}: question asked for बहुवचन but answer gives एकवचन — auto-fixed question text"
                     logger.warning("[quality_reviewer] %s", msg)
-                    q["_needs_regen"] = True
-                    result.warnings.append(msg)
-                elif asks_singular and "बहुवचन" in explanation and "एकवचन" not in explanation:
-                    msg = f"Q{q_id}: question asks for एकवचन but answer/explanation gives बहुवचन — flagged for regen"
+                    result.corrections.append(msg)
+                elif asks_singular and "बहुवचन" in explanation_lower and "एकवचन" not in explanation_lower:
+                    # Auto-fix: swap question to ask for बहुवचन instead
+                    new_text = re.sub(r"एकवचन", "बहुवचन", q_text)
+                    new_text = re.sub(r"(?i)singular", "plural", new_text)
+                    q[q_key] = new_text
+                    msg = f"Q{q_id}: question asked for एकवचन but answer gives बहुवचन — auto-fixed question text"
                     logger.warning("[quality_reviewer] %s", msg)
-                    q["_needs_regen"] = True
-                    result.warnings.append(msg)
+                    result.corrections.append(msg)
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 16 (Hindi vachan consistency) skipped: %s", exc)
 

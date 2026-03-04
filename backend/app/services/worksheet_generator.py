@@ -1708,19 +1708,39 @@ def validate_response(
             continue
         correct = str(q.get("correct_answer", "")).strip()
         cleaned = [o for o in opts if str(o).strip().lower() not in _banned_mcq]
-        if len(cleaned) < len(opts):
-            # Pad back to original length with safe fillers
-            _safe = ["इनमें से कुछ नहीं कह सकते", "यह ज्ञात नहीं है", "Cannot be determined", "Not enough information"]
-            idx = 0
-            while len(cleaned) < len(opts) and idx < len(_safe):
-                if _safe[idx] not in cleaned:
-                    cleaned.append(_safe[idx])
-                idx += 1
+        changed = len(cleaned) < len(opts)
+        if changed:
+            warnings.append(f"{q.get('id', '?')}: stripped banned MCQ option(s)")
+        # Ensure exactly 4 options for MCQs (pad or trim as needed)
+        target = 4
+        if len(cleaned) < target:
+            changed = True
+            _safe = [
+                "इनमें से कुछ नहीं कह सकते",
+                "यह ज्ञात नहीं है",
+                "Cannot be determined",
+                "Not enough information",
+                "Does not apply",
+                "No correct option given",
+            ]
+            for filler in _safe:
+                if len(cleaned) >= target:
+                    break
+                if filler not in cleaned:
+                    cleaned.append(filler)
+            # Last resort: numbered options
+            while len(cleaned) < target:
+                cleaned.append(f"Option {len(cleaned) + 1}")
+        elif len(cleaned) > target:
+            changed = True
+            # Trim: keep correct answer + first 3 others
+            others = [o for o in cleaned if o != correct][:3]
+            cleaned = others + [correct] if correct and correct not in others else cleaned[:target]
+        if changed:
             q["options"] = cleaned
             # Ensure correct_answer is still in options
             if correct and correct not in cleaned:
                 q["options"][-1] = correct
-            warnings.append(f"{q.get('id', '?')}: stripped banned MCQ option(s)")
 
     # --- Count check ---
     count_diff = abs(len(questions) - num_questions)
