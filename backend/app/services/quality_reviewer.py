@@ -2060,13 +2060,13 @@ class QualityReviewerAgent:
         try:
             if is_maths:
                 _ADD_KW = re.compile(
-                    r"\b(total|altogether|sum|in all|how many|more|combined|"
-                    r"together|plus|additional|extra)\b",
+                    r"\b(total|altogether|sum|in all|combined|"
+                    r"together|plus|additional|extra|joined|both)\b",
                     re.IGNORECASE,
                 )
                 _SUB_KW = re.compile(
-                    r"\b(left|remaining|gave away|less|difference|fewer|"
-                    r"taken away|removed|spent|lost|ate|distributed)\b",
+                    r"\b(left|remaining|gave away|gave|less|difference|fewer|"
+                    r"taken away|removed|spent|lost|ate|distributed|sold|used)\b",
                     re.IGNORECASE,
                 )
                 _MUL_KW = re.compile(
