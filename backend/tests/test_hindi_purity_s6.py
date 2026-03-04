@@ -124,8 +124,8 @@ class TestMCQOptionsCheck:
         reviewer.review_worksheet(questions, ctx)
         assert questions[0].get("_hindi_impure") is True
 
-    def test_impure_translit_option_sets_flag(self):
-        """MCQ option with transliteration → _hindi_impure (Hindi subject)."""
+    def test_impure_translit_option_auto_fixed(self):
+        """MCQ option with transliteration → auto-replaced (Hindi subject)."""
         ctx = _make_context(subject="Hindi")
         questions = [
             {
@@ -138,8 +138,10 @@ class TestMCQOptionsCheck:
             }
         ]
         reviewer = QualityReviewerAgent()
-        reviewer.review_worksheet(questions, ctx)
-        assert questions[0].get("_hindi_impure") is True
+        result = reviewer.review_worksheet(questions, ctx)
+        # "रेड" should be auto-replaced with "लाल", not flagged
+        assert "रेड" not in questions[0]["options"]
+        assert questions[0].get("_hindi_impure") is not True
 
     def test_clean_options_no_flag(self):
         """All-Hindi MCQ options → no _hindi_impure."""
@@ -198,8 +200,8 @@ class TestQuestionTextImpureFlag:
         assert questions[0].get("_hindi_impure") is True
         assert questions[0].get("_needs_regen") is True
 
-    def test_transliteration_in_question_sets_flag(self):
-        """Transliteration in question_text (Hindi subject) → _hindi_impure."""
+    def test_transliteration_in_question_auto_fixed(self):
+        """Transliteration in question_text (Hindi subject) → auto-replaced."""
         ctx = _make_context(subject="Hindi")
         questions = [
             {
@@ -212,6 +214,27 @@ class TestQuestionTextImpureFlag:
         ]
         reviewer = QualityReviewerAgent()
         reviewer.review_worksheet(questions, ctx)
+        # "पेंसिल" should be auto-replaced with "कलम"
+        assert "पेंसिल" not in questions[0]["question_text"]
+        assert "कलम" in questions[0]["question_text"]
+        # Should NOT be flagged for regen since it was auto-fixed
+        assert questions[0].get("_hindi_impure") is not True
+
+    def test_unknown_transliteration_still_flags(self):
+        """Transliteration NOT in auto-fix dict → still flagged for regen."""
+        ctx = _make_context(subject="Hindi")
+        questions = [
+            {
+                "id": "Q1",
+                "question_text": "इसमें कितने कंप्यूटर हैं?",
+                "slot_type": "application",
+                "format": "word_problem",
+                "answer": "3",
+            }
+        ]
+        reviewer = QualityReviewerAgent()
+        reviewer.review_worksheet(questions, ctx)
+        # "कंप्यूटर" is in blocklist but NOT in auto-fix dict → still flagged
         assert questions[0].get("_hindi_impure") is True
         assert questions[0].get("_needs_regen") is True
 

@@ -774,7 +774,8 @@ def build_user_prompt(
             "   हेल्प → मदद/सहायता, सॉल्व → हल करो, फाइंड → ढूँढो/खोजो\n"
             "4. Numbers may remain in Arabic numerals (1, 2, 3).\n"
             "5. Mathematical symbols (+, −, ×, ÷, =) may remain in standard form.\n"
-            "6. This rule applies to EVERY field: question_text, options, correct_answer, explanation, hint.\n"
+            "6. For true_false questions: use 'सही' and 'गलत' as options — NEVER 'True'/'False'.\n"
+            "7. This rule applies to EVERY field: question_text, options, correct_answer, explanation, hint.\n"
         )
         # T3: Hindi spoken register — child-friendly, not textbook-formal
         prompt += (
@@ -1183,22 +1184,40 @@ def ensure_roles(questions: list[dict], difficulty: str) -> list[dict]:
     return questions
 
 
-def fix_true_false_options(questions: list[dict]) -> list[dict]:
-    """Ensure true_false questions always have options and correct_answer is True/False."""
+def fix_true_false_options(questions: list[dict], subject: str = "") -> list[dict]:
+    """Ensure true_false questions always have options and correct_answer is True/False.
+
+    For Hindi-subject worksheets, uses सही/गलत instead of True/False.
+    """
+    is_hindi = subject.lower() == "hindi"
+    true_label = "सही" if is_hindi else "True"
+    false_label = "गलत" if is_hindi else "False"
+    # All recognized affirmative/negative forms
+    _affirmative = {"true", "yes", "correct", "right", "सही", "हाँ", "हां"}
+    _negative = {"false", "no", "incorrect", "wrong", "गलत", "नहीं"}
+
     for q in questions:
         if q.get("type") == "true_false":
             if not q.get("options"):
-                q["options"] = ["True", "False"]
-            # Ensure correct_answer is exactly "True" or "False"
+                q["options"] = [true_label, false_label]
+            elif is_hindi:
+                # Replace English True/False options with Hindi
+                q["options"] = [
+                    true_label
+                    if str(o).strip().lower() in ("true",)
+                    else false_label
+                    if str(o).strip().lower() in ("false",)
+                    else o
+                    for o in q["options"]
+                ]
+            # Ensure correct_answer is in the right form
             ans = str(q.get("correct_answer", "")).strip().lower()
-            if ans not in ("true", "false"):
-                # Try to infer: if the answer looks affirmative, set True
-                if ans in ("yes", "correct", "right"):
-                    q["correct_answer"] = "True"
-                else:
-                    q["correct_answer"] = "False"
+            if ans in _affirmative:
+                q["correct_answer"] = true_label
+            elif ans in _negative:
+                q["correct_answer"] = false_label
             else:
-                q["correct_answer"] = "True" if ans == "true" else "False"
+                q["correct_answer"] = false_label  # default to false for unknown
     return questions
 
 
@@ -1662,6 +1681,47 @@ def validate_response(
                             opts.append(f"Option {len(opts) + 1}")
                     q["options"] = opts
 
+    # --- Strip banned MCQ options (English + Hindi) ---
+    _banned_mcq = {
+        "all of the above",
+        "none of the above",
+        "both a and b",
+        "all the above",
+        "none of above",
+        "both (a) and (b)",
+        "all of these",
+        "none of these",
+        "उपरोक्त सभी",
+        "इनमें से कोई नहीं",
+        "ये सभी",
+        "कोई नहीं",
+        "a और b दोनों",
+        "उपर्युक्त सभी",
+        "सभी सही हैं",
+        "कोई भी नहीं",
+    }
+    for q in questions:
+        if q.get("type") != "mcq":
+            continue
+        opts = q.get("options", [])
+        if not isinstance(opts, list):
+            continue
+        correct = str(q.get("correct_answer", "")).strip()
+        cleaned = [o for o in opts if str(o).strip().lower() not in _banned_mcq]
+        if len(cleaned) < len(opts):
+            # Pad back to original length with safe fillers
+            _safe = ["इनमें से कुछ नहीं कह सकते", "यह ज्ञात नहीं है", "Cannot be determined", "Not enough information"]
+            idx = 0
+            while len(cleaned) < len(opts) and idx < len(_safe):
+                if _safe[idx] not in cleaned:
+                    cleaned.append(_safe[idx])
+                idx += 1
+            q["options"] = cleaned
+            # Ensure correct_answer is still in options
+            if correct and correct not in cleaned:
+                q["options"][-1] = correct
+            warnings.append(f"{q.get('id', '?')}: stripped banned MCQ option(s)")
+
     # --- Count check ---
     count_diff = abs(len(questions) - num_questions)
     if count_diff > 1:
@@ -1721,7 +1781,7 @@ def validate_response(
 
     # --- Question type fixes ---
     questions = detect_true_false(questions)
-    questions = fix_true_false_options(questions)
+    questions = fix_true_false_options(questions, subject=subject)
     questions = fix_mcq_options(questions)
 
     # --- Strip phantom image references ---

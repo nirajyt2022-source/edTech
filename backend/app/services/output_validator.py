@@ -124,10 +124,10 @@ class OutputValidator:
             if q_type == "mcq" and (not q.get("options") or len(q.get("options", [])) < 3):
                 errors.append(f"{qid}: MCQ needs at least 3 options")
 
-            # True/false answer must be valid
+            # True/false answer must be valid (English: True/False, Hindi: सही/गलत)
             if q_type == "true_false":
                 ans = str(q.get("correct_answer", "")).strip().lower()
-                if ans not in ("true", "false"):
+                if ans not in ("true", "false", "सही", "गलत"):
                     errors.append(f"{qid}: true_false answer must be 'True' or 'False', got '{ans}'")
 
             # MCQ answer must be in options

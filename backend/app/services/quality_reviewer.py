@@ -694,6 +694,44 @@ _HINDI_ENGLISH_ALLOWLIST = {
     "PM",
 }
 
+# Indian proper names (from worksheet_generator._INDIAN_NAMES) are legitimate
+# in Hindi text and should not trigger code-mixing detection.
+# Dynamically loaded to stay in sync.
+try:
+    from app.services.worksheet_generator import _INDIAN_NAMES as _NAMES_LIST
+
+    _HINDI_ENGLISH_ALLOWLIST |= set(_NAMES_LIST)
+except ImportError:
+    pass
+
+# Engagement framing words injected by the LLM or CHECK 11 — these get
+# stripped later but should not trigger code-mixing detection before that.
+_HINDI_ENGLISH_ALLOWLIST |= {
+    "Help",
+    "help",
+    "solve",
+    "Solve",
+    "find",
+    "Find",
+    "figure",
+    "Figure",
+    "out",
+    "this",
+    "Can",
+    "can",
+    "you",
+    "Try",
+    "try",
+    "Let",
+    "let",
+    "Guess",
+    "guess",
+    "count",
+    "Count",
+    "work",
+    "Work",
+}
+
 # Devanagari transliterations of common English words that LLMs inject into
 # Hindi text.  These are pure Devanagari Unicode but semantically English.
 _HINDI_TRANSLITERATION_BLOCKLIST = {
@@ -1165,6 +1203,130 @@ class QualityReviewerAgent:
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 9 skipped for Q%s: %s", q_id, exc)
 
+            # ── CHECK 10-pre: Auto-fix Hindi impurities before detection ────
+            # A) True/False → सही/गलत
+            # B) Auto-replace common Devanagari-transliterated English words
+            try:
+                if context.subject.lower() == "hindi":
+                    _TF_REPLACEMENTS = {
+                        "True": "सही",
+                        "true": "सही",
+                        "False": "गलत",
+                        "false": "गलत",
+                        "Correct": "सही",
+                        "correct": "सही",
+                        "Incorrect": "गलत",
+                        "incorrect": "गलत",
+                    }
+                    q_type = q.get("type", q.get("slot_type", ""))
+                    # Fix options
+                    opts = q.get("options")
+                    if isinstance(opts, list):
+                        new_opts = [_TF_REPLACEMENTS.get(str(o).strip(), o) for o in opts]
+                        if new_opts != opts:
+                            q["options"] = new_opts
+                            result.corrections.append(f"Q{q_id}: True/False options → सही/गलत")
+                    # Fix answer fields
+                    for _tf_field in ("answer", "correct_answer"):
+                        _tf_val = str(q.get(_tf_field, "") or "").strip()
+                        if _tf_val in _TF_REPLACEMENTS:
+                            q[_tf_field] = _TF_REPLACEMENTS[_tf_val]
+                            result.corrections.append(
+                                f"Q{q_id}: {_tf_field} '{_tf_val}' → '{_TF_REPLACEMENTS[_tf_val]}'"
+                            )
+                    # Fix question text containing "True or False" / "True/False"
+                    qt = q.get("question_text", q.get("text", ""))
+                    if qt:
+                        _cleaned_qt = (
+                            qt.replace("True or False", "सही या गलत")
+                            .replace("true or false", "सही या गलत")
+                            .replace("True/False", "सही/गलत")
+                            .replace("true/false", "सही/गलत")
+                        )
+                        if _cleaned_qt != qt:
+                            q["question_text"] = _cleaned_qt
+                            q["text"] = _cleaned_qt
+                            question_text = _cleaned_qt  # update local var for CHECK 10
+                            result.corrections.append(f"Q{q_id}: 'True or False' → 'सही या गलत' in text")
+
+                    # B) Auto-replace common transliterated words across all fields
+                    _TRANSLIT_FIXES = {
+                        "बॉल": "गेंद",
+                        "बुक": "किताब",
+                        "बुक्स": "किताबें",
+                        "टेबल": "मेज़",
+                        "चेयर": "कुर्सी",
+                        "पेंसिल": "कलम",
+                        "पेंसिल्स": "कलमें",
+                        "स्कूल": "विद्यालय",
+                        "टीचर": "शिक्षक",
+                        "स्टूडेंट": "विद्यार्थी",
+                        "कलर": "रंग",
+                        "फ्लावर": "फूल",
+                        "ट्री": "पेड़",
+                        "बर्ड": "पक्षी",
+                        "कैट": "बिल्ली",
+                        "डॉग": "कुत्ता",
+                        "फिश": "मछली",
+                        "रैबिट": "खरगोश",
+                        "स्टार": "तारा",
+                        "बैग": "थैला",
+                        "ट्रेन": "रेलगाड़ी",
+                        "बॉक्स": "डिब्बा",
+                        "हेल्प": "मदद",
+                        "सॉल्व": "हल करो",
+                        "फाइंड": "ढूँढो",
+                        "लेट्स": "चलो",
+                        "चेक": "जाँचो",
+                        "काउंट": "गिनो",
+                        "करेक्ट": "सही",
+                        "इनकरेक्ट": "गलत",
+                        "नंबर": "संख्या",
+                        "प्लेट": "थाली",
+                        "कप": "प्याला",
+                        "गिलास": "गिलास",
+                        "मिल्क": "दूध",
+                        "ब्रेड": "रोटी",
+                        "रेड": "लाल",
+                        "ब्लू": "नीला",
+                        "ग्रीन": "हरा",
+                        "यलो": "पीला",
+                        "पिंक": "गुलाबी",
+                        "ऑरेंज": "नारंगी",
+                        "ब्लैक": "काला",
+                        "व्हाइट": "सफ़ेद",
+                    }
+                    _translit_fixed = False
+                    for _field in ("question_text", "text", "answer", "correct_answer", "explanation", "hint"):
+                        _fv = str(q.get(_field, "") or "")
+                        if not _fv.strip():
+                            continue
+                        _new_fv = _fv
+                        for _bad, _good in _TRANSLIT_FIXES.items():
+                            if _bad in _new_fv:
+                                _new_fv = _new_fv.replace(_bad, _good)
+                        if _new_fv != _fv:
+                            q[_field] = _new_fv
+                            if _field in ("question_text", "text"):
+                                question_text = _new_fv
+                            _translit_fixed = True
+                    if _translit_fixed:
+                        result.corrections.append(f"Q{q_id}: auto-replaced transliterated words with Hindi equivalents")
+                    # Also fix options
+                    _opts = q.get("options")
+                    if isinstance(_opts, list):
+                        _new_opts = []
+                        for _o in _opts:
+                            _os = str(_o or "")
+                            for _bad, _good in _TRANSLIT_FIXES.items():
+                                _os = _os.replace(_bad, _good)
+                            _new_opts.append(_os)
+                        if _new_opts != [str(o or "") for o in _opts]:
+                            q["options"] = _new_opts
+                            result.corrections.append(f"Q{q_id}: auto-replaced transliterated words in options")
+            except Exception as exc:
+                logger.debug("[quality_reviewer] Check 10-pre skipped for Q%s: %s", q_id, exc)
+
             # ── CHECK 10: Hindi language purity ─────────────────────────────
             # Code-mixing check runs on any text with Devanagari.
             # Transliteration blocklist only runs on Hindi subject worksheets
@@ -1191,20 +1353,26 @@ class QualityReviewerAgent:
                     result.corrections.append(f"Q{q_id}: flagged for regen (transliterated English)")
 
                 # CHECK 10b: Scan answer, hint, explanation for Hindi impurity
+                # Only answer fields are student-facing and trigger _hindi_impure.
+                # Explanation/hint impurity is logged as a warning but does NOT
+                # trigger R17 BLOCK — it's teacher-facing and cosmetic.
                 for _field_name in ("answer", "correct_answer", "explanation", "hint"):
                     _field_val = str(q.get(_field_name, "") or "")
                     if not _field_val.strip():
                         continue
+                    _is_student_facing = _field_name in ("answer", "correct_answer")
                     if _has_hindi_code_mixing(_field_val):
                         msg = f"Q{q_id}: Hindi code-mixing in {_field_name}"
                         logger.warning("[quality_reviewer] %s", msg)
                         result.warnings.append(msg)
-                        _impure_found = True
+                        if _is_student_facing:
+                            _impure_found = True
                     elif context.subject.lower() == "hindi" and _has_hindi_transliteration(_field_val):
                         msg = f"Q{q_id}: Hindi transliteration in {_field_name}"
                         logger.warning("[quality_reviewer] %s", msg)
                         result.warnings.append(msg)
-                        _impure_found = True
+                        if _is_student_facing:
+                            _impure_found = True
 
                 # CHECK 10c: MCQ options
                 options = q.get("options")
@@ -1576,39 +1744,50 @@ class QualityReviewerAgent:
         # LLM sometimes answers a T/F question with the actual value (e.g. "1/3")
         # instead of "True" or "False". Derive the correct boolean from the content.
         try:
+            _is_hindi_subject = context.subject.lower() == "hindi"
+            _valid_tf = {"True", "False", "सही", "गलत"} if _is_hindi_subject else {"True", "False"}
+            _true_label = "सही" if _is_hindi_subject else "True"
+            _false_label = "गलत" if _is_hindi_subject else "False"
+
             for q in result.questions:
                 q_type = q.get("type", q.get("slot_type", ""))
                 if q_type != "true_false":
                     continue
                 answer = str(q.get("answer") or q.get("correct_answer") or "").strip()
-                if answer in ("True", "False"):
+                if answer in _valid_tf:
                     continue  # already correct format
-                # Answer is not True/False — derive from explanation
+                # Answer is not in valid T/F form — derive from explanation
                 explanation = str(q.get("explanation") or "").lower()
-                q_text = (q.get("text") or q.get("question_text") or "").lower()
                 q_id = q.get("id", "?")
-                # Heuristic: if explanation says "correct", "true", "right" → True
-                # if explanation says "incorrect", "not", "wrong", "false" → False
-                _true_signals = bool(
-                    re.search(
-                        r"\b(is correct|is true|is right|statement is true|so,? true|the answer is true)\b", explanation
-                    )
-                )
-                _false_signals = bool(
-                    re.search(
-                        r"\b(incorrect|not correct|is wrong|is false|not true|the answer is false|is not)\b",
-                        explanation,
-                    )
-                )
-                if _true_signals and not _false_signals:
-                    new_answer = "True"
-                elif _false_signals and not _true_signals:
-                    new_answer = "False"
+                # Check affirmative/negative in both English and Hindi
+                _affirmative_forms = {"true", "yes", "correct", "right", "सही", "हाँ", "हां"}
+                _negative_forms = {"false", "no", "incorrect", "wrong", "गलत", "नहीं"}
+                ans_lower = answer.lower()
+                if ans_lower in _affirmative_forms:
+                    new_answer = _true_label
+                elif ans_lower in _negative_forms:
+                    new_answer = _false_label
                 else:
-                    # Fallback: check if the statement in question matches the given answer
-                    # e.g. Q: "T or F: 7/9 - 4/9 = 3/9" A: "1/3" → 3/9 == 1/3, so True
-                    new_answer = "True"  # default: assume LLM gave the correct value
-                msg = f"Q{q_id}: T/F answer was '{answer}' (not True/False) — corrected to '{new_answer}'"
+                    # Heuristic from explanation
+                    _true_signals = bool(
+                        re.search(
+                            r"\b(is correct|is true|is right|statement is true|so,? true|the answer is true|सही है)\b",
+                            explanation,
+                        )
+                    )
+                    _false_signals = bool(
+                        re.search(
+                            r"\b(incorrect|not correct|is wrong|is false|not true|the answer is false|is not|गलत है|सही नहीं)\b",
+                            explanation,
+                        )
+                    )
+                    if _true_signals and not _false_signals:
+                        new_answer = _true_label
+                    elif _false_signals and not _true_signals:
+                        new_answer = _false_label
+                    else:
+                        new_answer = _true_label  # default: assume LLM gave the correct value
+                msg = f"Q{q_id}: T/F answer was '{answer}' (not {_true_label}/{_false_label}) — corrected to '{new_answer}'"
                 logger.warning("[quality_reviewer] %s", msg)
                 q["answer"] = new_answer
                 q["correct_answer"] = new_answer
