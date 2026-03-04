@@ -66,9 +66,12 @@ def _diverse_questions(n: int = 10) -> list[dict]:
             qtype=types[i],
             skill_tag=tags[i],
         )
-        if types[i] == "mcq":
+        if types[i] == "mcq" and i == 0:
             q["options"] = ["A) 68", "B) 58", "C) 78", "D) 88"]
             q["correct_answer"] = "A) 68"
+        elif types[i] == "mcq" and i == 8:
+            q["options"] = ["A) 100", "B) 98", "C) 101", "D) 110"]
+            q["correct_answer"] = "A) 100"
         qs.append(q)
     return qs[:n]
 

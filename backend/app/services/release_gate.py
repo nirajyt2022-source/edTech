@@ -444,6 +444,34 @@ def r10_warnings_transparent(ctx: GateContext) -> RuleResult:
 # ---------------------------------------------------------------------------
 
 
+@register_rule("R11_TOPIC_DRIFT_GUARD", Enforcement.DEGRADE)
+def r11_topic_drift_guard(ctx: GateContext) -> RuleResult:
+    """Degrade if >50% of questions appear off-topic based on warnings."""
+    import re as _re
+
+    drift_match = None
+    for w in ctx.warnings:
+        m = _re.search(r"Topic drift:\s*(\d+)/(\d+)", w)
+        if m:
+            drift_match = m
+            break
+
+    if not drift_match:
+        return RuleResult("R11_TOPIC_DRIFT_GUARD", True, Enforcement.DEGRADE, "No drift detected")
+
+    off_topic = int(drift_match.group(1))
+    total = int(drift_match.group(2))
+    ratio = off_topic / max(total, 1)
+
+    passed = ratio <= 0.50
+    return RuleResult(
+        "R11_TOPIC_DRIFT_GUARD",
+        passed,
+        Enforcement.DEGRADE,
+        f"{off_topic}/{total} off-topic ({ratio:.0%})" if not passed else f"{off_topic}/{total} within tolerance",
+    )
+
+
 # ---------------------------------------------------------------------------
 # R12 — ROUND_NUMBER_GUARD (DEGRADE)
 # ---------------------------------------------------------------------------
@@ -478,34 +506,6 @@ def r12_round_number_guard(ctx: GateContext) -> RuleResult:
         f"{round_count}/{len(all_nums)} round ({ratio:.0%})"
         if not passed
         else f"{round_count}/{len(all_nums)} within tolerance",
-    )
-
-
-@register_rule("R11_TOPIC_DRIFT_GUARD", Enforcement.DEGRADE)
-def r11_topic_drift_guard(ctx: GateContext) -> RuleResult:
-    """Degrade if >50% of questions appear off-topic based on warnings."""
-    import re as _re
-
-    drift_match = None
-    for w in ctx.warnings:
-        m = _re.search(r"Topic drift:\s*(\d+)/(\d+)", w)
-        if m:
-            drift_match = m
-            break
-
-    if not drift_match:
-        return RuleResult("R11_TOPIC_DRIFT_GUARD", True, Enforcement.DEGRADE, "No drift detected")
-
-    off_topic = int(drift_match.group(1))
-    total = int(drift_match.group(2))
-    ratio = off_topic / max(total, 1)
-
-    passed = ratio <= 0.50
-    return RuleResult(
-        "R11_TOPIC_DRIFT_GUARD",
-        passed,
-        Enforcement.DEGRADE,
-        f"{off_topic}/{total} off-topic ({ratio:.0%})" if not passed else f"{off_topic}/{total} within tolerance",
     )
 
 
@@ -594,6 +594,25 @@ def r14_sentence_diversity_guard(ctx: GateContext) -> RuleResult:
 # ---------------------------------------------------------------------------
 # R15 — ANSWER_AUTHORITY (BLOCK)
 # ---------------------------------------------------------------------------
+
+
+@register_rule("R15_ANSWER_AUTHORITY", Enforcement.BLOCK)
+def r15_answer_authority(ctx: GateContext) -> RuleResult:
+    """Block if any question has _answer_mismatch (wrong answer)."""
+    mismatches = [q for q in ctx.questions if q.get("_answer_mismatch")]
+    passed = len(mismatches) == 0
+    details = []
+    for q in mismatches[:3]:
+        qid = q.get("id", "?")
+        debug = q.get("_answer_mismatch_debug", {})
+        details.append(f"Q{qid}: declared='{q.get('answer', '')}' expected='{debug.get('computed', '?')}'")
+
+    return RuleResult(
+        "R15_ANSWER_AUTHORITY",
+        passed,
+        Enforcement.BLOCK,
+        f"{len(mismatches)} answer mismatch(es): {'; '.join(details)}" if not passed else "All answers verified",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -794,25 +813,30 @@ def r22_mcq_unique_answer(ctx: GateContext) -> RuleResult:
     )
 
 
-@register_rule("R15_ANSWER_AUTHORITY", Enforcement.BLOCK)
-def r15_answer_authority(ctx: GateContext) -> RuleResult:
-    """Block if any question has _answer_mismatch (wrong math answer)."""
-    if ctx.subject.lower() not in ("maths", "mathematics", "math"):
-        return RuleResult("R15_ANSWER_AUTHORITY", True, Enforcement.BLOCK, "Non-Maths: skipped")
+# ---------------------------------------------------------------------------
+# R23 — ANSWER_KEY_COMPLETE (BLOCK)
+# ---------------------------------------------------------------------------
 
-    mismatches = [q for q in ctx.questions if q.get("_answer_mismatch")]
-    passed = len(mismatches) == 0
-    details = []
-    for q in mismatches[:3]:
-        qid = q.get("id", "?")
-        debug = q.get("_answer_mismatch_debug", {})
-        details.append(f"Q{qid}: declared='{q.get('answer', '')}' expected='{debug.get('computed', '?')}'")
+
+@register_rule("R23_ANSWER_KEY_COMPLETE", Enforcement.BLOCK)
+def r23_answer_key_complete(ctx: GateContext) -> RuleResult:
+    """Block if any non-bonus question is missing an answer."""
+    missing = []
+    for q in ctx.questions:
+        if q.get("_is_bonus"):
+            continue
+        answer = q.get("answer") or q.get("correct_answer") or ""
+        if not str(answer).strip():
+            missing.append(f"Q{q.get('id', '?')}")
+
+    if not missing:
+        return RuleResult("R23_ANSWER_KEY_COMPLETE", True, Enforcement.BLOCK, "All answers present")
 
     return RuleResult(
-        "R15_ANSWER_AUTHORITY",
-        passed,
+        "R23_ANSWER_KEY_COMPLETE",
+        False,
         Enforcement.BLOCK,
-        f"{len(mismatches)} answer mismatch(es): {'; '.join(details)}" if not passed else "All answers verified",
+        f"{len(missing)} question(s) missing answer: {', '.join(missing[:5])}",
     )
 
 

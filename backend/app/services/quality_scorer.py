@@ -597,6 +597,37 @@ def _run_pedagogical_checks(
         )
 
 
+def _check_answer_dedup(
+    questions: list[dict],
+    buckets: dict[str, list[FailureReason]],
+) -> None:
+    """CONTENT_14: Flag duplicate answers across same question type."""
+    from collections import Counter
+
+    groups: Counter = Counter()
+    for q in questions:
+        q_type = (q.get("type") or q.get("slot_type") or "").lower()
+        if q_type in ("error_detection", "error_spot"):
+            continue
+        answer = str(q.get("answer", q.get("correct_answer", ""))).strip().lower()
+        if not answer:
+            continue
+        groups[(q_type, answer)] += 1
+
+    dupes = {k: v for k, v in groups.items() if v >= 2}
+    if dupes:
+        detail_parts = [f"{k[0]}:'{k[1]}'×{v}" for k, v in list(dupes.items())[:3]]
+        buckets["content"].append(
+            FailureReason(
+                dimension="content",
+                check_id="CONTENT_14",
+                severity="major",
+                message=f"Answer dedup: {', '.join(detail_parts)}",
+                points_deducted=0.15,
+            )
+        )
+
+
 # ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
@@ -670,6 +701,7 @@ def score_worksheet(
     _run_ai_smell_checks(q_dicts, buckets)
     _run_curriculum_checks(worksheet, q_dicts, subject, topic, buckets)
     _run_pedagogical_checks(worksheet, q_dicts, buckets)
+    _check_answer_dedup(q_dicts, buckets)
 
     # Step 3: Check for P0 (critical) failures — instant zero
     all_failures = [f for fs in buckets.values() for f in fs]

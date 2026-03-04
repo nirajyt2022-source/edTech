@@ -19,6 +19,14 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# True/False canonical forms (English + Hindi)
+# ---------------------------------------------------------------------------
+
+_TRUE_FORMS = frozenset({"true", "yes", "सही", "हाँ", "हां", "correct", "right"})
+_FALSE_FORMS = frozenset({"false", "no", "गलत", "नहीं", "incorrect", "wrong"})
+_TF_CANONICAL = {**{k: "true" for k in _TRUE_FORMS}, **{k: "false" for k in _FALSE_FORMS}}
+
 
 @dataclass
 class AnswerVerdict:
@@ -68,13 +76,20 @@ class AnswerAuthority:
         is_maths = subject.lower() in ("maths", "mathematics", "math")
 
         if not is_maths:
+            # --- Non-Maths subject-aware dispatch ---
+            if slot_type in ("true_false", "tf"):
+                return self._verify_true_false(q_id, stored_answer)
+            if slot_type == "mcq":
+                return self._verify_mcq_answer(q_id, question, stored_answer)
+            if subject.lower() == "english" and slot_type in ("fill_blank", "fill_in_blank"):
+                return self._verify_fill_blank_english(q_id, stored_answer)
             return AnswerVerdict(
                 question_id=q_id,
                 declared_answer=stored_answer,
                 authoritative_answer=None,
                 match=None,
                 method="unverifiable",
-                debug={"reason": "non-maths subject"},
+                debug={"reason": "non-maths subject, unverifiable type"},
             )
 
         # Skip error_detection for arithmetic checks (intentionally wrong)
@@ -200,6 +215,95 @@ class AnswerAuthority:
         if computed == int(computed):
             return str(int(computed))
         return f"{computed:.4f}".rstrip("0").rstrip(".")
+
+    @staticmethod
+    def _verify_true_false(q_id: str, stored_answer: str) -> AnswerVerdict:
+        """Verify true/false answer is a recognized boolean form."""
+        normalized = stored_answer.strip().lower()
+        canonical = _TF_CANONICAL.get(normalized)
+        if canonical is not None:
+            return AnswerVerdict(
+                question_id=q_id,
+                declared_answer=stored_answer,
+                authoritative_answer=canonical.capitalize(),
+                match=True,
+                method="true_false",
+                debug={"canonical": canonical},
+            )
+        return AnswerVerdict(
+            question_id=q_id,
+            declared_answer=stored_answer,
+            authoritative_answer=None,
+            match=None,
+            method="true_false",
+            debug={"reason": "unrecognized T/F value"},
+        )
+
+    @staticmethod
+    def _verify_mcq_answer(q_id: str, question: dict, stored_answer: str) -> AnswerVerdict:
+        """Verify MCQ answer exists in the options list (case-insensitive)."""
+        options = question.get("options", [])
+        if not options:
+            return AnswerVerdict(
+                question_id=q_id,
+                declared_answer=stored_answer,
+                authoritative_answer=None,
+                match=None,
+                method="mcq",
+                debug={"reason": "no options list"},
+            )
+        lower_options = [str(o).strip().lower() for o in options]
+        answer_lower = stored_answer.strip().lower()
+        if answer_lower in lower_options:
+            return AnswerVerdict(
+                question_id=q_id,
+                declared_answer=stored_answer,
+                authoritative_answer=stored_answer,
+                match=True,
+                method="mcq",
+                debug={"options": options},
+            )
+        return AnswerVerdict(
+            question_id=q_id,
+            declared_answer=stored_answer,
+            authoritative_answer=None,
+            match=False,
+            method="mcq",
+            debug={"reason": "answer not in options", "options": options},
+        )
+
+    @staticmethod
+    def _verify_fill_blank_english(q_id: str, stored_answer: str) -> AnswerVerdict:
+        """Verify fill-in-the-blank answer for English (simple answers only)."""
+        cleaned = stored_answer.strip().lower()
+        if not cleaned:
+            return AnswerVerdict(
+                question_id=q_id,
+                declared_answer=stored_answer,
+                authoritative_answer=None,
+                match=None,
+                method="fill_blank_english",
+                debug={"reason": "empty answer"},
+            )
+        word_count = len(cleaned.split())
+        if word_count > 3:
+            return AnswerVerdict(
+                question_id=q_id,
+                declared_answer=stored_answer,
+                authoritative_answer=None,
+                match=None,
+                method="fill_blank_english",
+                debug={"reason": "too complex", "word_count": word_count},
+            )
+        # Simple answer: valid if non-empty and ≤3 words
+        return AnswerVerdict(
+            question_id=q_id,
+            declared_answer=stored_answer,
+            authoritative_answer=cleaned,
+            match=True,
+            method="fill_blank_english",
+            debug={"word_count": word_count},
+        )
 
     @staticmethod
     def _verify_error_detection(

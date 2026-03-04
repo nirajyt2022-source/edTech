@@ -942,33 +942,36 @@ class QualityReviewerAgent:
             slot_type = q.get("slot_type", "")
             question_text = q.get("question_text", "")
 
-            # ── CHECK 1: Maths answer verification (HARD BLOCK) ────────────
-            # Uses AnswerAuthority to verify ALL maths answers (including
-            # error_detection) WITHOUT auto-correcting.
+            # ── CHECK 1: Answer verification (all subjects) ────────────────
+            # Uses AnswerAuthority to verify answers across all subjects:
+            #   Maths: arithmetic, fraction, word-problem, error-detection
+            #   Non-Maths: T/F canonical check, MCQ answer-in-options, fill_blank
             # If mismatch: sets _answer_mismatch=True (downstream R15 blocks).
-            # If extraction fails: sets _math_unverified=True.
-            if is_maths:
-                try:
-                    from app.services.answer_authority import get_answer_authority
+            # If extraction fails (Maths only): sets _math_unverified=True.
+            try:
+                from app.services.answer_authority import get_answer_authority
 
-                    verdict = get_answer_authority().verify_question(q, context.subject)
-                    if verdict.match is False:
-                        msg = (
-                            f"Q{q_id}: answer mismatch — declared '{verdict.declared_answer}', "
-                            f"authoritative '{verdict.authoritative_answer}' (method={verdict.method})"
-                        )
-                        logger.warning("[quality_reviewer] %s", msg)
-                        q["_answer_mismatch"] = True
-                        q["_answer_mismatch_debug"] = verdict.debug
-                        result.corrections.append(msg)
-                    elif verdict.match is None and verdict.method not in ("unverifiable", "error_detection"):
-                        q["_math_unverified"] = True
-                        result.warnings.append(f"Q{q_id}: math answer could not be verified ({verdict.debug})")
-                except Exception as exc:
+                verdict = get_answer_authority().verify_question(q, context.subject)
+                if verdict.match is False:
+                    msg = (
+                        f"Q{q_id}: answer mismatch — declared '{verdict.declared_answer}', "
+                        f"authoritative '{verdict.authoritative_answer}' (method={verdict.method})"
+                    )
+                    logger.warning("[quality_reviewer] %s", msg)
+                    q["_answer_mismatch"] = True
+                    q["_answer_mismatch_debug"] = verdict.debug
+                    result.corrections.append(msg)
+                elif is_maths and verdict.match is None and verdict.method not in ("unverifiable", "error_detection"):
+                    q["_math_unverified"] = True
+                    result.warnings.append(f"Q{q_id}: math answer could not be verified ({verdict.debug})")
+            except Exception as exc:
+                if is_maths:
                     # HARD BLOCK: mark question as unverified instead of silently skipping
                     logger.error("[quality_reviewer] Check 1 FAILED for Q%s — marking unverified: %s", q_id, exc)
                     q["_math_unverified"] = True
                     result.warnings.append(f"Q{q_id}: math answer could not be verified ({exc})")
+                else:
+                    logger.debug("[quality_reviewer] Check 1 skipped for non-Maths Q%s: %s", q_id, exc)
 
             # ── CHECK 2: Skill tag validation ────────────────────────────
             try:
