@@ -6,6 +6,7 @@ Same signature as generate_worksheet() in worksheet_generator.py for easy swap-i
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 
@@ -15,6 +16,28 @@ from .light_validator import validate_worksheet
 from .slot_builder import build_slots
 
 logger = logging.getLogger(__name__)
+
+
+def _fetch_curriculum_context(grade_level: str, subject: str, topic: str) -> str | None:
+    """Fetch curriculum context synchronously (wraps async get_curriculum_context)."""
+    try:
+        from app.services.curriculum import get_curriculum_context
+
+        return asyncio.run(get_curriculum_context(grade_level, subject, topic))
+    except RuntimeError:
+        # Already inside an event loop — use nest_asyncio or skip
+        try:
+            import nest_asyncio
+
+            nest_asyncio.apply()
+            from app.services.curriculum import get_curriculum_context
+
+            return asyncio.run(get_curriculum_context(grade_level, subject, topic))
+        except Exception as ne:
+            logger.debug("[v3] nest_asyncio fallback failed: %s", ne)
+    except Exception as e:
+        logger.warning("[v3] curriculum fetch failed: %s", e)
+    return None
 
 
 def generate_worksheet_v3(
@@ -59,9 +82,17 @@ def generate_worksheet_v3(
     slot_ms = int((time.perf_counter() - t0) * 1000)
     logger.info("[v3] Slot building took %dms", slot_ms)
 
+    # Step 1.5: Fetch curriculum context (NCERT RAG)
+    curriculum_ctx = _fetch_curriculum_context(grade_level, subject, topic)
+    if curriculum_ctx:
+        warnings.append("[v3] curriculum context injected")
+        logger.info("[v3] Curriculum context loaded for %s / %s", subject, topic)
+    else:
+        logger.info("[v3] No curriculum context for %s / %s", subject, topic)
+
     # Step 2: Fill with Gemini
     t_fill = time.perf_counter()
-    filled = fill_slots(client, slot_output.slots, language)
+    filled = fill_slots(client, slot_output.slots, language, curriculum_context=curriculum_ctx)
     fill_ms = int((time.perf_counter() - t_fill) * 1000)
     logger.info("[v3] Gemini fill took %dms for %d slots", fill_ms, len(filled))
 
@@ -77,7 +108,7 @@ def generate_worksheet_v3(
         logger.info("[v3] Retrying %d failed slots: %s", len(failed_slots), failed_slots)
         retry_slots = [s for s in slot_output.slots if s.slot_number in failed_slots]
         if retry_slots:
-            retry_filled = fill_slots(client, retry_slots, language)
+            retry_filled = fill_slots(client, retry_slots, language, curriculum_context=curriculum_ctx)
             # Merge retry results into worksheet
             retry_by_slot = {}
             for item in retry_filled:

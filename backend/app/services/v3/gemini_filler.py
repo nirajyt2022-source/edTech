@@ -58,9 +58,13 @@ IMPORTANT:
 # ---------------------------------------------------------------------------
 # Build user prompt from slots
 # ---------------------------------------------------------------------------
-def _build_user_prompt(slots: list[Slot], language: str) -> str:
+def _build_user_prompt(slots: list[Slot], language: str, curriculum_context: str | None = None) -> str:
     """Build user prompt listing all slots with their instructions."""
     parts = [f"Language: {language}", f"Total slots: {len(slots)}", ""]
+
+    if curriculum_context:
+        parts.append(curriculum_context)
+        parts.append("")
 
     for slot in slots:
         parts.append(f"SLOT {slot.slot_number}:")
@@ -106,9 +110,9 @@ def _parse_response(raw: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Single LLM call
 # ---------------------------------------------------------------------------
-def _single_call(client, slots: list[Slot], language: str) -> list[dict]:
+def _single_call(client, slots: list[Slot], language: str, curriculum_context: str | None = None) -> list[dict]:
     """Make a single LLM call for a batch of slots."""
-    user_prompt = _build_user_prompt(slots, language)
+    user_prompt = _build_user_prompt(slots, language, curriculum_context)
 
     # Determine temperature and tokens
     has_maths = any(s.numbers for s in slots)
@@ -148,14 +152,14 @@ def _single_call(client, slots: list[Slot], language: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 # Main entry: fill_slots()
 # ---------------------------------------------------------------------------
-def fill_slots(client, slots: list[Slot], language: str) -> list[dict]:
+def fill_slots(client, slots: list[Slot], language: str, curriculum_context: str | None = None) -> list[dict]:
     """Fill all slots with LLM-generated text. Batches for 10+ slots."""
     if len(slots) <= 10:
-        return _single_call(client, slots, language)
+        return _single_call(client, slots, language, curriculum_context)
 
     results = []
     for i in range(0, len(slots), 10):
         batch = slots[i : i + 10]
-        filled = _single_call(client, batch, language)
+        filled = _single_call(client, batch, language, curriculum_context)
         results.extend(filled)
     return results
