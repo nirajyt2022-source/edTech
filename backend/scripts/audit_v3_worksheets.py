@@ -203,7 +203,7 @@ async def run_audit():
                 print("  ✅ All checks passed")
 
             # Print sample questions
-            print(f"\n  Sample questions:")
+            print("\n  Sample questions:")
             for q in audit["questions"][:3]:
                 print(f"    [{q.get('type','?')}|{q.get('role','?')}|{q.get('difficulty','?')}] {q.get('text','')[:80]}")
                 if q.get("correct_answer"):
