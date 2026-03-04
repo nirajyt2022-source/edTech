@@ -47,6 +47,7 @@ class Slot:
     age_range: str = "8-9"
     expected_answer: str | None = None  # Python-known answer for non-maths
     assigned_word: str | None = None  # the word assigned from a word bank
+    context_object: str | None = None  # word problem object (e.g. "apples", "marbles")
 
 
 @dataclass
@@ -745,16 +746,29 @@ def _build_llm_instruction(
         slot.expected_answer = plural
 
         if slot.question_type == "mcq":
+            # Rotate through different MCQ frames
+            mcq_frames = [
+                f"'{singular}' का बहुवचन क्या है?",
+                f"इनमें से '{singular}' का सही बहुवचन चुनो।",
+                f"'{singular}' शब्द का बहुवचन रूप बताओ।",
+            ]
+            frame = mcq_frames[slot.slot_number % len(mcq_frames)]
             other_plurals = [v for k, v in word_items if v != plural and v != singular]
             random.shuffle(other_plurals)
             wrong_opts = other_plurals[:3]
-            parts.append(f"SPECIFIC TASK: Ask '{singular} का बहुवचन क्या है?'")
+            parts.append(f"SPECIFIC TASK: Ask: {frame}")
             parts.append(f"Correct answer: {plural}")
             parts.append(f"Wrong options: {', '.join(wrong_opts)}")
             parts.append(f"Set correct_answer to exactly: {plural}")
             parts.append("Do NOT change the question. Ask ONLY about बहुवचन of this exact word.")
         elif slot.question_type == "fill_blank":
-            parts.append(f"SPECIFIC TASK: Write '{singular} का बहुवचन ______ है।'")
+            fill_frames = [
+                f"'{singular}' का बहुवचन ______ है।",
+                f"एक {singular}, बहुत सारे ______।",
+                f"बगीचे में कई ______ हैं। ({singular})",
+            ]
+            frame = fill_frames[slot.slot_number % len(fill_frames)]
+            parts.append(f"SPECIFIC TASK: Write: {frame}")
             parts.append(f"Correct answer: {plural}")
             parts.append(f"Set correct_answer to exactly: {plural}")
         elif slot.question_type == "true_false":
@@ -772,7 +786,13 @@ def _build_llm_instruction(
             parts.append(f"Correct answer: गलत है। सही बहुवचन {plural} है।")
             slot.expected_answer = f"गलत है। सही बहुवचन {plural} है।"
         else:
-            parts.append(f"SPECIFIC TASK: Ask '{singular} का बहुवचन लिखो।'")
+            sa_frames = [
+                f"'{singular}' का बहुवचन लिखो।",
+                f"'{singular}' शब्द को बहुवचन में बदलो।",
+                f"इस शब्द का बहुवचन लिखो: '{singular}'",
+            ]
+            frame = sa_frames[slot.slot_number % len(sa_frames)]
+            parts.append(f"SPECIFIC TASK: {frame}")
             parts.append(f"Correct answer: {plural}")
             parts.append(f"Set correct_answer to exactly: {plural}")
 
@@ -842,11 +862,50 @@ def _build_llm_instruction(
 
     # Format-specific instructions
     if slot.question_type == "word_problem":
-        if slot.context:
-            parts.append(f"Set in a {slot.context} context.")
-        if slot.names:
-            parts.append(f"Use character(s): {', '.join(slot.names)}.")
-        parts.append("Tell a mini-story, don't just state bare numbers.")
+        # Use rotating frame templates for variety
+        from .context_pools import FEMALE_NAMES, WORD_PROBLEM_FRAMES
+
+        operation = _detect_maths_operation(topic, slot.skill_tag)
+        # Map operation to frame key
+        frame_key = "addition"
+        if operation and "subtraction" in operation:
+            frame_key = "subtraction"
+        elif operation and "multiplication" in operation:
+            frame_key = "multiplication"
+        elif operation and "fraction" in operation:
+            frame_key = "fractions"
+        elif operation == "addition" or (operation and "addition" in operation):
+            frame_key = "addition"
+
+        frames = WORD_PROBLEM_FRAMES.get(frame_key, WORD_PROBLEM_FRAMES["addition"])
+        frame = frames[slot.slot_number % len(frames)]
+
+        name = slot.names[0] if slot.names else "Aarav"
+        name2 = slot.names[1] if len(slot.names) > 1 else "Priya"
+        pronoun = "she" if name in FEMALE_NAMES else "he"
+        pronoun_cap = pronoun.capitalize()
+        obj = slot.context_object or "items"
+
+        if slot.numbers:
+            a, b = slot.numbers["a"], slot.numbers["b"]
+            filled_frame = frame.format(
+                name=name,
+                name2=name2,
+                pronoun=pronoun,
+                pronoun_cap=pronoun_cap,
+                a=a,
+                b=b,
+                obj=obj,
+                context=slot.context or "shop",
+            )
+            parts.append(f"Write a word problem SIMILAR to this structure (vary the wording): {filled_frame}")
+            parts.append(f"Correct answer: {slot.numbers['answer']}.")
+        else:
+            if slot.context:
+                parts.append(f"Set in a {slot.context} context.")
+            if slot.names:
+                parts.append(f"Use character(s): {', '.join(slot.names)}.")
+        parts.append("Make it a natural mini-story. Don't copy the frame exactly — use it as inspiration.")
 
     elif slot.question_type == "error_detection":
         if slot.numbers and slot.wrong_answer is not None:
@@ -892,9 +951,16 @@ def _build_llm_instruction(
         if is_maths_subj and slot.numbers:
             parts.append("Write the question text only. Options will be generated separately.")
         else:
-            parts.append("You MUST provide exactly 4 options in the 'options' array.")
-            parts.append("One option is the correct answer. Three are wrong but plausible.")
-            parts.append("Do NOT skip or leave options empty.")
+            # Rotate through MCQ phrasing styles to avoid repetitive feel
+            mcq_styles = [
+                "Ask 'Which of these is...?' with 4 options.",
+                "Give a sentence and ask to identify the correct word/concept from 4 options.",
+                "Show an example and ask what category/type it belongs to. 4 options.",
+                "Ask 'Which one does NOT belong?' with 4 options (3 correct, 1 wrong — answer is the odd one out).",
+            ]
+            style = mcq_styles[slot.slot_number % len(mcq_styles)]
+            parts.append(style)
+            parts.append("1 clearly correct option, 3 clearly wrong. At least 1 obviously wrong.")
 
     # Fraction MCQs with visuals — use fraction notation, not "Option A/B"
     if slot.visual_type == "pie_fraction" and slot.visual_data and slot.question_type == "mcq":
@@ -1216,6 +1282,9 @@ def build_slots(
 
     # Pick contexts and objects
     contexts = pick_contexts(subject, num_questions)
+    from .context_pools import pick_objects
+
+    objects = pick_objects(grade_num, num_questions)
     used_names: list[str] = []
 
     # Detect error_detection forbidden
@@ -1306,6 +1375,7 @@ def build_slots(
             image_keywords=image_kw,
             max_words=max_words,
             age_range=age_range,
+            context_object=objects[i % len(objects)] if objects else None,
         )
 
         # Build LLM instruction
