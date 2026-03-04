@@ -629,6 +629,15 @@ _BANNED_MCQ_PHRASES = frozenset(
         "both (a) and (b)",
         "all of these",
         "none of these",
+        # Hindi equivalents
+        "उपरोक्त सभी",
+        "इनमें से कोई नहीं",
+        "ये सभी",
+        "कोई नहीं",
+        "a और b दोनों",
+        "उपर्युक्त सभी",
+        "सभी सही हैं",
+        "कोई भी नहीं",
     }
 )
 
@@ -837,6 +846,50 @@ def r23_answer_key_complete(ctx: GateContext) -> RuleResult:
         False,
         Enforcement.BLOCK,
         f"{len(missing)} question(s) missing answer: {', '.join(missing[:5])}",
+    )
+
+
+@register_rule("R24_MINIMUM_QUALITY_SCORE", Enforcement.BLOCK)
+def r24_minimum_quality_score(ctx: GateContext) -> RuleResult:
+    """Block worksheets below minimum quality threshold.
+
+    Thresholds:
+        < 50  → BLOCK   (unacceptable — retry or fail gracefully)
+        50–64 → DEGRADE (usable but warn user as best_effort)
+        ≥ 65  → PASS
+    """
+    score = ctx.worksheet_meta.get("_quality_score")
+    if score is None:
+        # Score not computed — don't block (fail-open)
+        return RuleResult(
+            "R24_MINIMUM_QUALITY_SCORE",
+            True,
+            Enforcement.BLOCK,
+            "quality_score not computed — skipped",
+        )
+
+    BLOCK_THRESHOLD = 50.0
+    DEGRADE_THRESHOLD = 65.0
+
+    if score < BLOCK_THRESHOLD:
+        return RuleResult(
+            "R24_MINIMUM_QUALITY_SCORE",
+            False,
+            Enforcement.BLOCK,
+            f"quality_score {score:.1f} below block threshold {BLOCK_THRESHOLD}",
+        )
+    if score < DEGRADE_THRESHOLD:
+        return RuleResult(
+            "R24_MINIMUM_QUALITY_SCORE",
+            False,
+            Enforcement.DEGRADE,
+            f"quality_score {score:.1f} below degrade threshold {DEGRADE_THRESHOLD}",
+        )
+    return RuleResult(
+        "R24_MINIMUM_QUALITY_SCORE",
+        True,
+        Enforcement.BLOCK,
+        f"quality_score {score:.1f} — OK",
     )
 
 

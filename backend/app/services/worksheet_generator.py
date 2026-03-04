@@ -564,13 +564,20 @@ def build_user_prompt(
     )
 
     # -- MCQ quality rules (S1.2) --
-    prompt += (
+    _mcq_ban = (
         "\nMCQ RULES (MANDATORY): "
         "NEVER use 'All of the above', 'None of the above', 'Both A and B', "
         "'All of these', or 'None of these' as options. "
+    )
+    if language.lower() == "hindi" or subject.lower() == "hindi":
+        _mcq_ban += (
+            "Also NEVER use Hindi equivalents: 'उपरोक्त सभी', 'इनमें से कोई नहीं', 'ये सभी', 'कोई नहीं', 'A और B दोनों'. "
+        )
+    _mcq_ban += (
         "Each option must be distinct and only ONE option should be correct. "
         "Lazy meta-options confuse young learners and are banned.\n"
     )
+    prompt += _mcq_ban
 
     # -- Word problem length variety (S3) --
     prompt += (
@@ -756,9 +763,18 @@ def build_user_prompt(
     # -- Hindi Devanagari anchor --
     if language.lower() == "hindi" or subject.lower() == "hindi":
         prompt += (
-            "\nHINDI SCRIPT: Generate ALL question content in Devanagari script. "
-            "NEVER use transliterated Hindi (Roman script for Hindi words). "
-            "All Hindi words must use proper Devanagari Unicode characters.\n"
+            "\nHINDI SCRIPT PURITY (MANDATORY — violation = rejected worksheet):\n"
+            "1. Write ALL question text, options, answers, hints, and explanations in PURE Devanagari script.\n"
+            "2. NEVER use any Latin/English letters inside Hindi text. No mixing scripts.\n"
+            "3. NEVER transliterate English words into Devanagari. Use the correct Hindi word:\n"
+            "   WRONG → RIGHT: बॉल → गेंद, बुक → किताब, टेबल → मेज़, चेयर → कुर्सी,\n"
+            "   पेंसिल → कलम, स्कूल → विद्यालय, टीचर → शिक्षक/गुरुजी, स्टूडेंट → विद्यार्थी,\n"
+            "   कलर → रंग, फ्लावर → फूल, ट्री → पेड़, बर्ड → पक्षी/चिड़िया,\n"
+            "   कैट → बिल्ली, डॉग → कुत्ता, फिश → मछली, रैबिट → खरगोश,\n"
+            "   हेल्प → मदद/सहायता, सॉल्व → हल करो, फाइंड → ढूँढो/खोजो\n"
+            "4. Numbers may remain in Arabic numerals (1, 2, 3).\n"
+            "5. Mathematical symbols (+, −, ×, ÷, =) may remain in standard form.\n"
+            "6. This rule applies to EVERY field: question_text, options, correct_answer, explanation, hint.\n"
         )
         # T3: Hindi spoken register — child-friendly, not textbook-formal
         prompt += (
@@ -1624,19 +1640,19 @@ def validate_response(
             opts = q.get("options") or []
             if len(opts) != 4:
                 warnings.append(f"{qid}: MCQ should have 4 options, got {len(opts)}")
-                # Auto-fix: trim to 4 (keep correct answer) or pad with "None of the above"
+                # Auto-fix: trim to 4 (keep correct answer) or pad with safe distractors
                 correct = q.get("correct_answer", "")
                 if len(opts) > 4:
                     # Keep correct answer + first 3 others
                     others = [o for o in opts if o != correct][:3]
                     q["options"] = others + [correct] if correct not in others else opts[:4]
                 elif 1 <= len(opts) < 4:
-                    # Pad with generic distractors
+                    # Pad with generic distractors (never use banned phrases)
                     _fillers = [
-                        "None of the above",
                         "Cannot be determined",
-                        "All of the above",
                         "Not enough information",
+                        "Does not apply",
+                        "No correct option given",
                     ]
                     while len(opts) < 4:
                         filler = _fillers[len(opts) - 1] if len(opts) - 1 < len(_fillers) else f"Option {len(opts) + 1}"
@@ -1900,10 +1916,10 @@ def generate_worksheet(
                                     tq["options"] = others + [correct] if correct not in others else opts[:4]
                                 elif 1 <= len(opts) < 4:
                                     _fillers = [
-                                        "None of the above",
                                         "Cannot be determined",
-                                        "All of the above",
                                         "Not enough information",
+                                        "Does not apply",
+                                        "No correct option given",
                                     ]
                                     while len(opts) < 4:
                                         filler = (
@@ -2191,15 +2207,27 @@ def generate_worksheet(
                 logger.warning("[difficulty_calibrator] Agent failed (non-blocking): %s", exc)
                 all_warnings.append(f"[difficulty_calibrator] Skipped: {exc}")
 
-            # ── Release Gate (final enforcement) ──
-            from app.services.release_gate import run_release_gate
-
+            # ── Quality Score (P2-D) — compute BEFORE release gate so R23 can use it ──
             try:
                 from app.core.config import get_settings
 
                 _gsm = get_settings().gold_standard_mode
             except Exception:
                 _gsm = False
+
+            try:
+                from app.services.quality_scorer import score_worksheet as _score_ws
+
+                _qs = _score_ws(data, expected_count=num_questions, gold_standard_mode=_gsm)
+                data["_quality_score"] = _qs.total_score
+                data["_quality_export_allowed"] = _qs.export_allowed
+                data["_gold_standard_eligible"] = _qs.gold_standard_eligible
+            except Exception as _qs_exc:
+                logger.warning("quality_score in generator failed: %s", _qs_exc)
+                data["_quality_score"] = None
+
+            # ── Release Gate (final enforcement) ──
+            from app.services.release_gate import run_release_gate
 
             release = run_release_gate(
                 questions=data.get("questions", []),
@@ -2212,6 +2240,7 @@ def generate_worksheet(
                 generation_context=None,
                 curriculum_available=bool(chapter_name),
                 gold_standard_mode=_gsm,
+                worksheet_meta={"_quality_score": data.get("_quality_score")},
             )
             data["_release_stamps"] = release.stamps
             data["_release_verdict"] = release.verdict
@@ -2227,18 +2256,6 @@ def generate_worksheet(
                 raise ValueError(f"Release gate blocked after {max_attempts} attempts: {release.block_reasons}")
 
             all_warnings.extend(release.degrade_reasons)
-
-            # ── Quality Score (P2-D) ──
-            try:
-                from app.services.quality_scorer import score_worksheet as _score_ws
-
-                _qs = _score_ws(data, expected_count=num_questions, gold_standard_mode=_gsm)
-                data["_quality_score"] = _qs.total_score
-                data["_quality_export_allowed"] = _qs.export_allowed
-                data["_gold_standard_eligible"] = _qs.gold_standard_eligible
-            except Exception as _qs_exc:
-                logger.warning("quality_score in generator failed: %s", _qs_exc)
-                data["_quality_score"] = None
 
             # ── Final safety-net: strip LLM-ism fillers from all questions ──
             # Quality reviewer strips these, but retries can regenerate them.

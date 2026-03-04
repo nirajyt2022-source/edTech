@@ -267,7 +267,10 @@ class TestWorksheetGenerationV2:
 
         client = TestClient(app, raise_server_exceptions=False)
 
-        with patch("app.services.curriculum.get_curriculum_context", return_value=None):
+        # Mock quality scorer to return a passing score for mock data
+        mock_qs = MagicMock(total_score=85.0, export_allowed=True, gold_standard_eligible=False)
+        with patch("app.services.curriculum.get_curriculum_context", return_value=None), \
+             patch("app.services.quality_scorer.score_worksheet", return_value=mock_qs):
             resp = client.post(
                 "/api/v2/worksheets/generate",
                 json=self._make_generate_request(),

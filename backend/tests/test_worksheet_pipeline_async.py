@@ -151,7 +151,7 @@ class TestBuildUserPrompt:
             language="Hindi",
         )
         assert "Devanagari" in prompt
-        assert "NEVER use transliterated" in prompt
+        assert "NEVER transliterate English words into Devanagari" in prompt
 
     def test_fractions_constraint(self):
         prompt = build_user_prompt(
@@ -319,8 +319,10 @@ class TestGenerateWorksheetAsync:
             choices=[MagicMock(message=MagicMock(content=raw_response))]
         )
 
-        # Patch curriculum context to avoid DB
-        with patch("app.services.curriculum.get_curriculum_context", return_value=None):
+        # Patch curriculum context and quality scorer to avoid DB / mock data issues
+        mock_qs = MagicMock(total_score=85.0, export_allowed=True, gold_standard_eligible=False)
+        with patch("app.services.curriculum.get_curriculum_context", return_value=None), \
+             patch("app.services.quality_scorer.score_worksheet", return_value=mock_qs):
             data, elapsed_ms, warnings = generate_worksheet(
                 client=mock_client,
                 board="CBSE",
@@ -359,7 +361,9 @@ class TestGenerateWorksheetAsync:
                 num_questions=3,
             )
 
-        with patch("app.services.curriculum.get_curriculum_context", return_value=None):
+        mock_qs = MagicMock(total_score=85.0, export_allowed=True, gold_standard_eligible=False)
+        with patch("app.services.curriculum.get_curriculum_context", return_value=None), \
+             patch("app.services.quality_scorer.score_worksheet", return_value=mock_qs):
             data, elapsed_ms, warnings = asyncio.run(_run())
 
         assert len(data["questions"]) == 3
@@ -380,7 +384,9 @@ class TestGenerateWorksheetAsync:
         mock_client = MagicMock()
         mock_client.chat.completions.create.side_effect = side_effect
 
-        with patch("app.services.curriculum.get_curriculum_context", return_value=None):
+        mock_qs = MagicMock(total_score=85.0, export_allowed=True, gold_standard_eligible=False)
+        with patch("app.services.curriculum.get_curriculum_context", return_value=None), \
+             patch("app.services.quality_scorer.score_worksheet", return_value=mock_qs):
             data, elapsed_ms, warnings = generate_worksheet(
                 client=mock_client,
                 board="CBSE",

@@ -779,6 +779,65 @@ _HINDI_TRANSLITERATION_BLOCKLIST = {
     "कंपेयर",
     "एक्सप्लेन",
     "अनालाइज़",
+    # Additional LLM-isms and verbs
+    "चेक",
+    "मैच",
+    "लिस्ट",
+    "ग्रुप",
+    "काउंट",
+    "सिलेक्ट",
+    "करेक्ट",
+    "इनकरेक्ट",
+    "ट्रू",
+    "फॉल्स",
+    "आंसर",
+    "क्वेश्चन",
+    "ऑप्शन",
+    "एग्ज़ाम्पल",
+    "प्रैक्टिस",
+    "रिपीट",
+    "कम्प्लीट",
+    # Clothing / household
+    "ड्रेस",
+    "शर्ट",
+    "पैंट",
+    "शूज़",
+    "सॉक्स",
+    # Fruits / vegetables
+    "एप्पल",
+    "ऑरेंज",  # fruit sense
+    "बनाना",  # banana (not Hindi बनाना=to make)
+    "मैंगो",
+    "ग्रेप्स",
+    "टोमैटो",
+    "पोटैटो",
+    # Grammar terms transliterated
+    "सिंगुलर",
+    "प्लूरल",
+    "एडजेक्टिव",
+    "नाउन",
+    "वर्ब",
+    "सेंटेंस",
+    "पैराग्राफ",
+    # Numbers transliterated
+    "नंबर",
+    "ज़ीरो",
+    "डबल",
+    "ट्रिपल",
+    # Misc common leaks
+    "पिक्चर",
+    "फोटो",
+    "वीडियो",
+    "गेम",
+    "प्ले",
+    "टाइम",
+    "क्लॉक",
+    "कलर",
+    "शेप",
+    "सर्कल",
+    "स्क्वेयर",
+    "ट्रायंगल",
+    "रेक्टैंगल",
 }
 
 
@@ -1229,9 +1288,36 @@ class QualityReviewerAgent:
 
         # ── CHECK 11: Engagement framing injection (P0-A) ──────────────
         # If <20% of questions use warm framing, inject it on eligible questions.
+        # Step 1: Strip any existing engagement prefixes FIRST to avoid double-framing.
+        # Step 2: Count engagement-framed questions.
+        # Step 3: Inject new framing if below target, preserving original case.
         try:
             _ENGAGEMENT_RE = re.compile(r"(?i)^(help|can you|try to|let'?s|guess)")
             _HINDI_ENGAGEMENT_RE = re.compile(r"की मदद करो")
+            # Patterns to strip old engagement prefixes (including name variants)
+            _STRIP_ENGAGEMENT_RE = re.compile(
+                r"(?i)^(?:help\s+\w+\s+(?:solve this|figure out|find|count|work out)\s*:\s*"
+                r"|can you\s+(?:help\s+\w+\s+)?(?:solve|find|figure out)\s*[:\?]?\s*"
+                r"|try to\s+(?:find|solve|figure out)\s*:\s*"
+                r"|let'?s\s+(?:figure out|find|solve|help\s+\w+)\s*:\s*"
+                r"|with\s+\w+\s*:\s*)"
+            )
+            _STRIP_HINDI_ENGAGEMENT_RE = re.compile(r"^\w+\s+की मदद करो\s*:\s*")
+
+            # Step 1: Strip existing engagement prefixes from ALL questions
+            for q in result.questions:
+                q_text = (q.get("text") or q.get("question_text") or "").strip()
+                if not q_text:
+                    continue
+                cleaned = _STRIP_ENGAGEMENT_RE.sub("", q_text).strip()
+                cleaned = _STRIP_HINDI_ENGAGEMENT_RE.sub("", cleaned).strip()
+                if cleaned != q_text and cleaned:
+                    # Ensure first character is uppercase after stripping
+                    cleaned = cleaned[0].upper() + cleaned[1:] if len(cleaned) > 1 else cleaned.upper()
+                    q["text"] = cleaned
+                    q["question_text"] = cleaned
+
+            # Step 2: Count (should be 0 after stripping)
             engagement_count = sum(
                 1
                 for q in result.questions
@@ -1243,6 +1329,8 @@ class QualityReviewerAgent:
             # P3-A: Vary engagement target (2-3 for 10Q) instead of fixed 2
             _base = max(2, len(result.questions) // 5)
             target = _rng.choice([_base, _base + 1]) if len(result.questions) >= 8 else _base
+
+            # Step 3: Inject fresh framing
             if engagement_count < target:
                 from app.services.worksheet_generator import _INDIAN_NAMES
 
@@ -1260,6 +1348,8 @@ class QualityReviewerAgent:
                         continue
                     if _ENGAGEMENT_RE.match(q_text) or _HINDI_ENGAGEMENT_RE.search(q_text):
                         continue  # already has framing
+                    if not q_text:
+                        continue
                     name = names_pool[name_idx % len(names_pool)]
                     name_idx += 1
                     # Detect Hindi: check if question has Devanagari script
@@ -1267,7 +1357,11 @@ class QualityReviewerAgent:
                     if _is_hindi:
                         new_text = f"{name} की मदद करो: {q_text}"
                     else:
-                        new_text = f"Help {name} solve this: {q_text[0].lower()}{q_text[1:]}"
+                        # Preserve original case — don't lowercase the first char
+                        new_text = f"Help {name} solve this: {q_text}"
+                    # Guard: ensure result is not garbled (starts with letter, reasonable length)
+                    if len(new_text) < 10 or not new_text[0].isalpha():
+                        continue
                     q["text"] = new_text
                     q["question_text"] = new_text
                     injected += 1
@@ -1282,36 +1376,114 @@ class QualityReviewerAgent:
 
         # ── CHECK 13: Error detection answer/explanation consistency (P0) ──
         # If an error_detection question's answer ("No"/"Yes") contradicts its
-        # own explanation, fix the answer to match the explanation.
+        # own explanation OR the mathematical truth, fix the answer.
         try:
             _YES_RE = re.compile(r"(?i)\b(correct|right|yes)\b")
             _NO_RE = re.compile(r"(?i)\b(incorrect|wrong|not correct|no)\b")
+            # Pattern: "X says A is the largest/smallest/greatest among ..."
+            _COMPARISON_CLAIM_RE = re.compile(
+                r"(?:says?\s+)?(\d+(?:\.\d+)?)\s+is\s+(?:the\s+)?"
+                r"(largest|smallest|greatest|biggest|least|most|highest|lowest)"
+                r"(?:\s+(?:among|of|in|from))?",
+                re.IGNORECASE,
+            )
+            # Extract numbers from question text
+            _ALL_NUMS_RE = re.compile(r"\d+(?:\.\d+)?")
+
             for q in result.questions:
                 q_type = q.get("type", q.get("slot_type", ""))
                 if q_type not in ("error_detection", "error_spot"):
                     continue
                 answer = str(q.get("answer") or q.get("correct_answer") or "")
                 explanation = str(q.get("explanation") or "")
-                if not answer or not explanation:
+                q_text = q.get("text") or q.get("question_text") or ""
+                if not answer:
                     continue
+                q_id = q.get("id", "?")
 
                 # Determine answer sentiment
                 ans_lower = answer.lower().strip().rstrip(".")
                 ans_says_correct = _YES_RE.search(ans_lower) is not None
                 ans_says_incorrect = _NO_RE.search(ans_lower) is not None
 
-                # Determine explanation's final verdict (last sentence wins)
+                # --- 13a: Mathematical verification of comparison claims ---
+                claim_match = _COMPARISON_CLAIM_RE.search(q_text)
+                if claim_match and (ans_says_correct or ans_says_incorrect):
+                    claimed_val = float(claim_match.group(1))
+                    claim_type = claim_match.group(2).lower()
+                    all_nums = [float(n) for n in _ALL_NUMS_RE.findall(q_text)]
+                    # Need at least 3 numbers (the claim value + 2 comparisons)
+                    if len(all_nums) >= 3:
+                        is_max_claim = claim_type in ("largest", "greatest", "biggest", "highest", "most")
+                        is_min_claim = claim_type in ("smallest", "least", "lowest")
+                        if is_max_claim:
+                            claim_is_true = claimed_val >= max(all_nums)
+                        elif is_min_claim:
+                            claim_is_true = claimed_val <= min(all_nums)
+                        else:
+                            claim_is_true = None
+
+                        if claim_is_true is not None:
+                            if claim_is_true and ans_says_incorrect:
+                                new_answer = (
+                                    answer.replace("No", "Yes")
+                                    .replace("no", "yes")
+                                    .replace("incorrect", "correct")
+                                    .replace("Incorrect", "Correct")
+                                    .replace("not correct", "correct")
+                                    .replace("Not correct", "Correct")
+                                )
+                                q["answer"] = new_answer
+                                q["correct_answer"] = new_answer
+                                msg = f"Q{q_id}: error_detection math verification — claim IS true but answer said no, flipped to '{new_answer[:50]}'"
+                                logger.warning("[quality_reviewer] %s", msg)
+                                result.corrections.append(msg)
+                                continue  # already fixed
+                            elif not claim_is_true and ans_says_correct:
+                                new_answer = (
+                                    answer.replace("Yes", "No").replace("yes", "no").replace("correct", "incorrect")
+                                )
+                                q["answer"] = new_answer
+                                q["correct_answer"] = new_answer
+                                msg = f"Q{q_id}: error_detection math verification — claim IS false but answer said yes, flipped to '{new_answer[:50]}'"
+                                logger.warning("[quality_reviewer] %s", msg)
+                                result.corrections.append(msg)
+                                continue
+
+                # --- 13b: Answer vs explanation sentiment (original check, improved) ---
+                if not explanation:
+                    continue
+
+                # Scan ALL sentences for verdict (not just last)
                 expl_sentences = [s.strip() for s in explanation.split(".") if s.strip()]
-                last_sentence = expl_sentences[-1].lower() if expl_sentences else ""
-                expl_says_correct = bool(
-                    re.search(r"\b(is correct|is right|correct)\b", last_sentence)
-                    and not re.search(r"\b(not correct|incorrect|is not right)\b", last_sentence)
-                )
-                expl_says_incorrect = bool(re.search(r"\b(incorrect|wrong|not correct|is not right)\b", last_sentence))
+                expl_says_correct = False
+                expl_says_incorrect = False
+                for sent in expl_sentences:
+                    sent_lower = sent.lower()
+                    if re.search(
+                        r"\b(is correct|is right|he is correct|she is correct|statement is correct|claim is correct)\b",
+                        sent_lower,
+                    ) and not re.search(r"\b(not correct|incorrect|is not right)\b", sent_lower):
+                        expl_says_correct = True
+                    if re.search(
+                        r"\b(incorrect|wrong|not correct|is not right|he is wrong|she is wrong)\b", sent_lower
+                    ):
+                        expl_says_incorrect = True
+
+                # Last sentence gets priority if it has a clear verdict
+                if expl_sentences:
+                    last_lower = expl_sentences[-1].lower()
+                    if re.search(r"\b(is correct|is right)\b", last_lower) and not re.search(
+                        r"\b(not correct|incorrect)\b", last_lower
+                    ):
+                        expl_says_correct = True
+                        expl_says_incorrect = False
+                    elif re.search(r"\b(incorrect|wrong|not correct)\b", last_lower):
+                        expl_says_incorrect = True
+                        expl_says_correct = False
 
                 # Contradiction: answer says "No" but explanation says correct (or vice versa)
-                if ans_says_incorrect and expl_says_correct:
-                    # Explanation proves the statement IS correct — flip the answer
+                if ans_says_incorrect and expl_says_correct and not expl_says_incorrect:
                     new_answer = (
                         answer.replace("No", "Yes")
                         .replace("no", "yes")
@@ -1320,15 +1492,13 @@ class QualityReviewerAgent:
                     )
                     q["answer"] = new_answer
                     q["correct_answer"] = new_answer
-                    q_id = q.get("id", "?")
                     msg = f"Q{q_id}: error_detection answer contradicted explanation — flipped to '{new_answer[:50]}'"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.corrections.append(msg)
-                elif ans_says_correct and expl_says_incorrect:
+                elif ans_says_correct and expl_says_incorrect and not expl_says_correct:
                     new_answer = answer.replace("Yes", "No").replace("yes", "no").replace("correct", "incorrect")
                     q["answer"] = new_answer
                     q["correct_answer"] = new_answer
-                    q_id = q.get("id", "?")
                     msg = f"Q{q_id}: error_detection answer contradicted explanation — flipped to '{new_answer[:50]}'"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.corrections.append(msg)
