@@ -734,6 +734,142 @@ _HINDI_ENGLISH_ALLOWLIST |= {
     "Work",
 }
 
+# Hindi grammar / CBSE pedagogical terms that legitimately appear in English
+# in CBSE Hindi textbooks and worksheets.  These are NOT code-mixing.
+_HINDI_ENGLISH_ALLOWLIST |= {
+    # Grammar terms (used in Hindi vyakaran textbooks)
+    "Sangya",
+    "sangya",
+    "Sarvanam",
+    "sarvanam",
+    "Kriya",
+    "kriya",
+    "Visheshan",
+    "visheshan",
+    "Vachan",
+    "vachan",
+    "Ling",
+    "ling",
+    "Kaal",
+    "kaal",
+    "Vilom",
+    "vilom",
+    "Paryayvachi",
+    "paryayvachi",
+    "Muhavara",
+    "muhavara",
+    "Lokokti",
+    "lokokti",
+    "Samas",
+    "samas",
+    "Upsarg",
+    "upsarg",
+    "Pratyay",
+    "pratyay",
+    "Sandhi",
+    "sandhi",
+    "Varn",
+    "varn",
+    "Matra",
+    "matra",
+    "Vyakaran",
+    "vyakaran",
+    "Shabd",
+    "shabd",
+    "Vakya",
+    "vakya",
+    "Varnamala",
+    "varnamala",
+    "Ekvachan",
+    "ekvachan",
+    "Bahuvachan",
+    "bahuvachan",
+    "Pulling",
+    "pulling",
+    "Striling",
+    "striling",
+    "Napunsakling",
+    "napunsakling",
+    # English grammar terms used parenthetically in Hindi worksheets
+    "noun",
+    "Noun",
+    "verb",
+    "Verb",
+    "adjective",
+    "Adjective",
+    "pronoun",
+    "Pronoun",
+    "adverb",
+    "Adverb",
+    "tense",
+    "Tense",
+    "singular",
+    "Singular",
+    "plural",
+    "Plural",
+    "gender",
+    "Gender",
+    "sentence",
+    "Sentence",
+    "paragraph",
+    "Paragraph",
+    "masculine",
+    "Masculine",
+    "feminine",
+    "Feminine",
+    "present",
+    "Present",
+    "past",
+    "Past",
+    "future",
+    "Future",
+    "subject",
+    "Subject",
+    "object",
+    "Object",
+    "predicate",
+    "Predicate",
+    # Common pedagogical English in Hindi worksheets
+    "example",
+    "Example",
+    "hint",
+    "Hint",
+    "answer",
+    "Answer",
+    "question",
+    "Question",
+    "option",
+    "Option",
+    "correct",
+    "Correct",
+    "incorrect",
+    "Incorrect",
+    "true",
+    "True",
+    "false",
+    "False",
+    "fill",
+    "Fill",
+    "blank",
+    "Blank",
+    "match",
+    "Match",
+    "choose",
+    "Choose",
+    "select",
+    "Select",
+    "write",
+    "Write",
+    "read",
+    "Read",
+    "complete",
+    "Complete",
+    "identify",
+    "Identify",
+    "underline",
+    "Underline",
+}
+
 # Devanagari transliterations of common English words that LLMs inject into
 # Hindi text.  These are pure Devanagari Unicode but semantically English.
 _HINDI_TRANSLITERATION_BLOCKLIST = {
@@ -998,6 +1134,58 @@ class ReviewResult:
 # ---------------------------------------------------------------------------
 
 
+# Role → preferred skill-tag suffix mapping.
+# Used to assign skill tags deterministically from question role
+# instead of always falling back to valid_tags[0].
+_ROLE_TAG_SUFFIXES: dict[str, list[str]] = {
+    "recognition": ["basic", "recall", "identify", "match", "read"],
+    "application": ["word_problem", "apply", "grammar_apply", "fill_in"],
+    "representation": ["missing", "represent", "fill_in", "write"],
+    "error_detection": ["error", "error_spot", "spot"],
+    "thinking": ["think", "thinking", "pattern", "reason"],
+}
+
+# Question type → fallback suffix (when role doesn't match any tag)
+_TYPE_TAG_SUFFIXES: dict[str, list[str]] = {
+    "mcq": ["basic", "recall", "identify"],
+    "fill_blank": ["missing", "fill_in", "basic"],
+    "word_problem": ["word_problem", "apply"],
+    "true_false": ["basic", "recall", "identify"],
+    "error_detection": ["error", "error_spot"],
+    "short_answer": ["basic", "apply", "recall"],
+}
+
+
+def _pick_skill_tag_by_role(
+    valid_tags: list[str],
+    role: str,
+    q_type: str,
+) -> str:
+    """Pick the best skill tag from valid_tags based on question role and type.
+
+    Tries role-based suffix matching first, then type-based, then falls back
+    to round-robin across all valid tags (using a counter to distribute evenly).
+    """
+    # Try role-based suffix match (handles both "c1_add_basic" and bare "recall")
+    for suffix in _ROLE_TAG_SUFFIXES.get(role, []):
+        for tag in valid_tags:
+            if tag.endswith(f"_{suffix}") or tag == suffix:
+                return tag
+
+    # Try type-based suffix match
+    for suffix in _TYPE_TAG_SUFFIXES.get(q_type, []):
+        for tag in valid_tags:
+            if tag.endswith(f"_{suffix}") or tag == suffix:
+                return tag
+
+    # Round-robin fallback: use a simple counter to distribute across tags
+    if not hasattr(_pick_skill_tag_by_role, "_counter"):
+        _pick_skill_tag_by_role._counter = 0  # type: ignore[attr-defined]
+    idx = _pick_skill_tag_by_role._counter % len(valid_tags)  # type: ignore[attr-defined]
+    _pick_skill_tag_by_role._counter += 1  # type: ignore[attr-defined]
+    return valid_tags[idx]
+
+
 class QualityReviewerAgent:
     """
     Agent 3 of 4 — post-generation quality gate.
@@ -1073,16 +1261,19 @@ class QualityReviewerAgent:
                     logger.debug("[quality_reviewer] Check 1 skipped for non-Maths Q%s: %s", q_id, exc)
 
             # ── CHECK 2: Skill tag validation ────────────────────────────
+            # Assign deterministically from question role, not LLM output.
             try:
                 valid_tags = context.valid_skill_tags
                 if valid_tags:
                     skill_tag = q.get("skill_tag", "")
                     if skill_tag not in valid_tags:
-                        replacement = valid_tags[0]
-                        msg = f"Q{q_id}: invalid skill_tag '{skill_tag}' replaced with '{replacement}'"
-                        logger.error("[quality_reviewer] %s", msg)
+                        role = (q.get("role") or "application").lower()
+                        q_type = (q.get("type") or "").lower()
+                        replacement = _pick_skill_tag_by_role(valid_tags, role, q_type)
+                        msg = f"Q{q_id}: skill_tag '{skill_tag}' → '{replacement}' (role={role})"
+                        logger.info("[quality_reviewer] %s", msg)
                         q["skill_tag"] = replacement
-                        result.errors.append(msg)
+                        result.corrections.append(msg)
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 2 skipped for Q%s: %s", q_id, exc)
 
@@ -1766,19 +1957,14 @@ class QualityReviewerAgent:
                             seen_norms[normalize_numeric(new_opt)] = len(cleaned) - 1
                     except (ValueError, ZeroDivisionError):
                         pass
-                    # Fallback: generic fillers
-                    _fillers = [
-                        "Cannot be determined",
-                        "Not enough information",
-                        "Does not apply",
-                        "No correct option given",
-                    ]
-                    for filler in _fillers:
-                        if len(cleaned) >= 4:
-                            break
-                        if filler not in cleaned:
-                            cleaned.append(filler)
-                    q["options"] = cleaned[:4]
+                    # Fallback: generate plausible numeric distractors
+                    if len(cleaned) < 4:
+                        from app.services.worksheet_generator import _pad_mcq_to_target
+
+                        q["options"] = cleaned
+                        _pad_mcq_to_target(q, "Maths", target=4)
+                    else:
+                        q["options"] = cleaned[:4]
                 # Re-check: any remaining multi-correct?
                 equiv_count = sum(
                     1 for opt in q.get("options", []) if normalize_numeric(str(opt).strip()) == answer_norm

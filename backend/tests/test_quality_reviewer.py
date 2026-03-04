@@ -242,13 +242,13 @@ class TestCheck1ArithmeticVerification:
 
 class TestCheck2SkillTagValidation:
     def test_invalid_skill_tag_replaced(self):
-        """An invalid skill_tag must be replaced with valid_skill_tags[0]."""
+        """An invalid skill_tag must be replaced with a valid tag based on role."""
         reviewer = QualityReviewerAgent()
         q = _make_q(skill_tag="totally_invalid_tag_xyz")
         result = reviewer.review_worksheet([q], _DEFAULT_CTX)
 
-        assert len(result.errors) == 1
-        assert result.questions[0]["skill_tag"] == _DEFAULT_CTX.valid_skill_tags[0]
+        assert len(result.corrections) >= 1
+        assert result.questions[0]["skill_tag"] in _DEFAULT_CTX.valid_skill_tags
 
     def test_valid_skill_tag_preserved(self):
         """A tag already in valid_skill_tags must not be touched."""

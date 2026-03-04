@@ -669,21 +669,31 @@ def r16_mcq_quality_guard(ctx: GateContext) -> RuleResult:
 
 
 # ---------------------------------------------------------------------------
-# R17 — HINDI_SCRIPT_PURITY (BLOCK for Hindi, DEGRADE for others)
+# R17 — HINDI_SCRIPT_PURITY (threshold-based: BLOCK only if >30% impure)
 # ---------------------------------------------------------------------------
+
+# Maximum fraction of questions allowed to have Hindi script impurity
+# before the worksheet is blocked.  CBSE Hindi textbooks routinely include
+# English grammar terms (e.g., "visheshan", "Adjective") — a small amount
+# of mixing is normal and expected.
+_HINDI_IMPURITY_BLOCK_THRESHOLD = 0.3  # >30% impure → BLOCK
 
 
 @register_rule("R17_HINDI_SCRIPT_PURITY", Enforcement.BLOCK)
 def r17_hindi_script_purity(ctx: GateContext) -> RuleResult:
-    """Block Hindi worksheets with script impurity; degrade others."""
+    """Block Hindi worksheets only when impurity exceeds threshold."""
     impure = [q for q in ctx.questions if q.get("_hindi_impure")]
     if not impure:
         return RuleResult("R17_HINDI_SCRIPT_PURITY", True, Enforcement.BLOCK, "No Hindi impurity")
 
-    detail = f"{len(impure)} question(s) with Hindi script impurity"
-    if ctx.subject.lower() == "hindi":
+    total = max(len(ctx.questions), 1)
+    impure_ratio = len(impure) / total
+    detail = f"{len(impure)}/{total} question(s) with Hindi script impurity ({impure_ratio:.0%})"
+
+    if ctx.subject.lower() == "hindi" and impure_ratio > _HINDI_IMPURITY_BLOCK_THRESHOLD:
         return RuleResult("R17_HINDI_SCRIPT_PURITY", False, Enforcement.BLOCK, detail)
     else:
+        # Below threshold or non-Hindi: degrade only
         return RuleResult("R17_HINDI_SCRIPT_PURITY", False, Enforcement.DEGRADE, detail)
 
 

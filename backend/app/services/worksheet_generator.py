@@ -149,7 +149,22 @@ BAD EXAMPLE 5 (Self-referential):
 BAD EXAMPLE 6 (Duplicate concept):
   Q3: "What is 12 + 5?" and Q4: "Find 12 + 5."
   WHY BAD: Same numbers, same operation — just rephrased. No new skill tested.
-  GOOD: Q3: "What is 12 + 5?" Q4: "What is 9 + 8?" (different numbers, still tests addition)."""
+  GOOD: Q3: "What is 12 + 5?" Q4: "What is 9 + 8?" (different numbers, still tests addition).
+
+BAD EXAMPLE 7 (Robotic framing — Hindi):
+  "Sameer की मदद करो: मीरा के पास एक ______ है।"
+  WHY BAD: Forced third-person "help X" framing is robotic and adds nothing. Write direct questions.
+  GOOD: "मीरा के पास एक ______ है। (बिल्ली / कुत्ता / किताब / गेंद)"
+
+BAD EXAMPLE 8 (Robotic framing — English):
+  "Help Aarav solve: What is 3 + 2?"
+  WHY BAD: "Help X solve:" is filler that adds no pedagogical value. Ask the question directly.
+  GOOD: "What is 3 + 2?"
+
+BAD EXAMPLE 9 (Dangling pronoun):
+  "She bought 5 apples and 3 oranges. How many fruits in all?"
+  WHY BAD: "She" has no antecedent — who is "she"? Use a name instead.
+  GOOD: "Priya bought 5 apples and 3 oranges. How many fruits in all?" """
 
 _IMAGE_BLOCK_TEMPLATE = """\
 
@@ -1371,7 +1386,165 @@ def fix_true_false_options(questions: list[dict], subject: str = "") -> list[dic
     return questions
 
 
-def fix_mcq_options(questions: list[dict]) -> list[dict]:
+# Meta-option blocklist — NEVER pad with these
+_BANNED_FILLERS = frozenset(
+    {
+        "cannot be determined",
+        "not enough information",
+        "does not apply",
+        "no correct option given",
+        "none of the above",
+        "all of the above",
+        "both a and b",
+        "option 1",
+        "option 2",
+        "option 3",
+        "option 4",
+        "इनमें से कुछ नहीं कह सकते",
+        "यह ज्ञात नहीं है",
+    }
+)
+
+
+def _generate_plausible_distractor(
+    correct_answer: str,
+    existing_options: list[str],
+    subject: str,
+) -> str | None:
+    """Try to generate a plausible wrong option for an MCQ.
+
+    For Maths: nearby numbers (±1, ±2, ±10, ×2, common mistakes).
+    Returns None if no plausible distractor can be generated.
+    """
+    if not correct_answer:
+        return None
+
+    subject_lower = subject.lower() if subject else ""
+    existing_lower = {str(o).strip().lower() for o in existing_options}
+
+    # Maths: generate nearby wrong numbers
+    if subject_lower in ("maths", "mathematics", "math"):
+        # Try to parse as number
+        cleaned = re.sub(r"[₹$€,\s]", "", correct_answer.strip())
+        prefix = ""
+        if "₹" in correct_answer:
+            prefix = "₹"
+
+        try:
+            val = int(cleaned)
+            # Common wrong answers: off-by-one, off-by-ten, doubled, common mistakes
+            candidates = [
+                val + 1,
+                val - 1,
+                val + 2,
+                val - 2,
+                val + 10,
+                val - 10,
+                val * 2,
+            ]
+            # Add digit-swap if multi-digit (e.g., 45 → 54)
+            if 10 <= val <= 99:
+                swapped = int(str(val)[::-1])
+                if swapped != val:
+                    candidates.append(swapped)
+            for c in candidates:
+                if c < 0:
+                    continue
+                c_str = f"{prefix}{c}"
+                if c_str.lower() not in existing_lower and c != val:
+                    return c_str
+        except (ValueError, TypeError):
+            pass
+
+        try:
+            val_f = float(cleaned)
+            candidates_f = [val_f + 0.1, val_f - 0.1, val_f + 1, val_f - 1]
+            for c in candidates_f:
+                if c < 0:
+                    continue
+                c_str = f"{prefix}{c:g}"
+                if c_str.lower() not in existing_lower:
+                    return c_str
+        except (ValueError, TypeError):
+            pass
+
+        # Fraction: generate nearby fraction
+        frac_m = re.match(r"(\d+)\s*/\s*(\d+)", correct_answer.strip())
+        if frac_m:
+            num, den = int(frac_m.group(1)), int(frac_m.group(2))
+            frac_candidates = [
+                (num + 1, den),
+                (num, den + 1),
+                (num - 1, den),
+                (den, num),  # inverted
+            ]
+            for fn, fd in frac_candidates:
+                if fn > 0 and fd > 0 and fn != num:
+                    c_str = f"{fn}/{fd}"
+                    if c_str.lower() not in existing_lower:
+                        return c_str
+
+    return None
+
+
+def _pad_mcq_to_target(
+    question: dict,
+    subject: str,
+    target: int = 4,
+) -> None:
+    """Pad an MCQ question's options to `target` count using plausible distractors.
+
+    Strategy:
+    1. Try _generate_plausible_distractor() for Maths questions
+    2. For non-Maths (English/EVS/etc): convert to short_answer instead of padding
+    3. If Maths can't generate enough distractors, accept 3 options (mcq_3)
+    Never uses meta-options like "None of the above".
+    """
+    opts = question.get("options") or []
+    if not isinstance(opts, list):
+        opts = []
+    if len(opts) >= target:
+        return
+
+    correct = str(question.get("correct_answer", "")).strip()
+    subject_lower = (subject or "").lower()
+    is_maths = subject_lower in ("maths", "mathematics", "math")
+
+    if is_maths:
+        # Try to generate plausible wrong numbers
+        attempts = 0
+        while len(opts) < target and attempts < 10:
+            distractor = _generate_plausible_distractor(correct, opts, subject)
+            if distractor is not None:
+                opts.append(distractor)
+            else:
+                break
+            attempts += 1
+    else:
+        # Non-Maths: convert to short_answer rather than padding with garbage
+        if len(opts) < 3:
+            question["type"] = "short_answer"
+            question["format"] = "short_answer"
+            question["options"] = None
+            logger.info(
+                "MCQ %s has %d options (non-Maths) — converted to short_answer",
+                question.get("id", "?"),
+                len(opts),
+            )
+            return
+
+    # Accept 3 options if we couldn't reach 4
+    if len(opts) < target and len(opts) >= 3:
+        logger.info(
+            "MCQ %s: accepting %d options (couldn't generate plausible 4th)",
+            question.get("id", "?"),
+            len(opts),
+        )
+
+    question["options"] = opts
+
+
+def fix_mcq_options(questions: list[dict], subject: str = "Maths") -> list[dict]:
     """Ensure MCQ questions have options, downgrade to short_answer if not."""
     MCQ_PHRASES = ["which of these", "which one of", "which of the following", "which animal", "which option"]
 
@@ -1435,6 +1608,58 @@ PHANTOM_IMAGE_PATTERNS = [
     r"[Ii]n the (?:image|picture) (?:below|above)[.,]?\s*",
     r"[Oo]bserve the (?:image|picture|figure)(?:\s+(?:below|above))?\.\s*",
 ]
+
+
+# Dangling pronoun at start of question — no antecedent in a standalone question
+_DANGLING_PRONOUN_RE = re.compile(
+    r"^(She|He|It|They|Her|His|Its|Their)\b",
+)
+
+# Robotic Hindi engagement framing that wraps around the real question
+_HINDI_FRAMING_RE = re.compile(
+    r"^[\w\u0900-\u097F]+\s+(?:की|के|का)\s+(?:मदद|सहायता)\s+(?:करो|करें|कीजिए)\s*[:।\-–—]\s*",
+)
+_ENGLISH_FRAMING_RE = re.compile(
+    r"^Help\s+\w+\s+(?:solve|find|figure out|answer|with)\s*[:.\-–—]\s*",
+    re.IGNORECASE,
+)
+
+
+def _cleanup_question_text(questions: list[dict]) -> list[dict]:
+    """Clean up LLM text artifacts: leading punctuation, dangling pronouns, robotic framing."""
+    for q in questions:
+        text = q.get("text", "")
+        if not text:
+            continue
+
+        original = text
+
+        # 1. Strip leading stray punctuation (but not "?" which is valid Hindi usage)
+        text = re.sub(r"^[,;:\-–—•·»›]+\s*", "", text)
+
+        # 2. Strip robotic engagement framing
+        #    "Sameer की मदद करो: मीरा के पास..." → "मीरा के पास..."
+        text = _HINDI_FRAMING_RE.sub("", text)
+        #    "Help Aarav solve: What is 3+2?" → "What is 3+2?"
+        text = _ENGLISH_FRAMING_RE.sub("", text)
+
+        # 3. Replace dangling pronouns with a name
+        m = _DANGLING_PRONOUN_RE.match(text)
+        if m:
+            # Pick a name deterministically from the question id
+            q_id = q.get("id", "q1")
+            idx = hash(q_id) % len(_INDIAN_NAMES)
+            name = _INDIAN_NAMES[idx]
+            text = _DANGLING_PRONOUN_RE.sub(name, text, count=1)
+
+        # 4. Ensure first char is uppercase (may have been lowered by stripping)
+        if text and text[0].islower():
+            text = text[0].upper() + text[1:]
+
+        if text != original:
+            q["text"] = text
+
+    return questions
 
 
 def strip_phantom_image_refs(questions: list[dict]) -> list[dict]:
@@ -1902,27 +2127,13 @@ def validate_response(
             opts = q.get("options") or []
             if len(opts) != 4:
                 warnings.append(f"{qid}: MCQ should have 4 options, got {len(opts)}")
-                # Auto-fix: trim to 4 (keep correct answer) or pad with safe distractors
                 correct = q.get("correct_answer", "")
                 if len(opts) > 4:
                     # Keep correct answer + first 3 others
                     others = [o for o in opts if o != correct][:3]
                     q["options"] = others + [correct] if correct not in others else opts[:4]
                 elif 1 <= len(opts) < 4:
-                    # Pad with generic distractors (never use banned phrases)
-                    _fillers = [
-                        "Cannot be determined",
-                        "Not enough information",
-                        "Does not apply",
-                        "No correct option given",
-                    ]
-                    while len(opts) < 4:
-                        filler = _fillers[len(opts) - 1] if len(opts) - 1 < len(_fillers) else f"Option {len(opts) + 1}"
-                        if filler not in opts:
-                            opts.append(filler)
-                        else:
-                            opts.append(f"Option {len(opts) + 1}")
-                    q["options"] = opts
+                    _pad_mcq_to_target(q, subject, target=4)
 
     # --- Strip banned MCQ options (English + Hindi) ---
     _banned_mcq = {
@@ -1954,35 +2165,19 @@ def validate_response(
         changed = len(cleaned) < len(opts)
         if changed:
             warnings.append(f"{q.get('id', '?')}: stripped banned MCQ option(s)")
-        # Ensure exactly 4 options for MCQs (pad or trim as needed)
+        # Pad or trim to target option count
         target = 4
-        if len(cleaned) < target:
+        if len(cleaned) > target:
             changed = True
-            _safe = [
-                "इनमें से कुछ नहीं कह सकते",
-                "यह ज्ञात नहीं है",
-                "Cannot be determined",
-                "Not enough information",
-                "Does not apply",
-                "No correct option given",
-            ]
-            for filler in _safe:
-                if len(cleaned) >= target:
-                    break
-                if filler not in cleaned:
-                    cleaned.append(filler)
-            # Last resort: numbered options
-            while len(cleaned) < target:
-                cleaned.append(f"Option {len(cleaned) + 1}")
-        elif len(cleaned) > target:
-            changed = True
-            # Trim: keep correct answer + first 3 others
             others = [o for o in cleaned if o != correct][:3]
             cleaned = others + [correct] if correct and correct not in others else cleaned[:target]
         if changed:
             q["options"] = cleaned
+            # Pad using smart distractor generation (no meta-options)
+            if len(cleaned) < target:
+                _pad_mcq_to_target(q, subject, target=target)
             # Ensure correct_answer is still in options
-            if correct and correct not in cleaned:
+            if correct and correct not in q.get("options", []):
                 q["options"][-1] = correct
 
     # --- Count check ---
@@ -2052,7 +2247,10 @@ def validate_response(
     # --- Question type fixes ---
     questions = detect_true_false(questions)
     questions = fix_true_false_options(questions, subject=subject)
-    questions = fix_mcq_options(questions)
+    questions = fix_mcq_options(questions, subject=subject)
+
+    # --- Text cleanup (LLM artifacts, dangling pronouns, robotic framing) ---
+    questions = _cleanup_question_text(questions)
 
     # --- Strip phantom image references ---
     questions = strip_phantom_image_refs(questions)
@@ -2245,20 +2443,7 @@ def generate_worksheet(
                                     others = [o for o in opts if o != correct][:3]
                                     tq["options"] = others + [correct] if correct not in others else opts[:4]
                                 elif 1 <= len(opts) < 4:
-                                    _fillers = [
-                                        "Cannot be determined",
-                                        "Not enough information",
-                                        "Does not apply",
-                                        "No correct option given",
-                                    ]
-                                    while len(opts) < 4:
-                                        filler = (
-                                            _fillers[len(opts) - 1]
-                                            if len(opts) - 1 < len(_fillers)
-                                            else f"Option {len(opts) + 1}"
-                                        )
-                                        opts.append(filler if filler not in opts else f"Option {len(opts) + 1}")
-                                    tq["options"] = opts
+                                    _pad_mcq_to_target(tq, subject, target=4)
                         data["questions"] = questions + topup_qs
                         all_warnings.append(
                             f"[topup] Generated {len(topup_qs)} extra question(s) to reach {num_questions}"

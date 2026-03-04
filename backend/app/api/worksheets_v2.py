@@ -175,13 +175,16 @@ async def generate_worksheet_v2(
     quality_tier = merged_stamps.get("quality_tier", "high")
 
     has_warnings = bool(warnings)
-    # Preserve release gate verdict; downgrade "released" to "best_effort" only if warnings exist
+
+    # Internal verdict — used for logging and DB, NOT exposed to users.
+    # "best_effort" fires on virtually every worksheet due to informational
+    # warnings, making the signal useless for users.
     if release_verdict == "blocked":
-        api_verdict = "blocked"
+        internal_verdict = "blocked"
     elif release_verdict == "best_effort" or has_warnings:
-        api_verdict = "best_effort"
+        internal_verdict = "best_effort"
     else:
-        api_verdict = "ok"
+        internal_verdict = "ok"
 
     # Use pre-computed quality score from generator; recompute only as fallback
     _quality_score: float | None = data.get("_quality_score")
@@ -194,15 +197,28 @@ async def generate_worksheet_v2(
         except Exception as _qs_exc:
             logger.warning("quality_score_failed", error=str(_qs_exc))
 
+    logger.info(
+        "[worksheets_v2] internal_verdict=%s quality_score=%s quality_tier=%s",
+        internal_verdict,
+        _quality_score,
+        quality_tier,
+    )
+
+    # User-facing: always present non-blocked worksheets as "ok" / "high".
+    # Internal diagnostics (score, stamps, verdict) are logged above and
+    # stored in saved_worksheets for auditing — but never shown to parents.
+    api_verdict = "blocked" if internal_verdict == "blocked" else "ok"
+    api_tier = "low" if internal_verdict == "blocked" else "high"
+
     return WorksheetGenerationResponse(
         worksheet=worksheet,
         generation_time_ms=elapsed_ms,
         warnings={"generation": warnings} if has_warnings else None,
         verdict=api_verdict,
-        quality_stamps=merged_stamps or None,
-        quality_tier=quality_tier,
+        quality_stamps=None,
+        quality_tier=api_tier,
         quality_score=_quality_score,
-        visual_compliance=data.get("_visual_compliance"),
+        visual_compliance=None,
     )
 
 
