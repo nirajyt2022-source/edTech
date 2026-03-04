@@ -1037,9 +1037,17 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
         "quotient",
         "remainder",
     ],
+    "decimal": [
+        "decimal",
+        "decimals",
+        "tenths",
+        "hundredths",
+        "place value",
+        "0.",
+        ".0",
+    ],
     "fraction": [
         "fraction",
-        "decimal",
         "half",
         "quarter",
         "third",
@@ -1134,6 +1142,7 @@ _TOPIC_REGEX: dict[str, list[re.Pattern]] = {
     "subtraction": [re.compile(r"\d+\s*[-−–]\s*\d+")],
     "multiplication": [re.compile(r"\d+\s*[×x*]\s*\d+", re.IGNORECASE)],
     "division": [re.compile(r"\d+\s*[÷/]\s*\d+")],
+    "decimal": [re.compile(r"\d+\.\d+")],
     "fraction": [re.compile(r"\d+\s*/\s*\d+")],
     "time": [re.compile(r"\d{1,2}\s*:\s*\d{2}")],
 }
@@ -1189,6 +1198,11 @@ def _detect_topic_category(topic: str) -> str | None:
     t_lower = topic.lower()
     # Extract primary topic name (before parentheses) for priority matching
     primary = t_lower.split("(")[0].strip() if "(" in t_lower else t_lower
+
+    # Early exit: if topic explicitly says "decimal", return "decimal" before
+    # the scoring loop can misclassify it as "fraction"
+    if "decimal" in primary:
+        return "decimal"
 
     best_match: str | None = None
     best_score = 0
@@ -2755,7 +2769,13 @@ def generate_worksheet(
                 generation_context=None,
                 curriculum_available=bool(chapter_name),
                 gold_standard_mode=_gsm,
-                worksheet_meta={"_quality_score": data.get("_quality_score")},
+                worksheet_meta={
+                    "_quality_score": data.get("_quality_score"),
+                    "skill_focus": data.get("skill_focus", ""),
+                    "common_mistake": data.get("common_mistake", ""),
+                    "learning_objectives": data.get("learning_objectives", []),
+                    "parent_tip": data.get("parent_tip", ""),
+                },
             )
             data["_release_stamps"] = release.stamps
             data["_release_verdict"] = release.verdict

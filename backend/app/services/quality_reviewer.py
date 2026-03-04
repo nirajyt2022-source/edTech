@@ -2261,12 +2261,20 @@ class QualityReviewerAgent:
                     re.IGNORECASE,
                 )
 
+                topic_slug = context.topic_slug.lower() if hasattr(context, "topic_slug") and context.topic_slug else ""
+
                 for q in result.questions:
                     q_type = (q.get("type") or q.get("format") or "").lower()
                     if q_type != "word_problem":
                         continue
                     q_text = q.get("text") or q.get("question_text") or ""
                     if not q_text:
+                        continue
+
+                    # Skip fraction word problems — verifier can't handle "1/4 of N"
+                    if re.search(r"\d+\s*/\s*\d+", q_text):
+                        continue
+                    if "fraction" in topic_slug:
                         continue
 
                     # Extract all integers from question text

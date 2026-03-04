@@ -981,6 +981,7 @@ def run_release_gate(
             "R11_TOPIC_DRIFT_GUARD",
             "R12_ROUND_NUMBER_GUARD",
             "R13_SENTENCE_STRUCTURE_GUARD",
+            "R21_PARENT_CONFIDENCE",
         }
     )
     # Collect names of rules that failed with DEGRADE enforcement

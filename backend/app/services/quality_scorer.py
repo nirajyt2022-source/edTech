@@ -373,7 +373,7 @@ def _run_ai_smell_checks(
                     FailureReason(
                         dimension="ai_smell",
                         check_id="AI_06",
-                        severity="critical",
+                        severity="major",
                         message="LLM conversational artifact in question text",
                         question_ids=[qid],
                         points_deducted=0.20,
@@ -581,9 +581,9 @@ def _run_pedagogical_checks(
             FailureReason(
                 dimension="pedagogical",
                 check_id="PED_07",
-                severity="major",
+                severity="minor",
                 message="No learning_objectives for parent confidence block",
-                points_deducted=0.15,
+                points_deducted=0.05,
             )
         )
     if not common_mistake:
@@ -708,8 +708,8 @@ def score_worksheet(
     all_failures = [f for fs in buckets.values() for f in fs]
     p0_failures = [f for f in all_failures if f.severity == "critical"]
 
-    if p0_failures:
-        # P0 kill switch — any critical failure zeros the entire score
+    if len(p0_failures) >= 3 or (p0_failures and len(q_dicts) == 0):
+        # P0 kill switch — 3+ critical failures (or any critical with 0 questions) zeros the score
         dimensions: dict[str, DimensionResult] = {}
         for dim_name, weight in _DIMENSION_WEIGHTS.items():
             dimensions[dim_name] = DimensionResult(

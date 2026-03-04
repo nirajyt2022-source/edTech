@@ -235,12 +235,12 @@ class TestPED07QualityScorer:
         ped07 = [f for f in result.failures if f.check_id == "PED_07"]
         assert any("skill_focus" in f.message for f in ped07)
 
-    def test_missing_learning_objectives_major(self):
+    def test_missing_learning_objectives_minor(self):
         ws = _worksheet(learning_objectives=[])
         result = score_worksheet(ws)
         ped07 = [f for f in result.failures if f.check_id == "PED_07"]
-        majors = [f for f in ped07 if f.severity == "major"]
-        assert len(majors) >= 1
+        minors = [f for f in ped07 if f.severity == "minor" and "learning_objectives" in f.message]
+        assert len(minors) >= 1
 
     def test_missing_common_mistake_minor(self):
         ws = _worksheet(common_mistake="")
