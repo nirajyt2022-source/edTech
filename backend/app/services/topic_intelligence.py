@@ -191,9 +191,22 @@ class TopicIntelligenceAgent:
 
         Never raises — all failures fall back to safe defaults.
         """
-        # 1. NCERT chapter from curriculum canon
-        canon_info = _lookup_canon(topic_slug, subject, grade)
-        ncert_chapter: str = canon_info["ncert_chapter"]
+        # 1. NCERT chapter — try curriculum graph first, fall back to canon
+        ncert_chapter: str = topic_slug
+        try:
+            from app.services.curriculum_graph import get_curriculum_node
+
+            cg_node = get_curriculum_node(f"Class {grade}", subject, topic_slug)
+            if cg_node is not None:
+                ncert_chapter = cg_node.chapter.name
+                logger.debug("[topic_intelligence] curriculum_graph hit for %r", topic_slug)
+            else:
+                canon_info = _lookup_canon(topic_slug, subject, grade)
+                ncert_chapter = canon_info["ncert_chapter"]
+        except Exception as exc:
+            logger.debug("[topic_intelligence] curriculum_graph failed, using canon: %s", exc)
+            canon_info = _lookup_canon(topic_slug, subject, grade)
+            ncert_chapter = canon_info["ncert_chapter"]
 
         # 2. NCERT subtopics (learning objectives)
         ncert_subtopics: list[str] = _get_subtopics(topic_slug)

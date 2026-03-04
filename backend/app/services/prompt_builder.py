@@ -67,6 +67,15 @@ def build_compressed_curriculum_context(context: GenerationContext) -> str:
         SKILL_TAGS: column_add_with_carry, addition_word_problem, addition_error_spot
         BLOOM: recall | SCAFFOLDING: true | CHALLENGE: false
     """
+    # Line 0: Chapter breadcrumb from curriculum graph (if available)
+    breadcrumb = ""
+    try:
+        from app.services.curriculum_graph import get_chapter_chain
+
+        breadcrumb = get_chapter_chain(f"Class {context.grade}", context.subject, context.topic_slug)
+    except Exception as exc:
+        logger.debug("curriculum_graph breadcrumb lookup failed: %s", exc)
+
     # Line 1: Identity
     line1 = (
         f"TOPIC: {context.topic_slug} | "
@@ -74,6 +83,8 @@ def build_compressed_curriculum_context(context: GenerationContext) -> str:
         f"GRADE: {context.grade} | "
         f"SUBJECT: {context.subject}"
     )
+    if breadcrumb:
+        line1 += f"\nNCERT PATH: {breadcrumb}"
 
     # Line 2: NCERT learning objectives — the "what to teach" ground truth
     if context.ncert_subtopics:

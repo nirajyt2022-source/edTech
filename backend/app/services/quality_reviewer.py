@@ -660,6 +660,13 @@ def _has_hindi_transliteration(text: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Render integrity patterns (CHECK 21)
+_VISUAL_REF_RE = re.compile(
+    r"(?i)\b(?:look at|see|observe|refer to|check|examine|study)"
+    r"\s+(?:the\s+)?(?:picture|diagram|image|figure|table|chart|graph|number line|clock|grid|map|pattern)"
+)
+_TABLE_REF_RE = re.compile(r"(?i)\b(?:the following|given|below)\s+(?:table|chart|graph|diagram)")
+
 # Fill-in-the-blank ambiguity patterns (CHECK 20)
 # ---------------------------------------------------------------------------
 
@@ -1031,6 +1038,21 @@ class QualityReviewerAgent:
                         result.warnings.append(msg)
             except Exception as exc:
                 logger.debug("[quality_reviewer] Check 20 skipped for Q%s: %s", q_id, exc)
+
+            # ── CHECK 21: Render integrity — phantom visual references ────
+            try:
+                if _VISUAL_REF_RE.search(question_text) or _TABLE_REF_RE.search(question_text):
+                    has_visual = bool(q.get("visual_type") or q.get("visual_data") or q.get("images"))
+                    if not has_visual:
+                        q["_phantom_visual_ref"] = True
+                        match_str = (
+                            _VISUAL_REF_RE.search(question_text) or _TABLE_REF_RE.search(question_text)
+                        ).group()
+                        msg = f"Q{q_id}: render integrity — phantom visual reference ('{match_str}')"
+                        logger.warning("[quality_reviewer] %s", msg)
+                        result.warnings.append(msg)
+            except Exception as exc:
+                logger.debug("[quality_reviewer] Check 21 skipped for Q%s: %s", q_id, exc)
 
         # ── CHECK 11: Engagement framing injection (P0-A) ──────────────
         # If <20% of questions use warm framing, inject it on eligible questions.

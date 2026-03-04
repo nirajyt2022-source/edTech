@@ -135,6 +135,7 @@ _ERROR_CLASSIFIERS: list[tuple[str, str, str, str, float]] = [
         "minor",
         0.10,
     ),
+    (r"render integrity|phantom visual", "content", "CONTENT_12", "major", 0.15),
     # Pedagogical
     (r"Type diversity", "pedagogical", "PED_02", "major", 0.15),
 ]
@@ -295,6 +296,19 @@ def _run_content_checks(
                     message="Fill-in-the-blank question is ambiguous",
                     question_ids=[qid],
                     points_deducted=0.10,
+                )
+            )
+
+        # CONTENT_12: Phantom visual reference flag
+        if q.get("_phantom_visual_ref"):
+            buckets["content"].append(
+                FailureReason(
+                    dimension="content",
+                    check_id="CONTENT_12",
+                    severity="major",
+                    message="Phantom visual reference — text references visual not attached",
+                    question_ids=[qid],
+                    points_deducted=0.15,
                 )
             )
 

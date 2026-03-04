@@ -646,6 +646,24 @@ class OutputValidator:
             if ans in _FB_GENERIC_22:
                 errors.append(f"{qid}: fill-blank ambiguity — generic fill-blank answer '{ans}'")
 
+        # 23. Render integrity — phantom visual references
+        _VISUAL_REF_RE_23 = re.compile(
+            r"(?i)\b(?:look at|see|observe|refer to|check|examine|study)"
+            r"\s+(?:the\s+)?(?:picture|diagram|image|figure|table|chart|graph|number line|clock|grid|map|pattern)"
+        )
+        _TABLE_REF_RE_23 = re.compile(r"(?i)\b(?:the following|given|below)\s+(?:table|chart|graph|diagram)")
+        for i, q in enumerate(questions):
+            qid = q.get("id", f"Q{i + 1}")
+            text = q.get("text", "")
+            vis_match = _VISUAL_REF_RE_23.search(text) or _TABLE_REF_RE_23.search(text)
+            if vis_match:
+                has_visual = bool(q.get("visual_type") or q.get("visual_data") or q.get("images"))
+                if not has_visual:
+                    errors.append(
+                        f"{qid}: render integrity — phantom visual reference "
+                        f"(text says '{vis_match.group()}' but no visual attached)"
+                    )
+
         is_valid = len(errors) == 0
         if not is_valid:
             logger.warning("Worksheet validation failed", extra={"errors": errors, "topic": topic, "grade": grade})

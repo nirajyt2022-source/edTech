@@ -681,6 +681,58 @@ def r18_fill_blank_ambiguity(ctx: GateContext) -> RuleResult:
     )
 
 
+# ---------------------------------------------------------------------------
+# R19 — CURRICULUM_DEPTH (STAMP)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R19_CURRICULUM_DEPTH", Enforcement.STAMP)
+def r19_curriculum_depth(ctx: GateContext) -> RuleResult:
+    """Stamp curriculum_depth based on curriculum graph coverage."""
+    try:
+        from app.services.curriculum_graph import get_curriculum_node
+
+        node = get_curriculum_node(ctx.grade_level, ctx.subject, ctx.topic)
+        if node is None:
+            depth = "none"
+        elif node.learning_outcomes and node.primary_section:
+            depth = "full"
+        else:
+            depth = "partial"
+    except Exception as exc:
+        logger.debug("[release_gate] R19 curriculum graph lookup failed: %s", exc)
+        depth = "none"
+
+    return RuleResult(
+        "R19_CURRICULUM_DEPTH",
+        True,  # Always passes (STAMP)
+        Enforcement.STAMP,
+        f"curriculum_depth={depth}",
+        stamps={"curriculum_depth": depth},
+    )
+
+
+# ---------------------------------------------------------------------------
+# R20 — RENDER_INTEGRITY (DEGRADE / BLOCK for Class 1-2)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R20_RENDER_INTEGRITY", Enforcement.DEGRADE)
+def r20_render_integrity(ctx: GateContext) -> RuleResult:
+    """Degrade if phantom visual references found; block for Class 1-2."""
+    phantom_count = sum(1 for q in ctx.questions if q.get("_phantom_visual_ref"))
+    if phantom_count == 0:
+        return RuleResult("R20_RENDER_INTEGRITY", True, Enforcement.DEGRADE, "No phantom visual refs")
+
+    detail = f"{phantom_count} question(s) with phantom visual references"
+
+    # Classes 1-2 (visual-heavy curriculum): >0 phantom refs → BLOCK
+    if ctx.grade_num <= 2:
+        return RuleResult("R20_RENDER_INTEGRITY", False, Enforcement.BLOCK, detail)
+
+    return RuleResult("R20_RENDER_INTEGRITY", False, Enforcement.DEGRADE, detail)
+
+
 @register_rule("R15_ANSWER_AUTHORITY", Enforcement.BLOCK)
 def r15_answer_authority(ctx: GateContext) -> RuleResult:
     """Block if any question has _answer_mismatch (wrong math answer)."""
