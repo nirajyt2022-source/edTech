@@ -569,6 +569,107 @@ def _get_image_keywords_for_subject(subject: str) -> list[str]:
     return all_keywords
 
 
+# ── Topic → Image mapping for illustrated worksheets ──
+TOPIC_IMAGE_MAP = {
+    # Maths
+    "addition": ["apple", "mango", "banana", "flower", "butterfly", "pencil_box"],
+    "subtraction": ["apple", "mango", "bird_flock", "flower", "balloon"],
+    "shapes": ["triangle_shape", "circle_shape", "rectangle_shape", "square_shape"],
+    "money": ["coin_1", "coin_2", "coin_5", "note_10", "note_50"],
+    "time": ["clock", "sun", "moon"],
+    "measurement": ["ruler", "scale", "thermometer"],
+    "numbers": ["apple", "mango", "star", "pencil_box", "book_open"],
+    "multiplication": ["apple", "mango", "flower", "egg"],
+    "division": ["apple", "mango", "roti", "laddoo"],
+    "fractions": [],  # uses visual_type=pie_fraction instead
+    "data handling": [],
+    "spatial": [],
+    # English
+    "alphabet": ["apple", "ball", "cat", "dog", "elephant"],
+    "nouns": ["dog", "cat", "book_open", "school_bag", "tree"],
+    "verbs": ["cricket", "football", "bicycle", "bus"],
+    "pronouns": ["family_group", "mother", "father", "baby"],
+    "adjectives": ["sun", "flower", "elephant", "ant"],
+    "sentences": ["school_bag", "book_open", "pencil_box"],
+    "vocabulary": ["cow", "dog", "cat", "mango", "apple", "banana"],
+    "phonics": ["apple", "ball", "cat", "dog", "egg", "fish"],
+    "rhyming": ["cat", "bat", "star", "car"],
+    "greetings": ["family_group", "school_bag"],
+    "seasons": ["sunny", "rainy", "snowy", "windy", "cloudy"],
+    "family": ["family_group", "grandparents", "mother", "father", "baby"],
+    # EVS
+    "animals": ["cow", "lion", "tiger", "elephant", "monkey", "parrot", "fish", "butterfly", "rabbit"],
+    "plants": ["tree", "flower", "rose", "sunflower", "tulsi", "lotus"],
+    "food": ["mango", "apple", "banana", "rice", "roti", "laddoo", "milk"],
+    "body": ["human_body", "eye", "ear", "nose", "tongue", "hand"],
+    "water": ["water_drop", "rain", "pond", "ocean", "tap"],
+    "shelter": ["house", "nest", "kennel", "stable"],
+    "senses": ["eye", "ear", "nose", "tongue", "hand"],
+    "weather": ["sunny", "rainy", "cloudy", "snowy", "windy"],
+    "habitats": ["forest", "pond", "desert", "ocean", "farm"],
+    "nutrition": ["mango", "apple", "banana", "rice", "roti", "milk", "egg"],
+    # Hindi
+    "varnamala": ["apple", "mango", "elephant", "flower"],
+    "family words": ["family_group", "grandparents", "mother", "father"],
+    "nature": ["tree", "flower", "sun", "moon", "cloud"],
+    # Science
+    "digestion": ["apple", "roti", "rice", "human_body"],
+    "air": ["balloon", "windy", "fan"],
+    "light": ["sun", "torch", "candle"],
+    "magnet": [],
+    "force": ["car", "bicycle", "cricket"],
+    # Computer
+    "parts of computer": ["desktop_computer", "laptop", "keyboard", "mouse", "monitor"],
+    "mouse": ["mouse", "desktop_computer"],
+    "keyboard": ["keyboard", "desktop_computer"],
+    "typing": ["keyboard", "laptop"],
+    # Health
+    "hygiene": ["toothbrush", "soap", "handwash", "comb", "towel"],
+    "exercise": ["cricket", "football", "yoga_pose"],
+    "posture": ["yoga_pose"],
+    "eating": ["mango", "apple", "roti", "milk"],
+}
+
+
+def _get_topic_images(topic: str, subject: str, slot_num: int = 0) -> list[str] | None:
+    """Get 1-2 relevant image keywords for a topic, rotating per slot."""
+    topic_lower = topic.lower()
+
+    # Find matching keywords from TOPIC_IMAGE_MAP
+    matched_images: list[str] = []
+    for key, images in TOPIC_IMAGE_MAP.items():
+        if key in topic_lower:
+            matched_images.extend(images)
+
+    # Also check subject-level keywords
+    subject_lower = subject.lower()
+    for key, images in TOPIC_IMAGE_MAP.items():
+        if key in subject_lower and key not in topic_lower:
+            matched_images.extend(images[:3])
+
+    if not matched_images:
+        return None
+
+    # Deduplicate while preserving order, only keep keys in IMAGE_REGISTRY
+    seen: set[str] = set()
+    unique: list[str] = []
+    for img in matched_images:
+        if img not in seen and img in IMAGE_REGISTRY:
+            seen.add(img)
+            unique.append(img)
+
+    if not unique:
+        return None
+
+    # Rotate based on slot number for variety
+    start = (slot_num * 2) % len(unique)
+    selected = []
+    for j in range(min(2, len(unique))):
+        selected.append(unique[(start + j) % len(unique)])
+
+    return selected
+
+
 # ---------------------------------------------------------------------------
 # Hindi grammar answer banks — Python-owned answers, same pattern as maths
 # ---------------------------------------------------------------------------
@@ -1367,12 +1468,32 @@ def build_slots(
         if visual_type:
             visual_data = _compute_visual_data(visual_type, numbers, grade_num)
 
-        # Image keywords for non-maths visual
+        # Image keywords — auto-assign for Class 1-2, optional for Class 3
         image_kw = None
-        if not is_maths and problem_style in ("visual", "mixed") and not visual_type:
-            available_kw = _get_image_keywords_for_subject(subject)
-            if available_kw:
-                image_kw = random.sample(available_kw, min(2, len(available_kw)))
+        auto_image_rate = 0.0
+        if grade_num <= 2:
+            auto_image_rate = 0.5  # 50% of questions get images
+        elif grade_num == 3:
+            auto_image_rate = 0.25  # 25% of questions get images
+
+        # Override with problem_style if explicitly set
+        if problem_style == "visual":
+            auto_image_rate = 0.8
+        elif problem_style == "mixed":
+            auto_image_rate = max(auto_image_rate, 0.5)
+
+        # Don't add images if this slot already has a visual_type (e.g., pie_fraction, clock)
+        if visual_type:
+            image_kw = None
+        elif auto_image_rate > 0 and random.random() < auto_image_rate:
+            # Find relevant images for this topic
+            image_kw = _get_topic_images(topic, subject, slot_num=i)
+
+            if not image_kw:
+                # Fallback: subject-level images
+                available_kw = _get_image_keywords_for_subject(subject)
+                if available_kw:
+                    image_kw = random.sample(available_kw, min(2, len(available_kw)))
 
         # Names for this slot (avoid adjacent repeats)
         slot_names = pick_names(1, exclude=used_names[-3:] if used_names else None)
@@ -1398,6 +1519,16 @@ def build_slots(
 
         # Build LLM instruction
         slot.llm_instruction = _build_llm_instruction(slot, topic, subject, language, grade_num)
+
+        # If images are assigned, tell the LLM about them
+        if image_kw and not slot.llm_instruction.startswith("SPECIFIC TASK"):
+            image_names = [IMAGE_REGISTRY[k]["alt"] for k in image_kw if k in IMAGE_REGISTRY]
+            if image_names:
+                slot.llm_instruction += (
+                    f" | Images shown with this question: {', '.join(image_names)}."
+                    " You can reference these images in the question text"
+                    " (e.g., 'Look at the picture and answer')."
+                )
 
         slots.append(slot)
 
