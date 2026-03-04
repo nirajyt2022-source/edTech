@@ -77,6 +77,45 @@ GRADE_PROFILES: dict = json.loads(_GRADE_PROFILES_PATH.read_text(encoding="utf-8
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Parent confidence block validation (CHECK 22)
+# ---------------------------------------------------------------------------
+
+_GENERIC_PARENT_RE = re.compile(
+    r"(?i)^(practice regularly|keep practicing|revise daily|"
+    r"help your child|encourage your child|make sure to practice|"
+    r"practice makes perfect|review the concepts)$"
+)
+
+
+def validate_parent_blocks(worksheet: dict) -> tuple[bool, list[str]]:
+    """
+    Validate worksheet-level parent confidence fields.
+
+    Returns (all_complete, warnings) where all_complete is True only when
+    all parent blocks are present and non-generic.
+    """
+    warnings: list[str] = []
+    skill_focus = (worksheet.get("skill_focus") or "").strip()
+    common_mistake = (worksheet.get("common_mistake") or "").strip()
+    parent_tip = (worksheet.get("parent_tip") or "").strip()
+    learning_objectives = worksheet.get("learning_objectives") or []
+
+    if not skill_focus:
+        warnings.append("[parent_block] missing skill_focus")
+    if not common_mistake:
+        warnings.append("[parent_block] missing common_mistake")
+    if not learning_objectives or len(learning_objectives) < 1:
+        warnings.append("[parent_block] missing learning_objectives")
+    if parent_tip and _GENERIC_PARENT_RE.match(parent_tip):
+        warnings.append("[parent_block] generic parent_tip")
+    if common_mistake and _GENERIC_PARENT_RE.match(common_mistake):
+        warnings.append("[parent_block] generic common_mistake")
+
+    all_complete = len(warnings) == 0
+    return all_complete, warnings
+
+
+# ---------------------------------------------------------------------------
 # Safe arithmetic evaluator
 # ---------------------------------------------------------------------------
 
@@ -747,6 +786,7 @@ class ReviewResult:
     corrections: list = field(default_factory=list)  # human-readable log of corrections
     warnings: list = field(default_factory=list)  # grade-level language warnings
     errors: list = field(default_factory=list)  # skill-tag replacement log
+    stamps: dict = field(default_factory=dict)  # metadata stamps (e.g. parent_blocks_complete)
 
 
 # ---------------------------------------------------------------------------

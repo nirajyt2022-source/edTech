@@ -538,6 +538,42 @@ def _run_pedagogical_checks(
             )
         )
 
+    # PED_07: Parent confidence blocks — skill_focus, learning_objectives, common_mistake
+    skill_focus = (worksheet.get("skill_focus") or "").strip()
+    learning_objectives = worksheet.get("learning_objectives") or []
+    common_mistake = (worksheet.get("common_mistake") or "").strip()
+
+    if not skill_focus:
+        buckets["pedagogical"].append(
+            FailureReason(
+                dimension="pedagogical",
+                check_id="PED_07",
+                severity="minor",
+                message="No skill_focus for parent confidence block",
+                points_deducted=0.10,
+            )
+        )
+    if not learning_objectives:
+        buckets["pedagogical"].append(
+            FailureReason(
+                dimension="pedagogical",
+                check_id="PED_07",
+                severity="major",
+                message="No learning_objectives for parent confidence block",
+                points_deducted=0.15,
+            )
+        )
+    if not common_mistake:
+        buckets["pedagogical"].append(
+            FailureReason(
+                dimension="pedagogical",
+                check_id="PED_07",
+                severity="minor",
+                message="No common_mistake for parent confidence block",
+                points_deducted=0.05,
+            )
+        )
+
 
 # ---------------------------------------------------------------------------
 # Orchestrator

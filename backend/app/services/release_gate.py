@@ -72,6 +72,7 @@ class GateContext:
     warnings: list[str]
     generation_context: Any | None = None  # GenerationContext or None
     curriculum_available: bool = True
+    worksheet_meta: dict = field(default_factory=dict)  # worksheet-level fields (skill_focus, etc.)
 
 
 # ---------------------------------------------------------------------------
@@ -733,6 +734,37 @@ def r20_render_integrity(ctx: GateContext) -> RuleResult:
     return RuleResult("R20_RENDER_INTEGRITY", False, Enforcement.DEGRADE, detail)
 
 
+# ---------------------------------------------------------------------------
+# R21 — PARENT_CONFIDENCE (DEGRADE + STAMP)
+# ---------------------------------------------------------------------------
+
+
+@register_rule("R21_PARENT_CONFIDENCE", Enforcement.DEGRADE)
+def r21_parent_confidence(ctx: GateContext) -> RuleResult:
+    """Degrade if parent confidence blocks are missing or generic."""
+    from app.services.quality_reviewer import validate_parent_blocks
+
+    meta = ctx.worksheet_meta
+    if not meta:
+        # No worksheet meta available — skip silently
+        return RuleResult(
+            "R21_PARENT_CONFIDENCE",
+            True,
+            Enforcement.DEGRADE,
+            "No worksheet meta — skipped",
+            stamps={"parent_blocks_complete": True},
+        )
+
+    all_complete, warnings = validate_parent_blocks(meta)
+    return RuleResult(
+        "R21_PARENT_CONFIDENCE",
+        all_complete,
+        Enforcement.DEGRADE,
+        "; ".join(warnings) if warnings else "All parent blocks present",
+        stamps={"parent_blocks_complete": all_complete},
+    )
+
+
 @register_rule("R15_ANSWER_AUTHORITY", Enforcement.BLOCK)
 def r15_answer_authority(ctx: GateContext) -> RuleResult:
     """Block if any question has _answer_mismatch (wrong math answer)."""
@@ -770,6 +802,7 @@ def run_release_gate(
     warnings: list[str],
     generation_context: Any | None = None,
     curriculum_available: bool = True,
+    worksheet_meta: dict | None = None,
 ) -> ReleaseVerdict:
     """
     Run all registered rules and produce a ReleaseVerdict.
@@ -795,6 +828,7 @@ def run_release_gate(
         warnings=list(warnings),
         generation_context=generation_context,
         curriculum_available=curriculum_available,
+        worksheet_meta=worksheet_meta or {},
     )
 
     results: list[RuleResult] = []
