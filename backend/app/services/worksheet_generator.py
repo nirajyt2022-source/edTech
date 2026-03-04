@@ -977,12 +977,61 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
         "month",
         "day",
         "week",
+        ":",
     ],
-    "addition": ["add", "sum", "plus", "carry", "total"],
-    "subtraction": ["subtract", "minus", "borrow", "difference", "take away"],
-    "multiplication": ["multiply", "multiplication", "times", "product", "table"],
-    "division": ["divide", "division", "share", "quotient", "remainder"],
-    "fraction": ["fraction", "decimal", "half", "quarter", "numerator", "denominator"],
+    "addition": [
+        "add",
+        "sum",
+        "plus",
+        "+",
+        "carry",
+        "total",
+        "altogether",
+        "in all",
+        "combined",
+        "how many",
+    ],
+    "subtraction": [
+        "subtract",
+        "minus",
+        "-",
+        "−",
+        "borrow",
+        "difference",
+        "take away",
+        "left",
+        "remaining",
+    ],
+    "multiplication": [
+        "multiply",
+        "multiplication",
+        "times",
+        "×",
+        "product",
+        "table",
+        "each",
+        "groups of",
+    ],
+    "division": [
+        "divide",
+        "division",
+        "÷",
+        "share equally",
+        "share",
+        "split",
+        "quotient",
+        "remainder",
+    ],
+    "fraction": [
+        "fraction",
+        "decimal",
+        "half",
+        "quarter",
+        "third",
+        "numerator",
+        "denominator",
+        "/",
+    ],
     "money": ["money", "coin", "rupee", "₹", "price", "cost", "change", "buy", "sell"],
     "shape": ["shape", "triangle", "circle", "square", "rectangle", "side", "corner", "edge"],
     "measurement": ["measure", "length", "weight", "height", "cm", "metre", "kg", "gram", "litre"],
@@ -1062,6 +1111,18 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
     "evs": ["environment", "family", "community", "shelter", "transport", "safety", "festival", "food", "water"],
 }
 
+# Regex patterns for operator-based detection in question text.
+# These catch "3 + 2", "45 − 12", "6 × 7", "20 ÷ 4", "1/4", "3:30" etc.
+# Keyed by topic category — checked in _is_question_on_topic().
+_TOPIC_REGEX: dict[str, list[re.Pattern]] = {
+    "addition": [re.compile(r"\d+\s*\+\s*\d+")],
+    "subtraction": [re.compile(r"\d+\s*[-−–]\s*\d+")],
+    "multiplication": [re.compile(r"\d+\s*[×x*]\s*\d+", re.IGNORECASE)],
+    "division": [re.compile(r"\d+\s*[÷/]\s*\d+")],
+    "fraction": [re.compile(r"\d+\s*/\s*\d+")],
+    "time": [re.compile(r"\d{1,2}\s*:\s*\d{2}")],
+}
+
 
 # ---------------------------------------------------------------------------
 # Warning severity categorization
@@ -1136,12 +1197,34 @@ def _detect_topic_category(topic: str) -> str | None:
 
 
 def _is_question_on_topic(question_text: str, topic_category: str | None) -> bool:
-    """Check if a question mentions at least one keyword from the topic category."""
+    """Check if a question mentions at least one keyword or matches a regex for the topic.
+
+    For short keywords (1-2 chars like "+", "-", ":", "/", "÷") we require
+    the symbol to actually appear rather than using word-boundary matching,
+    since these are operators not words.
+    """
     if not topic_category:
         return True  # unknown category — can't check
-    keywords = _TOPIC_KEYWORDS.get(topic_category, [])
+
     q_lower = question_text.lower()
-    return any(kw in q_lower for kw in keywords)
+
+    # Check plain keywords
+    keywords = _TOPIC_KEYWORDS.get(topic_category, [])
+    for kw in keywords:
+        if len(kw) <= 2:
+            # Short tokens: exact substring match (covers operators like +, -, :, ÷)
+            if kw in q_lower:
+                return True
+        else:
+            if kw in q_lower:
+                return True
+
+    # Check regex patterns (e.g. \d+\s*\+\s*\d+ for "3 + 2")
+    for pat in _TOPIC_REGEX.get(topic_category, []):
+        if pat.search(question_text):
+            return True
+
+    return False
 
 
 def _verify_maths_answer(question: dict) -> str | None:
@@ -1434,6 +1517,22 @@ def validate_visual_data(questions: list[dict]) -> list[dict]:
 # 1D-bis  Mandatory Visual Enforcement
 # ---------------------------------------------------------------------------
 
+# Topic-keyword → default visual type for the safety-net pass.
+# This is intentionally simple: it catches topics by substring so it works
+# even when the topic profile is missing or problem_style == "standard".
+_VISUAL_MANDATORY_TOPICS: dict[str, str] = {
+    "fractions": "pie_fraction",
+    "fraction": "pie_fraction",
+    "time": "clock",
+    "telling time": "clock",
+    "shapes": "shapes",
+    "geometry": "shapes",
+    "money": "money_coins",
+    "place value": "abacus",
+    "symmetry": "grid_symmetry",
+    "patterns": "pattern_tiles",
+}
+
 # Regex patterns for extracting visual data from question text (module level)
 _RE_TIME = re.compile(r"(\d{1,2})\s*:\s*(\d{2})")
 _RE_FRACTION = re.compile(r"(\d+)\s*/\s*(\d+)")
@@ -1671,6 +1770,72 @@ def enforce_mandatory_visuals(
     return questions, compliance
 
 
+def _inject_visuals_safety_net(
+    questions: list[dict],
+    topic: str,
+    subject: str,
+) -> tuple[list[dict], list[str]]:
+    """Safety-net visual injection for mandatory-visual topics.
+
+    Runs regardless of problem_style.  Uses _VISUAL_MANDATORY_TOPICS to
+    decide the default visual type from the topic name, then injects
+    visual_type + visual_data on questions that have none.
+
+    Target: at least 50% of questions should have visuals on these topics.
+    Only injects when _generate_default_visual_data succeeds (never garbage).
+    """
+    repairs: list[str] = []
+
+    # Only Maths gets SVG visuals
+    if subject.lower() != "maths":
+        return questions, repairs
+
+    # Find matching visual type from topic keywords
+    topic_lower = topic.lower()
+    default_visual: str | None = None
+    for keyword, vtype in _VISUAL_MANDATORY_TOPICS.items():
+        if keyword in topic_lower:
+            default_visual = vtype
+            break
+
+    if default_visual is None:
+        return questions, repairs
+
+    # Count existing visuals
+    total = len(questions)
+    with_visual = sum(1 for q in questions if q.get("visual_type"))
+    target = max(1, total // 2)  # 50% target
+
+    if with_visual >= target:
+        return questions, repairs  # already enough
+
+    # Sort eligible questions: prefer recognition/representation roles
+    eligible = [(i, q) for i, q in enumerate(questions) if not q.get("visual_type")]
+    eligible.sort(key=lambda x: _ROLE_PRIORITY.get(x[1].get("role", "application"), 2))
+
+    injected = 0
+    for idx, q in eligible:
+        if with_visual + injected >= target:
+            break
+        vd = _generate_default_visual_data(default_visual, q, topic)
+        if vd is not None:
+            questions[idx]["visual_type"] = default_visual
+            questions[idx]["visual_data"] = vd
+            injected += 1
+            repairs.append(f"q{idx + 1}←{default_visual}")
+
+    if repairs:
+        logger.info(
+            "visual_safety_net_injected",
+            topic=topic,
+            visual_type=default_visual,
+            count=injected,
+            target=target,
+        )
+
+    return questions, repairs
+
+
 def validate_response(
     raw_text: str,
     subject: str,
@@ -1873,6 +2038,13 @@ def validate_response(
                 f"[visual_mandatory] Non-compliant: "
                 f"{visual_compliance['actual_count']}/{visual_compliance['min_count']} visuals"
             )
+
+    # --- Visual safety net (runs even for problem_style="standard") ---
+    questions, safety_net_repairs = _inject_visuals_safety_net(questions, topic, subject)
+    if safety_net_repairs:
+        warnings.append(
+            f"[visual_safety_net] Injected {len(safety_net_repairs)} visuals: " + ", ".join(safety_net_repairs)
+        )
 
     # --- Image keyword resolution ---
     questions = resolve_question_images(questions)
