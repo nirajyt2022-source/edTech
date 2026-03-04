@@ -638,11 +638,11 @@ def build_user_prompt(
     if bloom_directive:
         prompt += f"\nCOGNITIVE LEVEL: {bloom_directive}\n"
 
-    # -- MCQ option count variety (S2) --
+    # -- MCQ option count (S2) --
     prompt += (
-        "\nMCQ VARIETY: Not all MCQs should have exactly 4 options. "
-        "Use this mix: ~70% with 4 options, ~20% with 3 options, ~10% with 5 options. "
-        "This makes the worksheet feel less mechanical.\n"
+        "\nMCQ OPTIONS: Every MCQ MUST have exactly 4 options. "
+        "Never use 3 or 5 options. Never use filler options like 'Does not apply', "
+        "'Cannot be determined', or 'None of the above'.\n"
     )
 
     # -- MCQ quality rules (S1.2) --
@@ -1005,6 +1005,18 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
         "in all",
         "combined",
         "how many",
+        "more",
+        "joined",
+        "both",
+        "gives",
+        "gave him",
+        "gave her",
+        "received",
+        "bought",
+        "collected",
+        "gets",
+        "got",
+        "found",
     ],
     "subtraction": [
         "subtract",
@@ -1016,6 +1028,16 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
         "take away",
         "left",
         "remaining",
+        "gave away",
+        "gave",
+        "spent",
+        "lost",
+        "ate",
+        "sold",
+        "used",
+        "flew away",
+        "removed",
+        "fewer",
     ],
     "multiplication": [
         "multiply",
@@ -1138,8 +1160,8 @@ _TOPIC_KEYWORDS: dict[str, list[str]] = {
 # These catch "3 + 2", "45 − 12", "6 × 7", "20 ÷ 4", "1/4", "3:30" etc.
 # Keyed by topic category — checked in _is_question_on_topic().
 _TOPIC_REGEX: dict[str, list[re.Pattern]] = {
-    "addition": [re.compile(r"\d+\s*\+\s*\d+")],
-    "subtraction": [re.compile(r"\d+\s*[-−–]\s*\d+")],
+    "addition": [re.compile(r"\d+\s*\+\s*\d+"), re.compile(r"\d+\s+more\b")],
+    "subtraction": [re.compile(r"\d+\s*[-−–]\s*\d+"), re.compile(r"how many.*left|how many.*remaining", re.IGNORECASE)],
     "multiplication": [re.compile(r"\d+\s*[×x*]\s*\d+", re.IGNORECASE)],
     "division": [re.compile(r"\d+\s*[÷/]\s*\d+")],
     "decimal": [re.compile(r"\d+\.\d+")],
@@ -2159,6 +2181,11 @@ def validate_response(
         "both (a) and (b)",
         "all of these",
         "none of these",
+        "does not apply",
+        "not applicable",
+        "cannot be determined",
+        "not enough information",
+        "no correct option given",
         "उपरोक्त सभी",
         "इनमें से कोई नहीं",
         "ये सभी",
@@ -2167,6 +2194,7 @@ def validate_response(
         "उपर्युक्त सभी",
         "सभी सही हैं",
         "कोई भी नहीं",
+        "लागू नहीं",
     }
     for q in questions:
         if q.get("type") != "mcq":
@@ -2499,16 +2527,18 @@ def generate_worksheet(
                     _fixed = re.sub(r"^(c)\d+(_)", rf"\g<1>{_grade_int}\2", _tag)
                     _grade_fixed_tags.append(_fixed)
 
+                _bloom_map = {"easy": "recall", "medium": "application", "hard": "reasoning"}
+                _bloom = _bloom_map.get(difficulty, "recall")
                 _gen_ctx = GenerationContext(
                     topic_slug=topic,
                     subject=subject,
                     grade=_grade_int,
                     ncert_chapter=topic,
                     ncert_subtopics=[],
-                    bloom_level="recall",
+                    bloom_level=_bloom,
                     format_mix={"mcq": 40, "fill_blank": 30, "word_problem": 30},
-                    scaffolding=False,
-                    challenge_mode=False,
+                    scaffolding=difficulty == "easy",
+                    challenge_mode=difficulty == "hard",
                     valid_skill_tags=_grade_fixed_tags,
                     child_context={},
                 )
@@ -2706,16 +2736,18 @@ def generate_worksheet(
                     _grade_int = (
                         int(re.search(r"\d+", str(grade_level)).group()) if re.search(r"\d+", str(grade_level)) else 3
                     )
+                    _bloom_map2 = {"easy": "recall", "medium": "application", "hard": "reasoning"}
+                    _bloom2 = _bloom_map2.get(difficulty, "recall")
                     _gen_ctx = _GC(
                         topic_slug=topic,
                         subject=subject,
                         grade=_grade_int,
                         ncert_chapter=topic,
                         ncert_subtopics=[],
-                        bloom_level="recall",
+                        bloom_level=_bloom2,
                         format_mix={"mcq": 40, "fill_blank": 30, "word_problem": 30},
-                        scaffolding=False,
-                        challenge_mode=False,
+                        scaffolding=difficulty == "easy",
+                        challenge_mode=difficulty == "hard",
                         valid_skill_tags=list(_profile.get("allowed_skill_tags", [])),
                         child_context={},
                     )

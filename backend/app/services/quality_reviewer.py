@@ -1528,22 +1528,22 @@ class QualityReviewerAgent:
                 _impure_found = False
 
                 # CHECK 10a: Question text
+                # Note: code-mixing sets _hindi_impure for R17 release gate check
+                # but does NOT set _needs_regen (avoids P0 kill via CONTENT_03).
                 if _has_hindi_code_mixing(question_text):
                     msg = f"Q{q_id}: Hindi code-mixing detected (Latin script in Devanagari text)"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)
-                    q["_needs_regen"] = True
                     q["_hindi_impure"] = True
                     _impure_found = True
-                    result.corrections.append(f"Q{q_id}: flagged for regen (Latin code-mixing)")
+                    result.corrections.append(f"Q{q_id}: Hindi code-mixing flagged")
                 elif context.subject.lower() == "hindi" and _has_hindi_transliteration(question_text):
                     msg = f"Q{q_id}: Hindi transliterated English detected (Devanagari-English words)"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)
-                    q["_needs_regen"] = True
                     q["_hindi_impure"] = True
                     _impure_found = True
-                    result.corrections.append(f"Q{q_id}: flagged for regen (transliterated English)")
+                    result.corrections.append(f"Q{q_id}: Hindi transliteration flagged")
 
                 # CHECK 10b: Scan answer, hint, explanation for Hindi impurity
                 # Only answer fields are student-facing and trigger _hindi_impure.
@@ -1653,17 +1653,29 @@ class QualityReviewerAgent:
         # Step 2: Count engagement-framed questions.
         # Step 3: Inject new framing if below target, preserving original case.
         try:
-            _ENGAGEMENT_RE = re.compile(r"(?i)^(help|can you|try to|let'?s|guess)")
-            _HINDI_ENGAGEMENT_RE = re.compile(r"की मदद करो")
+            _ENGAGEMENT_RE = re.compile(
+                r"(?i)^(\w+'?s?\s+(?:is wondering|needs to|question)|help|can you|try to|let'?s|guess|think about|सोचो)"
+            )
+            _HINDI_ENGAGEMENT_RE = re.compile(r"की मदद करो|को बताओ|के लिए हल करो|का सवाल|सोचो और बताओ")
             # Patterns to strip old engagement prefixes (including name variants)
             _STRIP_ENGAGEMENT_RE = re.compile(
                 r"(?i)^(?:help\s+\w+\s+(?:solve this|figure out|find|count|work out)\s*:\s*"
                 r"|can you\s+(?:help\s+\w+\s+)?(?:solve|find|figure out)\s*[:\?]?\s*"
                 r"|try to\s+(?:find|solve|figure out)\s*:\s*"
                 r"|let'?s\s+(?:figure out|find|solve|help\s+\w+)\s*:\s*"
-                r"|with\s+\w+\s*:\s*)"
+                r"|with\s+\w+\s*:\s*"
+                r"|\w+\s+is wondering\s*:\s*"
+                r"|\w+\s+needs to figure out\s*:\s*"
+                r"|\w+'?s\s+question\s*:\s*"
+                r"|think about this\s*:\s*)"
             )
-            _STRIP_HINDI_ENGAGEMENT_RE = re.compile(r"^\w+\s+की मदद करो\s*:\s*")
+            _STRIP_HINDI_ENGAGEMENT_RE = re.compile(
+                r"^(?:\w+\s+की मदद करो\s*:\s*"
+                r"|\w+\s+को बताओ\s*:\s*"
+                r"|\w+\s+के लिए हल करो\s*:\s*"
+                r"|\w+\s+का सवाल\s*:\s*"
+                r"|सोचो और बताओ\s*:\s*)"
+            )
 
             # Step 1: Strip existing engagement prefixes from ALL questions
             for q in result.questions:
@@ -1716,10 +1728,21 @@ class QualityReviewerAgent:
                     # Detect Hindi: check if question has Devanagari script
                     _is_hindi = bool(re.search(r"[\u0900-\u097F]", q_text))
                     if _is_hindi:
-                        new_text = f"{name} की मदद करो: {q_text}"
+                        _hindi_templates = [
+                            f"{name} को बताओ: {q_text}",
+                            f"{name} के लिए हल करो: {q_text}",
+                            f"{name} का सवाल: {q_text}",
+                            f"सोचो और बताओ: {q_text}",
+                        ]
+                        new_text = _rng.choice(_hindi_templates)
                     else:
-                        # Preserve original case — don't lowercase the first char
-                        new_text = f"Help {name} solve this: {q_text}"
+                        _eng_templates = [
+                            f"{name} is wondering: {q_text}",
+                            f"{name} needs to figure out: {q_text}",
+                            f"{name}'s question: {q_text}",
+                            f"Think about this: {q_text}",
+                        ]
+                        new_text = _rng.choice(_eng_templates)
                     # Guard: ensure result is not garbled (starts with letter, reasonable length)
                     if len(new_text) < 10 or not new_text[0].isalpha():
                         continue
@@ -2285,12 +2308,20 @@ class QualityReviewerAgent:
                     a, b = nums[0], nums[1]
                     expected = None
 
-                    if _MUL_KW.search(q_text):
-                        expected = a * b
-                    elif _SUB_KW.search(q_text):
+                    has_sub = _SUB_KW.search(q_text)
+                    has_mul = _MUL_KW.search(q_text)
+                    has_add = _ADD_KW.search(q_text)
+
+                    # Subtraction first — loss/giving keywords are most specific
+                    if has_sub:
                         expected = a - b if a >= b else b - a
-                    elif _ADD_KW.search(q_text):
+                    elif has_mul and not has_add:
+                        # Only treat as multiplication if no addition keywords compete
+                        expected = a * b
+                    elif has_add:
                         expected = a + b
+                    elif has_mul:
+                        expected = a * b
 
                     if expected is None:
                         continue

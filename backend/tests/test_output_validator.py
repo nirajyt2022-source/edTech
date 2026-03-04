@@ -915,12 +915,11 @@ class TestPromptAntiArtificiality:
         defaults.update(kwargs)
         return build_user_prompt(**defaults)
 
-    def test_mcq_variety_instruction_present(self):
-        """S2: Prompt should instruct varied MCQ option counts."""
+    def test_mcq_options_instruction_present(self):
+        """S2: Prompt should instruct exactly 4 MCQ options."""
         prompt = self._build_prompt()
-        assert "MCQ VARIETY" in prompt
-        assert "3 options" in prompt
-        assert "5 options" in prompt
+        assert "MCQ OPTIONS" in prompt
+        assert "exactly 4 options" in prompt
 
     def test_word_problem_length_instruction_present(self):
         """S3: Prompt should instruct varied word problem lengths."""

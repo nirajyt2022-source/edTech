@@ -184,7 +184,7 @@ class TestMCQOptionsCheck:
 
 class TestQuestionTextImpureFlag:
     def test_code_mixing_in_question_sets_flag(self):
-        """Latin code-mixing in question_text → _hindi_impure AND _needs_regen."""
+        """Latin code-mixing in question_text → _hindi_impure (no _needs_regen to avoid P0 kill)."""
         ctx = _make_context()
         questions = [
             {
@@ -198,7 +198,8 @@ class TestQuestionTextImpureFlag:
         reviewer = QualityReviewerAgent()
         reviewer.review_worksheet(questions, ctx)
         assert questions[0].get("_hindi_impure") is True
-        assert questions[0].get("_needs_regen") is True
+        # _needs_regen is NOT set — R17 release gate handles blocking instead
+        assert questions[0].get("_needs_regen") is None
 
     def test_transliteration_in_question_auto_fixed(self):
         """Transliteration in question_text (Hindi subject) → auto-replaced."""
@@ -221,7 +222,7 @@ class TestQuestionTextImpureFlag:
         assert questions[0].get("_hindi_impure") is not True
 
     def test_unknown_transliteration_still_flags(self):
-        """Transliteration NOT in auto-fix dict → still flagged for regen."""
+        """Transliteration NOT in auto-fix dict → _hindi_impure but no _needs_regen."""
         ctx = _make_context(subject="Hindi")
         questions = [
             {
@@ -234,9 +235,10 @@ class TestQuestionTextImpureFlag:
         ]
         reviewer = QualityReviewerAgent()
         reviewer.review_worksheet(questions, ctx)
-        # "कंप्यूटर" is in blocklist but NOT in auto-fix dict → still flagged
+        # "कंप्यूटर" is in blocklist — flagged as impure for R17
         assert questions[0].get("_hindi_impure") is True
-        assert questions[0].get("_needs_regen") is True
+        # _needs_regen is NOT set — R17 release gate handles blocking
+        assert questions[0].get("_needs_regen") is None
 
     def test_clean_question_no_flag(self):
         """Pure Hindi question → no _hindi_impure."""
