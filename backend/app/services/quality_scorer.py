@@ -95,6 +95,7 @@ class QualityScore:
     question_count: int
     grade: str
     subject: str
+    gold_standard_eligible: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -762,6 +763,11 @@ def score_worksheet(
     total = round(additive_total * penalty_multiplier, 1)
     ai_smell_flags = buckets.get("ai_smell", [])
 
+    # Auto gold-standard promotion: score ≥ 85 and zero critical/major failures
+    gold_threshold = _get_export_threshold(gold_standard_mode=True)
+    has_major_plus = any(f.severity in ("critical", "major") for f in all_failures)
+    is_gold_eligible = total >= gold_threshold and not has_major_plus
+
     return QualityScore(
         total_score=total,
         dimensions=dimensions,
@@ -772,4 +778,5 @@ def score_worksheet(
         question_count=len(q_dicts),
         grade=grade_str,
         subject=subject,
+        gold_standard_eligible=is_gold_eligible,
     )

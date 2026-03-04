@@ -2227,6 +2227,7 @@ def generate_worksheet(
                 _qs = _score_ws(data, expected_count=num_questions)
                 data["_quality_score"] = _qs.total_score
                 data["_quality_export_allowed"] = _qs.export_allowed
+                data["_gold_standard_eligible"] = _qs.gold_standard_eligible
             except Exception as _qs_exc:
                 logger.warning("quality_score in generator failed: %s", _qs_exc)
                 data["_quality_score"] = None
