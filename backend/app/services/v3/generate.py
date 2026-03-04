@@ -17,7 +17,7 @@ from .slot_builder import build_slots
 logger = logging.getLogger(__name__)
 
 
-async def generate_worksheet_v3(
+def generate_worksheet_v3(
     client,
     board: str,
     grade_level: str,

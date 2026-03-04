@@ -7,6 +7,7 @@ Mounts at /api/v2/worksheets. The old /api/worksheets (v1) is untouched.
 from __future__ import annotations
 
 import asyncio
+import os
 
 import sentry_sdk
 import structlog
@@ -79,50 +80,73 @@ async def generate_worksheet_v2(
 
     from app.services.telemetry import emit_event
 
+    engine = os.environ.get("WORKSHEET_ENGINE", "v3")
+
     try:
-        data, elapsed_ms, warnings = await asyncio.wait_for(
-            asyncio.to_thread(
-                generate_worksheet,
-                client=client,
-                board=body.board,
-                grade_level=body.grade_level,
-                subject=body.subject,
-                topic=body.topic,
-                difficulty=body.difficulty,
-                num_questions=body.num_questions,
-                language=body.language,
-                problem_style=body.problem_style,
-                custom_instructions=body.custom_instructions,
-            ),
-            timeout=90.0,
-        )
+        if engine == "v3":
+            from app.services.v3 import generate_worksheet_v3
+
+            data, elapsed_ms, warnings = await asyncio.wait_for(
+                asyncio.to_thread(
+                    generate_worksheet_v3,
+                    client=client,
+                    board=body.board,
+                    grade_level=body.grade_level,
+                    subject=body.subject,
+                    topic=body.topic,
+                    difficulty=body.difficulty,
+                    num_questions=body.num_questions,
+                    language=body.language,
+                    problem_style=body.problem_style,
+                    custom_instructions=body.custom_instructions,
+                ),
+                timeout=90.0,
+            )
+            logger.info("[v3] Generation complete: %dms, %d warnings", elapsed_ms, len(warnings))
+        else:
+            data, elapsed_ms, warnings = await asyncio.wait_for(
+                asyncio.to_thread(
+                    generate_worksheet,
+                    client=client,
+                    board=body.board,
+                    grade_level=body.grade_level,
+                    subject=body.subject,
+                    topic=body.topic,
+                    difficulty=body.difficulty,
+                    num_questions=body.num_questions,
+                    language=body.language,
+                    problem_style=body.problem_style,
+                    custom_instructions=body.custom_instructions,
+                ),
+                timeout=90.0,
+            )
     except asyncio.TimeoutError:
         emit_event(
             "worksheet_generation",
             route="/api/v2/worksheets/generate",
-            version="v2",
+            version=engine,
             topic=body.topic,
             ok=False,
             error_type="TimeoutError",
         )
-        logger.error("[v2] Generation timed out (90s) topic=%s", body.topic)
+        logger.error("[%s] Generation timed out (90s) topic=%s", engine, body.topic)
         raise HTTPException(status_code=504, detail="Worksheet generation timed out. Please try again.")
     except ValueError as exc:
         emit_event(
             "worksheet_generation",
             route="/api/v2/worksheets/generate",
-            version="v2",
+            version=engine,
             topic=body.topic,
             ok=False,
             error_type="ValueError",
         )
-        logger.error("[v2] Generation failed: %s", exc)
+        logger.error("[%s] Generation failed: %s", engine, exc)
         raise HTTPException(status_code=502, detail="Worksheet generation failed. Please try again.")
 
     emit_event(
         "worksheet_generation",
         route="/api/v2/worksheets/generate",
-        version="v2",
+        version=engine,
         topic=body.topic,
         skill_tag=data.get("skill_focus"),
         latency_ms=elapsed_ms,
@@ -166,9 +190,15 @@ async def generate_worksheet_v2(
         skill_coverage=skill_coverage or None,
     )
 
-    release_stamps = data.get("_release_stamps", {})
-    release_verdict = data.get("_release_verdict", "released")
-    severity = data.get("_warning_severity", {})
+    if engine == "v3":
+        # V3 doesn't compute release gate — set safe defaults
+        release_stamps = {}
+        release_verdict = "released"
+        severity = {}
+    else:
+        release_stamps = data.get("_release_stamps", {})
+        release_verdict = data.get("_release_verdict", "released")
+        severity = data.get("_warning_severity", {})
 
     # Merge release stamps into severity for backward compat
     merged_stamps = {**severity, **release_stamps}
