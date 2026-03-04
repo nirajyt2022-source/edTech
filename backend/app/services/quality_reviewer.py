@@ -61,8 +61,10 @@ import ast
 import json
 import logging
 import operator
+import random
 import re
 from dataclasses import dataclass, field
+from fractions import Fraction
 from pathlib import Path
 from typing import Optional
 
@@ -1730,11 +1732,61 @@ class QualityReviewerAgent:
                 answer_norm = normalize_numeric(answer)
                 if answer_norm is None:
                     continue
-                equiv_count = sum(1 for opt in options if normalize_numeric(str(opt).strip()) == answer_norm)
+                # Check ALL options for any pair of equivalents (not just answer)
+                seen_norms: dict[str, int] = {}
+                for idx, opt in enumerate(options):
+                    opt_norm = normalize_numeric(str(opt).strip())
+                    if opt_norm is not None and opt_norm in seen_norms:
+                        # Duplicate found — remove this option (keep the first)
+                        q_id = q.get("id", "?")
+                        msg = f"Q{q_id}: duplicate MCQ option '{opt}' equivalent to '{options[seen_norms[opt_norm]]}' — auto-removed"
+                        logger.warning("[quality_reviewer] %s", msg)
+                        result.corrections.append(msg)
+                        options[idx] = None  # mark for removal
+                    elif opt_norm is not None:
+                        seen_norms[opt_norm] = idx
+                # Remove marked options and pad back to 4
+                cleaned = [o for o in options if o is not None]
+                if len(cleaned) < len(options):
+                    # Generate replacement distractors based on answer
+                    try:
+                        Fraction(answer)  # validate answer is a valid fraction
+                        # Generate nearby fractions as replacement distractors
+                        candidates = []
+                        for num in range(1, 10):
+                            for den in range(2, 10):
+                                f = Fraction(num, den)
+                                f_norm = normalize_numeric(str(f))
+                                if f_norm and f_norm not in seen_norms and str(f) not in cleaned:
+                                    candidates.append(str(f))
+                        random.shuffle(candidates)
+                        while len(cleaned) < 4 and candidates:
+                            new_opt = candidates.pop(0)
+                            cleaned.append(new_opt)
+                            seen_norms[normalize_numeric(new_opt)] = len(cleaned) - 1
+                    except (ValueError, ZeroDivisionError):
+                        pass
+                    # Fallback: generic fillers
+                    _fillers = [
+                        "Cannot be determined",
+                        "Not enough information",
+                        "Does not apply",
+                        "No correct option given",
+                    ]
+                    for filler in _fillers:
+                        if len(cleaned) >= 4:
+                            break
+                        if filler not in cleaned:
+                            cleaned.append(filler)
+                    q["options"] = cleaned[:4]
+                # Re-check: any remaining multi-correct?
+                equiv_count = sum(
+                    1 for opt in q.get("options", []) if normalize_numeric(str(opt).strip()) == answer_norm
+                )
                 if equiv_count > 1:
                     q_id = q.get("id", "?")
                     q["_mcq_multi_correct"] = True
-                    msg = f"Q{q_id}: MCQ has {equiv_count} equivalent correct options"
+                    msg = f"Q{q_id}: MCQ still has {equiv_count} equivalent correct options after auto-fix"
                     logger.warning("[quality_reviewer] %s", msg)
                     result.warnings.append(msg)
         except Exception as exc:
