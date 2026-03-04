@@ -176,7 +176,7 @@ MANDATORY_VISUAL_TOPICS = {
 DIFFICULTY_DISTRIBUTION = {
     "easy": {"recognition": 0.60, "application": 0.30, "stretch": 0.10},
     "medium": {"recognition": 0.30, "application": 0.50, "stretch": 0.20},
-    "hard": {"recognition": 0.10, "application": 0.30, "stretch": 0.60},
+    "hard": {"recognition": 0.20, "application": 0.30, "stretch": 0.50},
 }
 
 
@@ -316,13 +316,19 @@ def _add_extras(result: list[dict], default_recipe: list[dict], deficit: int):
 def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
     """Detect the maths operation from topic/skill_tag."""
     combined = f"{topic} {skill_tag}".lower()
-    if "add" in combined or "sum" in combined:
+    if any(kw in combined for kw in ("add", "addition", "sum", "plus")):
+        if "carry" in combined or "carries" in combined:
+            return "addition_with_carry"
         return "addition"
-    if "sub" in combined or "borrow" in combined or "minus" in combined:
+    if any(kw in combined for kw in ("subtract", "subtraction", "minus", "difference", "borrow")):
+        if "borrow" in combined:
+            if "without" in combined or "no" in combined:
+                return "subtraction_no_borrow"
+            return "subtraction_with_borrow"
         return "subtraction"
-    if "mul" in combined or "times" in combined or "table" in combined:
+    if any(kw in combined for kw in ("multipl", "times", "product", "table")):
         return "multiplication"
-    if "div" in combined or "share" in combined or "quotient" in combined:
+    if any(kw in combined for kw in ("divid", "division", "quotient", "share")):
         return "division"
     return None
 
@@ -334,9 +340,9 @@ def _generate_numbers(grade_num: int, operation: str | None, skill_tag: str) -> 
 
     # Try scenario pools first
     pool = None
-    if operation == "addition":
+    if operation in ("addition", "addition_with_carry"):
         pool = _load_scenario_pool("maths_addition")
-    elif operation == "subtraction":
+    elif operation in ("subtraction", "subtraction_with_borrow", "subtraction_no_borrow"):
         pool = _load_scenario_pool("maths_subtraction") if _load_scenario_pool("maths_subtraction") else None
 
     class_key = f"class_{grade_num}"
@@ -344,16 +350,18 @@ def _generate_numbers(grade_num: int, operation: str | None, skill_tag: str) -> 
         pairs = pool[class_key].get("pairs", [])
         if pairs:
             pair = random.choice(pairs)
-            if operation == "addition":
+            if operation in ("addition", "addition_with_carry"):
                 return {"a": pair["a"], "b": pair["b"], "answer": pair.get("sum", pair["a"] + pair["b"])}
-            elif operation == "subtraction":
+            elif operation in ("subtraction", "subtraction_with_borrow", "subtraction_no_borrow"):
                 return {"a": pair["a"], "b": pair["b"], "answer": pair.get("diff", pair["a"] - pair["b"])}
 
     # Generate random numbers based on grade
-    if operation == "addition":
+    if operation in ("addition", "addition_with_carry"):
         return _random_addition(grade_num)
-    elif operation == "subtraction":
-        return _random_subtraction(grade_num)
+    elif operation == "subtraction_no_borrow":
+        return _random_subtraction(grade_num, allow_borrow=False)
+    elif operation in ("subtraction", "subtraction_with_borrow"):
+        return _random_subtraction(grade_num, allow_borrow=True)
     elif operation == "multiplication":
         return _random_multiplication(grade_num)
     elif operation == "division":
@@ -381,10 +389,50 @@ def _random_addition(grade: int) -> dict:
     return {"a": a, "b": b, "answer": a + b}
 
 
-def _random_subtraction(grade: int) -> dict:
-    nums = _random_addition(grade)
-    # Swap to make a > b for subtraction
-    a, b = nums["answer"], nums["a"]
+def _random_subtraction(grade: int, allow_borrow: bool = True) -> dict:
+    """Generate subtraction pair. If allow_borrow=False, ensure no borrowing needed."""
+    max_attempts = 50
+    for _ in range(max_attempts):
+        if grade == 1:
+            a = random.randint(5, 18)
+            b = random.randint(2, min(9, a - 1))
+        elif grade == 2:
+            a = random.randint(20, 99)
+            b = random.randint(10, a - 1)
+        elif grade == 3:
+            a = random.randint(100, 999)
+            b = random.randint(100, a - 1)
+        elif grade == 4:
+            a = random.randint(1000, 9999)
+            b = random.randint(100, a - 1)
+        else:
+            a = random.randint(10000, 99999)
+            b = random.randint(1000, a - 1)
+
+        if not allow_borrow:
+            # Check EVERY digit: each digit of a must be >= corresponding digit of b
+            sa = str(a)
+            sb = str(b).zfill(len(sa))
+            needs_borrow = False
+            for da, db in zip(reversed(sa), reversed(sb)):
+                if int(da) < int(db):
+                    needs_borrow = True
+                    break
+            if needs_borrow:
+                continue  # retry
+
+        return {"a": a, "b": b, "answer": a - b}
+
+    # Fallback: construct a guaranteed no-borrow pair
+    if grade <= 2:
+        a_ones = random.randint(5, 9)
+        b_ones = random.randint(1, a_ones)
+        a_tens = random.randint(3, 9)
+        b_tens = random.randint(1, a_tens)
+        a = a_tens * 10 + a_ones
+        b = b_tens * 10 + b_ones
+    else:
+        a, b = 87, 43  # safe fallback
     return {"a": a, "b": b, "answer": a - b}
 
 
@@ -864,6 +912,44 @@ _HINDI_TOPIC_ALIASES = {
 }
 
 
+# Explicit overrides for topics that fuzzy-matching gets wrong
+OBJECTIVES_OVERRIDES = {
+    "Addition (single digit)": [
+        "Add two single-digit numbers with sums up to 18",
+        "Solve simple word problems involving addition",
+        "Identify addition in everyday situations",
+    ],
+    "Addition up to 20": [
+        "Add two small numbers with sums up to 20",
+        "Solve word problems involving addition within 20",
+    ],
+    "Subtraction (2-digit without borrow)": [
+        "Subtract 2-digit numbers without borrowing",
+        "Solve word problems involving simple subtraction",
+        "Check subtraction using addition",
+    ],
+    "Subtraction (2-digit with borrow)": [
+        "Subtract 2-digit numbers with borrowing (regrouping)",
+        "Identify when borrowing is needed in subtraction",
+    ],
+    "Fractions": [
+        "Identify halves, thirds, and quarters of shapes and quantities",
+        "Read and write simple fractions (½, ¼, ¾)",
+        "Compare simple fractions using pictures",
+    ],
+    "Decimals": [
+        "Read and write decimal numbers up to two decimal places",
+        "Compare decimal numbers using place value",
+        "Apply decimals to money and measurement contexts",
+    ],
+    "Food and Digestion": [
+        "Identify different types of food and their nutrients",
+        "Describe the basic process of digestion",
+        "Explain the importance of a balanced diet",
+    ],
+}
+
+
 def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
     """Build worksheet metadata from learning objectives with scored fuzzy matching."""
     objectives = _match_learning_objectives(topic, grade_level, subject)
@@ -880,6 +966,13 @@ def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
 def _match_learning_objectives(topic: str, grade_level: str, subject: str) -> list[str]:
     """Match topic to learning objectives with scored matching + grade penalty."""
     _STOP_WORDS = {"and", "the", "of", "in", "for", "with", "without", "no", "to", "a", "an"}
+
+    # 0. Check explicit overrides first (handles common fuzzy-match failures)
+    base_topic_for_override = re.sub(r"\s*\(Class\s*\d+\)\s*", "", topic, flags=re.IGNORECASE).strip()
+    if base_topic_for_override in OBJECTIVES_OVERRIDES:
+        return OBJECTIVES_OVERRIDES[base_topic_for_override]
+    if topic in OBJECTIVES_OVERRIDES:
+        return OBJECTIVES_OVERRIDES[topic]
 
     # 1. Exact match
     if topic in LEARNING_OBJECTIVES:
@@ -1164,6 +1257,25 @@ def build_slots(
         slot.llm_instruction = _build_llm_instruction(slot, topic, subject, language, grade_num)
 
         slots.append(slot)
+
+    # --- Step 6b: Deduplicate number pairs ---
+    seen_pairs: set[tuple] = set()
+    for slot in slots:
+        if slot.numbers:
+            pair_key = (slot.numbers.get("a"), slot.numbers.get("b"))
+            if pair_key in seen_pairs:
+                # Regenerate this slot's numbers
+                for _attempt in range(10):
+                    new_nums = _generate_numbers(grade_num, operation, slot.skill_tag)
+                    if new_nums:
+                        new_key = (new_nums.get("a"), new_nums.get("b"))
+                        if new_key not in seen_pairs:
+                            slot.numbers = new_nums
+                            # Rebuild instruction with new numbers
+                            slot.llm_instruction = _build_llm_instruction(slot, topic, subject, language, grade_num)
+                            pair_key = new_key
+                            break
+            seen_pairs.add(pair_key)
 
     # --- Step 7: Enforce type minimums ---
     _enforce_type_minimums(slots, num_questions, error_det_forbidden)

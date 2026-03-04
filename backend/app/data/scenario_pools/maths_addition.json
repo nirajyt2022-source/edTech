@@ -1,20 +1,40 @@
 {
   "class_1": {
-    "note": "Class 1: Single-digit addends, sums 10-17. Python sets correct_answer — never the LLM.",
+    "note": "Class 1: Single-digit addends, sums 10-18. Balanced across all digits 2-9.",
     "pairs": [
-      {"a": 7, "b": 8, "sum": 15},
-      {"a": 9, "b": 6, "sum": 15},
-      {"a": 8, "b": 5, "sum": 13},
-      {"a": 6, "b": 7, "sum": 13},
-      {"a": 9, "b": 4, "sum": 13},
-      {"a": 8, "b": 9, "sum": 17},
-      {"a": 5, "b": 8, "sum": 13},
-      {"a": 6, "b": 9, "sum": 15},
+      {"a": 2, "b": 9, "sum": 11},
+      {"a": 3, "b": 8, "sum": 11},
+      {"a": 3, "b": 9, "sum": 12},
+      {"a": 4, "b": 7, "sum": 11},
       {"a": 4, "b": 8, "sum": 12},
-      {"a": 7, "b": 5, "sum": 12}
+      {"a": 4, "b": 9, "sum": 13},
+      {"a": 5, "b": 6, "sum": 11},
+      {"a": 5, "b": 7, "sum": 12},
+      {"a": 5, "b": 8, "sum": 13},
+      {"a": 5, "b": 9, "sum": 14},
+      {"a": 6, "b": 5, "sum": 11},
+      {"a": 6, "b": 6, "sum": 12},
+      {"a": 6, "b": 7, "sum": 13},
+      {"a": 6, "b": 8, "sum": 14},
+      {"a": 6, "b": 9, "sum": 15},
+      {"a": 7, "b": 4, "sum": 11},
+      {"a": 7, "b": 5, "sum": 12},
+      {"a": 7, "b": 6, "sum": 13},
+      {"a": 7, "b": 7, "sum": 14},
+      {"a": 7, "b": 8, "sum": 15},
+      {"a": 8, "b": 3, "sum": 11},
+      {"a": 8, "b": 5, "sum": 13},
+      {"a": 8, "b": 7, "sum": 15},
+      {"a": 8, "b": 9, "sum": 17},
+      {"a": 9, "b": 2, "sum": 11},
+      {"a": 9, "b": 4, "sum": 13},
+      {"a": 9, "b": 6, "sum": 15},
+      {"a": 9, "b": 8, "sum": 17},
+      {"a": 9, "b": 9, "sum": 18},
+      {"a": 3, "b": 7, "sum": 10}
     ],
-    "names": ["Ravi","Priya","Arjun","Meera","Kiran","Anita","Deepa","Suresh"],
-    "contexts": ["apples","mangoes","books","crayons","marbles","pencils","flowers","chocolates"]
+    "names": ["Ravi", "Priya", "Arjun", "Meera", "Kiran", "Anita", "Deepa", "Suresh", "Kavya", "Rohan", "Isha", "Dev"],
+    "contexts": ["apples", "mangoes", "books", "crayons", "marbles", "pencils", "flowers", "chocolates", "laddoos", "diyas", "balloons", "stars"]
   },
   "class_2": {
     "note": "Class 2: Two-digit addends (no carrying), sums 37-79. Python sets correct_answer.",
@@ -30,7 +50,7 @@
       {"a": 34, "b": 28, "sum": 62},
       {"a": 47, "b": 31, "sum": 78}
     ],
-    "names": ["Ravi","Priya","Arjun","Meera","Kiran","Anita","Deepa","Suresh"],
-    "contexts": ["stamps","stickers","marbles","books","beads","coins","flowers","cards"]
+    "names": ["Ravi", "Priya", "Arjun", "Meera", "Kiran", "Anita", "Deepa", "Suresh"],
+    "contexts": ["stamps", "stickers", "marbles", "books", "beads", "coins", "flowers", "cards"]
   }
 }
