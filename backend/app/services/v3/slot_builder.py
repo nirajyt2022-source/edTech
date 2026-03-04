@@ -45,7 +45,8 @@ class Slot:
     llm_instruction: str = ""
     max_words: int = 25
     age_range: str = "8-9"
-    expected_answer: str | None = None
+    expected_answer: str | None = None  # Python-known answer for non-maths
+    assigned_word: str | None = None  # the word assigned from a word bank
 
 
 @dataclass
@@ -730,54 +731,86 @@ def _build_llm_instruction(
                 parts.append(f"SPECIFIC INSTRUCTION: {template}")
             break
 
-    # Hindi वचन: inject Python-owned answer pair into instruction
-    if "वचन" in topic:
-        word_pairs = list(HINDI_VACHAN_BANK.items())
-        random.shuffle(word_pairs)
-        pair = word_pairs[slot.slot_number % len(word_pairs)]
-        singular, plural = pair
+    # ── Hindi grammar word bank injection ──
+    # If topic is a Hindi grammar topic with a word bank,
+    # assign a specific word and answer to this slot, then RETURN EARLY.
+    topic_lower = topic.lower()
+
+    if "वचन" in topic or "vachan" in topic_lower:
+        word_items = list(HINDI_VACHAN_BANK.items())
+        # Deterministic index — ensures different words per slot, no shuffle
+        idx = (slot.slot_number - 1) % len(word_items)
+        singular, plural = word_items[idx]
+        slot.assigned_word = singular
+        slot.expected_answer = plural
 
         if slot.question_type == "mcq":
-            wrong_options = [v for _, v in word_pairs if v != plural][:3]
-            parts.append(f"Ask: '{singular} का बहुवचन क्या है?'")
-            parts.append(f"Correct answer: '{plural}'")
-            parts.append(f"Wrong options: {wrong_options}")
+            other_plurals = [v for k, v in word_items if v != plural and v != singular]
+            random.shuffle(other_plurals)
+            wrong_opts = other_plurals[:3]
+            parts.append(f"SPECIFIC TASK: Ask '{singular} का बहुवचन क्या है?'")
+            parts.append(f"Correct answer: {plural}")
+            parts.append(f"Wrong options: {', '.join(wrong_opts)}")
             parts.append(f"Set correct_answer to exactly: {plural}")
+            parts.append("Do NOT change the question. Ask ONLY about बहुवचन of this exact word.")
         elif slot.question_type == "fill_blank":
-            parts.append(f"Write a fill-blank sentence using '{singular}'. The blank should be filled with '{plural}'.")
+            parts.append(f"SPECIFIC TASK: Write '{singular} का बहुवचन ______ है।'")
+            parts.append(f"Correct answer: {plural}")
             parts.append(f"Set correct_answer to exactly: {plural}")
         elif slot.question_type == "true_false":
             is_true = random.choice([True, False])
             if is_true:
-                parts.append(f"Write: '{singular} का बहुवचन {plural} है।' Answer: True")
+                parts.append(f"SPECIFIC TASK: Write statement: '{singular} का बहुवचन {plural} है।' Answer: True")
+                slot.expected_answer = "True"
             else:
-                wrong = random.choice([v for _, v in word_pairs if v != plural])
-                parts.append(f"Write: '{singular} का बहुवचन {wrong} है।' Answer: False")
+                wrong = random.choice([v for k, v in word_items if v != plural])
+                parts.append(f"SPECIFIC TASK: Write statement: '{singular} का बहुवचन {wrong} है।' Answer: False")
+                slot.expected_answer = "False"
+        elif slot.question_type == "error_detection":
+            wrong = random.choice([v for k, v in word_items if v != plural])
+            parts.append(f"SPECIFIC TASK: Write: 'राम ने कहा {singular} का बहुवचन {wrong} है। क्या यह सही है? गलती बताओ।'")
+            parts.append(f"Correct answer: गलत है। सही बहुवचन {plural} है।")
+            slot.expected_answer = f"गलत है। सही बहुवचन {plural} है।"
         else:
-            parts.append(f"Use the word '{singular}' (बहुवचन: '{plural}') in your question.")
+            parts.append(f"SPECIFIC TASK: Ask '{singular} का बहुवचन लिखो।'")
+            parts.append(f"Correct answer: {plural}")
             parts.append(f"Set correct_answer to exactly: {plural}")
 
-        slot.expected_answer = plural if slot.question_type != "true_false" else None
+        parts.append("Write in pure Devanagari. No English.")
+        parts.append(f"Age range: {slot.age_range} | Difficulty: {slot.difficulty}")
+        # RETURN EARLY — don't add generic instructions
+        return " | ".join(parts)
 
-    # Hindi विलोम शब्द: inject Python-owned answer pair
-    elif "विलोम" in topic:
-        word_pairs = list(HINDI_VILOM_BANK.items())
-        random.shuffle(word_pairs)
-        pair = word_pairs[slot.slot_number % len(word_pairs)]
-        word, opposite = pair
-
-        if slot.question_type == "mcq":
-            wrong_options = [v for _, v in word_pairs if v != opposite][:3]
-            parts.append(f"Ask: '{word} का विलोम शब्द क्या है?'")
-            parts.append(f"Correct answer: '{opposite}'")
-            parts.append(f"Wrong options: {wrong_options}")
-            parts.append(f"Set correct_answer to exactly: {opposite}")
-        else:
-            parts.append(f"Use the word '{word}' (विलोम: '{opposite}') in your question.")
-            parts.append(f"Set correct_answer to exactly: {opposite}")
-
+    elif "विलोम" in topic or "vilom" in topic_lower:
+        word_items = list(HINDI_VILOM_BANK.items())
+        idx = (slot.slot_number - 1) % len(word_items)
+        word, opposite = word_items[idx]
+        slot.assigned_word = word
         slot.expected_answer = opposite
 
+        if slot.question_type == "mcq":
+            wrong_opts = [v for k, v in word_items if v != opposite][:3]
+            parts.append(f"SPECIFIC TASK: Ask '{word} का विलोम शब्द क्या है?'")
+            parts.append(f"Correct answer: {opposite}. Wrong options: {', '.join(wrong_opts)}")
+            parts.append(f"Set correct_answer to exactly: {opposite}")
+        elif slot.question_type == "true_false":
+            is_true = random.choice([True, False])
+            if is_true:
+                parts.append(f"SPECIFIC TASK: Write statement: '{word} का विलोम शब्द {opposite} है।' Answer: True")
+                slot.expected_answer = "True"
+            else:
+                wrong = random.choice([v for k, v in word_items if v != opposite])
+                parts.append(f"SPECIFIC TASK: Write statement: '{word} का विलोम शब्द {wrong} है।' Answer: False")
+                slot.expected_answer = "False"
+        else:
+            parts.append(f"SPECIFIC TASK: Use word '{word}' (विलोम: {opposite})")
+            parts.append(f"Set correct_answer to exactly: {opposite}")
+
+        parts.append("Write in pure Devanagari. No English.")
+        parts.append(f"Age range: {slot.age_range} | Difficulty: {slot.difficulty}")
+        return " | ".join(parts)
+
+    # ── Generic instruction (non-word-bank topics) ──
     # Type and topic
     parts.append(f"Question type: {slot.question_type}")
     parts.append(f"Topic: {topic}")
@@ -785,6 +818,21 @@ def _build_llm_instruction(
     parts.append(f"Max words: {slot.max_words}")
     parts.append(f"Cognitive role: {slot.role}")
     parts.append(f"Difficulty: {slot.difficulty}")
+
+    # Grade-level vocabulary constraint for Science/EVS
+    if subject.lower() in ("science", "evs") and grade_num <= 5:
+        if grade_num <= 2:
+            parts.append("Use ONLY words a 6-7 year old knows. No scientific terms.")
+        elif grade_num <= 3:
+            parts.append("Use simple words. Say 'food pipe' not 'esophagus'. Say 'tummy' not 'stomach lining'.")
+        elif grade_num <= 4:
+            parts.append(
+                "Use NCERT Class 4 vocabulary ONLY. Say 'food pipe' not 'esophagus'. Say 'breaks down food' not 'digestion enzymes'. NO words like: cellulose, ruminant, peristalsis, pancreas, enzymes, glucose, organisms, photosynthesis."
+            )
+        elif grade_num <= 5:
+            parts.append(
+                "Use NCERT Class 5 vocabulary. Avoid Class 7+ terms like: cellulose, ruminant, peristalsis, enzymes, mitochondria, cytoplasm."
+            )
 
     # Maths with pre-computed numbers
     if slot.numbers:
@@ -830,14 +878,12 @@ def _build_llm_instruction(
                 parts.append("correct_answer must be: False")
         else:
             # Non-maths true/false
-            if is_true:
-                parts.append(f"Write a single FACTUAL STATEMENT about {topic} that is TRUE.")
-                parts.append("Example format: 'Water boils at 100 degrees Celsius.'")
-                parts.append("correct_answer must be: True")
-            else:
-                parts.append(f"Write a single STATEMENT about {topic} that is FALSE.")
-                parts.append("Example format: 'Fish breathe through their skin.' (this is false)")
-                parts.append("correct_answer must be: False")
+            parts.append(f"Write a single DECLARATIVE STATEMENT (not a question) that is {is_true}.")
+            parts.append("The statement must NOT contain a question mark.")
+            parts.append("BAD example: 'Which word is a noun?' — this is a question, NOT a statement.")
+            parts.append("GOOD example: 'The word cake is a common noun.' — this IS a statement.")
+            parts.append(f"The student must decide if this statement is True or False. Answer: {is_true}.")
+            parts.append("Set correct_answer to exactly: 'True' or 'False'.")
         parts.append("CRITICAL: Write a STATEMENT, not a question. No '?' allowed.")
         parts.append("correct_answer must be exactly 'True' or 'False'.")
 
@@ -849,6 +895,15 @@ def _build_llm_instruction(
             parts.append("You MUST provide exactly 4 options in the 'options' array.")
             parts.append("One option is the correct answer. Three are wrong but plausible.")
             parts.append("Do NOT skip or leave options empty.")
+
+    # Fraction MCQs with visuals — use fraction notation, not "Option A/B"
+    if slot.visual_type == "pie_fraction" and slot.visual_data and slot.question_type == "mcq":
+        n = slot.visual_data.get("numerator")
+        d = slot.visual_data.get("denominator")
+        if n is not None and d is not None:
+            parts.append(
+                f"The correct answer is the fraction {n}/{d}. Use fraction notation in options (like 1/4, 1/2, 3/4), NOT 'Option A/B/C'."
+            )
 
     # Thinking role — require reasoning, not just harder arithmetic
     if slot.role == "thinking":

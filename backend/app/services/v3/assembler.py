@@ -111,8 +111,18 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
                 correct_answer = fill["options"][0] if fill["options"] else ""
 
         # Override with expected_answer if Python knows the answer (Hindi grammar, etc.)
+        # SAFETY: only override if the LLM actually used the assigned word
         if hasattr(slot, "expected_answer") and slot.expected_answer:
-            correct_answer = slot.expected_answer
+            assigned_word = getattr(slot, "assigned_word", None)
+            if assigned_word and assigned_word in text:
+                # LLM used the assigned word — safe to override
+                correct_answer = slot.expected_answer
+            elif assigned_word and assigned_word not in text:
+                # LLM wrote a different question — DON'T override, use Gemini's answer
+                pass  # keep correct_answer from Gemini
+            else:
+                # No assigned_word (e.g. non-word-bank topic) — safe to override
+                correct_answer = slot.expected_answer
 
         # Options
         options = None
@@ -127,6 +137,19 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
                     all_options.append(str(correct_int + random.randint(2, 20)))
                 random.shuffle(all_options)
                 options = all_options[:4]
+            elif hasattr(slot, "expected_answer") and slot.expected_answer and getattr(slot, "assigned_word", None):
+                # Hindi word bank MCQ — use Gemini's options but ensure correct answer is in them
+                options = fill.get("options") or []
+                if slot.expected_answer not in options:
+                    if options:
+                        options[0] = slot.expected_answer
+                    else:
+                        options = [slot.expected_answer]
+                if len(options) < 4:
+                    while len(options) < 4:
+                        options.append(f"विकल्प {len(options) + 1}")
+                options = options[:4]
+                random.shuffle(options)
             else:
                 # Non-maths: use Gemini's options
                 options = fill.get("options") or []
@@ -179,6 +202,12 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
             "images": images,
             "verified": True,
         }
+        # Fix visual-label answers: "Option B" → actual fraction value
+        if q.get("correct_answer", "").startswith("Option ") and slot.visual_type == "pie_fraction":
+            vd = slot.visual_data or {}
+            if vd.get("numerator") is not None and vd.get("denominator") is not None:
+                q["correct_answer"] = f"{vd['numerator']}/{vd['denominator']}"
+
         # Final enforcement: T/F must have T/F answers and options
         if slot.question_type == "true_false":
             q["options"] = ["True", "False"]

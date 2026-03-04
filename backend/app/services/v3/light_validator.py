@@ -84,15 +84,24 @@ def validate_worksheet(
                     options[0] = correct
                     q["options"] = options
 
+        # CHECK 7: Hindi word bank alignment — assigned word must appear in text
+        if slot and getattr(slot, "assigned_word", None):
+            if slot.assigned_word not in text:
+                issues.append(
+                    f"Q{slot_num}: assigned word '{slot.assigned_word}' not in question text — LLM may have ignored instruction"
+                )
+                failed_slots.append(slot_num)
+
         # CHECK 6: True/False answers must be "True" or "False"
         if q_type == "true_false":
             ca = str(q.get("correct_answer", ""))
             if ca not in ("True", "False"):
                 issues.append(f"Q{slot_num}: true_false answer is '{ca}', must be 'True' or 'False'")
                 failed_slots.append(slot_num)
-            # Also flag if text is a question (contains ?)
+            # Also flag if text is a question (contains ?) — triggers retry
             if "?" in text:
                 issues.append(f"Q{slot_num}: true_false text is a question (contains '?'), should be a statement")
+                failed_slots.append(slot_num)
 
     # CHECK 4: No duplicates (Jaccard similarity)
     texts = [q.get("text", "") for q in questions]
