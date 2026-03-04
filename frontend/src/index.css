@@ -148,6 +148,15 @@ a:hover {
   background: oklch(0.55 0.18 272);               /* indigo-500 */
 }
 
+/* Hide scrollbar for horizontal scroll containers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Paper texture */
 .paper-texture {
   position: relative;

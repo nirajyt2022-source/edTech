@@ -22,9 +22,25 @@ export default function ChildSwitcher() {
   // Only show for parents
   if (activeRole === 'teacher') return null
 
-  // 0 children — show "Add a child" link
+  // 0 children — prompt to add a child
   if (children.length === 0) {
-    return null // Profile tab handles adding children
+    return (
+      <button
+        onClick={() => {
+          // Dispatch a custom event that App.tsx can listen to for navigation
+          window.dispatchEvent(new CustomEvent('navigate', { detail: 'children' }))
+        }}
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors"
+        style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+      >
+        <svg className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.7)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          Add child
+        </span>
+      </button>
+    )
   }
 
   // 1 child — static label

@@ -108,6 +108,16 @@ function AppContent() {
   const profileCtx = useProfile()
   const { activeRole, profile } = profileCtx
 
+  // Listen for navigation events from child components (e.g., ChildSwitcher)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const page = (e as CustomEvent).detail as Page
+      setCurrentPage(page)
+    }
+    window.addEventListener('navigate', handler)
+    return () => window.removeEventListener('navigate', handler)
+  }, [])
+
   // When role switches, reset to default page for that role
   useEffect(() => {
     const isTeacherPage = ['home', 'dashboard', 'classes', 'generator'].includes(currentPage)
