@@ -99,6 +99,7 @@ async def generate_worksheet_v2(
                     language=body.language,
                     problem_style=body.problem_style,
                     custom_instructions=body.custom_instructions,
+                    child_id=body.child_id,
                 ),
                 timeout=90.0,
             )

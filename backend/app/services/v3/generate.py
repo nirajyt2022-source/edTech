@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import time
 
 from .assembler import assemble_worksheet
@@ -16,6 +17,57 @@ from .light_validator import validate_worksheet
 from .slot_builder import build_slots
 
 logger = logging.getLogger(__name__)
+
+
+def _get_child_adaptive_config(child_id: str, topic: str, subject: str) -> dict | None:
+    """Fetch child's mastery for this topic and return adaptive config."""
+    from app.services.mastery_store import get_mastery_store
+
+    store = get_mastery_store()
+    all_mastery = store.list_student(child_id)
+
+    if not all_mastery:
+        return None
+
+    # Find mastery entries matching this topic's skill tags
+    topic_slug = re.sub(r"[^a-z0-9]+", "_", topic.lower()).strip("_")
+    topic_keywords = set(topic_slug.split("_")) - {"class", "the", "and", "of", "in"}
+
+    relevant = []
+    for m in all_mastery:
+        tag_words = set(m.skill_tag.lower().split("_"))
+        overlap = topic_keywords & tag_words
+        if len(overlap) >= 1:
+            relevant.append(m)
+
+    if not relevant:
+        return None
+
+    # Aggregate mastery
+    total_attempts = sum(m.total_attempts for m in relevant)
+    correct_attempts = sum(m.correct_attempts for m in relevant)
+    accuracy = (correct_attempts / total_attempts * 100) if total_attempts > 0 else 0
+    avg_streak = sum(m.streak for m in relevant) / len(relevant)
+
+    # Majority vote for mastery level
+    mastery_counts: dict[str, int] = {}
+    for m in relevant:
+        mastery_counts[m.mastery_level] = mastery_counts.get(m.mastery_level, 0) + 1
+    overall_level = max(mastery_counts, key=mastery_counts.get) if mastery_counts else "unknown"
+
+    # Weak formats: skill_tags with low accuracy
+    weak_tags = [
+        m.skill_tag for m in relevant if m.total_attempts >= 3 and (m.correct_attempts / m.total_attempts) < 0.6
+    ]
+
+    return {
+        "mastery_level": overall_level,
+        "accuracy": round(accuracy, 1),
+        "total_attempts": total_attempts,
+        "avg_streak": round(avg_streak, 1),
+        "weak_skill_tags": weak_tags,
+        "relevant_entries": len(relevant),
+    }
 
 
 def _fetch_curriculum_context(grade_level: str, subject: str, topic: str) -> str | None:
@@ -51,6 +103,7 @@ def generate_worksheet_v3(
     language: str = "English",
     problem_style: str = "standard",
     custom_instructions: str | None = None,
+    child_id: str | None = None,
 ) -> tuple[dict, int, list[str]]:
     """V3 worksheet generation. Returns (worksheet_dict, elapsed_ms, warnings).
 
@@ -59,6 +112,23 @@ def generate_worksheet_v3(
     """
     t0 = time.perf_counter()
     warnings: list[str] = []
+
+    # Step 0.5: Fetch adaptive difficulty if child_id is provided
+    adaptive_config = None
+    if child_id:
+        try:
+            adaptive_config = _get_child_adaptive_config(child_id, topic, subject)
+            if adaptive_config:
+                warnings.append(f"[v3] adaptive difficulty applied: mastery={adaptive_config['mastery_level']}")
+                logger.info(
+                    "[v3] Adaptive config: mastery=%s accuracy=%.1f%% attempts=%d",
+                    adaptive_config["mastery_level"],
+                    adaptive_config["accuracy"],
+                    adaptive_config["total_attempts"],
+                )
+        except Exception as e:
+            logger.warning("[v3] adaptive difficulty fetch failed (non-blocking): %s", e)
+            adaptive_config = None
 
     # Step 1: Build slots (pure Python, instant)
     logger.info(
@@ -78,6 +148,7 @@ def generate_worksheet_v3(
         num_questions=num_questions,
         problem_style=problem_style,
         language=language,
+        adaptive_config=adaptive_config,
     )
     slot_ms = int((time.perf_counter() - t0) * 1000)
     logger.info("[v3] Slot building took %dms", slot_ms)

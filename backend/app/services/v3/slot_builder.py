@@ -1213,6 +1213,7 @@ def build_slots(
     num_questions: int,
     problem_style: str,
     language: str,
+    adaptive_config: dict | None = None,
 ) -> SlotBuilderOutput:
     """Build a complete slot skeleton. Zero LLM calls.
 
@@ -1250,7 +1251,24 @@ def build_slots(
     expanded_tags = expanded_tags[:num_questions]
 
     # --- Step 5: Assign role + difficulty based on difficulty param ---
-    dist = DIFFICULTY_DISTRIBUTION.get(difficulty, DIFFICULTY_DISTRIBUTION["medium"])
+    # If adaptive_config is available, override the difficulty distribution
+    if adaptive_config:
+        mastery = adaptive_config.get("mastery_level", "unknown")
+        accuracy = adaptive_config.get("accuracy", 0)
+
+        if mastery == "mastered" and accuracy >= 85:
+            # Child has mastered this — push harder regardless of selected difficulty
+            dist = {"recognition": 0.10, "application": 0.40, "stretch": 0.50}
+        elif mastery == "improving" and accuracy >= 65:
+            # Child is improving — balanced challenge
+            dist = {"recognition": 0.20, "application": 0.50, "stretch": 0.30}
+        elif mastery == "learning" or accuracy < 50:
+            # Child is struggling — more scaffolding
+            dist = {"recognition": 0.50, "application": 0.40, "stretch": 0.10}
+        else:
+            dist = DIFFICULTY_DISTRIBUTION.get(difficulty, DIFFICULTY_DISTRIBUTION["medium"])
+    else:
+        dist = DIFFICULTY_DISTRIBUTION.get(difficulty, DIFFICULTY_DISTRIBUTION["medium"])
     n_recognition = max(1, round(num_questions * dist["recognition"]))
     n_application = max(1, round(num_questions * dist["application"]))
     n_stretch = num_questions - n_recognition - n_application
@@ -1411,6 +1429,15 @@ def build_slots(
 
     # --- Step 8: Build worksheet meta ---
     worksheet_meta = _build_worksheet_meta(topic, grade_level, subject)
+
+    # Add adaptive info to meta if present
+    if adaptive_config:
+        worksheet_meta["adaptive_info"] = {
+            "adapted": True,
+            "mastery_level": adaptive_config.get("mastery_level"),
+            "accuracy": adaptive_config.get("accuracy"),
+            "total_attempts": adaptive_config.get("total_attempts"),
+        }
 
     return SlotBuilderOutput(slots=slots, worksheet_meta=worksheet_meta)
 

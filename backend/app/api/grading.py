@@ -106,6 +106,56 @@ async def grade_from_photo(
         except Exception as exc:
             logger.warning("Mastery update failed (non-blocking): %s", exc)
 
+    # ── Record session to learning graph (topic-level mastery) ──
+    if child_id:
+        try:
+            import re as _re
+
+            from app.services.learning_graph import get_learning_graph_service
+
+            lg = get_learning_graph_service()
+
+            total_q = len(results.get("results", []))
+            correct_q = sum(1 for r in results.get("results", []) if r.get("is_correct"))
+            score_pct = int((correct_q / total_q) * 100) if total_q > 0 else 0
+
+            ws_topic = worksheet.get("topic", "")
+            topic_slug = _re.sub(r"[^a-z0-9]+", "_", ws_topic.lower()).strip("_")
+
+            format_results: dict[str, dict[str, int]] = {}
+            for r in results.get("results", []):
+                q_num = r.get("question_number", 0)
+                if 0 < q_num <= len(questions):
+                    q_type = questions[q_num - 1].get("type", "short_answer")
+                    if q_type not in format_results:
+                        format_results[q_type] = {"total": 0, "correct": 0}
+                    format_results[q_type]["total"] += 1
+                    if r.get("is_correct"):
+                        format_results[q_type]["correct"] += 1
+
+            error_tags = [
+                r["error_type"] for r in results.get("results", []) if not r.get("is_correct") and r.get("error_type")
+            ]
+
+            grade_num = int(_re.search(r"\d+", str(grade_level)).group()) if _re.search(r"\d+", str(grade_level)) else 3
+
+            lg.record_session(
+                child_id=child_id,
+                topic_slug=topic_slug,
+                subject=subject,
+                grade=grade_num,
+                bloom_level="application",
+                format_results=format_results,
+                error_tags=error_tags,
+                score_pct=score_pct,
+                questions_total=total_q,
+                questions_correct=correct_q,
+                worksheet_id=worksheet.get("id"),
+            )
+            logger.info("learning_graph session recorded: topic=%s score=%d%%", topic_slug, score_pct)
+        except Exception as exc:
+            logger.warning("Learning graph record_session failed (non-blocking): %s", exc)
+
     # ── Record per-question diagnostic data ──
     if child_id:
         try:
