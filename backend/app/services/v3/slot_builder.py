@@ -519,6 +519,78 @@ def _get_image_keywords_for_subject(subject: str) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Topic-specific instruction templates (for tricky grammar/concept topics)
+# ---------------------------------------------------------------------------
+TOPIC_INSTRUCTION_TEMPLATES: dict[str, dict[str, str]] = {
+    # Hindi grammar topics
+    "वचन": {
+        "mcq": "Ask: '{word} का बहुवचन क्या है?' Give a singular Hindi word, ask for its plural form. Example: 'लड़का → लड़के'. Options should be 4 different plural forms, only one correct.",
+        "fill_blank": "Write a sentence with one blank where the student must write the correct singular or plural form. Example: 'बगीचे में कई ______ हैं। (फूल)'",
+        "short_answer": "Give a singular word and ask the student to write its plural form. Example: 'पुस्तक का बहुवचन लिखो।'",
+        "true_false": "Write a statement like: 'पुस्तक का बहुवचन पुस्तकें है।' correct_answer: True or False.",
+        "error_detection": "Show an incorrect singular/plural conversion. Student must find the mistake.",
+    },
+    "विशेषण": {
+        "mcq": "Give a Hindi sentence with an adjective. Ask: 'इस वाक्य में विशेषण कौन-सा शब्द है?' Options: 4 words from the sentence, only one is the adjective.",
+        "fill_blank": "Write: '______ फूल बहुत सुंदर है।' where the blank needs an adjective like 'लाल' or 'बड़ा'.",
+        "short_answer": "Give a sentence and ask student to identify the adjective (विशेषण) in it.",
+        "true_false": "Write a statement about adjectives. Example: '\"लाल\" एक विशेषण है।' correct_answer: True.",
+    },
+    "संज्ञा": {
+        "mcq": "Ask: 'इनमें से संज्ञा शब्द कौन-सा है?' Give 4 Hindi words, one is a noun.",
+        "short_answer": "Give a sentence and ask the student to identify the noun (संज्ञा).",
+    },
+    "सर्वनाम": {
+        "mcq": "Ask: 'इनमें से सर्वनाम कौन-सा है?' Give 4 words, one is a pronoun (मैं, तुम, वह, हम).",
+        "fill_blank": "Give a sentence with a blank where a pronoun goes. Example: '______ विद्यालय जाता है।'",
+    },
+    "क्रिया": {
+        "mcq": "Ask: 'इनमें से क्रिया शब्द कौन-सा है?' Give 4 words, one is a verb.",
+        "fill_blank": "Give a sentence with a blank where a verb goes.",
+    },
+    "विलोम शब्द": {
+        "mcq": "Ask: '{word} का विलोम शब्द क्या है?' Give a word, ask for its opposite. Options: 4 words.",
+        "short_answer": "Give a word and ask for its विलोम (opposite). Example: 'दिन → रात'.",
+    },
+    "पर्यायवाची शब्द": {
+        "mcq": "Ask: '{word} का पर्यायवाची शब्द क्या है?' Give a word, ask for its synonym. Options: 4 words.",
+        "short_answer": "Give a word and ask for its पर्यायवाची (synonym).",
+    },
+    "मुहावरे": {
+        "mcq": "Ask: '{muhavra} का अर्थ क्या है?' Give a Hindi idiom and 4 meaning options.",
+        "short_answer": "Give a situation and ask which muhavra (idiom) fits.",
+    },
+    "Varnamala": {
+        "mcq": "Ask about Hindi letter identification: 'इनमें से स्वर कौन-सा है?' or 'इस अक्षर की मात्रा पहचानो।'",
+        "fill_blank": "Write a word with a missing letter (matra). Student fills in the correct matra.",
+    },
+    # English grammar topics
+    "Nouns": {
+        "mcq": "Ask: 'Which of these is a noun?' Give 4 words (1 noun, 3 non-nouns: verb, adjective, pronoun). Or: 'Identify the proper noun in this sentence.'",
+        "fill_blank": "Write a sentence with a blank: 'The ______ is on the table.' Answer should be a noun.",
+        "short_answer": "Give a sentence and ask the student to identify the noun(s) in it.",
+    },
+    "Tenses": {
+        "mcq": "Give a sentence and ask: 'What tense is this sentence in?' Options: Simple Past, Simple Present, Simple Future, + 1 wrong.",
+        "fill_blank": "Write: 'Yesterday, Ria ______ (go) to the park.' Answer: went.",
+        "short_answer": "Give a sentence in one tense and ask: 'Change to past/present/future tense.'",
+    },
+    "Adjectives": {
+        "mcq": "Ask: 'Which word is an adjective in this sentence?' Give 4 words from the sentence.",
+        "fill_blank": "Give a sentence with a blank where an adjective goes. Example: 'The ______ cat sat on the mat.'",
+    },
+    "Pronouns": {
+        "mcq": "Ask: 'Which word is a pronoun in this sentence?' Give 4 word options.",
+        "fill_blank": "Give a sentence with a blank where a pronoun goes. Example: '______ went to school.'",
+    },
+    "Active and Passive Voice": {
+        "mcq": "Give a sentence. Ask: 'Is this in active or passive voice?' Options: Active Voice, Passive Voice, + 2 wrong.",
+        "short_answer": "Give an active voice sentence. Ask: 'Change to passive voice.'",
+    },
+}
+
+
+# ---------------------------------------------------------------------------
 # LLM instruction builder
 # ---------------------------------------------------------------------------
 def _build_llm_instruction(
@@ -530,6 +602,14 @@ def _build_llm_instruction(
 ) -> str:
     """Build a specific instruction string for Gemini to fill this slot."""
     parts = []
+
+    # Check for topic-specific instruction template
+    for topic_key, templates in TOPIC_INSTRUCTION_TEMPLATES.items():
+        if topic_key.lower() in topic.lower() or topic.lower() in topic_key.lower():
+            template = templates.get(slot.question_type) or templates.get("mcq")
+            if template:
+                parts.append(f"SPECIFIC INSTRUCTION: {template}")
+            break
 
     # Type and topic
     parts.append(f"Question type: {slot.question_type}")
@@ -565,15 +645,64 @@ def _build_llm_instruction(
         parts.append("Must contain exactly one blank (______).")
 
     elif slot.question_type == "true_false":
-        tf_value = random.choice([True, False])
-        parts.append(f"Write a statement that is {tf_value}.")
+        is_true = random.choice([True, False])
+        if slot.numbers:
+            # Maths true/false — use pre-computed numbers
+            a, b = slot.numbers.get("a", 0), slot.numbers.get("b", 0)
+            ans = slot.numbers.get("answer", 0)
+            if is_true:
+                parts.append(f"Write a TRUE statement using {a} and {b}.")
+                parts.append(f"Example: '{a} + {b} = {ans}'")
+                parts.append("correct_answer must be: True")
+            else:
+                wrong = ans + random.choice([-1, 1, -10, 10])
+                if wrong <= 0:
+                    wrong = ans + random.choice([1, 2, 10])
+                parts.append(f"Write a FALSE statement: '{a} + {b} = {wrong}'")
+                parts.append(f"The actual answer is {ans}.")
+                parts.append("correct_answer must be: False")
+        else:
+            # Non-maths true/false
+            if is_true:
+                parts.append(f"Write a single FACTUAL STATEMENT about {topic} that is TRUE.")
+                parts.append("Example format: 'Water boils at 100 degrees Celsius.'")
+                parts.append("correct_answer must be: True")
+            else:
+                parts.append(f"Write a single STATEMENT about {topic} that is FALSE.")
+                parts.append("Example format: 'Fish breathe through their skin.' (this is false)")
+                parts.append("correct_answer must be: False")
+        parts.append("CRITICAL: Write a STATEMENT, not a question. No '?' allowed.")
+        parts.append("correct_answer must be exactly 'True' or 'False'.")
 
     elif slot.question_type == "mcq":
-        is_maths = subject.lower() in ("maths", "mathematics", "math")
-        if is_maths:
+        is_maths_subj = subject.lower() in ("maths", "mathematics", "math")
+        if is_maths_subj and slot.numbers:
             parts.append("Write the question text only. Options will be generated separately.")
         else:
-            parts.append("4 options. 1 clearly correct, 3 clearly wrong. At least 1 obviously wrong.")
+            parts.append("You MUST provide exactly 4 options in the 'options' array.")
+            parts.append("One option is the correct answer. Three are wrong but plausible.")
+            parts.append("Do NOT skip or leave options empty.")
+
+    # Thinking role — require reasoning, not just harder arithmetic
+    if slot.role == "thinking":
+        if slot.numbers:
+            thinking_maths = [
+                "Ask the student to EXPLAIN WHY their answer is correct. Use 'Why?' or 'Explain your reasoning.'",
+                "Ask the student to COMPARE two methods. Example: 'Ravi solves 48+37 by counting up. Priya uses column addition. Who is faster? Why?'",
+                "Ask a WHAT IF question. Example: 'What happens to the sum if you increase one number by 10?'",
+                "Ask the student to SPOT A PATTERN. Example: 'Add: 10+5, 20+5, 30+5. What pattern do you see?'",
+                "Ask the student to PROVE or DISPROVE. Example: 'Meera says adding 0 to any number gives 0. Is she right?'",
+            ]
+            parts.append(f"THINKING QUESTION: {random.choice(thinking_maths)}")
+        else:
+            thinking_non_maths = [
+                "Ask WHY or HOW — not just WHAT. Example: 'Why do we need to save water?'",
+                "Ask the student to COMPARE two things. Example: 'How is a river different from a pond?'",
+                "Ask the student to PREDICT. Example: 'What would happen if there was no rain for a year?'",
+                "Ask the student to give their OPINION with a reason. Example: 'Which is more important — saving water or saving electricity? Why?'",
+            ]
+            parts.append(f"THINKING QUESTION: {random.choice(thinking_non_maths)}")
+        parts.append("This must be a REASONING question, not just a harder calculation.")
 
     # Visual
     if slot.visual_type:
@@ -593,23 +722,124 @@ def _build_llm_instruction(
 # ---------------------------------------------------------------------------
 # Worksheet metadata builder
 # ---------------------------------------------------------------------------
+_HINDI_TOPIC_ALIASES = {
+    "वचन": "Vachan",
+    "लिंग": "Ling",
+    "विशेषण": "Visheshan",
+    "संज्ञा": "Sangya",
+    "सर्वनाम": "Sarvanam",
+    "क्रिया": "Kriya",
+    "विलोम शब्द": "Vilom Shabd",
+    "पर्यायवाची शब्द": "Paryayvachi Shabd",
+    "मुहावरे": "Muhavare",
+    "काल": "Kaal",
+    "वर्णमाला": "Varnamala",
+    "मात्रा": "Matras",
+    "शब्द रचना": "Shabd Rachna",
+    "वाक्य रचना": "Vakya Rachna",
+    "कहानी लेखन": "Kahani Lekhan",
+    "पत्र लेखन": "Patra Lekhan",
+    "संवाद लेखन": "Samvad Lekhan",
+    "समास": "Samas",
+    "अनुस्वार": "Anusvaar",
+}
+
+
 def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
-    """Build worksheet metadata from learning objectives."""
-    objectives = LEARNING_OBJECTIVES.get(topic, [])
-    # Try fuzzy match if exact not found
+    """Build worksheet metadata from learning objectives with robust fuzzy matching."""
+    objectives: list[str] = []
+    topic_lower = topic.lower().strip()
+
+    # 1. Exact match
+    if topic in LEARNING_OBJECTIVES:
+        objectives = LEARNING_OBJECTIVES[topic]
+
+    # 2. Case-insensitive match
     if not objectives:
-        topic_lower = topic.lower()
         for key, val in LEARNING_OBJECTIVES.items():
-            if topic_lower in key.lower() or key.lower() in topic_lower:
+            if key.lower().strip() == topic_lower:
                 objectives = val
                 break
+
+    # 2.5. Hindi alias match: वचन → Vachan
+    if not objectives:
+        for hindi_name, latin_name in _HINDI_TOPIC_ALIASES.items():
+            if hindi_name in topic:
+                for key, val in LEARNING_OBJECTIVES.items():
+                    if latin_name.lower() in key.lower():
+                        objectives = val
+                        break
+                if objectives:
+                    break
+
+    # 3. Base topic match: strip parenthetical like "(carries)" or "(Class 3)"
+    if not objectives:
+        base_topic = re.sub(r"\s*\(.*?\)\s*", "", topic_lower).strip()
+        for key, val in LEARNING_OBJECTIVES.items():
+            key_base = re.sub(r"\s*\(.*?\)\s*", "", key.lower()).strip()
+            if base_topic == key_base or base_topic in key_base or key_base in base_topic:
+                objectives = val
+                break
+
+    # 4. Grade-suffixed match: "Water (Class 3)" → try "Water"
+    if not objectives:
+        no_grade = re.sub(r"\s*\(Class \d+\)\s*", "", topic, flags=re.IGNORECASE).strip()
+        if no_grade != topic:
+            for key, val in LEARNING_OBJECTIVES.items():
+                key_clean = re.sub(r"\s*\(Class \d+\)\s*", "", key, flags=re.IGNORECASE).strip()
+                if no_grade.lower() == key_clean.lower():
+                    objectives = val
+                    break
+
+    # 5. Keyword overlap match (best-effort for remaining topics)
+    if not objectives:
+        topic_words = set(re.sub(r"[^a-z\s]", "", topic_lower).split()) - {
+            "class",
+            "of",
+            "and",
+            "the",
+            "in",
+            "to",
+            "for",
+        }
+        if len(topic_words) >= 1:  # Only if we have meaningful words after filtering
+            best_match = None
+            best_overlap = 0
+            for key, val in LEARNING_OBJECTIVES.items():
+                key_words = set(re.sub(r"[^a-z\s]", "", key.lower()).split()) - {
+                    "class",
+                    "of",
+                    "and",
+                    "the",
+                    "in",
+                    "to",
+                    "for",
+                }
+                overlap = len(topic_words & key_words)
+                if overlap > best_overlap and overlap >= 1:
+                    best_overlap = overlap
+                    best_match = val
+            if best_match:
+                objectives = best_match
+
+    # 6. Fallback: generate specific objectives from topic name
+    if not objectives:
+        objectives = [
+            f"Identify and understand key concepts of {topic}",
+            f"Apply knowledge of {topic} to solve problems",
+            f"Analyze and evaluate information related to {topic}",
+        ]
+
+    # Ensure at least 2 objectives
+    if len(objectives) < 2:
+        objectives.append(f"Apply concepts of {topic} in real-world contexts")
 
     return {
         "title": f"Worksheet: {topic}",
         "skill_focus": objectives[0] if objectives else f"Practice {topic}",
         "common_mistake": "",  # Gemini will fill this
         "parent_tip": "",  # Gemini will fill this
-        "learning_objectives": objectives or [f"Practice and master {topic}"],
+        "learning_objectives": objectives[:3],  # Cap at 3
     }
 
 
@@ -793,6 +1023,10 @@ def build_slots(
 
     # --- Step 7: Enforce type minimums ---
     _enforce_type_minimums(slots, num_questions, error_det_forbidden)
+
+    # Rebuild LLM instructions for any slots whose type was changed
+    for slot in slots:
+        slot.llm_instruction = _build_llm_instruction(slot, topic, subject, language, grade_num)
 
     # --- Step 8: Build worksheet meta ---
     worksheet_meta = _build_worksheet_meta(topic, grade_level, subject)

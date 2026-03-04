@@ -82,19 +82,27 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
     questions = []
     for slot in slot_output.slots:
         fill = filled_by_slot.get(slot.slot_number, {})
+        q_type_override = None
 
         # Question text
         text = fill.get("text", f"Question {slot.slot_number}")
 
-        # Correct answer
+        # Correct answer: maths from Python, non-maths from Gemini
         if slot.numbers and slot.numbers.get("answer") is not None:
             correct_answer = str(slot.numbers["answer"])
         else:
-            # Non-maths: use Gemini's options or fill
             correct_answer = fill.get("correct_answer", "")
-            if not correct_answer and fill.get("options"):
-                # First option is typically correct for non-maths MCQ
-                correct_answer = fill["options"][0] if fill["options"] else ""
+
+            # true_false (non-maths only): normalize correct_answer to "True" or "False"
+            if slot.question_type == "true_false":
+                ca_lower = str(correct_answer).strip().lower()
+                if ca_lower in ("true", "t", "yes", "correct", "sahi", "सही"):
+                    correct_answer = "True"
+                elif ca_lower in ("false", "f", "no", "incorrect", "galat", "गलत"):
+                    correct_answer = "False"
+                else:
+                    # LLM returned a sentence — default to True
+                    correct_answer = "True"
 
         # Options
         options = None
@@ -111,12 +119,17 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
                 options = all_options[:4]
             else:
                 # Non-maths: use Gemini's options
-                options = fill.get("options", [])
-                if not options or len(options) < 4:
-                    options = options or []
-                    while len(options) < 4:
-                        options.append(f"Option {len(options) + 1}")
-                options = options[:4]
+                options = fill.get("options") or []
+                if len(options) < 4:
+                    if len(options) <= 1:
+                        # Gemini filler failure — convert to short_answer
+                        q_type_override = "short_answer"
+                        options = None
+                    else:
+                        # Pad with "None of the above" as last resort for 2-3 options
+                        while len(options) < 4:
+                            options.append("None of the above")
+                options = options[:4] if options else None
         elif slot.question_type == "true_false":
             options = ["True", "False"]
 
@@ -137,9 +150,10 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
                     images.append({"path": entry["path"], "alt": entry["alt"], "category": entry.get("category", "")})
 
         # Build question dict
+        final_type = q_type_override if q_type_override else slot.question_type
         q = {
             "id": f"q{slot.slot_number}",
-            "type": slot.question_type,
+            "type": final_type,
             "role": slot.role,
             "text": text,
             "options": options,
@@ -151,7 +165,7 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
             "image_keywords": image_keywords,
             "visual_type": visual_type,
             "visual_data": visual_data,
-            "format": _infer_render_format(slot.question_type, options),
+            "format": _infer_render_format(final_type, options),
             "images": images,
             "verified": True,
         }

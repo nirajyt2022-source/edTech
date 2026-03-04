@@ -36,6 +36,7 @@ Respond with ONLY a JSON array (no markdown, no extra text):
   {
     "slot": 1,
     "text": "question text",
+    "correct_answer": "the correct answer",
     "hint": "helpful hint that does NOT reveal the answer",
     "explanation": "brief explanation of how to solve",
     "options": ["A", "B", "C", "D"] or null,
@@ -44,8 +45,13 @@ Respond with ONLY a JSON array (no markdown, no extra text):
   }
 ]
 
-Only include "common_mistake" and "parent_tip" for slot 1. Set them to null for other slots.
-Only include "options" for non-maths MCQ questions. Set to null otherwise.
+IMPORTANT:
+- "correct_answer" is MANDATORY for every slot. It must be the exact correct answer.
+- For MCQ: correct_answer must be one of the options.
+- For true_false: correct_answer must be "True" or "False".
+- For fill_blank: correct_answer must be the word(s) that fill the blank.
+- Only include "common_mistake" and "parent_tip" for slot 1. Set them to null for other slots.
+- "options" MUST be a 4-element array for ALL MCQ questions. Include the correct_answer as one of the 4 options. Set to null only for non-MCQ question types (fill_blank, short_answer, word_problem).
 """
 
 

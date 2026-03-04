@@ -84,6 +84,16 @@ def validate_worksheet(
                     options[0] = correct
                     q["options"] = options
 
+        # CHECK 6: True/False answers must be "True" or "False"
+        if q_type == "true_false":
+            ca = str(q.get("correct_answer", ""))
+            if ca not in ("True", "False"):
+                issues.append(f"Q{slot_num}: true_false answer is '{ca}', must be 'True' or 'False'")
+                failed_slots.append(slot_num)
+            # Also flag if text is a question (contains ?)
+            if "?" in text:
+                issues.append(f"Q{slot_num}: true_false text is a question (contains '?'), should be a statement")
+
     # CHECK 4: No duplicates (Jaccard similarity)
     texts = [q.get("text", "") for q in questions]
     for i in range(len(texts)):
