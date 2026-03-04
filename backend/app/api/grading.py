@@ -121,6 +121,29 @@ async def grade_from_photo(
         except Exception as exc:
             logger.warning("Diagnostic recording failed (non-blocking): %s", exc)
 
+    # ── Audit trail: write attempt events (best-effort) ──
+    try:
+        from app.services.audit import write_attempt_event
+
+        for r in results.get("results", []):
+            q_num = r.get("question_number", 0)
+            skill_tag = r.get("skill_tag", "")
+            if not skill_tag and 0 < q_num <= len(questions):
+                skill_tag = questions[q_num - 1].get("skill_tag", "")
+            write_attempt_event(
+                {
+                    "student_id": child_id,
+                    "worksheet_id": worksheet.get("id"),
+                    "question_number": q_num,
+                    "skill_tag": skill_tag,
+                    "is_correct": r.get("is_correct", False),
+                    "subject": subject,
+                    "grade": grade_level,
+                }
+            )
+    except Exception as exc:
+        logger.debug("Audit write_attempt_event failed (non-blocking): %s", exc)
+
     # Invalidate dashboard cache so fresh stats are shown
     if child_id:
         from app.services.cache import invalidate_dashboard

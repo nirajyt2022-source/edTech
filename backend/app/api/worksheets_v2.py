@@ -77,6 +77,8 @@ async def generate_worksheet_v2(
         raise HTTPException(status_code=402, detail=usage["message"])
     # ── End subscription enforcement ──────────────────────────
 
+    from app.services.telemetry import emit_event
+
     try:
         data, elapsed_ms, warnings = await asyncio.wait_for(
             asyncio.to_thread(
@@ -95,11 +97,37 @@ async def generate_worksheet_v2(
             timeout=90.0,
         )
     except asyncio.TimeoutError:
+        emit_event(
+            "worksheet_generation",
+            route="/api/v2/worksheets/generate",
+            version="v2",
+            topic=body.topic,
+            ok=False,
+            error_type="TimeoutError",
+        )
         logger.error("[v2] Generation timed out (90s) topic=%s", body.topic)
         raise HTTPException(status_code=504, detail="Worksheet generation timed out. Please try again.")
     except ValueError as exc:
+        emit_event(
+            "worksheet_generation",
+            route="/api/v2/worksheets/generate",
+            version="v2",
+            topic=body.topic,
+            ok=False,
+            error_type="ValueError",
+        )
         logger.error("[v2] Generation failed: %s", exc)
         raise HTTPException(status_code=502, detail="Worksheet generation failed. Please try again.")
+
+    emit_event(
+        "worksheet_generation",
+        route="/api/v2/worksheets/generate",
+        version="v2",
+        topic=body.topic,
+        skill_tag=data.get("skill_focus"),
+        latency_ms=elapsed_ms,
+        ok=True,
+    )
 
     raw_questions = data.get("questions", [])
 

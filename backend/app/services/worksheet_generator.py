@@ -2194,6 +2194,13 @@ def generate_worksheet(
             # ── Release Gate (final enforcement) ──
             from app.services.release_gate import run_release_gate
 
+            try:
+                from app.core.config import get_settings
+
+                _gsm = get_settings().gold_standard_mode
+            except Exception:
+                _gsm = False
+
             release = run_release_gate(
                 questions=data.get("questions", []),
                 grade_level=grade_level,
@@ -2204,6 +2211,7 @@ def generate_worksheet(
                 warnings=all_warnings,
                 generation_context=None,
                 curriculum_available=bool(chapter_name),
+                gold_standard_mode=_gsm,
             )
             data["_release_stamps"] = release.stamps
             data["_release_verdict"] = release.verdict
@@ -2224,7 +2232,7 @@ def generate_worksheet(
             try:
                 from app.services.quality_scorer import score_worksheet as _score_ws
 
-                _qs = _score_ws(data, expected_count=num_questions)
+                _qs = _score_ws(data, expected_count=num_questions, gold_standard_mode=_gsm)
                 data["_quality_score"] = _qs.total_score
                 data["_quality_export_allowed"] = _qs.export_allowed
                 data["_gold_standard_eligible"] = _qs.gold_standard_eligible

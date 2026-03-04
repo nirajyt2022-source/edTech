@@ -42,6 +42,9 @@ class SaveWorksheetRequest(BaseModel):
     child_id: str | None = None
     class_id: str | None = None
     region: str | None = None
+    quality_score: float | None = None
+    quality_tier: str | None = None
+    gold_standard_eligible: bool | None = None
 
 
 class PDFExportWorksheet(BaseModel):
@@ -85,26 +88,61 @@ async def save_worksheet(
     try:
         questions_data = [q if isinstance(q, dict) else q.model_dump() for q in body.worksheet.questions]
 
-        result = (
-            db.table("worksheets")
-            .insert(
-                {
-                    "user_id": user_id,
+        # Compute quality score if not provided by frontend
+        q_score = body.quality_score
+        q_tier = body.quality_tier
+        q_gold = body.gold_standard_eligible
+        if q_score is None:
+            try:
+                from app.services.quality_scorer import score_worksheet as _score_ws
+
+                ws_dict = {
                     "title": body.worksheet.title,
-                    "board": body.board,
                     "grade": body.worksheet.grade,
                     "subject": body.worksheet.subject,
                     "topic": body.worksheet.topic,
-                    "difficulty": body.worksheet.difficulty,
-                    "language": body.worksheet.language,
                     "questions": questions_data,
-                    "child_id": body.child_id,
-                    "class_id": body.class_id,
-                    "region": body.region or "India",
+                    "learning_objectives": body.worksheet.learning_objectives,
+                    "skill_focus": body.worksheet.skill_focus,
+                    "common_mistake": body.worksheet.common_mistake,
                 }
-            )
-            .execute()
-        )
+                _qs = _score_ws(ws_dict, expected_count=len(questions_data))
+                q_score = _qs.total_score
+                q_gold = _qs.gold_standard_eligible
+                # Derive tier from score
+                if any(f.severity == "critical" for f in _qs.failures):
+                    q_tier = "low"
+                elif any(f.severity == "major" for f in _qs.failures):
+                    q_tier = "medium"
+                else:
+                    q_tier = "high"
+            except Exception as exc:
+                logger.debug("quality_score_on_save_skipped", error=str(exc))
+
+        insert_data = {
+            "user_id": user_id,
+            "title": body.worksheet.title,
+            "board": body.board,
+            "grade": body.worksheet.grade,
+            "subject": body.worksheet.subject,
+            "topic": body.worksheet.topic,
+            "difficulty": body.worksheet.difficulty,
+            "language": body.worksheet.language,
+            "questions": questions_data,
+            "child_id": body.child_id,
+            "class_id": body.class_id,
+            "region": body.region or "India",
+        }
+
+        # Persist quality fields (best-effort — columns may not exist yet)
+        if q_score is not None:
+            insert_data["quality_score"] = round(q_score, 1)
+        if q_tier is not None:
+            insert_data["quality_tier"] = q_tier
+        if q_gold is not None:
+            insert_data["gold_standard_eligible"] = q_gold
+
+        result = db.table("worksheets").insert(insert_data).execute()
 
         if result.data:
             return {"success": True, "worksheet_id": result.data[0]["id"]}
@@ -164,6 +202,9 @@ async def list_saved_worksheets(
                     "class_id": row.get("class_id"),
                     "class_name": class_data.get("name") if class_data else None,
                     "regeneration_count": row.get("regeneration_count", 0),
+                    "quality_score": row.get("quality_score"),
+                    "quality_tier": row.get("quality_tier"),
+                    "gold_standard_eligible": row.get("gold_standard_eligible"),
                 }
             )
 
