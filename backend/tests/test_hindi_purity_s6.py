@@ -138,7 +138,7 @@ class TestMCQOptionsCheck:
             }
         ]
         reviewer = QualityReviewerAgent()
-        result = reviewer.review_worksheet(questions, ctx)
+        reviewer.review_worksheet(questions, ctx)
         # "रेड" should be auto-replaced with "लाल", not flagged
         assert "रेड" not in questions[0]["options"]
         assert questions[0].get("_hindi_impure") is not True
