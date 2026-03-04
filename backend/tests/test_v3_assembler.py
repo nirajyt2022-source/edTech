@@ -78,9 +78,15 @@ class TestAssembler:
         for i, q in enumerate(worksheet["questions"]):
             slot = output.slots[i]
             if slot.numbers and slot.numbers.get("answer") is not None:
-                assert q["correct_answer"] == str(slot.numbers["answer"]), (
-                    f"Q{i + 1}: answer should be {slot.numbers['answer']}, got {q['correct_answer']}"
-                )
+                if slot.question_type == "true_false":
+                    # T/F answers must be "True" or "False", never numeric
+                    assert q["correct_answer"] in ("True", "False"), (
+                        f"Q{i + 1}: T/F answer should be True/False, got {q['correct_answer']}"
+                    )
+                else:
+                    assert q["correct_answer"] == str(slot.numbers["answer"]), (
+                        f"Q{i + 1}: answer should be {slot.numbers['answer']}, got {q['correct_answer']}"
+                    )
 
     def test_mcq_has_4_options(self):
         """MCQ questions must have exactly 4 options."""

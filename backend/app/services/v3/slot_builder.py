@@ -45,6 +45,7 @@ class Slot:
     llm_instruction: str = ""
     max_words: int = 25
     age_range: str = "8-9"
+    expected_answer: str | None = None
 
 
 @dataclass
@@ -519,6 +520,76 @@ def _get_image_keywords_for_subject(subject: str) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# Hindi grammar answer banks — Python-owned answers, same pattern as maths
+# ---------------------------------------------------------------------------
+HINDI_VACHAN_BANK = {
+    "लड़का": "लड़के",
+    "लड़की": "लड़कियाँ",
+    "गाय": "गाएँ",
+    "कुत्ता": "कुत्ते",
+    "किताब": "किताबें",
+    "पुस्तक": "पुस्तकें",
+    "बच्चा": "बच्चे",
+    "पक्षी": "पक्षी",
+    "मछली": "मछलियाँ",
+    "चिड़िया": "चिड़ियाँ",
+    "दुकान": "दुकानें",
+    "खिड़की": "खिड़कियाँ",
+    "खिलौना": "खिलौने",
+    "पटाखा": "पटाखे",
+    "तारा": "तारे",
+    "आँख": "आँखें",
+    "कान": "कान",
+    "पैर": "पैर",
+    "हाथ": "हाथ",
+    "दरवाज़ा": "दरवाज़े",
+    "कमरा": "कमरे",
+    "फूल": "फूल",
+    "पत्ता": "पत्ते",
+    "डिब्बा": "डिब्बे",
+    "गिलास": "गिलास",
+    "कप": "कप",
+    "कुर्सी": "कुर्सियाँ",
+    "मेज़": "मेज़ें",
+    "बिल्ली": "बिल्लियाँ",
+    "चूहा": "चूहे",
+    "मोर": "मोर",
+    "तोता": "तोते",
+    "रोटी": "रोटियाँ",
+    "सब्ज़ी": "सब्ज़ियाँ",
+    "मिठाई": "मिठाइयाँ",
+    "टोपी": "टोपियाँ",
+    "नदी": "नदियाँ",
+    "गुड़िया": "गुड़ियाँ",
+    "पेड़": "पेड़",
+    "बादल": "बादल",
+    "गाड़ी": "गाड़ियाँ",
+    "पौधा": "पौधे",
+    "तस्वीर": "तस्वीरें",
+    "गेंद": "गेंदें",
+}
+
+HINDI_VILOM_BANK = {
+    "दिन": "रात",
+    "गर्म": "ठंडा",
+    "ऊपर": "नीचे",
+    "आना": "जाना",
+    "सुख": "दुख",
+    "अच्छा": "बुरा",
+    "बड़ा": "छोटा",
+    "लंबा": "छोटा",
+    "मोटा": "पतला",
+    "सुंदर": "कुरूप",
+    "अमीर": "गरीब",
+    "राजा": "रंक",
+    "जीत": "हार",
+    "शुरू": "खत्म",
+    "खुश": "दुखी",
+    "सच": "झूठ",
+}
+
+
+# ---------------------------------------------------------------------------
 # Topic-specific instruction templates (for tricky grammar/concept topics)
 # ---------------------------------------------------------------------------
 TOPIC_INSTRUCTION_TEMPLATES: dict[str, dict[str, str]] = {
@@ -610,6 +681,54 @@ def _build_llm_instruction(
             if template:
                 parts.append(f"SPECIFIC INSTRUCTION: {template}")
             break
+
+    # Hindi वचन: inject Python-owned answer pair into instruction
+    if "वचन" in topic:
+        word_pairs = list(HINDI_VACHAN_BANK.items())
+        random.shuffle(word_pairs)
+        pair = word_pairs[slot.slot_number % len(word_pairs)]
+        singular, plural = pair
+
+        if slot.question_type == "mcq":
+            wrong_options = [v for _, v in word_pairs if v != plural][:3]
+            parts.append(f"Ask: '{singular} का बहुवचन क्या है?'")
+            parts.append(f"Correct answer: '{plural}'")
+            parts.append(f"Wrong options: {wrong_options}")
+            parts.append(f"Set correct_answer to exactly: {plural}")
+        elif slot.question_type == "fill_blank":
+            parts.append(f"Write a fill-blank sentence using '{singular}'. The blank should be filled with '{plural}'.")
+            parts.append(f"Set correct_answer to exactly: {plural}")
+        elif slot.question_type == "true_false":
+            is_true = random.choice([True, False])
+            if is_true:
+                parts.append(f"Write: '{singular} का बहुवचन {plural} है।' Answer: True")
+            else:
+                wrong = random.choice([v for _, v in word_pairs if v != plural])
+                parts.append(f"Write: '{singular} का बहुवचन {wrong} है।' Answer: False")
+        else:
+            parts.append(f"Use the word '{singular}' (बहुवचन: '{plural}') in your question.")
+            parts.append(f"Set correct_answer to exactly: {plural}")
+
+        slot.expected_answer = plural if slot.question_type != "true_false" else None
+
+    # Hindi विलोम शब्द: inject Python-owned answer pair
+    elif "विलोम" in topic:
+        word_pairs = list(HINDI_VILOM_BANK.items())
+        random.shuffle(word_pairs)
+        pair = word_pairs[slot.slot_number % len(word_pairs)]
+        word, opposite = pair
+
+        if slot.question_type == "mcq":
+            wrong_options = [v for _, v in word_pairs if v != opposite][:3]
+            parts.append(f"Ask: '{word} का विलोम शब्द क्या है?'")
+            parts.append(f"Correct answer: '{opposite}'")
+            parts.append(f"Wrong options: {wrong_options}")
+            parts.append(f"Set correct_answer to exactly: {opposite}")
+        else:
+            parts.append(f"Use the word '{word}' (विलोम: '{opposite}') in your question.")
+            parts.append(f"Set correct_answer to exactly: {opposite}")
+
+        slot.expected_answer = opposite
 
     # Type and topic
     parts.append(f"Question type: {slot.question_type}")
@@ -746,93 +865,8 @@ _HINDI_TOPIC_ALIASES = {
 
 
 def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
-    """Build worksheet metadata from learning objectives with robust fuzzy matching."""
-    objectives: list[str] = []
-    topic_lower = topic.lower().strip()
-
-    # 1. Exact match
-    if topic in LEARNING_OBJECTIVES:
-        objectives = LEARNING_OBJECTIVES[topic]
-
-    # 2. Case-insensitive match
-    if not objectives:
-        for key, val in LEARNING_OBJECTIVES.items():
-            if key.lower().strip() == topic_lower:
-                objectives = val
-                break
-
-    # 2.5. Hindi alias match: वचन → Vachan
-    if not objectives:
-        for hindi_name, latin_name in _HINDI_TOPIC_ALIASES.items():
-            if hindi_name in topic:
-                for key, val in LEARNING_OBJECTIVES.items():
-                    if latin_name.lower() in key.lower():
-                        objectives = val
-                        break
-                if objectives:
-                    break
-
-    # 3. Base topic match: strip parenthetical like "(carries)" or "(Class 3)"
-    if not objectives:
-        base_topic = re.sub(r"\s*\(.*?\)\s*", "", topic_lower).strip()
-        for key, val in LEARNING_OBJECTIVES.items():
-            key_base = re.sub(r"\s*\(.*?\)\s*", "", key.lower()).strip()
-            if base_topic == key_base or base_topic in key_base or key_base in base_topic:
-                objectives = val
-                break
-
-    # 4. Grade-suffixed match: "Water (Class 3)" → try "Water"
-    if not objectives:
-        no_grade = re.sub(r"\s*\(Class \d+\)\s*", "", topic, flags=re.IGNORECASE).strip()
-        if no_grade != topic:
-            for key, val in LEARNING_OBJECTIVES.items():
-                key_clean = re.sub(r"\s*\(Class \d+\)\s*", "", key, flags=re.IGNORECASE).strip()
-                if no_grade.lower() == key_clean.lower():
-                    objectives = val
-                    break
-
-    # 5. Keyword overlap match (best-effort for remaining topics)
-    if not objectives:
-        topic_words = set(re.sub(r"[^a-z\s]", "", topic_lower).split()) - {
-            "class",
-            "of",
-            "and",
-            "the",
-            "in",
-            "to",
-            "for",
-        }
-        if len(topic_words) >= 1:  # Only if we have meaningful words after filtering
-            best_match = None
-            best_overlap = 0
-            for key, val in LEARNING_OBJECTIVES.items():
-                key_words = set(re.sub(r"[^a-z\s]", "", key.lower()).split()) - {
-                    "class",
-                    "of",
-                    "and",
-                    "the",
-                    "in",
-                    "to",
-                    "for",
-                }
-                overlap = len(topic_words & key_words)
-                if overlap > best_overlap and overlap >= 1:
-                    best_overlap = overlap
-                    best_match = val
-            if best_match:
-                objectives = best_match
-
-    # 6. Fallback: generate specific objectives from topic name
-    if not objectives:
-        objectives = [
-            f"Identify and understand key concepts of {topic}",
-            f"Apply knowledge of {topic} to solve problems",
-            f"Analyze and evaluate information related to {topic}",
-        ]
-
-    # Ensure at least 2 objectives
-    if len(objectives) < 2:
-        objectives.append(f"Apply concepts of {topic} in real-world contexts")
+    """Build worksheet metadata from learning objectives with scored fuzzy matching."""
+    objectives = _match_learning_objectives(topic, grade_level, subject)
 
     return {
         "title": f"Worksheet: {topic}",
@@ -841,6 +875,116 @@ def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
         "parent_tip": "",  # Gemini will fill this
         "learning_objectives": objectives[:3],  # Cap at 3
     }
+
+
+def _match_learning_objectives(topic: str, grade_level: str, subject: str) -> list[str]:
+    """Match topic to learning objectives with scored matching + grade penalty."""
+    _STOP_WORDS = {"and", "the", "of", "in", "for", "with", "without", "no", "to", "a", "an"}
+
+    # 1. Exact match
+    if topic in LEARNING_OBJECTIVES:
+        return LEARNING_OBJECTIVES[topic]
+
+    # 2. Strip grade suffix: "Water (Class 3)" → "Water"
+    base_topic = re.sub(r"\s*\(Class\s*\d+\)\s*", "", topic, flags=re.IGNORECASE).strip()
+
+    # 3. Try base topic exact match
+    if base_topic in LEARNING_OBJECTIVES:
+        return LEARNING_OBJECTIVES[base_topic]
+
+    # 3.5. Hindi alias match: वचन → Vachan
+    for hindi_name, latin_name in _HINDI_TOPIC_ALIASES.items():
+        if hindi_name in topic:
+            for key, val in LEARNING_OBJECTIVES.items():
+                if latin_name.lower() in key.lower():
+                    return val
+
+    # 4. Scored matching across all keys
+    base_lower = base_topic.lower()
+    grade_num = re.search(r"\d+", str(grade_level))
+    grade_str = f"class {grade_num.group()}" if grade_num else ""
+
+    best_match = None
+    best_score = 0
+
+    for key, val in LEARNING_OBJECTIVES.items():
+        key_base = re.sub(r"\s*\(Class\s*\d+\)\s*", "", key, flags=re.IGNORECASE).strip().lower()
+
+        # Extract grade from key
+        key_grade = re.search(r"class\s*(\d+)", key, re.IGNORECASE)
+        key_grade_str = f"class {key_grade.group(1)}" if key_grade else ""
+
+        # Score the match
+        score = 0
+
+        # Exact base match (after stripping grade)
+        if base_lower == key_base:
+            score = 100
+        # Base topic starts with key base or vice versa
+        elif base_lower.startswith(key_base) or key_base.startswith(base_lower):
+            score = 70
+        # First word matches (e.g., "Addition" matches "Addition (carries)")
+        elif base_lower.split()[0] == key_base.split()[0]:
+            score = 50
+        # Key words overlap
+        else:
+            base_words = set(base_lower.split()) - _STOP_WORDS
+            key_words = set(key_base.split()) - _STOP_WORDS
+            if base_words and key_words:
+                overlap = len(base_words & key_words) / len(base_words | key_words)
+                if overlap >= 0.4:
+                    score = int(overlap * 40)
+
+        # Grade match bonus/penalty — ONLY match same grade
+        if grade_str and key_grade_str:
+            if grade_str == key_grade_str:
+                score += 20  # same grade bonus
+            else:
+                score = max(0, score - 30)  # different grade penalty
+
+        if score > best_score:
+            best_score = score
+            best_match = val
+
+    # Only accept matches above threshold
+    if best_match and best_score >= 40:
+        return best_match
+
+    # 5. Generate grade-appropriate fallback objectives
+    return _generate_fallback_objectives(topic, grade_level, subject)
+
+
+def _generate_fallback_objectives(topic: str, grade_level: str, subject: str) -> list[str]:
+    """Generate specific fallback objectives when no match found."""
+    base = re.sub(r"\s*\(Class\s*\d+\)\s*", "", topic, flags=re.IGNORECASE).strip()
+
+    if subject.lower() in ("maths", "mathematics", "math"):
+        return [
+            f"Solve problems involving {base}",
+            f"Apply {base} concepts to word problems",
+            f"Identify and correct common mistakes in {base}",
+        ]
+    elif subject.lower() == "english":
+        return [
+            f"Identify and use {base} correctly in sentences",
+            f"Apply knowledge of {base} in reading and writing",
+        ]
+    elif subject.lower() == "hindi":
+        return [
+            f"{base} की पहचान करना और सही उपयोग करना",
+            f"{base} के नियमों को वाक्यों में लागू करना",
+        ]
+    elif subject.lower() in ("science", "evs"):
+        return [
+            f"Understand key concepts related to {base}",
+            f"Apply knowledge of {base} to real-world situations",
+            f"Observe and describe phenomena related to {base}",
+        ]
+    else:
+        return [
+            f"Understand and apply concepts of {base}",
+            f"Demonstrate knowledge of {base} through problem-solving",
+        ]
 
 
 # ---------------------------------------------------------------------------

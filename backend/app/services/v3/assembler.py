@@ -87,22 +87,32 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
         # Question text
         text = fill.get("text", f"Question {slot.slot_number}")
 
-        # Correct answer: maths from Python, non-maths from Gemini
-        if slot.numbers and slot.numbers.get("answer") is not None:
+        # Correct answer logic — true_false FIRST, then maths numbers, then Gemini
+        if slot.question_type == "true_false":
+            # True/False: answer must be "True" or "False", never numeric
+            raw_answer = fill.get("correct_answer", "")
+            raw_lower = str(raw_answer).strip().lower()
+            if raw_lower in ("true", "t", "yes", "correct", "sahi", "सही", "haan", "हाँ"):
+                correct_answer = "True"
+            elif raw_lower in ("false", "f", "no", "incorrect", "galat", "गलत", "nahi", "नहीं"):
+                correct_answer = "False"
+            else:
+                # Gemini didn't return True/False — infer from instruction
+                instruction = slot.llm_instruction.upper()
+                if "FALSE STATEMENT" in instruction or "STATEMENT THAT IS FALSE" in instruction:
+                    correct_answer = "False"
+                else:
+                    correct_answer = "True"
+        elif slot.numbers and slot.numbers.get("answer") is not None:
             correct_answer = str(slot.numbers["answer"])
         else:
             correct_answer = fill.get("correct_answer", "")
+            if not correct_answer and fill.get("options"):
+                correct_answer = fill["options"][0] if fill["options"] else ""
 
-            # true_false (non-maths only): normalize correct_answer to "True" or "False"
-            if slot.question_type == "true_false":
-                ca_lower = str(correct_answer).strip().lower()
-                if ca_lower in ("true", "t", "yes", "correct", "sahi", "सही"):
-                    correct_answer = "True"
-                elif ca_lower in ("false", "f", "no", "incorrect", "galat", "गलत"):
-                    correct_answer = "False"
-                else:
-                    # LLM returned a sentence — default to True
-                    correct_answer = "True"
+        # Override with expected_answer if Python knows the answer (Hindi grammar, etc.)
+        if hasattr(slot, "expected_answer") and slot.expected_answer:
+            correct_answer = slot.expected_answer
 
         # Options
         options = None
@@ -169,6 +179,12 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
             "images": images,
             "verified": True,
         }
+        # Final enforcement: T/F must have T/F answers and options
+        if slot.question_type == "true_false":
+            q["options"] = ["True", "False"]
+            if q["correct_answer"] not in ("True", "False"):
+                q["correct_answer"] = "True"  # safe fallback
+
         questions.append(q)
 
     # Worksheet-level metadata
