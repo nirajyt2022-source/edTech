@@ -1620,14 +1620,14 @@ def validate_response(
     warnings: list[str] = []
 
     # --- JSON parse ---
+    # Pre-strip control characters (except \n, \r, \t) that LLMs sometimes inject
+    sanitized = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", raw_text)
     try:
-        data = json.loads(raw_text)
+        data = json.loads(sanitized)
     except json.JSONDecodeError:
-        # Try stripping markdown fences and control characters
-        cleaned = re.sub(r"^```(?:json)?\s*", "", raw_text.strip())
+        # Try stripping markdown fences
+        cleaned = re.sub(r"^```(?:json)?\s*", "", sanitized.strip())
         cleaned = re.sub(r"\s*```$", "", cleaned)
-        # Strip control characters (except \n, \r, \t) that LLMs sometimes inject
-        cleaned = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", cleaned)
         data = json.loads(cleaned)  # let it raise if still bad
 
     questions = data.get("questions", [])

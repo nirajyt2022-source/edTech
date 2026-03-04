@@ -170,10 +170,14 @@ def audit_worksheet(ws_id: str, data: dict, warnings: list[str], elapsed_ms: int
     if len(structures) < 2:
         issues.append(f"Sentence monotony: only {len(structures)} structure type(s)")
 
-    # 10. MCQ option counts
+    # 10. MCQ option counts (exclude true_false which legitimately has 2 options)
     bad_mcq = 0
     for q in questions:
-        if q.get("type") == "mcq" or q.get("format") == "mcq":
+        q_type = q.get("type", "")
+        q_format = q.get("format", "")
+        is_mcq = q_type == "mcq" or q_format == "mcq"
+        is_tf = q_type == "true_false" or q_format == "true_false"
+        if is_mcq and not is_tf:
             opts = q.get("options", [])
             if isinstance(opts, list) and len(opts) != 4:
                 bad_mcq += 1
