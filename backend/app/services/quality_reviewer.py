@@ -2054,6 +2054,79 @@ class QualityReviewerAgent:
         except Exception as exc:
             logger.debug("[quality_reviewer] Check 17 (round number fix) skipped: %s", exc)
 
+        # ── CHECK 22: Word problem answer verification (Gap 6) ─────────
+        # For Maths word problems with exactly 2 numbers, infer the operation
+        # from keywords and cross-check the LLM's answer.
+        try:
+            if is_maths:
+                _ADD_KW = re.compile(
+                    r"\b(total|altogether|sum|in all|how many|more|combined|"
+                    r"together|plus|additional|extra)\b",
+                    re.IGNORECASE,
+                )
+                _SUB_KW = re.compile(
+                    r"\b(left|remaining|gave away|less|difference|fewer|"
+                    r"taken away|removed|spent|lost|ate|distributed)\b",
+                    re.IGNORECASE,
+                )
+                _MUL_KW = re.compile(
+                    r"\b(each|every|rows? of|groups? of|times|per|packets? of|"
+                    r"sets? of|bundles? of)\b",
+                    re.IGNORECASE,
+                )
+
+                for q in result.questions:
+                    q_type = (q.get("type") or q.get("format") or "").lower()
+                    if q_type != "word_problem":
+                        continue
+                    q_text = q.get("text") or q.get("question_text") or ""
+                    if not q_text:
+                        continue
+
+                    # Extract all integers from question text
+                    nums = [int(n) for n in re.findall(r"\b\d+\b", q_text)]
+                    if len(nums) != 2:
+                        continue  # Only handle simple 2-number word problems
+
+                    a, b = nums[0], nums[1]
+                    expected = None
+
+                    if _MUL_KW.search(q_text):
+                        expected = a * b
+                    elif _SUB_KW.search(q_text):
+                        expected = a - b if a >= b else b - a
+                    elif _ADD_KW.search(q_text):
+                        expected = a + b
+
+                    if expected is None:
+                        continue
+
+                    # Compare with LLM's answer
+                    ans_str = str(q.get("answer") or q.get("correct_answer") or "").strip()
+                    # Extract numeric part from answer (e.g. "₹380" → "380")
+                    ans_nums = re.findall(r"\d+", ans_str)
+                    if not ans_nums:
+                        continue
+                    llm_answer = int(ans_nums[0])
+
+                    if llm_answer != expected:
+                        q_id = q.get("id", "?")
+                        # Preserve currency/unit prefix if present
+                        prefix_match = re.match(r"^([^\d]*)", ans_str)
+                        prefix = prefix_match.group(1) if prefix_match else ""
+                        new_answer = f"{prefix}{expected}"
+                        q["answer"] = new_answer
+                        q["correct_answer"] = new_answer
+                        q["_math_auto_corrected"] = True
+                        msg = (
+                            f"Q{q_id}: word problem answer mismatch — "
+                            f"LLM said '{ans_str}', computed {a}?{b}={expected}, corrected to '{new_answer}'"
+                        )
+                        logger.warning("[quality_reviewer] %s", msg)
+                        result.corrections.append(msg)
+        except Exception as exc:
+            logger.debug("[quality_reviewer] Check 22 (word problem verification) skipped: %s", exc)
+
         logger.info(
             "[quality_reviewer] Review complete: %d question(s), %d correction(s), %d warning(s), %d error(s)",
             len(result.questions),

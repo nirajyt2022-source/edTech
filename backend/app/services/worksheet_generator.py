@@ -18,6 +18,11 @@ import random
 import re
 import string
 import time
+
+# ---------------------------------------------------------------------------
+# Grade profiles — loaded once at module start (same source as quality_reviewer)
+# ---------------------------------------------------------------------------
+from pathlib import Path as _Path
 from typing import Any
 
 import structlog
@@ -26,6 +31,9 @@ from app.data.image_registry import get_keywords_for_subject
 from app.data.phrasing_templates import get_phrasing_samples
 from app.data.topic_profiles import get_topic_profile
 from app.services.prompt_builder import _BLOOM_DIRECTIVES
+
+_GRADE_PROFILES_PATH = _Path(__file__).parent.parent / "data" / "grade_profiles.json"
+_GRADE_PROFILES: dict = json.loads(_GRADE_PROFILES_PATH.read_text(encoding="utf-8"))
 
 logger = structlog.get_logger("skolar.worksheet_generator")
 
@@ -108,6 +116,40 @@ VISUAL RULES:
 - For "visual": EVERY question MUST have a visual. For "mixed": ~50% should have visuals.
 - NEVER write "look at the image/picture", "In the following", "Read the passage below", or "Given below" — question text must be self-contained.
 - Visual must directly help answer the question. No visual is better than a misleading one."""
+
+_BAD_EXAMPLES_BLOCK = """
+
+NEVER generate questions like these — study why each is BAD:
+
+BAD EXAMPLE 1 (Age-inappropriate):
+  Class 1 worksheet: "Prove that addition is commutative using 3 + 5 = 5 + 3."
+  WHY BAD: "commutative" is abstract algebra — a 6-year-old cannot comprehend it.
+  GOOD: "What is 3 + 5? Now find 5 + 3. Are the answers the same?"
+
+BAD EXAMPLE 2 (Off-topic):
+  Topic is "Telling Time", but question is "What is 25 + 37?"
+  WHY BAD: Pure addition question has nothing to do with time.
+  GOOD: "The clock shows 3:00. What time will it be after 2 hours?"
+
+BAD EXAMPLE 3 (Bad MCQ distractors):
+  "Which is a fraction?" Options: ["1/2", "2/4", "3/6", "0.5"]
+  WHY BAD: All four options are equivalent — every answer is correct.
+  GOOD: Options: ["1/2", "5", "3+2", "ten"] — only one is a fraction.
+
+BAD EXAMPLE 4 (Wrong maths answer):
+  "What is 47 + 38?" Answer: "75"
+  WHY BAD: 47 + 38 = 85, not 75. LLM computed incorrectly.
+  GOOD: Always verify your arithmetic. 47 + 38 = 85.
+
+BAD EXAMPLE 5 (Self-referential):
+  "In the question above, what pattern do you see?"
+  WHY BAD: Each question must be self-contained. "The question above" has no meaning in a worksheet.
+  GOOD: "Look at this pattern: 2, 4, 6, 8, ___. What comes next?"
+
+BAD EXAMPLE 6 (Duplicate concept):
+  Q3: "What is 12 + 5?" and Q4: "Find 12 + 5."
+  WHY BAD: Same numbers, same operation — just rephrased. No new skill tested.
+  GOOD: Q3: "What is 12 + 5?" Q4: "What is 9 + 8?" (different numbers, still tests addition)."""
 
 _IMAGE_BLOCK_TEMPLATE = """\
 
@@ -227,6 +269,9 @@ def build_system_prompt(problem_style: str, subject: str) -> str:
         keywords = get_keywords_for_subject(subject)
         if keywords:
             parts.append(_IMAGE_BLOCK_TEMPLATE.replace("{keywords}", ", ".join(keywords)))
+
+    # Negative examples (Gap 7) — always included
+    parts.append(_BAD_EXAMPLES_BLOCK)
 
     # Output format: standard variant omits visual_type/visual_data example
     if problem_style == "standard":
@@ -509,8 +554,30 @@ def build_user_prompt(
     seed = "".join(random.choices(string.ascii_lowercase, k=6))
     names_str = ", ".join(random.sample(_INDIAN_NAMES, min(10, len(_INDIAN_NAMES))))
 
+    # -- Grade profile injection (Gap 1) --
+    _grade_match_num = re.search(r"\d+", grade_level)
+    _grade_num_str = _grade_match_num.group() if _grade_match_num else "3"
+    _gp = _GRADE_PROFILES.get(_grade_num_str, {})
+    _grade_profile_block = ""
+    if _gp:
+        _age = _gp.get("age_range", "unknown")
+        _ceiling = _gp.get("cognitive_ceiling", "unknown")
+        _max_words = _gp.get("answer_constraints", {}).get("max_words", "N/A")
+        _forbidden = ", ".join(_gp.get("forbidden_question_types", [])) or "none"
+        _allowed_fmts = ", ".join(_gp.get("answer_constraints", {}).get("allowed_formats", [])) or "any"
+        _context = _gp.get("context_must_be", "General")
+        _grade_profile_block = (
+            f"STUDENT PROFILE FOR {grade_level}:\n"
+            f"- Age: {_age} years old\n"
+            f"- Cognitive ceiling: {_ceiling}\n"
+            f"- Maximum answer length: {_max_words} words\n"
+            f"- FORBIDDEN question types: {_forbidden}\n"
+            f"- Allowed answer formats: {_allowed_fmts}\n"
+            f"- Context: {_context}\n\n"
+        )
+
     prompt = (
-        f"Board: {board} | Class: {grade_level} | Subject: {subject}\n"
+        _grade_profile_block + f"Board: {board} | Class: {grade_level} | Subject: {subject}\n"
         f"Topic: {topic} | Difficulty: {difficulty} | Questions: {num_questions}\n"
         f"Language: {language} | Style: {style_hint} | Seed: {seed}\n\n"
         f'Generate {num_questions} ORIGINAL questions strictly about "{topic}". '
@@ -1629,6 +1696,17 @@ def validate_response(
         cleaned = re.sub(r"^```(?:json)?\s*", "", sanitized.strip())
         cleaned = re.sub(r"\s*```$", "", cleaned)
         data = json.loads(cleaned)  # let it raise if still bad
+
+    # -- Overwrite learning objectives with known values (Gap 4) --
+    try:
+        from app.data.learning_objectives import LEARNING_OBJECTIVES
+
+        known_obj = LEARNING_OBJECTIVES.get(topic)
+        if known_obj:
+            data["learning_objectives"] = known_obj
+            warnings.append(f"[learning_objectives] Overwritten with known objectives for '{topic}'")
+    except Exception as exc:
+        logger.debug("Learning objectives lookup skipped: %s", exc)
 
     questions = data.get("questions", [])
     if not questions:
