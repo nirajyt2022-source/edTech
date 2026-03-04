@@ -446,11 +446,18 @@ def _random_multiplication(grade: int) -> dict:
         a = random.randint(2, 10)
         b = random.randint(2, 10)
     elif grade == 4:
-        a = random.randint(10, 999)
-        b = random.randint(10, 99)
+        # NCERT Class 4: 2-digit × 1-digit, max 2-digit × 2-digit (small)
+        a = random.randint(11, 50)
+        b = random.randint(2, 20)
     else:
-        a = random.randint(100, 999)
-        b = random.randint(10, 99)
+        # Class 5: 2-digit × 2-digit, some 3-digit × 1-digit
+        choice = random.choice(["2d_2d", "3d_1d"])
+        if choice == "2d_2d":
+            a = random.randint(11, 99)
+            b = random.randint(11, 50)
+        else:
+            a = random.randint(100, 500)
+            b = random.randint(2, 9)
     return {"a": a, "b": b, "answer": a * b}
 
 
@@ -462,12 +469,14 @@ def _random_division(grade: int) -> dict:
         b = random.randint(2, 10)
         answer = random.randint(2, 10)
     elif grade == 4:
+        # NCERT Class 4: divide 2-digit by 1-digit
+        b = random.randint(2, 9)
+        answer = random.randint(5, 20)
+    else:
+        # Class 5: divide up to 3-digit by 1-2 digit
         b = random.randint(2, 20)
         answer = random.randint(10, 50)
-    else:
-        b = random.randint(2, 50)
-        answer = random.randint(10, 100)
-    a = b * answer  # ensure clean division
+    a = b * answer  # ensures clean division
     return {"a": a, "b": b, "answer": answer}
 
 
@@ -936,6 +945,15 @@ def _build_llm_instruction(
     parts.append(f"Question type: {slot.question_type}")
     parts.append(f"Topic: {topic}")
     parts.append(f"Age range: {slot.age_range}")
+
+    # Question length constraint based on grade
+    if grade_num <= 1:
+        parts.append("CRITICAL: Question text must be UNDER 15 words. A 6-year-old must be able to read it alone.")
+    elif grade_num <= 2:
+        parts.append("Question text must be under 20 words. Keep sentences short and simple.")
+    elif grade_num <= 3:
+        parts.append("Question text should be under 30 words.")
+
     parts.append(f"Max words: {slot.max_words}")
     parts.append(f"Cognitive role: {slot.role}")
     parts.append(f"Difficulty: {slot.difficulty}")
@@ -1168,6 +1186,35 @@ OBJECTIVES_OVERRIDES = {
         "Identify different types of food and their nutrients",
         "Describe the basic process of digestion",
         "Explain the importance of a balanced diet",
+    ],
+    "Subtraction (no borrow)": [
+        "Subtract 2-digit numbers without borrowing",
+        "Solve word problems involving simple subtraction",
+        "Check subtraction using addition",
+    ],
+    "Subtraction (without borrow)": [
+        "Subtract 2-digit numbers without borrowing",
+        "Solve word problems involving simple subtraction",
+        "Check subtraction using addition",
+    ],
+    "Multiplication": [
+        "Multiply numbers using repeated addition and tables",
+        "Solve multiplication word problems",
+        "Recall multiplication facts",
+    ],
+    "Multiplication (2-digit)": [
+        "Multiply 2-digit numbers by 1-digit and small 2-digit numbers",
+        "Solve multiplication word problems with realistic scenarios",
+    ],
+    "Tenses": [
+        "Identify simple present, past, and future tenses",
+        "Change sentences from one tense to another",
+        "Use correct tense in fill-in-the-blank sentences",
+    ],
+    "Two Letter Words": [
+        "Read and write two-letter Hindi words (दो अक्षर वाले शब्द)",
+        "Form two-letter words from given letters",
+        "Identify two-letter words in simple sentences",
     ],
 }
 
@@ -1550,6 +1597,31 @@ def build_slots(
                             pair_key = new_key
                             break
             seen_pairs.add(pair_key)
+
+    # --- Step 6c: Deduplicate answers (no answer 3+ times) ---
+    if is_maths:
+        answer_counts: dict[int, list[int]] = {}  # answer → [slot indices]
+        for idx, slot in enumerate(slots):
+            if slot.numbers and slot.numbers.get("answer") is not None:
+                ans = slot.numbers["answer"]
+                answer_counts.setdefault(ans, []).append(idx)
+
+        for ans, indices in answer_counts.items():
+            if len(indices) >= 3:
+                # Keep first 2, regenerate the rest
+                for regen_idx in indices[2:]:
+                    for attempt in range(20):
+                        new_nums = _generate_numbers(grade_num, operation, slots[regen_idx].skill_tag)
+                        if new_nums and new_nums.get("answer") != ans:
+                            existing_answers = {
+                                s.numbers["answer"] for s in slots if s.numbers and s.numbers.get("answer") is not None
+                            }
+                            if new_nums["answer"] not in existing_answers or attempt > 15:
+                                slots[regen_idx].numbers = new_nums
+                                slots[regen_idx].llm_instruction = _build_llm_instruction(
+                                    slots[regen_idx], topic, subject, language, grade_num
+                                )
+                                break
 
     # --- Step 7: Enforce type minimums ---
     _enforce_type_minimums(slots, num_questions, error_det_forbidden)

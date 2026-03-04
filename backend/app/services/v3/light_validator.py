@@ -72,6 +72,20 @@ def validate_worksheet(
             if word_count > max_allowed:
                 issues.append(f"Q{slot_num}: text too long ({word_count} words, max {max_allowed})")
 
+        # CHECK 3b: Question word count for young grades
+        if slot and slot.age_range:
+            try:
+                age_start = int(slot.age_range.split("-")[0]) if "-" in slot.age_range else 8
+            except (ValueError, IndexError):
+                age_start = 8
+            max_question_words = 15 if age_start <= 7 else (20 if age_start <= 8 else 40)
+            word_count = len(text.split())
+            if word_count > max_question_words:
+                issues.append(
+                    f"Q{slot_num}: question too long for age {slot.age_range}"
+                    f" ({word_count} words, max {max_question_words})"
+                )
+
         # CHECK 5: MCQ answer in options
         q_type = q.get("type", "")
         options = q.get("options")
