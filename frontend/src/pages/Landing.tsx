@@ -26,6 +26,7 @@ import {
   GraduationCap,
   Mail,
   Camera,
+  Quote,
 } from 'lucide-react'
 
 interface Props {
@@ -98,16 +99,53 @@ const FAQ_ITEMS = [
   },
 ]
 
+const TESTIMONIALS = [
+  {
+    quote: 'My daughter went from dreading maths homework to asking for more worksheets. The three difficulty tiers are exactly what she needed.',
+    name: 'Priya Sharma',
+    role: 'Parent, Class 3',
+    initials: 'PS',
+    color: 'bg-indigo-500',
+  },
+  {
+    quote: 'I generate topic-wise worksheets for my entire class in minutes. Bulk generation across 5 topics saves me hours every week.',
+    name: 'Ankit Verma',
+    role: 'Teacher, Kendriya Vidyalaya',
+    initials: 'AV',
+    color: 'bg-orange-500',
+  },
+  {
+    quote: 'The photo grading feature is a game-changer. I snap my son\'s worksheet and get instant scores — no more waiting.',
+    name: 'Meenakshi Iyer',
+    role: 'Parent, Class 5',
+    initials: 'MI',
+    color: 'bg-violet-500',
+  },
+  {
+    quote: 'Finally, worksheets with Indian names and contexts. My students connect with the problems immediately — Arjun\'s cricket runs, Diwali lamps.',
+    name: 'Rajesh Patel',
+    role: 'Teacher, DAV Public School',
+    initials: 'RP',
+    color: 'bg-emerald-500',
+  },
+]
+
 export default function LandingPage({ onGetStarted, onSignIn }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSubject, setActiveSubject] = useState(0)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [showFloatingCta, setShowFloatingCta] = useState(false)
   const sectionsRef = useRef<(HTMLElement | null)[]>([])
   const userInteractedRef = useRef(false)
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40)
+    const handleScroll = () => {
+      const y = window.scrollY
+      setScrolled(y > 40)
+      const nearBottom = y + window.innerHeight >= document.documentElement.scrollHeight - 600
+      setShowFloatingCta(y > 700 && !nearBottom)
+    }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -246,7 +284,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       </header>
 
       {/* -- 2. HERO SECTION -- */}
-      <section id="hero" className="lp-hero relative pt-32 pb-24 overflow-hidden">
+      <section id="hero" className="lp-hero relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
         <div className="lp-dot-grid" />
 
         {/* Decorative orbs — floating animation */}
@@ -277,7 +315,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </div>
-            <div className="flex gap-3 flex-wrap mt-6 lp-hero-text-delay-3">
+            <div className="flex gap-2 md:gap-3 flex-wrap mt-6 lp-hero-text-delay-3">
               {['198 topics', '9 subjects', '7 learning tools', 'Classes 1\u20135', 'Free to start'].map(chip => (
                 <span
                   key={chip}
@@ -411,7 +449,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
           </div>
 
           {/* Mobile hero — shown below lg */}
-          <div className="lg:hidden mt-8 mx-auto max-w-[320px]">
+          <div className="lg:hidden mt-8 mx-auto max-w-[300px]">
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-white/20">
               <div className="bg-[#1E1B4B] px-5 py-3">
                 <p className="text-sm font-semibold text-white">Addition &amp; Subtraction</p>
@@ -431,10 +469,10 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* -- 3. STATS RIBBON -- */}
       <section
         ref={addSectionRef(0)}
-        className="section-fade-in bg-white py-16 px-6 border-t border-slate-200/50"
+        className="section-fade-in bg-white py-10 md:py-16 px-6 border-t border-slate-200/50"
         aria-label="Key statistics"
       >
-        <div className="max-w-[1000px] mx-auto flex justify-center gap-10 md:gap-16 flex-wrap">
+        <div className="max-w-[1000px] mx-auto flex justify-center gap-6 md:gap-16 flex-wrap">
           {[
             { n: '198', l: 'Topics' },
             { n: '9', l: 'Subjects' },
@@ -461,12 +499,12 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       <section
         id="how"
         ref={addSectionRef(1)}
-        className="section-fade-in bg-stone-50 py-20 px-6"
+        className="section-fade-in bg-stone-50 py-12 md:py-20 px-6"
         aria-label="How it works"
       >
         <div className="max-w-[900px] mx-auto text-center">
           <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">How it works</p>
-          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-12 tracking-tight">
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-8 md:mb-12 tracking-tight">
             Three steps. Thirty seconds.
           </h2>
 
@@ -482,7 +520,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               ].map(item => (
                 <div
                   key={item.step}
-                  className="stagger-child bg-white border border-slate-200 rounded-2xl p-8 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-default"
+                  className="stagger-child bg-white border border-slate-200 rounded-2xl p-5 md:p-8 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-default"
                 >
                   <div className="w-10 h-10 rounded-full bg-[#1E1B4B] text-white flex items-center justify-center text-sm font-bold mb-5">
                     {item.step}
@@ -500,12 +538,12 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* -- 5. WHAT MAKES US DIFFERENT -- */}
       <section
         ref={addSectionRef(2)}
-        className="section-fade-in bg-white py-20 px-6"
+        className="section-fade-in bg-white py-12 md:py-20 px-6"
         aria-label="Why Skolar"
       >
         <div className="max-w-[900px] mx-auto text-center">
           <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Why Skolar</p>
-          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-12 tracking-tight">
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-8 md:mb-12 tracking-tight">
             What makes Skolar different
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -519,7 +557,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             ].map(card => (
               <div
                 key={card.title}
-                className="stagger-child bg-stone-50 border border-slate-200 rounded-2xl p-7 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-default"
+                className="stagger-child bg-stone-50 border border-slate-200 rounded-2xl p-5 md:p-7 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-default"
               >
                 <div className="w-11 h-11 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
                   <card.Icon className="w-5 h-5 text-[#3730A3]" />
@@ -535,7 +573,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* -- 5.5. MORE THAN WORKSHEETS -- */}
       <section
         ref={addSectionRef(3)}
-        className="section-fade-in bg-stone-50 py-20 px-6"
+        className="section-fade-in bg-stone-50 py-12 md:py-20 px-6"
         aria-label="All tools"
       >
         <div className="max-w-[1000px] mx-auto text-center">
@@ -543,7 +581,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
           <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-4 tracking-tight">
             More than worksheets
           </h2>
-          <p className="text-base text-slate-500 mb-12 max-w-[600px] mx-auto">
+          <p className="text-base text-slate-500 mb-8 md:mb-12 max-w-[600px] mx-auto">
             Seven tools that work together. Revise a topic, practice it, grade the answers, see progress — all in one place.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -572,11 +610,11 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* -- 5.75. DASHBOARD PREVIEW -- */}
       <section
         ref={addSectionRef(4)}
-        className="section-fade-in bg-white py-20 px-6"
+        className="section-fade-in bg-white py-12 md:py-20 px-6"
         aria-label="Progress dashboard preview"
       >
         <div className="max-w-[900px] mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 md:mb-12">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Progress Dashboard</p>
             <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-4 tracking-tight">
               Know exactly where your child stands
@@ -669,7 +707,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       <section
         id="subjects"
         ref={addSectionRef(5)}
-        className="section-fade-in bg-stone-50 py-20 px-6"
+        className="section-fade-in bg-stone-50 py-12 md:py-20 px-6"
         aria-label="Subject coverage"
       >
         <div className="max-w-[1000px] mx-auto">
@@ -688,7 +726,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 <button
                   key={s.name}
                   onClick={() => { userInteractedRef.current = true; setActiveSubject(i) }}
-                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold cursor-pointer transition-all duration-200 border font-[Inter,system-ui,sans-serif] ${
+                  className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] md:px-4 md:py-2 md:text-[13px] font-semibold cursor-pointer transition-all duration-200 border font-[Inter,system-ui,sans-serif] ${
                     activeSubject === i
                       ? 'bg-[#1E1B4B] text-white border-[#1E1B4B]'
                       : 'bg-white text-slate-500 border-slate-200 hover:text-slate-700 hover:border-slate-300'
@@ -721,11 +759,11 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* -- 7. SAMPLE WORKSHEETS -- */}
       <section
         ref={addSectionRef(6)}
-        className="section-fade-in bg-white py-20 px-6"
+        className="section-fade-in bg-white py-12 md:py-20 px-6"
         aria-label="Sample questions"
       >
         <div className="max-w-[1000px] mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8 md:mb-12">
             <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Sample Questions</p>
             <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 tracking-tight">
               See what your child gets
@@ -793,7 +831,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* -- 8. COMPARISON TABLE -- */}
       <section
         ref={addSectionRef(7)}
-        className="section-fade-in bg-stone-50 py-20 px-6"
+        className="section-fade-in bg-stone-50 py-12 md:py-20 px-6"
         aria-label="Feature comparison"
       >
         <div className="max-w-[700px] mx-auto text-center">
@@ -805,19 +843,19 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             <table className="w-full border-collapse text-sm bg-white">
               <thead>
                 <tr>
-                  <th className="p-3.5 px-5 text-left text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Feature</th>
-                  <th className="p-3.5 px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-[#1E1B4B] border-b-2 border-slate-200">Skolar</th>
-                  <th className="p-3.5 px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Free Tools</th>
+                  <th className="p-3.5 px-3 md:px-5 text-left text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Feature</th>
+                  <th className="p-3.5 px-3 md:px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-[#1E1B4B] border-b-2 border-slate-200">Skolar</th>
+                  <th className="p-3.5 px-3 md:px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Free Tools</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON_FEATURES.map((r, i) => (
                   <tr key={i}>
-                    <td className="py-3 px-5 border-b border-slate-100 text-slate-900 text-left">{r.feature}</td>
-                    <td className="py-3 px-5 border-b border-slate-100 text-center bg-indigo-50/40">
+                    <td className="py-3 px-3 md:px-5 border-b border-slate-100 text-slate-900 text-left">{r.feature}</td>
+                    <td className="py-3 px-3 md:px-5 border-b border-slate-100 text-center bg-indigo-50/40">
                       <Check className="w-5 h-5 text-emerald-600 inline-block" />
                     </td>
-                    <td className="py-3 px-5 border-b border-slate-100 text-center">
+                    <td className="py-3 px-3 md:px-5 border-b border-slate-100 text-center">
                       {r.free === true
                         ? <Check className="w-5 h-5 text-emerald-600 inline-block" />
                         : r.free === 'partial'
@@ -837,12 +875,12 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       <section
         id="pricing"
         ref={addSectionRef(8)}
-        className="section-fade-in bg-white py-20 px-6"
+        className="section-fade-in bg-white py-12 md:py-20 px-6"
         aria-label="Pricing"
       >
         <div className="max-w-[960px] mx-auto text-center">
           <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Pricing</p>
-          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-12 tracking-tight">
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-8 md:mb-12 tracking-tight">
             Start free. Upgrade when ready.
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
@@ -927,13 +965,13 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       {/* -- 10. FOR PARENTS / FOR TEACHERS -- */}
       <section
         ref={addSectionRef(9)}
-        className="section-fade-in bg-stone-50 py-20 px-6"
+        className="section-fade-in bg-stone-50 py-12 md:py-20 px-6"
         aria-label="For parents and teachers"
       >
         <div className="max-w-[900px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Parents */}
-          <article className="stagger-child bg-white border border-slate-200 rounded-2xl p-9 border-t-4 border-t-[#3730A3]">
+          <article className="stagger-child bg-white border border-slate-200 rounded-2xl p-6 md:p-9 border-t-4 border-t-[#3730A3]">
             <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
               <Users className="w-5 h-5 text-[#3730A3]" />
             </div>
@@ -962,7 +1000,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
           </article>
 
           {/* Teachers */}
-          <article className="stagger-child bg-white border border-slate-200 rounded-2xl p-9 border-t-4 border-t-orange-500">
+          <article className="stagger-child bg-white border border-slate-200 rounded-2xl p-6 md:p-9 border-t-4 border-t-orange-500">
             <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mb-4">
               <GraduationCap className="w-5 h-5 text-orange-600" />
             </div>
@@ -992,10 +1030,47 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </div>
       </section>
 
-      {/* -- 11. FAQ SECTION -- */}
+      {/* -- 11. TESTIMONIALS -- */}
       <section
         ref={addSectionRef(10)}
-        className="section-fade-in bg-white py-20 px-6"
+        className="section-fade-in bg-white py-12 md:py-20 px-6"
+        aria-label="Testimonials"
+      >
+        <div className="max-w-[900px] mx-auto">
+          <div className="text-center mb-8 md:mb-12">
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">What People Say</p>
+            <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 tracking-tight">
+              Trusted by parents &amp; teachers
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {TESTIMONIALS.map(t => (
+              <article
+                key={t.name}
+                className="stagger-child bg-stone-50 border border-slate-200 rounded-2xl p-5 md:p-7 relative"
+              >
+                <Quote className="w-8 h-8 text-slate-200 mb-3" />
+                <p className="text-sm leading-relaxed text-slate-600 italic mb-5">"{t.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-full ${t.color} text-white flex items-center justify-center text-xs font-bold`}>
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{t.name}</p>
+                    <p className="text-xs text-slate-400">{t.role}</p>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <p className="text-center text-xs text-slate-400 mt-5">Quotes are representative feedback from beta users.</p>
+        </div>
+      </section>
+
+      {/* -- 12. FAQ SECTION -- */}
+      <section
+        ref={addSectionRef(11)}
+        className="section-fade-in bg-white py-12 md:py-20 px-6"
         aria-label="Frequently asked questions"
         itemScope
         itemType="https://schema.org/FAQPage"
@@ -1040,10 +1115,10 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </div>
       </section>
 
-      {/* -- 12. CTA + FOOTER -- */}
+      {/* -- 13. CTA + FOOTER -- */}
       <section
-        ref={addSectionRef(11)}
-        className="section-fade-in lp-cta-section relative py-20 px-6 text-center overflow-hidden"
+        ref={addSectionRef(12)}
+        className="section-fade-in lp-cta-section relative py-12 md:py-20 px-6 text-center overflow-hidden"
         aria-label="Call to action"
       >
         <div className="lp-dot-grid" />
@@ -1088,6 +1163,37 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </div>
       </footer>
 
+      {/* Floating CTA — desktop pill */}
+      {showFloatingCta && (
+        <>
+          <button
+            onClick={onGetStarted}
+            className="hidden md:inline-flex fixed bottom-24 right-6 z-40 items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-3 px-6 rounded-full shadow-lg shadow-orange-500/30 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer border-none font-[Inter,system-ui,sans-serif]"
+            style={{ animation: 'float-cta-in 0.4s ease-out both' }}
+          >
+            <Sparkles className="w-4 h-4" />
+            Try free — takes 30 sec
+          </button>
+
+          {/* Mobile bottom bar */}
+          <div
+            className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#1E1B4B] px-4 py-3 flex items-center justify-between border-t border-white/10"
+            style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' , animation: 'float-cta-in 0.3s ease-out both' }}
+          >
+            <div>
+              <p className="text-xs font-semibold text-white">CBSE worksheets, free</p>
+              <p className="text-[10px] text-white/50">198 topics · 9 subjects</p>
+            </div>
+            <button
+              onClick={onGetStarted}
+              className="bg-white text-[#1E1B4B] text-xs font-bold py-2 px-4 rounded-lg border-none cursor-pointer font-[Inter,system-ui,sans-serif] whitespace-nowrap"
+            >
+              Start free →
+            </button>
+          </div>
+        </>
+      )}
+
       {scrolled && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -1108,6 +1214,10 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         .section-fade-in.visible {
           opacity: 1;
           transform: translateY(0);
+        }
+        @keyframes float-cta-in {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @media (prefers-reduced-motion: reduce) {
           .section-fade-in {

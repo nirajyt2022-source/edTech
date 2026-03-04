@@ -572,6 +572,12 @@ textarea::placeholder {
   line-height: 1;
 }
 
+@media (max-width: 768px) {
+  .lp-stats-number {
+    font-size: 1.75rem;
+  }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
