@@ -2434,6 +2434,7 @@ def generate_worksheet(
     max_attempts = 3
     last_error: Exception | None = None
     all_warnings: list[str] = list(curriculum_warnings)
+    _gen_ctx = None
 
     for attempt in range(1, max_attempts + 1):
         t0 = time.perf_counter()
@@ -2729,7 +2730,7 @@ def generate_worksheet(
                 from app.services.difficulty_calibrator import get_difficulty_calibrator
 
                 # Reuse _gen_ctx from QualityReviewer if available, else build fresh
-                if "_gen_ctx" not in dir():
+                if _gen_ctx is None:
                     from app.services.topic_intelligence import GenerationContext as _GC
 
                     _profile = get_topic_profile(topic, subject, grade_level) or {}
@@ -2798,7 +2799,7 @@ def generate_worksheet(
                 num_questions=num_questions,
                 difficulty=difficulty,
                 warnings=all_warnings,
-                generation_context=None,
+                generation_context=_gen_ctx,
                 curriculum_available=bool(chapter_name),
                 gold_standard_mode=_gsm,
                 worksheet_meta={
@@ -2811,6 +2812,11 @@ def generate_worksheet(
             )
             data["_release_stamps"] = release.stamps
             data["_release_verdict"] = release.verdict
+            data["_release_meta"] = {
+                "failed_rules": release.failed_rules,
+                "block_reasons": release.block_reasons,
+                "degrade_reasons": release.degrade_reasons,
+            }
 
             if release.verdict == "blocked" and attempt < max_attempts:
                 feedback = "; ".join(release.block_reasons[:3])

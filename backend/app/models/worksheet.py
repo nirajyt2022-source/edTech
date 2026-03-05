@@ -143,5 +143,6 @@ class WorksheetGenerationResponse(BaseModel):
     quality_tier: str | None = None  # "high" | "medium" | "low"
     quality_score: float | None = None  # 0-100 composite quality score
     visual_compliance: dict | None = None  # mandatory visual enforcement result
+    trust_summary: dict | None = None  # {severity_max, failed_rules_count, policy_version, blocked_reason_codes}
     worksheets: list[Worksheet] | None = None
     capped_q_count: int | None = None  # Set if q_count was reduced due to topic limit

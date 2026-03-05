@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     worksheet_export_min_score: int = 70  # 0-100; PDF export blocked below this
     worksheet_export_gold_score: int = 85  # threshold for gold standard mode
     gold_standard_mode: bool = False  # stricter export: DEGRADE→BLOCK, threshold 85
+    # Trust runtime controls
+    trust_strict_p1: bool = False  # If true, any P0/P1 issue blocks worksheet release
+    trust_canary_percent: int = 5  # % traffic routed to canary trust policies
+    trust_autopolicy_repeat_threshold: int = 3  # repeated failure count within window
+    trust_autopolicy_p1_improvement_min: float = 0.2  # minimum relative P1 improvement for promotion
+    trust_dual_run_enabled: bool = False  # Run shadow engine in background for parity scoring
+    trust_dual_run_percent: int = 5  # % sampled traffic for dual-run shadow
+    trust_dual_run_timeout_ms: int = 45000  # max time budget for shadow generation
 
     # CORS — comma-separated allowed origins
     frontend_url: str = "https://ed-tech-drab.vercel.app"

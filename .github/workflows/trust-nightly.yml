@@ -1,0 +1,42 @@
+name: Trust Nightly Ops
+
+on:
+  schedule:
+    # 01:00 UTC daily
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  trust-nightly:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      TRUST_STRICT_P1: "true"
+      TRUST_CANARY_PERCENT: "5"
+      TRUST_AUTOPOLICY_REPEAT_THRESHOLD: "3"
+      TRUST_AUTOPOLICY_P1_IMPROVEMENT_MIN: "0.2"
+      TRUST_DUAL_RUN_ENABLED: "true"
+      TRUST_DUAL_RUN_PERCENT: "5"
+      TRUST_DUAL_RUN_TIMEOUT_MS: "45000"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install backend dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Propose trust policies
+        run: python scripts/propose_trust_policies.py
+      - name: Promote/rollback canary trust policies
+        run: python scripts/promote_trust_policies.py
+      - name: Rollout readiness check
+        run: python scripts/trust_rollout_check.py --hours 24

@@ -477,7 +477,7 @@ def _run_curriculum_checks(
         try:
             from app.data.topic_profiles import get_topic_profile
 
-            profile = get_topic_profile(topic, subject or None)
+            profile = get_topic_profile(topic, subject or None, worksheet.get("grade", ""))
             if profile:
                 valid_tags = set(profile.get("allowed_skill_tags", []))
                 if valid_tags:

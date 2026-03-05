@@ -23,6 +23,14 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable
 
+from app.core.config import get_settings
+from app.services.trust_policy import (
+    FAIL_CLOSED_RULES,
+    TrustSeverity,
+    is_trust_blocking_failure,
+    severity_for_rule,
+)
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -74,6 +82,7 @@ class GateContext:
     curriculum_available: bool = True
     worksheet_meta: dict = field(default_factory=dict)  # worksheet-level fields (skill_focus, etc.)
     gold_standard_mode: bool = False  # stricter enforcement: DEGRADE→BLOCK for R04, R21
+    strict_p1: bool = False  # if True, P1 failures block in addition to P0
 
 
 # ---------------------------------------------------------------------------
@@ -878,8 +887,9 @@ def r24_minimum_quality_score(ctx: GateContext) -> RuleResult:
             "quality_score not computed — skipped",
         )
 
-    BLOCK_THRESHOLD = 50.0
-    DEGRADE_THRESHOLD = 65.0
+    settings = get_settings()
+    BLOCK_THRESHOLD = float(settings.worksheet_export_min_score)
+    DEGRADE_THRESHOLD = float(settings.worksheet_export_gold_score)
 
     if score < BLOCK_THRESHOLD:
         return RuleResult(
@@ -920,6 +930,7 @@ def run_release_gate(
     curriculum_available: bool = True,
     worksheet_meta: dict | None = None,
     gold_standard_mode: bool = False,
+    strict_p1: bool | None = None,
 ) -> ReleaseVerdict:
     """
     Run all registered rules and produce a ReleaseVerdict.
@@ -947,6 +958,7 @@ def run_release_gate(
         curriculum_available=curriculum_available,
         worksheet_meta=worksheet_meta or {},
         gold_standard_mode=gold_standard_mode,
+        strict_p1=(get_settings().trust_strict_p1 if strict_p1 is None else strict_p1),
     )
 
     results: list[RuleResult] = []
@@ -960,14 +972,19 @@ def run_release_gate(
             result = func(ctx)
         except Exception as exc:
             logger.warning("[release_gate] Rule %s crashed: %s", name, exc)
-            result = RuleResult(name, False, enforcement, f"Crashed: {exc}")
+            # Fail-closed for trust-critical rules in strict mode.
+            if ctx.strict_p1 and name in FAIL_CLOSED_RULES:
+                result = RuleResult(name, False, Enforcement.BLOCK, f"Crashed (fail-closed): {exc}")
+            else:
+                result = RuleResult(name, False, enforcement, f"Crashed: {exc}")
 
         results.append(result)
         merged_stamps.update(result.stamps)
 
         if not result.passed:
             failed_rules.append(name)
-            if result.enforcement == Enforcement.BLOCK:
+            strict_block = ctx.strict_p1 and is_trust_blocking_failure(name, strict_p1=True)
+            if result.enforcement == Enforcement.BLOCK or strict_block:
                 block_reasons.append(f"[{name}] {result.detail}")
             elif result.enforcement == Enforcement.DEGRADE:
                 degrade_reasons.append(f"[{name}] {result.detail}")
@@ -1001,14 +1018,29 @@ def run_release_gate(
     # Gold standard stamps
     merged_stamps["gold_standard_mode"] = gold_standard_mode
     merged_stamps["gold_standard_eligible"] = passed and verdict == "released" and gold_standard_mode
+    merged_stamps["trust_strict_p1"] = ctx.strict_p1
+    if failed_rules:
+        severities = [severity_for_rule(rn) for rn in failed_rules]
+        if TrustSeverity.P0 in severities:
+            sev_max = TrustSeverity.P0.value
+        elif TrustSeverity.P1 in severities:
+            sev_max = TrustSeverity.P1.value
+        else:
+            sev_max = TrustSeverity.P2.value
+    else:
+        sev_max = None
+    merged_stamps["trust_severity_max"] = sev_max
+    merged_stamps["trust_failed_rules_count"] = len(failed_rules)
+    merged_stamps["trust_policy_version"] = "v1"
 
     logger.info(
-        "[release_gate] verdict=%s failed=%d blocked=%d degraded=%d gold=%s",
+        "[release_gate] verdict=%s failed=%d blocked=%d degraded=%d gold=%s strict_p1=%s",
         verdict,
         len(failed_rules),
         len(block_reasons),
         len(degrade_reasons),
         gold_standard_mode,
+        ctx.strict_p1,
     )
 
     return ReleaseVerdict(

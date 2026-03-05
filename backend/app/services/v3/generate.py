@@ -11,6 +11,8 @@ import logging
 import re
 import time
 
+from app.core.config import get_settings
+
 from .assembler import assemble_worksheet
 from .gemini_filler import fill_slots
 from .light_validator import validate_worksheet
@@ -258,6 +260,12 @@ def generate_worksheet_v3(
                     warnings.extend([f"[quality_gate:retry] {i}" for i in gate_result.issues])
         except Exception as e:
             logger.warning("[v3] quality gate retry failed: %s", e)
+
+    strict_p1 = get_settings().trust_strict_p1
+    if not gate_result.passed or (strict_p1 and gate_result.severity == "warning"):
+        raise ValueError(
+            f"V3 quality gate rejected worksheet: severity={gate_result.severity}, issues={gate_result.issues[:3]}"
+        )
 
     worksheet["_quality_gate"] = {
         "passed": gate_result.passed,

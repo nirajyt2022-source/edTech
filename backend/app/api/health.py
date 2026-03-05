@@ -1,7 +1,7 @@
 import os
 
 import structlog
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 
 logger = structlog.get_logger("skolar.health")
 
@@ -120,6 +120,29 @@ async def ai_metrics(request: Request):
     except Exception as e:
         logger.error("ai_metrics_failed", error=str(e))
         raise HTTPException(status_code=500, detail="Failed to get AI metrics")
+
+
+@router.get("/health/trust-metrics")
+async def trust_metrics(request: Request, hours: int = Query(default=24, ge=1, le=24 * 14)):
+    """Trust KPIs for recent window (P0/P1 served, blocked trend, dual-run parity).
+
+    Protected by the same X-Health-Token as /health/deep.
+    """
+    expected_token = os.environ.get("HEALTH_CHECK_TOKEN", "")
+    if expected_token:
+        provided = request.headers.get("X-Health-Token", "")
+        if provided != expected_token:
+            raise HTTPException(status_code=403, detail="Forbidden")
+
+    try:
+        from app.services.supabase_client import get_supabase_client
+        from app.services.trust_monitor import get_trust_metrics
+
+        db = get_supabase_client()
+        return get_trust_metrics(db, hours=hours)
+    except Exception as e:
+        logger.error("trust_metrics_failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to get trust metrics")
 
 
 @router.get("/api/v1/curriculum/check")

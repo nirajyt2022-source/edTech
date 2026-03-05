@@ -137,12 +137,12 @@ def _lookup_canon(topic_slug: str, subject: str, grade: int) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _get_skill_tags(topic_slug: str) -> list[str]:
+def _get_skill_tags(topic_slug: str, subject: str, grade: int) -> list[str]:
     """Return allowed_skill_tags for this topic from TOPIC_PROFILES."""
     try:
         from app.data.topic_profiles import get_topic_profile
 
-        profile = get_topic_profile(topic_slug)
+        profile = get_topic_profile(topic_slug, subject, f"Class {grade}")
         if profile:
             return list(profile.get("allowed_skill_tags", []))
     except Exception as exc:
@@ -212,7 +212,7 @@ class TopicIntelligenceAgent:
         ncert_subtopics: list[str] = _get_subtopics(topic_slug)
 
         # 3. Valid skill tags from topic profile
-        valid_skill_tags: list[str] = _get_skill_tags(topic_slug)
+        valid_skill_tags: list[str] = _get_skill_tags(topic_slug, subject, grade)
 
         # 4. Adaptive difficulty from Learning Graph (fail-open with flag)
         bloom_level: str = _DEFAULT_BLOOM

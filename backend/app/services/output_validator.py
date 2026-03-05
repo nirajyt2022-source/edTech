@@ -213,7 +213,7 @@ class OutputValidator:
             try:
                 from app.data.topic_profiles import get_topic_profile
 
-                profile = get_topic_profile(topic, subject or None)
+                profile = get_topic_profile(topic, subject or None, grade)
                 if profile:
                     disallowed = profile.get("disallowed_keywords", [])
                     if disallowed:
@@ -248,7 +248,7 @@ class OutputValidator:
             try:
                 from app.data.topic_profiles import get_topic_profile
 
-                profile = get_topic_profile(topic, subject or None)
+                profile = get_topic_profile(topic, subject or None, grade)
                 if profile:
                     disallowed_visuals = profile.get("disallowed_visual_types", [])
                     if disallowed_visuals:
@@ -531,7 +531,7 @@ class OutputValidator:
         if subject.lower() == "maths":
             from app.data.topic_profiles import get_topic_profile
 
-            _profile = get_topic_profile(topic)
+            _profile = get_topic_profile(topic, subject or None, grade)
             _mandatory = _profile.get("mandatory_visuals") if _profile else None
             if _mandatory:
                 from app.services.worksheet_generator import effective_min_count
