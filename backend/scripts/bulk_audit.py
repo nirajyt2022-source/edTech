@@ -202,7 +202,7 @@ def audit_topic(topic_name: str, profile: dict) -> list[AuditIssue]:
     if "percent" in topic_name.lower() and is_maths:
         for s in slots:
             if s.numbers and s.numbers.get("operation") == "percentage":
-                a, b, ans = s.numbers["a"], s.numbers["b"], s.numbers["answer"]
+                a, b = s.numbers["a"], s.numbers["b"]
                 exact = a * b / 100
                 if exact != int(exact):
                     issues.append(AuditIssue("P0", "percentage_rounding",
