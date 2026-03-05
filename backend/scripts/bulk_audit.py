@@ -175,7 +175,9 @@ def audit_topic(topic_name: str, profile: dict) -> list[AuditIssue]:
         if answers:
             counts = Counter(answers)
             max_repeat = max(counts.values())
-            if max_repeat >= 3:
+            # Class 1 addition has a small answer range (1-20), allow up to 3 repeats
+            cluster_threshold = 4 if grade_num <= 1 else 3
+            if max_repeat >= cluster_threshold:
                 issues.append(AuditIssue("P1", "answer_clustering",
                                          f"Answer {max(counts, key=counts.get)} repeats {max_repeat} times"))
 
