@@ -1086,6 +1086,7 @@ TOPIC_PROFILES: dict[str, dict] = {
         "allowed_skill_tags": [
             "c4_geometry_identify",
             "c4_geometry_classify",
+            "c4_geometry_apply",
             "c4_geometry_represent",
             "c4_geometry_error",
             "c4_geometry_thinking",
@@ -1110,8 +1111,9 @@ TOPIC_PROFILES: dict[str, dict] = {
             "preferred_types": [],
         },
         "default_recipe": [
-            {"skill_tag": "c4_geometry_identify", "count": 3},
-            {"skill_tag": "c4_geometry_classify", "count": 3},
+            {"skill_tag": "c4_geometry_identify", "count": 2},
+            {"skill_tag": "c4_geometry_classify", "count": 2},
+            {"skill_tag": "c4_geometry_apply", "count": 2},
             {"skill_tag": "c4_geometry_represent", "count": 2},
             {"skill_tag": "c4_geometry_error", "count": 1},
             {"skill_tag": "c4_geometry_thinking", "count": 1},

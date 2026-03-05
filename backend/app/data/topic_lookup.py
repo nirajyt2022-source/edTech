@@ -15,6 +15,45 @@ import re
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Devanagari → Romanized aliases (Hindi topic names + common English variants)
+# ---------------------------------------------------------------------------
+DEVANAGARI_ALIASES = {
+    # Hindi topic names in Devanagari → romanized profile keys
+    "वचन": "Vachan and Ling (Class 4)",
+    "वचन और लिंग": "Vachan and Ling (Class 4)",
+    "विलोम शब्द": "Vilom Shabd (Class 5)",
+    "विलोम": "Vilom Shabd (Class 5)",
+    "मुहावरे": "Muhavare (Class 5)",
+    "पर्यायवाची शब्द": "Paryayvachi Shabd (Class 5)",
+    "समास": "Samas (Class 5)",
+    "संवाद लेखन": "Samvad Lekhan (Class 5)",
+    "पत्र लेखन": "Patra Lekhan (Class 4)",
+    "काल": "Kaal (Class 4)",
+    "अनुस्वार और विसर्ग": "Anusvaar and Visarg (Class 4)",
+    "वर्णमाला": "Varnamala (Class 3)",
+    "वर्णमाला स्वर": "Varnamala Swar (Class 1)",
+    "वर्णमाला व्यंजन": "Varnamala Vyanjan (Class 1)",
+    "मात्रा": "Matras Introduction (Class 2)",
+    "मात्राएँ": "Matras Introduction (Class 2)",
+    "शब्द रचना": "Shabd Rachna (Class 3)",
+    "वाक्य रचना": "Vakya Rachna (Class 3)",
+    "कहानी लेखन": "Kahani Lekhan (Class 3)",
+    "दो अक्षर वाले शब्द": "Two Letter Words (Class 2)",
+    "तीन अक्षर वाले शब्द": "Three Letter Words (Class 2)",
+    "परिवार के शब्द": "Family Words (Class 1)",
+    "हिंदी में सरल वाक्य": "Simple Sentences in Hindi (Class 1)",
+    "प्रकृति शब्दावली": "Nature Vocabulary (Class 2)",
+    "कविता और गीत": "Rhymes and Poems (Class 2)",
+    # Common English variations for Science topics
+    "digestion": "Human Body (Class 4)",
+    "food and digestion": "Human Body (Class 4)",
+    "force and energy": "Force and Motion (Class 4)",
+    "force": "Force and Motion (Class 4)",
+    "my body": "My Body (Class 1)",
+    "human body": "Human Body (Class 4)",
+}
+
 
 def _build_lookup() -> dict[str, str]:
     """Build the lookup table from existing data."""
@@ -118,6 +157,15 @@ def _build_lookup() -> dict[str, str]:
                 lookup[normalized_alias] = profile_key
     except Exception as e:
         logger.debug("_TOPIC_ALIASES not loaded: %s", e)
+
+    # Add Devanagari and common English aliases
+    for alias, profile_key in DEVANAGARI_ALIASES.items():
+        normalized_alias = alias.strip().lower()
+        if profile_key in TOPIC_PROFILES:
+            lookup[normalized_alias] = profile_key
+            # Also with class suffixes
+            for grade in range(1, 6):
+                lookup[f"{normalized_alias} (class {grade})"] = profile_key
 
     return lookup
 

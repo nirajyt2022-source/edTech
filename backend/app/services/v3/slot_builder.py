@@ -659,7 +659,7 @@ def _random_percentage(grade: int) -> dict:
         if grade <= 4:
             base = random.choice([100, 200, 400, 500, 1000])
         else:
-            base = random.randint(1, 20) * 100  # multiples of 100
+            base = random.choice([50, 100, 200, 250, 400, 500])
         result = base * percent / 100
         if result == int(result):  # only accept clean integer answers
             return {"a": base, "b": percent, "answer": int(result), "operation": "percentage"}
@@ -1863,6 +1863,9 @@ def build_slots(
         expanded_tags.append(expanded_tags[0] if expanded_tags else "general")
     expanded_tags = expanded_tags[:num_questions]
 
+    # Detect if ALL tags are generic (no topic profile matched)
+    all_generic = all(tag == "general" for tag in expanded_tags)
+
     # --- Step 5: Assign role + difficulty based on difficulty param ---
     # If adaptive_config is available, override the difficulty distribution
     if adaptive_config:
@@ -1945,8 +1948,39 @@ def build_slots(
         if error_det_forbidden and final_role == "error_detection":
             final_role = "application"
 
+        # Override role for generic tags based on position
+        if all_generic:
+            slot_pct = i / max(num_questions - 1, 1)
+            if slot_pct < 0.3:
+                final_role = "recognition"
+            elif slot_pct < 0.6:
+                final_role = "application"
+            elif slot_pct < 0.8:
+                if not error_det_forbidden:
+                    final_role = "error_detection" if i % 2 == 0 else "representation"
+                else:
+                    final_role = "application"
+            else:
+                final_role = "thinking"
+
         # Question type
         q_type = _skill_to_question_type(skill_tag)
+
+        # Vary question types for generic tags
+        if all_generic:
+            slot_pct = i / max(num_questions - 1, 1)
+            if slot_pct < 0.3:
+                q_type = "mcq"
+            elif slot_pct < 0.5:
+                q_type = "fill_blank" if i % 2 == 0 else "short_answer"
+            elif slot_pct < 0.7:
+                q_type = "short_answer"
+            elif slot_pct < 0.8:
+                q_type = "true_false"
+            elif slot_pct < 0.9:
+                q_type = "error_detection" if not error_det_forbidden else "short_answer"
+            else:
+                q_type = "short_answer"
 
         # Check if error_detection type is forbidden
         if error_det_forbidden and q_type == "error_detection":
@@ -2088,6 +2122,18 @@ def build_slots(
                 )
 
         slots.append(slot)
+
+        # Post-creation override: Hindi word-bank role mapping
+        if slot.expected_answer and slot.assigned_word:
+            type_to_role = {
+                "mcq": "recognition",
+                "fill_blank": "application",
+                "short_answer": "application",
+                "true_false": "application",
+                "error_detection": "error_detection",
+                "word_problem": "application",
+            }
+            slot.role = type_to_role.get(slot.question_type, "recognition")
 
     # --- Step 6b: Deduplicate number pairs ---
     seen_pairs: set[tuple] = set()
