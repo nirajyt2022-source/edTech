@@ -460,9 +460,17 @@ def _random_subtraction(grade: int, allow_borrow: bool = True) -> dict:
         elif not allow_borrow and not needs_borrow:
             return {"a": a, "b": b, "answer": a - b}
 
-    # Fallback: guaranteed pair
+    # Fallback: guaranteed borrow pair per grade
+    _BORROW_FALLBACKS = {
+        1: {"a": 15, "b": 8, "answer": 7},
+        2: {"a": 42, "b": 17, "answer": 25},
+        3: {"a": 503, "b": 248, "answer": 255},
+        4: {"a": 5032, "b": 1748, "answer": 3284},
+        5: {"a": 50321, "b": 17486, "answer": 32835},
+    }
     if allow_borrow:
-        return {"a": 42, "b": 17, "answer": 25}  # guaranteed borrow (2 < 7)
+        fb = _BORROW_FALLBACKS.get(grade, _BORROW_FALLBACKS[2])
+        return dict(fb)
     if grade <= 2:
         a_ones = random.randint(5, 9)
         b_ones = random.randint(1, a_ones)
@@ -837,14 +845,26 @@ TOPIC_IMAGE_MAP = {
     "nutrition": ["mango", "apple", "banana", "rice", "roti", "milk", "egg"],
     # Hindi
     "varnamala": ["apple", "mango", "elephant", "flower"],
+    "two letter": ["apple", "mango", "book_open", "ball"],
+    "three letter": ["banana", "mango", "apple", "flower"],
+    "vachan": ["cow", "cat", "dog", "book_open", "flower"],
+    "ling": ["cow", "cat", "dog", "book_open", "flower"],
+    "matra": ["apple", "mango", "banana", "elephant"],
+    "shabd": ["book_open", "pencil_box", "school_bag", "apple"],
+    "vilom": ["sun", "moon", "sunny", "rainy"],
     "family words": ["family_group", "grandparents", "mother", "father"],
     "nature": ["tree", "flower", "sun", "moon", "cloud"],
+    "rhymes": ["butterfly", "flower", "sun", "moon"],
+    "kahani": ["book_open", "family_group", "tree", "sun"],
     # Science
+    "human body": ["human_body", "eye", "ear", "nose", "hand"],
     "digestion": ["apple", "roti", "rice", "human_body"],
     "air": ["balloon", "windy", "fan"],
     "light": ["sun", "torch", "candle"],
     "magnet": [],
     "force": ["car", "bicycle", "cricket"],
+    "energy": ["sun", "torch", "candle"],
+    "matter": ["water_drop"],
     # Computer
     "parts of computer": ["desktop_computer", "laptop", "keyboard", "mouse", "monitor"],
     "mouse": ["mouse", "desktop_computer"],
@@ -1655,19 +1675,28 @@ def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
     else:
         title_topic = base_topic
 
-    # Grade-appropriate title templates
+    # Grade-appropriate title templates (8 per band for variety)
     if grade_num <= 2:
         _TITLE_TEMPLATES = [
             "Fun with {topic}",
             "Let's Learn {topic}!",
             "My {topic} Worksheet",
             "{topic} Practice",
+            "{topic} — Let's Try!",
+            "I Can Do {topic}!",
+            "{topic} Time!",
+            "Play and Learn: {topic}",
         ]
     elif grade_num <= 3:
         _TITLE_TEMPLATES = [
             "{topic} Practice",
             "{topic} Worksheet",
             "Let's Practice {topic}",
+            "{topic} — Practice Questions",
+            "{topic} — Test Yourself",
+            "Get Better at {topic}",
+            "{topic} Revision",
+            "{topic} — Quick Practice",
         ]
     else:
         _TITLE_TEMPLATES = [
@@ -1675,10 +1704,14 @@ def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
             "{topic} Practice",
             "{topic} Exercise",
             "{topic} — Practice Questions",
+            "{topic} — Test Your Skills",
+            "{topic} Revision Sheet",
+            "{topic} — Sharpen Your Skills",
+            "{topic} — Practice & Apply",
         ]
 
     if title_topic:
-        idx = hash(title_topic) % len(_TITLE_TEMPLATES)
+        idx = hash(title_topic + grade_level) % len(_TITLE_TEMPLATES)
         title = _TITLE_TEMPLATES[idx].format(topic=title_topic)
     else:
         title = f"{subject} Practice Worksheet"
@@ -2068,6 +2101,10 @@ def build_slots(
         elif grade_num == 3:
             auto_image_rate = 0.25  # 25% of questions get images
 
+        # Boost for Science/EVS — these subjects benefit from visuals at every grade
+        if subject.lower() in ("science", "evs"):
+            auto_image_rate = max(auto_image_rate, 0.4)
+
         # Override with problem_style if explicitly set
         if problem_style == "visual":
             auto_image_rate = 0.8
@@ -2154,8 +2191,11 @@ def build_slots(
                             break
             seen_pairs.add(pair_key)
 
-    # --- Step 6c: Deduplicate answers (no answer 3+ times) ---
+    # --- Step 6c: Deduplicate answers ---
+    # Class 1-2: max 1 repeat per answer (small number ranges)
+    # Class 3+: max 2 repeats per answer
     if is_maths:
+        max_repeats = 1 if grade_num <= 2 else 2
         answer_counts: dict[int, list[int]] = {}  # answer → [slot indices]
         for idx, slot in enumerate(slots):
             if slot.numbers and slot.numbers.get("answer") is not None:
@@ -2163,16 +2203,15 @@ def build_slots(
                 answer_counts.setdefault(ans, []).append(idx)
 
         for ans, indices in answer_counts.items():
-            if len(indices) >= 3:
-                # Keep first 2, regenerate the rest
-                for regen_idx in indices[2:]:
-                    for attempt in range(20):
+            if len(indices) > max_repeats:
+                for regen_idx in indices[max_repeats:]:
+                    for attempt in range(30):
                         new_nums = _generate_numbers(grade_num, operation, slots[regen_idx].skill_tag)
                         if new_nums and new_nums.get("answer") != ans:
                             existing_answers = {
                                 s.numbers["answer"] for s in slots if s.numbers and s.numbers.get("answer") is not None
                             }
-                            if new_nums["answer"] not in existing_answers or attempt > 15:
+                            if new_nums["answer"] not in existing_answers or attempt > 20:
                                 slots[regen_idx].numbers = new_nums
                                 slots[regen_idx].llm_instruction = _build_llm_instruction(
                                     slots[regen_idx], topic, subject, language, grade_num
