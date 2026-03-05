@@ -88,9 +88,9 @@ function masteryColor(level: string): string {
 
 function masteryLabel(level: string): string {
   switch (level) {
-    case 'mastered': return 'Mastered'
-    case 'improving': return 'Improving'
-    case 'learning':  return 'Learning'
+    case 'mastered': return 'Mastered ⭐'
+    case 'improving': return 'Getting Better 📈'
+    case 'learning':  return 'Needs Practice 📝'
     case 'unknown':   return 'Not Started'
     default: return level.charAt(0).toUpperCase() + level.slice(1)
   }
@@ -176,9 +176,9 @@ function LearningHealthCard({ summary }: { summary: GraphSummary }) {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-fraunces">Learning Progress</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Complete a worksheet to see progress here.
+        <CardContent className="text-center py-4">
+          <p className="text-sm text-muted-foreground">
+            Generate and grade worksheets to see mastery levels here.
           </p>
         </CardContent>
       </Card>
@@ -1005,7 +1005,14 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
                 </svg>
               }
               title="No progress yet"
-              description="Complete a worksheet to see progress here."
+              description="Generate and grade worksheets to see progress here."
+              action={
+                onNavigate ? (
+                  <Button onClick={() => onNavigate('generator')} className="mt-2">
+                    Generate a Worksheet
+                  </Button>
+                ) : undefined
+              }
             />
           )}
 

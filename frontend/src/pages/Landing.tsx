@@ -495,6 +495,42 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </p>
       </section>
 
+      {/* -- SAMPLE WORKSHEET PREVIEW -- */}
+      <section className="bg-white py-12 md:py-20 px-6" aria-label="Sample worksheet">
+        <div className="max-w-[900px] mx-auto text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">See it in action</p>
+          <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-3 tracking-tight">
+            Here's what your child gets
+          </h2>
+          <p className="text-sm text-slate-500 mb-8 max-w-lg mx-auto">
+            A real Class 3 Maths worksheet on Fractions — with easy, medium, and hard questions built around one micro-skill.
+          </p>
+
+          <div className="max-w-md mx-auto bg-stone-50 border border-slate-200 rounded-2xl p-6 text-left space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md">Easy</span>
+              <span className="text-sm text-slate-700">Colour <sup>1</sup>/<sub>4</sub> of this shape.</span>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md">Medium</span>
+              <span className="text-sm text-slate-700">Which is greater: <sup>2</sup>/<sub>5</sub> or <sup>3</sup>/<sub>5</sub>?</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 px-2 py-0.5 rounded-md">Hard</span>
+              <span className="text-sm text-slate-700">Riya ate <sup>1</sup>/<sub>4</sub> of a pizza. Her brother ate <sup>2</sup>/<sub>4</sub>. How much is left?</span>
+            </div>
+          </div>
+
+          <button
+            onClick={onGetStarted}
+            className="mt-8 inline-flex items-center gap-2 bg-[#1E1B4B] text-white cursor-pointer text-sm font-semibold py-3 px-8 rounded-lg font-[Inter,system-ui,sans-serif] hover:bg-[#2d2a5e] transition-colors"
+          >
+            Generate yours free
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </section>
+
       {/* -- 4. HOW IT WORKS -- */}
       <section
         id="how"
@@ -1030,7 +1066,32 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </div>
       </section>
 
+      {/* -- TRUST BADGES -- */}
+      <section className="bg-stone-50 py-12 md:py-16 px-6 border-t border-slate-100" aria-label="Trust signals">
+        <div className="max-w-[900px] mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div>
+              <p className="text-3xl md:text-4xl font-bold text-[#1E1B4B] font-[Fraunces,Georgia,serif]">198</p>
+              <p className="text-xs font-medium text-slate-500 mt-1">CBSE topics covered</p>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-bold text-[#1E1B4B] font-[Fraunces,Georgia,serif]">9</p>
+              <p className="text-xs font-medium text-slate-500 mt-1">Subjects across Classes 1-5</p>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-bold text-[#1E1B4B] font-[Fraunces,Georgia,serif]">5</p>
+              <p className="text-xs font-medium text-slate-500 mt-1">Cognitive roles per worksheet</p>
+            </div>
+            <div>
+              <p className="text-3xl md:text-4xl font-bold text-[#1E1B4B] font-[Fraunces,Georgia,serif]">100%</p>
+              <p className="text-xs font-medium text-slate-500 mt-1">Maths answers verified by code</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* -- 11. TESTIMONIALS -- */}
+      {/* TODO: Replace with real testimonials after launch */}
       <section
         ref={addSectionRef(10)}
         className="section-fade-in bg-white py-12 md:py-20 px-6"
@@ -1038,7 +1099,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
       >
         <div className="max-w-[900px] mx-auto">
           <div className="text-center mb-8 md:mb-12">
-            <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">What People Say</p>
+            <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Built for CBSE parents</p>
             <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 tracking-tight">
               Trusted by parents &amp; teachers
             </h2>

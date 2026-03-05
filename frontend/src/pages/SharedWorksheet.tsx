@@ -309,11 +309,25 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           </div>
         </div>
 
-        {/* CTA section */}
-        <div className="mt-8 text-center pb-12 print:hidden">
-          <p className="text-sm text-stone-500">
-            CBSE-aligned, personalized, and printable. Free to get started.
-          </p>
+        {/* CTA banner */}
+        <div className="mt-8 pb-12 print:hidden">
+          <div className="bg-indigo-950 rounded-2xl p-8 md:p-10 text-center">
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Lora, Georgia, serif' }}>
+              Want worksheets like this for your child?
+            </h3>
+            <p className="text-sm text-indigo-200 mb-6">
+              198 CBSE topics &middot; Classes 1-5 &middot; Free to start
+            </p>
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors"
+            >
+              Generate your first worksheet — free
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </a>
+          </div>
         </div>
       </main>
     </div>

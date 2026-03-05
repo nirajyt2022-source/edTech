@@ -276,6 +276,13 @@ export default function HomeDashboard({ onNavigate }: Props) {
                 <p className="text-xs text-muted-foreground mt-1">
                   Generate your first practice to see activity here.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('generator')}
+                  className="mt-4 px-5 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  Create First Worksheet
+                </button>
               </div>
             ) : (
               <div className="space-y-2">
