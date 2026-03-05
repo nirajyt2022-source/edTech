@@ -502,18 +502,18 @@ def _random_fraction(grade: int) -> dict:
         # Simple fractions: halves, thirds, and quarters of small numbers
         denominator = random.choice([2, 3, 4])
         if denominator == 4:
-            whole = random.choice([4, 8, 12, 16, 20])
+            whole = random.choice([4, 8, 12, 16, 20, 24, 28, 32])
         elif denominator == 3:
-            whole = random.choice([3, 6, 9, 12, 15, 18])
+            whole = random.choice([3, 6, 9, 12, 15, 18, 21, 24])
         else:
-            whole = random.choice([2, 4, 6, 8, 10, 12])
+            whole = random.choice([2, 4, 6, 8, 10, 12, 14, 16, 18, 20])
         numerator = 1  # unit fractions for Class 3
         answer = whole // denominator
     elif grade == 4:
         # Equivalent fractions, non-unit fractions
         denominator = random.choice([2, 3, 4, 5, 6, 8])
         numerator = random.randint(1, denominator - 1)
-        whole = denominator * random.randint(2, 5)
+        whole = denominator * random.randint(2, 8)
         answer = (whole * numerator) // denominator
     else:
         # Class 5: mixed fractions, addition
