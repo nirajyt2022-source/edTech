@@ -35,6 +35,7 @@ from app.api import (  # noqa: E402
     classes,
     curriculum,
     dashboard,
+    emails,
     engagement,
     feedback,
     flashcards,
@@ -73,7 +74,40 @@ async def lifespan(app: FastAPI):
     _lifespan_logger.info("ai_client_ready")
 
     _lifespan_logger.info("startup_complete")
+
+    # ── Background email sequence processor (runs every hour) ────────
+    import asyncio
+
+    async def _email_sequence_loop():
+        """Process pending welcome emails every hour."""
+        while True:
+            await asyncio.sleep(3600)  # 1 hour
+            try:
+                from app.core.deps import get_supabase_client
+                from app.services.welcome_emails import process_pending_emails
+
+                db = get_supabase_client()
+                result = await process_pending_emails(db)
+                _lifespan_logger.info(
+                    "email_sequence_tick",
+                    processed=result["processed"],
+                    sent=result["sent"],
+                    skipped=result["skipped"],
+                )
+            except Exception as e:
+                _lifespan_logger.error("email_sequence_tick_failed", error=str(e))
+
+    email_task = asyncio.create_task(_email_sequence_loop())
+    _lifespan_logger.info("email_sequence_scheduler_started")
+
     yield
+
+    # Cancel the background email task on shutdown
+    email_task.cancel()
+    try:
+        await email_task
+    except asyncio.CancelledError:
+        pass
 
     # ── Graceful shutdown ─────────────────────────────────────
     _t0 = _time.monotonic()
@@ -197,6 +231,7 @@ app.include_router(textbook.router)
 app.include_router(ask_skolar.router)
 app.include_router(insights.router)
 app.include_router(feedback.router)
+app.include_router(emails.router)
 
 
 @app.get("/")

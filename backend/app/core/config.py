@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     resend_from_email: str = "onboarding@resend.dev"
 
+    # Email sequence
+    email_webhook_secret: str = ""  # protects email webhook endpoints
+
     # Monitoring
     sentry_dsn: str = ""  # Empty = disabled
     log_level: str = "INFO"
