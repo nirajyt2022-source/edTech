@@ -137,8 +137,12 @@ def _lookup_canon(topic_slug: str, subject: str, grade: int) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def _get_skill_tags(topic_slug: str, subject: str, grade: int) -> list[str]:
-    """Return allowed_skill_tags for this topic from TOPIC_PROFILES."""
+def _get_skill_tags(topic_slug: str, subject: str = "Maths", grade: int = 3) -> list[str]:
+    """Return allowed_skill_tags for this topic from TOPIC_PROFILES.
+
+    Backward-compatible defaults preserve older internal/test call sites that
+    only pass topic_slug while newer grade-aware paths pass all arguments.
+    """
     try:
         from app.data.topic_profiles import get_topic_profile
 
