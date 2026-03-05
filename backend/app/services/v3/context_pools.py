@@ -381,7 +381,185 @@ def pick_contexts(subject: str, count: int, generation_offset: int = 0) -> list[
     return [pool[(start + i) % len(pool)] for i in range(count)]
 
 
+SCIENCE_OBJECTS = {
+    "food": ["chapati", "rice", "dal", "milk", "fruits", "vegetables", "stomach", "teeth", "tongue", "saliva"],
+    "digestion": ["chapati", "rice", "dal", "milk", "fruits", "vegetables", "stomach", "teeth", "tongue", "saliva"],
+    "human body": ["bones", "muscles", "heart", "lungs", "brain", "blood", "skin", "eyes", "ears", "nose"],
+    "body": ["bones", "muscles", "heart", "lungs", "brain", "blood", "skin", "eyes", "ears", "nose"],
+    "plants": ["leaves", "roots", "stem", "flowers", "seeds", "fruits", "bark", "branches", "soil", "sunlight"],
+    "animals": ["nests", "burrows", "feathers", "scales", "fur", "wings", "legs", "eggs", "milk", "food"],
+    "water": ["rivers", "ponds", "wells", "taps", "rain", "ice", "steam", "clouds", "ocean", "lakes"],
+    "air": ["wind", "oxygen", "balloons", "kites", "bubbles", "smoke", "dust", "fans", "lungs", "breathing"],
+    "light": ["torch", "candle", "sun", "shadow", "mirror", "lamp", "bulb", "rainbow", "fire", "stars"],
+    "force": ["push", "pull", "wheels", "ramps", "springs", "magnets", "gravity", "friction", "machines", "levers"],
+    "default": [
+        "things",
+        "objects",
+        "items",
+        "samples",
+        "examples",
+        "parts",
+        "materials",
+        "types",
+        "groups",
+        "features",
+    ],
+}
+
+EVS_OBJECTS = {
+    "animals": [
+        "birds",
+        "fish",
+        "insects",
+        "pets",
+        "wild animals",
+        "farm animals",
+        "nests",
+        "eggs",
+        "feathers",
+        "food",
+    ],
+    "plants": ["trees", "flowers", "leaves", "seeds", "fruits", "vegetables", "roots", "garden", "forest", "grass"],
+    "food": ["chapati", "rice", "dal", "sabzi", "fruits", "milk", "curd", "laddoo", "idli", "dosa"],
+    "water": ["tap", "well", "river", "pond", "rain", "bucket", "glass", "bottle", "tank", "pipe"],
+    "family": [
+        "mother",
+        "father",
+        "grandparents",
+        "siblings",
+        "cousins",
+        "neighbours",
+        "friends",
+        "teachers",
+        "elders",
+        "babies",
+    ],
+    "shelter": ["house", "hut", "tent", "flat", "bungalow", "rooms", "kitchen", "bathroom", "roof", "walls"],
+    "senses": ["eyes", "ears", "nose", "tongue", "skin", "sounds", "smells", "tastes", "touch", "colours"],
+    "weather": ["rain", "sun", "wind", "clouds", "snow", "fog", "rainbow", "thunder", "seasons", "temperature"],
+    "default": [
+        "things",
+        "objects",
+        "items",
+        "examples",
+        "types",
+        "parts",
+        "features",
+        "groups",
+        "activities",
+        "places",
+    ],
+}
+
+ENGLISH_OBJECTS = {
+    "nouns": ["dog", "cat", "book", "school", "tree", "river", "teacher", "garden", "house", "ball"],
+    "verbs": [
+        "running",
+        "jumping",
+        "reading",
+        "writing",
+        "singing",
+        "dancing",
+        "cooking",
+        "playing",
+        "swimming",
+        "drawing",
+    ],
+    "tenses": [
+        "yesterday",
+        "today",
+        "tomorrow",
+        "morning",
+        "evening",
+        "always",
+        "sometimes",
+        "never",
+        "often",
+        "usually",
+    ],
+    "default": [
+        "words",
+        "sentences",
+        "stories",
+        "letters",
+        "paragraphs",
+        "poems",
+        "questions",
+        "answers",
+        "ideas",
+        "examples",
+    ],
+}
+
+HINDI_OBJECTS = {
+    "varnamala": ["\u0905", "\u0906", "\u0907", "\u0908", "\u0909", "\u090a", "\u0915", "\u0916", "\u0917", "\u0918"],
+    "shabd": [
+        "\u091c\u0932",
+        "\u092b\u0932",
+        "\u0915\u0932",
+        "\u0926\u0932",
+        "\u092c\u0932",
+        "\u091a\u0932",
+        "\u092e\u0928",
+        "\u0935\u0928",
+        "\u0927\u0928",
+        "\u091c\u0928",
+    ],
+    "vakya": [
+        "\u0935\u093e\u0915\u094d\u092f",
+        "\u0936\u092c\u094d\u0926",
+        "\u0905\u0915\u094d\u0937\u0930",
+        "\u092e\u093e\u0924\u094d\u0930\u093e",
+        "\u091a\u093f\u0924\u094d\u0930",
+        "\u0915\u0939\u093e\u0928\u0940",
+        "\u0915\u0935\u093f\u0924\u093e",
+        "\u0917\u0940\u0924",
+        "\u092a\u0924\u094d\u0930",
+        "\u0928\u093f\u092c\u0902\u0927",
+    ],
+    "default": [
+        "\u0936\u092c\u094d\u0926",
+        "\u0935\u093e\u0915\u094d\u092f",
+        "\u091a\u093f\u0924\u094d\u0930",
+        "\u0915\u0939\u093e\u0928\u0940",
+        "\u0905\u0915\u094d\u0937\u0930",
+        "\u092a\u0941\u0938\u094d\u0924\u0915",
+        "\u0915\u0932\u092e",
+        "\u0935\u093f\u0926\u094d\u092f\u093e\u0932\u092f",
+        "\u092c\u091a\u094d\u091a\u0947",
+        "\u0916\u093f\u0932\u094c\u0928\u0947",
+    ],
+}
+
+
 def pick_objects(grade_num: int, count: int) -> list[str]:
     """Pick N maths word problem objects for this grade."""
     pool = MATHS_OBJECTS.get(str(grade_num), MATHS_OBJECTS["3"])
     return random.sample(pool, min(count, len(pool)))
+
+
+def pick_subject_objects(subject: str, topic: str, count: int, grade_num: int) -> list[str]:
+    """Pick context objects appropriate to the subject and topic."""
+    subject_lower = subject.lower()
+    topic_lower = topic.lower()
+
+    pool_map = {
+        "science": SCIENCE_OBJECTS,
+        "evs": EVS_OBJECTS,
+        "english": ENGLISH_OBJECTS,
+        "hindi": HINDI_OBJECTS,
+    }
+
+    pool = pool_map.get(subject_lower)
+    if pool:
+        # Try topic-specific sub-pool
+        for key, objects in pool.items():
+            if key in topic_lower:
+                return random.sample(objects, min(count, len(objects)))
+        # Fallback to default for this subject
+        default = pool.get("default", [])
+        if default:
+            return random.sample(default, min(count, len(default)))
+
+    # Fallback to maths objects for grade
+    return pick_objects(grade_num, count)

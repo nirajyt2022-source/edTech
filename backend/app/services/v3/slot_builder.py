@@ -178,7 +178,7 @@ MANDATORY_VISUAL_TOPICS = {
 DIFFICULTY_DISTRIBUTION = {
     "easy": {"recognition": 0.60, "application": 0.30, "stretch": 0.10},
     "medium": {"recognition": 0.30, "application": 0.50, "stretch": 0.20},
-    "hard": {"recognition": 0.20, "application": 0.30, "stretch": 0.50},
+    "hard": {"recognition": 0.20, "application": 0.40, "stretch": 0.40},
 }
 
 
@@ -332,6 +332,10 @@ def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
         return "multiplication"
     if any(kw in combined for kw in ("divid", "division", "quotient", "share")):
         return "division"
+    if any(kw in combined for kw in ("fraction", "halves", "quarters", "half", "quarter")):
+        return "fraction"
+    if any(kw in combined for kw in ("decimal",)):
+        return "decimal"
     return None
 
 
@@ -368,6 +372,10 @@ def _generate_numbers(grade_num: int, operation: str | None, skill_tag: str) -> 
         return _random_multiplication(grade_num)
     elif operation == "division":
         return _random_division(grade_num)
+    elif operation == "fraction":
+        return _random_fraction(grade_num)
+    elif operation == "decimal":
+        return _random_decimal(grade_num)
     return None
 
 
@@ -482,6 +490,67 @@ def _random_division(grade: int) -> dict:
         answer = random.randint(10, 50)
     a = b * answer  # ensures clean division
     return {"a": a, "b": b, "answer": answer}
+
+
+def _random_fraction(grade: int) -> dict:
+    """Generate a fraction question with pre-computed answer."""
+    if grade <= 3:
+        # Simple fractions: halves and quarters of small numbers
+        denominator = random.choice([2, 4])
+        whole = random.choice([4, 8, 12, 16, 20]) if denominator == 4 else random.choice([2, 4, 6, 8, 10, 12])
+        numerator = 1  # unit fractions for Class 3
+        answer = whole // denominator
+    elif grade == 4:
+        # Equivalent fractions, non-unit fractions
+        denominator = random.choice([2, 3, 4, 5, 6, 8])
+        numerator = random.randint(1, denominator - 1)
+        whole = denominator * random.randint(2, 5)
+        answer = (whole * numerator) // denominator
+    else:
+        # Class 5: mixed fractions, addition
+        denominator = random.choice([2, 3, 4, 5, 6, 8, 10])
+        numerator = random.randint(1, denominator - 1)
+        whole = denominator * random.randint(3, 10)
+        answer = (whole * numerator) // denominator
+
+    return {
+        "a": whole,
+        "b": denominator,
+        "answer": answer,
+        "numerator": numerator,
+        "denominator": denominator,
+        "fraction_str": f"{numerator}/{denominator}",
+    }
+
+
+def _random_decimal(grade: int) -> dict:
+    """Generate decimal number pairs with pre-computed answer."""
+    if grade <= 4:
+        # Tenths only
+        a = round(random.randint(10, 99) / 10, 1)  # 1.0 to 9.9
+        b = round(random.randint(10, 99) / 10, 1)
+    else:
+        # Hundredths
+        a = round(random.randint(100, 999) / 100, 2)  # 1.00 to 9.99
+        b = round(random.randint(100, 999) / 100, 2)
+
+    # Randomly pick operation
+    op = random.choice(["add", "subtract", "compare"])
+    if op == "add":
+        answer = round(a + b, 2)
+    elif op == "subtract":
+        if a < b:
+            a, b = b, a
+        answer = round(a - b, 2)
+    else:  # compare
+        answer = a if a > b else b  # the larger one
+
+    return {
+        "a": a,
+        "b": b,
+        "answer": answer,
+        "operation": op,
+    }
 
 
 def _generate_wrong_answer(correct: int, operation: str | None) -> int:
@@ -1231,15 +1300,176 @@ OBJECTIVES_OVERRIDES = {
 }
 
 
+# Pre-written common mistakes and parent tips per topic category
+TOPIC_GUIDANCE = {
+    # Maths
+    "addition": {
+        "common_mistake": "Children often forget to carry over when the sum exceeds 9 in a column.",
+        "parent_tip": "Use real objects (laddoos, coins) to practice addition. Start with small numbers and build up.",
+    },
+    "subtraction": {
+        "common_mistake": "Children subtract the smaller digit from the larger regardless of position (e.g., 42-17: they do 7-2=5 instead of borrowing).",
+        "parent_tip": "Practice with coins — removing coins from a pile makes subtraction concrete.",
+    },
+    "multiplication": {
+        "common_mistake": "Children confuse multiplication with addition (e.g., 3×4=7 instead of 12).",
+        "parent_tip": "Use arrays — arrange objects in rows and columns to visualize multiplication.",
+    },
+    "division": {
+        "common_mistake": "Children confuse division with subtraction or forget that division means equal sharing.",
+        "parent_tip": "Practice sharing — divide laddoos equally among family members.",
+    },
+    "fractions": {
+        "common_mistake": "Children think 1/3 is bigger than 1/2 because 3 > 2.",
+        "parent_tip": "Cut a roti into halves, then quarters — let your child see and touch the parts.",
+    },
+    "decimals": {
+        "common_mistake": "Children think 0.45 > 0.5 because 45 > 5.",
+        "parent_tip": "Use money: ₹0.50 vs ₹0.45 — which can buy more? This makes decimals real.",
+    },
+    "time": {
+        "common_mistake": "Children confuse hour and minute hands on a clock.",
+        "parent_tip": "Point out the clock at home at meal times — 'It's 8 o'clock, time for dinner!'",
+    },
+    "money": {
+        "common_mistake": "Children forget to give back correct change.",
+        "parent_tip": "Let your child buy small items at a shop and count the change.",
+    },
+    "shapes": {
+        "common_mistake": "Children confuse similar shapes like rectangle and square.",
+        "parent_tip": "Point out shapes around the house — door (rectangle), clock (circle), sandwich (triangle).",
+    },
+    "measurement": {
+        "common_mistake": "Children confuse units (cm vs m, g vs kg).",
+        "parent_tip": "Measure things at home together — height of a door, weight of a bag of rice.",
+    },
+    "numbers": {
+        "common_mistake": "Children reverse digits when writing numbers (e.g., write 31 as 13).",
+        "parent_tip": "Practice number writing daily — 5 numbers before breakfast!",
+    },
+    "percentage": {
+        "common_mistake": "Children forget that percent means 'out of 100'.",
+        "parent_tip": "Use exam marks: 'You got 80 out of 100 — that's 80%!'",
+    },
+    "perimeter": {
+        "common_mistake": "Children confuse perimeter (around) with area (inside).",
+        "parent_tip": "Walk around the room — that's perimeter. The floor inside — that's area.",
+    },
+    "area": {
+        "common_mistake": "Children confuse perimeter with area or forget to use square units.",
+        "parent_tip": "Use tiles on the floor — count how many tiles cover the room.",
+    },
+    "geometry": {
+        "common_mistake": "Children mix up angles — they think bigger-looking angles are always larger.",
+        "parent_tip": "Open a book to different angles — show that angle size is about the opening, not the line length.",
+    },
+    "pattern": {
+        "common_mistake": "Children continue patterns mechanically without understanding the rule.",
+        "parent_tip": "Ask 'What's the rule?' before continuing any pattern.",
+    },
+    "data": {
+        "common_mistake": "Children misread graph scales or count bars instead of reading values.",
+        "parent_tip": "Look at graphs in newspapers together — ask 'What does this tell us?'",
+    },
+    # English
+    "nouns": {
+        "common_mistake": "Children confuse proper and common nouns.",
+        "parent_tip": "Play 'spot the noun' while reading — point to every naming word in a paragraph.",
+    },
+    "verbs": {
+        "common_mistake": "Children confuse action verbs with describing words (adjectives).",
+        "parent_tip": "Act out verbs — 'Show me jump! Show me run!' Makes grammar physical.",
+    },
+    "tenses": {
+        "common_mistake": "Children mix past and present tense in the same sentence.",
+        "parent_tip": "At bedtime, ask: 'What did you do today?' (past tense practice!).",
+    },
+    "pronouns": {
+        "common_mistake": "Children use 'me' instead of 'I' (e.g., 'Me went to school').",
+        "parent_tip": "Gently correct in conversation — 'I went to school, not me went.'",
+    },
+    "adjectives": {
+        "common_mistake": "Children place adjectives after the noun in English (influence of Hindi word order).",
+        "parent_tip": "Describe things together: 'What kind of flower? A RED flower. A BIG flower.'",
+    },
+    # Hindi
+    "\u0935\u091a\u0928": {
+        "common_mistake": "\u092c\u091a\u094d\u091a\u0947 \u0905\u0928\u093f\u092f\u092e\u093f\u0924 \u092c\u0939\u0941\u0935\u091a\u0928 \u092e\u0947\u0902 \u0917\u0932\u0924\u0940 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902 (\u091c\u0948\u0938\u0947 '\u0906\u0926\u092e\u0940' \u0915\u093e \u092c\u0939\u0941\u0935\u091a\u0928 '\u0906\u0926\u092e\u0940\u092f\u093e\u0901' \u0932\u093f\u0916\u0928\u093e)\u0964",
+        "parent_tip": "\u0918\u0930 \u092e\u0947\u0902 \u0935\u0938\u094d\u0924\u0941\u0913\u0902 \u0915\u094b \u090f\u0915 \u0914\u0930 \u0905\u0928\u0947\u0915 \u092e\u0947\u0902 \u092c\u093e\u0901\u091f\u0915\u0930 \u0905\u092d\u094d\u092f\u093e\u0938 \u0915\u0930\u0947\u0902\u0964",
+    },
+    "\u0935\u093f\u0932\u094b\u092e": {
+        "common_mistake": "\u092c\u091a\u094d\u091a\u0947 \u0915\u0941\u091b \u0935\u093f\u0932\u094b\u092e \u0936\u092c\u094d\u0926\u094b\u0902 \u0915\u094b \u0909\u0932\u094d\u091f\u093e \u092f\u093e\u0926 \u0915\u0930\u0924\u0947 \u0939\u0948\u0902\u0964",
+        "parent_tip": "\u0935\u093f\u0932\u094b\u092e \u0936\u092c\u094d\u0926\u094b\u0902 \u0915\u093e \u0916\u0947\u0932 \u0916\u0947\u0932\u0947\u0902 \u2014 \u090f\u0915 \u0936\u092c\u094d\u0926 \u092c\u094b\u0932\u0947\u0902, \u092c\u091a\u094d\u091a\u093e \u0909\u0932\u094d\u091f\u093e \u092c\u094b\u0932\u0947\u0964",
+    },
+    # EVS/Science
+    "animals": {
+        "common_mistake": "Children classify animals only as 'pet' or 'wild' without understanding habitats.",
+        "parent_tip": "Visit a park or watch nature videos together — ask 'Where does this animal live?'",
+    },
+    "plants": {
+        "common_mistake": "Children think all plants need the same amount of water and sunlight.",
+        "parent_tip": "Grow two different plants at home — one in sun, one in shade. Observe the difference.",
+    },
+    "food": {
+        "common_mistake": "Children think all tasty food is healthy and all healthy food is boring.",
+        "parent_tip": "Cook together — show how dal, roti, and sabzi each give different things to our body.",
+    },
+    "water": {
+        "common_mistake": "Children don't connect tap water to its source (river, groundwater).",
+        "parent_tip": "Ask: 'Where does our water come from before it reaches our tap?'",
+    },
+    "body": {
+        "common_mistake": "Children confuse sense organs with the senses themselves.",
+        "parent_tip": "Play a blindfold game — identify objects by touch, smell, sound.",
+    },
+    "digestion": {
+        "common_mistake": "Children think digestion happens only in the stomach.",
+        "parent_tip": "Trace the journey of a roti — mouth (chewing) → food pipe → stomach → intestines.",
+    },
+    "weather": {
+        "common_mistake": "Children confuse weather (daily) with climate (long-term pattern).",
+        "parent_tip": "Keep a weather diary for a week — draw the weather each day.",
+    },
+    # Computer
+    "computer": {
+        "common_mistake": "Children confuse hardware (things you touch) with software (programs).",
+        "parent_tip": "Point to computer parts: 'Monitor is hardware. Game inside is software.'",
+    },
+    # Health
+    "hygiene": {
+        "common_mistake": "Children wash hands quickly without soap or for less than 20 seconds.",
+        "parent_tip": "Sing 'Happy Birthday' twice while washing — that's 20 seconds!",
+    },
+    "exercise": {
+        "common_mistake": "Children think exercise means only running or sports.",
+        "parent_tip": "Dancing, climbing stairs, and playing are all exercise!",
+    },
+    "diet": {
+        "common_mistake": "Children want to eat only their favourite food every day.",
+        "parent_tip": "Use a plate model: half vegetables, quarter grain, quarter protein.",
+    },
+}
+
+
 def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
     """Build worksheet metadata from learning objectives with scored fuzzy matching."""
     objectives = _match_learning_objectives(topic, grade_level, subject)
 
+    # Find matching guidance
+    topic_lower = topic.lower()
+    common_mistake = ""
+    parent_tip = ""
+    for key, guidance in TOPIC_GUIDANCE.items():
+        if key in topic_lower:
+            common_mistake = guidance.get("common_mistake", "")
+            parent_tip = guidance.get("parent_tip", "")
+            break
+
     return {
         "title": f"Worksheet: {topic}",
         "skill_focus": objectives[0] if objectives else f"Practice {topic}",
-        "common_mistake": "",  # Gemini will fill this
-        "parent_tip": "",  # Gemini will fill this
+        "common_mistake": common_mistake,
+        "parent_tip": parent_tip,
         "learning_objectives": objectives[:3],  # Cap at 3
     }
 
@@ -1460,9 +1690,9 @@ def build_slots(
 
     # Pick contexts and objects
     contexts = pick_contexts(subject, num_questions)
-    from .context_pools import pick_objects
+    from .context_pools import pick_subject_objects
 
-    objects = pick_objects(grade_num, num_questions)
+    objects = pick_subject_objects(subject, topic, num_questions, grade_num)
     used_names: list[str] = []
 
     # Detect error_detection forbidden
@@ -1549,10 +1779,9 @@ def build_slots(
             image_kw = _get_topic_images(topic, subject, slot_num=i)
 
             if not image_kw:
-                # Fallback: subject-level images
-                available_kw = _get_image_keywords_for_subject(subject)
-                if available_kw:
-                    image_kw = random.sample(available_kw, min(2, len(available_kw)))
+                # NO fallback to random images — only show images that match the topic
+                # Random images (ship for Hindi, desert for tenses) confuse children
+                image_kw = None
 
         # Names for this slot (avoid adjacent repeats)
         slot_names = pick_names(1, exclude=used_names[-3:] if used_names else None)
