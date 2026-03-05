@@ -929,7 +929,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               </div>
               <p className="text-[13px] text-slate-400 mb-6 mt-1">5 worksheets per month</p>
               <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
-                {['All 9 subjects', 'PDF download', '10 questions per sheet', 'Answer key included'].map(f => (
+                {['All 9 subjects', 'PDF download + answer key', '3 difficulty levels', '1 child profile'].map(f => (
                   <li key={f} className="text-[13.5px] text-slate-900 flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" /> {f}
                   </li>
@@ -953,10 +953,10 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 {'\u20B9'}199<span className="text-[15px] font-normal text-white/60"> /month</span>
               </div>
               <p className="text-[13px] text-white/60 mb-1 mt-1">Unlimited worksheets</p>
-              <p className="text-[11px] text-white/40 mb-1">AED 29/mo</p>
-              <p className="text-[11px] text-white/40 mb-6">Cancel anytime</p>
+              <p className="text-[11px] text-white/40 mb-1">Just {'\u20B9'}6.6/day &middot; Cancel anytime</p>
+              <p className="text-[11px] text-white/40 mb-6">AED 29/mo</p>
               <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
-                {['Unlimited worksheets', 'Mastery tracking', 'Bulk generation', 'Parent insights', 'Priority support'].map(f => (
+                {['Unlimited worksheets', 'Photo grading', 'Revision notes + flashcards', 'Progress tracking', 'Up to 5 children', 'Ask Skolar AI tutor'].map(f => (
                   <li key={f} className="text-[13.5px] text-white/90 flex items-center gap-2">
                     <Check className="w-4 h-4 text-orange-400 flex-shrink-0" /> {f}
                   </li>
@@ -979,10 +979,10 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               <div className="font-[Fraunces,Georgia,serif] text-[40px] font-normal text-slate-900 leading-none mb-1">
                 {'\u20B9'}1,499<span className="text-[15px] font-normal text-slate-400"> /year</span>
               </div>
-              <p className="text-[13px] text-emerald-600 font-semibold mb-1 mt-1">Save 37%</p>
-              <p className="text-[11px] text-slate-400 mb-6">AED 229/yr</p>
+              <p className="text-[13px] text-emerald-600 font-semibold mb-1 mt-1">{'\u20B9'}125/month, billed yearly</p>
+              <p className="text-[11px] text-slate-400 mb-6">AED 229/yr &middot; Save {'\u20B9'}889</p>
               <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
-                {['Everything in Scholar', '12 months access', 'Best value for families', 'Lock in price forever'].map(f => (
+                {['Everything in Scholar', '12 months access', 'Best value for families', 'Just \u20B94.1/day'].map(f => (
                   <li key={f} className="text-[13.5px] text-slate-900 flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" /> {f}
                   </li>

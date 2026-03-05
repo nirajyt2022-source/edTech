@@ -11,7 +11,7 @@ from datetime import datetime
 
 logger = logging.getLogger("skolar.subscription")
 
-FREE_TIER_LIMIT = 10  # worksheets per month
+FREE_TIER_LIMIT = 5  # worksheets per month
 
 
 async def check_and_increment_usage(user_id: str, supabase_client) -> dict:
