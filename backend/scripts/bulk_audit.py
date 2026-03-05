@@ -34,11 +34,13 @@ def _detect_subject(topic_name: str, profile: dict) -> str:
     tag_str = " ".join(tags).lower()
     topic_lower = topic_name.lower()
 
-    if any(x in tag_str for x in ["add", "sub", "mult", "div", "frac", "dec", "num", "place_value"]):
+    # --- Detect from skill tag prefixes ---
+    if any(x in tag_str for x in ["add", "sub", "mult", "div", "frac", "dec", "num", "place_value",
+                                   "c1_spatial", "c5_factors", "c5_hcflcm", "c5_percent"]):
         return "Maths"
     if any(x in tag_str for x in ["eng_", "noun", "verb", "tense", "pronoun", "adj"]):
         return "English"
-    if any(x in tag_str for x in ["hindi_", "vachan", "vilom", "varn", "matra"]):
+    if any(x in tag_str for x in ["hin_", "hindi_", "vachan", "vilom", "varn", "matra"]):
         return "Hindi"
     if any(x in tag_str for x in ["sci_", "evs_", "animal", "plant", "water", "food", "body"]):
         return "EVS"
@@ -46,29 +48,44 @@ def _detect_subject(topic_name: str, profile: dict) -> str:
         return "Computer"
     if any(x in tag_str for x in ["health_"]):
         return "Health"
-    if any(x in tag_str for x in ["moral_", "gk_"]):
+    if any(x in tag_str for x in ["gk_"]):
+        return "GK"
+    if any(x in tag_str for x in ["moral_"]):
         return "Moral Science"
 
-    # Fallback from topic name
+    # --- Fallback: detect from topic name ---
     if any(x in topic_lower for x in ["addition", "subtraction", "multiplication", "division",
                                         "fraction", "decimal", "number", "shape", "time", "money",
                                         "measurement", "geometry", "pattern", "data", "symmetry",
-                                        "perimeter", "area", "speed"]):
+                                        "perimeter", "area", "speed", "factor", "multiple",
+                                        "hcf", "lcm", "percentage", "spatial"]):
         return "Maths"
     if any(x in topic_lower for x in ["noun", "verb", "tense", "pronoun", "adjective", "sentence",
                                         "vowel", "consonant", "grammar", "comprehension", "letter",
-                                        "writing", "rhym", "phonic", "vocabulary", "article"]):
+                                        "writing", "rhym", "phonic", "vocabulary", "article",
+                                        "family words", "nature vocabulary"]):
         return "English"
     if any(x in topic_lower for x in ["वर्ण", "मात्रा", "वचन", "विलोम", "हिन्दी", "hindi",
-                                        "संज्ञा", "सर्वनाम", "क्रिया", "लिंग", "पत्र", "संवाद"]):
+                                        "संज्ञा", "सर्वनाम", "क्रिया", "लिंग", "पत्र", "संवाद",
+                                        "varnamala", "shabd", "vakya", "kahani", "lekhan",
+                                        "kaal", "anusvaar", "visarg", "muhavare", "paryayvachi",
+                                        "samas", "samvad", "two letter", "three letter",
+                                        "दो अक्षर", "तीन अक्षर"]):
         return "Hindi"
+    if any(x in topic_lower for x in ["landmark", "continent", "ocean", "scientist", "festival",
+                                        "sports", "constitution", "heritage", "space mission",
+                                        "solar system basics", "current awareness",
+                                        "national symbol", "environmental awareness"]):
+        return "GK"
     if any(x in topic_lower for x in ["animal", "plant", "water", "weather", "food", "body",
-                                        "shelter", "sense", "habitat", "season", "air", "soil"]):
+                                        "shelter", "habitat", "season", "air", "soil"]):
         return "EVS"
     if any(x in topic_lower for x in ["computer", "keyboard", "mouse", "typing"]):
         return "Computer"
     if any(x in topic_lower for x in ["hygiene", "exercise", "balanced diet", "first aid", "safety"]):
         return "Health"
+    if any(x in topic_lower for x in ["rhymes and poems"]):
+        return "English"
     return "EVS"  # safe default
 
 
