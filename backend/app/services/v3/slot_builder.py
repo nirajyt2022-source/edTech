@@ -318,6 +318,12 @@ def _add_extras(result: list[dict], default_recipe: list[dict], deficit: int):
 def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
     """Detect the maths operation from topic/skill_tag."""
     combined = f"{topic} {skill_tag}".lower()
+    # Fraction topics often contain words like "add/subtract". Detect fraction first
+    # so "Fractions (add and subtract)" doesn't get misclassified as whole-number addition.
+    if any(
+        kw in combined for kw in ("fraction", "fractions", "halves", "quarters", "half", "quarter", "thirds", "third")
+    ):
+        return "fraction"
     if any(kw in combined for kw in ("add", "addition", "sum", "plus")):
         if "carry" in combined or "carries" in combined:
             return "addition_with_carry"
@@ -332,8 +338,6 @@ def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
         return "multiplication"
     if any(kw in combined for kw in ("divid", "division", "quotient", "share")):
         return "division"
-    if any(kw in combined for kw in ("fraction", "halves", "quarters", "half", "quarter")):
-        return "fraction"
     if any(kw in combined for kw in ("decimal",)):
         return "decimal"
     return None
@@ -495,9 +499,14 @@ def _random_division(grade: int) -> dict:
 def _random_fraction(grade: int) -> dict:
     """Generate a fraction question with pre-computed answer."""
     if grade <= 3:
-        # Simple fractions: halves and quarters of small numbers
-        denominator = random.choice([2, 4])
-        whole = random.choice([4, 8, 12, 16, 20]) if denominator == 4 else random.choice([2, 4, 6, 8, 10, 12])
+        # Simple fractions: halves, thirds, and quarters of small numbers
+        denominator = random.choice([2, 3, 4])
+        if denominator == 4:
+            whole = random.choice([4, 8, 12, 16, 20])
+        elif denominator == 3:
+            whole = random.choice([3, 6, 9, 12, 15, 18])
+        else:
+            whole = random.choice([2, 4, 6, 8, 10, 12])
         numerator = 1  # unit fractions for Class 3
         answer = whole // denominator
     elif grade == 4:
@@ -570,8 +579,11 @@ def _generate_wrong_answer(correct: int, operation: str | None) -> int:
 def _compute_visual_data(visual_type: str, numbers: dict | None, grade_num: int) -> dict | None:
     """Compute visual_data for a given visual type."""
     if visual_type == "pie_fraction":
-        if numbers and "a" in numbers and "b" in numbers:
-            return {"numerator": min(numbers["a"], numbers["b"]), "denominator": max(numbers["a"], numbers["b"])}
+        if numbers:
+            if "numerator" in numbers and "denominator" in numbers:
+                return {"numerator": numbers["numerator"], "denominator": numbers["denominator"]}
+            if "a" in numbers and "b" in numbers:
+                return {"numerator": min(numbers["a"], numbers["b"]), "denominator": max(numbers["a"], numbers["b"])}
         denoms = [2, 3, 4, 6, 8]
         d = random.choice(denoms)
         n = random.randint(1, d - 1)
@@ -1465,8 +1477,23 @@ def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
             parent_tip = guidance.get("parent_tip", "")
             break
 
+    if "(" in topic:
+        title_topic = topic.split("(")[0].strip()
+    else:
+        title_topic = topic.strip()
+
+    if title_topic:
+        title = f"{title_topic} Practice"
+    else:
+        title = f"{subject} Practice Worksheet"
+
+    if not common_mistake:
+        common_mistake = f"Children may apply rules of {title_topic or topic} inconsistently in new examples."
+    if not parent_tip:
+        parent_tip = "Ask your child to explain one answer aloud after each question. Explaining improves retention."
+
     return {
-        "title": f"Worksheet: {topic}",
+        "title": title,
         "skill_focus": objectives[0] if objectives else f"Practice {topic}",
         "common_mistake": common_mistake,
         "parent_tip": parent_tip,
@@ -1619,7 +1646,7 @@ def build_slots(
     forbidden_types = grade_profile.get("forbidden_question_types", [])
 
     # --- Step 2: Load topic profile ---
-    profile = get_topic_profile(topic, subject)
+    profile = get_topic_profile(topic, subject, grade_level)
     if not profile:
         # Fallback: generic profile
         profile = {
@@ -1682,11 +1709,17 @@ def build_slots(
 
     # Check for mandatory visuals
     mandatory_visual = None
+    mandatory_visual_min = 0
     topic_lower = topic.lower()
     for key, vis_type in MANDATORY_VISUAL_TOPICS.items():
         if key in topic_lower:
             mandatory_visual = vis_type
             break
+    profile_mandatory = profile.get("mandatory_visuals", {}) if profile else {}
+    required_types = profile_mandatory.get("required_types") or []
+    if required_types:
+        mandatory_visual = required_types[0]
+        mandatory_visual_min = int(profile_mandatory.get("min_count", 1))
 
     # Pick contexts and objects
     contexts = pick_contexts(subject, num_questions)
@@ -1697,6 +1730,7 @@ def build_slots(
 
     # Detect error_detection forbidden
     error_det_forbidden = any("error_detection" in ft for ft in forbidden_types)
+    seen_number_signatures: set[tuple] = set()
 
     slots: list[Slot] = []
     for i, skill_tag in enumerate(expanded_tags):
@@ -1704,14 +1738,12 @@ def build_slots(
         natural_role = _skill_to_role(skill_tag)
         assigned_role, assigned_diff = difficulty_assignments[i]
 
-        # Respect natural role for error_detection/thinking
+        # Respect natural role from recipe tags to preserve pedagogical intent.
+        final_role = natural_role
+        final_diff = assigned_diff
         if natural_role in ("error_detection", "thinking"):
-            final_role = natural_role
-            # If difficulty says "easy" but role is thinking/error_detection, set medium
+            # Avoid easy error/thinking prompts.
             final_diff = max(assigned_diff, "medium", key=lambda x: ["easy", "medium", "hard"].index(x))
-        else:
-            final_role = assigned_role
-            final_diff = assigned_diff
 
         # Check forbidden types
         if error_det_forbidden and final_role == "error_detection":
@@ -1736,6 +1768,29 @@ def build_slots(
             if skill_op:
                 numbers = _generate_numbers(grade_num, skill_op, skill_tag)
 
+        # Avoid duplicate maths pairs in the same worksheet where possible.
+        if is_maths and numbers and "a" in numbers and "b" in numbers:
+            op_for_retry = operation or _detect_maths_operation("", skill_tag)
+            signature = (
+                op_for_retry,
+                numbers.get("a"),
+                numbers.get("b"),
+                numbers.get("numerator"),
+                numbers.get("denominator"),
+            )
+            retries = 0
+            while signature in seen_number_signatures and retries < 8 and op_for_retry:
+                numbers = _generate_numbers(grade_num, op_for_retry, skill_tag) or numbers
+                signature = (
+                    op_for_retry,
+                    numbers.get("a"),
+                    numbers.get("b"),
+                    numbers.get("numerator"),
+                    numbers.get("denominator"),
+                )
+                retries += 1
+            seen_number_signatures.add(signature)
+
         # Wrong answer for error_detection
         if q_type == "error_detection" and numbers and numbers.get("answer") is not None:
             wrong_answer = _generate_wrong_answer(numbers["answer"], operation)
@@ -1744,9 +1799,27 @@ def build_slots(
         visual_type = None
         visual_data = None
         if mandatory_visual:
-            # At least 50% get mandatory visual
-            if i < math.ceil(num_questions * 0.5):
+            # Respect profile minimums, but never go below the 50% baseline.
+            min_required = max(mandatory_visual_min, math.ceil(num_questions * 0.5))
+            if i < min_required:
                 visual_type = mandatory_visual
+        elif (
+            is_maths
+            and grade_num <= 2
+            and operation
+            in (
+                "addition",
+                "addition_with_carry",
+                "subtraction",
+                "subtraction_no_borrow",
+                "subtraction_with_borrow",
+                "multiplication",
+                "division",
+            )
+        ):
+            # Early-grade maths should be visual-heavy.
+            if i < math.ceil(num_questions * 0.6):
+                visual_type = "object_group"
         elif problem_style == "visual":
             if random.random() < 0.8:
                 visual_type = _pick_visual_type(topic, is_maths)

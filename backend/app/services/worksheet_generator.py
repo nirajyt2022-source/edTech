@@ -620,7 +620,7 @@ def build_user_prompt(
 
     # -- Mandatory visual hint (pre-LLM nudge) --
     if problem_style != "standard" and subject.lower() == "maths":
-        profile = get_topic_profile(topic)
+        profile = get_topic_profile(topic, subject, grade_level)
         mandatory = profile.get("mandatory_visuals") if profile else None
         if mandatory and mandatory.get("required_types"):
             types_str = ", ".join(mandatory["required_types"])
@@ -770,7 +770,7 @@ def build_user_prompt(
             prompt += f"\n{term_block}\n"
 
     # -- Skill-tag recipe injection --
-    profile = get_topic_profile(topic, subject)
+    profile = get_topic_profile(topic, subject, grade_level)
     if profile:
         # Use recipes_by_count if available, otherwise scale default_recipe
         recipes_by_count = profile.get("recipes_by_count", {})
@@ -869,7 +869,7 @@ def build_user_prompt(
         )
         # 4a: Inject Devanagari word anchors from topic profile
         try:
-            _profile = get_topic_profile(topic, subject)
+            _profile = get_topic_profile(topic, subject, grade_level)
             _deva = (_profile or {}).get("devanagari_examples", [])
             if _deva:
                 anchors = ", ".join(_deva[:12])
@@ -2515,7 +2515,7 @@ def generate_worksheet(
                 from app.services.topic_intelligence import GenerationContext
 
                 # Build minimal GenerationContext from available params
-                _profile = get_topic_profile(topic, subject) or {}
+                _profile = get_topic_profile(topic, subject, grade_level) or {}
                 _grade_int = (
                     int(re.search(r"\d+", str(grade_level)).group()) if re.search(r"\d+", str(grade_level)) else 3
                 )
@@ -2732,7 +2732,7 @@ def generate_worksheet(
                 if "_gen_ctx" not in dir():
                     from app.services.topic_intelligence import GenerationContext as _GC
 
-                    _profile = get_topic_profile(topic, subject) or {}
+                    _profile = get_topic_profile(topic, subject, grade_level) or {}
                     _grade_int = (
                         int(re.search(r"\d+", str(grade_level)).group()) if re.search(r"\d+", str(grade_level)) else 3
                     )

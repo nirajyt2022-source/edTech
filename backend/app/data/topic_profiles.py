@@ -4957,10 +4957,13 @@ _TOPIC_ALIASES: dict[str, str] = {
     "c2 plants": "Plants (Class 2)",
     "class 2 plants": "Plants (Class 2)",
     "c2 plants evs": "Plants (Class 2)",
+    "plants (class 2)": "Plants (Class 2)",
     "animals and habitats": "Animals and Habitats (Class 2)",
     "c2 animals": "Animals and Habitats (Class 2)",
     "class 2 animals": "Animals and Habitats (Class 2)",
     "c2 habitats": "Animals and Habitats (Class 2)",
+    "animals around us (class 2)": "Animals and Habitats (Class 2)",
+    "animals around us class 2": "Animals and Habitats (Class 2)",
     "food and nutrition class 2": "Food and Nutrition (Class 2)",
     "c2 food": "Food and Nutrition (Class 2)",
     "class 2 food": "Food and Nutrition (Class 2)",
@@ -5005,6 +5008,8 @@ _TOPIC_ALIASES: dict[str, str] = {
     "class 4 photosynthesis": "Photosynthesis (Class 4)",
     "c4 photosynthesis": "Photosynthesis (Class 4)",
     "how plants make food": "Photosynthesis (Class 4)",
+    "plants (class 4)": "Photosynthesis (Class 4)",
+    "class 4 plants": "Photosynthesis (Class 4)",
     "animal adaptation": "Animal Adaptation (Class 4)",
     "class 4 adaptation": "Animal Adaptation (Class 4)",
     "c4 adaptation": "Animal Adaptation (Class 4)",
@@ -5439,7 +5444,7 @@ def apply_diagnostic_weights(
     return result
 
 
-def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
+def get_topic_profile(topic: str, subject: str | None = None, grade_level: str | int | None = None) -> dict | None:
     """Return the TOPIC_PROFILES entry for topic.
 
     If subject is given (e.g. "EVS", "English"), reject profiles whose
@@ -5447,19 +5452,55 @@ def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
     subject=None keeps the original permissive behaviour (backward compatible).
     """
 
+    grade_num = None
+    if grade_level is not None:
+        gm = _re.search(r"\d+", str(grade_level))
+        if gm:
+            grade_num = int(gm.group())
+    if grade_num is None:
+        tm = _re.search(r"class\s*(\d+)", topic or "", _re.IGNORECASE)
+        if tm:
+            grade_num = int(tm.group(1))
+
+    topic_for_lookup = normalize_topic(topic)
+    if grade_num is not None and subject and subject.lower() in ("maths", "math", "mathematics"):
+        t_lower = topic_for_lookup.lower()
+        if grade_num >= 4 and t_lower in ("division (sharing equally)", "sharing equally"):
+            topic_for_lookup = "Division (long division)"
+        elif grade_num >= 4 and t_lower in ("multiplication (tables 2-10)",):
+            topic_for_lookup = "Multiplication (3-digit × 2-digit)"
+        elif grade_num <= 2 and t_lower in ("multiplication (tables 2-10)",):
+            topic_for_lookup = "Multiplication (tables 2-5)"
+
     def _ok(profile: dict) -> bool:
         if not subject:
             return True
         expected = _SUBJECT_TO_PROFILE_GROUP.get(subject.lower())
         return not expected or _profile_subject_group(profile) == expected
 
+    def _class_num_from_key(key: str) -> int | None:
+        km = _re.search(r"class\s*(\d+)", key, _re.IGNORECASE)
+        return int(km.group(1)) if km else None
+
+    def _prefer_grade(candidates: list[str]) -> str | None:
+        if not candidates:
+            return None
+        if grade_num is None:
+            return candidates[0]
+        for key in candidates:
+            key_grade = _class_num_from_key(key)
+            if key_grade == grade_num:
+                return key
+        for key in candidates:
+            if _class_num_from_key(key) is None:
+                return key
+        return candidates[0]
+
     # --- Exact lookup table (highest priority) ---
     try:
         from app.data.topic_lookup import resolve_topic
 
-        grade_match = _re.search(r"class\s*(\d+)", topic, _re.IGNORECASE)
-        grade = int(grade_match.group(1)) if grade_match else None
-        resolved_key = resolve_topic(topic, grade)
+        resolved_key = resolve_topic(topic_for_lookup, grade_num)
         if resolved_key and resolved_key in TOPIC_PROFILES:
             profile = TOPIC_PROFILES[resolved_key]
             if _ok(profile):
@@ -5467,16 +5508,28 @@ def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
     except ImportError:
         pass
 
-    normalized = normalize_topic(topic)
+    normalized = topic_for_lookup
+
     profile = TOPIC_PROFILES.get(normalized)
     if profile:
         return profile if _ok(profile) else None
 
     alias_key = normalized.lower()
     if alias_key in _TOPIC_ALIASES:
-        p = TOPIC_PROFILES.get(_TOPIC_ALIASES[alias_key])
-        if p:
-            return p if _ok(p) else None
+        mapped_key = _TOPIC_ALIASES[alias_key]
+        candidates = [mapped_key]
+        # If alias mapped to wrong grade variant, try same-base with requested grade.
+        if grade_num is not None:
+            alias_base = _re.sub(r"\s*\(class\s*\d+\)\s*$", "", mapped_key, flags=_re.IGNORECASE).strip().lower()
+            for key in TOPIC_PROFILES:
+                key_base = _re.sub(r"\s*\(class\s*\d+\)\s*$", "", key, flags=_re.IGNORECASE).strip().lower()
+                if key_base == alias_base and key not in candidates:
+                    candidates.append(key)
+        selected = _prefer_grade(candidates)
+        if selected:
+            p = TOPIC_PROFILES.get(selected)
+            if p:
+                return p if _ok(p) else None
 
     # Substring fallback — guard by class marker AND subject
     _class_marker = _re.search(r"class\s*(\d)", alias_key, _re.IGNORECASE)
@@ -5493,13 +5546,19 @@ def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
             matches.append(key)
     if matches:
         matches.sort(key=len, reverse=True)
-        return TOPIC_PROFILES[matches[0]]
+        selected = _prefer_grade(matches)
+        if selected:
+            return TOPIC_PROFILES[selected]
     # Fuzzy fallback: find profile whose key contains the topic stem.
     # Handles frontend sending "Time" when key is "Time (Class 1)".
     if topic:
         _t_lower = topic.lower()
+        fuzzy_matches = []
         for _k, _v in TOPIC_PROFILES.items():
             if _t_lower in _k.lower() or _k.lower().startswith(_t_lower):
                 if _ok(_v):
-                    return _v
+                    fuzzy_matches.append(_k)
+        selected = _prefer_grade(fuzzy_matches)
+        if selected:
+            return TOPIC_PROFILES[selected]
     return None
