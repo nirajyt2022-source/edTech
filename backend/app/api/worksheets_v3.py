@@ -8,7 +8,6 @@ structural decisions in Python and only asks Gemini to write question text.
 from __future__ import annotations
 
 import asyncio
-import uuid
 
 import sentry_sdk
 import structlog
@@ -23,8 +22,6 @@ from app.models.worksheet import (
     WorksheetGenerationResponse,
 )
 from app.services.subscription_check import check_and_increment_usage
-from app.services.trust_memory import summarize_trust_for_response
-from app.services.trust_policy_engine import apply_policies_to_request, load_applicable_policies
 
 logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/api/v3/worksheets", tags=["worksheets-v3"])
@@ -78,20 +75,6 @@ async def generate_worksheet_v3_endpoint(
     usage = await check_and_increment_usage(user_id, db)
     if not usage["allowed"]:
         raise HTTPException(status_code=402, detail=usage["message"])
-    request_id = request.headers.get("x-request-id", str(uuid.uuid4())[:8])
-    body_data = body.model_dump()
-    policy_request_key = f"{request_id}|{user_id}|{body.grade_level}|{body.subject}|{body.topic}"
-    policies = load_applicable_policies(
-        db,
-        grade_level=body.grade_level,
-        subject=body.subject,
-        topic=body.topic,
-        request_key=policy_request_key,
-    )
-    if policies:
-        body_data, _ = apply_policies_to_request(body_data, policies)
-        body = WorksheetGenerationRequest(**body_data)
-
     from app.services.telemetry import emit_event
     from app.services.v3 import generate_worksheet_v3
 
@@ -186,11 +169,12 @@ async def generate_worksheet_v3_endpoint(
         block_reasons = [f"[V3_QUALITY_GATE_BLOCK] {len(qg.get('issues', []))} quality-gate issue(s)"]
     elif verdict == "best_effort":
         failed_rules = ["V3_QUALITY_GATE_WARNING"]
-    trust_summary = summarize_trust_for_response(
-        failed_rules=failed_rules,
-        block_reasons=block_reasons,
-        policy_version="v1",
-    )
+    trust_summary = {
+        "severity_max": "P0" if block_reasons else ("P1" if failed_rules else None),
+        "failed_rules_count": len(failed_rules),
+        "policy_version": "v1",
+        "blocked_reason_codes": [],
+    }
     quality_tier = "low" if verdict == "blocked" else ("medium" if verdict == "best_effort" else "high")
 
     return WorksheetGenerationResponse(

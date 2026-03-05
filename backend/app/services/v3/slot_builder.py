@@ -516,11 +516,42 @@ def _random_fraction(grade: int) -> dict:
         whole = denominator * random.randint(2, 8)
         answer = (whole * numerator) // denominator
     else:
-        # Class 5: mixed fractions, addition
-        denominator = random.choice([2, 3, 4, 5, 6, 8, 10])
-        numerator = random.randint(1, denominator - 1)
-        whole = denominator * random.randint(3, 10)
-        answer = (whole * numerator) // denominator
+        # Class 5: fraction addition/subtraction with unlike denominators
+        from math import gcd
+
+        denoms = [2, 3, 4, 5, 6, 8]
+        d1 = random.choice(denoms)
+        d2 = random.choice([d for d in denoms if d != d1])
+        n1 = random.randint(1, d1 - 1)
+        n2 = random.randint(1, d2 - 1)
+        lcd = (d1 * d2) // gcd(d1, d2)
+
+        op = random.choice(["add", "subtract"])
+        if op == "add":
+            result_num = n1 * (lcd // d1) + n2 * (lcd // d2)
+        else:
+            result_num = n1 * (lcd // d1) - n2 * (lcd // d2)
+            if result_num <= 0:
+                # Flip to addition if subtraction would be zero/negative
+                result_num = n1 * (lcd // d1) + n2 * (lcd // d2)
+
+        # Simplify the result
+        g = gcd(abs(result_num), lcd)
+        numerator = result_num // g
+        denominator = lcd // g
+
+        # Keep a, b for backward compat (use first operand values)
+        whole = n1
+        answer = f"{numerator}/{denominator}"
+
+        return {
+            "a": whole,
+            "b": d1,
+            "answer": answer,
+            "numerator": numerator,
+            "denominator": denominator,
+            "fraction_str": f"{n1}/{d1}",
+        }
 
     return {
         "a": whole,
@@ -562,8 +593,20 @@ def _random_decimal(grade: int) -> dict:
     }
 
 
-def _generate_wrong_answer(correct: int, operation: str | None) -> int:
+def _generate_wrong_answer(correct: int | str, operation: str | None) -> int | str:
     """Generate a plausible wrong answer for error detection."""
+    if isinstance(correct, str) and "/" in correct:
+        # Fraction answer like "7/12" — tweak numerator
+        from math import gcd
+
+        parts = correct.split("/")
+        num, den = int(parts[0]), int(parts[1])
+        offset = random.choice([1, -1, 2, -2])
+        wrong_num = num + offset
+        if wrong_num <= 0:
+            wrong_num = num + abs(offset)
+        g = gcd(abs(wrong_num), den)
+        return f"{wrong_num // g}/{den // g}"
     offsets = [1, -1, 10, -10]
     if correct >= 100:
         offsets.extend([100, -100])
@@ -628,7 +671,9 @@ def _compute_visual_data(visual_type: str, numbers: dict | None, grade_num: int)
 
     if visual_type == "object_group":
         if numbers and "a" in numbers:
-            op = "+" if numbers.get("answer", 0) > max(numbers["a"], numbers.get("b", 0)) else "-"
+            ans_val = numbers.get("answer", 0)
+            ans_num = ans_val if isinstance(ans_val, (int, float)) else 0
+            op = "+" if ans_num > max(numbers["a"], numbers.get("b", 0)) else "-"
             return {
                 "groups": [
                     {"count": numbers["a"], "label": "objects"},
@@ -644,7 +689,9 @@ def _compute_visual_data(visual_type: str, numbers: dict | None, grade_num: int)
 
     if visual_type == "base_ten_regrouping":
         if numbers and "a" in numbers:
-            op = "addition" if numbers.get("answer", 0) > numbers["a"] else "subtraction"
+            ans_val = numbers.get("answer", 0)
+            ans_num = ans_val if isinstance(ans_val, (int, float)) else 0
+            op = "addition" if ans_num > numbers["a"] else "subtraction"
             return {"numbers": [numbers["a"], numbers.get("b", 0)], "operation": op}
         return {"numbers": [234, 178], "operation": "addition"}
 
@@ -1141,9 +1188,15 @@ def _build_llm_instruction(
                 parts.append(f"Example: '{a} + {b} = {ans}'")
                 parts.append("correct_answer must be: True")
             else:
-                wrong = ans + random.choice([-1, 1, -10, 10])
-                if wrong <= 0:
-                    wrong = ans + random.choice([1, 2, 10])
+                if isinstance(ans, str) and "/" in str(ans):
+                    # Fraction answer — tweak for wrong statement
+                    fparts = str(ans).split("/")
+                    fn, fd = int(fparts[0]), int(fparts[1])
+                    wrong = f"{fn + random.choice([1, -1, 2])}/{fd}"
+                else:
+                    wrong = ans + random.choice([-1, 1, -10, 10])
+                    if wrong <= 0:
+                        wrong = ans + random.choice([1, 2, 10])
                 parts.append(f"Write a FALSE statement: '{a} + {b} = {wrong}'")
                 parts.append(f"The actual answer is {ans}.")
                 parts.append("correct_answer must be: False")

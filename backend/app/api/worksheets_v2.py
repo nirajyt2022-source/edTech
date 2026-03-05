@@ -15,7 +15,6 @@ import structlog
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.core.config import get_settings
 from app.core.deps import DbClient, OpenAICompat, UserId
 from app.middleware.rate_limit import limiter
 from app.models.worksheet import (
@@ -25,9 +24,6 @@ from app.models.worksheet import (
     WorksheetGenerationResponse,
 )
 from app.services.subscription_check import check_and_increment_usage
-from app.services.trust_dual_run import run_shadow_generation, should_run_dual_shadow
-from app.services.trust_memory import log_release_failures, summarize_trust_for_response
-from app.services.trust_policy_engine import apply_policies_to_request, load_applicable_policies
 from app.services.worksheet_generator import generate_worksheet
 
 logger = structlog.get_logger(__name__)
@@ -88,29 +84,6 @@ async def generate_worksheet_v2(
     from app.services.telemetry import emit_event
 
     engine = os.environ.get("WORKSHEET_ENGINE", "v3")
-    body_data = body.model_dump()
-    policy_request_key = f"{request_id}|{user_id}|{body.grade_level}|{body.subject}|{body.topic}"
-    policies = load_applicable_policies(
-        db,
-        grade_level=body.grade_level,
-        subject=body.subject,
-        topic=body.topic,
-        request_key=policy_request_key,
-    )
-    policy_applied = []
-    if policies:
-        body_data, applied = apply_policies_to_request(body_data, policies)
-        policy_applied = [
-            {
-                "policy_id": a.policy_id,
-                "action_type": a.action_type,
-                "scope_type": a.scope_type,
-                "scope_key": a.scope_key,
-                "status": a.status,
-            }
-            for a in applied
-        ]
-        body = WorksheetGenerationRequest(**body_data)
 
     try:
         if engine == "v3":
@@ -234,31 +207,25 @@ async def generate_worksheet_v2(
             release_verdict = "released"
         release_stamps = {
             "quality_gate": qg,
-            "policy_applied": policy_applied,
             "trust_policy_version": "v1",
         }
         severity = {}
         if release_verdict == "blocked":
             failed_rules = ["V3_QUALITY_GATE_BLOCK"]
             block_reasons = [f"[V3_QUALITY_GATE_BLOCK] {qg.get('issues_count', 0)} quality issue(s)"]
-            degrade_reasons = []
         elif release_verdict == "best_effort":
             failed_rules = ["V3_QUALITY_GATE_WARNING"]
             block_reasons = []
-            degrade_reasons = [f"[V3_QUALITY_GATE_WARNING] {qg.get('issues_count', 0)} quality issue(s)"]
         else:
             failed_rules = []
             block_reasons = []
-            degrade_reasons = []
     else:
         release_stamps = data.get("_release_stamps", {})
-        release_stamps["policy_applied"] = policy_applied
         release_verdict = data.get("_release_verdict", "released")
         severity = data.get("_warning_severity", {})
         release_meta = data.get("_release_meta", {})
         failed_rules = list(release_meta.get("failed_rules", []))
         block_reasons = list(release_meta.get("block_reasons", []))
-        degrade_reasons = list(release_meta.get("degrade_reasons", []))
 
     # Merge release stamps into severity for backward compat
     merged_stamps = {**severity, **release_stamps}
@@ -291,60 +258,13 @@ async def generate_worksheet_v2(
         quality_tier,
         request_id,
     )
-    settings = get_settings()
-    if settings.trust_dual_run_enabled and should_run_dual_shadow(policy_request_key, settings.trust_dual_run_percent):
 
-        async def _dual_shadow_job() -> None:
-            try:
-                await asyncio.wait_for(
-                    asyncio.to_thread(
-                        run_shadow_generation,
-                        db=db,
-                        client=client,
-                        primary_engine=engine,
-                        request_id=request_id,
-                        grade_level=body.grade_level,
-                        subject=body.subject,
-                        topic=body.topic,
-                        board=body.board,
-                        difficulty=body.difficulty,
-                        num_questions=body.num_questions,
-                        language=body.language,
-                        problem_style=body.problem_style,
-                        custom_instructions=body.custom_instructions,
-                        child_id=body.child_id,
-                        primary_verdict=internal_verdict,
-                        primary_quality_score=float(_quality_score) if _quality_score is not None else None,
-                        primary_latency_ms=elapsed_ms,
-                    ),
-                    timeout=max(1.0, float(settings.trust_dual_run_timeout_ms) / 1000.0),
-                )
-            except Exception as exc:
-                logger.warning("dual_run_shadow_job_failed", request_id=request_id, error=str(exc))
-
-        asyncio.create_task(_dual_shadow_job())
-
-    if engine != "v3":
-        log_release_failures(
-            db,
-            request_id=request_id,
-            grade_level=body.grade_level,
-            subject=body.subject,
-            topic=body.topic,
-            user_id=user_id,
-            failed_rules=failed_rules,
-            block_reasons=block_reasons,
-            degrade_reasons=degrade_reasons,
-            profile_key=data.get("_resolved_profile", ""),
-            model_version=engine,
-            was_served=internal_verdict != "blocked",
-        )
-
-    trust_summary = summarize_trust_for_response(
-        failed_rules=failed_rules,
-        block_reasons=block_reasons,
-        policy_version=str(release_stamps.get("trust_policy_version", "v1")),
-    )
+    trust_summary = {
+        "severity_max": "P0" if block_reasons else ("P1" if failed_rules else None),
+        "failed_rules_count": len(failed_rules),
+        "policy_version": "v1",
+        "blocked_reason_codes": [],
+    }
     api_verdict = internal_verdict
     api_tier = quality_tier if internal_verdict != "blocked" else "low"
 

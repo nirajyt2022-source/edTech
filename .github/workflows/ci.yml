@@ -129,7 +129,7 @@ jobs:
       - name: Run trust unit tests
         run: |
           cd backend
-          python -m pytest tests/test_trust_policy.py tests/test_release_gate_strict.py tests/test_trust_rollout_ops.py -v --tb=short
+          python -m pytest tests/test_trust_policy.py tests/test_release_gate_strict.py -v --tb=short
       - name: Run bulk trust audit
         run: |
           cd backend

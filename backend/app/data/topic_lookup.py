@@ -108,6 +108,17 @@ def _build_lookup() -> dict[str, str]:
     except Exception as e:
         logger.debug("curriculum_canon.json not loaded: %s", e)
 
+    # Import topic aliases so variant names resolve correctly (e.g. EVS grade variants)
+    try:
+        from app.data.topic_profiles import _TOPIC_ALIASES
+
+        for alias_key, profile_key in _TOPIC_ALIASES.items():
+            normalized_alias = alias_key.strip().lower()
+            if normalized_alias not in lookup and profile_key in TOPIC_PROFILES:
+                lookup[normalized_alias] = profile_key
+    except Exception as e:
+        logger.debug("_TOPIC_ALIASES not loaded: %s", e)
+
     return lookup
 
 
