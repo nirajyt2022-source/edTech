@@ -36,17 +36,15 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
   const { profile } = useProfile()
   const { children, loading: childrenLoading, createChild } = useChildren()
 
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<1 | 2>(1)
   const [saving, setSaving] = useState(false)
 
-  // Step 1: child form
+  // Step 1: child form (name + grade only)
   const [childName, setChildName] = useState('')
-  const [childGrade, setChildGrade] = useState('Class 1')
-  const [childBoard, setChildBoard] = useState('')
+  const [childGrade, setChildGrade] = useState('Class 3')
 
   // Step 2: subject pick
   const [subjects, setSubjects] = useState<string[]>([])
-  const [selectedSubject, setSelectedSubject] = useState('')
   const [loadingSubjects, setLoadingSubjects] = useState(false)
 
   // Created child info (persisted across steps)
@@ -94,7 +92,6 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
       await createChild({
         name: childName.trim(),
         grade: childGrade,
-        board: childBoard || undefined,
       })
       setCreatedChildGrade(childGrade)
       setStep(2)
@@ -105,17 +102,13 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
     }
   }
 
+  // Auto-navigate to generator on subject pick (skip old Step 3 confirmation)
   const handleSubjectSelect = (subject: string) => {
-    setSelectedSubject(subject)
-    setStep(3)
-  }
-
-  const handleGenerate = () => {
     localStorage.setItem(ONBOARDING_KEY, 'true')
-    const topic = STARTER_TOPICS[selectedSubject] || STARTER_TOPICS['Maths']
+    const topic = STARTER_TOPICS[subject] || STARTER_TOPICS['Maths']
     onNavigate('generator', {
       grade: createdChildGrade,
-      subject: selectedSubject,
+      subject,
       topic,
     })
   }
@@ -132,9 +125,9 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
           <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-accent/15 via-primary/5 to-transparent -z-10" />
 
           <div className="p-8 sm:p-10">
-            {/* Step indicators */}
+            {/* Step indicators — 2 steps now */}
             <div className="flex items-center justify-center gap-2 mb-8">
-              {[1, 2, 3].map((s) => (
+              {[1, 2].map((s) => (
                 <div
                   key={s}
                   className="w-2.5 h-2.5 rounded-full transition-all duration-300"
@@ -146,7 +139,7 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
               ))}
             </div>
 
-            {/* Step 1: Add Your Child */}
+            {/* Step 1: Child Name + Grade */}
             {step === 1 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                 <DialogHeader className="space-y-3">
@@ -154,7 +147,7 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
                     Welcome to <span className="text-primary italic">Skolar</span>
                   </DialogTitle>
                   <DialogDescription className="text-center text-sm font-medium text-muted-foreground/70 max-w-sm mx-auto">
-                    Let's set up your child's learning profile. This takes about 30 seconds.
+                    Two quick questions and you'll have your first worksheet.
                   </DialogDescription>
                 </DialogHeader>
 
@@ -175,7 +168,7 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
 
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase tracking-widest text-foreground/70 block pl-1">
-                      Grade
+                      Class
                     </Label>
                     <div className="flex flex-wrap gap-2">
                       {GRADES.map((g) => (
@@ -194,19 +187,6 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
                       ))}
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="child-board" className="text-xs font-bold uppercase tracking-widest text-foreground/70 block pl-1">
-                      Board <span className="text-muted-foreground/50 lowercase italic ml-1">(Optional)</span>
-                    </Label>
-                    <Input
-                      id="child-board"
-                      placeholder="e.g. CBSE, ICSE"
-                      value={childBoard}
-                      onChange={(e) => setChildBoard(e.target.value)}
-                      className="h-12 bg-card/40 border-border/60 rounded-xl focus:ring-primary/20 focus:border-primary/30 font-medium"
-                    />
-                  </div>
                 </div>
 
                 <div className="flex items-center justify-between mt-6 pt-2">
@@ -224,25 +204,25 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
                     {saving ? (
                       <>
                         <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-                        Creating...
+                        Setting up...
                       </>
                     ) : (
-                      'Next'
+                      'Next — pick a subject'
                     )}
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* Step 2: Pick a Subject */}
+            {/* Step 2: Pick a Subject → auto-generates worksheet */}
             {step === 2 && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                 <DialogHeader className="space-y-3">
                   <DialogTitle className="text-2xl sm:text-3xl text-center font-fraunces text-foreground">
-                    Pick a <span className="text-primary italic">Subject</span>
+                    What should {childName.split(' ')[0]} <span className="text-primary italic">practice?</span>
                   </DialogTitle>
                   <DialogDescription className="text-center text-sm font-medium text-muted-foreground/70 max-w-sm mx-auto">
-                    What should we practice first? You can always explore other subjects later.
+                    Pick a subject and we'll generate a worksheet instantly.
                   </DialogDescription>
                 </DialogHeader>
 
@@ -281,54 +261,6 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
                   >
                     Skip for now
                   </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Confirm & Generate */}
-            {step === 3 && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                <DialogHeader className="space-y-3">
-                  <DialogTitle className="text-2xl sm:text-3xl text-center font-fraunces text-foreground">
-                    Ready to <span className="text-primary italic">Practice!</span>
-                  </DialogTitle>
-                  <DialogDescription className="text-center text-sm font-medium text-muted-foreground/70 max-w-sm mx-auto">
-                    We'll generate a {selectedSubject} worksheet for {childName} ({createdChildGrade}).
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="mt-6 p-6 rounded-2xl border border-border/60 bg-card/30 text-center space-y-4">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/10">
-                    <span className="text-3xl">
-                      {selectedSubject === 'Maths' || selectedSubject === 'Mathematics' ? '🔢' :
-                       selectedSubject === 'English' ? '📖' :
-                       selectedSubject === 'Science' ? '🔬' :
-                       selectedSubject === 'Hindi' ? '🕉️' :
-                       selectedSubject === 'EVS' ? '🌿' :
-                       '📚'}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-foreground">{selectedSubject}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Topic: {STARTER_TOPICS[selectedSubject] || 'General'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mt-6 pt-2">
-                  <button
-                    onClick={dismiss}
-                    className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors underline underline-offset-2"
-                  >
-                    Skip for now
-                  </button>
-                  <Button
-                    onClick={handleGenerate}
-                    className="bg-primary text-primary-foreground shadow-xl shadow-primary/20 px-8 py-3 rounded-2xl font-bold text-sm h-auto hover:translate-y-[-2px] transition-all"
-                  >
-                    Generate!
-                  </Button>
                 </div>
               </div>
             )}

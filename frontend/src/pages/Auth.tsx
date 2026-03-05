@@ -29,6 +29,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -129,17 +130,17 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             Skolar
           </h1>
           <p className="text-lg mb-12" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: "'Inter', sans-serif" }}>
-            From syllabus to mastery.
+            CBSE worksheets with verified answers.
           </p>
 
           {/* Feature checkpoints */}
           <div className="space-y-4">
             {[
-              { text: '7 learning tools in one place', detail: 'Worksheets, revision notes, flashcards, grading & more' },
+              { text: 'Every maths answer verified by code', detail: 'No wrong answers — unlike free worksheet sites' },
               { text: '198 topics across 9 subjects', detail: 'Maths, English, Hindi, EVS, Science & more' },
-              { text: 'Grade answers from a photo', detail: 'Snap filled worksheet \u2014 AI scores it instantly' },
-              { text: 'AI tutor for homework doubts', detail: 'Ask Skolar explains step-by-step' },
-              { text: 'Snap any textbook page to practice', detail: 'Photograph NCERT pages \u2014 we generate questions' },
+              { text: '3 difficulty levels per worksheet', detail: 'Foundation, Application, and Stretch questions' },
+              { text: 'Grade answers from a photo', detail: 'Snap filled worksheet — get scores instantly' },
+              { text: 'Hindi worksheets in Devanagari', detail: 'Proper conjuncts, not broken characters' },
               { text: 'Free to start, no card needed', detail: '5 worksheets per month at no cost' },
             ].map((item) => (
               <div key={item.text} className="flex items-start gap-3">
@@ -227,17 +228,17 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             className="text-2xl font-semibold mb-1 text-center"
             style={{ fontFamily: "'Fraunces', serif", color: '#1E293B' }}
           >
-            {mode === 'signup' ? 'Create your account' : 'Welcome back'}
+            {mode === 'signup' ? 'Create your free account' : 'Welcome back'}
           </h3>
           <p className="text-sm mb-6 text-center" style={{ color: '#64748B', fontFamily: "'Inter', sans-serif" }}>
-            {mode === 'signup' ? 'Start with 5 free worksheets — no card needed' : 'Sign in to your workspace'}
+            {mode === 'signup' ? '5 free worksheets every month — no card needed' : 'Sign in to continue'}
           </p>
 
-          {/* Google sign-in */}
+          {/* Google sign-in — PRIMARY */}
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl transition-colors text-sm font-medium cursor-pointer"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl transition-all text-sm font-semibold cursor-pointer shadow-sm hover:shadow-md"
             style={{
               border: '1px solid #E2E8F0',
               backgroundColor: '#FFFFFF',
@@ -253,8 +254,11 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 001 12c0 1.77.42 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
             </svg>
-            Continue with Google
+            {mode === 'signup' ? 'Sign up with Google' : 'Continue with Google'}
           </button>
+          <p className="text-center text-[11px] mt-2 mb-1" style={{ color: '#94A3B8' }}>
+            Fastest way — one tap on mobile
+          </p>
 
           {/* Divider */}
           <div className="relative my-5">
@@ -262,7 +266,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               <div className="w-full" style={{ borderTop: '1px solid #E2E8F0' }} />
             </div>
             <div className="relative flex justify-center text-xs" style={{ color: '#94A3B8' }}>
-              <span className="px-2" style={{ backgroundColor: '#FAFAF9' }}>or continue with email</span>
+              <span className="px-2" style={{ backgroundColor: '#FAFAF9' }}>or use email instead</span>
             </div>
           </div>
 
@@ -299,17 +303,38 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
 
             <div className="space-y-2">
               <Label htmlFor="password" style={{ color: '#1E293B', fontFamily: "'Inter', sans-serif" }}>Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="rounded-xl"
-                style={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="6+ characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="rounded-xl pr-10"
+                  style={{ backgroundColor: '#FFFFFF', borderColor: '#E2E8F0' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer p-0"
+                  style={{ color: '#94A3B8' }}
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               {mode === 'login' && (
                 <div className="flex justify-end mt-1">
                   <button
@@ -353,10 +378,10 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <span className="spinner !w-4 !h-4 !border-white/30 !border-t-white" />
-                  {mode === 'login' ? 'Signing in...' : 'Creating your account...'}
+                  {mode === 'login' ? 'Signing in...' : 'Creating account...'}
                 </span>
               ) : (
-                mode === 'login' ? 'Sign in' : 'Create account'
+                mode === 'login' ? 'Sign in' : 'Create free account'
               )}
             </Button>
           </form>
@@ -371,7 +396,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               className="font-medium transition-colors cursor-pointer bg-transparent border-none hover:underline"
               style={{ color: '#3730A3' }}
             >
-              {mode === 'login' ? 'Sign up' : 'Sign in'}
+              {mode === 'login' ? 'Sign up free' : 'Sign in'}
             </button>
           </div>
 
@@ -386,16 +411,16 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             <span style={{ color: '#CBD5E1' }}>&bull;</span>
             <div className="flex items-center gap-1.5">
               <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 1l2.928 6.472 6.572.574-4.928 4.428 1.428 6.526L10 15.5l-6 3.5 1.428-6.526L.5 8.046l6.572-.574L10 1z" />
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              <span>AI-powered</span>
+              <span>Verified answers</span>
             </div>
             <span style={{ color: '#CBD5E1' }}>&bull;</span>
             <div className="flex items-center gap-1.5">
               <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clipRule="evenodd" />
               </svg>
-              <span>5 free worksheets</span>
+              <span>No card needed</span>
             </div>
           </div>
         </div>
