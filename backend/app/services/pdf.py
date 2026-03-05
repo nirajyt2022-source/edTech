@@ -36,6 +36,9 @@ logger = logging.getLogger(__name__)
 
 # ── Register Unicode font (Latin + Devanagari + ₹) ──────────────────────
 _FONT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "fonts")
+
+_NOTO_DEVANAGARI = os.path.join(_FONT_DIR, "NotoSansDevanagari-Regular.ttf")
+_NOTO_DEVANAGARI_BOLD = os.path.join(_FONT_DIR, "NotoSansDevanagari-Bold.ttf")
 _NOTO_VARIABLE = os.path.join(_FONT_DIR, "NotoSans-Variable.ttf")
 _NOTO_BOLD = os.path.join(_FONT_DIR, "NotoSans-Bold.ttf")
 _DEJAVU = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
@@ -44,20 +47,33 @@ _DEJAVU_OBLIQUE = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"
 
 _USE_UNICODE_FONT = False
 
-# Try Noto Sans Variable (best — has Latin + Devanagari + ₹)
-if os.path.exists(_NOTO_VARIABLE):
+# Priority 1: Noto Sans Devanagari (best for Hindi conjuncts: क्ष, ज्ञ, श्र, त्र)
+if os.path.exists(_NOTO_DEVANAGARI):
+    try:
+        pdfmetrics.registerFont(TTFont("SkolarFont", _NOTO_DEVANAGARI))
+        bold = _NOTO_DEVANAGARI_BOLD if os.path.exists(_NOTO_DEVANAGARI_BOLD) else _NOTO_DEVANAGARI
+        pdfmetrics.registerFont(TTFont("SkolarFont-Bold", bold))
+        pdfmetrics.registerFont(TTFont("SkolarFont-Italic", _NOTO_DEVANAGARI))  # no italic variant
+        registerFontFamily("SkolarFont", normal="SkolarFont", bold="SkolarFont-Bold", italic="SkolarFont-Italic")
+        _USE_UNICODE_FONT = True
+        logger.info("PDF font: NotoSansDevanagari (full Hindi support)")
+    except Exception as e:
+        logger.warning("NotoSansDevanagari registration failed: %s", e)
+
+# Priority 2: Noto Sans Variable (Latin + partial Devanagari)
+if not _USE_UNICODE_FONT and os.path.exists(_NOTO_VARIABLE):
     try:
         pdfmetrics.registerFont(TTFont("SkolarFont", _NOTO_VARIABLE))
-        # Use dedicated bold file if available; fall back to Variable
         _bold_path = _NOTO_BOLD if os.path.exists(_NOTO_BOLD) else _NOTO_VARIABLE
         pdfmetrics.registerFont(TTFont("SkolarFont-Bold", _bold_path))
         pdfmetrics.registerFont(TTFont("SkolarFont-Italic", _NOTO_VARIABLE))
         registerFontFamily("SkolarFont", normal="SkolarFont", bold="SkolarFont-Bold", italic="SkolarFont-Italic")
         _USE_UNICODE_FONT = True
+        logger.info("PDF font: NotoSans Variable")
     except Exception as e:
-        logger.warning("Failed to register Noto Sans font: %s", e)
+        logger.warning("NotoSans Variable registration failed: %s", e)
 
-# Fallback: DejaVu Sans (often on Linux/Railway)
+# Priority 3: DejaVu Sans (Latin only — Hindi WILL break)
 if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
     try:
         pdfmetrics.registerFont(TTFont("SkolarFont", _DEJAVU))
@@ -67,8 +83,9 @@ if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
         )
         registerFontFamily("SkolarFont", normal="SkolarFont", bold="SkolarFont-Bold", italic="SkolarFont-Italic")
         _USE_UNICODE_FONT = True
+        logger.warning("PDF font: DejaVuSans (Hindi conjuncts WILL NOT render correctly)")
     except Exception as e:
-        logger.warning("Failed to register DejaVu font: %s", e)
+        logger.warning("DejaVuSans registration failed: %s", e)
 
 # Final font names used throughout
 FONT_REGULAR = "SkolarFont" if _USE_UNICODE_FONT else "Helvetica"
