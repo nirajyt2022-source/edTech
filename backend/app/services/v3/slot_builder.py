@@ -422,44 +422,47 @@ def _random_addition(grade: int) -> dict:
 
 
 def _random_subtraction(grade: int, allow_borrow: bool = True) -> dict:
-    """Generate subtraction pair. If allow_borrow=False, ensure no borrowing needed."""
+    """Generate subtraction pair.
+
+    If allow_borrow=True (for "with borrow" topics), GUARANTEE at least one
+    digit position requires borrowing.
+    If allow_borrow=False, ensure NO digit position requires borrowing.
+    """
     max_attempts = 50
     for _ in range(max_attempts):
         if grade == 1:
-            a = random.randint(5, 18)
-            b = random.randint(2, min(9, a - 1))
+            a = random.randint(11, 18)
+            b = random.randint(3, min(9, a - 2))
         elif grade == 2:
             a = random.randint(20, 99)
-            b = random.randint(10, a - 1)
+            b = random.randint(10, a - 3)
         elif grade == 3:
             a = random.randint(100, 999)
-            b = random.randint(100, a - 1)
+            b = random.randint(100, a - 10)
         elif grade == 4:
             a = random.randint(1000, 9999)
-            b = random.randint(100, a - 1)
+            b = random.randint(100, a - 10)
         else:
             a = random.randint(10000, 99999)
-            b = random.randint(1000, a - 1)
+            b = random.randint(1000, a - 10)
 
         # Ensure minimum pedagogical difference (avoid trivial 39-38=1)
         if a - b < 3:
             continue
 
-        if not allow_borrow:
-            # Check EVERY digit: each digit of a must be >= corresponding digit of b
-            sa = str(a)
-            sb = str(b).zfill(len(sa))
-            needs_borrow = False
-            for da, db in zip(reversed(sa), reversed(sb)):
-                if int(da) < int(db):
-                    needs_borrow = True
-                    break
-            if needs_borrow:
-                continue  # retry
+        # Check if borrowing is needed
+        sa = str(a).zfill(len(str(max(a, b))))
+        sb = str(b).zfill(len(str(max(a, b))))
+        needs_borrow = any(int(da) < int(db) for da, db in zip(reversed(sa), reversed(sb)))
 
-        return {"a": a, "b": b, "answer": a - b}
+        if allow_borrow and needs_borrow:
+            return {"a": a, "b": b, "answer": a - b}
+        elif not allow_borrow and not needs_borrow:
+            return {"a": a, "b": b, "answer": a - b}
 
-    # Fallback: construct a guaranteed no-borrow pair
+    # Fallback: guaranteed pair
+    if allow_borrow:
+        return {"a": 42, "b": 17, "answer": 25}  # guaranteed borrow (2 < 7)
     if grade <= 2:
         a_ones = random.randint(5, 9)
         b_ones = random.randint(1, a_ones)
@@ -468,7 +471,7 @@ def _random_subtraction(grade: int, allow_borrow: bool = True) -> dict:
         a = a_tens * 10 + a_ones
         b = b_tens * 10 + b_ones
     else:
-        a, b = 87, 43  # safe fallback
+        a, b = 87, 43  # safe no-borrow fallback
     return {"a": a, "b": b, "answer": a - b}
 
 
@@ -650,13 +653,18 @@ def _random_place_value(grade: int) -> dict:
 
 
 def _random_percentage(grade: int) -> dict:
-    """Generate percentage problems with clean integer answers."""
-    bases = [50, 100, 200, 250, 500]
-    percents = [10, 20, 25, 50, 75]
-    base = random.choice(bases)
-    percent = random.choice(percents)
-    answer = base * percent // 100
-    return {"a": base, "b": percent, "answer": answer}
+    """Generate percentage question with VERIFIED integer answer."""
+    for _ in range(50):
+        percent = random.choice([10, 20, 25, 50, 75])
+        if grade <= 4:
+            base = random.choice([100, 200, 400, 500, 1000])
+        else:
+            base = random.randint(1, 20) * 100  # multiples of 100
+        result = base * percent / 100
+        if result == int(result):  # only accept clean integer answers
+            return {"a": base, "b": percent, "answer": int(result), "operation": "percentage"}
+    # Safe fallback
+    return {"a": 100, "b": 50, "answer": 50, "operation": "percentage"}
 
 
 def _random_geometry(grade: int) -> dict:
@@ -1445,7 +1453,36 @@ OBJECTIVES_OVERRIDES = {
 
 # Pre-written common mistakes and parent tips per topic category
 TOPIC_GUIDANCE = {
-    # Maths
+    # Maths — SPECIFIC entries first (matched by longest-key-first logic below)
+    "addition up to 20": {
+        "common_mistake": "Children count on their fingers but start counting from the first number instead of the next. For 8+5, they count 8,9,10,11,12 (4 steps) instead of 9,10,11,12,13 (5 steps).",
+        "parent_tip": "Use objects (laddoos, coins) to show adding. Practice 'counting on' — start from the bigger number and count up.",
+    },
+    "addition (without carry)": {
+        "common_mistake": "Children count on their fingers but start counting from the first number instead of the next.",
+        "parent_tip": "Use real objects (laddoos, coins) to practice addition. Start with small numbers and build up.",
+    },
+    "addition (carries)": {
+        "common_mistake": "Children forget to carry over when the sum exceeds 9 in a column.",
+        "parent_tip": "Use place value columns on paper. Write ones and tens separately. Practice carrying with small numbers first.",
+    },
+    "addition (2-digit with carry)": {
+        "common_mistake": "Children forget to carry over when the sum of ones exceeds 9. For 28+15, they write 313 instead of 43.",
+        "parent_tip": "Use place value columns on paper. Write ones and tens separately. Practice carrying with small numbers first.",
+    },
+    "subtraction (no borrow)": {
+        "common_mistake": "Children subtract the larger digit from the smaller regardless of position (e.g., in 47-23, they do 7-3=4 correctly, but in 42-27, they do 7-2=5 instead of recognizing they need to regroup).",
+        "parent_tip": "Practice with coins — removing coins from a pile makes subtraction concrete. Emphasize: always subtract bottom from top.",
+    },
+    "subtraction (without borrow)": {
+        "common_mistake": "Children subtract the larger digit from the smaller regardless of position.",
+        "parent_tip": "Practice with coins — removing coins from a pile makes subtraction concrete.",
+    },
+    "subtraction within 20": {
+        "common_mistake": "Children count backwards incorrectly — for 13-5, they count 13,12,11,10,9 (4 steps) instead of 12,11,10,9,8 (5 steps).",
+        "parent_tip": "Use a number line. Start at 13, jump back 5 times. Where do you land?",
+    },
+    # Generic entries (matched only if no specific entry above matched)
     "addition": {
         "common_mistake": "Children often forget to carry over when the sum exceeds 9 in a column.",
         "parent_tip": "Use real objects (laddoos, coins) to practice addition. Start with small numbers and build up.",
@@ -1598,28 +1635,47 @@ def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
     """Build worksheet metadata from learning objectives with scored fuzzy matching."""
     objectives = _match_learning_objectives(topic, grade_level, subject)
 
-    # Find matching guidance
+    grade_num = int(re.search(r"\d+", str(grade_level)).group()) if re.search(r"\d+", str(grade_level)) else 3
+
+    # Find matching guidance — sort by LONGEST key first so specific entries win
     topic_lower = topic.lower()
     common_mistake = ""
     parent_tip = ""
-    for key, guidance in TOPIC_GUIDANCE.items():
+    for key in sorted(TOPIC_GUIDANCE.keys(), key=len, reverse=True):
         if key in topic_lower:
+            guidance = TOPIC_GUIDANCE[key]
             common_mistake = guidance.get("common_mistake", "")
             parent_tip = guidance.get("parent_tip", "")
             break
 
-    if "(" in topic:
-        title_topic = topic.split("(")[0].strip()
+    # Strip grade suffix for title: "Addition (carries)" → "Addition"
+    base_topic = re.sub(r"\s*\(Class\s*\d+\)\s*", "", topic, flags=re.IGNORECASE).strip()
+    if "(" in base_topic:
+        title_topic = base_topic.split("(")[0].strip()
     else:
-        title_topic = topic.strip()
+        title_topic = base_topic
 
-    _TITLE_TEMPLATES = [
-        "{topic} Practice",
-        "{topic} Worksheet",
-        "{topic} — Practice Questions",
-        "Let's Practice {topic}",
-        "{topic} Challenge",
-    ]
+    # Grade-appropriate title templates
+    if grade_num <= 2:
+        _TITLE_TEMPLATES = [
+            "Fun with {topic}",
+            "Let's Learn {topic}!",
+            "My {topic} Worksheet",
+            "{topic} Practice",
+        ]
+    elif grade_num <= 3:
+        _TITLE_TEMPLATES = [
+            "{topic} Practice",
+            "{topic} Worksheet",
+            "Let's Practice {topic}",
+        ]
+    else:
+        _TITLE_TEMPLATES = [
+            "{topic} Worksheet",
+            "{topic} Practice",
+            "{topic} Exercise",
+            "{topic} — Practice Questions",
+        ]
 
     if title_topic:
         idx = hash(title_topic) % len(_TITLE_TEMPLATES)

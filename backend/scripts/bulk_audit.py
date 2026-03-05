@@ -198,6 +198,48 @@ def audit_topic(topic_name: str, profile: dict) -> list[AuditIssue]:
         issues.append(AuditIssue("P2", "low_type_variety",
                                  f"Only {len(q_types)} question types: {dict(q_types)}"))
 
+    # === CHECK 8: Percentage answers are exact integers ===
+    if "percent" in topic_name.lower() and is_maths:
+        for s in slots:
+            if s.numbers and s.numbers.get("operation") == "percentage":
+                a, b, ans = s.numbers["a"], s.numbers["b"], s.numbers["answer"]
+                exact = a * b / 100
+                if exact != int(exact):
+                    issues.append(AuditIssue("P0", "percentage_rounding",
+                                             f"Slot {s.slot_number}: {b}% of {a} = {exact}, not integer"))
+
+    # === CHECK 9: "with borrow" pairs actually need borrowing ===
+    # Only check pure subtraction topics (not "Addition and subtraction" combo topics)
+    topic_lower_check = topic_name.lower()
+    is_pure_subtraction = (
+        "subtrac" in topic_lower_check
+        and "addition" not in topic_lower_check
+        and "add" not in topic_lower_check
+        and "without" not in topic_lower_check
+        and "no borrow" not in topic_lower_check
+    )
+    if "with borrow" in topic_lower_check or is_pure_subtraction:
+        for s in slots:
+            if s.numbers and s.numbers.get("a") is not None and s.numbers.get("b") is not None:
+                a, b = s.numbers["a"], s.numbers["b"]
+                if isinstance(a, int) and isinstance(b, int) and a > b:
+                    sa = str(a).zfill(len(str(max(a, b))))
+                    sb = str(b).zfill(len(str(max(a, b))))
+                    needs_borrow = any(int(da) < int(db) for da, db in zip(reversed(sa), reversed(sb)))
+                    if not needs_borrow:
+                        issues.append(AuditIssue("P1", "no_borrow_in_borrow_topic",
+                                                 f"Slot {s.slot_number}: {a}-{b} doesn't need borrowing"))
+
+    # === CHECK 10: Common mistake doesn't contradict topic ===
+    common_mistake = meta.get("common_mistake", "")
+    if common_mistake:
+        if "carry" in common_mistake.lower() and ("no carry" in topic_name.lower() or "without carry" in topic_name.lower()):
+            issues.append(AuditIssue("P0", "contradicting_common_mistake",
+                                     "common_mistake mentions 'carry' but topic is no-carry"))
+        if "borrow" in common_mistake.lower() and ("no borrow" in topic_name.lower() or "without borrow" in topic_name.lower()):
+            issues.append(AuditIssue("P0", "contradicting_common_mistake",
+                                     "common_mistake mentions 'borrow' but topic is no-borrow"))
+
     return issues
 
 

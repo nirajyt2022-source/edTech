@@ -140,6 +140,46 @@ def check_worksheet(
         if long_questions > 3:
             issues.append(f"[WARNING] {long_questions} questions exceed 25 words for Class {grade_num}")
 
+    # === CHECK 12: Maths answers are exact (catches percentage rounding) ===
+    if is_maths and slots:
+        for q, s in zip(questions, slots):
+            nums = getattr(s, "numbers", None)
+            if nums and nums.get("answer") is not None:
+                expected = nums["answer"]
+                actual = q.get("correct_answer", "")
+                if q.get("type") == "true_false":
+                    continue
+                try:
+                    if float(actual) != float(expected):
+                        issues.append(f"[CRITICAL] {q.get('id', '?')}: answer {actual} != expected {expected}")
+                        critical = True
+                except (ValueError, TypeError):
+                    pass
+
+    # === CHECK 13: Common mistake doesn't contradict topic ===
+    common_mistake = worksheet.get("common_mistake", "")
+    topic_lower = topic.lower()
+    if common_mistake:
+        if "carry" in common_mistake.lower() and ("no carry" in topic_lower or "without carry" in topic_lower):
+            issues.append("[CRITICAL] common_mistake mentions 'carry' but topic is no-carry/without-carry")
+            critical = True
+        if "borrow" in common_mistake.lower() and ("no borrow" in topic_lower or "without borrow" in topic_lower):
+            issues.append("[CRITICAL] common_mistake mentions 'borrow' but topic is no-borrow")
+            critical = True
+
+    # === CHECK 14: Role diversity (catches 100% recognition) ===
+    if slots and len(slots) >= 5:
+        from collections import Counter as _Counter
+
+        role_counts = _Counter(getattr(s, "role", "recognition") for s in slots)
+        most_common_role, most_common_count = role_counts.most_common(1)[0]
+        if most_common_count == len(slots):
+            issues.append(f"[WARNING] 100% of questions have role='{most_common_role}' — no cognitive variety")
+        elif most_common_count >= len(slots) * 0.8:
+            issues.append(
+                f"[WARNING] {most_common_count}/{len(slots)} questions have role='{most_common_role}' — low variety"
+            )
+
     # Determine severity
     if critical:
         severity = "blocked"

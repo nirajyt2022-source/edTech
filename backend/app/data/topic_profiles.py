@@ -4643,7 +4643,9 @@ _TOPIC_ALIASES: dict[str, str] = {
     "addition and subtraction": "Addition and subtraction (3-digit)",
     "add/sub": "Addition and subtraction (3-digit)",
     "multiplication": "Multiplication (tables 2-10)",
+    "multiplication tables": "Multiplication (tables 2-10)",
     "division": "Division basics",
+    "division basics": "Division basics",
     "fractions": "Fractions",
     "time": "Time (reading clock, calendar)",
     "money": "Money (bills and change)",
@@ -5467,10 +5469,14 @@ def get_topic_profile(topic: str, subject: str | None = None, grade_level: str |
         t_lower = topic_for_lookup.lower()
         if grade_num >= 4 and t_lower in ("division (sharing equally)", "sharing equally"):
             topic_for_lookup = "Division (long division)"
-        elif grade_num >= 4 and t_lower in ("multiplication (tables 2-10)",):
+        elif grade_num >= 4 and t_lower in ("multiplication (tables 2-10)", "multiplication tables"):
             topic_for_lookup = "Multiplication (3-digit × 2-digit)"
-        elif grade_num <= 2 and t_lower in ("multiplication (tables 2-10)",):
+        elif grade_num <= 2 and t_lower in ("multiplication (tables 2-10)", "multiplication tables"):
             topic_for_lookup = "Multiplication (tables 2-5)"
+        elif grade_num == 3 and t_lower in ("multiplication tables",):
+            topic_for_lookup = "Multiplication (tables 2-10)"
+        elif grade_num == 3 and "division" in t_lower and "long" not in t_lower:
+            topic_for_lookup = "Division basics"
 
     def _ok(profile: dict) -> bool:
         if not subject:
