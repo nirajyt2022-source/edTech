@@ -151,6 +151,12 @@ def _skill_to_role(skill_tag: str) -> str:
         return "application"
     if "missing" in tag or "represent" in tag or "estimation" in tag:
         return "representation"
+    # Application suffixes (English/Hindi grammar tags like tenses_change, voice_convert)
+    if any(tag.endswith(s) for s in ("_use", "_change", "_convert", "_write", "_rewrite", "_rearrange", "_answer")):
+        return "application"
+    # Representation suffixes (English/Hindi grammar tags like blanks_fill, sentences_complete)
+    if any(tag.endswith(s) for s in ("_fill", "_complete", "_expand", "_match")):
+        return "representation"
     return "recognition"
 
 
@@ -340,6 +346,12 @@ def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
         return "division"
     if any(kw in combined for kw in ("decimal",)):
         return "decimal"
+    if any(kw in combined for kw in ("place value", "numbers up to", "large number")):
+        return "place_value"
+    if any(kw in combined for kw in ("percent", "percentage")):
+        return "percentage"
+    if any(kw in combined for kw in ("geometry", "angle", "line segment")):
+        return "geometry"
     return None
 
 
@@ -380,6 +392,12 @@ def _generate_numbers(grade_num: int, operation: str | None, skill_tag: str) -> 
         return _random_fraction(grade_num)
     elif operation == "decimal":
         return _random_decimal(grade_num)
+    elif operation == "place_value":
+        return _random_place_value(grade_num)
+    elif operation == "percentage":
+        return _random_percentage(grade_num)
+    elif operation == "geometry":
+        return _random_geometry(grade_num)
     return None
 
 
@@ -520,25 +538,31 @@ def _random_fraction(grade: int) -> dict:
         from math import gcd
 
         denoms = [2, 3, 4, 5, 6, 8]
-        d1 = random.choice(denoms)
-        d2 = random.choice([d for d in denoms if d != d1])
-        n1 = random.randint(1, d1 - 1)
-        n2 = random.randint(1, d2 - 1)
-        lcd = (d1 * d2) // gcd(d1, d2)
+        for _retry in range(10):
+            d1 = random.choice(denoms)
+            d2 = random.choice([d for d in denoms if d != d1])
+            n1 = random.randint(1, d1 - 1)
+            n2 = random.randint(1, d2 - 1)
+            lcd = (d1 * d2) // gcd(d1, d2)
 
-        op = random.choice(["add", "subtract"])
-        if op == "add":
-            result_num = n1 * (lcd // d1) + n2 * (lcd // d2)
-        else:
-            result_num = n1 * (lcd // d1) - n2 * (lcd // d2)
-            if result_num <= 0:
-                # Flip to addition if subtraction would be zero/negative
+            op = random.choice(["add", "subtract"])
+            if op == "add":
                 result_num = n1 * (lcd // d1) + n2 * (lcd // d2)
+            else:
+                result_num = n1 * (lcd // d1) - n2 * (lcd // d2)
+                if result_num <= 0:
+                    # Flip to addition if subtraction would be zero/negative
+                    result_num = n1 * (lcd // d1) + n2 * (lcd // d2)
 
-        # Simplify the result
-        g = gcd(abs(result_num), lcd)
-        numerator = result_num // g
-        denominator = lcd // g
+            # Simplify the result
+            g = gcd(abs(result_num), lcd)
+            numerator = result_num // g
+            denominator = lcd // g
+
+            # Reject degenerate fractions (1/1, 0/n)
+            if numerator > 0 and numerator != denominator:
+                break
+        # else: use whatever we got on last attempt (extremely rare)
 
         # Keep a, b for backward compat (use first operand values)
         whole = n1
@@ -591,6 +615,60 @@ def _random_decimal(grade: int) -> dict:
         "answer": answer,
         "operation": op,
     }
+
+
+def _random_place_value(grade: int) -> dict:
+    """Generate place-value numbers with decomposition."""
+    if grade <= 2:
+        n = random.randint(100, 999)
+        comparison = random.randint(100, 999)
+        while comparison == n:
+            comparison = random.randint(100, 999)
+        return {
+            "a": n,
+            "b": comparison,
+            "answer": n,
+            "hundreds": (n // 100) % 10,
+            "tens": (n // 10) % 10,
+            "ones": n % 10,
+        }
+    elif grade <= 4:
+        digits = 4 if grade == 3 else 5
+        lo = 10 ** (digits - 1)
+        hi = 10**digits - 1
+        n = random.randint(lo, hi)
+        comparison = random.randint(lo, hi)
+        while comparison == n:
+            comparison = random.randint(lo, hi)
+        return {"a": n, "b": comparison, "answer": n}
+    else:
+        n = random.randint(100000, 1000000)
+        comparison = random.randint(100000, 1000000)
+        while comparison == n:
+            comparison = random.randint(100000, 1000000)
+        return {"a": n, "b": comparison, "answer": n}
+
+
+def _random_percentage(grade: int) -> dict:
+    """Generate percentage problems with clean integer answers."""
+    bases = [50, 100, 200, 250, 500]
+    percents = [10, 20, 25, 50, 75]
+    base = random.choice(bases)
+    percent = random.choice(percents)
+    answer = base * percent // 100
+    return {"a": base, "b": percent, "answer": answer}
+
+
+def _random_geometry(grade: int) -> dict:
+    """Generate angle problems (complementary or supplementary)."""
+    angle_pool = [30, 40, 45, 50, 60, 70, 75, 80]
+    kind = random.choice(["complementary", "supplementary"])
+    a = random.choice(angle_pool)
+    if kind == "complementary":
+        b = 90 - a
+    else:
+        b = 180 - a
+    return {"a": a, "b": b, "answer": b, "angle_type": kind}
 
 
 def _generate_wrong_answer(correct: int | str, operation: str | None) -> int | str:
@@ -1535,8 +1613,17 @@ def _build_worksheet_meta(topic: str, grade_level: str, subject: str) -> dict:
     else:
         title_topic = topic.strip()
 
+    _TITLE_TEMPLATES = [
+        "{topic} Practice",
+        "{topic} Worksheet",
+        "{topic} — Practice Questions",
+        "Let's Practice {topic}",
+        "{topic} Challenge",
+    ]
+
     if title_topic:
-        title = f"{title_topic} Practice"
+        idx = hash(title_topic) % len(_TITLE_TEMPLATES)
+        title = _TITLE_TEMPLATES[idx].format(topic=title_topic)
     else:
         title = f"{subject} Practice Worksheet"
 
@@ -1993,7 +2080,13 @@ def build_slots(
     # --- Step 7: Enforce type minimums ---
     _enforce_type_minimums(slots, num_questions, error_det_forbidden)
 
-    # Rebuild LLM instructions for any slots whose type was changed
+    # --- Step 7b: Sort by difficulty (scaffolding: easy → medium → hard) ---
+    _DIFF_ORDER = {"easy": 0, "medium": 1, "hard": 2}
+    slots.sort(key=lambda s: _DIFF_ORDER.get(s.difficulty, 1))
+    for idx, slot in enumerate(slots):
+        slot.slot_number = idx + 1
+
+    # Rebuild LLM instructions for any slots whose type/order was changed
     for slot in slots:
         slot.llm_instruction = _build_llm_instruction(slot, topic, subject, language, grade_num)
 
