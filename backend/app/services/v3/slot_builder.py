@@ -411,6 +411,10 @@ def _random_subtraction(grade: int, allow_borrow: bool = True) -> dict:
             a = random.randint(10000, 99999)
             b = random.randint(1000, a - 1)
 
+        # Ensure minimum pedagogical difference (avoid trivial 39-38=1)
+        if a - b < 3:
+            continue
+
         if not allow_borrow:
             # Check EVERY digit: each digit of a must be >= corresponding digit of b
             sa = str(a)
@@ -907,6 +911,10 @@ def _build_llm_instruction(
             parts.append(f"Set correct_answer to exactly: {plural}")
 
         parts.append("Write in pure Devanagari. No English.")
+        if grade_num <= 1:
+            parts.append("CRITICAL: Question text must be UNDER 15 words.")
+        elif grade_num <= 2:
+            parts.append("Question text must be under 20 words.")
         parts.append(f"Age range: {slot.age_range} | Difficulty: {slot.difficulty}")
         # RETURN EARLY — don't add generic instructions
         return " | ".join(parts)
@@ -937,6 +945,10 @@ def _build_llm_instruction(
             parts.append(f"Set correct_answer to exactly: {opposite}")
 
         parts.append("Write in pure Devanagari. No English.")
+        if grade_num <= 1:
+            parts.append("CRITICAL: Question text must be UNDER 15 words.")
+        elif grade_num <= 2:
+            parts.append("Question text must be under 20 words.")
         parts.append(f"Age range: {slot.age_range} | Difficulty: {slot.difficulty}")
         return " | ".join(parts)
 
