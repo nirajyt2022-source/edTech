@@ -1,5 +1,7 @@
 """Context pools for worksheet variety — names, scenarios, rotation."""
 
+from __future__ import annotations
+
 import random
 
 INDIAN_NAMES = [
