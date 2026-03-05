@@ -10,6 +10,7 @@ Gold-G8: Redesigned to match Pearson/Oxford primary workbook quality.
 import io
 import logging
 import os
+import re
 import tempfile
 from xml.sax.saxutils import escape as xml_escape
 
@@ -91,6 +92,128 @@ if not _USE_UNICODE_FONT and os.path.exists(_DEJAVU):
 FONT_REGULAR = "SkolarFont" if _USE_UNICODE_FONT else "Helvetica"
 FONT_BOLD = "SkolarFont-Bold" if _USE_UNICODE_FONT else "Helvetica-Bold"
 FONT_ITALIC = "SkolarFont-Italic" if _USE_UNICODE_FONT else "Helvetica-Oblique"
+
+# ── HarfBuzz text shaping for Devanagari conjuncts ──────────────────────
+# ReportLab doesn't apply OpenType GSUB rules, so conjuncts like क्ष, ज्ञ,
+# श्र, त्र render as broken sequences. We use HarfBuzz to shape text into
+# proper glyph sequences, then map shaped glyphs to Private Use Area (PUA)
+# codepoints that ReportLab can render via the font's glyph table.
+
+_HB_AVAILABLE = False
+_hb_font = None
+_hb_font_bold = None
+_DEVANAGARI_RE = re.compile(r"[\u0900-\u097F\u200C\u200D]+(?:[\u0020][\u0900-\u097F\u200C\u200D]+)*")
+_PUA_BASE = 0xE000
+_next_pua = _PUA_BASE
+_gid_to_pua: dict[int, int] = {}
+
+# Determine which font path to use for shaping (must match what ReportLab uses)
+_SHAPE_FONT_PATH = None  # type: str | None
+_SHAPE_FONT_PATH_BOLD = None  # type: str | None
+
+if _USE_UNICODE_FONT:
+    # Pick the font file that was registered as SkolarFont
+    for _candidate in [_NOTO_DEVANAGARI, _NOTO_VARIABLE, _DEJAVU]:
+        if os.path.exists(_candidate):
+            _SHAPE_FONT_PATH = _candidate
+            break
+    for _candidate_b in [
+        _NOTO_DEVANAGARI_BOLD,
+        _NOTO_BOLD if os.path.exists(_NOTO_BOLD) else None,
+        _SHAPE_FONT_PATH,
+    ]:
+        if _candidate_b and os.path.exists(_candidate_b):
+            _SHAPE_FONT_PATH_BOLD = _candidate_b
+            break
+
+if _SHAPE_FONT_PATH:
+    try:
+        import uharfbuzz as hb
+
+        _blob = hb.Blob.from_file_path(_SHAPE_FONT_PATH)
+        _face = hb.Face(_blob)
+        _hb_font = hb.Font(_face)
+        _HB_AVAILABLE = True
+        # Bold font for shaping bold text
+        if _SHAPE_FONT_PATH_BOLD and _SHAPE_FONT_PATH_BOLD != _SHAPE_FONT_PATH:
+            _blob_b = hb.Blob.from_file_path(_SHAPE_FONT_PATH_BOLD)
+            _face_b = hb.Face(_blob_b)
+            _hb_font_bold = hb.Font(_face_b)
+        else:
+            _hb_font_bold = _hb_font
+        logger.info("HarfBuzz shaping: enabled (Devanagari conjuncts will render correctly)")
+    except ImportError:
+        logger.warning("uharfbuzz not installed — Devanagari conjuncts may render incorrectly")
+    except Exception as e:
+        logger.warning("HarfBuzz init failed: %s — Devanagari conjuncts may render incorrectly", e)
+
+
+def _shape_devanagari_segment(text: str, bold: bool = False) -> str:
+    """Shape a Devanagari text segment using HarfBuzz.
+
+    Returns a string of PUA-mapped characters that ReportLab can render
+    as properly shaped glyphs (conjuncts, ligatures, etc.).
+    """
+    global _next_pua
+    import uharfbuzz as hb
+
+    hb_f = _hb_font_bold if bold and _hb_font_bold else _hb_font
+    rl_font_name = "SkolarFont-Bold" if bold else "SkolarFont"
+    rl_font_obj = pdfmetrics.getFont(rl_font_name)
+
+    buf = hb.Buffer()
+    buf.add_str(text)
+    buf.guess_segment_properties()
+    hb.shape(hb_f, buf)
+
+    result = []
+    for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
+        gid = info.codepoint
+        if gid not in _gid_to_pua:
+            pua = _next_pua
+            _next_pua += 1
+            _gid_to_pua[gid] = pua
+            # Inject into ALL registered SkolarFont variants
+            for fn in ["SkolarFont", "SkolarFont-Bold", "SkolarFont-Italic"]:
+                try:
+                    f = pdfmetrics.getFont(fn)
+                    f.face.charToGlyph[pua] = gid
+                    f.face.charWidths[pua] = pos.x_advance
+                except Exception as exc:
+                    logger.debug("PUA glyph inject skipped for %s: %s", fn, exc)
+                    continue
+        else:
+            # Update width if not yet set for this font variant
+            pua = _gid_to_pua[gid]
+            try:
+                if pua not in rl_font_obj.face.charWidths:
+                    rl_font_obj.face.charWidths[pua] = pos.x_advance
+            except Exception:
+                logger.debug("PUA width update skipped for gid=%d", gid)
+        result.append(chr(_gid_to_pua[gid]))
+    return "".join(result)
+
+
+def _shape_text(text: str, bold: bool = False) -> str:
+    """Shape all Devanagari segments in text using HarfBuzz.
+
+    Non-Devanagari text (Latin, digits, punctuation) passes through unchanged.
+    """
+    if not _HB_AVAILABLE or not text:
+        return text
+    if not any("\u0900" <= c <= "\u097f" for c in text):
+        return text
+
+    parts: list[str] = []
+    last_end = 0
+    for m in _DEVANAGARI_RE.finditer(text):
+        if m.start() > last_end:
+            parts.append(text[last_end : m.start()])
+        parts.append(_shape_devanagari_segment(m.group(), bold=bold))
+        last_end = m.end()
+    if last_end < len(text):
+        parts.append(text[last_end:])
+    return "".join(parts)
 
 
 def _flatten_image_alpha(local_path: str) -> str:
@@ -182,12 +305,14 @@ if not _USE_UNICODE_FONT:
     _UNICODE_REPLACEMENTS["\u20b9"] = "Rs."  # rupee sign
 
 
-def _sanitize_text(text: str) -> str:
-    """Normalize special Unicode characters for PDF rendering."""
+def _sanitize_text(text: str, bold: bool = False) -> str:
+    """Normalize special Unicode characters and shape Devanagari for PDF rendering."""
     if not text:
         return ""
     for char, replacement in _UNICODE_REPLACEMENTS.items():
         text = text.replace(char, replacement)
+    # Shape Devanagari conjuncts via HarfBuzz (must happen before XML-escape)
+    text = _shape_text(text, bold=bold)
     # XML-escape for ReportLab Paragraph (handles &, <, >)
     return xml_escape(text)
 
@@ -259,6 +384,16 @@ _FMT_LABELS_HINDI = {
     "sentence_completion": "\u0935\u093e\u0915\u094d\u092f \u092a\u0942\u0930\u094d\u0924\u093f",
     "classify": "\u0935\u0930\u094d\u0917\u0940\u0915\u0930\u0923",
 }
+
+# Pre-shape all Hindi labels and tier config at module load time
+if _HB_AVAILABLE:
+    for _k, _v in _HINDI_LABELS.items():
+        _HINDI_LABELS[_k] = _shape_text(_v, bold=("label" in _k or _k in ("for_parents", "instructions")))
+    for _k2, _v2 in _FMT_LABELS_HINDI.items():
+        _FMT_LABELS_HINDI[_k2] = _shape_text(_v2)
+    _TIER_CONFIG_HINDI = [
+        (key, roles, _shape_text(label, bold=True), _shape_text(desc)) for key, roles, label, desc in _TIER_CONFIG_HINDI
+    ]
 
 
 def _is_hindi(worksheet: dict) -> bool:
