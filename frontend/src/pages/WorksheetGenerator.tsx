@@ -58,6 +58,20 @@ const LABELS_EN = {
   foundationDesc: 'I can recall and recognise',
   applicationDesc: 'I can use what I know',
   stretchDesc: 'I can think and reason',
+  name: 'Name:',
+  date: 'Date:',
+  score: 'Score:',
+  hint: 'Hint:',
+  answerLabel: 'Ans:',
+  trueOption: 'True',
+  falseOption: 'False',
+  bonusChallenge: 'Bonus Challenge',
+  bonusDesc: 'Optional — stretch your thinking!',
+  answerKey: 'Answer Key',
+  answerKeyRef: 'Answer Key Reference',
+  showAnswerKey: 'Show Answer Key',
+  hideAnswerKey: 'Hide Answer Key',
+  difficultyBreakdown: 'Difficulty Breakdown',
 }
 const LABELS_HINDI = {
   learningGoal: 'आज का अध्ययन लक्ष्य',
@@ -74,6 +88,20 @@ const LABELS_HINDI = {
   foundationDesc: 'मैं पहचान सकता/सकती हूं',
   applicationDesc: 'मैं इस्तेमाल कर सकता/सकती हूं',
   stretchDesc: 'मैं सोच सकता/सकती हूं',
+  name: 'नाम:',
+  date: 'दिनांक:',
+  score: 'अंक:',
+  hint: 'संकेत:',
+  answerLabel: 'उत्तर:',
+  trueOption: 'सही',
+  falseOption: 'गलत',
+  bonusChallenge: 'बोनस चुनौती',
+  bonusDesc: 'वैकल्पिक — अपनी सोच को आगे बढ़ाओ!',
+  answerKey: 'उत्तर कुंजी',
+  answerKeyRef: 'उत्तर कुंजी संदर्भ',
+  showAnswerKey: 'उत्तर कुंजी दिखाएं',
+  hideAnswerKey: 'उत्तर कुंजी छुपाएं',
+  difficultyBreakdown: 'कठिनाई विवरण',
 }
 const FORMAT_LABELS_EN: Record<string, string> = {
   mcq: 'MCQ', fill_blank: 'Fill in the Blank', true_false: 'True/False',
@@ -1816,14 +1844,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                               <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                               <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            Hide Answers
+                            {getLabels(worksheet.subject).hideAnswerKey}
                           </>
                         ) : (
                           <>
                             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
                             </svg>
-                            Show Answers
+                            {getLabels(worksheet.subject).showAnswerKey}
                           </>
                         )}
                       </Button>
@@ -1858,7 +1886,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                 <svg className="w-4 h-4 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                                 </svg>
-                                Answer Key
+                                {getLabels(worksheet.subject).answerKey}
                               </>
                             )}
                           </Button>
@@ -1939,9 +1967,9 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                 <CardContent className="px-10 pb-14 print:px-0 print:pb-0">
                   {/* Print-only: Name / Date / Score header */}
                   <div className="hidden print:flex print:justify-between print:items-end print:mb-6 print:pb-3 print:border-b print:border-black/20">
-                    <span className="text-sm">Name: ______________________________</span>
-                    <span className="text-sm">Date: ______________</span>
-                    <span className="text-sm">Score: _____ / {worksheet.questions.length}</span>
+                    <span className="text-sm">{getLabels(worksheet.subject).name} ______________________________</span>
+                    <span className="text-sm">{getLabels(worksheet.subject).date} ______________</span>
+                    <span className="text-sm">{getLabels(worksheet.subject).score} _____ / {worksheet.questions.length}</span>
                   </div>
 
                   {/* NCERT Chapter Badge (Trust P2) */}
@@ -2139,7 +2167,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                           <div className="mt-3 print:mt-2">
                                             {revealedHints.has(question.id) ? (
                                               <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-lg text-sm text-amber-900 italic print:bg-gray-50 print:border-gray-300 print:text-gray-600">
-                                                <span className="font-semibold not-italic text-amber-700 print:text-gray-700">Hint: </span>
+                                                <span className="font-semibold not-italic text-amber-700 print:text-gray-700">{getLabels(worksheet.subject).hint} </span>
                                                 {question.hint || question.explanation}
                                               </div>
                                             ) : (
@@ -2155,7 +2183,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                         {/* Inline answer when Show Answers is ON */}
                                         {showAnswers && (question.correct_answer || question.explanation) && (
                                           <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
-                                            <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">Ans:</span>
+                                            <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">{getLabels(worksheet.subject).answerLabel}</span>
                                             <span className="text-sm font-bold text-emerald-900 print:text-gray-900">
                                               {question.correct_answer || question.explanation}
                                             </span>
@@ -2213,7 +2241,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                       <div className="mt-3 print:mt-2">
                                         {revealedHints.has(question.id) ? (
                                           <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-lg text-sm text-amber-900 italic print:bg-gray-50 print:border-gray-300 print:text-gray-600">
-                                            <span className="font-semibold not-italic text-amber-700 print:text-gray-700">Hint: </span>
+                                            <span className="font-semibold not-italic text-amber-700 print:text-gray-700">{getLabels(worksheet.subject).hint} </span>
                                             {question.hint || question.explanation}
                                           </div>
                                         ) : (
@@ -2229,7 +2257,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                     {/* Inline answer when Show Answers is ON */}
                                     {showAnswers && (question.correct_answer || question.explanation) && (
                                       <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
-                                        <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">Ans:</span>
+                                        <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">{getLabels(worksheet.subject).answerLabel}</span>
                                         <span className="text-sm font-bold text-emerald-900 print:text-gray-900">
                                           {question.correct_answer || question.explanation}
                                         </span>
@@ -2247,8 +2275,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                           <div className="mt-10">
                             <div className="flex items-baseline gap-3 mb-1 mt-6 print:mt-4">
                               <span className="text-amber-500 font-semibold text-sm">&#9733;</span>
-                              <h4 className="font-serif text-lg font-bold text-amber-600 tracking-tight print:text-black">Bonus Challenge</h4>
-                              <span className="text-xs text-muted-foreground italic ml-1">Optional — stretch your thinking!</span>
+                              <h4 className="font-serif text-lg font-bold text-amber-600 tracking-tight print:text-black">{getLabels(worksheet.subject).bonusChallenge}</h4>
+                              <span className="text-xs text-muted-foreground italic ml-1">{getLabels(worksheet.subject).bonusDesc}</span>
                             </div>
                             <div className="border-b border-amber-300/40 mb-6 print:border-black/15" />
                             <div className="space-y-10">
@@ -2269,7 +2297,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                                       </div>
                                       {showAnswers && question.correct_answer && (
                                         <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
-                                          <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">Ans:</span>
+                                          <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">{getLabels(worksheet.subject).answerLabel}</span>
                                           <span className="text-sm font-bold text-emerald-900 print:text-gray-900">{question.correct_answer}</span>
                                         </div>
                                       )}
@@ -2295,7 +2323,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                       <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                       </svg>
-                      {showAnswers ? 'Hide Answer Key' : 'Show Answer Key'}
+                      {showAnswers ? getLabels(worksheet.subject).hideAnswerKey : getLabels(worksheet.subject).showAnswerKey}
                     </Button>
                   </div>
 
@@ -2306,7 +2334,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
                         </svg>
-                        Answer Key Reference
+                        {getLabels(worksheet.subject).answerKeyRef}
                       </h3>
                       {/* Curriculum summary (Trust P2) */}
                       {(worksheet.chapter_ref || (worksheet.learning_objectives && worksheet.learning_objectives.length > 0)) && (
@@ -2385,7 +2413,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         if (fCount + aCount + sCount === 0) return null
                         return (
                           <div className="mt-6 pt-4 border-t border-border/30">
-                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Difficulty Breakdown</h4>
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{getLabels(worksheet.subject).difficultyBreakdown}</h4>
                             <div className="flex flex-wrap gap-2 text-xs">
                               {fCount > 0 && <span className="px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700">&#9733; {getLabels(worksheet.subject).foundation}: {fCount}</span>}
                               {aCount > 0 && <span className="px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700">&#9733;&#9733; {getLabels(worksheet.subject).application}: {aCount}</span>}

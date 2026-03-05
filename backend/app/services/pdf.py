@@ -370,6 +370,20 @@ _HINDI_LABELS = {
     "answer_verified_high": "\u0938\u092d\u0940 \u0909\u0924\u094d\u0924\u0930 \u0938\u0924\u094d\u092f\u093e\u092a\u093f\u0924",
     "answer_verified_medium": "\u0909\u0924\u094d\u0924\u0930 \u0938\u0924\u094d\u092f\u093e\u092a\u093f\u0924",
     "answer_best_effort": "\u0909\u0924\u094d\u0924\u0930 \u0938\u0930\u094d\u0935\u094b\u0924\u094d\u0924\u092e \u092a\u094d\u0930\u092f\u093e\u0938",
+    # Additional labels for full Hindi UI
+    "name": "\u0928\u093e\u092e:",
+    "date": "\u0926\u093f\u0928\u093e\u0902\u0915:",
+    "score": "\u0905\u0902\u0915:",
+    "true": "\u0938\u0939\u0940",
+    "false": "\u0917\u0932\u0924",
+    "answer_label": "\u0909\u0924\u094d\u0924\u0930:",
+    "hint": "\u0938\u0902\u0915\u0947\u0924:",
+    "answer_key": "\u0909\u0924\u094d\u0924\u0930 \u0915\u0941\u0902\u091c\u0940",
+    "explanations": "\u0935\u094d\u092f\u093e\u0916\u094d\u092f\u093e\u090f\u0902",
+    "watch_for": "\u0927\u094d\u092f\u093e\u0928 \u0926\u0947\u0902:",
+    "bonus_challenge": "\u092c\u094b\u0928\u0938 \u091a\u0941\u0928\u094c\u0924\u0940",
+    "bonus_desc": "\u0935\u0948\u0915\u0932\u094d\u092a\u093f\u0915 \u2014 \u0905\u092a\u0928\u0940 \u0938\u094b\u091a \u0915\u094b \u0906\u0917\u0947 \u092c\u0922\u093c\u093e\u0913!",
+    "show_working": "\u0905\u092a\u0928\u093e \u0915\u093e\u092e \u0926\u093f\u0916\u093e\u090f\u0902:",
 }
 
 _FMT_LABELS_HINDI = {
@@ -977,8 +991,10 @@ class PDFService:
                     spaceAfter=8,
                 )
             )
-            story.append(Paragraph("*  Bonus Challenge", self.styles["TierHeader"]))
-            story.append(Paragraph("Optional — stretch your thinking!", self.styles["TierDesc"]))
+            _bonus_title = _HINDI_LABELS["bonus_challenge"] if self._hindi else "Bonus Challenge"
+            _bonus_desc = _HINDI_LABELS["bonus_desc"] if self._hindi else "Optional — stretch your thinking!"
+            story.append(Paragraph(f"*  {_bonus_title}", self.styles["TierHeader"]))
+            story.append(Paragraph(_bonus_desc, self.styles["TierDesc"]))
             for question in bonus_questions:
                 elements = self._build_bonus_question(question)
                 story.append(KeepTogether(elements))
@@ -989,11 +1005,14 @@ class PDFService:
         num_q = len(questions)
         page_width = A4[0] - 4.0 * cm  # usable width with 2cm margins
 
+        _name = _HINDI_LABELS["name"] if self._hindi else "Name:"
+        _date = _HINDI_LABELS["date"] if self._hindi else "Date:"
+        _score = _HINDI_LABELS["score"] if self._hindi else "Score:"
         row_data = [
             [
-                Paragraph("Name: ____________________________", self.styles["HeaderField"]),
-                Paragraph("Date: ______________", self.styles["HeaderField"]),
-                Paragraph(f"Score: _____ / {num_q}", self.styles["HeaderField"]),
+                Paragraph(f"{_name} ____________________________", self.styles["HeaderField"]),
+                Paragraph(f"{_date} ______________", self.styles["HeaderField"]),
+                Paragraph(f"{_score} _____ / {num_q}", self.styles["HeaderField"]),
             ]
         ]
 
@@ -1308,14 +1327,17 @@ class PDFService:
 
         elif q_type == "true_false":
             _px = _PRIMARY.hexval()[2:]
-            elements.append(Paragraph(f"<font color='#{_px}'>A)</font>  True", self.styles["OptionText"]))
-            elements.append(Paragraph(f"<font color='#{_px}'>B)</font>  False", self.styles["OptionText"]))
+            _true = _HINDI_LABELS["true"] if self._hindi else "True"
+            _false = _HINDI_LABELS["false"] if self._hindi else "False"
+            elements.append(Paragraph(f"<font color='#{_px}'>A)</font>  {_true}", self.styles["OptionText"]))
+            elements.append(Paragraph(f"<font color='#{_px}'>B)</font>  {_false}", self.styles["OptionText"]))
             elements.append(Spacer(1, 3))
 
         elif q_type == "fill_blank":
             # Single answer line with box-style underline
             elements.append(Spacer(1, 4))
-            elements.append(Paragraph("Ans: ________________________________________", self.styles["OptionText"]))
+            _ans = _HINDI_LABELS["answer_label"] if self._hindi else "Ans:"
+            elements.append(Paragraph(f"{_ans} ________________________________________", self.styles["OptionText"]))
             elements.append(Spacer(1, 6))
 
         else:
@@ -1349,7 +1371,8 @@ class PDFService:
             hint = question.get("hint") or question.get("explanation")
             if hint:
                 hint_text = _sanitize_text(hint)
-                elements.append(Paragraph(f"<i>Hint: {hint_text}</i>", self.styles["HintText"]))
+                _hint_label = _HINDI_LABELS["hint"] if self._hindi else "Hint:"
+                elements.append(Paragraph(f"<i>{_hint_label} {hint_text}</i>", self.styles["HintText"]))
 
         # ── Working area (maths subjects, medium/hard difficulty) ─────────
         if subject.lower() in ("maths", "mathematics", "math"):
@@ -1360,7 +1383,7 @@ class PDFService:
                 elements.append(Spacer(1, 6))
                 elements.append(
                     Paragraph(
-                        "<i>Show your working:</i>",
+                        f"<i>{_HINDI_LABELS['show_working'] if self._hindi else 'Show your working:'}</i>",
                         self.styles["HintText"],
                     )
                 )
@@ -1441,7 +1464,8 @@ class PDFService:
         )
 
         title = _sanitize_text(worksheet.get("title", "Practice Worksheet"))
-        story.append(Paragraph(f"{title} - Answer Key", self.styles["AnswerKeyTitle"]))
+        _ak_label = _HINDI_LABELS["answer_key"] if self._hindi else "Answer Key"
+        story.append(Paragraph(f"{title} - {_ak_label}", self.styles["AnswerKeyTitle"]))
 
         story.append(
             HRFlowable(
@@ -1561,7 +1585,8 @@ class PDFService:
         has_explanations = any(q.get("explanation") for q in questions)
         if has_explanations:
             story.append(Spacer(1, 18))
-            story.append(Paragraph("<b>Explanations</b>", self.styles["AnswerKeyTitle"]))
+            _expl = _HINDI_LABELS["explanations"] if self._hindi else "Explanations"
+            story.append(Paragraph(f"<b>{_expl}</b>", self.styles["AnswerKeyTitle"]))
             story.append(
                 HRFlowable(
                     width="100%",
@@ -1589,7 +1614,7 @@ class PDFService:
                 [
                     [
                         Paragraph(
-                            f"<b>Watch For:</b> {_sanitize_text(common_mistake)}",
+                            f"<b>{_HINDI_LABELS['watch_for'] if self._hindi else 'Watch For:'}</b> {_sanitize_text(common_mistake)}",
                             self.styles["ParentTip"],
                         )
                     ]
