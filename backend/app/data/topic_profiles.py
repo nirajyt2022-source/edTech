@@ -5453,6 +5453,20 @@ def get_topic_profile(topic: str, subject: str | None = None) -> dict | None:
         expected = _SUBJECT_TO_PROFILE_GROUP.get(subject.lower())
         return not expected or _profile_subject_group(profile) == expected
 
+    # --- Exact lookup table (highest priority) ---
+    try:
+        from app.data.topic_lookup import resolve_topic
+
+        grade_match = _re.search(r"class\s*(\d+)", topic, _re.IGNORECASE)
+        grade = int(grade_match.group(1)) if grade_match else None
+        resolved_key = resolve_topic(topic, grade)
+        if resolved_key and resolved_key in TOPIC_PROFILES:
+            profile = TOPIC_PROFILES[resolved_key]
+            if _ok(profile):
+                return profile
+    except ImportError:
+        pass
+
     normalized = normalize_topic(topic)
     profile = TOPIC_PROFILES.get(normalized)
     if profile:

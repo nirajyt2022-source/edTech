@@ -203,6 +203,68 @@ def generate_worksheet_v3(
     if custom_instructions:
         warnings.append(f"[v3] custom_instructions not yet supported: {custom_instructions[:50]}")
 
+    # === Runtime quality gate ===
+    from app.services.v3.quality_gate import check_worksheet
+
+    gate_result = check_worksheet(
+        worksheet=worksheet,
+        slots=slot_output.slots,
+        topic=topic,
+        subject=subject,
+        grade_level=grade_level,
+    )
+
+    if gate_result.issues:
+        warnings.extend([f"[quality_gate] {issue}" for issue in gate_result.issues])
+        logger.info("[v3] quality gate: %s (%d issues)", gate_result.severity, len(gate_result.issues))
+
+    if not gate_result.passed:
+        # Critical failure — try once more with resolved topic name
+        logger.warning("[v3] quality gate BLOCKED — attempting retry with resolved topic")
+        try:
+            from app.data.topic_lookup import resolve_topic
+
+            grade_match = re.search(r"\d+", str(grade_level))
+            grade = int(grade_match.group()) if grade_match else None
+            resolved = resolve_topic(topic, grade)
+
+            if resolved and resolved != topic:
+                logger.info("[v3] retrying with resolved topic: %s → %s", topic, resolved)
+                slot_output = build_slots(
+                    board=board,
+                    grade_level=grade_level,
+                    subject=subject,
+                    topic=resolved,
+                    difficulty=difficulty,
+                    num_questions=num_questions,
+                    problem_style=problem_style,
+                    language=language,
+                    adaptive_config=adaptive_config,
+                )
+                filled = fill_slots(client, slot_output.slots, language, curriculum_context=curriculum_ctx)
+                worksheet = assemble_worksheet(slot_output, filled)
+
+                gate_result = check_worksheet(
+                    worksheet=worksheet,
+                    slots=slot_output.slots,
+                    topic=resolved,
+                    subject=subject,
+                    grade_level=grade_level,
+                )
+
+                if gate_result.passed:
+                    warnings.append("[quality_gate] Retry with resolved topic name succeeded")
+                else:
+                    warnings.extend([f"[quality_gate:retry] {i}" for i in gate_result.issues])
+        except Exception as e:
+            logger.warning("[v3] quality gate retry failed: %s", e)
+
+    worksheet["_quality_gate"] = {
+        "passed": gate_result.passed,
+        "severity": gate_result.severity,
+        "issues_count": len(gate_result.issues),
+    }
+
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
     logger.info("[v3] Total generation: %dms, %d warnings", elapsed_ms, len(warnings))
 
