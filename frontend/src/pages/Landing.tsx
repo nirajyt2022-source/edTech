@@ -296,14 +296,14 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
           {/* Left */}
           <div>
             <div className="lp-badge mb-6 lp-hero-text">
-              CBSE Classes 1&ndash;5 &middot; AI-Powered
+              CBSE Classes 1&ndash;5 &middot; Free to start
             </div>
             <h1 className="lp-hero-h1 mb-5 lp-hero-text-delay">
-              CBSE worksheets your child will{' '}
-              <em>actually finish.</em>
+              Tired of worksheets with{' '}
+              <em>wrong answers?</em>
             </h1>
             <p className="text-base lg:text-lg leading-relaxed text-indigo-200/80 max-w-[500px] mb-7 lp-hero-text-delay-2">
-              Pick any topic, get a print-ready worksheet in 30 seconds — with three difficulty levels, Indian contexts, and a full answer key.
+              Skolar generates CBSE worksheets where every maths answer is verified by code &mdash; not copy-pasted from the internet. Three difficulty levels. Indian contexts. Print-ready PDF with answer key.
             </p>
             <div className="lp-hero-text-delay-3">
               <Button
@@ -316,7 +316,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               </Button>
             </div>
             <div className="flex gap-2 md:gap-3 flex-wrap mt-6 lp-hero-text-delay-3">
-              {['198 topics', '9 subjects', 'Classes 1\u20135', 'No app needed', 'Free to start'].map(chip => (
+              {['198 topics', '9 subjects', 'Classes 1\u20135', 'Every answer checked', 'Hindi worksheets too'].map(chip => (
                 <span
                   key={chip}
                   className="text-xs text-indigo-200/70 bg-white/[0.08] border border-white/[0.12] py-1.5 px-4 rounded-full"
