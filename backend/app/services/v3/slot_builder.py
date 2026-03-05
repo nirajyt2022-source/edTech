@@ -437,7 +437,7 @@ def _random_subtraction(grade: int, allow_borrow: bool = True) -> dict:
             a = random.randint(20, 99)
             b = random.randint(10, a - 3)
         elif grade == 3:
-            a = random.randint(100, 999)
+            a = random.randint(120, 999)
             b = random.randint(100, a - 10)
         elif grade == 4:
             a = random.randint(1000, 9999)
