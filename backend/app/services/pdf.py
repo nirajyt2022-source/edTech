@@ -118,6 +118,14 @@ _MUTED = colors.HexColor("#94A3B8")  # muted slate
 _RULE = colors.HexColor("#B0B4BC")  # ruled line colour — print-visible
 _HINT_BG = colors.Color(0.95, 0.95, 0.93)  # hint box bg
 
+# Section-specific colours — aligned with web view
+_OBJECTIVE_BG = colors.HexColor("#F0FDF4")  # green-50 (learning objectives)
+_OBJECTIVE_BORDER = colors.HexColor("#22C55E")  # green-500
+_FOCUS_BG = colors.HexColor("#FFFBEB")  # amber-50 (today's focus box)
+_FOCUS_BORDER = colors.HexColor("#F59E0B")  # amber-500
+_PARENT_BG = colors.HexColor("#FFF7ED")  # orange-50 (parent tip)
+_PARENT_BORDER = colors.HexColor("#F97316")  # orange-500
+
 # Tier-specific accent colours
 TIER_COLORS = {
     "Foundation": colors.HexColor("#059669"),  # emerald green
@@ -729,8 +737,8 @@ class PDFService:
             tip_table.setStyle(
                 TableStyle(
                     [
-                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FEF3C7")),
-                        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#D97706")),
+                        ("BACKGROUND", (0, 0), (-1, -1), _PARENT_BG),
+                        ("BOX", (0, 0), (-1, -1), 0.5, _PARENT_BORDER),
                         ("TOPPADDING", (0, 0), (-1, -1), 8),
                         ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
                         ("LEFTPADDING", (0, 0), (-1, -1), 12),
@@ -864,7 +872,7 @@ class PDFService:
         obj_elements.append(Paragraph(self._goal_title, self.styles["ObjectiveTitle"]))
         for obj in objectives:
             obj_elements.append(
-                Paragraph(f"<bullet>&bull;</bullet> {_sanitize_text(obj)}", self.styles["ObjectiveItem"])
+                Paragraph(f"<bullet>&#10003;</bullet> {_sanitize_text(obj)}", self.styles["ObjectiveItem"])
             )
 
         # Wrap in a single-cell table for the bordered box
@@ -875,8 +883,8 @@ class PDFService:
         obj_table.setStyle(
             TableStyle(
                 [
-                    ("BACKGROUND", (0, 0), (-1, -1), _LIGHT_BG),
-                    ("BOX", (0, 0), (-1, -1), 0.5, _PRIMARY),
+                    ("BACKGROUND", (0, 0), (-1, -1), _OBJECTIVE_BG),
+                    ("BOX", (0, 0), (-1, -1), 0.5, _OBJECTIVE_BORDER),
                     ("TOPPADDING", (0, 0), (-1, -1), 8),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
                     ("LEFTPADDING", (0, 0), (-1, -1), 12),
@@ -937,8 +945,8 @@ class PDFService:
         focus_table.setStyle(
             TableStyle(
                 [
-                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F0FDF4")),
-                    ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#16A34A")),
+                    ("BACKGROUND", (0, 0), (-1, -1), _FOCUS_BG),
+                    ("BOX", (0, 0), (-1, -1), 0.5, _FOCUS_BORDER),
                     ("TOPPADDING", (0, 0), (-1, -1), 8),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
                     ("LEFTPADDING", (0, 0), (-1, -1), 12),
