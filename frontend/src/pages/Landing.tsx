@@ -299,11 +299,11 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               CBSE Classes 1&ndash;5 &middot; AI-Powered
             </div>
             <h1 className="lp-hero-h1 mb-5 lp-hero-text-delay">
-              From syllabus to{' '}
-              <em>mastery.</em>
+              CBSE worksheets your child will{' '}
+              <em>actually finish.</em>
             </h1>
             <p className="text-base lg:text-lg leading-relaxed text-indigo-200/80 max-w-[500px] mb-7 lp-hero-text-delay-2">
-              Worksheets, revision notes, flashcards, and AI grading — all built for the CBSE syllabus your child actually follows.
+              Pick any topic, get a print-ready worksheet in 30 seconds — with three difficulty levels, Indian contexts, and a full answer key.
             </p>
             <div className="lp-hero-text-delay-3">
               <Button
@@ -311,12 +311,12 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 onClick={onGetStarted}
                 className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3.5 text-base rounded-xl font-semibold font-[Inter,system-ui,sans-serif] cursor-pointer inline-flex items-center gap-2 shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 hover:-translate-y-0.5"
               >
-                Generate your first worksheet &mdash; free
+                Generate a free worksheet
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </div>
             <div className="flex gap-2 md:gap-3 flex-wrap mt-6 lp-hero-text-delay-3">
-              {['198 topics', '9 subjects', '7 learning tools', 'Classes 1\u20135', 'Free to start'].map(chip => (
+              {['198 topics', '9 subjects', 'Classes 1\u20135', 'No app needed', 'Free to start'].map(chip => (
                 <span
                   key={chip}
                   className="text-xs text-indigo-200/70 bg-white/[0.08] border border-white/[0.12] py-1.5 px-4 rounded-full"
@@ -525,7 +525,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             onClick={onGetStarted}
             className="mt-8 inline-flex items-center gap-2 bg-[#1E1B4B] text-white cursor-pointer text-sm font-semibold py-3 px-8 rounded-lg font-[Inter,system-ui,sans-serif] hover:bg-[#2d2a5e] transition-colors"
           >
-            Generate yours free
+            Generate a free worksheet
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -873,7 +873,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         <div className="max-w-[700px] mx-auto text-center">
           <p className="text-xs font-bold uppercase tracking-[0.1em] text-orange-500 mb-2.5">Comparison</p>
           <h2 className="font-[Fraunces,Georgia,serif] text-[clamp(28px,4vw,40px)] font-normal text-slate-900 mb-9 tracking-tight">
-            Skolar vs Free Tools
+            Skolar vs Generic Worksheet Sites
           </h2>
           <div className="overflow-auto rounded-xl border border-slate-200 shadow-sm">
             <table className="w-full border-collapse text-sm bg-white">
@@ -881,7 +881,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 <tr>
                   <th className="p-3.5 px-3 md:px-5 text-left text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Feature</th>
                   <th className="p-3.5 px-3 md:px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-[#1E1B4B] border-b-2 border-slate-200">Skolar</th>
-                  <th className="p-3.5 px-3 md:px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Free Tools</th>
+                  <th className="p-3.5 px-3 md:px-5 text-center text-[11.5px] font-bold uppercase tracking-[0.06em] text-slate-400 border-b-2 border-slate-200">Others</th>
                 </tr>
               </thead>
               <tbody>
@@ -939,7 +939,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 onClick={onGetStarted}
                 className="w-full bg-transparent border-2 border-orange-500 text-orange-500 cursor-pointer text-sm font-semibold py-3 px-5 rounded-xl font-[Inter,system-ui,sans-serif] hover:bg-orange-50 transition-colors"
               >
-                Get started free
+                Generate a free worksheet
               </button>
             </div>
 
@@ -953,7 +953,8 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 {'\u20B9'}199<span className="text-[15px] font-normal text-white/60"> /month</span>
               </div>
               <p className="text-[13px] text-white/60 mb-1 mt-1">Unlimited worksheets</p>
-              <p className="text-[11px] text-white/40 mb-6">AED 29/mo</p>
+              <p className="text-[11px] text-white/40 mb-1">AED 29/mo</p>
+              <p className="text-[11px] text-white/40 mb-6">Cancel anytime</p>
               <ul className="list-none p-0 m-0 mb-6 flex flex-col gap-2.5">
                 {['Unlimited worksheets', 'Mastery tracking', 'Bulk generation', 'Parent insights', 'Priority support'].map(f => (
                   <li key={f} className="text-[13.5px] text-white/90 flex items-center gap-2">
@@ -965,7 +966,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 onClick={onGetStarted}
                 className="w-full bg-white border-none text-[#1E1B4B] cursor-pointer text-sm font-semibold py-3 px-5 rounded-xl font-[Inter,system-ui,sans-serif] hover:bg-white/90 transition-colors"
               >
-                Start Scholar plan
+                Go unlimited
               </button>
             </div>
 
@@ -991,7 +992,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                 onClick={onGetStarted}
                 className="w-full bg-orange-500 border-none text-white cursor-pointer text-sm font-semibold py-3 px-5 rounded-xl font-[Inter,system-ui,sans-serif] hover:bg-orange-600 transition-colors"
               >
-                Start annual plan
+                Save 37% — go annual
               </button>
             </div>
           </div>
@@ -1079,8 +1080,8 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               <p className="text-xs font-medium text-slate-500 mt-1">Subjects across Classes 1-5</p>
             </div>
             <div>
-              <p className="text-3xl md:text-4xl font-bold text-[#1E1B4B] font-[Fraunces,Georgia,serif]">5</p>
-              <p className="text-xs font-medium text-slate-500 mt-1">Cognitive roles per worksheet</p>
+              <p className="text-3xl md:text-4xl font-bold text-[#1E1B4B] font-[Fraunces,Georgia,serif]">3</p>
+              <p className="text-xs font-medium text-slate-500 mt-1">Difficulty levels per sheet</p>
             </div>
             <div>
               <p className="text-3xl md:text-4xl font-bold text-[#1E1B4B] font-[Fraunces,Georgia,serif]">100%</p>
@@ -1194,10 +1195,13 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             onClick={onGetStarted}
             className="bg-orange-500 hover:bg-orange-600 border-none text-white cursor-pointer text-base font-semibold py-4 px-10 rounded-xl font-[Inter,system-ui,sans-serif] transition-all duration-300 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:-translate-y-0.5 inline-flex items-center gap-2"
           >
-            Create free worksheet
+            Generate a free worksheet
             <ArrowRight className="w-5 h-5" />
           </button>
-          <p className="text-sm text-white/40 mt-5 flex items-center justify-center gap-1.5">
+          <p className="text-xs text-white/30 mt-5">
+            Your data stays private. No ads, no spam, no sharing.
+          </p>
+          <p className="text-sm text-white/40 mt-3 flex items-center justify-center gap-1.5">
             <Mail className="w-4 h-4" />
             hello@skolar.in
           </p>
@@ -1255,7 +1259,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         </>
       )}
 
-      {scrolled && (
+      {scrolled && !showFloatingCta && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-full bg-[#1E1B4B] text-white shadow-lg flex items-center justify-center hover:bg-[#312E81] transition-colors"
