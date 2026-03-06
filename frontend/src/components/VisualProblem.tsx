@@ -1,4 +1,4 @@
-import { memo, useRef, useCallback, useMemo } from 'react'
+import React, { memo, useRef, useCallback, useMemo } from 'react'
 
 /* ── Standardized visual sizes ── */
 const VISUAL_SIZE: Record<string, string> = {
@@ -7,11 +7,14 @@ const VISUAL_SIZE: Record<string, string> = {
   base_ten_regrouping: "w-40",
   grid_symmetry: "w-36 h-36",
   shapes: "w-28 h-28",
-  pie_fraction: "w-28 h-32",
+  pie_fraction: "w-full max-w-[350px]",
   money_coins: "w-full max-w-[300px]",
   pattern_tiles: "w-full max-w-[300px]",
-  object_group: "w-fit",
+  object_group: "w-full max-w-[400px]",
   abacus: "w-40 h-28",
+  picture_word_match: "w-full max-w-[300px]",
+  labeled_diagram: "w-full max-w-[300px]",
+  match_columns: "w-full max-w-[400px]",
 }
 
 function VisualContainer({ type, children }: { type: string; children: React.ReactNode }) {
@@ -54,6 +57,12 @@ export default memo(function VisualProblem({ visualType, visualData, colorMode =
       return <VisualContainer type="pattern_tiles"><PatternTilesVisual tiles={(visualData.tiles as string[]) || []} blankPosition={visualData.blank_position != null ? Number(visualData.blank_position) : -1} /></VisualContainer>
     case 'abacus':
       return <VisualContainer type="abacus"><AbacusVisual hundreds={Number(visualData.hundreds) || 0} tens={Number(visualData.tens) || 0} ones={Number(visualData.ones) || 0} /></VisualContainer>
+    case 'picture_word_match':
+      return <VisualContainer type="picture_word_match"><PictureWordMatchVisual emoji={String(visualData.emoji || '❓')} /></VisualContainer>
+    case 'labeled_diagram':
+      return <VisualContainer type="labeled_diagram"><LabeledDiagramVisual labels={(visualData.labels as string[]) || []} blankIndex={Number(visualData.blank_index ?? -1)} /></VisualContainer>
+    case 'match_columns':
+      return <VisualContainer type="match_columns"><MatchColumnsVisual left={(visualData.left as {emoji: string; label: string}[]) || []} right={(visualData.right as {emoji: string; label: string}[]) || []} /></VisualContainer>
     default:
       return null
   }
@@ -223,13 +232,59 @@ function ClockVisual({ hour, minute }: { hour: number; minute: number }) {
 
 /* ── Object Group ── */
 
-interface GroupItem { count: number; label: string }
+interface GroupItem { count: number; label: string; emoji?: string; type?: string }
 
 function ObjectGroupVisual({ groups, operation, useColor }: { groups: GroupItem[]; operation: string; useColor?: boolean }) {
   if (!groups.length) return null
   const maxCount = Math.max(...groups.map(g => g.count || 0))
   if (maxCount > 20) return null // too many to draw
 
+  const hasEmoji = groups.some(g => g.emoji)
+
+  if (hasEmoji) {
+    return (
+      <div className="py-3 px-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200/60 w-full">
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          {groups.map((group, gi) => (
+            <React.Fragment key={gi}>
+              {gi > 0 && (
+                <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center shadow-md shadow-orange-200 flex-shrink-0">
+                  <span className="text-white text-lg font-bold">{operation}</span>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-1 items-center justify-center bg-white/70 rounded-xl px-3 py-2 border border-amber-100 shadow-sm">
+                {Array.from({ length: Math.min(group.count || 0, 20) }).map((_, i) => (
+                  <span key={i} className="text-2xl md:text-3xl leading-none select-none"
+                        style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }}>
+                    {group.emoji || "●"}
+                  </span>
+                ))}
+              </div>
+            </React.Fragment>
+          ))}
+
+          {operation !== "count" && (
+            <>
+              <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shadow-md shadow-indigo-200 flex-shrink-0">
+                <span className="text-white text-lg font-bold">=</span>
+              </div>
+              <div className="w-12 h-12 rounded-xl border-dashed border-indigo-300 bg-white flex items-center justify-center shadow-inner"
+                   style={{ borderWidth: "3px", borderStyle: "dashed" }}>
+                <span className="text-xl font-bold text-indigo-400">?</span>
+              </div>
+            </>
+          )}
+        </div>
+        {groups[0]?.label && (
+          <p className="text-center text-xs text-amber-600/70 mt-2 font-medium">
+            Count the {groups[0].label}s!
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  // Fall back to old TokenIcon implementation for backward compatibility
   return (
     <div className="flex items-center gap-3 flex-wrap" role="img" aria-label={groups.map(g => `${g.count} ${g.label}`).join(` ${operation} `)}>
       {groups.map((group, gi) => {
@@ -436,39 +491,53 @@ function NumberLineVisual({ start, end, step, highlight, useColor }: { start: nu
 /* ── Pie Fraction ── */
 
 function PieFractionVisual({ numerator, denominator }: { numerator: number; denominator: number }) {
-  const cx = 60, cy = 60, r = 48
+  const size = 130
+  const cx = size / 2
+  const cy = size / 2
+  const r = 50
   const clampedNum = Math.max(0, Math.min(numerator, denominator))
   const clampedDen = Math.max(1, denominator)
 
-  const wedges = Array.from({ length: clampedDen }, (_, i) => {
-    const startAngle = (i / clampedDen) * 2 * Math.PI - Math.PI / 2
-    const endAngle = ((i + 1) / clampedDen) * 2 * Math.PI - Math.PI / 2
-    const x1 = cx + Math.cos(startAngle) * r
-    const y1 = cy + Math.sin(startAngle) * r
-    const x2 = cx + Math.cos(endAngle) * r
-    const y2 = cy + Math.sin(endAngle) * r
-    const largeArc = clampedDen === 1 ? 1 : 0
-    const d = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`
-    return { d, shaded: i < clampedNum }
+  const sectors = Array.from({ length: clampedDen }).map((_, i) => {
+    const startAngle = (i * 360) / clampedDen - 90
+    const endAngle = ((i + 1) * 360) / clampedDen - 90
+    const startRad = (startAngle * Math.PI) / 180
+    const endRad = (endAngle * Math.PI) / 180
+    const x1 = cx + r * Math.cos(startRad)
+    const y1 = cy + r * Math.sin(startRad)
+    const x2 = cx + r * Math.cos(endRad)
+    const y2 = cy + r * Math.sin(endRad)
+    const largeArc = (endAngle - startAngle) > 180 ? 1 : 0
+    const isFilled = i < clampedNum
+
+    return (
+      <path key={i}
+        d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+        fill={isFilled ? "#6366F1" : "#EEF2FF"}
+        stroke="#A5B4FC"
+        strokeWidth="1.5"
+      />
+    )
   })
 
   return (
-    <svg viewBox="0 0 120 140" className="w-full h-full text-foreground print:text-black" role="img" aria-label={`Fraction ${clampedNum} out of ${clampedDen}: ${clampedNum}/${clampedDen} of a circle shaded`}>
-      {wedges.map((w, i) => (
-        <path
-          key={i}
-          d={w.d}
-          fill={w.shaded ? 'currentColor' : 'none'}
-          stroke="currentColor"
-          strokeWidth="1"
-          opacity={w.shaded ? 0.25 : 1}
-        />
-      ))}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <text x={cx} y={cy + r + 20} textAnchor="middle" fontSize="12" fill="currentColor" fontWeight="600">
-        {clampedNum}/{clampedDen}
-      </text>
-    </svg>
+    <div className="py-4 px-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200/60 w-full">
+      <div className="flex items-center justify-center gap-6">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="drop-shadow-md" role="img" aria-label={`Fraction ${clampedNum}/${clampedDen} of a circle shaded`}>
+          {sectors}
+        </svg>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-indigo-600">
+            <span className="border-b-2 border-indigo-400 px-1">{clampedNum}</span>
+            <br />
+            <span className="px-1">{clampedDen}</span>
+          </div>
+          <div className="text-xs text-indigo-400 mt-2">
+            {clampedNum} of {clampedDen} parts
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -647,6 +716,81 @@ function PatternTilesVisual({ tiles, blankPosition }: { tiles: string[]; blankPo
         )
       })}
     </svg>
+  )
+}
+
+/* ── Picture Word Match ── */
+
+function PictureWordMatchVisual({ emoji }: { emoji: string }) {
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-sky-50 to-cyan-50 rounded-2xl border border-sky-200/60 w-full">
+      <div className="flex items-center justify-center">
+        <span className="text-6xl md:text-7xl drop-shadow-lg">
+          {emoji}
+        </span>
+      </div>
+      <p className="text-center text-sm text-sky-600/80 mt-2 font-medium">
+        What is this?
+      </p>
+    </div>
+  )
+}
+
+/* ── Labeled Diagram ── */
+
+function LabeledDiagramVisual({ labels, blankIndex }: { labels: string[]; blankIndex: number }) {
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200/60 w-full">
+      <div className="flex flex-col items-center gap-1">
+        {labels.map((label, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className={`px-3 py-1 rounded-lg text-sm font-semibold ${
+              i === blankIndex
+                ? 'bg-orange-100 text-orange-600 border-2 border-dashed border-orange-300'
+                : 'bg-emerald-100 text-emerald-700'
+            }`}>
+              {i === blankIndex ? '???' : label}
+            </div>
+            <span className="text-emerald-400">&larr;</span>
+            <div className="w-2 h-6 bg-emerald-300 rounded-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Match Columns ── */
+
+function MatchColumnsVisual({ left, right }: { left: {emoji: string; label: string}[]; right: {emoji: string; label: string}[] }) {
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-violet-50 to-fuchsia-50 rounded-2xl border border-violet-200/60 w-full">
+      <div className="flex justify-around">
+        <div className="space-y-3">
+          {left.map((item, i) => (
+            <div key={i} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-violet-100 shadow-sm">
+              <span className="text-2xl">{item.emoji}</span>
+              <span className="text-sm font-medium text-slate-700">{item.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col justify-center">
+          {left.map((_, i) => (
+            <div key={i} className="h-10 flex items-center">
+              <div className="w-16 border-t-2 border-dashed border-violet-300" />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-3">
+          {right.map((item, i) => (
+            <div key={i} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-violet-100 shadow-sm">
+              <span className="text-2xl">{item.emoji}</span>
+              <span className="text-sm font-medium text-slate-700">{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 

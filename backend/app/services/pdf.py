@@ -1129,6 +1129,306 @@ class PDFService:
         story.append(focus_table)
         story.append(Spacer(1, 6))
 
+    # ── Visual rendering methods ───────────────────────────────────────────
+    def _build_visual(self, visual_type: str, visual_data: dict, page_width: float) -> list:
+        """Render a visual element and return ReportLab flowables."""
+        if not visual_data:
+            return []
+
+        try:
+            if visual_type == "object_group":
+                return self._draw_object_group(visual_data, page_width)
+            elif visual_type == "pie_fraction":
+                return self._draw_pie_fraction(visual_data)
+            elif visual_type == "clock":
+                return self._draw_clock(visual_data)
+            elif visual_type == "number_line":
+                return self._draw_number_line(visual_data, page_width)
+            elif visual_type == "picture_word_match":
+                return self._draw_picture_word_match(visual_data)
+            elif visual_type == "labeled_diagram":
+                return self._draw_labeled_diagram(visual_data)
+            elif visual_type == "match_columns":
+                return self._draw_match_columns(visual_data)
+        except Exception as e:
+            logger.warning("Failed to render visual %s in PDF: %s", visual_type, e)
+        return []
+
+    def _draw_object_group(self, data: dict, page_width: float) -> list:
+        """Draw emoji groups for picture addition/subtraction as colored circles."""
+        from reportlab.graphics.shapes import Circle, Drawing, Rect, String
+        from reportlab.lib.colors import HexColor
+
+        groups = data.get("groups", [])
+        operation = data.get("operation", "+")
+
+        total_objects = sum(g.get("count", 0) for g in groups)
+        obj_size = 14 if total_objects <= 12 else 10
+        spacing = obj_size + 4
+
+        draw_width = min(page_width - 2 * cm, 400)
+        draw_height = 50
+
+        d = Drawing(draw_width, draw_height)
+
+        group_colors = [
+            HexColor("#EF4444"),
+            HexColor("#3B82F6"),
+            HexColor("#F59E0B"),
+            HexColor("#10B981"),
+        ]
+
+        x_offset = 20
+
+        for gi, group in enumerate(groups):
+            count = group.get("count", 0)
+            color = group_colors[gi % len(group_colors)]
+
+            if gi > 0:
+                d.add(
+                    String(
+                        x_offset + 5,
+                        draw_height / 2 - 6,
+                        operation,
+                        fontSize=16,
+                        fontName=FONT_BOLD,
+                        fillColor=HexColor("#F97316"),
+                    )
+                )
+                x_offset += 25
+
+            for i in range(min(count, 20)):
+                row = i // 8
+                col = i % 8
+                cx = x_offset + col * spacing + obj_size / 2
+                cy = draw_height - 10 - row * spacing - obj_size / 2
+                d.add(Circle(cx, cy, obj_size / 2, fillColor=color, strokeColor=None))
+
+            cols_used = min(count, 8)
+            x_offset += cols_used * spacing + 10
+
+        if operation != "count":
+            d.add(
+                String(
+                    x_offset + 5,
+                    draw_height / 2 - 6,
+                    "=",
+                    fontSize=16,
+                    fontName=FONT_BOLD,
+                    fillColor=HexColor("#6366F1"),
+                )
+            )
+            x_offset += 25
+            d.add(
+                Rect(
+                    x_offset,
+                    draw_height / 2 - 12,
+                    30,
+                    24,
+                    fillColor=None,
+                    strokeColor=HexColor("#A5B4FC"),
+                    strokeWidth=1.5,
+                    strokeDashArray=[4, 2],
+                )
+            )
+
+        return [d, Spacer(1, 4)]
+
+    def _draw_pie_fraction(self, data: dict) -> list:
+        """Draw a pie chart fraction visual."""
+        from reportlab.graphics.shapes import Drawing, Line, String, Wedge
+        from reportlab.lib.colors import HexColor
+
+        n = data.get("numerator", 1)
+        d_val = data.get("denominator", 4)
+
+        drawing = Drawing(200, 100)
+        cx, cy, r = 50, 50, 40
+
+        angle_per = 360 / max(d_val, 1)
+        for i in range(d_val):
+            start = 90 - (i + 1) * angle_per
+            fill = HexColor("#6366F1") if i < n else HexColor("#EEF2FF")
+            drawing.add(
+                Wedge(
+                    cx, cy, r, start, start + angle_per, fillColor=fill, strokeColor=HexColor("#A5B4FC"), strokeWidth=1
+                )
+            )
+
+        drawing.add(String(130, 55, str(n), fontSize=20, fontName=FONT_BOLD, fillColor=HexColor("#4F46E5")))
+        drawing.add(Line(120, 48, 160, 48, strokeColor=HexColor("#4F46E5"), strokeWidth=1.5))
+        drawing.add(String(130, 30, str(d_val), fontSize=20, fontName=FONT_BOLD, fillColor=HexColor("#4F46E5")))
+
+        return [drawing, Spacer(1, 4)]
+
+    def _draw_clock(self, data: dict) -> list:
+        """Draw a clock face."""
+        import math as _math
+
+        from reportlab.graphics.shapes import Circle, Drawing, Line, String
+        from reportlab.lib.colors import HexColor
+
+        hour = data.get("hour", 3)
+        minute = data.get("minute", 0)
+
+        drawing = Drawing(120, 120)
+        cx, cy, r = 60, 60, 48
+
+        drawing.add(Circle(cx, cy, r + 4, fillColor=HexColor("#1E1B4B")))
+        drawing.add(Circle(cx, cy, r, fillColor=HexColor("#FFFFFF")))
+
+        for h in range(1, 13):
+            angle = _math.radians(90 - h * 30)
+            nx = cx + (r - 14) * _math.cos(angle)
+            ny = cy + (r - 14) * _math.sin(angle)
+            drawing.add(String(nx - 4, ny - 4, str(h), fontSize=9, fontName=FONT_BOLD, fillColor=HexColor("#1E1B4B")))
+
+        h_angle = _math.radians(90 - (hour % 12 + minute / 60) * 30)
+        drawing.add(
+            Line(
+                cx,
+                cy,
+                cx + 26 * _math.cos(h_angle),
+                cy + 26 * _math.sin(h_angle),
+                strokeColor=HexColor("#1E1B4B"),
+                strokeWidth=3.5,
+            )
+        )
+
+        m_angle = _math.radians(90 - minute * 6)
+        drawing.add(
+            Line(
+                cx,
+                cy,
+                cx + 36 * _math.cos(m_angle),
+                cy + 36 * _math.sin(m_angle),
+                strokeColor=HexColor("#6366F1"),
+                strokeWidth=2,
+            )
+        )
+
+        drawing.add(Circle(cx, cy, 3.5, fillColor=HexColor("#F97316")))
+
+        return [drawing, Spacer(1, 4)]
+
+    def _draw_number_line(self, data: dict, page_width: float) -> list:
+        """Draw a number line."""
+        from reportlab.graphics.shapes import Drawing, Line, String
+        from reportlab.lib.colors import HexColor
+
+        start = data.get("start", 0)
+        end = data.get("end", 20)
+        step = data.get("step", 2)
+        highlight = data.get("highlight")
+
+        draw_width = min(page_width - 2 * cm, 350)
+        draw_height = 40
+        pad = 20
+
+        drawing = Drawing(draw_width, draw_height)
+        line_y = 20
+
+        drawing.add(Line(pad, line_y, draw_width - pad, line_y, strokeColor=HexColor("#1E1B4B"), strokeWidth=1.2))
+
+        rng = max(end - start, 1)
+        v = start
+        while v <= end:
+            x = pad + ((v - start) / rng) * (draw_width - 2 * pad)
+            drawing.add(Line(x, line_y - 5, x, line_y + 5, strokeColor=HexColor("#1E1B4B"), strokeWidth=1))
+            drawing.add(
+                String(x - 4, line_y + 10, str(v), fontSize=7, fontName=FONT_REGULAR, fillColor=HexColor("#1E1B4B"))
+            )
+            v += step
+
+        if highlight is not None and start <= highlight <= end:
+            from reportlab.graphics.shapes import Circle
+
+            hx = pad + ((highlight - start) / rng) * (draw_width - 2 * pad)
+            drawing.add(
+                Circle(hx, line_y, 4, fillColor=HexColor("#6366F1"), strokeColor=HexColor("#1E1B4B"), strokeWidth=1.5)
+            )
+
+        return [drawing, Spacer(1, 4)]
+
+    def _draw_picture_word_match(self, data: dict) -> list:
+        """Draw a large emoji for picture-word matching."""
+        emoji = data.get("emoji", "?")
+        p = Paragraph(
+            f"<font size='30'>{_sanitize_text(emoji)}</font>",
+            ParagraphStyle("EmojiCenter", alignment=TA_CENTER, fontName=FONT_REGULAR, spaceBefore=4, spaceAfter=4),
+        )
+        return [p, Spacer(1, 4)]
+
+    def _draw_labeled_diagram(self, data: dict) -> list:
+        """Draw a labeled diagram with one blank label."""
+        labels = data.get("labels", [])
+        blank_idx = data.get("blank_index", -1)
+
+        rows = []
+        for i, label in enumerate(labels):
+            display = "___?" if i == blank_idx else _sanitize_text(label)
+            rows.append([Paragraph(display, self.styles["QuestionText"])])
+
+        if not rows:
+            return []
+
+        t = Table(rows, colWidths=[4 * cm])
+        t.setStyle(
+            TableStyle(
+                [
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 2),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+                ]
+            )
+        )
+        return [t, Spacer(1, 4)]
+
+    def _draw_match_columns(self, data: dict) -> list:
+        """Draw a two-column match table."""
+        left_items = data.get("left", [])
+        right_items = data.get("right", [])
+
+        rows = []
+        max_len = max(len(left_items), len(right_items))
+        for i in range(max_len):
+            left_text = ""
+            if i < len(left_items):
+                item = left_items[i]
+                left_text = f"{_sanitize_text(item.get('emoji', ''))} {_sanitize_text(item.get('label', ''))}"
+            right_text = ""
+            if i < len(right_items):
+                item = right_items[i]
+                right_text = f"{_sanitize_text(item.get('emoji', ''))} {_sanitize_text(item.get('label', ''))}"
+            rows.append(
+                [
+                    Paragraph(left_text, self.styles["QuestionText"]),
+                    Paragraph(
+                        "________", ParagraphStyle("MatchLine", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=8)
+                    ),
+                    Paragraph(right_text, self.styles["QuestionText"]),
+                ]
+            )
+
+        if not rows:
+            return []
+
+        t = Table(rows, colWidths=[4 * cm, 2 * cm, 4 * cm])
+        t.setStyle(
+            TableStyle(
+                [
+                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                    ("GRID", (0, 0), (0, -1), 0.5, _MUTED),
+                    ("GRID", (2, 0), (2, -1), 0.5, _MUTED),
+                ]
+            )
+        )
+        return [t, Spacer(1, 4)]
+
     def _build_single_question(self, question: dict, number: int, tier_key: str = "all", subject: str = "") -> list:
         """Build elements for a single question. Returns list of flowables."""
         import re as _re
@@ -1209,6 +1509,14 @@ class PDFService:
                     )
                     elements.append(img_table)
                 elements.append(Spacer(1, 3))
+
+        # ── Visual rendering (SVG-based visuals) ─────────────────────────────
+        visual_type = question.get("visual_type")
+        visual_data = question.get("visual_data")
+        if visual_type and visual_data:
+            page_width = A4[0] - 4.0 * cm
+            visual_elements = self._build_visual(visual_type, visual_data, page_width)
+            elements.extend(visual_elements)
 
         # ── Answer area by render format ──────────────────────────────────────
 

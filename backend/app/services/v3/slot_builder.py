@@ -179,6 +179,106 @@ MANDATORY_VISUAL_TOPICS = {
 
 
 # ---------------------------------------------------------------------------
+# Object Emoji Registry — colorful emoji objects for picture addition/subtraction
+# ---------------------------------------------------------------------------
+OBJECT_EMOJI_REGISTRY = {
+    "fruits": [
+        {"emoji": "🍎", "name": "apple", "name_hi": "सेब"},
+        {"emoji": "🥭", "name": "mango", "name_hi": "आम"},
+        {"emoji": "🍌", "name": "banana", "name_hi": "केला"},
+        {"emoji": "🍊", "name": "orange", "name_hi": "संतरा"},
+        {"emoji": "🍇", "name": "grapes", "name_hi": "अंगूर"},
+    ],
+    "nature": [
+        {"emoji": "🌸", "name": "flower", "name_hi": "फूल"},
+        {"emoji": "⭐", "name": "star", "name_hi": "तारा"},
+        {"emoji": "🦋", "name": "butterfly", "name_hi": "तितली"},
+        {"emoji": "🐦", "name": "bird", "name_hi": "चिड़िया"},
+    ],
+    "indian": [
+        {"emoji": "🪁", "name": "kite", "name_hi": "पतंग"},
+        {"emoji": "🪔", "name": "diya", "name_hi": "दीया"},
+        {"emoji": "🏏", "name": "cricket bat", "name_hi": "बल्ला"},
+    ],
+    "school": [
+        {"emoji": "✏️", "name": "pencil", "name_hi": "पेंसिल"},
+        {"emoji": "📕", "name": "book", "name_hi": "किताब"},
+        {"emoji": "🎒", "name": "school bag", "name_hi": "बस्ता"},
+    ],
+}
+
+
+# ---------------------------------------------------------------------------
+# Word-Picture Bank — for picture_word_match visual type
+# ---------------------------------------------------------------------------
+WORD_PICTURE_BANK = {
+    "english": [
+        {"emoji": "🐄", "word": "cow", "wrong": ["cat", "cup", "car"]},
+        {"emoji": "🐕", "word": "dog", "wrong": ["doll", "duck", "door"]},
+        {"emoji": "🏠", "word": "house", "wrong": ["horse", "hat", "hen"]},
+        {"emoji": "🌳", "word": "tree", "wrong": ["train", "truck", "table"]},
+        {"emoji": "☀️", "word": "sun", "wrong": ["son", "sit", "six"]},
+        {"emoji": "🐟", "word": "fish", "wrong": ["fire", "five", "fan"]},
+        {"emoji": "🍎", "word": "apple", "wrong": ["ant", "arm", "axe"]},
+        {"emoji": "📕", "word": "book", "wrong": ["ball", "bat", "bed"]},
+    ],
+    "hindi": [
+        {"emoji": "🐄", "word": "गाय", "wrong": ["बकरी", "भैंस", "घोड़ा"]},
+        {"emoji": "🏠", "word": "घर", "wrong": ["गाँव", "गमला", "गुड़िया"]},
+        {"emoji": "☀️", "word": "सूरज", "wrong": ["चाँद", "तारा", "बादल"]},
+        {"emoji": "🍎", "word": "सेब", "wrong": ["आम", "केला", "अंगूर"]},
+        {"emoji": "📕", "word": "किताब", "wrong": ["कलम", "कुर्सी", "कमरा"]},
+        {"emoji": "🐦", "word": "चिड़िया", "wrong": ["तितली", "मछली", "बिल्ली"]},
+    ],
+}
+
+
+# ---------------------------------------------------------------------------
+# Diagram Bank — for labeled_diagram visual type
+# ---------------------------------------------------------------------------
+DIAGRAM_BANK = {
+    "plant_parts": {
+        "title": "Parts of a Plant",
+        "labels": ["flower", "leaf", "stem", "root"],
+        "labels_hi": ["फूल", "पत्ती", "तना", "जड़"],
+        "diagram_type": "vertical_labeled",
+    },
+    "body_parts": {
+        "title": "Parts of the Body",
+        "labels": ["head", "arm", "leg", "foot"],
+        "labels_hi": ["सिर", "बाज़ू", "टांग", "पैर"],
+        "diagram_type": "body_outline",
+    },
+    "computer_parts": {
+        "title": "Parts of a Computer",
+        "labels": ["monitor", "keyboard", "mouse", "CPU"],
+        "labels_hi": ["मॉनिटर", "कीबोर्ड", "माउस", "सीपीयू"],
+        "diagram_type": "horizontal_labeled",
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Match Bank — for match_columns visual type
+# ---------------------------------------------------------------------------
+MATCH_BANK = {
+    "animal_habitat": [
+        {"left": "🐟", "left_label": "Fish", "right": "🌊", "right_label": "Water"},
+        {"left": "🐦", "left_label": "Bird", "right": "🌳", "right_label": "Tree/Nest"},
+        {"left": "🐫", "left_label": "Camel", "right": "🏜️", "right_label": "Desert"},
+        {"left": "🐒", "left_label": "Monkey", "right": "🌳", "right_label": "Forest"},
+        {"left": "🐄", "left_label": "Cow", "right": "🏡", "right_label": "Farm"},
+    ],
+    "animal_food": [
+        {"left": "🐄", "left_label": "Cow", "right": "🌾", "right_label": "Grass"},
+        {"left": "🐱", "left_label": "Cat", "right": "🐟", "right_label": "Fish"},
+        {"left": "🐒", "left_label": "Monkey", "right": "🍌", "right_label": "Banana"},
+        {"left": "🐰", "left_label": "Rabbit", "right": "🥕", "right_label": "Carrot"},
+    ],
+}
+
+
+# ---------------------------------------------------------------------------
 # Difficulty distribution
 # ---------------------------------------------------------------------------
 DIFFICULTY_DISTRIBUTION = {
@@ -713,7 +813,14 @@ def _generate_wrong_answer(correct: int | str, operation: str | None) -> int | s
 # ---------------------------------------------------------------------------
 # Visual data computation
 # ---------------------------------------------------------------------------
-def _compute_visual_data(visual_type: str, numbers: dict | None, grade_num: int) -> dict | None:
+def _compute_visual_data(
+    visual_type: str,
+    numbers: dict | None,
+    grade_num: int,
+    slot_number: int = 0,
+    topic: str = "",
+    language: str = "English",
+) -> dict | None:
     """Compute visual_data for a given visual type."""
     if visual_type == "pie_fraction":
         if numbers:
@@ -764,18 +871,86 @@ def _compute_visual_data(visual_type: str, numbers: dict | None, grade_num: int)
         return {"start": 0, "end": 20, "step": 2, "highlight": None}
 
     if visual_type == "object_group":
+        # Pick a different emoji category per slot for variety
+        categories = list(OBJECT_EMOJI_REGISTRY.keys())
+        cat_idx = (slot_number or 0) % len(categories)
+        category = categories[cat_idx]
+        objects = OBJECT_EMOJI_REGISTRY[category]
+        obj_idx = ((slot_number or 0) * 3) % len(objects)
+        obj = objects[obj_idx]
+
         if numbers and "a" in numbers:
+            a = numbers["a"]
+            b = numbers.get("b", 0)
             ans_val = numbers.get("answer", 0)
             ans_num = ans_val if isinstance(ans_val, (int, float)) else 0
-            op = "+" if ans_num > max(numbers["a"], numbers.get("b", 0)) else "-"
+            op = "+" if ans_num > max(a, b) else "-"
             return {
                 "groups": [
-                    {"count": numbers["a"], "label": "objects"},
-                    {"count": numbers.get("b", 0), "label": "objects"},
+                    {"count": a, "type": "emoji", "emoji": obj["emoji"], "label": obj["name"]},
+                    {"count": b, "type": "emoji", "emoji": obj["emoji"], "label": obj["name"]},
                 ],
                 "operation": op,
+                "object_name": obj["name"],
+                "object_name_hi": obj["name_hi"],
+                "object_emoji": obj["emoji"],
             }
-        return {"groups": [{"count": 3, "label": "apples"}, {"count": 4, "label": "apples"}], "operation": "+"}
+        count = random.randint(3, 10)
+        return {
+            "groups": [{"count": count, "type": "emoji", "emoji": obj["emoji"], "label": obj["name"]}],
+            "operation": "count",
+            "object_name": obj["name"],
+            "object_emoji": obj["emoji"],
+        }
+
+    if visual_type == "picture_word_match":
+        lang_key = "hindi" if language == "Hindi" else "english"
+        bank = WORD_PICTURE_BANK.get(lang_key, WORD_PICTURE_BANK["english"])
+        idx = (slot_number or 0) % len(bank)
+        item = bank[idx]
+        return {
+            "emoji": item["emoji"],
+            "correct_word": item["word"],
+            "wrong_words": item["wrong"],
+        }
+
+    if visual_type == "labeled_diagram":
+        topic_lower = topic.lower()
+        diagram_key = None
+        if "plant" in topic_lower:
+            diagram_key = "plant_parts"
+        elif "body" in topic_lower:
+            diagram_key = "body_parts"
+        elif "computer" in topic_lower:
+            diagram_key = "computer_parts"
+
+        if diagram_key:
+            diagram = DIAGRAM_BANK[diagram_key]
+            blank_idx = (slot_number or 0) % len(diagram["labels"])
+            return {
+                "diagram_type": diagram["diagram_type"],
+                "title": diagram["title"],
+                "labels": diagram["labels"],
+                "labels_hi": diagram["labels_hi"],
+                "blank_index": blank_idx,
+            }
+        return None
+
+    if visual_type == "match_columns":
+        bank_key = "animal_habitat"
+        if "food" in topic.lower():
+            bank_key = "animal_food"
+
+        items = MATCH_BANK.get(bank_key, MATCH_BANK["animal_habitat"])
+        selected = items[:4]
+        shuffled_right = selected.copy()
+        random.shuffle(shuffled_right)
+
+        return {
+            "left": [{"emoji": x["left"], "label": x["left_label"]} for x in selected],
+            "right": [{"emoji": x["right"], "label": x["right_label"]} for x in shuffled_right],
+            "correct_matches": [selected.index(x) for x in shuffled_right],
+        }
 
     if visual_type == "pattern_tiles":
         tiles = ["A", "B", "A", "B", "A", "?"]
@@ -2111,15 +2286,21 @@ def build_slots(
             # Early-grade maths should be visual-heavy.
             if i < math.ceil(num_questions * 0.6):
                 visual_type = "object_group"
+        elif not is_maths and grade_num <= 2:
+            # Non-maths early grades: use subject-specific visuals for ~50% of questions
+            if random.random() < 0.5:
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
         elif problem_style == "visual":
             if random.random() < 0.8:
-                visual_type = _pick_visual_type(topic, is_maths)
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
         elif problem_style == "mixed":
             if random.random() < 0.5:
-                visual_type = _pick_visual_type(topic, is_maths)
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
 
         if visual_type:
-            visual_data = _compute_visual_data(visual_type, numbers, grade_num)
+            visual_data = _compute_visual_data(
+                visual_type, numbers, grade_num, slot_number=i, topic=topic, language=language
+            )
 
         # Image keywords — auto-assign for Class 1-2, optional for Class 3
         image_kw = None
@@ -2283,17 +2464,51 @@ def build_slots(
     return SlotBuilderOutput(slots=slots, worksheet_meta=worksheet_meta)
 
 
-def _pick_visual_type(topic: str, is_maths: bool) -> str | None:
+def _pick_visual_type(
+    topic: str,
+    is_maths: bool,
+    subject: str = "",
+    grade_num: int = 3,
+    slot_number: int = 0,
+) -> str | None:
     """Pick a suitable visual type for a slot."""
     topic_lower = topic.lower()
+    subject_lower = subject.lower()
+
     # Check mandatory topics first
     for key, vis_type in MANDATORY_VISUAL_TOPICS.items():
         if key in topic_lower:
             return vis_type
 
+    # Subject-specific visual types
+    if subject_lower in ("english",) and grade_num <= 2:
+        return "picture_word_match"
+
+    if subject_lower in ("hindi",) and grade_num <= 2:
+        return "picture_word_match"
+
+    if subject_lower in ("evs",) and grade_num <= 2:
+        if "animal" in topic_lower and "habitat" in topic_lower:
+            return "match_columns"
+        if "plant" in topic_lower or "body" in topic_lower:
+            return "labeled_diagram"
+        return "picture_word_match"
+
+    if subject_lower in ("science",):
+        if "body" in topic_lower or "plant" in topic_lower:
+            return "labeled_diagram"
+        if "animal" in topic_lower:
+            return "match_columns"
+
+    if subject_lower in ("computer",) and grade_num <= 2:
+        return "labeled_diagram"
+
     if is_maths:
-        maths_visuals = ["object_group", "number_line", "base_ten_regrouping"]
-        return random.choice(maths_visuals)
+        maths_visuals = ["object_group", "number_line"]
+        if grade_num <= 2:
+            maths_visuals.append("object_group")  # weight toward objects for young kids
+        return maths_visuals[slot_number % len(maths_visuals)]
+
     return None
 
 
