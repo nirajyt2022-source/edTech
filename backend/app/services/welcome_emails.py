@@ -56,7 +56,7 @@ def _send_email_sync(to: str, subject: str, html: str) -> None:
 
     api_key, from_email = _get_resend_config()
     if not api_key:
-        logger.warning("[WelcomeEmails] RESEND_API_KEY not set — skipping send to %s", to)
+        logger.warning("[WelcomeEmails] Email delivery not configured — skipping send to %s", to)
         return
 
     resend.api_key = api_key
