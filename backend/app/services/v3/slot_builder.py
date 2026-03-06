@@ -880,6 +880,11 @@ TOPIC_IMAGE_MAP = {
 
 def _get_topic_images(topic: str, subject: str, slot_num: int = 0) -> list[str] | None:
     """Get 1-2 relevant image keywords for a topic, rotating per slot."""
+    # Maths uses SVG-based visuals (number lines, column setups, etc.),
+    # not decorative clipart images. Skip image assignment entirely.
+    if subject.lower() in ("maths", "math", "mathematics"):
+        return None
+
     topic_lower = topic.lower()
 
     # Find matching keywords from TOPIC_IMAGE_MAP
