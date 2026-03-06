@@ -12,6 +12,7 @@ import { useSubscription } from '@/lib/subscription'
 import { useProfile } from '@/lib/profile'
 import { fetchSubjects, type CurriculumSubject } from '@/lib/curriculum'
 import { GRADES } from '@/lib/constants'
+import { notify } from '@/lib/toast'
 const FALLBACK_SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
 
 interface SyllabusTopic {
@@ -175,6 +176,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
       })
       setSyllabus(response.data.syllabus)
       setConfidenceScore(response.data.confidence_score)
+      notify.success('Syllabus parsed successfully!')
     } catch (err: unknown) {
       // Extract detail from axios error response, fall back to message
       let errorMessage = 'Failed to parse syllabus'
@@ -185,6 +187,7 @@ export default function SyllabusUpload({ onSyllabusReady }: Props) {
         errorMessage = err.message
       }
       setError(errorMessage)
+      notify.error(errorMessage)
     } finally {
       setLoading(false)
     }

@@ -148,6 +148,14 @@ export default function RoleSelector() {
                     <div className="absolute bottom-0 left-0 w-full h-1 bg-primary/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                   </button>
                 </div>
+
+                <button
+                  onClick={handleParent}
+                  disabled={saving}
+                  className="w-full text-center text-xs font-medium text-muted-foreground/60 hover:text-muted-foreground transition-colors py-2 cursor-pointer bg-transparent border-none"
+                >
+                  Skip for now — continue as Parent
+                </button>
               </div>
             ) : (
               <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">

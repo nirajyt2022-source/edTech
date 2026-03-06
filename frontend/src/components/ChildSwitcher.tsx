@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useChildren } from '@/lib/children'
 import { useProfile } from '@/lib/profile'
 
 export default function ChildSwitcher() {
   const { children, activeChild, activeChildId, setActiveChildId } = useChildren()
   const { activeRole } = useProfile()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -26,10 +28,7 @@ export default function ChildSwitcher() {
   if (children.length === 0) {
     return (
       <button
-        onClick={() => {
-          // Dispatch a custom event that App.tsx can listen to for navigation
-          window.dispatchEvent(new CustomEvent('navigate', { detail: 'children' }))
-        }}
+        onClick={() => navigate('/children')}
         className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-colors"
         style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
       >

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
+import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom'
 
 // Lazy load all pages — only the active page is loaded
 const Auth = lazy(() => import('./pages/Auth'))
@@ -26,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Toaster } from 'sonner'
 import { AuthProvider, useAuth } from '@/lib/auth'
 import { ChildrenProvider } from '@/lib/children'
@@ -38,6 +40,32 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import './index.css'
 
 type Page = 'home' | 'generator' | 'syllabus' | 'saved' | 'children' | 'dashboard' | 'classes' | 'history' | 'progress' | 'ask'
+
+const PAGE_TO_PATH: Record<Page, string> = {
+  home: '/',
+  generator: '/generate',
+  syllabus: '/syllabus',
+  saved: '/saved',
+  children: '/children',
+  dashboard: '/dashboard',
+  classes: '/classes',
+  history: '/history',
+  progress: '/progress',
+  ask: '/ask',
+}
+
+const PATH_TO_PAGE: Record<string, Page> = {
+  '/': 'home',
+  '/generate': 'generator',
+  '/syllabus': 'syllabus',
+  '/saved': 'saved',
+  '/children': 'children',
+  '/dashboard': 'dashboard',
+  '/classes': 'classes',
+  '/history': 'history',
+  '/progress': 'progress',
+  '/ask': 'ask',
+}
 
 // ── Nav Icons ────────────────────────────────────────────────────────────────
 const NAV_ICONS: Record<string, React.ReactElement> = {
@@ -98,7 +126,8 @@ function UsageBadge() {
 }
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState<Page>('home')
+  const navigate = useNavigate()
+  const location = useLocation()
   const [generatorPreFill, setGeneratorPreFill] = useState<{ grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' | 'flashcards' | 'textbook' } | null>(null)
   const [syllabus, setSyllabus] = useState<ParsedSyllabus | null>(null)
   const [showAuth, setShowAuth] = useState(false)
@@ -108,29 +137,28 @@ function AppContent() {
   const profileCtx = useProfile()
   const { activeRole, profile } = profileCtx
 
-  // Listen for navigation events from child components (e.g., ChildSwitcher)
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const page = (e as CustomEvent).detail as Page
-      setCurrentPage(page)
-    }
-    window.addEventListener('navigate', handler)
-    return () => window.removeEventListener('navigate', handler)
-  }, [])
+  // Derive currentPage from pathname
+  const currentPage: Page = PATH_TO_PAGE[location.pathname] || 'home'
 
-  // When role switches, reset to default page for that role
+  // Helper: navigate by page name (used by onNavigate callbacks)
+  const navigateToPage = (page: string, preFill?: { grade?: string; subject?: string; topic?: string; mode?: 'worksheet' | 'revision' | 'flashcards' | 'textbook' }) => {
+    if (preFill) setGeneratorPreFill(preFill)
+    const path = PAGE_TO_PATH[page as Page] || '/'
+    navigate(path)
+  }
+
+  // When role switches, reset to home if on wrong-role page
   useEffect(() => {
     const isTeacherPage = ['home', 'dashboard', 'classes', 'generator'].includes(currentPage)
     const isParentPage = ['home', 'generator', 'syllabus', 'children', 'progress', 'ask'].includes(currentPage)
 
     const sharedPages = ['saved', 'history']
     if (activeRole === 'teacher' && !isTeacherPage && !sharedPages.includes(currentPage)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentPage('home')
+      navigate('/')
     } else if (activeRole === 'parent' && !isParentPage && !sharedPages.includes(currentPage)) {
-      setCurrentPage('home')
+      navigate('/')
     }
-  }, [activeRole, currentPage])
+  }, [activeRole, currentPage, navigate])
 
   // Show loading state
   if (loading) {
@@ -192,18 +220,16 @@ function AppContent() {
   const tabs = isTeacher ? teacherTabs : parentTabs
 
   return (
+    <TooltipProvider delayDuration={400}>
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" richColors />
       <RoleSelector />
-      <OnboardingWizard onNavigate={(page, preFill) => {
-        if (preFill) setGeneratorPreFill(preFill)
-        setCurrentPage(page as Page)
-      }} />
+      <OnboardingWizard onNavigate={(page, preFill) => navigateToPage(page, preFill)} />
       {/* Navigation */}
       <nav className="backdrop-blur-xl border-b border-border/30 sticky top-0 z-50 print:hidden bg-primary">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
-          <button className="flex items-center gap-2.5 group cursor-pointer bg-transparent border-none shrink-0" onClick={() => setCurrentPage('home')} aria-label="Go to home page">
+          <button className="flex items-center gap-2.5 group cursor-pointer bg-transparent border-none shrink-0" onClick={() => navigate('/')} aria-label="Go to home page">
             <span className="text-lg font-bold tracking-tight hidden sm:inline font-fraunces text-white">
               Skolar
             </span>
@@ -222,7 +248,7 @@ function AppContent() {
                 key={tab.id}
                 role="tab"
                 aria-selected={currentPage === tab.id}
-                onClick={() => setCurrentPage(tab.id)}
+                onClick={() => navigate(PAGE_TO_PATH[tab.id])}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${currentPage === tab.id
                   ? 'font-semibold text-white bg-white/15'
                   : 'text-white/55 hover:text-white/85 hover:bg-white/[0.08]'
@@ -239,18 +265,23 @@ function AppContent() {
             <UsageBadge />
 
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 rounded-lg px-1 -mr-1">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors bg-white/15 border-white/25">
-                    <span className="text-xs font-semibold text-white">
-                      {(user.user_metadata?.name || user.email || 'U')[0].toUpperCase()}
-                    </span>
-                  </div>
-                  <svg className="w-3 h-3 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                  </svg>
-                </button>
-              </DropdownMenuTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 rounded-lg px-1 -mr-1">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center border transition-colors bg-white/15 border-white/25">
+                        <span className="text-xs font-semibold text-white">
+                          {(user.user_metadata?.name || user.email || 'U')[0].toUpperCase()}
+                        </span>
+                      </div>
+                      <svg className="w-3 h-3 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
+                    </button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Account menu</TooltipContent>
+              </Tooltip>
               <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl border-border/40 shadow-lg">
                 <DropdownMenuLabel className="px-3 py-2">
                   <p className="text-sm font-semibold truncate">{user.user_metadata?.name || user.email}</p>
@@ -310,7 +341,7 @@ function AppContent() {
                 key={tab.id}
                 role="tab"
                 aria-selected={currentPage === tab.id}
-                onClick={() => setCurrentPage(tab.id)}
+                onClick={() => navigate(PAGE_TO_PATH[tab.id])}
                 className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg min-w-[44px] min-h-[44px] justify-center transition-colors cursor-pointer ${currentPage === tab.id ? 'text-primary' : 'text-muted-foreground'}`}
               >
                 {NAV_ICONS[tab.id]}
@@ -328,49 +359,44 @@ function AppContent() {
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-emerald-600" />
           </div>
         }>
-        {currentPage === 'home' && (
-          <HomeDashboard onNavigate={(page, preFill) => {
-            if (preFill) setGeneratorPreFill(preFill)
-            setCurrentPage(page as Page)
-          }} />
-        )}
-        {currentPage === 'dashboard' && (
-          <TeacherDashboard onNavigate={(page) => setCurrentPage(page as Page)} />
-        )}
-        {currentPage === 'classes' && <ClassManager onNavigate={(page) => setCurrentPage(page as Page)} />}
-        {currentPage === 'generator' && (
-          <WorksheetGenerator
-            syllabus={syllabus}
-            onClearSyllabus={() => setSyllabus(null)}
-            preFill={generatorPreFill}
-            onPreFillConsumed={() => setGeneratorPreFill(null)}
-          />
-        )}
-        {currentPage === 'syllabus' && (
-          <SyllabusUpload
-            onSyllabusReady={(parsedSyllabus) => {
-              setSyllabus(parsedSyllabus)
-              setCurrentPage('generator')
-            }}
-          />
-        )}
-        {currentPage === 'saved' && <SavedWorksheets />}
-        {currentPage === 'history' && (
-          <History onNavigateToGenerator={(preFill) => {
-            if (preFill) setGeneratorPreFill(preFill)
-            setCurrentPage('generator')
-          }} />
-        )}
-        {currentPage === 'progress' && <ParentDashboard onNavigate={(page) => setCurrentPage(page as Page)} />}
-        {currentPage === 'ask' && (
-          <AskSkolar
-            onNavigate={(page, preFill) => {
-              if (preFill) setGeneratorPreFill(preFill)
-              setCurrentPage(page as Page)
-            }}
-          />
-        )}
-        {currentPage === 'children' && <ChildProfiles />}
+        <Routes>
+          <Route path="/" element={
+            <HomeDashboard onNavigate={(page, preFill) => navigateToPage(page, preFill)} />
+          } />
+          <Route path="/generate" element={
+            <WorksheetGenerator
+              syllabus={syllabus}
+              onClearSyllabus={() => setSyllabus(null)}
+              preFill={generatorPreFill}
+              onPreFillConsumed={() => setGeneratorPreFill(null)}
+            />
+          } />
+          <Route path="/syllabus" element={
+            <SyllabusUpload
+              onSyllabusReady={(parsedSyllabus) => {
+                setSyllabus(parsedSyllabus)
+                navigate('/generate')
+              }}
+            />
+          } />
+          <Route path="/saved" element={<SavedWorksheets />} />
+          <Route path="/children" element={<ChildProfiles />} />
+          <Route path="/dashboard" element={
+            <TeacherDashboard onNavigate={(page) => navigateToPage(page)} />
+          } />
+          <Route path="/classes" element={<ClassManager onNavigate={(page) => navigateToPage(page)} />} />
+          <Route path="/history" element={
+            <History onNavigateToGenerator={(preFill) => navigateToPage('generator', preFill)} />
+          } />
+          <Route path="/progress" element={<ParentDashboard onNavigate={(page) => navigateToPage(page)} />} />
+          <Route path="/ask" element={
+            <AskSkolar onNavigate={(page, preFill) => navigateToPage(page, preFill)} />
+          } />
+          {/* Fallback — redirect unknown routes to home */}
+          <Route path="*" element={
+            <HomeDashboard onNavigate={(page, preFill) => navigateToPage(page, preFill)} />
+          } />
+        </Routes>
         </Suspense>
       </main>
 
@@ -393,78 +419,69 @@ function AppContent() {
         </svg>
       </a>
     </div>
+    </TooltipProvider>
   )
 }
 
+// Wrapper components to extract route params for public pages
+function SharedWorksheetRoute() {
+  const { id } = useParams<{ id: string }>()
+  if (!id) return null
+  return <SharedWorksheet worksheetId={id} />
+}
+
+function ClassReportRoute() {
+  const { token } = useParams<{ token: string }>()
+  if (!token) return null
+  return <ClassReport token={token} />
+}
+
 function App() {
-  // Check if we're on a public /shared/:id route (no auth required)
-  const sharedWorksheetId = useMemo(() => {
-    const match = window.location.pathname.match(/^\/shared\/([a-f0-9-]+)$/i)
-    return match ? match[1] : null
-  }, [])
-
-  // Check if we're on a public /report/:token route (no auth required)
-  const reportToken = useMemo(() => {
-    const match = window.location.pathname.match(/^\/report\/([A-Za-z0-9_-]+)$/)
-    return match ? match[1] : null
-  }, [])
-
-  // Public shared worksheet route — no auth providers needed
-  if (sharedWorksheetId) {
-    return (
-      <ErrorBoundary>
-        <Suspense fallback={
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-emerald-600" />
-          </div>
-        }>
-          <SharedWorksheet worksheetId={sharedWorksheetId} />
-        </Suspense>
-        <a
-          href="https://wa.me/919999999999?text=Hi%2C%20I%20need%20help%20with%20Skolar"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-4 z-50 w-12 h-12 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all print:hidden"
-          aria-label="Chat on WhatsApp"
-        >
-          <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-          </svg>
-        </a>
-      </ErrorBoundary>
-    )
-  }
-
-  // Public class report route — no auth providers needed
-  if (reportToken) {
-    return (
-      <ErrorBoundary>
-        <Suspense fallback={
-          <div className="flex items-center justify-center min-h-[50vh]">
-            <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-emerald-600" />
-          </div>
-        }>
-          <ClassReport token={reportToken} />
-        </Suspense>
-      </ErrorBoundary>
-    )
-  }
-
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <ProfileProvider>
-          <SubscriptionProvider>
-            <ChildrenProvider>
-              <ClassesProvider>
-                <EngagementProvider>
-                  <AppContent />
-                </EngagementProvider>
-              </ClassesProvider>
-            </ChildrenProvider>
-          </SubscriptionProvider>
-        </ProfileProvider>
-      </AuthProvider>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-300 border-t-emerald-600" />
+        </div>
+      }>
+        <Routes>
+          {/* Public routes — no auth providers needed */}
+          <Route path="/shared/:id" element={
+            <>
+              <SharedWorksheetRoute />
+              <a
+                href="https://wa.me/919999999999?text=Hi%2C%20I%20need%20help%20with%20Skolar"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="fixed bottom-6 right-4 z-50 w-12 h-12 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all print:hidden"
+                aria-label="Chat on WhatsApp"
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+              </a>
+            </>
+          } />
+          <Route path="/report/:token" element={<ClassReportRoute />} />
+
+          {/* All other routes — wrapped in auth providers */}
+          <Route path="/*" element={
+            <AuthProvider>
+              <ProfileProvider>
+                <SubscriptionProvider>
+                  <ChildrenProvider>
+                    <ClassesProvider>
+                      <EngagementProvider>
+                        <AppContent />
+                      </EngagementProvider>
+                    </ClassesProvider>
+                  </ChildrenProvider>
+                </SubscriptionProvider>
+              </ProfileProvider>
+            </AuthProvider>
+          } />
+        </Routes>
+      </Suspense>
     </ErrorBoundary>
   )
 }

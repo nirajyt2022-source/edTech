@@ -102,7 +102,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           <p className="text-sm text-stone-500">{error || 'This worksheet could not be loaded.'}</p>
         </div>
         <a
-          href="/"
+          href="/?utm_source=shared_worksheet&utm_medium=organic&utm_campaign=worksheet_share&utm_content=error_link"
           className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-950 text-white rounded-lg text-sm font-medium hover:bg-indigo-900 transition-colors"
         >
           Generate your own worksheets
@@ -116,7 +116,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
       {/* Header / branding */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-stone-200/60 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2.5 group">
+          <a href="/?utm_source=shared_worksheet&utm_medium=organic&utm_campaign=worksheet_share&utm_content=header_logo" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded-lg bg-indigo-950 flex items-center justify-center">
               <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -127,7 +127,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
             </span>
           </a>
           <a
-            href="/"
+            href="/?utm_source=shared_worksheet&utm_medium=organic&utm_campaign=worksheet_share&utm_content=header_cta"
             className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-indigo-950 text-white rounded-lg text-xs font-semibold hover:bg-indigo-900 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -299,7 +299,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
                 Print
               </button>
               <a
-                href="/"
+                href="/?utm_source=shared_worksheet&utm_medium=organic&utm_campaign=worksheet_share&utm_content=inline_cta"
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-950 text-white rounded-lg text-sm font-semibold hover:bg-indigo-900 transition-colors"
               >
                 Create free &rarr;
@@ -318,7 +318,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
               198 CBSE topics &middot; Classes 1-5 &middot; Free to start
             </p>
             <a
-              href="/"
+              href="/?utm_source=shared_worksheet&utm_medium=organic&utm_campaign=worksheet_share&utm_content=footer_banner"
               className="inline-flex items-center gap-2 px-8 py-3 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors"
             >
               Generate your first worksheet — free
