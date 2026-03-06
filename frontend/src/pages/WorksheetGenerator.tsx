@@ -716,15 +716,15 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       return
     }
     // Validate skill/topic selection
-    if (useCurriculumFlow && selectedSkills.length === 0) {
+    if (isTeacher && useCurriculumFlow && selectedSkills.length === 0) {
       setError('Please select at least one skill')
       return
     }
-    if (!useCurriculumFlow && useAdvancedSelection && selectedTopics.length === 0) {
+    if (isTeacher && !useCurriculumFlow && useAdvancedSelection && selectedTopics.length === 0) {
       setError('Please select at least one topic')
       return
     }
-    if (!useCurriculumFlow && !useAdvancedSelection && !topic) {
+    if ((!isTeacher || (!useCurriculumFlow && !useAdvancedSelection)) && !topic) {
       setError('Please select a topic')
       return
     }
@@ -742,7 +742,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     // Use chapter name as context if from syllabus, or combine selected topics/skills
     const topicWithContext = syllabus && chapter
       ? `${chapter} - ${topic}`
-      : useCurriculumFlow
+      : isTeacher && useCurriculumFlow
         ? selectedSkills.slice(0, 5).join(', ')
         : useAdvancedSelection
           ? topicsToUse.slice(0, 5).join(', ')
@@ -759,8 +759,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
         language,
         problem_style: problemStyle,
         custom_instructions: customInstructions || undefined,
-        skills: useCurriculumFlow ? selectedSkills : undefined,
-        logic_tags: useCurriculumFlow ? selectedLogicTags : undefined,
+        skills: isTeacher && useCurriculumFlow ? selectedSkills : undefined,
+        logic_tags: isTeacher && useCurriculumFlow ? selectedLogicTags : undefined,
         region,
       })
       // Discard stale result if selections changed during request
