@@ -2636,6 +2636,23 @@ def build_slots(
             # Health and Moral Science benefit from visuals at all grades
             if random.random() < 0.5:
                 visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
+        elif subject.lower() in ("science", "evs") and grade_num <= 5:
+            # Science/EVS Class 3-5: 40% for Class 3, 20% for Class 4-5
+            rate = 0.4 if grade_num <= 3 else 0.2
+            if random.random() < rate:
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
+        elif subject.lower() in ("computer", "gk"):
+            # Computer/GK any grade: 20% visuals
+            if random.random() < 0.2:
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
+        elif not is_maths and grade_num == 3:
+            # Non-maths subjects Class 3: 25% visuals
+            if random.random() < 0.25:
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
+        elif is_maths and grade_num >= 4:
+            # Maths Class 4-5 non-mandatory topics: 15% visuals
+            if random.random() < 0.15:
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
         elif problem_style == "visual":
             if random.random() < 0.8:
                 visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
@@ -2844,14 +2861,24 @@ def _pick_visual_type(
             return "labeled_diagram"
         return "picture_word_match"
 
-    if subject_lower in ("science",):
-        if "body" in topic_lower or "plant" in topic_lower:
+    if subject_lower in ("science", "evs"):
+        if "food" in topic_lower or "nutrition" in topic_lower or "diet" in topic_lower:
+            return "food_plate"
+        if "body" in topic_lower or "human" in topic_lower or "digest" in topic_lower or "plant" in topic_lower:
             return "labeled_diagram"
         if "animal" in topic_lower:
-            return "match_columns"
+            return random.choice(["match_columns", "picture_word_match"])
+        if "water" in topic_lower or "air" in topic_lower:
+            return "labeled_diagram"
+        if "force" in topic_lower or "energy" in topic_lower or "matter" in topic_lower:
+            return "sequence_pictures"
+        return "picture_word_match"
 
-    if subject_lower in ("computer",) and grade_num <= 2:
+    if subject_lower in ("computer",):
         return "labeled_diagram"
+
+    if subject_lower in ("gk",):
+        return "picture_word_match"
 
     # Health
     if subject_lower in ("health",):
@@ -2879,6 +2906,15 @@ def _pick_visual_type(
             return random.choice(["ten_frame", "number_line", "object_group"])
         if "multipl" in topic_lower and grade_num <= 3:
             return "array_visual"
+        # Maths Class 4-5 topics without mandatory visuals
+        if grade_num >= 4:
+            if "decimal" in topic_lower:
+                return "number_line"
+            if "area" in topic_lower or "volume" in topic_lower or "perimeter" in topic_lower:
+                return "shapes"
+            if "speed" in topic_lower or "distance" in topic_lower:
+                return "number_line"
+            return "number_line"
         # Default maths visuals
         if grade_num <= 2:
             return random.choice(["object_group", "ten_frame", "number_line"])
