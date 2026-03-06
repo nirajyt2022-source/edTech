@@ -1,4 +1,5 @@
 import { useState, useRef } from "react"
+import { FileEdit, BookOpen, Layers } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
@@ -312,7 +313,7 @@ export default function TextbookUpload({
         <Card className="border-[#1B4332]/20 bg-[#E8F5E9]/30">
           <CardContent className="p-5 space-y-3">
             <div className="flex items-start gap-3">
-              <span className="text-2xl">📖</span>
+              <BookOpen className="w-6 h-6 text-[#1B4332]" aria-hidden="true" />
               <div>
                 <p className="font-bold text-[#1B4332]">{analysis.detected_chapter}</p>
                 <p className="text-sm text-muted-foreground">
@@ -350,7 +351,7 @@ export default function TextbookUpload({
               disabled={generating}
               className="p-4 rounded-xl border-2 border-[#1B4332]/20 bg-white hover:bg-[#E8F5E9]/50 hover:border-[#1B4332]/40 transition-all text-center group"
             >
-              <span className="text-2xl block mb-2">📝</span>
+              <FileEdit className="w-6 h-6 text-[#1B4332] mx-auto mb-2" aria-hidden="true" />
               <p className="text-sm font-bold text-[#1B4332]">Worksheet</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">10 questions from this chapter</p>
             </button>
@@ -359,7 +360,7 @@ export default function TextbookUpload({
               disabled={generating}
               className="p-4 rounded-xl border-2 border-[#1B4332]/20 bg-white hover:bg-[#E8F5E9]/50 hover:border-[#1B4332]/40 transition-all text-center group"
             >
-              <span className="text-2xl block mb-2">📖</span>
+              <BookOpen className="w-6 h-6 text-[#1B4332] mx-auto mb-2" aria-hidden="true" />
               <p className="text-sm font-bold text-[#1B4332]">Revision Notes</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">Summarize this chapter</p>
             </button>
@@ -368,7 +369,7 @@ export default function TextbookUpload({
               disabled={generating}
               className="p-4 rounded-xl border-2 border-[#1B4332]/20 bg-white hover:bg-[#E8F5E9]/50 hover:border-[#1B4332]/40 transition-all text-center group"
             >
-              <span className="text-2xl block mb-2">🃏</span>
+              <Layers className="w-6 h-6 text-[#1B4332] mx-auto mb-2" aria-hidden="true" />
               <p className="text-sm font-bold text-[#1B4332]">Flashcards</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">12 cards from this content</p>
             </button>

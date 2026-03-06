@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Hash, BookOpen, FlaskConical, Languages, Leaf, Library } from 'lucide-react'
 import { useProfile } from '@/lib/profile'
 import { useChildren } from '@/lib/children'
 import { fetchSubjects } from '@/lib/curriculum'
@@ -18,6 +19,16 @@ const ONBOARDING_KEY = 'skolar_onboarding_complete'
 const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'] as const
 
 const FALLBACK_SUBJECTS = ['Maths', 'English', 'Science', 'Hindi', 'EVS']
+
+const SUBJECT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  Maths: Hash,
+  Mathematics: Hash,
+  English: BookOpen,
+  Science: FlaskConical,
+  Hindi: Languages,
+  EVS: Leaf,
+}
+const DefaultSubjectIcon = Library
 
 const STARTER_TOPICS: Record<string, string> = {
   Maths: 'Addition',
@@ -238,14 +249,10 @@ export default function OnboardingWizard({ onNavigate }: OnboardingWizardProps) 
                         onClick={() => handleSubjectSelect(subject)}
                         className="flex flex-col items-center gap-2 p-5 rounded-2xl border border-border/60 bg-card/40 hover:bg-card hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 text-center group"
                       >
-                        <span className="text-2xl">
-                          {subject === 'Maths' || subject === 'Mathematics' ? '🔢' :
-                           subject === 'English' ? '📖' :
-                           subject === 'Science' ? '🔬' :
-                           subject === 'Hindi' ? '🕉️' :
-                           subject === 'EVS' ? '🌿' :
-                           '📚'}
-                        </span>
+                        {(() => {
+                          const IconComp = SUBJECT_ICONS[subject] || DefaultSubjectIcon
+                          return <IconComp className="w-6 h-6 text-primary" aria-hidden="true" />
+                        })()}
                         <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">
                           {subject}
                         </span>

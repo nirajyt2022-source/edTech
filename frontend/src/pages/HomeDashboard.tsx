@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Brain } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useProfile } from '@/lib/profile'
 import { useChildren } from '@/lib/children'
@@ -142,8 +143,7 @@ export default function HomeDashboard({ onNavigate }: Props) {
       {/* ── 1. Greeting Section ─────────────────────────────────────────────── */}
       <div className="animate-in fade-in slide-in-from-top-4 duration-500">
         <h1
-          className="text-2xl sm:text-3xl font-bold text-foreground"
-          style={{ fontFamily: "'Fraunces', serif" }}
+          className="text-2xl sm:text-3xl font-bold text-foreground font-fraunces"
         >
           {greetingData.greeting},{' '}
           <span className="text-primary">{displayName}</span>
@@ -209,8 +209,8 @@ export default function HomeDashboard({ onNavigate }: Props) {
           onKeyDown={(e) => { if (e.key === 'Enter') onNavigate('ask') }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-lg">
-              🧠
+            <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <Brain className="w-5 h-5 text-emerald-700" aria-hidden="true" />
             </div>
             <div className="flex-1">
               <div className="font-semibold text-foreground flex items-center gap-2">

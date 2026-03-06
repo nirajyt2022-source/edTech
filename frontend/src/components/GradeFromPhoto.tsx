@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { CheckCircle2, XCircle, AlertTriangle, FileEdit } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
@@ -141,7 +142,7 @@ export default function GradeFromPhoto({ open, onOpenChange, worksheet, childId 
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle className="text-lg" style={{ fontFamily: "'Fraunces', serif" }}>
+          <DialogTitle className="text-lg font-fraunces">
             {results ? 'Grading Results' : 'Grade from Photo'}
           </DialogTitle>
         </DialogHeader>
@@ -249,7 +250,7 @@ export default function GradeFromPhoto({ open, onOpenChange, worksheet, childId 
               <div className="relative mx-auto w-16 h-16">
                 <div className="w-16 h-16 border-4 rounded-full animate-spin" style={{ borderColor: 'rgba(30,27,75,0.15)', borderTopColor: '#1E1B4B' }} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg">📝</span>
+                  <FileEdit className="w-5 h-5 text-[#1E1B4B]" aria-hidden="true" />
                 </div>
               </div>
               <div>
@@ -279,7 +280,7 @@ export default function GradeFromPhoto({ open, onOpenChange, worksheet, childId 
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold" style={{ color: scoreColor, fontFamily: "'Fraunces', serif" }}>
+                    <span className="text-2xl font-bold font-fraunces" style={{ color: scoreColor }}>
                       {adjustedScore}/{results.total}
                     </span>
                     <span className="text-[10px] font-medium" style={{ color: '#94a3b8' }}>correct</span>
@@ -307,8 +308,14 @@ export default function GradeFromPhoto({ open, onOpenChange, worksheet, childId 
                       }}
                     >
                       <div className="flex items-start gap-2">
-                        <span className="text-base mt-0.5">
-                          {needsReview ? '⚠️' : isCorrect ? '✅' : '❌'}
+                        <span className="mt-0.5">
+                          {needsReview ? (
+                            <AlertTriangle className="w-5 h-5 text-amber-500" aria-label="Needs review" />
+                          ) : isCorrect ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-500" aria-label="Correct" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-red-500" aria-label="Incorrect" />
+                          )}
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">

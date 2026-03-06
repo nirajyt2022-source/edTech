@@ -78,7 +78,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           <div className="w-14 h-14 border-4 border-indigo-200 border-t-indigo-950 rounded-full animate-spin" />
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold text-stone-800" style={{ fontFamily: 'Lora, Georgia, serif' }}>
+          <h2 className="text-xl font-bold text-stone-800 font-fraunces">
             Loading worksheet...
           </h2>
           <p className="text-sm text-stone-500">Fetching shared content</p>
@@ -96,7 +96,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           </svg>
         </div>
         <div className="text-center space-y-2 max-w-md">
-          <h2 className="text-xl font-bold text-stone-800" style={{ fontFamily: 'Lora, Georgia, serif' }}>
+          <h2 className="text-xl font-bold text-stone-800 font-fraunces">
             Worksheet not found
           </h2>
           <p className="text-sm text-stone-500">{error || 'This worksheet could not be loaded.'}</p>
@@ -144,8 +144,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
           {/* Title area */}
           <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-stone-100">
             <h1
-              className="text-2xl sm:text-3xl font-bold text-stone-800 mb-3"
-              style={{ fontFamily: 'Lora, Georgia, serif' }}
+              className="text-2xl sm:text-3xl font-bold text-stone-800 mb-3 font-fraunces"
             >
               {worksheet.title}
             </h1>
@@ -312,7 +311,7 @@ export default function SharedWorksheet({ worksheetId }: SharedWorksheetProps) {
         {/* CTA banner */}
         <div className="mt-8 pb-12 print:hidden">
           <div className="bg-indigo-950 rounded-2xl p-8 md:p-10 text-center">
-            <h3 className="text-xl md:text-2xl font-bold text-white mb-2" style={{ fontFamily: 'Lora, Georgia, serif' }}>
+            <h3 className="text-xl md:text-2xl font-bold text-white mb-2 font-fraunces">
               Want worksheets like this for your child?
             </h3>
             <p className="text-sm text-indigo-200 mb-6">

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { PartyPopper } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useProfile } from '@/lib/profile'
 import {
@@ -115,8 +116,8 @@ export default function AppFeedback({ currentPage, open, onOpenChange }: AppFeed
         <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
           {submitted ? (
             <div className="p-8 text-center space-y-3">
-              <div className="text-4xl">🎉</div>
-              <h3 className="text-lg font-bold" style={{ fontFamily: "'Fraunces', serif", color: '#1E293B' }}>
+              <PartyPopper className="w-10 h-10 text-amber-500 mx-auto" aria-hidden="true" />
+              <h3 className="text-lg font-bold font-fraunces" style={{ color: '#1E293B' }}>
                 Thank you!
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -126,7 +127,7 @@ export default function AppFeedback({ currentPage, open, onOpenChange }: AppFeed
           ) : (
             <>
               <DialogHeader className="p-6 pb-0">
-                <DialogTitle className="text-lg font-bold" style={{ fontFamily: "'Fraunces', serif" }}>
+                <DialogTitle className="text-lg font-bold font-fraunces">
                   How is your experience?
                 </DialogTitle>
                 <DialogDescription className="text-sm text-muted-foreground">

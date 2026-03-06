@@ -143,8 +143,8 @@ function AppContent() {
           </div>
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-bold" style={{ fontFamily: "'Fraunces', serif", color: '#1E293B' }}>Getting ready</h2>
-          <p className="text-sm font-medium tracking-wide" style={{ color: '#64748B', fontFamily: "'Inter', sans-serif" }}>Preparing your practice workspace...</p>
+          <h2 className="text-xl font-bold font-fraunces" style={{ color: '#1E293B' }}>Getting ready</h2>
+          <p className="text-sm font-medium tracking-wide" style={{ color: '#64748B' }}>Preparing your practice workspace...</p>
         </div>
       </div>
     )
@@ -204,10 +204,10 @@ function AppContent() {
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
           <button className="flex items-center gap-2.5 group cursor-pointer bg-transparent border-none shrink-0" onClick={() => setCurrentPage('home')} aria-label="Go to home page">
-            <span className="text-lg font-bold tracking-tight hidden sm:inline" style={{ fontFamily: "'Fraunces', serif", color: '#FFFFFF' }}>
+            <span className="text-lg font-bold tracking-tight hidden sm:inline font-fraunces" style={{ color: '#FFFFFF' }}>
               Skolar
             </span>
-            <span className="sm:hidden text-lg font-bold" style={{ fontFamily: "'Fraunces', serif", color: '#FFFFFF' }}>
+            <span className="sm:hidden text-lg font-bold font-fraunces" style={{ color: '#FFFFFF' }}>
               S
             </span>
           </button>

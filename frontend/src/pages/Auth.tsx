@@ -124,12 +124,12 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
 
           {/* Wordmark */}
           <h1
-            className="text-4xl font-bold mb-3"
-            style={{ fontFamily: "'Fraunces', serif", color: '#FFFFFF' }}
+            className="text-4xl font-bold mb-3 font-fraunces"
+            style={{ color: '#FFFFFF' }}
           >
             Skolar
           </h1>
-          <p className="text-lg mb-12" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: "'Inter', sans-serif" }}>
+          <p className="text-lg mb-12" style={{ color: 'rgba(255,255,255,0.7)' }}>
             CBSE worksheets with verified answers.
           </p>
 
@@ -148,10 +148,10 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
                 <div>
-                  <span className="text-sm font-medium block" style={{ color: 'rgba(255,255,255,0.9)', fontFamily: "'Inter', sans-serif" }}>
+                  <span className="text-sm font-medium block" style={{ color: 'rgba(255,255,255,0.9)' }}>
                     {item.text}
                   </span>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)', fontFamily: "'Inter', sans-serif" }}>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
                     {item.detail}
                   </span>
                 </div>
@@ -171,7 +171,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               </div>
               <span className="text-xs font-medium text-white/60">Sample worksheet</span>
             </div>
-            <p className="text-[13px] text-white/80 leading-relaxed mb-2" style={{ fontFamily: "'Inter', sans-serif" }}>
+            <p className="text-[13px] text-white/80 leading-relaxed mb-2">
               &ldquo;Meera has 45 marbles. She wins 28 more. How many does she have now?&rdquo;
             </p>
             <div className="flex items-center gap-2">
@@ -181,15 +181,15 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
           </div>
           <div className="flex items-center gap-6 mt-4">
             <div className="text-center">
-              <div className="text-lg font-bold text-white/80" style={{ fontFamily: "'Inter', sans-serif" }}>198</div>
+              <div className="text-lg font-bold text-white/80" >198</div>
               <div className="text-[9px] uppercase tracking-wider text-white/30 font-medium">Topics</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-white/80" style={{ fontFamily: "'Inter', sans-serif" }}>9</div>
+              <div className="text-lg font-bold text-white/80" >9</div>
               <div className="text-[9px] uppercase tracking-wider text-white/30 font-medium">Subjects</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-white/80" style={{ fontFamily: "'Inter', sans-serif" }}>5</div>
+              <div className="text-lg font-bold text-white/80" >5</div>
               <div className="text-[9px] uppercase tracking-wider text-white/30 font-medium">Classes</div>
             </div>
           </div>
@@ -216,8 +216,8 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
           {/* Small Skolar logo at top — centered */}
           <div className="mb-8 text-center">
             <h2
-              className="text-2xl font-bold"
-              style={{ fontFamily: "'Fraunces', serif", color: '#1E1B4B' }}
+              className="text-2xl font-bold font-fraunces"
+              style={{ color: '#1E1B4B' }}
             >
               Skolar
             </h2>
@@ -225,12 +225,12 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
 
           {/* Heading — centered */}
           <h3
-            className="text-2xl font-semibold mb-1 text-center"
-            style={{ fontFamily: "'Fraunces', serif", color: '#1E293B' }}
+            className="text-2xl font-semibold mb-1 text-center font-fraunces"
+            style={{ color: '#1E293B' }}
           >
             {mode === 'signup' ? 'Create your free account' : 'Welcome back'}
           </h3>
-          <p className="text-sm mb-6 text-center" style={{ color: '#64748B', fontFamily: "'Inter', sans-serif" }}>
+          <p className="text-sm mb-6 text-center" style={{ color: '#64748B' }}>
             {mode === 'signup' ? '5 free worksheets every month — no card needed' : 'Sign in to continue'}
           </p>
 
@@ -243,7 +243,6 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               border: '1px solid #E2E8F0',
               backgroundColor: '#FFFFFF',
               color: '#1E293B',
-              fontFamily: "'Inter', sans-serif",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
@@ -274,7 +273,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
               <div className="space-y-2 animate-fade-in">
-                <Label htmlFor="name" style={{ color: '#1E293B', fontFamily: "'Inter', sans-serif" }}>Name</Label>
+                <Label htmlFor="name" style={{ color: '#1E293B' }}>Name</Label>
                 <Input
                   id="name"
                   type="text"
@@ -288,7 +287,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email" style={{ color: '#1E293B', fontFamily: "'Inter', sans-serif" }}>Email</Label>
+              <Label htmlFor="email" style={{ color: '#1E293B' }}>Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -302,7 +301,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" style={{ color: '#1E293B', fontFamily: "'Inter', sans-serif" }}>Password</Label>
+              <Label htmlFor="password" style={{ color: '#1E293B' }}>Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -373,7 +372,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
               size="lg"
               disabled={loading}
               aria-busy={loading}
-              style={{ backgroundColor: '#1E1B4B', fontFamily: "'Inter', sans-serif" }}
+              style={{ backgroundColor: '#1E1B4B' }}
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -386,7 +385,7 @@ export default function Auth({ defaultMode = 'login', onBack }: Props) {
             </Button>
           </form>
 
-          <div className="mt-5 text-center text-sm" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <div className="mt-5 text-center text-sm" >
             <span style={{ color: '#64748B' }}>
               {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
             </span>

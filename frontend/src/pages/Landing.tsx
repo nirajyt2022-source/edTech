@@ -27,6 +27,11 @@ import {
   Mail,
   Camera,
   Quote,
+  FileEdit,
+  Layers,
+  ClipboardList,
+  Brain,
+  type LucideIcon,
 } from 'lucide-react'
 
 interface Props {
@@ -207,14 +212,15 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
         }`}
       >
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
-          <span
-            className={`font-[Fraunces,Georgia,serif] text-2xl font-normal tracking-tight cursor-pointer transition-colors duration-300 ${
+          <button
+            className={`font-[Fraunces,Georgia,serif] text-2xl font-normal tracking-tight cursor-pointer transition-colors duration-300 bg-transparent border-none ${
               scrolled ? 'text-[#1E1B4B]' : 'text-white'
             }`}
             onClick={() => scrollTo('hero')}
+            aria-label="Scroll to top"
           >
             Skolar
-          </span>
+          </button>
 
           {/* Desktop links */}
           <nav className="hidden lg:flex items-center gap-1" aria-label="Main navigation">
@@ -621,21 +627,21 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             Seven tools that work together. Revise a topic, practice it, grade the answers, see progress — all in one place.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[
-              { icon: '\ud83d\udcdd', name: 'Worksheets', desc: '10-question PDFs with 3 difficulty tiers' },
-              { icon: '\ud83d\udcd6', name: 'Revision Notes', desc: '1-page topic summaries with worked examples' },
-              { icon: '\ud83c\udccf', name: 'Flashcards', desc: 'Printable study cards for active recall' },
-              { icon: '\ud83d\udcf8', name: 'Photo Grading', desc: 'Snap answers, AI grades instantly' },
-              { icon: '\ud83d\udcda', name: 'Textbook Scan', desc: 'Photograph any page, generate practice' },
-              { icon: '\ud83d\udccb', name: 'Syllabus Upload', desc: 'Upload your school syllabus to guide practice' },
-              { icon: '\ud83e\udde0', name: 'Ask Skolar', desc: 'AI tutor for homework doubts, step-by-step' },
-            ].map(tool => (
+            {([
+              { Icon: FileEdit, name: 'Worksheets', desc: '10-question PDFs with 3 difficulty tiers' },
+              { Icon: BookOpen, name: 'Revision Notes', desc: '1-page topic summaries with worked examples' },
+              { Icon: Layers, name: 'Flashcards', desc: 'Printable study cards for active recall' },
+              { Icon: Camera, name: 'Photo Grading', desc: 'Snap answers, AI grades instantly' },
+              { Icon: FileDown, name: 'Textbook Scan', desc: 'Photograph any page, generate practice' },
+              { Icon: ClipboardList, name: 'Syllabus Upload', desc: 'Upload your school syllabus to guide practice' },
+              { Icon: Brain, name: 'Ask Skolar', desc: 'AI tutor for homework doubts, step-by-step' },
+            ] as { Icon: LucideIcon; name: string; desc: string }[]).map(tool => (
               <div
                 key={tool.name}
                 className="stagger-child bg-white border border-slate-200 rounded-xl p-5 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-default"
               >
-                <div className="text-3xl mb-3">{tool.icon}</div>
-                <h3 className="text-sm font-semibold text-slate-900 mb-1" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>{tool.name}</h3>
+                <div className="flex justify-center mb-3"><tool.Icon className="w-7 h-7 text-[#1E1B4B]" aria-hidden="true" /></div>
+                <h3 className="text-sm font-semibold text-slate-900 mb-1">{tool.name}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">{tool.desc}</p>
               </div>
             ))}
@@ -673,7 +679,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
               ].map(stat => (
                 <div key={stat.label} className="bg-white rounded-xl p-4 border border-slate-100">
                   <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">{stat.label}</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1" style={{ fontFamily: "'Fraunces', serif" }}>{stat.value}</p>
+                  <p className="text-2xl font-bold text-slate-900 mt-1 font-fraunces">{stat.value}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{stat.sub}</p>
                 </div>
               ))}
@@ -755,20 +761,25 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
           </div>
 
           {/* Subject tabs */}
-          <div className="flex gap-2 flex-wrap justify-center mb-7">
+          <div
+            className="flex gap-2 flex-wrap justify-center mb-7"
+            onMouseEnter={() => { userInteractedRef.current = true }}
+            onFocus={() => { userInteractedRef.current = true }}
+          >
             {SUBJECTS.map((s, i) => {
               const IconComp = s.icon
               return (
                 <button
                   key={s.name}
                   onClick={() => { userInteractedRef.current = true; setActiveSubject(i) }}
+                  aria-pressed={activeSubject === i}
                   className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] md:px-4 md:py-2 md:text-[13px] font-semibold cursor-pointer transition-all duration-200 border font-[Inter,system-ui,sans-serif] ${
                     activeSubject === i
                       ? 'bg-[#1E1B4B] text-white border-[#1E1B4B]'
                       : 'bg-white text-slate-500 border-slate-200 hover:text-slate-700 hover:border-slate-300'
                   }`}
                 >
-                  <IconComp className="w-4 h-4" />
+                  <IconComp className="w-4 h-4" aria-hidden="true" />
                   {s.name}
                 </button>
               )
@@ -1157,12 +1168,15 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex items-center justify-between p-5 text-left bg-transparent border-none cursor-pointer gap-4"
                   aria-expanded={openFaq === i}
+                  aria-controls={`faq-panel-${i}`}
                 >
                   <span itemProp="name" className="text-sm font-semibold text-slate-900 font-[Inter,system-ui,sans-serif]">{item.q}</span>
                   <ChevronDown className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`} />
                 </button>
                 <div
+                  id={`faq-panel-${i}`}
                   className={`overflow-hidden transition-all duration-300 ${openFaq === i ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+                  aria-hidden={openFaq !== i}
                   itemScope
                   itemProp="acceptedAnswer"
                   itemType="https://schema.org/Answer"
@@ -1236,7 +1250,7 @@ export default function LandingPage({ onGetStarted, onSignIn }: Props) {
             className="hidden md:inline-flex fixed bottom-24 right-6 z-40 items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-3 px-6 rounded-full shadow-lg shadow-orange-500/30 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer border-none font-[Inter,system-ui,sans-serif]"
             style={{ animation: 'float-cta-in 0.4s ease-out both' }}
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" aria-hidden="true" />
             Try free — takes 30 sec
           </button>
 

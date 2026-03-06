@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Star, TrendingUp, PenLine, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import { api } from '@/lib/api'
 import { formatSkillTag } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
@@ -88,12 +89,27 @@ function masteryColor(level: string): string {
 
 function masteryLabel(level: string): string {
   switch (level) {
-    case 'mastered': return 'Mastered ⭐'
-    case 'improving': return 'Getting Better 📈'
-    case 'learning':  return 'Needs Practice 📝'
+    case 'mastered': return 'Mastered'
+    case 'improving': return 'Getting Better'
+    case 'learning':  return 'Needs Practice'
     case 'unknown':   return 'Not Started'
     default: return level.charAt(0).toUpperCase() + level.slice(1)
   }
+}
+
+function MasteryBadge({ level }: { level: string }) {
+  const label = masteryLabel(level)
+  const IconComp = level === 'mastered' ? Star
+    : level === 'improving' ? TrendingUp
+    : level === 'learning' ? PenLine
+    : null
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      {IconComp && <IconComp className="w-3.5 h-3.5" aria-hidden="true" />}
+      {label}
+    </span>
+  )
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -554,7 +570,13 @@ function GradingHistorySection({ history, loading: histLoading }: { history: Gra
                   {item.results.map((r) => (
                     <div key={r.question_number} className="flex items-start gap-2 text-sm">
                       <span className="mt-0.5">
-                        {r.needs_review ? '⚠️' : r.is_correct ? '✅' : '❌'}
+                        {r.needs_review ? (
+                          <AlertTriangle className="w-4 h-4 text-amber-500" aria-label="Needs review" />
+                        ) : r.is_correct ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" aria-label="Correct" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-red-500" aria-label="Incorrect" />
+                        )}
                       </span>
                       <div className="min-w-0 flex-1">
                         <span className="font-medium">Q{r.question_number}</span>
@@ -927,7 +949,7 @@ export default function ParentDashboard({ onNavigate }: { onNavigate?: (page: st
                             </td>
                             <td className="py-3 px-2">
                               <Badge variant="outline" className={masteryColor(skill.mastery_level)}>
-                                {masteryLabel(skill.mastery_level)}
+                                <MasteryBadge level={skill.mastery_level} />
                               </Badge>
                             </td>
                             <td className="py-3 px-2 text-right">

@@ -61,8 +61,7 @@ function LoadingScreen() {
       <div className="w-14 h-14 border-4 border-indigo-200 border-t-indigo-950 rounded-full animate-spin" />
       <div className="text-center space-y-1.5">
         <h2
-          className="text-xl font-bold text-stone-800"
-          style={{ fontFamily: 'Lora, Georgia, serif' }}
+          className="text-xl font-bold text-stone-800 font-fraunces"
         >
           Loading report…
         </h2>
@@ -94,8 +93,7 @@ function ErrorScreen({ message }: { message: string }) {
       </div>
       <div className="text-center space-y-3 max-w-sm">
         <h2
-          className="text-xl font-bold text-stone-800"
-          style={{ fontFamily: 'Lora, Georgia, serif' }}
+          className="text-xl font-bold text-stone-800 font-fraunces"
         >
           Report unavailable
         </h2>
@@ -130,8 +128,7 @@ function ChildReportCard({ child }: { child: ChildReport }) {
           </span>
         </div>
         <h3
-          className="text-lg font-bold text-stone-800"
-          style={{ fontFamily: 'Lora, Georgia, serif' }}
+          className="text-lg font-bold text-stone-800 font-fraunces"
         >
           {child.name}
         </h3>
@@ -203,8 +200,7 @@ function SignupCTA() {
   return (
     <section className="rounded-2xl bg-gradient-to-br from-indigo-950 to-indigo-900 text-white px-6 py-8 text-center shadow-lg shadow-indigo-950/20">
       <h2
-        className="text-xl font-bold mb-2"
-        style={{ fontFamily: 'Lora, Georgia, serif' }}
+        className="text-xl font-bold mb-2 font-fraunces"
       >
         Want to track your child's daily progress?
       </h2>
@@ -280,9 +276,8 @@ export default function ClassReport({ token }: ClassReportProps) {
 
           <div className="mt-5 mb-3">
             <h1
-              className="text-3xl font-bold text-stone-800"
-              style={{ fontFamily: 'Lora, Georgia, serif' }}
-            >
+              className="text-3xl font-bold text-stone-800 font-fraunces"
+                >
               Weekly Learning Report
             </h1>
           </div>
