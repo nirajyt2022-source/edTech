@@ -48,20 +48,20 @@ class SaveWorksheetRequest(BaseModel):
 
 
 class PDFExportWorksheet(BaseModel):
-    title: str = Field(default="Worksheet", max_length=300)
-    grade: str = Field(default="", max_length=20)
-    subject: str = Field(default="", max_length=50)
-    topic: str = Field(default="", max_length=200)
-    difficulty: str = Field(default="Mixed", max_length=20)
-    language: str = Field(default="English", max_length=30)
-    questions: list = Field(default_factory=list, max_length=50)
-    skill_focus: str = Field(default="", max_length=200)
-    common_mistake: str = Field(default="", max_length=500)
-    parent_tip: str = Field(default="", max_length=500)
-    learning_objectives: list = Field(default_factory=list, max_length=20)
+    title: str = Field(default="Worksheet")
+    grade: str = Field(default="")
+    subject: str = Field(default="")
+    topic: str = Field(default="")
+    difficulty: str = Field(default="Mixed")
+    language: str = Field(default="English")
+    questions: list = Field(default_factory=list)
+    skill_focus: str = Field(default="")
+    common_mistake: str = Field(default="")
+    parent_tip: str = Field(default="")
+    learning_objectives: list = Field(default_factory=list)
 
     class Config:
-        extra = "ignore"
+        extra = "allow"
 
 
 class PDFExportRequest(BaseModel):
