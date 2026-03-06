@@ -1,20 +1,23 @@
-import React, { memo, useRef, useCallback, useMemo } from 'react'
+import React, { memo } from 'react'
 
 /* ── Standardized visual sizes ── */
 const VISUAL_SIZE: Record<string, string> = {
   clock: "w-28 h-28",
   number_line: "w-full max-w-[280px] h-10",
-  base_ten_regrouping: "w-40",
+  base_ten_regrouping: "w-full max-w-[350px]",
   grid_symmetry: "w-36 h-36",
-  shapes: "w-28 h-28",
+  shapes: "w-full max-w-[350px]",
   pie_fraction: "w-full max-w-[350px]",
   money_coins: "w-full max-w-[300px]",
-  pattern_tiles: "w-full max-w-[300px]",
+  pattern_tiles: "w-full max-w-[350px]",
   object_group: "w-full max-w-[400px]",
   abacus: "w-40 h-28",
   picture_word_match: "w-full max-w-[300px]",
   labeled_diagram: "w-full max-w-[300px]",
   match_columns: "w-full max-w-[400px]",
+  ten_frame: "w-full max-w-[350px]",
+  pictograph: "w-full max-w-[400px]",
+  array_visual: "w-full max-w-[350px]",
 }
 
 function VisualContainer({ type, children }: { type: string; children: React.ReactNode }) {
@@ -34,7 +37,7 @@ interface VisualProblemProps {
   onStudentAnswerChange?: (val: string) => void
 }
 
-export default memo(function VisualProblem({ visualType, visualData, colorMode = 'mono', studentAnswer, onStudentAnswerChange }: VisualProblemProps) {
+export default memo(function VisualProblem({ visualType, visualData, colorMode = 'mono' }: VisualProblemProps) {
   const useColor = colorMode === 'color'
   switch (visualType) {
     case 'clock':
@@ -42,11 +45,11 @@ export default memo(function VisualProblem({ visualType, visualData, colorMode =
     case 'object_group':
       return <VisualContainer type="object_group"><ObjectGroupVisual groups={(visualData.groups as GroupItem[]) || []} operation={String(visualData.operation || '+')} useColor={useColor} /></VisualContainer>
     case 'shapes':
-      return <VisualContainer type="shapes"><ShapeVisual shape={String(visualData.shape || 'circle')} sides={(visualData.sides as number[]) || []} /></VisualContainer>
+      return <VisualContainer type="shapes"><ShapeIdentifyVisual shapes={(visualData.shapes as {name: string; sides: number; color: string}[]) || []} targetIndex={Number(visualData.target_index ?? -1)} /></VisualContainer>
     case 'number_line':
       return <VisualContainer type="number_line"><NumberLineVisual start={Number(visualData.start) || 0} end={Number(visualData.end) || 20} step={Number(visualData.step) || 2} highlight={visualData.highlight != null ? Number(visualData.highlight) : undefined} useColor={useColor} /></VisualContainer>
     case 'base_ten_regrouping':
-      return <VisualContainer type="base_ten_regrouping"><BaseTenRegroupingVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'addition')} studentAnswer={studentAnswer} onStudentAnswerChange={onStudentAnswerChange} /></VisualContainer>
+      return <VisualContainer type="base_ten_regrouping"><BaseTenBlocksVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'show')} /></VisualContainer>
     case 'pie_fraction':
       return <VisualContainer type="pie_fraction"><PieFractionVisual numerator={Number(visualData.numerator) || 1} denominator={Number(visualData.denominator) || 2} /></VisualContainer>
     case 'grid_symmetry':
@@ -54,7 +57,7 @@ export default memo(function VisualProblem({ visualType, visualData, colorMode =
     case 'money_coins':
       return <VisualContainer type="money_coins"><MoneyCoinsVisual coins={(visualData.coins as { value: number; count: number }[]) || []} /></VisualContainer>
     case 'pattern_tiles':
-      return <VisualContainer type="pattern_tiles"><PatternTilesVisual tiles={(visualData.tiles as string[]) || []} blankPosition={visualData.blank_position != null ? Number(visualData.blank_position) : -1} /></VisualContainer>
+      return <VisualContainer type="pattern_tiles"><PatternCompletionVisual tiles={(visualData.tiles as string[]) || []} blankPosition={visualData.blank_position != null ? Number(visualData.blank_position) : -1} /></VisualContainer>
     case 'abacus':
       return <VisualContainer type="abacus"><AbacusVisual hundreds={Number(visualData.hundreds) || 0} tens={Number(visualData.tens) || 0} ones={Number(visualData.ones) || 0} /></VisualContainer>
     case 'picture_word_match':
@@ -63,6 +66,12 @@ export default memo(function VisualProblem({ visualType, visualData, colorMode =
       return <VisualContainer type="labeled_diagram"><LabeledDiagramVisual labels={(visualData.labels as string[]) || []} blankIndex={Number(visualData.blank_index ?? -1)} /></VisualContainer>
     case 'match_columns':
       return <VisualContainer type="match_columns"><MatchColumnsVisual left={(visualData.left as {emoji: string; label: string}[]) || []} right={(visualData.right as {emoji: string; label: string}[]) || []} /></VisualContainer>
+    case 'ten_frame':
+      return <VisualContainer type="ten_frame"><TenFrameVisual filled={Number(visualData.filled) || 5} total={Number(visualData.total) || 10} color={String(visualData.color || '#6366F1')} /></VisualContainer>
+    case 'pictograph':
+      return <VisualContainer type="pictograph"><PictographVisual rows={(visualData.rows as {label: string; emoji: string; count: number}[]) || []} title={String(visualData.title || 'Picture Graph')} /></VisualContainer>
+    case 'array_visual':
+      return <VisualContainer type="array_visual"><ArrayVisual rows={Number(visualData.rows) || 3} cols={Number(visualData.cols) || 4} emoji={String(visualData.emoji || '⭐')} /></VisualContainer>
     default:
       return null
   }
@@ -307,155 +316,84 @@ function ObjectGroupVisual({ groups, operation, useColor }: { groups: GroupItem[
   )
 }
 
-/* ── Shapes ── */
+/* ── Shapes (Identify) ── */
 
-function ShapeVisual({ shape, sides }: { shape: string; sides: number[] }) {
-  const size = 80
-
-  const shapeElement = (() => {
-    switch (shape) {
-      case 'triangle':
-        return (
-          <>
-            <polygon points={`${size/2},8 8,${size-8} ${size-8},${size-8}`} fill="none" stroke="currentColor" strokeWidth="1.5" />
-            {sides[0] != null && <text x={size/4 - 4} y={size/2} fontSize="8" fill="currentColor" textAnchor="middle">{sides[0]}</text>}
-            {sides[1] != null && <text x={size/2} y={size - 2} fontSize="8" fill="currentColor" textAnchor="middle">{sides[1]}</text>}
-            {sides[2] != null && <text x={size*3/4 + 4} y={size/2} fontSize="8" fill="currentColor" textAnchor="middle">{sides[2]}</text>}
-          </>
-        )
-      case 'rectangle':
-        return (
-          <>
-            <rect x="8" y="16" width={size-16} height={size-32} fill="none" stroke="currentColor" strokeWidth="1.5" />
-            {sides[0] != null && <text x={size/2} y="12" fontSize="8" fill="currentColor" textAnchor="middle">{sides[0]}</text>}
-            {sides[1] != null && <text x={size - 4} y={size/2} fontSize="8" fill="currentColor" textAnchor="middle">{sides[1]}</text>}
-          </>
-        )
-      case 'square':
-        return (
-          <>
-            <rect x="12" y="12" width={size-24} height={size-24} fill="none" stroke="currentColor" strokeWidth="1.5" />
-            {sides[0] != null && <text x={size/2} y="9" fontSize="8" fill="currentColor" textAnchor="middle">{sides[0]}</text>}
-          </>
-        )
-      case 'circle':
-      default:
-        return (
-          <>
-            <circle cx={size/2} cy={size/2} r={size/2 - 10} fill="none" stroke="currentColor" strokeWidth="1.5" />
-            {sides[0] != null && (
-              <>
-                <line x1={size/2} y1={size/2} x2={size - 10} y2={size/2} stroke="currentColor" strokeWidth="1" strokeDasharray="3 2" />
-                <text x={size*3/4} y={size/2 - 4} fontSize="8" fill="currentColor" textAnchor="middle">{sides[0]}</text>
-              </>
-            )}
-          </>
-        )
-    }
-  })()
-
-  return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full text-foreground print:text-black" role="img" aria-label={`${shape}${sides.length ? ` with sides ${sides.join(', ')}` : ''}`}>
-      {shapeElement}
-    </svg>
-  )
+const SHAPE_PATHS: Record<string, string> = {
+  circle: "M 25 5 a 20 20 0 1 0 0.001 0",
+  triangle: "M 25 5 L 45 42 L 5 42 Z",
+  square: "M 5 5 h 40 v 40 h -40 Z",
+  rectangle: "M 2 12 h 46 v 26 h -46 Z",
+  pentagon: "M 25 5 L 45 20 L 38 42 L 12 42 L 5 20 Z",
+  hexagon: "M 15 5 L 35 5 L 45 25 L 35 45 L 15 45 L 5 25 Z",
 }
 
-/* ── Base Ten Regrouping (column form) ── */
-
-interface BaseTenRegroupingProps {
-  numbers: number[]
-  operation: string
-  studentAnswer?: string
-  onStudentAnswerChange?: (val: string) => void
-}
-
-function BaseTenRegroupingVisual({ numbers, operation, studentAnswer, onStudentAnswerChange }: BaseTenRegroupingProps) {
-  // All hooks must be called before any early return
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null])
-
-  // Derive answer digits from the controlled prop — no effect + setState needed
-  const answerDigits = useMemo(() => {
-    if (studentAnswer == null) return ['', '', '']
-    const padded = studentAnswer.padStart(3, ' ')
-    return [
-      padded[padded.length - 3] === ' ' ? '' : padded[padded.length - 3],
-      padded[padded.length - 2] === ' ' ? '' : padded[padded.length - 2],
-      padded[padded.length - 1] === ' ' ? '' : padded[padded.length - 1],
-    ]
-  }, [studentAnswer])
-
-  const handleDigitChange = useCallback((idx: number, value: string) => {
-    if (!onStudentAnswerChange) return
-    const digit = value.replace(/\D/g, '').slice(-1)
-    const next = [...answerDigits]
-    next[idx] = digit
-    onStudentAnswerChange(next.join(''))
-    if (digit && idx < 2) {
-      inputRefs.current[idx + 1]?.focus()
-    }
-  }, [answerDigits, onStudentAnswerChange])
-
-  const handleKeyDown = useCallback((idx: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !answerDigits[idx] && idx > 0) {
-      inputRefs.current[idx - 1]?.focus()
-    }
-  }, [answerDigits])
-
-  if (numbers.length < 2) return null
-  const [a, b] = numbers
-  const opSymbol = operation === 'addition' ? '+' : '\u2212'
-
-  const digits = (n: number) => {
-    const s = String(Math.abs(n)).padStart(3, '0')
-    return s.split('').map(Number)
-  }
-
-  const dA = digits(a)
-  const dB = digits(b)
-
-  const w = 160, svgH = 72
-  const cols = [52, 84, 116] // H, T, O x-positions
-  const headerY = 16, rowA = 36, rowB = 56, lineY = 66, labels = ['H', 'T', 'O']
+function ShapeIdentifyVisual({ shapes }: { shapes: {name: string; sides: number; color: string}[]; targetIndex: number }) {
+  if (!shapes.length) return null
 
   return (
-    <div className="relative inline-block">
-      <svg viewBox={`0 0 ${w} ${svgH}`} className="w-40 h-[72px] text-foreground print:text-black font-mono block" role="img" aria-label={`Column form: ${a} ${opSymbol} ${b}`}>
-        {/* Column headers */}
-        {labels.map((l, i) => (
-          <text key={l} x={cols[i]} y={headerY} textAnchor="middle" fontSize="10" fill="currentColor" fontWeight="600">{l}</text>
-        ))}
-        {/* First number */}
-        {dA.map((d, i) => (
-          <text key={`a${i}`} x={cols[i]} y={rowA} textAnchor="middle" fontSize="13" fill="currentColor">{d}</text>
-        ))}
-        {/* Operation symbol */}
-        <text x={28} y={rowB} textAnchor="middle" fontSize="13" fill="currentColor" fontWeight="600">{opSymbol}</text>
-        {/* Second number */}
-        {dB.map((d, i) => (
-          <text key={`b${i}`} x={cols[i]} y={rowB} textAnchor="middle" fontSize="13" fill="currentColor">{d}</text>
-        ))}
-        {/* Horizontal rule */}
-        <line x1={20} y1={lineY} x2={140} y2={lineY} stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-      {/* Answer input boxes aligned under H/T/O columns */}
-      <div className="flex mt-1" style={{ width: '160px', paddingLeft: '30px', paddingRight: '22px' }}>
-        {labels.map((l, i) => (
-          <div key={l} className="flex-1 flex justify-center">
-            <input
-              ref={el => { inputRefs.current[i] = el }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={answerDigits[i]}
-              onChange={e => handleDigitChange(i, e.target.value)}
-              onKeyDown={e => handleKeyDown(i, e)}
-              aria-label={`${l} digit`}
-              className="w-6 h-7 text-center text-sm font-mono border border-border rounded bg-white/80 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary print:border-b print:border-black print:border-t-0 print:border-l-0 print:border-r-0 print:bg-transparent print:shadow-none print:outline-none print:rounded-none"
-            />
+    <div className="py-4 px-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200/60 w-full">
+      <div className="flex items-center justify-center gap-4 flex-wrap">
+        {shapes.map((shape, i) => (
+          <div key={i} className="flex flex-col items-center gap-1.5">
+            <div className="w-16 h-16 flex items-center justify-center rounded-xl bg-white border border-emerald-100 shadow-sm">
+              <svg width="50" height="50" viewBox="0 0 50 50">
+                <path d={SHAPE_PATHS[shape.name] || SHAPE_PATHS.circle}
+                      fill={shape.color + "30"} stroke={shape.color} strokeWidth="2.5" />
+              </svg>
+            </div>
+            <span className="text-xs text-slate-500 font-bold">{String.fromCharCode(65 + i)}</span>
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+/* ── Base Ten Blocks ── */
+
+function BaseTenBlocksVisual({ numbers }: { numbers: number[]; operation: string }) {
+  const num = numbers[0] || 0
+  const hundreds = Math.floor(num / 100)
+  const tens = Math.floor((num % 100) / 10)
+  const ones = num % 10
+
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl border border-blue-200/60 w-full">
+      <div className="flex items-end justify-center gap-4">
+        {hundreds > 0 && (
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-1">
+              {Array.from({ length: hundreds }).map((_, i) => (
+                <div key={i} className="w-10 h-10 bg-blue-500 rounded border border-blue-600 shadow-sm" />
+              ))}
+            </div>
+            <span className="text-xs text-blue-600 font-bold">{hundreds}00</span>
+          </div>
+        )}
+        {tens > 0 && (
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-0.5">
+              {Array.from({ length: tens }).map((_, i) => (
+                <div key={i} className="w-3 h-10 bg-green-500 rounded-sm border border-green-600" />
+              ))}
+            </div>
+            <span className="text-xs text-green-600 font-bold">{tens}0</span>
+          </div>
+        )}
+        {ones > 0 && (
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-0.5 flex-wrap" style={{ maxWidth: '48px' }}>
+              {Array.from({ length: ones }).map((_, i) => (
+                <div key={i} className="w-3 h-3 bg-orange-400 rounded-sm border border-orange-500" />
+              ))}
+            </div>
+            <span className="text-xs text-orange-600 font-bold">{ones}</span>
+          </div>
+        )}
+      </div>
+      <p className="text-center text-sm text-blue-700 font-bold mt-3">
+        {num} = {hundreds > 0 ? `${hundreds} hundreds ` : ''}{tens > 0 ? `${tens} tens ` : ''}{ones > 0 ? `${ones} ones` : ''}
+      </p>
     </div>
   )
 }
@@ -661,61 +599,123 @@ function MoneyCoinsVisual({ coins }: { coins: { value: number; count: number }[]
   )
 }
 
-/* ── Pattern Tiles ── */
+/* ── Pattern Completion (emoji pattern with blank) ── */
 
-function PatternTilesVisual({ tiles, blankPosition }: { tiles: string[]; blankPosition: number }) {
+function PatternCompletionVisual({ tiles, blankPosition }: { tiles: string[]; blankPosition: number }) {
   if (!tiles.length) return null
 
-  const tileW = 40, tileH = 40, gap = 6, pad = 8
-  const totalW = Math.max(250, tiles.length * (tileW + gap) - gap + 2 * pad)
-  const totalH = 60
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl border border-pink-200/60 w-full">
+      <div className="flex items-center justify-center gap-2 flex-wrap">
+        {tiles.map((tile, i) => {
+          const isBlank = i === blankPosition
+          return (
+            <div key={i} className="w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all"
+                 style={{
+                   borderColor: isBlank ? '#F97316' : '#FECDD3',
+                   backgroundColor: isBlank ? '#FFF7ED' : '#FFFFFF',
+                   borderStyle: isBlank ? 'dashed' : 'solid',
+                 }}>
+              {isBlank ? (
+                <span className="text-xl font-bold text-orange-400">?</span>
+              ) : (
+                <span className="text-2xl select-none">{tile}</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <p className="text-center text-xs text-pink-600/70 mt-2 font-medium">
+        What comes next? Find the pattern!
+      </p>
+    </div>
+  )
+}
+
+/* ── Ten Frame (2×5 grid with dots) ── */
+
+function TenFrameVisual({ filled, total, color }: { filled: number; total: number; color: string }) {
+  const frames = total === 20 ? 2 : 1
 
   return (
-    <svg
-      viewBox={`0 0 ${totalW} ${totalH}`}
-      className="w-full h-full text-foreground print:text-black"
-      role="img"
-      aria-label={`Pattern sequence: ${tiles.join(', ')}${blankPosition >= 0 ? `, blank at position ${blankPosition + 1}` : ''}`}
-    >
-      {tiles.map((label, i) => {
-        const x = pad + i * (tileW + gap)
-        const y = (totalH - tileH) / 2
-        const isBlank = i === blankPosition
-        const isEven = i % 2 === 0
+    <div className="py-4 px-4 bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border border-violet-200/60 w-full">
+      <div className="flex justify-center gap-4 flex-wrap">
+        {Array.from({ length: frames }).map((_, f) => {
+          const frameStart = f * 10
+          return (
+            <div key={f} className="grid grid-cols-5 gap-1.5 bg-white rounded-xl p-3 border border-violet-100 shadow-sm">
+              {Array.from({ length: 10 }).map((_, i) => {
+                const globalIdx = frameStart + i
+                const isFilled = globalIdx < filled
+                return (
+                  <div key={i} className="w-9 h-9 rounded-lg border-2 flex items-center justify-center"
+                       style={{
+                         borderColor: isFilled ? color : '#E2E8F0',
+                         backgroundColor: isFilled ? color + '15' : '#F8FAFC',
+                       }}>
+                    {isFilled && (
+                      <div className="w-5 h-5 rounded-full shadow-sm" style={{ backgroundColor: color }} />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+      <p className="text-center text-xs text-violet-600/70 mt-2 font-medium">
+        How many dots? Count the filled circles.
+      </p>
+    </div>
+  )
+}
 
-        return (
-          <g key={i}>
-            <rect
-              x={x}
-              y={y}
-              width={tileW}
-              height={tileH}
-              rx="4"
-              fill={isBlank ? 'none' : isEven ? 'currentColor' : 'none'}
-              stroke="currentColor"
-              strokeWidth={isBlank ? 1.5 : 1}
-              strokeDasharray={isBlank ? '4 3' : undefined}
-              opacity={isEven && !isBlank ? 0.15 : 1}
-            />
-            {/* Slightly darker border for even filled tiles */}
-            {!isBlank && isEven && (
-              <rect x={x} y={y} width={tileW} height={tileH} rx="4" fill="none" stroke="currentColor" strokeWidth="1" />
-            )}
-            <text
-              x={x + tileW / 2}
-              y={y + tileH / 2 + 1}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={isBlank ? '14' : '13'}
-              fill="currentColor"
-              fontWeight="600"
-            >
-              {label}
-            </text>
-          </g>
-        )
-      })}
-    </svg>
+/* ── Pictograph (rows of emoji data) ── */
+
+function PictographVisual({ rows, title }: { rows: {label: string; emoji: string; count: number}[]; title: string }) {
+  if (!rows.length) return null
+
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-lime-50 to-green-50 rounded-2xl border border-lime-200/60 w-full">
+      <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-2 text-center">{title}</p>
+      <div className="space-y-2">
+        {rows.map((row, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-600 w-20 text-right">{row.label}</span>
+            <div className="flex-1 flex gap-0.5 bg-white/60 rounded-lg px-2 py-1">
+              {Array.from({ length: row.count }).map((_, j) => (
+                <span key={j} className="text-xl">{row.emoji}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 pt-2 border-t border-lime-200">
+        <p className="text-xs text-green-600/70 font-medium text-center">
+          Each {rows[0]?.emoji} = 1
+        </p>
+      </div>
+    </div>
+  )
+}
+
+/* ── Array Visual (rows × cols grid for multiplication) ── */
+
+function ArrayVisual({ rows, cols, emoji }: { rows: number; cols: number; emoji: string }) {
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl border border-amber-200/60 w-full">
+      <div className="flex justify-center">
+        <div className="bg-white/70 rounded-xl p-3 border border-amber-100 shadow-sm inline-grid gap-1.5"
+             style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          {Array.from({ length: rows * cols }).map((_, i) => (
+            <span key={i} className="text-xl md:text-2xl text-center select-none">{emoji}</span>
+          ))}
+        </div>
+      </div>
+      <p className="text-center text-xs text-amber-600/70 mt-2 font-medium">
+        {rows} rows × {cols} columns = ?
+      </p>
+    </div>
   )
 }
 

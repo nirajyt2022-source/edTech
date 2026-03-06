@@ -1150,6 +1150,18 @@ class PDFService:
                 return self._draw_labeled_diagram(visual_data)
             elif visual_type == "match_columns":
                 return self._draw_match_columns(visual_data)
+            elif visual_type == "ten_frame":
+                return self._draw_ten_frame(visual_data)
+            elif visual_type == "shapes":
+                return self._draw_shapes(visual_data)
+            elif visual_type == "pattern_tiles":
+                return self._draw_pattern(visual_data)
+            elif visual_type == "pictograph":
+                return self._draw_pictograph(visual_data)
+            elif visual_type == "array_visual":
+                return self._draw_array(visual_data)
+            elif visual_type == "base_ten_regrouping":
+                return self._draw_base_ten(visual_data)
         except Exception as e:
             logger.warning("Failed to render visual %s in PDF: %s", visual_type, e)
         return []
@@ -1428,6 +1440,265 @@ class PDFService:
             )
         )
         return [t, Spacer(1, 4)]
+
+    def _draw_ten_frame(self, data: dict) -> list:
+        """Draw a 2×5 ten frame grid with filled dots."""
+        from reportlab.graphics.shapes import Circle, Drawing, Rect
+        from reportlab.lib.colors import HexColor
+
+        filled = data.get("filled", 5)
+        total = data.get("total", 10)
+        color = HexColor(data.get("color", "#6366F1"))
+
+        cell_size = 22
+        gap = 3
+        cols = 5
+        rows = 2 if total == 10 else 4
+        width = cols * (cell_size + gap) + 20
+        height = rows * (cell_size + gap) + 10
+
+        d = Drawing(width, height)
+
+        for i in range(total):
+            row = i // cols
+            col = i % cols
+            x = 10 + col * (cell_size + gap)
+            y = height - 10 - (row + 1) * (cell_size + gap) + gap
+
+            # Cell border
+            fill_color = HexColor("#F8FAFC") if i >= filled else HexColor("#E8E5FF")
+            stroke_color = color if i < filled else HexColor("#E2E8F0")
+            d.add(
+                Rect(
+                    x,
+                    y,
+                    cell_size,
+                    cell_size,
+                    fillColor=fill_color,
+                    strokeColor=stroke_color,
+                    strokeWidth=1.5,
+                    rx=3,
+                    ry=3,
+                )
+            )
+
+            # Filled dot
+            if i < filled:
+                d.add(Circle(x + cell_size / 2, y + cell_size / 2, 7, fillColor=color, strokeColor=None))
+
+        return [d, Spacer(1, 4)]
+
+    def _draw_shapes(self, data: dict) -> list:
+        """Draw colored geometric shapes in a row."""
+        from reportlab.graphics.shapes import Circle, Drawing, Polygon, Rect, String
+        from reportlab.lib.colors import HexColor
+
+        shapes = data.get("shapes", [])
+
+        d = Drawing(300, 60)
+        x_offset = 10
+
+        for i, shape in enumerate(shapes):
+            color = HexColor(shape.get("color", "#3B82F6"))
+            light_color = (
+                HexColor(shape.get("color", "#3B82F6") + "40") if len(shape.get("color", "#3B82F6")) == 7 else color
+            )
+
+            if shape["name"] == "circle":
+                d.add(Circle(x_offset + 20, 30, 18, fillColor=light_color, strokeColor=color, strokeWidth=2))
+            elif shape["name"] == "triangle":
+                d.add(
+                    Polygon(
+                        points=[x_offset + 20, 48, x_offset + 38, 12, x_offset + 2, 12],
+                        fillColor=light_color,
+                        strokeColor=color,
+                        strokeWidth=2,
+                    )
+                )
+            elif shape["name"] == "square":
+                d.add(Rect(x_offset + 2, 10, 36, 36, fillColor=light_color, strokeColor=color, strokeWidth=2))
+            elif shape["name"] == "rectangle":
+                d.add(Rect(x_offset, 14, 40, 28, fillColor=light_color, strokeColor=color, strokeWidth=2))
+            elif shape["name"] == "pentagon":
+                d.add(
+                    Polygon(
+                        points=[
+                            x_offset + 20,
+                            48,
+                            x_offset + 38,
+                            38,
+                            x_offset + 35,
+                            12,
+                            x_offset + 5,
+                            12,
+                            x_offset + 2,
+                            38,
+                        ],
+                        fillColor=light_color,
+                        strokeColor=color,
+                        strokeWidth=2,
+                    )
+                )
+            elif shape["name"] == "hexagon":
+                d.add(
+                    Polygon(
+                        points=[
+                            x_offset + 10,
+                            48,
+                            x_offset + 30,
+                            48,
+                            x_offset + 40,
+                            30,
+                            x_offset + 30,
+                            12,
+                            x_offset + 10,
+                            12,
+                            x_offset,
+                            30,
+                        ],
+                        fillColor=light_color,
+                        strokeColor=color,
+                        strokeWidth=2,
+                    )
+                )
+
+            # Label
+            d.add(String(x_offset + 16, 0, chr(65 + i), fontSize=9, fontName=FONT_BOLD, fillColor=HexColor("#64748B")))
+            x_offset += 65
+
+        return [d, Spacer(1, 4)]
+
+    def _draw_pattern(self, data: dict) -> list:
+        """Draw emoji pattern with a blank position."""
+        tiles = data.get("tiles", [])
+        blank_pos = data.get("blank_position", -1)
+
+        parts = []
+        for i, tile in enumerate(tiles):
+            if i == blank_pos:
+                parts.append('<font size="14" color="#F97316"><b> ? </b></font>')
+            else:
+                parts.append(f'<font size="14"> {_sanitize_text(tile)} </font>')
+
+        text = " ".join(parts)
+        p = Paragraph(text, self.styles["QuestionText"])
+        return [p, Spacer(1, 4)]
+
+    def _draw_pictograph(self, data: dict) -> list:
+        """Draw pictograph rows of emoji data."""
+        rows = data.get("rows", [])
+        elements = []
+
+        for row in rows:
+            emoji_str = _sanitize_text(row.get("emoji", "")) * row.get("count", 0)
+            label = _sanitize_text(row.get("label", ""))
+            p = Paragraph(
+                f"<font size='8'><b>{label:>12}</b></font>  <font size='14'>{emoji_str}</font>",
+                self.styles["AnswerText"],
+            )
+            elements.append(p)
+
+        return elements + [Spacer(1, 4)]
+
+    def _draw_array(self, data: dict) -> list:
+        """Draw a rows × cols grid of colored circles for multiplication."""
+        from reportlab.graphics.shapes import Circle, Drawing
+        from reportlab.lib.colors import HexColor
+
+        rows = min(data.get("rows", 3), 6)
+        cols = min(data.get("cols", 4), 8)
+
+        dot_r = 6
+        gap = 18
+        pad = 10
+        width = cols * gap + 2 * pad
+        height = rows * gap + 2 * pad
+
+        d = Drawing(width, height)
+        color = HexColor("#F59E0B")
+
+        for r in range(rows):
+            for c in range(cols):
+                x = pad + c * gap + gap / 2
+                y = height - pad - r * gap - gap / 2
+                d.add(Circle(x, y, dot_r, fillColor=color, strokeColor=HexColor("#D97706"), strokeWidth=0.5))
+
+        return [d, Spacer(1, 4)]
+
+    def _draw_base_ten(self, data: dict) -> list:
+        """Draw base-ten blocks (hundreds squares, tens bars, ones cubes)."""
+        from reportlab.graphics.shapes import Drawing, Rect
+        from reportlab.lib.colors import HexColor
+
+        numbers = data.get("numbers", [0])
+        num = numbers[0] if numbers else 0
+        hundreds = num // 100
+        tens = (num % 100) // 10
+        ones = num % 10
+
+        width = max(200, (hundreds * 28 + tens * 10 + ones * 10 + 60))
+        height = 50
+        d = Drawing(width, height)
+
+        x = 10
+        # Hundreds — large blue squares
+        for i in range(min(hundreds, 5)):
+            d.add(
+                Rect(
+                    x,
+                    5,
+                    24,
+                    24,
+                    fillColor=HexColor("#3B82F6"),
+                    strokeColor=HexColor("#2563EB"),
+                    strokeWidth=1,
+                    rx=2,
+                    ry=2,
+                )
+            )
+            x += 28
+
+        if hundreds:
+            x += 10
+
+        # Tens — green bars
+        for i in range(min(tens, 9)):
+            d.add(
+                Rect(
+                    x,
+                    5,
+                    6,
+                    24,
+                    fillColor=HexColor("#22C55E"),
+                    strokeColor=HexColor("#16A34A"),
+                    strokeWidth=0.5,
+                    rx=1,
+                    ry=1,
+                )
+            )
+            x += 8
+
+        if tens:
+            x += 10
+
+        # Ones — small orange cubes
+        for i in range(min(ones, 9)):
+            d.add(
+                Rect(
+                    x,
+                    14,
+                    6,
+                    6,
+                    fillColor=HexColor("#FB923C"),
+                    strokeColor=HexColor("#EA580C"),
+                    strokeWidth=0.5,
+                    rx=1,
+                    ry=1,
+                )
+            )
+            x += 8
+
+        return [d, Spacer(1, 4)]
 
     def _build_single_question(self, question: dict, number: int, tier_key: str = "all", subject: str = "") -> list:
         """Build elements for a single question. Returns list of flowables."""

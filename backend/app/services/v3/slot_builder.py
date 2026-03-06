@@ -175,6 +175,9 @@ MANDATORY_VISUAL_TOPICS = {
     "symmetry": "grid_symmetry",
     "patterns": "pattern_tiles",
     "pattern": "pattern_tiles",
+    "data handling": "pictograph",
+    "pictograph": "pictograph",
+    "tally": "pictograph",
 }
 
 
@@ -853,9 +856,24 @@ def _compute_visual_data(
         return {"hundreds": random.randint(1, 9), "tens": random.randint(0, 9), "ones": random.randint(0, 9)}
 
     if visual_type == "shapes":
-        shape = random.choice(["triangle", "rectangle", "square", "circle"])
-        sides = {"triangle": [3, 4, 5], "rectangle": [4, 6], "square": [5, 5], "circle": []}
-        return {"shape": shape, "sides": sides.get(shape, [])}
+        SHAPE_LIBRARY = [
+            {"name": "circle", "sides": 0, "color": "#EF4444"},
+            {"name": "triangle", "sides": 3, "color": "#F59E0B"},
+            {"name": "square", "sides": 4, "color": "#3B82F6"},
+            {"name": "rectangle", "sides": 4, "color": "#10B981"},
+            {"name": "pentagon", "sides": 5, "color": "#8B5CF6"},
+            {"name": "hexagon", "sides": 6, "color": "#EC4899"},
+        ]
+        target = SHAPE_LIBRARY[(slot_number or 0) % len(SHAPE_LIBRARY)]
+        others = [s for s in SHAPE_LIBRARY if s["name"] != target["name"]]
+        random.shuffle(others)
+        display_shapes = [target] + others[:3]
+        random.shuffle(display_shapes)
+        return {
+            "shapes": [{"name": s["name"], "sides": s["sides"], "color": s["color"]} for s in display_shapes],
+            "target": target["name"],
+            "target_index": display_shapes.index(target),
+        }
 
     if visual_type == "grid_symmetry":
         size = 4
@@ -953,8 +971,92 @@ def _compute_visual_data(
         }
 
     if visual_type == "pattern_tiles":
-        tiles = ["A", "B", "A", "B", "A", "?"]
-        return {"tiles": tiles, "blank_position": 5}
+        PATTERN_SETS = [
+            ["🔴", "🔵", "🔴", "🔵", "🔴", "🔵"],
+            ["⭐", "❤️", "⭐", "❤️", "⭐", "❤️"],
+            ["🌸", "🍃", "🌸", "🍃", "🌸", "🍃"],
+            ["🟡", "🟢", "🟡", "🟢", "🟡", "🟢"],
+            ["☀️", "🌙", "☀️", "🌙", "☀️", "🌙"],
+            ["🍎", "🍌", "🍎", "🍌", "🍎", "🍌"],
+            ["🔴", "🔵", "🟢", "🔴", "🔵", "🟢"],
+            ["⭐", "⭐", "❤️", "⭐", "⭐", "❤️"],
+        ]
+        pattern_idx = (slot_number or 0) % len(PATTERN_SETS)
+        pattern = PATTERN_SETS[pattern_idx]
+        blank_pos = len(pattern) - 1
+        return {
+            "tiles": pattern,
+            "blank_position": blank_pos,
+            "answer": pattern[blank_pos],
+        }
+
+    if visual_type == "ten_frame":
+        if numbers and numbers.get("answer"):
+            filled = min(numbers["answer"], 20)
+        else:
+            filled = random.randint(3, 10)
+        ten_colors = ["#6366F1", "#EF4444", "#10B981", "#F59E0B", "#EC4899"]
+        color = ten_colors[(slot_number or 0) % len(ten_colors)]
+        return {
+            "filled": filled,
+            "total": 10 if filled <= 10 else 20,
+            "color": color,
+        }
+
+    if visual_type == "pictograph":
+        DATA_SETS = [
+            {
+                "title": "Favourite Fruits",
+                "rows": [
+                    {"label": "Apple", "emoji": "🍎", "count": random.randint(2, 6)},
+                    {"label": "Mango", "emoji": "🥭", "count": random.randint(2, 6)},
+                    {"label": "Banana", "emoji": "🍌", "count": random.randint(2, 6)},
+                    {"label": "Orange", "emoji": "🍊", "count": random.randint(2, 6)},
+                ],
+            },
+            {
+                "title": "Animals in the Zoo",
+                "rows": [
+                    {"label": "Lion", "emoji": "🦁", "count": random.randint(1, 5)},
+                    {"label": "Elephant", "emoji": "🐘", "count": random.randint(1, 5)},
+                    {"label": "Monkey", "emoji": "🐒", "count": random.randint(1, 5)},
+                    {"label": "Bird", "emoji": "🐦", "count": random.randint(1, 5)},
+                ],
+            },
+            {
+                "title": "Flowers in the Garden",
+                "rows": [
+                    {"label": "Rose", "emoji": "🌹", "count": random.randint(2, 7)},
+                    {"label": "Sunflower", "emoji": "🌻", "count": random.randint(2, 7)},
+                    {"label": "Lotus", "emoji": "🪷", "count": random.randint(2, 7)},
+                ],
+            },
+        ]
+        dataset = DATA_SETS[(slot_number or 0) % len(DATA_SETS)]
+        return {
+            "title": dataset["title"],
+            "rows": dataset["rows"],
+            "scale": 1,
+        }
+
+    if visual_type == "array_visual":
+        if numbers:
+            a = min(numbers.get("a", 3), 6)
+            b = min(numbers.get("b", 4), 8)
+        else:
+            a = random.randint(2, 5)
+            b = random.randint(2, 5)
+        categories = list(OBJECT_EMOJI_REGISTRY.keys())
+        cat = categories[(slot_number or 0) % len(categories)]
+        objects = OBJECT_EMOJI_REGISTRY[cat]
+        obj = objects[((slot_number or 0) * 7) % len(objects)]
+        return {
+            "rows": a,
+            "cols": b,
+            "emoji": obj["emoji"],
+            "object_name": obj["name"],
+            "answer": a * b,
+        }
 
     if visual_type == "base_ten_regrouping":
         if numbers and "a" in numbers:
@@ -2285,7 +2387,14 @@ def build_slots(
         ):
             # Early-grade maths should be visual-heavy.
             if i < math.ceil(num_questions * 0.6):
-                visual_type = "object_group"
+                visual_type = (
+                    _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
+                    or "object_group"
+                )
+        elif is_maths and grade_num <= 2:
+            # Non-arithmetic maths in early grades — use topic-specific visuals
+            if random.random() < 0.6:
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
         elif not is_maths and grade_num <= 2:
             # Non-maths early grades: use subject-specific visuals for ~50% of questions
             if random.random() < 0.5:
@@ -2295,6 +2404,10 @@ def build_slots(
                 visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
         elif problem_style == "mixed":
             if random.random() < 0.5:
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
+        elif is_maths and grade_num <= 3:
+            # Maths Class 3 non-arithmetic: occasional visuals
+            if random.random() < 0.4:
                 visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
 
         if visual_type:
@@ -2504,10 +2617,16 @@ def _pick_visual_type(
         return "labeled_diagram"
 
     if is_maths:
-        maths_visuals = ["object_group", "number_line"]
+        if "number" in topic_lower and grade_num <= 2:
+            return random.choice(["ten_frame", "number_line", "object_group"])
+        if "multipl" in topic_lower and grade_num <= 3:
+            return "array_visual"
+        if "data" in topic_lower or "pictograph" in topic_lower:
+            return "pictograph"
+        # Default maths visuals
         if grade_num <= 2:
-            maths_visuals.append("object_group")  # weight toward objects for young kids
-        return maths_visuals[slot_number % len(maths_visuals)]
+            return random.choice(["object_group", "ten_frame", "number_line"])
+        return random.choice(["object_group", "number_line"])
 
     return None
 
