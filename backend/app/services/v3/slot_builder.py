@@ -2529,6 +2529,590 @@ TOPIC_GUIDANCE = {
         "common_mistake": "Children want to eat only their favourite food every day.",
         "parent_tip": "Use a plate model: half vegetables, quarter grain, quarter protein.",
     },
+    # ── EVS / Science (specific) ──
+    "our senses": {
+        "common_mistake": "Children confuse which sense organ does what — thinking ears help us see or tongue helps us hear.",
+        "parent_tip": "Play a senses game: blindfold your child and have them guess objects by touch, smell, or sound.",
+    },
+    "my body": {
+        "common_mistake": "Children mix up internal and external body parts — they think the heart is in the head.",
+        "parent_tip": "Trace your child's body on a big paper and label body parts together.",
+    },
+    "my family": {
+        "common_mistake": "Children confuse maternal and paternal relations (nani vs dadi, mama vs chacha).",
+        "parent_tip": "Draw a family tree together and label each member with their relation name.",
+    },
+    "food we eat": {
+        "common_mistake": "Children think all cooked food is healthy and all raw food is unhealthy.",
+        "parent_tip": "During meals, ask: 'Is this giving us energy, strength, or protection?' for each food item.",
+    },
+    "seasons and weather": {
+        "common_mistake": "Children confuse seasons with weather — they think rainy season means it rains every day.",
+        "parent_tip": "Keep a weekly weather chart — draw sun, clouds, or rain each day and compare at month end.",
+    },
+    "plants around us": {
+        "common_mistake": "Children think only big trees are plants — they forget grass, herbs, and shrubs are plants too.",
+        "parent_tip": "Go for a walk and count different types of plants — big trees, small bushes, climbers, grass.",
+    },
+    "animals around us": {
+        "common_mistake": "Children forget that insects, fish, and birds are also animals.",
+        "parent_tip": "List 10 animals you saw today — include ants, butterflies, sparrows, not just dogs and cats.",
+    },
+    "shelter": {
+        "common_mistake": "Children think all animals live in the same type of home.",
+        "parent_tip": "Ask: 'Where does a bird sleep? Where does a fish sleep? Where does a dog sleep?' — compare homes.",
+    },
+    "animals and habitats": {
+        "common_mistake": "Children think desert animals need water like we do — they don't know camels store fat, not water.",
+        "parent_tip": "Watch a short nature video together and ask: 'Why does this animal live HERE and not there?'",
+    },
+    "our body": {
+        "common_mistake": "Children confuse voluntary and involuntary actions — they think breathing is voluntary.",
+        "parent_tip": "Ask your child to hold their breath — 'See? Your body breathes on its own!'",
+    },
+    "air": {
+        "common_mistake": "Children think air is nothing because they can't see it.",
+        "parent_tip": "Blow up a balloon together — 'See, air takes up space! It's real even though invisible.'",
+    },
+    "food and nutrition": {
+        "common_mistake": "Children think vitamins come only from tablets, not from food.",
+        "parent_tip": "While eating, name the vitamin: 'Carrots have Vitamin A for eyes, oranges have Vitamin C for health.'",
+    },
+    "human body": {
+        "common_mistake": "Children memorise organ names but can't explain what each organ does.",
+        "parent_tip": "After a meal, trace the food journey: mouth → food pipe → stomach → small intestine → blood.",
+    },
+    "photosynthesis": {
+        "common_mistake": "Children think plants get food from soil, not from sunlight.",
+        "parent_tip": "Keep one plant in sunlight and one in a dark cupboard for a week — observe the difference.",
+    },
+    "force and motion": {
+        "common_mistake": "Children think heavier objects always fall faster than lighter ones.",
+        "parent_tip": "Drop a ball and a crumpled paper from the same height — 'See? They land at almost the same time!'",
+    },
+    "states of matter": {
+        "common_mistake": "Children think ice is a different substance from water, not just a different state.",
+        "parent_tip": "Melt ice, boil water, catch steam — show the same water in 3 forms in your kitchen.",
+    },
+    "animal adaptation": {
+        "common_mistake": "Children think animals choose their features — 'The camel chose to have a hump.'",
+        "parent_tip": "Ask: 'Why does a polar bear have thick fur but a fish doesn't?' — connect body features to habitat.",
+    },
+    "simple machines": {
+        "common_mistake": "Children think machines are only electronic devices — they forget scissors, ramps, and seesaws.",
+        "parent_tip": "Find 5 simple machines at home: scissors (lever), door handle (wheel), ramp, bottle opener.",
+    },
+    "living things": {
+        "common_mistake": "Children think fire is alive because it moves and grows.",
+        "parent_tip": "Use MRS GREN: Movement, Respiration, Sensitivity, Growth, Reproduction, Excretion, Nutrition.",
+    },
+    "ecosystem": {
+        "common_mistake": "Children think food chains are simple and linear — they don't understand food webs.",
+        "parent_tip": "Draw a food chain from your garden: grass → grasshopper → frog → snake → eagle.",
+    },
+    "physical and chemical": {
+        "common_mistake": "Children think all changes can be reversed — they don't distinguish physical from chemical.",
+        "parent_tip": "Show: ice melts back to water (physical), but a burnt paper can't become paper again (chemical).",
+    },
+    "forms of energy": {
+        "common_mistake": "Children think energy is created when we switch on a light — they don't know it's transformed.",
+        "parent_tip": "Trace energy: sun → plant → food → your body → running. Energy changes form, never created!",
+    },
+    "solar system": {
+        "common_mistake": "Children think the sun moves around the earth because they see it 'rise' and 'set'.",
+        "parent_tip": "Use a torch and ball: torch = sun, ball = earth. Spin the ball — see day and night!",
+    },
+    "circulatory": {
+        "common_mistake": "Children think blood is only red — they don't know about oxygen-rich vs oxygen-poor blood.",
+        "parent_tip": "Feel your pulse after running — 'Your heart beats faster to send more blood to muscles!'",
+    },
+    "respiratory": {
+        "common_mistake": "Children think we breathe in only oxygen and breathe out only CO2.",
+        "parent_tip": "Breathe on a mirror — 'See the fog? That's water vapor your lungs added to the air!'",
+    },
+    "reproduction": {
+        "common_mistake": "Children think all plants grow from seeds — they forget roots, stems, and leaves can grow new plants.",
+        "parent_tip": "Plant a potato eye or onion top in soil — watch a new plant grow without seeds!",
+    },
+    # ── English ──
+    "alphabet": {
+        "common_mistake": "Children confuse visually similar letters: b/d, p/q, m/w. Also mix lowercase and uppercase.",
+        "parent_tip": "Practice one letter per day. Trace it, say its sound, name 3 objects starting with it.",
+    },
+    "phonics": {
+        "common_mistake": "Children confuse letter names with letter sounds ('aitch' vs /h/, 'double-you' vs /w/).",
+        "parent_tip": "Say the SOUND, not the name: 'b says /b/ as in ball', not 'b says bee'.",
+    },
+    "self and family": {
+        "common_mistake": "Children struggle with possessives — 'me book' instead of 'my book'.",
+        "parent_tip": "Practice: 'This is MY bag. This is YOUR pencil. This is HER doll.'",
+    },
+    "greetings": {
+        "common_mistake": "Children use informal greetings in formal situations — 'Hey' to a teacher.",
+        "parent_tip": "Role-play: 'How do you greet your teacher? Your friend? Your grandparent?'",
+    },
+    "simple sentences": {
+        "common_mistake": "Children write sentence fragments or forget capital letters and full stops.",
+        "parent_tip": "Every sentence needs: Capital letter + subject + verb + full stop. Practice 3 sentences daily.",
+    },
+    "seasons": {
+        "common_mistake": "Children confuse the number of seasons in India (6 ritus vs 3-4 commonly discussed).",
+        "parent_tip": "Ask: 'What clothes do we wear in summer? In winter? In rainy season?' — connect seasons to life.",
+    },
+    "animals and food vocabulary": {
+        "common_mistake": "Children use generic words ('thing', 'stuff') instead of specific vocabulary.",
+        "parent_tip": "During meals, name ingredients: 'This is dal, made from lentils. This is paneer, made from milk.'",
+    },
+    "nature vocabulary": {
+        "common_mistake": "Children know nature words in Hindi but struggle with English equivalents.",
+        "parent_tip": "Take a nature walk — name everything: cloud, leaf, puddle, stone, ant, flower.",
+    },
+    "sentences": {
+        "common_mistake": "Children write run-on sentences without punctuation.",
+        "parent_tip": "Read aloud together — pause at every full stop. This teaches sentence boundaries naturally.",
+    },
+    "rhyming": {
+        "common_mistake": "Children think words that start the same rhyme (bat/ball) instead of words that end the same (bat/cat).",
+        "parent_tip": "Play rhyme chains: 'cat → bat → hat → mat → sat' — who can think of the most?",
+    },
+    "punctuation": {
+        "common_mistake": "Children forget question marks for questions and use full stops everywhere.",
+        "parent_tip": "Read a paragraph together. Child points to every full stop, comma, and question mark.",
+    },
+    "reading comprehension": {
+        "common_mistake": "Children answer from memory or guess instead of finding answers in the passage.",
+        "parent_tip": "Teach: 'The answer is IN the passage. Underline the sentence that answers the question.'",
+    },
+    "vocabulary": {
+        "common_mistake": "Children memorise word meanings but can't use them in sentences.",
+        "parent_tip": "For every new word, make a sentence using it. One new word per day = 365 words per year!",
+    },
+    "prefixes": {
+        "common_mistake": "Children add prefixes randomly — 'unhappy' is correct but 'unsad' is not.",
+        "parent_tip": "Practice common prefixes: un- (undo), re- (redo), dis- (disagree), pre- (prepay).",
+    },
+    "prepositions": {
+        "common_mistake": "Children confuse in/on/at — 'I am on the bus' vs 'I am in the bus' (both used in Indian English).",
+        "parent_tip": "Use toys: 'Put the ball ON the table, IN the box, UNDER the chair, BESIDE the book.'",
+    },
+    "conjunctions": {
+        "common_mistake": "Children overuse 'and' to join all sentences instead of using but, because, so, or.",
+        "parent_tip": "Give two sentences, child joins with the right conjunction: 'I was hungry ___ I ate lunch.'",
+    },
+    "sentence types": {
+        "common_mistake": "Children can't distinguish statements from questions when there's no question mark.",
+        "parent_tip": "Sort sentences into types: 'The sky is blue' (statement), 'Is the sky blue?' (question).",
+    },
+    "formal letter": {
+        "common_mistake": "Children use informal language in formal letters — 'Hey Sir' instead of 'Respected Sir'.",
+        "parent_tip": "Practice the format: sender address, date, receiver, subject, body, closing. Stick it on the wall.",
+    },
+    "active and passive": {
+        "common_mistake": "Children confuse subject and object when converting — 'The cat caught the mouse' becomes 'The mouse caught the cat'.",
+        "parent_tip": "Use the trick: move the object to the start, add 'was/were', move subject to the end with 'by'.",
+    },
+    "direct and indirect": {
+        "common_mistake": "Children forget to change pronouns and tenses when converting direct to indirect speech.",
+        "parent_tip": "Practice the 3 changes: remove quotes, change pronoun (I→he/she), change tense (is→was).",
+    },
+    "clauses": {
+        "common_mistake": "Children can't identify the main clause vs the subordinate clause.",
+        "parent_tip": "Ask: 'Which part can stand alone as a sentence?' — that's the main clause.",
+    },
+    "complex sentences": {
+        "common_mistake": "Children write compound sentences (and, but) thinking they're complex.",
+        "parent_tip": "Complex = main clause + subordinate clause with words like because, although, when, if.",
+    },
+    "synonyms": {
+        "common_mistake": "Children think synonyms mean exactly the same — they don't understand shades of meaning.",
+        "parent_tip": "happy/glad/joyful/ecstatic — arrange by intensity. This builds vocabulary depth.",
+    },
+    "summary writing": {
+        "common_mistake": "Children copy sentences from the passage instead of writing in their own words.",
+        "parent_tip": "Read a paragraph, close the book, tell the main idea in 2 sentences. That's a summary!",
+    },
+    "creative writing": {
+        "common_mistake": "Children start stories with 'Once upon a time' every time and struggle with endings.",
+        "parent_tip": "Give a funny prompt: 'What if your school bag could talk?' Let imagination flow — don't correct grammar first.",
+    },
+    "comprehension": {
+        "common_mistake": "Children answer factual questions but struggle with inference and opinion questions.",
+        "parent_tip": "After reading, ask: 'How do you think the character feels? Why?' — practice reading between the lines.",
+    },
+    # ── Hindi ──
+    "varnamala swar": {
+        "common_mistake": "बच्चे अ-आ और इ-ई में अंतर भूल जाते हैं। छोटी-बड़ी मात्रा में भ्रम होता है।",
+        "parent_tip": "हर दिन एक स्वर का अभ्यास करें। उस स्वर से शुरू होने वाली 5 चीज़ें ढूँढें।",
+    },
+    "varnamala vyanjan": {
+        "common_mistake": "बच्चे क-ख, ग-घ, च-छ जैसे मिलते-जुलते व्यंजनों में भ्रम करते हैं।",
+        "parent_tip": "हर दिन 5 व्यंजन लिखवाएँ और उनसे एक-एक शब्द बनवाएँ।",
+    },
+    "family words": {
+        "common_mistake": "बच्चे माँ-पापा लिख लेते हैं पर दादा-दादी, नाना-नानी में गलती करते हैं।",
+        "parent_tip": "परिवार का पेड़ बनाएँ और हर सदस्य का नाम हिंदी में लिखें।",
+    },
+    "simple sentences in hindi": {
+        "common_mistake": "बच्चे वाक्य में क्रिया (verb) भूल जाते हैं — 'मैं स्कूल' लिखते हैं 'मैं स्कूल जाता हूँ' की जगह।",
+        "parent_tip": "हर वाक्य में पूछें: कौन? क्या करता है? कहाँ? — इन तीनों का उत्तर होना चाहिए।",
+    },
+    "two letter words": {
+        "common_mistake": "बच्चे दो अक्षर के शब्दों में मात्रा लगा देते हैं जहाँ ज़रूरत नहीं है।",
+        "parent_tip": "घर की चीज़ों के दो अक्षर वाले नाम ढूँढें: कप, जग, बस, रथ, फल।",
+    },
+    "three letter words": {
+        "common_mistake": "बच्चे तीन अक्षर के शब्दों में बीच का अक्षर भूल जाते हैं।",
+        "parent_tip": "तीन अक्षर के शब्दों से चित्र बनवाएँ: कमल, नदी, पतंग।",
+    },
+    "matras introduction": {
+        "common_mistake": "बच्चे आ की मात्रा (ा) और इ की मात्रा (ि) में भ्रम करते हैं।",
+        "parent_tip": "एक मात्रा प्रतिदिन — उस मात्रा वाले 10 शब्द ढूँढें और लिखें।",
+    },
+    "matras": {
+        "common_mistake": "बच्चे ए-ऐ और ओ-औ की मात्राओं में गलती करते हैं।",
+        "parent_tip": "मात्रा चार्ट दीवार पर लगाएँ। रोज़ एक मात्रा के 5 शब्द लिखवाएँ।",
+    },
+    "rhymes and poems": {
+        "common_mistake": "बच्चे कविता रट लेते हैं पर अर्थ नहीं समझते।",
+        "parent_tip": "कविता पढ़ने के बाद पूछें: 'इसमें क्या बताया गया है?' — अर्थ समझना ज़रूरी है।",
+    },
+    "varnamala": {
+        "common_mistake": "बच्चे अनुस्वार (ं) और विसर्ग (ः) भूल जाते हैं।",
+        "parent_tip": "वर्णमाला की पूरी सूची गाकर याद करें — संगीत से याद रहता है!",
+    },
+    "shabd rachna": {
+        "common_mistake": "बच्चे उपसर्ग और प्रत्यय में भ्रम करते हैं।",
+        "parent_tip": "एक मूल शब्द दें, बच्चा उपसर्ग-प्रत्यय लगाकर नए शब्द बनाए: सुख → दुःख, सुखी, सुखद।",
+    },
+    "vakya rachna": {
+        "common_mistake": "बच्चे वाक्य में शब्दों का क्रम गलत रखते हैं।",
+        "parent_tip": "शब्दों के कार्ड बनाएँ, बच्चा सही क्रम में जमाकर वाक्य बनाए।",
+    },
+    "kahani lekhan": {
+        "common_mistake": "बच्चे कहानी का अंत नहीं लिख पाते या बीच में रुक जाते हैं।",
+        "parent_tip": "कहानी के 3 भाग सिखाएँ: शुरुआत, बीच (समस्या), अंत (समाधान)।",
+    },
+    "kaal": {
+        "common_mistake": "बच्चे भूतकाल और भविष्यकाल में क्रिया रूप गलत लिखते हैं।",
+        "parent_tip": "तीन वाक्य बनवाएँ: 'कल मैंने ___ (भूत), आज मैं ___ (वर्तमान), कल मैं ___ (भविष्य)'।",
+    },
+    "patra lekhan": {
+        "common_mistake": "बच्चे पत्र का प्रारूप (format) भूल जाते हैं — दिनांक, संबोधन, विषय।",
+        "parent_tip": "पत्र का नमूना दीवार पर लगाएँ। हर हफ़्ते दादा-दादी को एक पत्र लिखवाएँ।",
+    },
+    "vachan and ling": {
+        "common_mistake": "बच्चे अनियमित बहुवचन में गलती करते हैं (आदमी → आदमीयाँ लिखना, सही: आदमी)।",
+        "parent_tip": "घर की चीज़ों को एकवचन-बहुवचन में बदलवाएँ: एक कुर्सी → दो कुर्सियाँ।",
+    },
+    "anusvaar": {
+        "common_mistake": "बच्चे अनुस्वार (ं) और चंद्रबिंदु (ँ) में अंतर नहीं कर पाते।",
+        "parent_tip": "अंतर समझाएँ: अनुस्वार नाक से बोलो (हंस), चंद्रबिंदु नाक + मुँह से (हँसना)।",
+    },
+    "comprehension hindi": {
+        "common_mistake": "बच्चे गद्यांश पढ़ते हैं पर उत्तर पूरे वाक्य में नहीं लिखते।",
+        "parent_tip": "सिखाएँ: उत्तर हमेशा पूरे वाक्य में लिखो, सिर्फ़ एक शब्द में नहीं।",
+    },
+    "vilom shabd": {
+        "common_mistake": "बच्चे कुछ विलोम शब्दों को उलटा याद करते हैं।",
+        "parent_tip": "विलोम शब्दों का खेल खेलें — एक शब्द बोलें, बच्चा उलटा बोले।",
+    },
+    "muhavare": {
+        "common_mistake": "बच्चे मुहावरे का शाब्दिक अर्थ समझते हैं, लाक्षणिक नहीं।",
+        "parent_tip": "'आँखों का तारा' का मतलब 'आँख में तारा' नहीं बल्कि 'बहुत प्यारा' — ऐसे समझाएँ।",
+    },
+    "paryayvachi": {
+        "common_mistake": "बच्चे पर्यायवाची और विलोम में भ्रम करते हैं।",
+        "parent_tip": "पर्यायवाची = समान अर्थ (जल, पानी, नीर)। विलोम = उल्टा अर्थ (दिन/रात)।",
+    },
+    "samas": {
+        "common_mistake": "बच्चे समास के प्रकार (तत्पुरुष, द्वंद्व, बहुव्रीहि) में भ्रम करते हैं।",
+        "parent_tip": "रोज़मर्रा के शब्दों से समास पहचानें: रसोईघर = रसोई का घर (तत्पुरुष)।",
+    },
+    "samvad lekhan": {
+        "common_mistake": "बच्चे संवाद में बोलने वाले का नाम लिखना भूल जाते हैं।",
+        "parent_tip": "दो पात्रों का संवाद लिखवाएँ: 'माँ: ___ बच्चा: ___' — रोज़ एक संवाद।",
+    },
+    # ── Computer ──
+    "parts of computer": {
+        "common_mistake": "Children confuse input devices (keyboard, mouse) with output devices (monitor, printer).",
+        "parent_tip": "Point to each part: 'Keyboard = you TYPE (input). Monitor = you SEE (output).'",
+    },
+    "mouse and keyboard": {
+        "common_mistake": "Children confuse left-click (select) with right-click (menu) and double-click (open).",
+        "parent_tip": "Practice: left-click to select, double-click to open, right-click to see options.",
+    },
+    "special keys": {
+        "common_mistake": "Children don't know the difference between Backspace (delete left) and Delete (delete right).",
+        "parent_tip": "Let your child type their name and practice using Enter, Space, Backspace, and Caps Lock.",
+    },
+    "desktop": {
+        "common_mistake": "Children confuse desktop icons with files — they think deleting an icon deletes the program.",
+        "parent_tip": "Show: 'This icon is a shortcut, like a door. The program is inside — the door just helps you reach it.'",
+    },
+    "typing": {
+        "common_mistake": "Children type with two fingers (hunt and peck) instead of using home row keys.",
+        "parent_tip": "Show the home row: ASDF for left hand, JKL; for right hand. Practice 5 minutes daily.",
+    },
+    "files and folders": {
+        "common_mistake": "Children save everything on the desktop instead of organizing into folders.",
+        "parent_tip": "Create folders together: 'Homework', 'Games', 'Photos' — practice saving files in the right folder.",
+    },
+    "keyboard shortcuts": {
+        "common_mistake": "Children forget common shortcuts and use menus for everything.",
+        "parent_tip": "Start with 3: Ctrl+C (copy), Ctrl+V (paste), Ctrl+Z (undo). Practice daily.",
+    },
+    "ms paint": {
+        "common_mistake": "Children use only the pencil tool and don't explore shapes, fill, or text tools.",
+        "parent_tip": "Draw a house together using shapes (rectangle for walls, triangle for roof, circle for sun).",
+    },
+    "ms word": {
+        "common_mistake": "Children type without pressing Enter for new paragraphs — one long block of text.",
+        "parent_tip": "Type a short story together: practice bold for title, Enter for paragraphs, spell-check.",
+    },
+    "scratch": {
+        "common_mistake": "Children place too many blocks without testing — then can't find the bug.",
+        "parent_tip": "Teach: 'Add 2-3 blocks, then click the green flag to test. Fix before adding more.'",
+    },
+    "internet safety": {
+        "common_mistake": "Children share personal information (name, school, address) in online games and chats.",
+        "parent_tip": "Rule: NEVER share your real name, school name, photo, or address with strangers online.",
+    },
+    "internet basics": {
+        "common_mistake": "Children think the internet and the web browser are the same thing.",
+        "parent_tip": "Explain: 'Internet is the road. Browser (Chrome) is the car. Website is the destination.'",
+    },
+    "powerpoint": {
+        "common_mistake": "Children put too much text on one slide — they copy paragraphs instead of bullet points.",
+        "parent_tip": "Rule: Maximum 5 bullet points per slide, maximum 5 words per point. Pictures > text.",
+    },
+    "scratch programming": {
+        "common_mistake": "Children don't use loops — they repeat the same blocks 10 times instead of using 'repeat'.",
+        "parent_tip": "Challenge: 'Can you make the cat walk in a square using only 4 blocks inside a repeat?'",
+    },
+    "digital citizenship": {
+        "common_mistake": "Children think anything they find online can be copied freely — no concept of copyright.",
+        "parent_tip": "Teach: 'Would you take someone's toy without asking? Online content belongs to someone too.'",
+    },
+    "digital ethics": {
+        "common_mistake": "Children think online actions have no consequences — cyberbullying seems like 'just joking'.",
+        "parent_tip": "Ask: 'Would you say this to their face? If not, don't type it.' — the grandma test.",
+    },
+    # ── GK ──
+    "national symbols": {
+        "common_mistake": "Children confuse the national bird (peacock) with the national animal (tiger).",
+        "parent_tip": "Make a chart: Flag, Emblem, Bird (peacock), Animal (tiger), Flower (lotus), Fruit (mango).",
+    },
+    "famous landmarks": {
+        "common_mistake": "Children know Taj Mahal but can't name the city or builder.",
+        "parent_tip": "Pick one landmark per week: name, city, who built it, one fun fact.",
+    },
+    "solar system basics": {
+        "common_mistake": "Children mix up planet order — they forget 'My Very Educated Mother Just Served Us Nachos'.",
+        "parent_tip": "Learn the mnemonic: Mercury Venus Earth Mars Jupiter Saturn Uranus Neptune.",
+    },
+    "current awareness": {
+        "common_mistake": "Children memorise facts without understanding context.",
+        "parent_tip": "Discuss one news story per week at dinner — 'What happened? Where? Why does it matter?'",
+    },
+    "continents": {
+        "common_mistake": "Children confuse continents with countries — they think India is a continent.",
+        "parent_tip": "Use a globe or map: '7 continents, India is in Asia. Can you find the others?'",
+    },
+    "famous scientists": {
+        "common_mistake": "Children memorise names but forget the discovery: 'Newton — something about apples.'",
+        "parent_tip": "One scientist per week: name, discovery, fun story. APJ Abdul Kalam is a great start!",
+    },
+    "festivals": {
+        "common_mistake": "Children know festival names but not why they're celebrated.",
+        "parent_tip": "Before each festival, tell the story: 'Diwali celebrates Ram's return. Holi celebrates Holika.'",
+    },
+    "indian constitution": {
+        "common_mistake": "Children think the Constitution is just a book of laws, not a living document.",
+        "parent_tip": "Discuss rights: 'You have the right to education. Your friend has the right to equality.'",
+    },
+    "world heritage": {
+        "common_mistake": "Children confuse world heritage sites with tourist spots — they don't understand 'heritage'.",
+        "parent_tip": "Heritage means 'precious things from the past.' Ask: 'Why should we protect the Taj Mahal?'",
+    },
+    "space missions": {
+        "common_mistake": "Children think only NASA sends rockets — they don't know about ISRO's achievements.",
+        "parent_tip": "Learn about Chandrayaan and Mangalyaan — India sent a Mars mission cheaper than a Hollywood movie!",
+    },
+    "environmental awareness": {
+        "common_mistake": "Children think pollution is only factory smoke — they forget plastic, water pollution, noise.",
+        "parent_tip": "Do a home audit: 'How much plastic did we use today? Can we reduce it tomorrow?'",
+    },
+    "global citizenship": {
+        "common_mistake": "Children think global problems are too big for them to help with.",
+        "parent_tip": "Start small: save water, plant a tree, donate old books. Small actions matter!",
+    },
+    # ── Moral Science ──
+    "sharing": {
+        "common_mistake": "Children think sharing means giving away their things permanently.",
+        "parent_tip": "Practice: 'Can you share your crayons with your friend? They'll return them after drawing.'",
+    },
+    "honesty": {
+        "common_mistake": "Children tell small lies to avoid trouble and think it's okay because 'it's a small lie'.",
+        "parent_tip": "Praise honesty: 'Thank you for telling the truth. I'm proud of you even though you made a mistake.'",
+    },
+    "kindness": {
+        "common_mistake": "Children are kind to friends but not to strangers or younger kids.",
+        "parent_tip": "Practice daily kindness: 'Did you do one kind thing today? Help someone carry their bag?'",
+    },
+    "respecting elders": {
+        "common_mistake": "Children confuse respect with obedience — they think respect means never disagreeing.",
+        "parent_tip": "Teach: 'Respect means listening politely, using kind words, and being helpful — not blind obedience.'",
+    },
+    "empathy": {
+        "common_mistake": "Children confuse empathy (feeling what others feel) with sympathy (feeling sorry).",
+        "parent_tip": "Ask: 'How would YOU feel if someone took your toy? That's empathy — understanding someone else's feelings.'",
+    },
+    "teamwork": {
+        "common_mistake": "Children want to do everything themselves and struggle to delegate or accept others' ideas.",
+        "parent_tip": "Play team games: building blocks together, cooking together. Ask: 'What was YOUR role?'",
+    },
+    "environmental care": {
+        "common_mistake": "Children think environmental care is only about not littering.",
+        "parent_tip": "Three Rs: Reduce (use less), Reuse (use again), Recycle (make new things from old).",
+    },
+    "leadership": {
+        "common_mistake": "Children think a leader is the one who gives orders, not the one who helps the team.",
+        "parent_tip": "Ask: 'What makes a good captain? Someone who shouts or someone who encourages the team?'",
+    },
+    # ── Health & PE ──
+    "personal hygiene": {
+        "common_mistake": "Children skip steps — they wash hands but forget to use soap, or brush but forget tongue.",
+        "parent_tip": "Make a hygiene checklist on the bathroom wall: brush teeth, wash hands, comb hair, clean nails.",
+    },
+    "good posture": {
+        "common_mistake": "Children slouch while studying and don't realize it affects their back and concentration.",
+        "parent_tip": "The wall test: stand with back against the wall — head, shoulders, hips should touch.",
+    },
+    "basic physical": {
+        "common_mistake": "Children think exercise has to be intense — they don't count walking and stretching.",
+        "parent_tip": "Start with 10 minutes: 5 stretches, 10 jumping jacks, walk around the park. Every day!",
+    },
+    "healthy eating": {
+        "common_mistake": "Children think 'healthy' means only salads and boring food.",
+        "parent_tip": "Make healthy food fun: fruit chat with chaat masala, smoothies, veggie sandwiches with cheese.",
+    },
+    "outdoor play": {
+        "common_mistake": "Children prefer screen time over outdoor play and don't know traditional games.",
+        "parent_tip": "Teach one traditional game: kho-kho, pitthu, lagori, hopscotch. Play together on weekends.",
+    },
+    "basic stretching": {
+        "common_mistake": "Children bounce during stretches instead of holding still — this can cause injury.",
+        "parent_tip": "Hold each stretch for 10 seconds, no bouncing. Practice touching toes, arm stretches.",
+    },
+    "balanced diet": {
+        "common_mistake": "Children think skipping meals helps them stay healthy.",
+        "parent_tip": "Three meals + two snacks. Show the plate: half veggies, quarter grain, quarter protein.",
+    },
+    "safety at play": {
+        "common_mistake": "Children ignore safety rules during excitement — no helmet while cycling, pushing on slides.",
+        "parent_tip": "Before play: 'What are the 3 safety rules today?' Let them set the rules themselves.",
+    },
+    "team sports": {
+        "common_mistake": "Children focus only on winning and get upset when they lose.",
+        "parent_tip": "After every game: 'What did you learn? Did you play fair? Did you encourage your team?'",
+    },
+    "sports and games": {
+        "common_mistake": "Children know cricket but can't name rules of other sports like kho-kho or basketball.",
+        "parent_tip": "Learn one new sport per month: rules, famous players, try playing it even in a small way.",
+    },
+    "first aid": {
+        "common_mistake": "Children panic during minor injuries instead of following basic first aid steps.",
+        "parent_tip": "Teach: cuts → wash with water, press with clean cloth. Burns → run cold water. Nosebleed → pinch and lean forward.",
+    },
+    "yoga": {
+        "common_mistake": "Children rush through yoga poses without holding them or focusing on breathing.",
+        "parent_tip": "Start with 3 poses: tree pose (balance), cobra (back), butterfly (flexibility). Hold for 10 breaths.",
+    },
+    "importance of sleep": {
+        "common_mistake": "Children think sleeping less means more time to play — they don't understand sleep helps the brain.",
+        "parent_tip": "Set a bedtime: Class 1-3 need 10 hours, Class 4-5 need 9 hours. No screens 30 minutes before bed.",
+    },
+    "fitness": {
+        "common_mistake": "Children think fitness is only for athletes or adults.",
+        "parent_tip": "Track weekly activity: 'Did you play outside 5 times this week?' — make it a fun challenge.",
+    },
+    "nutrition labels": {
+        "common_mistake": "Children don't know how to read food labels — they judge food by the brand or taste.",
+        "parent_tip": "Pick a packet from your kitchen — read together: calories, sugar, fat. Compare two brands.",
+    },
+    "mental health": {
+        "common_mistake": "Children think feeling sad or angry is wrong — they don't know these are normal emotions.",
+        "parent_tip": "Teach: 'All feelings are okay. Feeling angry is normal — what matters is how we handle it.'",
+    },
+    # ── Maths (specific) ──
+    "basic shapes": {
+        "common_mistake": "Children identify shapes only in standard orientation — a rotated triangle doesn't look like a triangle to them.",
+        "parent_tip": "Show shapes in different orientations and sizes — 'Is this still a triangle? Yes! Count the sides.'",
+    },
+    "spatial sense": {
+        "common_mistake": "Children confuse left-right and above-below in written directions.",
+        "parent_tip": "Play direction games: 'Put the ball ABOVE the table, BEHIND the chair, BELOW the bed.'",
+    },
+    "numbers 1 to 50": {
+        "common_mistake": "Children reverse digits when writing teens: 12 becomes 21, 15 becomes 51.",
+        "parent_tip": "Practice: say 'thirteen' → 1 then 3. The 'teen' tells you 1 comes first.",
+    },
+    "numbers 51 to 100": {
+        "common_mistake": "Children struggle with counting across decades: ...48, 49, 50, 41? They restart instead of continuing.",
+        "parent_tip": "Use a number chart (1-100). Point and read together — especially the decade transitions.",
+    },
+    "numbers up to 1000": {
+        "common_mistake": "Children confuse place values — in 432, they think 4 means four, not four hundred.",
+        "parent_tip": "Use bundles: 100 = 1 bundle, 10 = 1 stick, 1 = 1 bead. Build numbers physically.",
+    },
+    "numbers up to 10 lakh": {
+        "common_mistake": "Children confuse Indian place values (lakhs/crores) with international system (millions).",
+        "parent_tip": "Practice comma placement: Indian system has commas after 3, 5, 7 digits from right: 10,00,000.",
+    },
+    "multiplication (tables 2-5)": {
+        "common_mistake": "Children skip-count but lose track: 4, 8, 12, 14 (wrong — should be 16).",
+        "parent_tip": "Tables song: 'Two ones are two, two twos are four...' — rhythmic chanting works best.",
+    },
+    "area and volume": {
+        "common_mistake": "Children forget to use square units (cm²) for area and cubic units (cm³) for volume.",
+        "parent_tip": "Area = floor tiles (flat, cm²). Volume = how much water fits (3D, cm³ or mL).",
+    },
+    "speed distance": {
+        "common_mistake": "Children mix up the formula — they divide when they should multiply and vice versa.",
+        "parent_tip": "Use the triangle: S on top, D and T below. Cover what you want: D = S × T, S = D ÷ T.",
+    },
+    "factors and multiples": {
+        "common_mistake": "Children confuse factors (divide into) with multiples (multiply to get).",
+        "parent_tip": "Factors = what fits inside: factors of 12 = 1, 2, 3, 4, 6, 12. Multiples = keep adding: 3, 6, 9, 12...",
+    },
+    "hcf and lcm": {
+        "common_mistake": "Children confuse HCF (biggest shared factor) with LCM (smallest shared multiple).",
+        "parent_tip": "HCF = highest common FACTOR (goes INTO both). LCM = lowest common MULTIPLE (both go into IT).",
+    },
+    "data handling (pictographs)": {
+        "common_mistake": "Children miscount symbols when each symbol represents more than 1 unit.",
+        "parent_tip": "Always read the key first: 'Each 🍎 = 2 students. So 3 apples = 6 students, not 3!'",
+    },
+    "data handling (pie charts)": {
+        "common_mistake": "Children judge pie chart sections by appearance, not by reading the percentage labels.",
+        "parent_tip": "Always add up all sections — they must equal 100%. If not, something is wrong.",
+    },
+    "fractions (halves": {
+        "common_mistake": "Children think fractions are always less than 1 — they struggle with ½ of 8 = 4.",
+        "parent_tip": "Cut a roti in half — each piece is ½. Now cut 4 rotis — half of 4 rotis = 2 rotis.",
+    },
+    "fractions (add": {
+        "common_mistake": "Children add numerators AND denominators: ½ + ⅓ = ⅖ (wrong — it's ⅚).",
+        "parent_tip": "Rule: denominators MUST be same before adding. Find common denominator first, then add tops only.",
+    },
+    "decimals (all": {
+        "common_mistake": "Children line up decimal numbers from the right like whole numbers — 2.5 + 0.35 = 2.85 (wrong alignment).",
+        "parent_tip": "Golden rule: line up the decimal POINTS, then add column by column. Add zeros if needed: 2.50 + 0.35.",
+    },
+    "geometry (circles": {
+        "common_mistake": "Children confuse radius (center to edge) with diameter (edge to edge through center).",
+        "parent_tip": "Remember: diameter = 2 × radius. The diameter is the longest line through the circle.",
+    },
 }
 
 
