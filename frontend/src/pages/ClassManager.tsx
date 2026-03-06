@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ export default function ClassManager({ onNavigate }: { onNavigate?: (page: strin
   const [editingClass, setEditingClass] = useState<TeacherClass | null>(null)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<TeacherClass | null>(null)
 
   const [name, setName] = useState('')
   const [grade, setGrade] = useState('')
@@ -116,14 +118,14 @@ export default function ClassManager({ onNavigate }: { onNavigate?: (page: strin
   }
 
   const handleDelete = async (cls: TeacherClass) => {
-    if (!confirm(`Delete "${cls.name}"? This cannot be undone.`)) return
-
     try {
       await deleteClass(cls.id)
       notify.success('Class deleted')
     } catch (err) {
       notify.error('Failed to delete class')
       console.error('Failed to delete class:', err)
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
@@ -344,7 +346,7 @@ export default function ClassManager({ onNavigate }: { onNavigate?: (page: strin
                         </div>
                       </div>
 
-                      <div className="flex gap-2 self-stretch sm:self-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-2 self-stretch sm:self-auto opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         {onNavigate && (
                           <Button
                             size="sm"
@@ -370,7 +372,7 @@ export default function ClassManager({ onNavigate }: { onNavigate?: (page: strin
                           size="sm"
                           variant="ghost"
                           aria-label={`Delete ${cls.name}`}
-                          onClick={() => handleDelete(cls)}
+                          onClick={() => setDeleteTarget(cls)}
                           className="w-11 h-11 p-0 rounded-xl hover:bg-destructive/5 hover:text-destructive transition-colors border border-transparent hover:border-destructive/10"
                         >
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -386,6 +388,16 @@ export default function ClassManager({ onNavigate }: { onNavigate?: (page: strin
           )}
         </Section.Content>
       </Section>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget) }}
+        onCancel={() => setDeleteTarget(null)}
+        title="Delete class?"
+        description={`Delete "${deleteTarget?.name ?? ''}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+      />
     </div>
   )
 }

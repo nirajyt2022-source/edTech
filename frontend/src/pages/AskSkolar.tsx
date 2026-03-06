@@ -106,7 +106,7 @@ export default function AskSkolar({ onNavigate, childGrade }: AskSkolarProps) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col" style={{ height: 'calc(100vh - 8rem)' }}>
+    <div className="max-w-3xl mx-auto px-4 py-6 flex flex-col" style={{ height: 'calc(100dvh - 8rem)' }}>
       {/* Header */}
       <div className="mb-4 shrink-0">
         <div className="flex items-center gap-3 mb-3">
@@ -122,7 +122,7 @@ export default function AskSkolar({ onNavigate, childGrade }: AskSkolarProps) {
         {/* Filters */}
         <div className="flex gap-2">
           <Select value={grade} onValueChange={setGrade}>
-            <SelectTrigger className="w-[130px] h-8 text-xs bg-background" aria-label="Select class">
+            <SelectTrigger className="w-[130px] h-10 text-xs bg-background" aria-label="Select class">
               <SelectValue placeholder="Class (optional)" />
             </SelectTrigger>
             <SelectContent>
@@ -133,7 +133,7 @@ export default function AskSkolar({ onNavigate, childGrade }: AskSkolarProps) {
             </SelectContent>
           </Select>
           <Select value={subject} onValueChange={setSubject}>
-            <SelectTrigger className="w-[130px] h-8 text-xs bg-background" aria-label="Select subject">
+            <SelectTrigger className="w-[130px] h-10 text-xs bg-background" aria-label="Select subject">
               <SelectValue placeholder="Subject (optional)" />
             </SelectTrigger>
             <SelectContent>
@@ -165,7 +165,7 @@ export default function AskSkolar({ onNavigate, childGrade }: AskSkolarProps) {
                   <button
                     key={idx}
                     onClick={() => handleSend(q)}
-                    className="text-xs px-3 py-1.5 bg-white border border-[#1B4332]/15 rounded-full text-[#1B4332] hover:bg-[#E8F5E9] transition-colors"
+                    className="text-xs px-3 py-2.5 bg-white border border-[#1B4332]/15 rounded-full text-[#1B4332] hover:bg-[#E8F5E9] transition-colors"
                   >
                     "{q}"
                   </button>

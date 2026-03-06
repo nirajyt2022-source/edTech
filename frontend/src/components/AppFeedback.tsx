@@ -101,7 +101,7 @@ export default function AppFeedback({ currentPage, open, onOpenChange }: AppFeed
       {showFab && (
         <button
           onClick={handleOpen}
-          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 print:hidden"
+          className="fixed bottom-[7.5rem] right-4 md:bottom-6 md:right-6 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 print:hidden"
           style={{ backgroundColor: '#1E1B4B' }}
           aria-label="Send feedback"
         >

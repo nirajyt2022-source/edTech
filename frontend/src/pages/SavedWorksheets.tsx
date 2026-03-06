@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -69,6 +70,7 @@ export default function SavedWorksheets() {
   const [filterChildId, setFilterChildId] = useState(activeChildId || 'all')
   const [filterClassId, setFilterClassId] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const loadWorksheets = useCallback(async () => {
     setLoading(true)
@@ -120,8 +122,6 @@ export default function SavedWorksheets() {
   }
 
   const deleteWorksheet = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this worksheet?')) return
-
     try {
       await api.delete(`/api/worksheets/saved/${id}`)
       setWorksheets(worksheets.filter(w => w.id !== id))
@@ -133,6 +133,8 @@ export default function SavedWorksheets() {
       notify.error('Failed to delete worksheet')
       setError('Failed to delete worksheet')
       console.error(err)
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
@@ -657,8 +659,8 @@ export default function SavedWorksheets() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => deleteWorksheet(worksheet.id)}
-                                className="w-10 h-10 md:w-full p-0 md:h-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all"
+                                onClick={() => setDeleteTarget(worksheet.id)}
+                                className="w-11 h-11 md:w-full p-0 md:h-10 text-muted-foreground/40 hover:text-destructive hover:bg-destructive/5 rounded-xl transition-all"
                                 aria-label="Delete worksheet"
                               >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -679,6 +681,15 @@ export default function SavedWorksheets() {
         </>
       )}
 
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onConfirm={() => { if (deleteTarget) deleteWorksheet(deleteTarget) }}
+        onCancel={() => setDeleteTarget(null)}
+        title="Delete worksheet?"
+        description="Are you sure you want to delete this worksheet? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+      />
     </div>
   )
 }

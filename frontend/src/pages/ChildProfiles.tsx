@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -43,6 +44,7 @@ export default function ChildProfiles() {
   const [editingChild, setEditingChild] = useState<Child | null>(null)
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<Child | null>(null)
 
   const [name, setName] = useState('')
   const [grade, setGrade] = useState('')
@@ -113,16 +115,14 @@ export default function ChildProfiles() {
   }
 
   const handleDelete = async (child: Child) => {
-    if (!confirm(`Are you sure you want to delete ${child.name}'s profile? Worksheets will be preserved.`)) {
-      return
-    }
-
     try {
       await deleteChild(child.id)
       notify.success('Profile removed')
     } catch (err) {
       notify.error('Failed to delete profile')
       console.error('Failed to delete child:', err)
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
@@ -285,7 +285,7 @@ export default function ChildProfiles() {
             ) : (
               <div className="flex items-center gap-3 p-1.5 pl-3 bg-secondary/30 border border-border/50 rounded-xl">
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Multi-child is Pro</span>
-                <Button onClick={() => upgrade()} variant="default" size="sm" className="h-7 px-3 text-[10px] rounded-lg shadow-sm font-bold">
+                <Button onClick={() => upgrade()} variant="default" size="sm" className="h-9 px-3 text-[10px] rounded-lg shadow-sm font-bold">
                   Upgrade
                 </Button>
               </div>
@@ -333,8 +333,8 @@ export default function ChildProfiles() {
                         </div>
                       </div>
 
-                      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity print:hidden">
-                        <Button size="sm" variant="ghost" aria-label={`Edit ${child.name}'s profile`} onClick={() => openEditForm(child)} className="w-9 h-9 p-0 rounded-xl hover:bg-primary/5 hover:text-primary transition-colors">
+                      <div className="flex gap-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity print:hidden">
+                        <Button size="sm" variant="ghost" aria-label={`Edit ${child.name}'s profile`} onClick={() => openEditForm(child)} className="w-11 h-11 p-0 rounded-xl hover:bg-primary/5 hover:text-primary transition-colors">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                           </svg>
@@ -343,8 +343,8 @@ export default function ChildProfiles() {
                           size="sm"
                           variant="ghost"
                           aria-label={`Delete ${child.name}'s profile`}
-                          onClick={() => handleDelete(child)}
-                          className="w-9 h-9 p-0 rounded-xl hover:bg-destructive/5 hover:text-destructive transition-colors"
+                          onClick={() => setDeleteTarget(child)}
+                          className="w-11 h-11 p-0 rounded-xl hover:bg-destructive/5 hover:text-destructive transition-colors"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -364,6 +364,16 @@ export default function ChildProfiles() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onConfirm={() => { if (deleteTarget) handleDelete(deleteTarget) }}
+        onCancel={() => setDeleteTarget(null)}
+        title="Delete profile?"
+        description={`Are you sure you want to delete ${deleteTarget?.name ?? ''}'s profile? Worksheets will be preserved.`}
+        confirmLabel="Delete"
+        variant="destructive"
+      />
 
       {/* Sign out — visible on mobile for easy access */}
       <div className="mt-10 pt-6 border-t border-border/30 md:hidden">
