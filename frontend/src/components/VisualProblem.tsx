@@ -2,25 +2,25 @@ import React, { memo } from 'react'
 
 /* ── Standardized visual sizes ── */
 const VISUAL_SIZE: Record<string, string> = {
-  clock: "w-28 h-28",
-  number_line: "w-full max-w-[280px] h-10",
-  base_ten_regrouping: "w-full max-w-[350px]",
-  grid_symmetry: "w-36 h-36",
-  shapes: "w-full max-w-[350px]",
+  clock: "w-full max-w-[350px]",
+  number_line: "w-full",
+  base_ten_regrouping: "w-full max-w-[400px]",
+  grid_symmetry: "w-full max-w-[300px]",
+  shapes: "w-full max-w-[400px]",
   pie_fraction: "w-full max-w-[350px]",
-  money_coins: "w-full max-w-[300px]",
-  pattern_tiles: "w-full max-w-[350px]",
-  object_group: "w-full max-w-[400px]",
-  abacus: "w-40 h-28",
-  picture_word_match: "w-full max-w-[300px]",
-  labeled_diagram: "w-full max-w-[300px]",
+  money_coins: "w-full max-w-[400px]",
+  pattern_tiles: "w-full max-w-[400px]",
+  object_group: "w-full",
+  abacus: "w-full max-w-[300px]",
+  picture_word_match: "w-full max-w-[350px]",
+  labeled_diagram: "w-full max-w-[350px]",
   match_columns: "w-full max-w-[400px]",
   ten_frame: "w-full max-w-[350px]",
   pictograph: "w-full max-w-[400px]",
   array_visual: "w-full max-w-[350px]",
   fraction_bar: "w-full max-w-[400px]",
   scenario_picture: "w-full max-w-[400px]",
-  sequence_pictures: "w-full max-w-[450px]",
+  sequence_pictures: "w-full",
   bar_chart: "w-full max-w-[400px]",
   food_plate: "w-full max-w-[300px]",
   percentage_bar: "w-full max-w-[400px]",
@@ -234,26 +234,38 @@ function resolveTokenType(label: string): string {
 /* ── Clock ── */
 
 function ClockVisual({ hour, minute }: { hour: number; minute: number }) {
-  const cx = 50, cy = 50, r = 40
-  const hAngle = ((hour % 12) + minute / 60) * 30 - 90
-  const mAngle = minute * 6 - 90
-  const rad = (d: number) => d * Math.PI / 180
+  const size = 140, cx = size / 2, cy = size / 2, r = 55
+  const hAngle = ((hour % 12 + minute / 60) * 30 - 90) * Math.PI / 180
+  const mAngle = (minute * 6 - 90) * Math.PI / 180
 
   return (
-    <svg viewBox="0 0 100 100" className="w-full h-full text-foreground print:text-black" role="img" aria-label={`Clock showing ${hour}:${String(minute).padStart(2, '0')}`}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth="1.5" />
-      {[...Array(12)].map((_, i) => {
-        const a = rad(i * 30 - 90)
-        return <line key={i} x1={cx + Math.cos(a) * 35} y1={cy + Math.sin(a) * 35} x2={cx + Math.cos(a) * r} y2={cy + Math.sin(a) * r} stroke="currentColor" strokeWidth="1.5" />
-      })}
-      {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => {
-        const a = rad(n * 30 - 90)
-        return <text key={n} x={cx + Math.cos(a) * 30} y={cy + Math.sin(a) * 30} textAnchor="middle" dominantBaseline="central" fontSize="7" fill="currentColor" fontWeight="500">{n}</text>
-      })}
-      <line x1={cx} y1={cy} x2={cx + Math.cos(rad(hAngle)) * 20} y2={cy + Math.sin(rad(hAngle)) * 20} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1={cx} y1={cy} x2={cx + Math.cos(rad(mAngle)) * 30} y2={cy + Math.sin(rad(mAngle)) * 30} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx={cx} cy={cy} r="2" fill="currentColor" />
-    </svg>
+    <div className="my-3 px-4 py-4 bg-gradient-to-br from-blue-50 to-sky-50 rounded-2xl border border-blue-200/60 w-full">
+      <div className="flex justify-center">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="drop-shadow-lg" role="img" aria-label={`Clock showing ${hour}:${String(minute).padStart(2, '0')}`}>
+          <circle cx={cx} cy={cy} r={r + 5} fill="#1E1B4B" />
+          <circle cx={cx} cy={cy} r={r} fill="white" />
+          {Array.from({ length: 12 }).map((_, i) => {
+            const a = ((i + 1) * 30 - 90) * Math.PI / 180
+            const nx = cx + (r - 15) * Math.cos(a)
+            const ny = cy + (r - 15) * Math.sin(a)
+            const tx1 = cx + (r - 5) * Math.cos(a)
+            const ty1 = cy + (r - 5) * Math.sin(a)
+            const tx2 = cx + r * Math.cos(a)
+            const ty2 = cy + r * Math.sin(a)
+            return (
+              <g key={i}>
+                <line x1={tx1} y1={ty1} x2={tx2} y2={ty2} stroke="#1E1B4B" strokeWidth="2" />
+                <text x={nx} y={ny + 4} textAnchor="middle" fontSize="12" fontWeight="bold" fill="#1E1B4B">{i + 1}</text>
+              </g>
+            )
+          })}
+          <line x1={cx} y1={cy} x2={cx + 28 * Math.cos(hAngle)} y2={cy + 28 * Math.sin(hAngle)} stroke="#1E1B4B" strokeWidth="4" strokeLinecap="round" />
+          <line x1={cx} y1={cy} x2={cx + 38 * Math.cos(mAngle)} y2={cy + 38 * Math.sin(mAngle)} stroke="#6366F1" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx={cx} cy={cy} r={4} fill="#F97316" />
+        </svg>
+      </div>
+      <p className="text-center text-sm text-blue-600/80 mt-2 font-semibold">What time does the clock show?</p>
+    </div>
   )
 }
 
@@ -269,17 +281,23 @@ function ObjectGroupVisual({ groups, operation, useColor }: { groups: GroupItem[
   const hasEmoji = groups.some(g => g.emoji)
 
   if (hasEmoji) {
+    const bgClass = operation === '-'
+      ? 'from-rose-50 to-pink-50 border-rose-200/60'
+      : 'from-amber-50 to-orange-50 border-amber-200/60'
+    const opColor = operation === '-' ? 'bg-rose-500 shadow-rose-200' : 'bg-orange-500 shadow-orange-200'
+    const labelColor = operation === '-' ? 'text-rose-600/70' : 'text-amber-600/70'
+
     return (
-      <div className="py-3 px-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-200/60 w-full">
+      <div className={`my-3 px-4 py-4 bg-gradient-to-br ${bgClass} rounded-2xl border w-full`}>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           {groups.map((group, gi) => (
             <React.Fragment key={gi}>
               {gi > 0 && (
-                <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center shadow-md shadow-orange-200 flex-shrink-0">
+                <div className={`w-9 h-9 rounded-full ${opColor} flex items-center justify-center shadow-md flex-shrink-0`}>
                   <span className="text-white text-lg font-bold">{operation}</span>
                 </div>
               )}
-              <div className="flex flex-wrap gap-1 items-center justify-center bg-white/70 rounded-xl px-3 py-2 border border-amber-100 shadow-sm">
+              <div className="flex flex-wrap gap-1.5 items-center justify-center bg-white/70 rounded-xl px-3 py-2.5 border border-amber-100/80 shadow-sm max-w-[200px]">
                 {Array.from({ length: Math.min(group.count || 0, 20) }).map((_, i) => (
                   <span key={i} className="text-2xl md:text-3xl leading-none select-none"
                         style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.1))" }}>
@@ -295,15 +313,15 @@ function ObjectGroupVisual({ groups, operation, useColor }: { groups: GroupItem[
               <div className="w-9 h-9 rounded-full bg-indigo-500 flex items-center justify-center shadow-md shadow-indigo-200 flex-shrink-0">
                 <span className="text-white text-lg font-bold">=</span>
               </div>
-              <div className="w-12 h-12 rounded-xl border-dashed border-indigo-300 bg-white flex items-center justify-center shadow-inner"
-                   style={{ borderWidth: "3px", borderStyle: "dashed" }}>
+              <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-inner"
+                   style={{ borderWidth: '3px', borderStyle: 'dashed', borderColor: '#A5B4FC' }}>
                 <span className="text-xl font-bold text-indigo-400">?</span>
               </div>
             </>
           )}
         </div>
         {groups[0]?.label && (
-          <p className="text-center text-xs text-amber-600/70 mt-2 font-medium">
+          <p className={`text-center text-xs ${labelColor} mt-2 font-medium`}>
             Count the {groups[0].label}s!
           </p>
         )}
@@ -418,48 +436,47 @@ function BaseTenBlocksVisual({ numbers }: { numbers: number[]; operation: string
 
 /* ── Number Line ── */
 
-function NumberLineVisual({ start, end, step, highlight, useColor, hopsFrom = -1, hopsCount = 0, hopsDirection = 'forward', highlightStart = -1 }: { start: number; end: number; step: number; highlight?: number; useColor?: boolean; hopsFrom?: number; hopsCount?: number; hopsDirection?: string; highlightStart?: number }) {
+function NumberLineVisual({ start, end, step, highlight, hopsFrom = -1, hopsCount = 0, hopsDirection = 'forward', highlightStart = -1 }: { start: number; end: number; step: number; highlight?: number; useColor?: boolean; hopsFrom?: number; hopsCount?: number; hopsDirection?: string; highlightStart?: number }) {
   if (step <= 0 || end <= start) return null
   const hasHops = hopsCount > 0 && hopsFrom >= 0
-  const w = 280, h = hasHops ? 55 : 40, pad = 20
-  const lineY = hasHops ? 35 : 20
+  const w = 400, h = hasHops ? 70 : 50, pad = 25
+  const lineY = hasHops ? 45 : 28
   const range = end - start
   const toX = (val: number) => pad + ((val - start) / range) * (w - 2 * pad)
   const ticks: number[] = []
   for (let v = start; v <= end; v += step) ticks.push(v)
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full text-foreground print:text-black" role="img" aria-label={`Number line from ${start} to ${end}${highlight != null ? `, ${highlight} highlighted` : ''}`}>
-      <line x1={pad} y1={lineY} x2={w - pad} y2={lineY} stroke="currentColor" strokeWidth="1.2" />
-      <polygon points={`${w - pad},${lineY} ${w - pad - 5},${lineY - 3} ${w - pad - 5},${lineY + 3}`} fill="currentColor" />
-      {ticks.map(v => (
-        <g key={v}>
-          <line x1={toX(v)} y1={lineY - 5} x2={toX(v)} y2={lineY + 5} stroke="currentColor" strokeWidth="1" />
-          <text x={toX(v)} y={lineY + 15} textAnchor="middle" fontSize="7" fill="currentColor">{v}</text>
-        </g>
-      ))}
-      {/* Hop arcs */}
-      {hasHops && Array.from({ length: hopsCount }).map((_, i) => {
-        const fromN = hopsDirection === 'forward' ? hopsFrom + i : hopsFrom - i
-        const toN = hopsDirection === 'forward' ? hopsFrom + i + 1 : hopsFrom - i - 1
-        if (fromN < start || fromN > end || toN < start || toN > end) return null
-        const x1 = toX(fromN)
-        const x2 = toX(toN)
-        const midX = (x1 + x2) / 2
-        return (
-          <path key={`hop-${i}`} d={`M ${x1} ${lineY - 3} Q ${midX} ${lineY - 18 - i * 1.5} ${x2} ${lineY - 3}`}
-                fill="none" stroke="#F97316" strokeWidth="2" strokeDasharray="4 2" />
-        )
-      })}
-      {/* Start marker */}
-      {highlightStart >= 0 && highlightStart >= start && highlightStart <= end && (
-        <circle cx={toX(highlightStart)} cy={lineY} r="5" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
-      )}
-      {/* End marker */}
-      {highlight != null && highlight >= start && highlight <= end && (
-        <circle cx={toX(highlight)} cy={lineY} r="4" fill={useColor ? '#88a0b8' : 'none'} className={useColor ? 'token-cf' : undefined} stroke="currentColor" strokeWidth="2" />
-      )}
-    </svg>
+    <div className="my-3 px-4 py-4 bg-gradient-to-br from-sky-50 to-cyan-50 rounded-2xl border border-sky-200/60 w-full">
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full" role="img" aria-label={`Number line from ${start} to ${end}${highlight != null ? `, ${highlight} highlighted` : ''}`}>
+        <line x1={pad} y1={lineY} x2={w - pad} y2={lineY} stroke="#1E293B" strokeWidth="1.5" />
+        <polygon points={`${w - pad},${lineY} ${w - pad - 6},${lineY - 3.5} ${w - pad - 6},${lineY + 3.5}`} fill="#1E293B" />
+        {ticks.map(v => (
+          <g key={v}>
+            <line x1={toX(v)} y1={lineY - 6} x2={toX(v)} y2={lineY + 6} stroke="#1E293B" strokeWidth="1.2" />
+            <text x={toX(v)} y={lineY + 18} textAnchor="middle" fontSize="10" fill="#334155" fontWeight="500">{v}</text>
+          </g>
+        ))}
+        {hasHops && Array.from({ length: hopsCount }).map((_, i) => {
+          const fromN = hopsDirection === 'forward' ? hopsFrom + i : hopsFrom - i
+          const toN = hopsDirection === 'forward' ? hopsFrom + i + 1 : hopsFrom - i - 1
+          if (fromN < start || fromN > end || toN < start || toN > end) return null
+          const x1 = toX(fromN)
+          const x2 = toX(toN)
+          const midX = (x1 + x2) / 2
+          return (
+            <path key={`hop-${i}`} d={`M ${x1} ${lineY - 4} Q ${midX} ${lineY - 22 - i * 2} ${x2} ${lineY - 4}`}
+                  fill="none" stroke="#F97316" strokeWidth="2.5" strokeDasharray="5 3" />
+          )
+        })}
+        {highlightStart >= 0 && highlightStart >= start && highlightStart <= end && (
+          <circle cx={toX(highlightStart)} cy={lineY} r="6" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
+        )}
+        {highlight != null && highlight >= start && highlight <= end && (
+          <circle cx={toX(highlight)} cy={lineY} r="5" fill="#6366F1" stroke="#4F46E5" strokeWidth="2" />
+        )}
+      </svg>
+    </div>
   )
 }
 
@@ -519,8 +536,8 @@ function PieFractionVisual({ numerator, denominator }: { numerator: number; deno
 /* ── Grid Symmetry ── */
 
 function GridSymmetryVisual({ gridSize, filledCells, foldAxis }: { gridSize: number; filledCells: number[][]; foldAxis: 'vertical' | 'horizontal' }) {
-  const size = 150
-  const pad = 10
+  const size = 180
+  const pad = 15
   const cellSize = (size - 2 * pad) / Math.max(gridSize, 1)
   const filledSet = new Set(filledCells.map(([r, c]) => `${r},${c}`))
 
@@ -528,62 +545,31 @@ function GridSymmetryVisual({ gridSize, filledCells, foldAxis }: { gridSize: num
   const foldCoord = pad + midIndex * cellSize
 
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full text-foreground print:text-black" role="img" aria-label={`${gridSize}x${gridSize} symmetry grid with ${foldAxis} fold line`}>
-      {/* Dot grid */}
-      {Array.from({ length: gridSize + 1 }, (_, row) =>
-        Array.from({ length: gridSize + 1 }, (_, col) => (
-          <circle
-            key={`dot-${row}-${col}`}
-            cx={pad + col * cellSize}
-            cy={pad + row * cellSize}
-            r="1.2"
-            fill="currentColor"
-            opacity="0.35"
-          />
-        ))
-      )}
-      {/* Filled cells */}
-      {Array.from({ length: gridSize }, (_, row) =>
-        Array.from({ length: gridSize }, (_, col) =>
-          filledSet.has(`${row},${col}`) ? (
-            <rect
-              key={`cell-${row}-${col}`}
-              x={pad + col * cellSize + 1}
-              y={pad + row * cellSize + 1}
-              width={cellSize - 2}
-              height={cellSize - 2}
-              fill="currentColor"
-              opacity="0.22"
-              rx="1"
-            />
-          ) : null
-        )
-      )}
-      {/* Fold line */}
-      {foldAxis === 'vertical' ? (
-        <line
-          x1={foldCoord}
-          y1={pad}
-          x2={foldCoord}
-          y2={size - pad}
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeDasharray="5 3"
-          opacity="0.7"
-        />
-      ) : (
-        <line
-          x1={pad}
-          y1={foldCoord}
-          x2={size - pad}
-          y2={foldCoord}
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeDasharray="5 3"
-          opacity="0.7"
-        />
-      )}
-    </svg>
+    <div className="my-3 px-4 py-4 bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-2xl border border-purple-200/60 w-full">
+      <div className="flex justify-center">
+        <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} className="drop-shadow-md" role="img" aria-label={`${gridSize}x${gridSize} symmetry grid with ${foldAxis} fold line`}>
+          {Array.from({ length: gridSize + 1 }, (_, row) =>
+            Array.from({ length: gridSize + 1 }, (_, col) => (
+              <circle key={`dot-${row}-${col}`} cx={pad + col * cellSize} cy={pad + row * cellSize} r="1.5" fill="#7C3AED" opacity="0.3" />
+            ))
+          )}
+          {Array.from({ length: gridSize }, (_, row) =>
+            Array.from({ length: gridSize }, (_, col) =>
+              filledSet.has(`${row},${col}`) ? (
+                <rect key={`cell-${row}-${col}`} x={pad + col * cellSize + 1} y={pad + row * cellSize + 1}
+                  width={cellSize - 2} height={cellSize - 2} fill="#7C3AED" opacity="0.25" rx="2" />
+              ) : null
+            )
+          )}
+          {foldAxis === 'vertical' ? (
+            <line x1={foldCoord} y1={pad} x2={foldCoord} y2={size - pad} stroke="#DC2626" strokeWidth="2" strokeDasharray="6 3" opacity="0.8" />
+          ) : (
+            <line x1={pad} y1={foldCoord} x2={size - pad} y2={foldCoord} stroke="#DC2626" strokeWidth="2" strokeDasharray="6 3" opacity="0.8" />
+          )}
+        </svg>
+      </div>
+      <p className="text-center text-xs text-purple-600/70 mt-2 font-medium">Draw the mirror image along the dotted line</p>
+    </div>
   )
 }
 
@@ -985,59 +971,54 @@ function MatchColumnsVisual({ left, right }: { left: {emoji: string; label: stri
 /* ── Abacus ── */
 
 function AbacusVisual({ hundreds, tens, ones }: { hundreds: number; ones: number; tens: number }) {
-  const w = 160, h = 120
-  const frameX = 16, frameY = 10, frameW = 128, frameH = 90
-  const rodXs = [52, 80, 108]
+  const w = 200, h = 150
+  const frameX = 20, frameY = 15, frameW = 160, frameH = 100
+  const rodXs = [64, 100, 136]
   const rodLabels = ['H', 'T', 'O']
+  const rodColors = ['#3B82F6', '#10B981', '#F97316']
   const rodValues = [Math.max(0, Math.min(hundreds, 9)), Math.max(0, Math.min(tens, 9)), Math.max(0, Math.min(ones, 9))]
-  const rodTop = frameY + 8
-  const rodBottom = frameY + frameH - 8
-  const beadR = 5
-  const beadSpacing = 12
+  const rodTop = frameY + 10
+  const rodBottom = frameY + frameH - 10
+  const beadR = 6
+  const beadSpacing = 13
   const maxBeads = 9
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-full text-foreground print:text-black" role="img" aria-label={`Abacus: ${hundreds} hundreds, ${tens} tens, ${ones} ones`}>
-      {/* Frame */}
-      <rect x={frameX} y={frameY} width={frameW} height={frameH} rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
-      {/* Top and bottom bars */}
-      <line x1={frameX} y1={frameY + 14} x2={frameX + frameW} y2={frameY + 14} stroke="currentColor" strokeWidth="1.5" />
-      <line x1={frameX} y1={frameY + frameH - 14} x2={frameX + frameW} y2={frameY + frameH - 14} stroke="currentColor" strokeWidth="1.5" />
+    <div className="my-3 px-4 py-4 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-200/60 w-full">
+      <div className="flex justify-center">
+        <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} className="drop-shadow-md" role="img" aria-label={`Abacus: ${hundreds} hundreds, ${tens} tens, ${ones} ones`}>
+          <rect x={frameX} y={frameY} width={frameW} height={frameH} rx="6" fill="#FEF3C7" stroke="#92400E" strokeWidth="2.5" />
+          <line x1={frameX} y1={frameY + 16} x2={frameX + frameW} y2={frameY + 16} stroke="#92400E" strokeWidth="2" />
+          <line x1={frameX} y1={frameY + frameH - 16} x2={frameX + frameW} y2={frameY + frameH - 16} stroke="#92400E" strokeWidth="2" />
 
-      {rodXs.map((rx, ri) => {
-        const count = rodValues[ri]
-        const beadAreaTop = rodTop + 14
-        const beadAreaBottom = rodBottom - 14
-        const beadAreaH = beadAreaBottom - beadAreaTop
-        const startY = beadAreaBottom - beadR
+          {rodXs.map((rx, ri) => {
+            const count = rodValues[ri]
+            const beadAreaTop = rodTop + 16
+            const beadAreaBottom = rodBottom - 16
+            const beadAreaH = beadAreaBottom - beadAreaTop
+            const startY = beadAreaBottom - beadR
 
-        return (
-          <g key={ri}>
-            {/* Rod */}
-            <line x1={rx} y1={rodTop} x2={rx} y2={rodBottom} stroke="currentColor" strokeWidth="1.2" opacity="0.4" />
-            {/* Beads */}
-            {Array.from({ length: Math.min(count, maxBeads) }, (_, bi) => {
-              const beadY = startY - bi * Math.min(beadSpacing, beadAreaH / maxBeads)
-              return (
-                <circle
-                  key={bi}
-                  cx={rx}
-                  cy={beadY}
-                  r={beadR}
-                  fill="currentColor"
-                  opacity="0.25"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                />
-              )
-            })}
-            {/* Column label */}
-            <text x={rx} y={frameY + frameH + 14} textAnchor="middle" fontSize="10" fill="currentColor" fontWeight="600">
-              {rodLabels[ri]}
-            </text>
-          </g>
-        )
-      })}
-    </svg>
+            return (
+              <g key={ri}>
+                <line x1={rx} y1={rodTop} x2={rx} y2={rodBottom} stroke="#92400E" strokeWidth="1.5" opacity="0.5" />
+                {Array.from({ length: Math.min(count, maxBeads) }, (_, bi) => {
+                  const beadY = startY - bi * Math.min(beadSpacing, beadAreaH / maxBeads)
+                  return (
+                    <circle key={bi} cx={rx} cy={beadY} r={beadR}
+                      fill={rodColors[ri]} stroke={rodColors[ri]} strokeWidth="1.5" opacity="0.85" />
+                  )
+                })}
+                <text x={rx} y={frameY + frameH + 16} textAnchor="middle" fontSize="12" fill="#78350F" fontWeight="700">
+                  {rodLabels[ri]}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+      <p className="text-center text-sm text-amber-700 font-semibold mt-2">
+        {hundreds > 0 ? `${hundreds} hundreds, ` : ''}{tens > 0 ? `${tens} tens, ` : ''}{ones} ones = {hundreds * 100 + tens * 10 + ones}
+      </p>
+    </div>
   )
 }

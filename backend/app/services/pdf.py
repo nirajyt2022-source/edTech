@@ -1183,84 +1183,94 @@ class PDFService:
         return []
 
     def _draw_object_group(self, data: dict, page_width: float) -> list:
-        """Draw emoji groups for picture addition/subtraction as colored circles."""
+        """Draw colored circles for picture addition/subtraction."""
         from reportlab.graphics.shapes import Circle, Drawing, Rect, String
         from reportlab.lib.colors import HexColor
 
         groups = data.get("groups", [])
         operation = data.get("operation", "+")
+        obj_name = data.get("object_name", "objects")
 
-        total_objects = sum(g.get("count", 0) for g in groups)
-        obj_size = 14 if total_objects <= 12 else 10
-        spacing = obj_size + 4
+        if not groups:
+            return []
 
-        draw_width = min(page_width - 2 * cm, 400)
-        draw_height = 50
-
-        d = Drawing(draw_width, draw_height)
-
-        group_colors = [
+        GROUP_COLORS = [
             HexColor("#EF4444"),
             HexColor("#3B82F6"),
             HexColor("#F59E0B"),
             HexColor("#10B981"),
+            HexColor("#8B5CF6"),
         ]
 
-        x_offset = 20
+        radius = 7
+        spacing = 18
+        max_per_row = 10
+        max_count = max(g.get("count", 0) for g in groups)
+        rows_needed = (max_count + max_per_row - 1) // max_per_row
+        draw_height = max(rows_needed * spacing + 20, 40)
+        draw_width = min(page_width, 450)
+
+        d = Drawing(draw_width, draw_height)
+        x_cursor = 10
+        center_y = draw_height / 2
 
         for gi, group in enumerate(groups):
             count = group.get("count", 0)
-            color = group_colors[gi % len(group_colors)]
+            color = GROUP_COLORS[gi % len(GROUP_COLORS)]
 
             if gi > 0:
+                d.add(Circle(x_cursor + 10, center_y, 9, fillColor=HexColor("#F97316"), strokeColor=None))
                 d.add(
                     String(
-                        x_offset + 5,
-                        draw_height / 2 - 6,
+                        x_cursor + 6,
+                        center_y - 5,
                         operation,
-                        fontSize=16,
+                        fontSize=14,
                         fontName=FONT_BOLD,
-                        fillColor=HexColor("#F97316"),
+                        fillColor=HexColor("#FFFFFF"),
                     )
                 )
-                x_offset += 25
+                x_cursor += 30
 
             for i in range(min(count, 20)):
-                row = i // 8
-                col = i % 8
-                cx = x_offset + col * spacing + obj_size / 2
-                cy = draw_height - 10 - row * spacing - obj_size / 2
-                d.add(Circle(cx, cy, obj_size / 2, fillColor=color, strokeColor=None))
+                row = i // max_per_row
+                col = i % max_per_row
+                cx = x_cursor + col * spacing + radius
+                cy = center_y + ((rows_needed - 1) / 2 - row) * spacing
+                d.add(Circle(cx, cy, radius, fillColor=color, strokeColor=None))
 
-            cols_used = min(count, 8)
-            x_offset += cols_used * spacing + 10
+            cols_used = min(count, max_per_row)
+            x_cursor += cols_used * spacing + 8
 
         if operation != "count":
+            d.add(Circle(x_cursor + 10, center_y, 9, fillColor=HexColor("#6366F1"), strokeColor=None))
             d.add(
-                String(
-                    x_offset + 5,
-                    draw_height / 2 - 6,
-                    "=",
-                    fontSize=16,
-                    fontName=FONT_BOLD,
-                    fillColor=HexColor("#6366F1"),
-                )
+                String(x_cursor + 6, center_y - 5, "=", fontSize=14, fontName=FONT_BOLD, fillColor=HexColor("#FFFFFF"))
             )
-            x_offset += 25
+            x_cursor += 30
+
             d.add(
                 Rect(
-                    x_offset,
-                    draw_height / 2 - 12,
-                    30,
+                    x_cursor,
+                    center_y - 12,
+                    28,
                     24,
                     fillColor=None,
                     strokeColor=HexColor("#A5B4FC"),
                     strokeWidth=1.5,
-                    strokeDashArray=[4, 2],
+                    strokeDashArray=[3, 2],
                 )
             )
+            d.add(
+                String(x_cursor + 9, center_y - 5, "?", fontSize=12, fontName=FONT_BOLD, fillColor=HexColor("#A5B4FC"))
+            )
 
-        return [d, Spacer(1, 4)]
+        label_style = ParagraphStyle(
+            "ObjLabel", fontName=FONT_REGULAR, fontSize=7, textColor=HexColor("#B45309"), alignment=TA_CENTER
+        )
+        label = Paragraph(f"Count the {_sanitize_text(obj_name)}s!", label_style)
+
+        return [d, Spacer(1, 2), label, Spacer(1, 4)]
 
     def _draw_pie_fraction(self, data: dict) -> list:
         """Draw a pie chart fraction visual."""
@@ -1557,82 +1567,57 @@ class PDFService:
         return [d, Spacer(1, 4)]
 
     def _draw_shapes(self, data: dict) -> list:
-        """Draw colored geometric shapes in a row."""
+        """Draw 4 colorful geometric shapes labeled A, B, C, D."""
+        import math
+
         from reportlab.graphics.shapes import Circle, Drawing, Polygon, Rect, String
         from reportlab.lib.colors import HexColor
 
         shapes = data.get("shapes", [])
+        if not shapes:
+            return []
 
-        d = Drawing(300, 60)
+        d = Drawing(300, 65)
         x_offset = 10
 
         for i, shape in enumerate(shapes):
             color = HexColor(shape.get("color", "#3B82F6"))
-            light_color = (
-                HexColor(shape.get("color", "#3B82F6") + "40") if len(shape.get("color", "#3B82F6")) == 7 else color
-            )
+            hex_str = shape.get("color", "#3B82F6")
+            light = HexColor(hex_str + "40") if len(hex_str) == 7 else color
+            name = shape.get("name", "circle")
+            cx = x_offset + 22
+            cy = 38
 
-            if shape["name"] == "circle":
-                d.add(Circle(x_offset + 20, 30, 18, fillColor=light_color, strokeColor=color, strokeWidth=2))
-            elif shape["name"] == "triangle":
+            if name == "circle":
+                d.add(Circle(cx, cy, 18, fillColor=light, strokeColor=color, strokeWidth=2))
+            elif name == "triangle":
                 d.add(
                     Polygon(
-                        points=[x_offset + 20, 48, x_offset + 38, 12, x_offset + 2, 12],
-                        fillColor=light_color,
+                        points=[cx, cy + 18, cx + 18, cy - 14, cx - 18, cy - 14],
+                        fillColor=light,
                         strokeColor=color,
                         strokeWidth=2,
                     )
                 )
-            elif shape["name"] == "square":
-                d.add(Rect(x_offset + 2, 10, 36, 36, fillColor=light_color, strokeColor=color, strokeWidth=2))
-            elif shape["name"] == "rectangle":
-                d.add(Rect(x_offset, 14, 40, 28, fillColor=light_color, strokeColor=color, strokeWidth=2))
-            elif shape["name"] == "pentagon":
-                d.add(
-                    Polygon(
-                        points=[
-                            x_offset + 20,
-                            48,
-                            x_offset + 38,
-                            38,
-                            x_offset + 35,
-                            12,
-                            x_offset + 5,
-                            12,
-                            x_offset + 2,
-                            38,
-                        ],
-                        fillColor=light_color,
-                        strokeColor=color,
-                        strokeWidth=2,
-                    )
-                )
-            elif shape["name"] == "hexagon":
-                d.add(
-                    Polygon(
-                        points=[
-                            x_offset + 10,
-                            48,
-                            x_offset + 30,
-                            48,
-                            x_offset + 40,
-                            30,
-                            x_offset + 30,
-                            12,
-                            x_offset + 10,
-                            12,
-                            x_offset,
-                            30,
-                        ],
-                        fillColor=light_color,
-                        strokeColor=color,
-                        strokeWidth=2,
-                    )
-                )
+            elif name == "square":
+                d.add(Rect(cx - 16, cy - 16, 32, 32, fillColor=light, strokeColor=color, strokeWidth=2))
+            elif name == "rectangle":
+                d.add(Rect(cx - 20, cy - 12, 40, 24, fillColor=light, strokeColor=color, strokeWidth=2))
+            elif name == "pentagon":
+                pts = []
+                for j in range(5):
+                    a = math.radians(90 + j * 72)
+                    pts.extend([cx + 17 * math.cos(a), cy + 17 * math.sin(a)])
+                d.add(Polygon(points=pts, fillColor=light, strokeColor=color, strokeWidth=2))
+            elif name == "hexagon":
+                pts = []
+                for j in range(6):
+                    a = math.radians(j * 60)
+                    pts.extend([cx + 17 * math.cos(a), cy + 17 * math.sin(a)])
+                d.add(Polygon(points=pts, fillColor=light, strokeColor=color, strokeWidth=2))
 
-            # Label
-            d.add(String(x_offset + 16, 0, chr(65 + i), fontSize=9, fontName=FONT_BOLD, fillColor=HexColor("#64748B")))
-            x_offset += 65
+            d.add(String(cx - 3, 5, chr(65 + i), fontSize=9, fontName=FONT_BOLD, fillColor=HexColor("#64748B")))
+            x_offset += 70
 
         return [d, Spacer(1, 4)]
 
