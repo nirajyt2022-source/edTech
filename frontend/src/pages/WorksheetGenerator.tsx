@@ -1343,7 +1343,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     </div>
                   )}
 
-                  {(mode === 'revision' || mode === 'flashcards' || syllabus || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
+                  {(mode === 'revision' || mode === 'flashcards' || syllabus || (!isTeacher) || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
                     <div className="space-y-2">
                       <Label htmlFor="topic" className="text-sm font-semibold">Topic *</Label>
                       <Select
