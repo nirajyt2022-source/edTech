@@ -399,9 +399,14 @@ async def export_worksheet_pdf(
                 "Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{quote(raw_title + type_suffix + '.pdf')}"
             },
         )
+    except HTTPException:
+        raise
     except Exception as exc:
-        logger.exception("pdf_export_failed", error=str(exc))
-        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+        import traceback
+
+        tb = traceback.format_exc()
+        logger.exception("pdf_export_failed", error=str(exc), traceback=tb)
+        raise HTTPException(status_code=500, detail=f"PDF generation failed: {type(exc).__name__}: {exc}")
 
 
 # ── 6. Regenerate worksheet ───────────────────────────────────────────────────
