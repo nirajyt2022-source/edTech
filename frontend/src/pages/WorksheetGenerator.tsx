@@ -32,13 +32,9 @@ const LANGUAGES_BY_REGION: Record<string, string[]> = {
 // Arabic is "Coming Soon" for UAE — shown separately as disabled
 const QUESTION_COUNTS = ['5', '10', '15', '20']
 const PROBLEM_STYLES = [
-  { value: 'standard', label: 'Standard' },
-  { value: 'visual', label: 'Visual' },
-  { value: 'mixed', label: 'Mixed' },
-]
-const VISUAL_THEMES = [
-  { value: 'mono', label: 'Print-safe (Monochrome)' },
-  { value: 'color', label: 'Color on screen' },
+  { value: 'standard', label: 'Smart (age-appropriate)' },
+  { value: 'visual', label: 'Picture-heavy (best for Class 1-2)' },
+  { value: 'mixed', label: 'Balanced (text + pictures)' },
 ]
 
 // ─── Localization labels ─────────────────────────────────────────────────────
@@ -353,7 +349,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [questionCount, setQuestionCount] = useState('10')
   const [language, setLanguage] = useState('English')
   const [problemStyle, setProblemStyle] = useState('standard')
-  const [visualTheme, setVisualTheme] = useState<'mono' | 'color'>('mono')
+  const visualTheme = 'color' as const
   const [customInstructions, setCustomInstructions] = useState('')
 
   const [loading, setLoading] = useState(false)
@@ -1372,8 +1368,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   )}
                 </div>
 
-                {/* Skill Selector (curriculum-based flow) — worksheet mode only */}
-                {mode === 'worksheet' && useCurriculumFlow && curriculumSkills.length > 0 && !syllabus && (
+                {/* Skill Selector (curriculum-based flow) — worksheet mode, teachers only */}
+                {mode === 'worksheet' && isTeacher && useCurriculumFlow && curriculumSkills.length > 0 && !syllabus && (
                   <div className="pt-2">
                     <SkillSelector
                       skills={curriculumSkills}
@@ -1383,8 +1379,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   </div>
                 )}
 
-                {/* Advanced Topic Selector (fallback for CBSE syllabus DB) — worksheet mode only */}
-                {mode === 'worksheet' && !useCurriculumFlow && !syllabus && cbseSyllabus.length > 0 && (
+                {/* Advanced Topic Selector (fallback for CBSE syllabus DB) — worksheet mode, teachers only */}
+                {mode === 'worksheet' && isTeacher && !useCurriculumFlow && !syllabus && cbseSyllabus.length > 0 && (
                   <div className="pt-2">
                     {loadingSyllabus ? (
                       <div className="space-y-4 p-4 rounded-xl border border-border/50 bg-secondary/20">
@@ -1412,26 +1408,39 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
               </div>
             </div>
 
-            {/* Customise accordion toggle + Practice Settings — worksheet mode only */}
+            {/* Worksheet Style + Advanced options — worksheet mode only */}
             {mode === 'worksheet' && (<>
+            <div className="space-y-1.5">
+              <Label htmlFor="problemStyle" className="text-sm font-semibold">Worksheet Style</Label>
+              <Select value={problemStyle} onValueChange={setProblemStyle}>
+                <SelectTrigger id="problemStyle" className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROBLEM_STYLES.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Advanced options toggle */}
             <button
-              onClick={() => setShowCustomise(!showCustomise)}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full py-2"
               type="button"
+              onClick={() => setShowCustomise(!showCustomise)}
+              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 mt-3 mb-1 cursor-pointer bg-transparent border-none p-0"
             >
-              <svg className={`w-4 h-4 transition-transform ${showCustomise ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${showCustomise ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
-              Customise worksheet
+              {showCustomise ? 'Hide advanced options' : 'Advanced options'}
               {!showCustomise && (difficulty !== 'Medium' || questionCount !== '10' || language !== 'English') && (
-                <span className="text-xs text-primary ml-auto">{difficulty} · {questionCount}Q · {language}</span>
+                <span className="text-xs text-primary ml-2">{difficulty} · {questionCount}Q · {language}</span>
               )}
             </button>
 
-            {/* Practice Settings — in Customise accordion */}
-            {showCustomise && (<div>
-              <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Practice Settings</p>
-              <div className="space-y-5">
+            {showCustomise && (
+              <div className="space-y-5 pt-2 border-t border-slate-100 mt-1">
                 <TemplateSelector
                   selectedTemplate={selectedTemplate}
                   onSelect={handleTemplateSelect}
@@ -1484,34 +1493,6 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="problemStyle" className="text-sm font-semibold">Problem Style</Label>
-                    <Select value={problemStyle} onValueChange={setProblemStyle}>
-                      <SelectTrigger id="problemStyle" className="bg-background">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PROBLEM_STYLES.map((s) => (
-                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="visualTheme" className="text-sm font-semibold">Visual Theme</Label>
-                    <Select value={visualTheme} onValueChange={(v) => setVisualTheme(v as 'mono' | 'color')}>
-                      <SelectTrigger id="visualTheme" className="bg-background">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {VISUAL_THEMES.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1525,7 +1506,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   />
                 </div>
               </div>
-            </div>)}
+            )}
             </>)}
 
             {/* Language selector — visible in revision and flashcards mode too */}
