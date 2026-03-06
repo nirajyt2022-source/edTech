@@ -37,6 +37,11 @@ const PROBLEM_STYLES = [
   { value: 'mixed', label: 'Balanced (text + pictures)' },
 ]
 
+/** Strip redundant "(Class X)" suffix from topic display labels */
+function displayTopicName(topic: string): string {
+  return topic.replace(/\s*\(Class\s*\d+\)\s*$/i, '').trim()
+}
+
 // ─── Localization labels ─────────────────────────────────────────────────────
 const LABELS_EN = {
   learningGoal: "Today's Learning Goal",
@@ -699,7 +704,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     }
 
     // Determine which topic(s) to use
-    const useAdvancedSelection = !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
+    const useAdvancedSelection = isTeacher && !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
     const topicsToUse = useAdvancedSelection ? selectedTopics : [topic]
 
     if (!board || !grade || !difficulty) {
@@ -805,7 +810,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     if (!autoGeneratePendingRef.current) return
     if (!grade || !subject || !board || !difficulty) return
     // Mirror the same guard logic used in handleGenerate
-    const isAdvancedPath = !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
+    const isAdvancedPath = isTeacher && !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
     if (useCurriculumFlow && selectedSkills.length === 0) return
     if (!useCurriculumFlow && isAdvancedPath && selectedTopics.length === 0) return
     if (!useCurriculumFlow && !isAdvancedPath && !topic) return
@@ -1360,7 +1365,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         </SelectTrigger>
                         <SelectContent>
                           {availableTopics.map((t) => (
-                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                            <SelectItem key={t} value={t}>{displayTopicName(t)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
