@@ -1897,6 +1897,13 @@ def _build_llm_instruction(
     # Visual
     if slot.visual_type:
         parts.append(f"A {slot.visual_type} visual will be shown. Don't describe it in the question.")
+        # For object_group visuals, tell the LLM which object is shown so the question text matches
+        if slot.visual_type == "object_group" and slot.visual_data:
+            obj_name = slot.visual_data.get("object_name", "")
+            if obj_name:
+                parts.append(
+                    f"The visual shows {obj_name}s. Use '{obj_name}s' (not generic 'items') in the question text."
+                )
 
     # Language
     if language.lower() == "hindi":
@@ -2770,7 +2777,16 @@ def build_slots(
                         new_key = (new_nums.get("a"), new_nums.get("b"))
                         if new_key not in seen_pairs:
                             slot.numbers = new_nums
-                            # Rebuild instruction with new numbers
+                            # Sync visual_data groups with new numbers
+                            if slot.visual_type and slot.visual_data:
+                                slot.visual_data = _compute_visual_data(
+                                    slot.visual_type,
+                                    new_nums,
+                                    grade_num,
+                                    slot_number=slot.slot_number - 1,
+                                    topic=topic,
+                                    language=language,
+                                )
                             slot.llm_instruction = _build_llm_instruction(slot, topic, subject, language, grade_num)
                             pair_key = new_key
                             break
@@ -2798,6 +2814,16 @@ def build_slots(
                             }
                             if new_nums["answer"] not in existing_answers or attempt > 20:
                                 slots[regen_idx].numbers = new_nums
+                                # Sync visual_data groups with new numbers
+                                if slots[regen_idx].visual_type and slots[regen_idx].visual_data:
+                                    slots[regen_idx].visual_data = _compute_visual_data(
+                                        slots[regen_idx].visual_type,
+                                        new_nums,
+                                        grade_num,
+                                        slot_number=regen_idx,
+                                        topic=topic,
+                                        language=language,
+                                    )
                                 slots[regen_idx].llm_instruction = _build_llm_instruction(
                                     slots[regen_idx], topic, subject, language, grade_num
                                 )
@@ -2917,6 +2943,10 @@ def _pick_visual_type(
             return "number_line"
         # Default maths visuals
         if grade_num <= 2:
+            # For addition/subtraction topics, prefer object_group (shows two groups)
+            # ten_frame is for counting single numbers, not binary operations
+            if any(kw in topic_lower for kw in ("addition", "add ", "subtraction", "subtract")):
+                return random.choice(["object_group", "object_group", "number_line"])
             return random.choice(["object_group", "ten_frame", "number_line"])
         return random.choice(["object_group", "number_line"])
 
