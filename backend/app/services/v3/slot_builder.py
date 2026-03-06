@@ -240,6 +240,126 @@ WORD_PICTURE_BANK = {
     ],
 }
 
+# ---------------------------------------------------------------------------
+# Topic-specific picture-word banks for picture_word_match visuals
+# ---------------------------------------------------------------------------
+PICTURE_WORD_BANKS: dict[str, list[dict]] = {
+    "alphabet": [
+        {"letter": "A", "word": "Apple", "emoji": "🍎", "word_hi": "सेब"},
+        {"letter": "B", "word": "Ball", "emoji": "⚽", "word_hi": "गेंद"},
+        {"letter": "C", "word": "Cat", "emoji": "🐱", "word_hi": "बिल्ली"},
+        {"letter": "D", "word": "Dog", "emoji": "🐕", "word_hi": "कुत्ता"},
+        {"letter": "E", "word": "Elephant", "emoji": "🐘", "word_hi": "हाथी"},
+        {"letter": "F", "word": "Fish", "emoji": "🐟", "word_hi": "मछली"},
+        {"letter": "G", "word": "Grapes", "emoji": "🍇", "word_hi": "अंगूर"},
+        {"letter": "H", "word": "House", "emoji": "🏠", "word_hi": "घर"},
+        {"letter": "I", "word": "Ice cream", "emoji": "🍦", "word_hi": "आइसक्रीम"},
+        {"letter": "J", "word": "Jug", "emoji": "🫗", "word_hi": "जग"},
+        {"letter": "K", "word": "Kite", "emoji": "🪁", "word_hi": "पतंग"},
+        {"letter": "L", "word": "Lion", "emoji": "🦁", "word_hi": "शेर"},
+        {"letter": "M", "word": "Mango", "emoji": "🥭", "word_hi": "आम"},
+        {"letter": "N", "word": "Nest", "emoji": "🪺", "word_hi": "घोंसला"},
+        {"letter": "O", "word": "Orange", "emoji": "🍊", "word_hi": "संतरा"},
+        {"letter": "P", "word": "Parrot", "emoji": "🦜", "word_hi": "तोता"},
+        {"letter": "Q", "word": "Queen", "emoji": "👑", "word_hi": "रानी"},
+        {"letter": "R", "word": "Rabbit", "emoji": "🐰", "word_hi": "खरगोश"},
+        {"letter": "S", "word": "Sun", "emoji": "☀️", "word_hi": "सूरज"},
+        {"letter": "T", "word": "Tree", "emoji": "🌳", "word_hi": "पेड़"},
+        {"letter": "U", "word": "Umbrella", "emoji": "☂️", "word_hi": "छाता"},
+        {"letter": "V", "word": "Van", "emoji": "🚐", "word_hi": "गाड़ी"},
+        {"letter": "W", "word": "Watch", "emoji": "⌚", "word_hi": "घड़ी"},
+        {"letter": "X", "word": "Xylophone", "emoji": "🎵", "word_hi": "ज़ाइलोफोन"},
+        {"letter": "Y", "word": "Yak", "emoji": "🐃", "word_hi": "याक"},
+        {"letter": "Z", "word": "Zebra", "emoji": "🦓", "word_hi": "ज़ेबरा"},
+    ],
+    "phonics": [
+        {"letter": "A", "word": "Apple", "emoji": "🍎", "sound": "/æ/"},
+        {"letter": "B", "word": "Ball", "emoji": "⚽", "sound": "/b/"},
+        {"letter": "C", "word": "Cat", "emoji": "🐱", "sound": "/k/"},
+        {"letter": "M", "word": "Mango", "emoji": "🥭", "sound": "/m/"},
+        {"letter": "S", "word": "Sun", "emoji": "☀️", "sound": "/s/"},
+        {"letter": "T", "word": "Tree", "emoji": "🌳", "sound": "/t/"},
+        {"letter": "D", "word": "Dog", "emoji": "🐕", "sound": "/d/"},
+        {"letter": "F", "word": "Fish", "emoji": "🐟", "sound": "/f/"},
+        {"letter": "G", "word": "Grapes", "emoji": "🍇", "sound": "/g/"},
+        {"letter": "H", "word": "House", "emoji": "🏠", "sound": "/h/"},
+    ],
+    "animals": [
+        {"word": "Cow", "emoji": "🐄", "fact": "gives milk", "word_hi": "गाय"},
+        {"word": "Dog", "emoji": "🐕", "fact": "guards the house", "word_hi": "कुत्ता"},
+        {"word": "Cat", "emoji": "🐱", "fact": "catches mice", "word_hi": "बिल्ली"},
+        {"word": "Elephant", "emoji": "🐘", "fact": "has a trunk", "word_hi": "हाथी"},
+        {"word": "Lion", "emoji": "🦁", "fact": "is king of jungle", "word_hi": "शेर"},
+        {"word": "Parrot", "emoji": "🦜", "fact": "can talk", "word_hi": "तोता"},
+        {"word": "Fish", "emoji": "🐟", "fact": "lives in water", "word_hi": "मछली"},
+        {"word": "Butterfly", "emoji": "🦋", "fact": "has colorful wings", "word_hi": "तितली"},
+        {"word": "Rabbit", "emoji": "🐰", "fact": "loves carrots", "word_hi": "खरगोश"},
+        {"word": "Horse", "emoji": "🐴", "fact": "can run fast", "word_hi": "घोड़ा"},
+    ],
+    "fruits": [
+        {"word": "Apple", "emoji": "🍎", "color": "red", "word_hi": "सेब"},
+        {"word": "Mango", "emoji": "🥭", "color": "yellow", "word_hi": "आम"},
+        {"word": "Banana", "emoji": "🍌", "color": "yellow", "word_hi": "केला"},
+        {"word": "Orange", "emoji": "🍊", "color": "orange", "word_hi": "संतरा"},
+        {"word": "Grapes", "emoji": "🍇", "color": "purple", "word_hi": "अंगूर"},
+        {"word": "Watermelon", "emoji": "🍉", "color": "green", "word_hi": "तरबूज"},
+    ],
+    "hindi_two_letter": [
+        {"word": "घर", "emoji": "🏠", "english": "house"},
+        {"word": "कप", "emoji": "☕", "english": "cup"},
+        {"word": "बस", "emoji": "🚌", "english": "bus"},
+        {"word": "जल", "emoji": "💧", "english": "water"},
+        {"word": "फल", "emoji": "🍎", "english": "fruit"},
+        {"word": "वन", "emoji": "🌳", "english": "forest"},
+        {"word": "रथ", "emoji": "🛞", "english": "chariot"},
+        {"word": "मन", "emoji": "❤️", "english": "heart"},
+    ],
+    "hindi_three_letter": [
+        {"word": "केला", "emoji": "🍌", "english": "banana"},
+        {"word": "किताब", "emoji": "📕", "english": "book"},
+        {"word": "कमल", "emoji": "🪷", "english": "lotus"},
+        {"word": "नदी", "emoji": "🏞️", "english": "river"},
+        {"word": "पतंग", "emoji": "🪁", "english": "kite"},
+        {"word": "बादल", "emoji": "☁️", "english": "cloud"},
+    ],
+    "nouns": [
+        {"word": "Book", "emoji": "📕", "type": "common noun", "word_hi": "किताब"},
+        {"word": "Dog", "emoji": "🐕", "type": "common noun", "word_hi": "कुत्ता"},
+        {"word": "School", "emoji": "🏫", "type": "common noun", "word_hi": "स्कूल"},
+        {"word": "Sun", "emoji": "☀️", "type": "common noun", "word_hi": "सूरज"},
+        {"word": "Chair", "emoji": "🪑", "type": "common noun", "word_hi": "कुर्सी"},
+        {"word": "Flower", "emoji": "🌸", "type": "common noun", "word_hi": "फूल"},
+    ],
+    "seasons": [
+        {"word": "Summer", "emoji": "☀️", "description": "hot, sunny", "word_hi": "गर्मी"},
+        {"word": "Winter", "emoji": "❄️", "description": "cold, foggy", "word_hi": "सर्दी"},
+        {"word": "Rainy", "emoji": "🌧️", "description": "wet, cloudy", "word_hi": "बारिश"},
+        {"word": "Spring", "emoji": "🌸", "description": "flowers bloom", "word_hi": "बसंत"},
+    ],
+    "body_parts": [
+        {"word": "Eye", "emoji": "👁️", "function": "see", "word_hi": "आँख"},
+        {"word": "Ear", "emoji": "👂", "function": "hear", "word_hi": "कान"},
+        {"word": "Nose", "emoji": "👃", "function": "smell", "word_hi": "नाक"},
+        {"word": "Hand", "emoji": "✋", "function": "hold things", "word_hi": "हाथ"},
+        {"word": "Foot", "emoji": "🦶", "function": "walk", "word_hi": "पैर"},
+    ],
+    "food": [
+        {"word": "Rice", "emoji": "🍚", "group": "grain", "word_hi": "चावल"},
+        {"word": "Roti", "emoji": "🫓", "group": "grain", "word_hi": "रोटी"},
+        {"word": "Milk", "emoji": "🥛", "group": "dairy", "word_hi": "दूध"},
+        {"word": "Carrot", "emoji": "🥕", "group": "vegetable", "word_hi": "गाजर"},
+        {"word": "Egg", "emoji": "🥚", "group": "protein", "word_hi": "अंडा"},
+    ],
+    "family": [
+        {"word": "माँ", "emoji": "👩", "english": "Mother"},
+        {"word": "पापा", "emoji": "👨", "english": "Father"},
+        {"word": "दादी", "emoji": "👵", "english": "Grandmother"},
+        {"word": "दादा", "emoji": "👴", "english": "Grandfather"},
+        {"word": "भाई", "emoji": "👦", "english": "Brother"},
+        {"word": "बहन", "emoji": "👧", "english": "Sister"},
+    ],
+}
+
 
 # ---------------------------------------------------------------------------
 # Diagram Bank — for labeled_diagram visual type
@@ -967,6 +1087,53 @@ def _compute_visual_data(
         }
 
     if visual_type == "picture_word_match":
+        # Select topic-specific bank for richer, context-aware visuals
+        topic_lower = topic.lower()
+        bank_key = "animals"  # default
+        if "alphabet" in topic_lower or "varnamala" in topic_lower:
+            bank_key = "alphabet"
+        elif "phonics" in topic_lower:
+            bank_key = "phonics"
+        elif "vowel" in topic_lower or "swar" in topic_lower:
+            bank_key = "alphabet"
+        elif "consonant" in topic_lower or "vyanjan" in topic_lower:
+            bank_key = "alphabet"
+        elif "animal" in topic_lower:
+            bank_key = "animals"
+        elif "food" in topic_lower or "nutrition" in topic_lower or "diet" in topic_lower:
+            bank_key = "food"
+        elif "noun" in topic_lower:
+            bank_key = "nouns"
+        elif "season" in topic_lower:
+            bank_key = "seasons"
+        elif "body" in topic_lower:
+            bank_key = "body_parts"
+        elif "family" in topic_lower or "parivar" in topic_lower:
+            bank_key = "family"
+        elif "fruit" in topic_lower or "vocabulary" in topic_lower:
+            bank_key = "fruits"
+        elif "two letter" in topic_lower or "do akshar" in topic_lower:
+            bank_key = "hindi_two_letter"
+        elif "three letter" in topic_lower or "teen akshar" in topic_lower:
+            bank_key = "hindi_three_letter"
+        elif language.lower() == "hindi":
+            bank_key = "hindi_two_letter"
+
+        if bank_key in PICTURE_WORD_BANKS:
+            bank = PICTURE_WORD_BANKS[bank_key]
+            idx = (slot_number or 0) % len(bank)
+            item = bank[idx]
+            return {
+                "emoji": item["emoji"],
+                "word": item.get("word", ""),
+                "letter": item.get("letter", ""),
+                "correct_word": item.get("word", ""),
+                "bank_key": bank_key,
+                # Pass through all extra fields for LLM context
+                **{k: v for k, v in item.items() if k not in ("emoji",)},
+            }
+
+        # Fallback to legacy flat bank
         lang_key = "hindi" if language == "Hindi" else "english"
         bank = WORD_PICTURE_BANK.get(lang_key, WORD_PICTURE_BANK["english"])
         idx = (slot_number or 0) % len(bank)
@@ -974,7 +1141,9 @@ def _compute_visual_data(
         return {
             "emoji": item["emoji"],
             "correct_word": item["word"],
+            "word": item["word"],
             "wrong_words": item["wrong"],
+            "bank_key": "legacy",
         }
 
     if visual_type == "labeled_diagram":
@@ -1894,16 +2063,190 @@ def _build_llm_instruction(
             parts.append(f"THINKING QUESTION: {random.choice(thinking_non_maths)}")
         parts.append("This must be a REASONING question, not just a harder calculation.")
 
-    # Visual
+    # Visual — inject specific context so LLM question matches the shown visual
     if slot.visual_type:
         parts.append(f"A {slot.visual_type} visual will be shown. Don't describe it in the question.")
-        # For object_group visuals, tell the LLM which object is shown so the question text matches
-        if slot.visual_type == "object_group" and slot.visual_data:
-            obj_name = slot.visual_data.get("object_name", "")
+        vd = slot.visual_data or {}
+
+        if slot.visual_type == "object_group" and vd:
+            obj_name = vd.get("object_name", "")
             if obj_name:
                 parts.append(
                     f"The visual shows {obj_name}s. Use '{obj_name}s' (not generic 'items') in the question text."
                 )
+
+        elif slot.visual_type == "picture_word_match" and vd:
+            word = vd.get("word", "")
+            letter = vd.get("letter", "")
+            emoji = vd.get("emoji", "")
+            bank_key = vd.get("bank_key", "")
+            if bank_key in ("alphabet", "phonics"):
+                parts.append(f"VISUAL CONTEXT: A picture of '{word}' ({emoji}) is shown.")
+                if letter:
+                    parts.append(f"This word starts with letter '{letter}'.")
+                parts.append(
+                    f"Your question MUST be about '{word}' or the letter '{letter}'. Do NOT ask about any other word or letter."
+                )
+            elif bank_key in ("animals", "fruits", "food", "body_parts", "seasons"):
+                fact = vd.get("fact", vd.get("description", vd.get("function", vd.get("group", ""))))
+                parts.append(f"VISUAL CONTEXT: A picture of '{word}' ({emoji}) is shown.")
+                if fact:
+                    parts.append(f"Fact about {word}: {fact}.")
+                parts.append(f"Your question MUST be about '{word}'. Do NOT ask about any other object.")
+            elif bank_key == "nouns":
+                parts.append(f"VISUAL CONTEXT: A picture of '{word}' ({emoji}) is shown.")
+                parts.append(f"'{word}' is a {vd.get('type', 'noun')}.")
+                parts.append(f"Your question MUST use '{word}' as the example. Do NOT use any other word.")
+            elif bank_key in ("hindi_two_letter", "hindi_three_letter", "family"):
+                english = vd.get("english", "")
+                parts.append(f"VISUAL CONTEXT: A picture of '{english}' ({emoji}) is shown.")
+                parts.append(f"The Hindi word is '{word}'.")
+                parts.append(f"Your question MUST be about the word '{word}'. Do NOT ask about any other word.")
+            elif word:
+                parts.append(f"VISUAL CONTEXT: A picture ({emoji}) of '{word}' is shown.")
+                parts.append(f"Your question MUST reference '{word}'. Do NOT ask about anything else.")
+
+        elif slot.visual_type == "labeled_diagram" and vd:
+            labels = vd.get("labels", [])
+            blank_idx = vd.get("blank_index", -1)
+            title = vd.get("title", "")
+            parts.append(f"VISUAL CONTEXT: A '{title}' diagram is shown with labels: {', '.join(labels)}.")
+            if 0 <= blank_idx < len(labels):
+                parts.append(f"The label '{labels[blank_idx]}' is hidden. Ask the student to identify it.")
+
+        elif slot.visual_type == "match_columns" and vd:
+            left = vd.get("left", [])
+            right = vd.get("right", [])
+            left_items = [f"{x.get('emoji', '')} {x.get('label', '')}" for x in left]
+            right_items = [f"{x.get('emoji', '')} {x.get('label', '')}" for x in right]
+            parts.append("VISUAL CONTEXT: A matching exercise is shown.")
+            parts.append(f"Left column: {', '.join(left_items)}")
+            parts.append(f"Right column: {', '.join(right_items)}")
+            parts.append("Ask the student to match them correctly.")
+
+        elif slot.visual_type == "scenario_picture" and vd:
+            scene = vd.get("scene_emoji", "")
+            desc = vd.get("description", "")
+            question = vd.get("question", "")
+            parts.append(f"VISUAL CONTEXT: A scene is shown: {scene}")
+            parts.append(f"Description: {desc}")
+            parts.append(f"Ask: {question}")
+
+        elif slot.visual_type == "sequence_pictures" and vd:
+            labels = vd.get("labels", [])
+            blank_idx = vd.get("blank_index", -1)
+            parts.append(f"VISUAL CONTEXT: A sequence is shown: {' → '.join(labels)}")
+            if 0 <= blank_idx < len(labels):
+                parts.append(f"Step '{labels[blank_idx]}' is hidden. Ask what step is missing.")
+
+        elif slot.visual_type == "food_plate" and vd:
+            groups = vd.get("groups", [])
+            blank_idx = vd.get("blank_index", -1)
+            group_names = [g.get("name", "") for g in groups]
+            parts.append(f"VISUAL CONTEXT: A balanced diet plate is shown with food groups: {', '.join(group_names)}")
+            if 0 <= blank_idx < len(groups):
+                parts.append(f"The '{group_names[blank_idx]}' group is hidden. Ask the student to identify it.")
+
+        elif slot.visual_type == "bar_chart" and vd:
+            bars = vd.get("bars", [])
+            title = vd.get("title", "")
+            bar_desc = [f"{b.get('label')}: {b.get('value')}" for b in bars]
+            parts.append(f"VISUAL CONTEXT: A bar chart titled '{title}' is shown with data: {', '.join(bar_desc)}")
+            parts.append("Ask a question that requires reading the chart data.")
+
+        elif slot.visual_type == "pictograph" and vd:
+            rows = vd.get("rows", [])
+            title = vd.get("title", "")
+            row_desc = [f"{r.get('label')}: {r.get('count')} {r.get('emoji', '')}" for r in rows]
+            parts.append(f"VISUAL CONTEXT: A pictograph titled '{title}' is shown: {', '.join(row_desc)}")
+            parts.append("Ask a question about this specific data (which has most, how many total, etc.)")
+
+        elif slot.visual_type == "percentage_bar" and vd:
+            percent = vd.get("percent", 25)
+            parts.append(f"VISUAL CONTEXT: A percentage bar showing {percent}% is shaded.")
+            parts.append(f"Use {percent}% in your question.")
+
+        elif slot.visual_type == "fraction_bar" and vd:
+            n = vd.get("numerator", 1)
+            d = vd.get("denominator", 4)
+            parts.append(f"VISUAL CONTEXT: A fraction bar showing {n}/{d} is shaded.")
+            parts.append(f"Your question MUST reference the fraction {n}/{d}.")
+            second = vd.get("second")
+            if second:
+                parts.append(f"A second bar shows {second['numerator']}/{second['denominator']}. Ask to compare them.")
+
+        elif slot.visual_type == "ten_frame" and vd:
+            filled = vd.get("filled", 5)
+            parts.append(f"VISUAL CONTEXT: A ten frame with {filled} filled dots is shown. Ask about this count.")
+
+        elif slot.visual_type == "shapes" and vd:
+            shapes = vd.get("shapes", [])
+            target = vd.get("target", "")
+            shape_names = [s.get("name", "") for s in shapes]
+            parts.append(
+                f"VISUAL CONTEXT: These shapes are shown: {', '.join(shape_names)}. The target shape is '{target}'."
+            )
+            parts.append(f"Ask about '{target}' specifically.")
+
+        elif slot.visual_type == "array_visual" and vd:
+            rows_n = vd.get("rows", 3)
+            cols_n = vd.get("cols", 4)
+            parts.append(f"VISUAL CONTEXT: An array of {rows_n} rows × {cols_n} columns is shown.")
+            parts.append(f"Ask about {rows_n} × {cols_n} = {rows_n * cols_n}.")
+
+        elif slot.visual_type == "pie_fraction" and vd:
+            n = vd.get("numerator", 1)
+            d = vd.get("denominator", 4)
+            parts.append(f"VISUAL CONTEXT: A pie chart showing {n}/{d} shaded is shown.")
+            parts.append(f"Your question MUST reference the fraction {n}/{d}.")
+
+        elif slot.visual_type == "clock" and vd:
+            h = vd.get("hour", 3)
+            m = vd.get("minute", 0)
+            time_str = f"{h}:{m:02d}"
+            parts.append(f"VISUAL CONTEXT: A clock showing {time_str} is displayed.")
+            parts.append(f"Your question MUST ask about the time {time_str}.")
+
+        elif slot.visual_type == "money_coins" and vd:
+            total = vd.get("total", 0)
+            items = vd.get("items", [])
+            item_desc = [i.get("label", "") for i in items]
+            parts.append(f"VISUAL CONTEXT: Coins/notes shown: {', '.join(item_desc)}. Total = ₹{total}.")
+            parts.append(f"Your question MUST be about these coins/notes totalling ₹{total}.")
+
+        elif slot.visual_type == "number_line" and vd:
+            hf = vd.get("hops_from")
+            hc = vd.get("hops_count")
+            hl = vd.get("highlight")
+            if hf is not None and hc is not None:
+                parts.append(f"VISUAL CONTEXT: A number line with hops from {hf}, {hc} jumps, landing at {hl}.")
+            else:
+                parts.append(
+                    f"VISUAL CONTEXT: A number line from {vd.get('start', 0)} to {vd.get('end', 20)} is shown."
+                )
+
+        elif slot.visual_type == "pattern_tiles" and vd:
+            tiles = vd.get("tiles", [])
+            blank_pos = vd.get("blank_position", -1)
+            parts.append(f"VISUAL CONTEXT: A pattern is shown: {' '.join(tiles[:blank_pos])} ?")
+            parts.append(f"Ask what comes next. Answer: {vd.get('answer', '')}.")
+
+        elif slot.visual_type == "base_ten_regrouping" and vd:
+            nums = vd.get("numbers", [])
+            op = vd.get("operation", "addition")
+            if len(nums) >= 2:
+                parts.append(f"VISUAL CONTEXT: Base-ten blocks for {nums[0]} and {nums[1]} ({op}) are shown.")
+
+        elif slot.visual_type == "abacus" and vd:
+            h = vd.get("hundreds", 0)
+            t = vd.get("tens", 0)
+            o = vd.get("ones", 0)
+            val = h * 100 + t * 10 + o
+            parts.append(f"VISUAL CONTEXT: An abacus shows {h} hundreds, {t} tens, {o} ones = {val}.")
+            parts.append(f"Your question MUST ask about the number {val}.")
+
+        elif slot.visual_type == "grid_symmetry" and vd:
+            parts.append("VISUAL CONTEXT: A grid with some cells filled is shown. Ask about symmetry.")
 
     # Language
     if language.lower() == "hindi":
