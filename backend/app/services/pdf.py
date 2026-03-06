@@ -7,6 +7,8 @@ Gold-G8: Redesigned to match Pearson/Oxford primary workbook quality.
 - Professional footer with page number + branding
 """
 
+from __future__ import annotations
+
 import io
 import logging
 import os
@@ -1409,13 +1411,33 @@ class PDFService:
         return [drawing, Spacer(1, 4)]
 
     def _draw_picture_word_match(self, data: dict) -> list:
-        """Draw a large emoji for picture-word matching."""
-        emoji = data.get("emoji", "?")
-        p = Paragraph(
-            f"<font size='30'>{_sanitize_text(emoji)}</font>",
-            ParagraphStyle("EmojiCenter", alignment=TA_CENTER, fontName=FONT_REGULAR, spaceBefore=4, spaceAfter=4),
+        """Draw a labeled picture box for word matching (emoji won't render in PDF fonts)."""
+        from reportlab.graphics.shapes import Drawing, Rect, String
+        from reportlab.lib.colors import HexColor
+
+        word = data.get("word", data.get("label", "?"))
+        # Draw a colored card with the word label
+        d = Drawing(120, 60)
+        d.add(
+            Rect(
+                10,
+                5,
+                100,
+                50,
+                fillColor=HexColor("#EEF2FF"),
+                strokeColor=HexColor("#6366F1"),
+                strokeWidth=1.5,
+                rx=6,
+                ry=6,
+            )
         )
-        return [p, Spacer(1, 4)]
+        # Truncate long words
+        display = str(word)[:12]
+        d.add(
+            String(60 - len(display) * 3.5, 24, display, fontSize=13, fontName=FONT_BOLD, fillColor=HexColor("#4F46E5"))
+        )
+
+        return [d, Spacer(1, 4)]
 
     def _draw_labeled_diagram(self, data: dict) -> list:
         """Draw a labeled diagram with one blank label."""
@@ -1631,19 +1653,45 @@ class PDFService:
         return [p, Spacer(1, 4)]
 
     def _draw_pictograph(self, data: dict) -> list:
-        """Draw pictograph rows of emoji data."""
+        """Draw pictograph rows as colored circles (emoji won't render in PDF fonts)."""
+        from reportlab.graphics.shapes import Circle, Drawing, String
+        from reportlab.lib.colors import HexColor
+
         rows = data.get("rows", [])
+        if not rows:
+            return []
+
+        row_colors = [HexColor("#6366F1"), HexColor("#F59E0B"), HexColor("#10B981"), HexColor("#EF4444")]
+        max_count = max((r.get("count", 0) for r in rows), default=1)
+        dot_r = 6
+        gap = 16
+        label_w = 80
+        row_h = 20
+        width = label_w + max_count * gap + 20
+        height = len(rows) * row_h + 10
+
+        d = Drawing(width, height)
+        for ri, row in enumerate(rows):
+            label = row.get("label", "")[:12]
+            count = row.get("count", 0)
+            color = row_colors[ri % len(row_colors)]
+            y = height - 8 - ri * row_h
+
+            d.add(String(2, y - 4, label, fontSize=8, fontName=FONT_BOLD, fillColor=HexColor("#1E1B4B")))
+            for ci in range(min(count, 20)):
+                cx = label_w + ci * gap + dot_r
+                d.add(Circle(cx, y, dot_r, fillColor=color, strokeColor=None))
+
         elements = []
-
-        for row in rows:
-            emoji_str = _sanitize_text(row.get("emoji", "")) * row.get("count", 0)
-            label = _sanitize_text(row.get("label", ""))
-            p = Paragraph(
-                f"<font size='8'><b>{label:>12}</b></font>  <font size='14'>{emoji_str}</font>",
-                self.styles["AnswerText"],
+        title = data.get("title", "")
+        if title:
+            elements.append(
+                Paragraph(
+                    f"<b><font size='8'>{_sanitize_text(title)}</font></b>",
+                    ParagraphStyle("PictoTitle", alignment=TA_CENTER, fontName=FONT_BOLD, fontSize=8),
+                )
             )
-            elements.append(p)
-
+        elements.append(d)
         return elements + [Spacer(1, 4)]
 
     def _draw_array(self, data: dict) -> list:
@@ -1815,50 +1863,100 @@ class PDFService:
         return [p, Spacer(1, 4)]
 
     def _draw_scenario(self, data: dict) -> list:
-        """Draw scenario picture with emoji scene."""
-        scene = _sanitize_text(data.get("scene_emoji", ""))
-        desc = _sanitize_text(data.get("description", ""))
-        elements = [
-            Paragraph(
-                f"<font size='20'>{scene}</font>",
-                ParagraphStyle("SceneEmoji", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=20),
-            ),
-            Spacer(1, 4),
-            Paragraph(
-                f"<i><font size='9' color='#9F1239'>{desc}</font></i>",
-                ParagraphStyle("SceneDesc", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=9),
-            ),
-        ]
+        """Draw scenario as a labeled box (emoji won't render in PDF fonts)."""
+        from reportlab.graphics.shapes import Drawing, Rect, String
+        from reportlab.lib.colors import HexColor
+
+        desc = _sanitize_text(data.get("description", data.get("scene_description", "")))
+        scene_label = data.get("scene_label", "")
+
+        elements = []
+        if desc:
+            elements.append(
+                Paragraph(
+                    f"<i><font size='9' color='#9F1239'>{desc}</font></i>",
+                    ParagraphStyle("SceneDesc", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=9),
+                )
+            )
+        if scene_label:
+            d = Drawing(150, 40)
+            d.add(
+                Rect(
+                    5,
+                    5,
+                    140,
+                    30,
+                    fillColor=HexColor("#FFF7ED"),
+                    strokeColor=HexColor("#F97316"),
+                    strokeWidth=1,
+                    rx=4,
+                    ry=4,
+                )
+            )
+            d.add(String(12, 15, str(scene_label)[:20], fontSize=10, fontName=FONT_BOLD, fillColor=HexColor("#9A3412")))
+            elements.append(d)
         return elements + [Spacer(1, 4)]
 
     def _draw_sequence(self, data: dict) -> list:
-        """Draw sequence of emoji steps."""
+        """Draw sequence of steps as labeled boxes with arrows."""
+        from reportlab.graphics.shapes import Drawing, Rect, String
+        from reportlab.lib.colors import HexColor
+
         steps = data.get("steps", [])
-        labels = data.get("labels", [])
+        labels = data.get("labels", steps)
         blank_idx = data.get("blank_index", -1)
-        parts = []
-        for i, step in enumerate(steps):
+
+        if not labels:
+            return []
+
+        box_w = 50
+        gap = 12
+        n = min(len(labels), 6)
+        width = n * box_w + (n - 1) * gap + 20
+        d = Drawing(width, 40)
+
+        for i in range(n):
+            x = 10 + i * (box_w + gap)
             if i == blank_idx:
-                parts.append("<font size='14' color='#F97316'><b> ? </b></font>")
+                d.add(
+                    Rect(
+                        x,
+                        8,
+                        box_w,
+                        28,
+                        fillColor=HexColor("#FFF7ED"),
+                        strokeColor=HexColor("#F97316"),
+                        strokeWidth=1.5,
+                        rx=4,
+                        ry=4,
+                        strokeDashArray=[4, 2],
+                    )
+                )
+                d.add(
+                    String(x + box_w / 2 - 4, 17, "?", fontSize=14, fontName=FONT_BOLD, fillColor=HexColor("#F97316"))
+                )
             else:
-                parts.append(f"<font size='14'>{_sanitize_text(step)}</font>")
-        text = " → ".join(parts)
-        p = Paragraph(text, ParagraphStyle("SeqSteps", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=14))
-        elements = [p]
-        label_parts = []
-        for i, label in enumerate(labels):
-            if i == blank_idx:
-                label_parts.append("???")
-            else:
-                label_parts.append(_sanitize_text(label))
-        label_text = " → ".join(label_parts)
-        elements.append(
-            Paragraph(
-                f"<font size='7' color='#64748B'>{label_text}</font>",
-                ParagraphStyle("SeqLabels", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=7),
-            )
-        )
-        return elements + [Spacer(1, 4)]
+                label = _sanitize_text(str(labels[i]))[:8]
+                d.add(
+                    Rect(
+                        x,
+                        8,
+                        box_w,
+                        28,
+                        fillColor=HexColor("#EEF2FF"),
+                        strokeColor=HexColor("#6366F1"),
+                        strokeWidth=1,
+                        rx=4,
+                        ry=4,
+                    )
+                )
+                d.add(String(x + 4, 17, label, fontSize=9, fontName=FONT_BOLD, fillColor=HexColor("#4F46E5")))
+            # Arrow between boxes
+            if i < n - 1:
+                ax = x + box_w + 2
+                d.add(String(ax, 17, "->", fontSize=9, fontName=FONT_REGULAR, fillColor=HexColor("#94A3B8")))
+
+        return [d, Spacer(1, 4)]
 
     def _draw_bar_chart(self, data: dict) -> list:
         """Draw a simple bar chart."""
@@ -1903,23 +2001,58 @@ class PDFService:
         return elements + [Spacer(1, 4)]
 
     def _draw_food_plate(self, data: dict) -> list:
-        """Draw food plate groups as text."""
+        """Draw food plate groups as colored labeled boxes (emoji won't render in PDF fonts)."""
+        from reportlab.graphics.shapes import Drawing, Rect, String
+        from reportlab.lib.colors import HexColor
+
         groups = data.get("groups", [])
         blank_idx = data.get("blank_index", -1)
-        parts = []
-        for i, g in enumerate(groups):
+        if not groups:
+            return []
+
+        plate_colors = [
+            HexColor("#10B981"),
+            HexColor("#F59E0B"),
+            HexColor("#EF4444"),
+            HexColor("#6366F1"),
+            HexColor("#EC4899"),
+        ]
+        n = min(len(groups), 5)
+        box_w = 60
+        gap = 8
+        width = n * (box_w + gap) + 20
+        d = Drawing(width, 40)
+
+        for i in range(n):
+            x = 10 + i * (box_w + gap)
             if i == blank_idx:
-                parts.append("<font color='#F97316'><b>❓</b></font>")
+                d.add(
+                    Rect(
+                        x,
+                        8,
+                        box_w,
+                        28,
+                        fillColor=HexColor("#FFF7ED"),
+                        strokeColor=HexColor("#F97316"),
+                        strokeWidth=1.5,
+                        rx=4,
+                        ry=4,
+                        strokeDashArray=[4, 2],
+                    )
+                )
+                d.add(
+                    String(x + box_w / 2 - 4, 17, "?", fontSize=14, fontName=FONT_BOLD, fillColor=HexColor("#F97316"))
+                )
             else:
-                emoji = _sanitize_text(g.get("emoji", "")[:4])
-                name = _sanitize_text(g.get("name", ""))
-                parts.append(f"{emoji} <b>{name}</b>")
-        text = "  |  ".join(parts)
-        p = Paragraph(
-            f"<font size='10'>{text}</font>",
-            ParagraphStyle("FoodPlate", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=10),
-        )
-        return [p, Spacer(1, 4)]
+                g = groups[i]
+                name = _sanitize_text(g.get("name", ""))[:8]
+                color = plate_colors[i % len(plate_colors)]
+                d.add(
+                    Rect(x, 8, box_w, 28, fillColor=HexColor("#F0FDF4"), strokeColor=color, strokeWidth=1.5, rx=4, ry=4)
+                )
+                d.add(String(x + 4, 17, name, fontSize=8, fontName=FONT_BOLD, fillColor=color))
+
+        return [d, Spacer(1, 4)]
 
     def _draw_percentage_bar(self, data: dict) -> list:
         """Draw a percentage bar."""
