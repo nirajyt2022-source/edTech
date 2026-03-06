@@ -13,10 +13,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { GRADES } from '@/lib/constants'
 
 const ONBOARDING_KEY = 'skolar_onboarding_complete'
-
-const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5'] as const
 
 const FALLBACK_SUBJECTS = ['Maths', 'English', 'Science', 'Hindi', 'EVS']
 

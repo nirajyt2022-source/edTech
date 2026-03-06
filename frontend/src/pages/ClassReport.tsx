@@ -6,6 +6,7 @@
  */
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { formatDateLong } from '@/lib/utils'
 
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -32,13 +33,6 @@ interface ReportData {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
 
 function Logo() {
   return (
@@ -311,7 +305,7 @@ export default function ClassReport({ token }: ClassReportProps) {
             )}
 
             <span aria-hidden className="w-1 h-1 rounded-full bg-stone-300 shrink-0" />
-            <span>{formatDate(report.generated_at)}</span>
+            <span>{formatDateLong(report.generated_at)}</span>
           </div>
 
           <p className="mt-2 text-sm text-stone-400">

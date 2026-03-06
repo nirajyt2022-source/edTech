@@ -23,8 +23,7 @@ import { notify } from '@/lib/toast'
 import RevisionPreview, { type RevisionNotes } from '@/components/RevisionPreview'
 import FlashcardPreview, { type FlashcardSetData } from '@/components/FlashcardPreview'
 import TextbookUpload from '@/components/TextbookUpload'
-
-const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
+import { GRADES } from '@/lib/constants'
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
 const LANGUAGES_BY_REGION: Record<string, string[]> = {
   India: ['English', 'Hindi'],

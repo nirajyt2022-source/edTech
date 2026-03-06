@@ -14,10 +14,9 @@ import { useClasses, type TeacherClass } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
 import { fetchSubjects, type CurriculumSubject } from '@/lib/curriculum'
 import { notify } from '@/lib/toast'
+import { GRADES, BOARDS } from '@/lib/constants'
 
-const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const FALLBACK_SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
-const BOARDS = ['CBSE', 'ICSE', 'State Board']
 
 export default function ClassManager({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const { classes, loading, error, createClass, updateClass, deleteClass } = useClasses()

@@ -8,6 +8,7 @@ import { Section } from '@/components/ui/section'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
+import { formatDateShort } from '@/lib/utils'
 import { useChildren } from '@/lib/children'
 import { useClasses } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
@@ -208,13 +209,6 @@ export default function SavedWorksheets() {
     }
   }
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
 
   const filteredWorksheets = useMemo(() => {
     if (!searchQuery.trim()) return worksheets
@@ -228,7 +222,7 @@ export default function SavedWorksheets() {
   }, [worksheets, searchQuery])
 
   const groupedWorksheets = filteredWorksheets.reduce((groups, worksheet) => {
-    const date = formatDate(worksheet.created_at)
+    const date = formatDateShort(worksheet.created_at)
     if (!groups[date]) {
       groups[date] = []
     }

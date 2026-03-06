@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Star, TrendingUp, PenLine, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import { api } from '@/lib/api'
-import { formatSkillTag } from '@/lib/utils'
+import { formatSkillTag, getGreeting } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
 import { useChildren } from '@/lib/children'
 import { getTopicName } from '@/lib/curriculum'
@@ -69,14 +69,7 @@ interface GraphSummary {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-// formatSkillTag imported from @/lib/utils
-
-function getGreeting(): string {
-  const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
-}
+// formatSkillTag, getGreeting imported from @/lib/utils
 
 function masteryColor(level: string): string {
   switch (level) {
@@ -318,7 +311,7 @@ function SubjectGrid({
                           className="flex items-center justify-between px-4 py-3 min-h-[52px]"
                         >
                           <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColor}`} />
+                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${dotColor}`} aria-label={label} />
                             <span className="text-sm text-foreground truncate">
                               {getTopicName(topicSlug)}
                             </span>

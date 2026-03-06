@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
+import { formatDateShort } from '@/lib/utils'
 import { useChildren } from '@/lib/children'
 import { useProfile } from '@/lib/profile'
 import { notify } from '@/lib/toast'
@@ -134,13 +135,6 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
     return filteredWorksheets.slice(start, start + PAGE_SIZE)
   }, [filteredWorksheets, currentPageNum])
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
 
   const viewWorksheet = async (id: string) => {
     setViewLoading(true)
@@ -232,7 +226,7 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
               ))}
             </div>
             <p className="text-sm text-muted-foreground">
-              {formatDate(viewingWorksheet.created_at)} &middot; {viewingWorksheet.questions.length} questions
+              {formatDateShort(viewingWorksheet.created_at)} &middot; {viewingWorksheet.questions.length} questions
             </p>
           </div>
           <div className="flex gap-2 shrink-0 print:hidden">
@@ -441,7 +435,7 @@ export default function History({ onNavigateToGenerator }: { onNavigateToGenerat
                         )}
                       </div>
                       <p className="text-sm font-medium text-muted-foreground/70">
-                        {worksheet.topic} &middot; {worksheet.grade} &middot; {formatDate(worksheet.created_at)}
+                        {worksheet.topic} &middot; {worksheet.grade} &middot; {formatDateShort(worksheet.created_at)}
                       </p>
                     </div>
 

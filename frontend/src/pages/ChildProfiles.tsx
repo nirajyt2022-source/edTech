@@ -14,6 +14,7 @@ import { useChildren, type Child } from '@/lib/children'
 import { useSubscription } from '@/lib/subscription'
 import { useAuth } from '@/lib/auth'
 import { notify } from '@/lib/toast'
+import { GRADES, BOARDS } from '@/lib/constants'
 
 const AVATAR_COLORS = [
   'bg-primary/15 text-primary',
@@ -31,8 +32,6 @@ function ChildAvatar({ name, index }: { name: string; index: number }) {
   )
 }
 
-const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
-const BOARDS = ['CBSE', 'ICSE', 'State Board']
 
 export default function ChildProfiles() {
   const { children, loading, error, createChild, updateChild, deleteChild } = useChildren()

@@ -5,6 +5,39 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function getGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 17) return 'Good afternoon'
+  return 'Good evening'
+}
+
+/** "6 Mar 2026" */
+export function formatDateShort(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+/** "6 March 2026" */
+export function formatDateLong(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+/** "6 Mar" */
+export function formatDateCompact(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
 /**
  * Strip subject+class prefix from a skill tag and title-case the rest.
  * e.g. "hin_c2_matra_identify" → "Matra Identify"

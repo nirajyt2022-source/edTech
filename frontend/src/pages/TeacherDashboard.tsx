@@ -10,6 +10,7 @@ import { useClasses } from '@/lib/classes'
 import { api } from '@/lib/api'
 import { getTopicName } from '@/lib/curriculum'
 import { notify } from '@/lib/toast'
+import { getGreeting, formatDateCompact } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -62,28 +63,18 @@ interface TeacherDashboardProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const MASTERY_CELL: Record<string, { bg: string; label: string }> = {
-  mastered:  { bg: 'bg-emerald-500', label: 'Mastered' },
-  improving: { bg: 'bg-amber-400',   label: 'Improving' },
-  learning:  { bg: 'bg-red-400',     label: 'Needs help' },
-  unknown:   { bg: 'bg-red-300',     label: 'Not started' },
+const MASTERY_CELL: Record<string, { bg: string; label: string; letter: string }> = {
+  mastered:  { bg: 'bg-emerald-500', label: 'Mastered',     letter: 'M' },
+  improving: { bg: 'bg-amber-400',   label: 'Improving',    letter: 'I' },
+  learning:  { bg: 'bg-red-400',     label: 'Needs help',   letter: 'N' },
+  unknown:   { bg: 'bg-red-300',     label: 'Not started',  letter: '\u2014' },
 }
 
-function cellStyle(level: string | undefined): { bg: string; label: string } {
-  if (!level) return { bg: 'bg-gray-200', label: 'No data' }
-  return MASTERY_CELL[level] ?? { bg: 'bg-gray-200', label: level }
+function cellStyle(level: string | undefined): { bg: string; label: string; letter: string } {
+  if (!level) return { bg: 'bg-gray-200', label: 'No data', letter: '\u2014' }
+  return MASTERY_CELL[level] ?? { bg: 'bg-gray-200', label: level, letter: '\u2014' }
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-}
-
-function getGreeting() {
-  const h = new Date().getHours()
-  if (h < 12) return 'Good Morning'
-  if (h < 17) return 'Good Afternoon'
-  return 'Good Evening'
-}
 
 // ─── WeakTopicsAlert ──────────────────────────────────────────────────────────
 
@@ -172,16 +163,20 @@ function ClassHeatmap({
             {/* Cells — one per student */}
             {children.map((child) => {
               const level = heatmap[topicSlug]?.[child.id]
-              const { bg, label } = cellStyle(level)
+              const { bg, label, letter } = cellStyle(level)
               return (
                 <div
                   key={`${topicSlug}-${child.id}`}
-                  className={`h-8 rounded-sm ${bg} cursor-default transition-opacity hover:opacity-75`}
+                  className={`h-8 rounded-sm ${bg} cursor-default transition-opacity hover:opacity-75 flex items-center justify-center`}
+                  aria-label={`${child.name}: ${getTopicName(topicSlug)} \u2014 ${label}`}
+                  title={label}
                   onMouseEnter={() =>
                     setTooltip({ student: child.name, topic: getTopicName(topicSlug), status: label })
                   }
                   onMouseLeave={() => setTooltip(null)}
-                />
+                >
+                  <span className="text-[9px] text-white/70 font-bold select-none">{letter}</span>
+                </div>
               )
             })}
           </div>
@@ -780,7 +775,7 @@ export default function TeacherDashboard({ onNavigate }: TeacherDashboardProps) 
                             </div>
                           </div>
                           <Badge variant="secondary" className="bg-secondary/40 text-[9px] font-bold uppercase tracking-tighter px-1.5 py-0 rounded-md border-none text-muted-foreground/60 shrink-0">
-                            {formatDate(ws.created_at)}
+                            {formatDateCompact(ws.created_at)}
                           </Badge>
                         </div>
                       </CardContent>

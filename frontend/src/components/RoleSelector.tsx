@@ -10,17 +10,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { GRADES } from '@/lib/constants'
 
 const SUBJECTS = [
   'Mathematics', 'Science', 'English', 'Hindi',
-  'Social Studies', 'Computer Science', 'Physics',
-  'Chemistry', 'Biology', 'EVS',
-]
-
-const GRADES = [
-  'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5',
-  'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10',
-  'Grade 11', 'Grade 12',
+  'Social Studies', 'Computer Science', 'EVS',
 ]
 
 export default function RoleSelector() {

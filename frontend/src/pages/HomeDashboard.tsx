@@ -5,6 +5,8 @@ import { useProfile } from '@/lib/profile'
 import { useChildren } from '@/lib/children'
 import { api } from '@/lib/api'
 import { QuickActionCard } from '@/components/QuickActionCard'
+import { Skeleton } from '@/components/ui/skeleton'
+import { getGreeting, formatDateCompact } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -68,18 +70,11 @@ const ICONS = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getGreeting(): { greeting: string; motivation: string } {
+function getMotivation(): string {
   const h = new Date().getHours()
-  if (h < 12) return { greeting: 'Good morning', motivation: 'Ready for some practice?' }
-  if (h < 17) return { greeting: 'Good afternoon', motivation: 'Great time to review!' }
-  return { greeting: 'Good evening', motivation: 'Quick revision before bed?' }
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-  })
+  if (h < 12) return 'Ready for some practice?'
+  if (h < 17) return 'Great time to review!'
+  return 'Quick revision before bed?'
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -97,7 +92,7 @@ export default function HomeDashboard({ onNavigate }: Props) {
     user?.email?.split('@')[0] ||
     'there'
 
-  const greetingData = getGreeting()
+  const greetingData = { greeting: getGreeting(), motivation: getMotivation() }
 
   const isTeacher = activeRole === 'teacher'
   const { activeChild } = useChildren()
@@ -262,7 +257,7 @@ export default function HomeDashboard({ onNavigate }: Props) {
             {recentLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-white border border-border/40 rounded-xl animate-pulse" />
+                  <Skeleton key={i} className="h-16 w-full rounded-xl" />
                 ))}
               </div>
             ) : recentWorksheets.length === 0 ? (
@@ -303,7 +298,7 @@ export default function HomeDashboard({ onNavigate }: Props) {
                         {ws.topic}
                       </p>
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5">
-                        {formatDate(ws.created_at)}
+                        {formatDateCompact(ws.created_at)}
                       </p>
                     </div>
                   </div>

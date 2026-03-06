@@ -157,8 +157,7 @@ export default function GradeFromPhoto({ open, onOpenChange, worksheet, childId 
             <>
               {/* Upload area */}
               <div
-                className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors hover:border-primary/40 hover:bg-primary/5"
-                style={{ borderColor: '#e2e8f0' }}
+                className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors hover:border-primary/40 hover:bg-primary/5 border-border"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input
@@ -171,16 +170,16 @@ export default function GradeFromPhoto({ open, onOpenChange, worksheet, childId 
                   className="hidden"
                 />
                 <div className="space-y-2">
-                  <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f1f5f9' }}>
-                    <svg className="w-6 h-6" style={{ color: '#64748b' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center bg-secondary">
+                    <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
                     </svg>
                   </div>
-                  <p className="text-sm font-medium" style={{ color: '#334155' }}>
+                  <p className="text-sm font-medium text-foreground">
                     Tap to take a photo or choose from gallery
                   </p>
-                  <p className="text-xs" style={{ color: '#94a3b8' }}>
+                  <p className="text-xs text-muted-foreground/70">
                     Upload 1-5 clear photos of the filled worksheet
                   </p>
                 </div>

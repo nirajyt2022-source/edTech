@@ -11,8 +11,7 @@ import { api } from '@/lib/api'
 import { useSubscription } from '@/lib/subscription'
 import { useProfile } from '@/lib/profile'
 import { fetchSubjects, type CurriculumSubject } from '@/lib/curriculum'
-
-const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
+import { GRADES } from '@/lib/constants'
 const FALLBACK_SUBJECTS = ['Maths', 'English', 'EVS', 'Hindi', 'Science', 'Computer']
 
 interface SyllabusTopic {

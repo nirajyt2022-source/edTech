@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
 import { useChildren } from '@/lib/children'
+import { GRADES as BASE_GRADES } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -22,7 +23,7 @@ interface AskSkolarProps {
   childGrade?: string
 }
 
-const GRADES = ['', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
+const GRADES = ['', ...BASE_GRADES]
 const SUBJECTS = ['', 'Maths', 'English', 'Hindi', 'Science', 'EVS', 'GK', 'Computer']
 
 const EXAMPLE_QUESTIONS = [
