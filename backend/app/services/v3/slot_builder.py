@@ -2611,11 +2611,16 @@ def build_slots(
             min_required = max(mandatory_visual_min, math.ceil(num_questions * 0.5))
             if i < min_required:
                 visual_type = mandatory_visual
-        elif (
-            is_maths
-            and grade_num <= 2
-            and operation
-            in (
+        if not visual_type:
+            # Determine visual rate based on grade, subject, and problem_style
+            visual_rate = 0.0
+            _sl = subject.lower()
+
+            if problem_style == "visual":
+                visual_rate = {1: 1.0, 2: 0.9, 3: 0.7, 4: 0.5, 5: 0.3}.get(grade_num, 0.3)
+            elif problem_style == "mixed":
+                visual_rate = {1: 0.8, 2: 0.7, 3: 0.5, 4: 0.3, 5: 0.2}.get(grade_num, 0.2)
+            elif is_maths and operation in (
                 "addition",
                 "addition_with_carry",
                 "subtraction",
@@ -2623,53 +2628,24 @@ def build_slots(
                 "subtraction_with_borrow",
                 "multiplication",
                 "division",
-            )
-        ):
-            # Early-grade maths should be visual-heavy.
-            if i < math.ceil(num_questions * 0.6):
-                visual_type = (
-                    _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-                    or "object_group"
-                )
-        elif is_maths and grade_num <= 2:
-            # Non-arithmetic maths in early grades — use topic-specific visuals
-            if random.random() < 0.6:
+            ):
+                visual_rate = {1: 0.7, 2: 0.6, 3: 0.4, 4: 0.15, 5: 0.1}.get(grade_num, 0.1)
+            elif is_maths:
+                visual_rate = {1: 0.6, 2: 0.5, 3: 0.35, 4: 0.15, 5: 0.1}.get(grade_num, 0.1)
+            elif _sl in ("health", "moral science"):
+                visual_rate = {1: 0.7, 2: 0.6, 3: 0.4, 4: 0.3, 5: 0.2}.get(grade_num, 0.2)
+            elif _sl in ("science", "evs"):
+                visual_rate = {1: 0.7, 2: 0.5, 3: 0.35, 4: 0.2, 5: 0.1}.get(grade_num, 0.1)
+            elif _sl in ("computer", "gk"):
+                visual_rate = {1: 0.5, 2: 0.4, 3: 0.25, 4: 0.2, 5: 0.15}.get(grade_num, 0.15)
+            else:
+                visual_rate = {1: 0.5, 2: 0.4, 3: 0.25, 4: 0.1, 5: 0.05}.get(grade_num, 0.05)
+
+            if random.random() < visual_rate:
                 visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif not is_maths and grade_num <= 2:
-            # Non-maths early grades: use subject-specific visuals for ~50% of questions
-            if random.random() < 0.5:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif subject.lower() in ("health", "moral science"):
-            # Health and Moral Science benefit from visuals at all grades
-            if random.random() < 0.5:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif subject.lower() in ("science", "evs") and grade_num <= 5:
-            # Science/EVS Class 3-5: 40% for Class 3, 20% for Class 4-5
-            rate = 0.4 if grade_num <= 3 else 0.2
-            if random.random() < rate:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif subject.lower() in ("computer", "gk"):
-            # Computer/GK any grade: 20% visuals
-            if random.random() < 0.2:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif not is_maths and grade_num == 3:
-            # Non-maths subjects Class 3: 25% visuals
-            if random.random() < 0.25:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif is_maths and grade_num >= 4:
-            # Maths Class 4-5 non-mandatory topics: 15% visuals
-            if random.random() < 0.15:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif problem_style == "visual":
-            if random.random() < 0.8:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif problem_style == "mixed":
-            if random.random() < 0.5:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-        elif is_maths and grade_num <= 3:
-            # Maths Class 3 non-arithmetic: occasional visuals
-            if random.random() < 0.4:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
+                # For early-grade arithmetic, always fall back to object_group
+                if not visual_type and is_maths and grade_num <= 2:
+                    visual_type = "object_group"
 
         if visual_type:
             visual_data = _compute_visual_data(
