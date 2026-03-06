@@ -1162,6 +1162,20 @@ class PDFService:
                 return self._draw_array(visual_data)
             elif visual_type == "base_ten_regrouping":
                 return self._draw_base_ten(visual_data)
+            elif visual_type == "fraction_bar":
+                return self._draw_fraction_bar(visual_data)
+            elif visual_type == "money_coins":
+                return self._draw_money(visual_data)
+            elif visual_type == "scenario_picture":
+                return self._draw_scenario(visual_data)
+            elif visual_type == "sequence_pictures":
+                return self._draw_sequence(visual_data)
+            elif visual_type == "bar_chart":
+                return self._draw_bar_chart(visual_data)
+            elif visual_type == "food_plate":
+                return self._draw_food_plate(visual_data)
+            elif visual_type == "percentage_bar":
+                return self._draw_percentage_bar(visual_data)
         except Exception as e:
             logger.warning("Failed to render visual %s in PDF: %s", visual_type, e)
         return []
@@ -1324,22 +1338,26 @@ class PDFService:
         return [drawing, Spacer(1, 4)]
 
     def _draw_number_line(self, data: dict, page_width: float) -> list:
-        """Draw a number line."""
-        from reportlab.graphics.shapes import Drawing, Line, String
+        """Draw a number line with optional hop arcs."""
+        from reportlab.graphics.shapes import Circle, Drawing, Line, String
         from reportlab.lib.colors import HexColor
 
         start = data.get("start", 0)
         end = data.get("end", 20)
         step = data.get("step", 2)
         highlight = data.get("highlight")
+        hops_from = data.get("hops_from", -1)
+        hops_count = data.get("hops_count", 0)
+        hops_dir = data.get("hops_direction", "forward")
+        highlight_start = data.get("highlight_start", -1)
 
+        has_hops = hops_count > 0 and hops_from >= 0
         draw_width = min(page_width - 2 * cm, 350)
-        draw_height = 40
+        draw_height = 55 if has_hops else 40
         pad = 20
+        line_y = 35 if has_hops else 20
 
         drawing = Drawing(draw_width, draw_height)
-        line_y = 20
-
         drawing.add(Line(pad, line_y, draw_width - pad, line_y, strokeColor=HexColor("#1E1B4B"), strokeWidth=1.2))
 
         rng = max(end - start, 1)
@@ -1352,9 +1370,37 @@ class PDFService:
             )
             v += step
 
-        if highlight is not None and start <= highlight <= end:
-            from reportlab.graphics.shapes import Circle
+        # Hop arcs
+        if has_hops:
+            from reportlab.graphics.shapes import Path
 
+            for i in range(hops_count):
+                from_n = (hops_from + i) if hops_dir == "forward" else (hops_from - i)
+                to_n = (hops_from + i + 1) if hops_dir == "forward" else (hops_from - i - 1)
+                if from_n < start or from_n > end or to_n < start or to_n > end:
+                    continue
+                x1 = pad + ((from_n - start) / rng) * (draw_width - 2 * pad)
+                x2 = pad + ((to_n - start) / rng) * (draw_width - 2 * pad)
+                mid_x = (x1 + x2) / 2
+                arc_y = line_y - 18 - i * 1.5
+                p = Path()
+                p.moveTo(x1, line_y - 3)
+                p.curveTo(mid_x, arc_y, mid_x, arc_y, x2, line_y - 3)
+                p.strokeColor = HexColor("#F97316")
+                p.strokeWidth = 1.5
+                p.fillColor = None
+                p.strokeDashArray = [4, 2]
+                drawing.add(p)
+
+        # Start marker
+        if highlight_start >= 0 and start <= highlight_start <= end:
+            sx = pad + ((highlight_start - start) / rng) * (draw_width - 2 * pad)
+            drawing.add(
+                Circle(sx, line_y, 5, fillColor=HexColor("#F59E0B"), strokeColor=HexColor("#D97706"), strokeWidth=1.5)
+            )
+
+        # End marker
+        if highlight is not None and start <= highlight <= end:
             hx = pad + ((highlight - start) / rng) * (draw_width - 2 * pad)
             drawing.add(
                 Circle(hx, line_y, 4, fillColor=HexColor("#6366F1"), strokeColor=HexColor("#1E1B4B"), strokeWidth=1.5)
@@ -1697,6 +1743,237 @@ class PDFService:
                 )
             )
             x += 8
+
+        return [d, Spacer(1, 4)]
+
+    def _draw_fraction_bar(self, data: dict) -> list:
+        """Draw horizontal fraction bars for comparison."""
+        from reportlab.graphics.shapes import Drawing, Rect, String
+        from reportlab.lib.colors import HexColor
+
+        n = data.get("numerator", 1)
+        d = max(data.get("denominator", 4), 1)
+        color = HexColor(data.get("color", "#6366F1"))
+        total_parts = 12
+        filled = round((n / d) * total_parts)
+
+        draw_width = 300
+        bar_height = 20
+        d_obj = Drawing(draw_width, bar_height + 15)
+
+        part_width = (draw_width - 60) / total_parts
+        for i in range(total_parts):
+            x = 5 + i * part_width
+            fill = color if i < filled else HexColor("#F1F5F9")
+            d_obj.add(
+                Rect(x, 5, part_width - 1, bar_height, fillColor=fill, strokeColor=HexColor("#CBD5E1"), strokeWidth=0.5)
+            )
+
+        d_obj.add(String(draw_width - 45, 10, f"{n}/{d}", fontSize=12, fontName=FONT_BOLD, fillColor=color))
+
+        elements = [d_obj]
+
+        second = data.get("second")
+        if second:
+            n2, d2 = second["numerator"], max(second["denominator"], 1)
+            filled2 = round((n2 / d2) * total_parts)
+            d_obj2 = Drawing(draw_width, bar_height + 5)
+            for i in range(total_parts):
+                x = 5 + i * part_width
+                fill = HexColor("#EF4444") if i < filled2 else HexColor("#F1F5F9")
+                d_obj2.add(
+                    Rect(
+                        x,
+                        5,
+                        part_width - 1,
+                        bar_height,
+                        fillColor=fill,
+                        strokeColor=HexColor("#CBD5E1"),
+                        strokeWidth=0.5,
+                    )
+                )
+            d_obj2.add(
+                String(
+                    draw_width - 45, 10, f"{n2}/{d2}", fontSize=12, fontName=FONT_BOLD, fillColor=HexColor("#EF4444")
+                )
+            )
+            elements.append(d_obj2)
+
+        return elements + [Spacer(1, 4)]
+
+    def _draw_money(self, data: dict) -> list:
+        """Draw Indian currency coins and notes."""
+        items = data.get("items", [])
+        if not items:
+            return []
+        parts = []
+        for item in items:
+            label = _sanitize_text(item.get("label", ""))
+            parts.append(f"<font size='11'><b>{label}</b></font>")
+        text = "  +  ".join(parts) + "  =  ₹?"
+        p = Paragraph(text, self.styles["QuestionText"])
+        return [p, Spacer(1, 4)]
+
+    def _draw_scenario(self, data: dict) -> list:
+        """Draw scenario picture with emoji scene."""
+        scene = _sanitize_text(data.get("scene_emoji", ""))
+        desc = _sanitize_text(data.get("description", ""))
+        elements = [
+            Paragraph(
+                f"<font size='20'>{scene}</font>",
+                ParagraphStyle("SceneEmoji", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=20),
+            ),
+            Spacer(1, 4),
+            Paragraph(
+                f"<i><font size='9' color='#9F1239'>{desc}</font></i>",
+                ParagraphStyle("SceneDesc", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=9),
+            ),
+        ]
+        return elements + [Spacer(1, 4)]
+
+    def _draw_sequence(self, data: dict) -> list:
+        """Draw sequence of emoji steps."""
+        steps = data.get("steps", [])
+        labels = data.get("labels", [])
+        blank_idx = data.get("blank_index", -1)
+        parts = []
+        for i, step in enumerate(steps):
+            if i == blank_idx:
+                parts.append("<font size='14' color='#F97316'><b> ? </b></font>")
+            else:
+                parts.append(f"<font size='14'>{_sanitize_text(step)}</font>")
+        text = " → ".join(parts)
+        p = Paragraph(text, ParagraphStyle("SeqSteps", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=14))
+        elements = [p]
+        label_parts = []
+        for i, label in enumerate(labels):
+            if i == blank_idx:
+                label_parts.append("???")
+            else:
+                label_parts.append(_sanitize_text(label))
+        label_text = " → ".join(label_parts)
+        elements.append(
+            Paragraph(
+                f"<font size='7' color='#64748B'>{label_text}</font>",
+                ParagraphStyle("SeqLabels", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=7),
+            )
+        )
+        return elements + [Spacer(1, 4)]
+
+    def _draw_bar_chart(self, data: dict) -> list:
+        """Draw a simple bar chart."""
+        from reportlab.graphics.shapes import Drawing, Rect, String
+        from reportlab.lib.colors import HexColor
+
+        bars = data.get("bars", [])
+        title = data.get("title", "")
+        if not bars:
+            return []
+
+        max_val = max((b.get("value", 1) for b in bars), default=1)
+        bar_width = 30
+        gap = 20
+        chart_height = 80
+        width = len(bars) * (bar_width + gap) + 40
+        height = chart_height + 30
+
+        d = Drawing(width, height)
+
+        for i, bar in enumerate(bars):
+            val = bar.get("value", 0)
+            color = HexColor(bar.get("color", "#3B82F6"))
+            bar_h = max((val / max(max_val, 1)) * chart_height, 4)
+            x = 20 + i * (bar_width + gap)
+            y = height - 20 - bar_h
+
+            d.add(Rect(x, y, bar_width, bar_h, fillColor=color, strokeColor=None))
+            d.add(String(x + bar_width / 2 - 4, y - 10, str(val), fontSize=8, fontName=FONT_BOLD, fillColor=color))
+            label = _sanitize_text(bar.get("label", ""))[:8]
+            d.add(String(x + 2, 2, label, fontSize=6, fontName=FONT_REGULAR, fillColor=HexColor("#64748B")))
+
+        elements = []
+        if title:
+            elements.append(
+                Paragraph(
+                    f"<b><font size='8'>{_sanitize_text(title)}</font></b>",
+                    ParagraphStyle("ChartTitle", alignment=TA_CENTER, fontName=FONT_BOLD, fontSize=8),
+                )
+            )
+        elements.append(d)
+        return elements + [Spacer(1, 4)]
+
+    def _draw_food_plate(self, data: dict) -> list:
+        """Draw food plate groups as text."""
+        groups = data.get("groups", [])
+        blank_idx = data.get("blank_index", -1)
+        parts = []
+        for i, g in enumerate(groups):
+            if i == blank_idx:
+                parts.append("<font color='#F97316'><b>❓</b></font>")
+            else:
+                emoji = _sanitize_text(g.get("emoji", "")[:4])
+                name = _sanitize_text(g.get("name", ""))
+                parts.append(f"{emoji} <b>{name}</b>")
+        text = "  |  ".join(parts)
+        p = Paragraph(
+            f"<font size='10'>{text}</font>",
+            ParagraphStyle("FoodPlate", alignment=TA_CENTER, fontName=FONT_REGULAR, fontSize=10),
+        )
+        return [p, Spacer(1, 4)]
+
+    def _draw_percentage_bar(self, data: dict) -> list:
+        """Draw a percentage bar."""
+        from reportlab.graphics.shapes import Drawing, Rect, String
+        from reportlab.lib.colors import HexColor
+
+        percent = data.get("percent", 25)
+        color = HexColor(data.get("color", "#6366F1"))
+
+        draw_width = 300
+        bar_height = 18
+        d = Drawing(draw_width, bar_height + 20)
+
+        # Background bar
+        d.add(
+            Rect(
+                10,
+                10,
+                draw_width - 20,
+                bar_height,
+                fillColor=HexColor("#F1F5F9"),
+                strokeColor=HexColor("#CBD5E1"),
+                strokeWidth=0.5,
+                rx=4,
+                ry=4,
+            )
+        )
+
+        # Filled portion
+        filled_width = max((percent / 100) * (draw_width - 20), 2)
+        d.add(Rect(10, 10, filled_width, bar_height, fillColor=color, strokeColor=None, rx=4, ry=4))
+
+        # Percentage label
+        if percent >= 20:
+            d.add(
+                String(
+                    10 + filled_width / 2 - 8,
+                    14,
+                    f"{percent}%",
+                    fontSize=10,
+                    fontName=FONT_BOLD,
+                    fillColor=HexColor("#FFFFFF"),
+                )
+            )
+
+        # Tick marks
+        for mark in [25, 50, 75]:
+            x = 10 + (mark / 100) * (draw_width - 20)
+            d.add(Rect(x, 10, 0.5, bar_height, fillColor=HexColor("#CBD5E1"), strokeColor=None))
+
+        # Scale labels
+        for mark, label in [(0, "0%"), (25, "25%"), (50, "50%"), (75, "75%"), (100, "100%")]:
+            x = 10 + (mark / 100) * (draw_width - 20)
+            d.add(String(x - 6, 0, label, fontSize=6, fontName=FONT_REGULAR, fillColor=HexColor("#94A3B8")))
 
         return [d, Spacer(1, 4)]
 

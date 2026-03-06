@@ -178,6 +178,11 @@ MANDATORY_VISUAL_TOPICS = {
     "data handling": "pictograph",
     "pictograph": "pictograph",
     "tally": "pictograph",
+    "percentage": "percentage_bar",
+    "percent": "percentage_bar",
+    "bar graph": "bar_chart",
+    "bar chart": "bar_chart",
+    "pie chart": "bar_chart",
 }
 
 
@@ -843,11 +848,35 @@ def _compute_visual_data(
         return {"hour": h, "minute": m}
 
     if visual_type == "money_coins":
-        coin_values = [1, 2, 5, 10]
-        coins = []
-        for val in random.sample(coin_values, min(3, len(coin_values))):
-            coins.append({"value": val, "count": random.randint(1, 5)})
-        return {"coins": coins}
+        DENOMINATIONS = [
+            {"value": 1, "type": "coin", "label": "₹1", "color": "#B8860B"},
+            {"value": 2, "type": "coin", "label": "₹2", "color": "#C0C0C0"},
+            {"value": 5, "type": "coin", "label": "₹5", "color": "#C0C0C0"},
+            {"value": 10, "type": "coin", "label": "₹10", "color": "#DAA520"},
+            {"value": 10, "type": "note", "label": "₹10", "color": "#F97316"},
+            {"value": 20, "type": "note", "label": "₹20", "color": "#16A34A"},
+            {"value": 50, "type": "note", "label": "₹50", "color": "#2563EB"},
+            {"value": 100, "type": "note", "label": "₹100", "color": "#7C3AED"},
+        ]
+        if numbers and numbers.get("answer"):
+            target = numbers["answer"]
+        else:
+            target = random.choice([5, 10, 15, 20, 25, 50])
+        items = []
+        remaining = target
+        for denom in sorted(DENOMINATIONS, key=lambda x: -x["value"]):
+            while remaining >= denom["value"] and len(items) < 8:
+                items.append(denom)
+                remaining -= denom["value"]
+            if remaining == 0:
+                break
+        return {
+            "items": [
+                {"value": d["value"], "type": d["type"], "label": d["label"], "color": d["color"]} for d in items
+            ],
+            "total": target,
+            "currency": "INR",
+        }
 
     if visual_type == "abacus":
         if numbers and "a" in numbers:
@@ -882,10 +911,26 @@ def _compute_visual_data(
 
     if visual_type == "number_line":
         if numbers and "a" in numbers:
-            start = max(0, numbers["a"] - 5)
-            end = numbers["a"] + 10
-            step = 1 if grade_num <= 2 else 5
-            return {"start": start, "end": end, "step": step, "highlight": numbers["a"]}
+            a = numbers["a"]
+            b = numbers.get("b", 3)
+            operation = numbers.get("operation", "addition")
+            if "subtract" in str(operation):
+                end_val = a - b
+                direction = "backward"
+            else:
+                end_val = a + b
+                direction = "forward"
+            line_end = max(end_val + 3, 20)
+            return {
+                "start": 0,
+                "end": min(line_end, 25),
+                "step": 1,
+                "hops_from": a,
+                "hops_count": b,
+                "hops_direction": direction,
+                "highlight": end_val,
+                "highlight_start": a,
+            }
         return {"start": 0, "end": 20, "step": 2, "highlight": None}
 
     if visual_type == "object_group":
@@ -1065,6 +1110,187 @@ def _compute_visual_data(
             op = "addition" if ans_num > numbers["a"] else "subtraction"
             return {"numbers": [numbers["a"], numbers.get("b", 0)], "operation": op}
         return {"numbers": [234, 178], "operation": "addition"}
+
+    if visual_type == "fraction_bar":
+        if numbers:
+            n = numbers.get("numerator", numbers.get("a", 1))
+            d = numbers.get("denominator", numbers.get("b", 4))
+            if d == 0:
+                d = 4
+        else:
+            d = random.choice([2, 3, 4, 5, 6])
+            n = random.randint(1, d - 1)
+        show_comparison = "compar" in topic.lower() or "equivalent" in topic.lower()
+        second = None
+        if show_comparison:
+            d2 = random.choice([2, 3, 4, 5, 6])
+            n2 = random.randint(1, d2 - 1)
+            second = {"numerator": n2, "denominator": d2}
+        colors = ["#6366F1", "#EF4444", "#10B981", "#F59E0B", "#EC4899"]
+        color = colors[(slot_number or 0) % len(colors)]
+        return {"numerator": n, "denominator": d, "color": color, "second": second, "total_parts": 12}
+
+    if visual_type == "scenario_picture":
+        SCENARIO_BANK = {
+            "sharing": [
+                {
+                    "scene": "👧🍎🍎🍎 👦😢",
+                    "description": "Priya has 3 apples. Rohan has none and looks sad.",
+                    "question": "What should Priya do?",
+                },
+                {
+                    "scene": "👦🖍️🖍️🖍️🖍️ 👧🖍️",
+                    "description": "Aarav has 4 crayons. Meera has only 1.",
+                    "question": "Is Aarav being kind?",
+                },
+            ],
+            "honesty": [
+                {
+                    "scene": "👦⚽💔🪟",
+                    "description": "Rohan's ball broke the window.",
+                    "question": "Should Rohan tell the truth?",
+                },
+                {
+                    "scene": "👧📝✅❌",
+                    "description": "Ananya copied her friend's answer in the test.",
+                    "question": "Was this the right thing to do?",
+                },
+            ],
+            "kindness": [
+                {
+                    "scene": "👴🚌👦💺",
+                    "description": "An old man is standing on the bus. Aarav has a seat.",
+                    "question": "What should Aarav do?",
+                },
+                {
+                    "scene": "👧😢📚 👦😊",
+                    "description": "Meera dropped her books. Rohan is walking past.",
+                    "question": "How can Rohan be kind?",
+                },
+            ],
+            "hygiene": [
+                {"scene": "👦🍽️🤲💧", "description": "Before eating food.", "question": "What should you do first?"},
+                {
+                    "scene": "👧🤧🤲🧼",
+                    "description": "After sneezing.",
+                    "question": "What should you do with your hands?",
+                },
+            ],
+            "healthy_eating": [
+                {
+                    "scene": "🍎🥕🍌 vs 🍕🍬🍫",
+                    "description": "Choose what to eat.",
+                    "question": "Which group is healthier?",
+                },
+            ],
+        }
+        topic_lower = topic.lower()
+        bank_key = "sharing"
+        for key in SCENARIO_BANK:
+            if key.replace("_", " ") in topic_lower or key in topic_lower:
+                bank_key = key
+                break
+        scenarios = SCENARIO_BANK.get(bank_key, SCENARIO_BANK["sharing"])
+        idx = (slot_number or 0) % len(scenarios)
+        scenario = scenarios[idx]
+        return {
+            "scene_emoji": scenario["scene"],
+            "description": scenario["description"],
+            "question": scenario["question"],
+        }
+
+    if visual_type == "sequence_pictures":
+        SEQUENCE_BANK = {
+            "handwashing": {
+                "title": "Handwashing Steps",
+                "steps": ["🚰", "🧼", "🤲💧", "🧴", "🤲✨"],
+                "labels": ["Turn on tap", "Take soap", "Rub hands", "Rinse", "Hands clean!"],
+            },
+            "plant_growth": {
+                "title": "How a Plant Grows",
+                "steps": ["🌱", "🌿", "🌻", "🌻🌻"],
+                "labels": ["Seed sprouts", "Leaves grow", "Flower blooms", "More flowers!"],
+            },
+            "morning_routine": {
+                "title": "Morning Routine",
+                "steps": ["⏰", "🪥", "🚿", "👕", "🍳"],
+                "labels": ["Wake up", "Brush teeth", "Bath", "Get dressed", "Eat breakfast"],
+            },
+            "tense_sequence": {
+                "title": "Yesterday → Today → Tomorrow",
+                "steps": ["🌅⬅️", "☀️", "🌅➡️"],
+                "labels": ["Yesterday (past)", "Today (present)", "Tomorrow (future)"],
+            },
+        }
+        topic_lower = topic.lower()
+        bank_key = "morning_routine"
+        if "hygiene" in topic_lower or "wash" in topic_lower:
+            bank_key = "handwashing"
+        elif "plant" in topic_lower or "grow" in topic_lower:
+            bank_key = "plant_growth"
+        elif "tense" in topic_lower or "yesterday" in topic_lower:
+            bank_key = "tense_sequence"
+        elif "routine" in topic_lower or "morning" in topic_lower:
+            bank_key = "morning_routine"
+        seq = SEQUENCE_BANK.get(bank_key, SEQUENCE_BANK["morning_routine"])
+        blank_idx = (slot_number or 0) % len(seq["steps"])
+        return {"title": seq["title"], "steps": seq["steps"], "labels": seq["labels"], "blank_index": blank_idx}
+
+    if visual_type == "bar_chart":
+        CHART_DATA_SETS = [
+            {
+                "title": "Students' Favourite Sport",
+                "bars": [
+                    {"label": "Cricket", "value": random.randint(5, 15), "color": "#3B82F6"},
+                    {"label": "Football", "value": random.randint(3, 12), "color": "#10B981"},
+                    {"label": "Badminton", "value": random.randint(2, 10), "color": "#F59E0B"},
+                    {"label": "Kabaddi", "value": random.randint(2, 8), "color": "#EF4444"},
+                ],
+                "y_label": "Number of Students",
+            },
+            {
+                "title": "Books Read This Month",
+                "bars": [
+                    {"label": "Aarav", "value": random.randint(2, 8), "color": "#6366F1"},
+                    {"label": "Priya", "value": random.randint(3, 10), "color": "#EC4899"},
+                    {"label": "Rohan", "value": random.randint(1, 7), "color": "#F97316"},
+                    {"label": "Meera", "value": random.randint(4, 9), "color": "#14B8A6"},
+                ],
+                "y_label": "Books",
+            },
+        ]
+        dataset = CHART_DATA_SETS[(slot_number or 0) % len(CHART_DATA_SETS)]
+        return dataset
+
+    if visual_type == "food_plate":
+        FOOD_GROUPS = [
+            {"name": "Grains", "emoji": "🍚🫓🍞", "color": "#F59E0B", "name_hi": "अनाज"},
+            {"name": "Vegetables", "emoji": "🥕🥦🍅", "color": "#16A34A", "name_hi": "सब्ज़ी"},
+            {"name": "Fruits", "emoji": "🍎🍌🥭", "color": "#EF4444", "name_hi": "फल"},
+            {"name": "Protein", "emoji": "🥚🫘🍗", "color": "#92400E", "name_hi": "प्रोटीन"},
+            {"name": "Dairy", "emoji": "🥛🧀", "color": "#3B82F6", "name_hi": "दूध"},
+        ]
+        blank_idx = (slot_number or 0) % len(FOOD_GROUPS)
+        return {
+            "groups": [
+                {"name": g["name"], "emoji": g["emoji"], "color": g["color"], "name_hi": g["name_hi"]}
+                for g in FOOD_GROUPS
+            ],
+            "blank_index": blank_idx,
+        }
+
+    if visual_type == "percentage_bar":
+        if numbers:
+            percent = numbers.get("b", 25)
+            base = numbers.get("a", 100)
+        else:
+            percent = random.choice([10, 20, 25, 50, 75])
+            base = 100
+        return {
+            "percent": percent,
+            "base": base,
+            "color": ["#6366F1", "#EF4444", "#10B981", "#F59E0B"][(slot_number or 0) % 4],
+        }
 
     return None
 
@@ -2248,13 +2474,20 @@ def build_slots(
     mandatory_visual = None
     mandatory_visual_min = 0
     topic_lower = topic.lower()
-    for key, vis_type in MANDATORY_VISUAL_TOPICS.items():
-        if key in topic_lower:
-            mandatory_visual = vis_type
-            break
+    # Special case: fraction comparison/equivalent → fraction_bar, not pie
+    _special_case_visual = False
+    if "fraction" in topic_lower and any(kw in topic_lower for kw in ("compar", "equivalent", "adding", "subtracting")):
+        mandatory_visual = "fraction_bar"
+        _special_case_visual = True
+    else:
+        for key, vis_type in MANDATORY_VISUAL_TOPICS.items():
+            if key in topic_lower:
+                mandatory_visual = vis_type
+                break
+    # Profile can override, but NOT when we already picked a special-case visual
     profile_mandatory = profile.get("mandatory_visuals", {}) if profile else {}
     required_types = profile_mandatory.get("required_types") or []
-    if required_types:
+    if required_types and not _special_case_visual:
         mandatory_visual = required_types[0]
         mandatory_visual_min = int(profile_mandatory.get("min_count", 1))
 
@@ -2397,6 +2630,10 @@ def build_slots(
                 visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
         elif not is_maths and grade_num <= 2:
             # Non-maths early grades: use subject-specific visuals for ~50% of questions
+            if random.random() < 0.5:
+                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
+        elif subject.lower() in ("health", "moral science"):
+            # Health and Moral Science benefit from visuals at all grades
             if random.random() < 0.5:
                 visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
         elif problem_style == "visual":
@@ -2616,13 +2853,32 @@ def _pick_visual_type(
     if subject_lower in ("computer",) and grade_num <= 2:
         return "labeled_diagram"
 
+    # Health
+    if subject_lower in ("health",):
+        if "hygiene" in topic_lower or "wash" in topic_lower:
+            return "sequence_pictures"
+        if "diet" in topic_lower or "food" in topic_lower or "eating" in topic_lower or "nutrition" in topic_lower:
+            return "food_plate"
+        return "scenario_picture"
+
+    # Moral Science
+    if subject_lower in ("moral science",):
+        return "scenario_picture"
+
     if is_maths:
+        # Fraction comparison/equivalence → fraction_bar (not pie)
+        if "fraction" in topic_lower and (
+            "compar" in topic_lower or "equivalent" in topic_lower or "add" in topic_lower or "subtract" in topic_lower
+        ):
+            return "fraction_bar"
+        if "percent" in topic_lower:
+            return "percentage_bar"
+        if "data" in topic_lower or "graph" in topic_lower or "chart" in topic_lower:
+            return random.choice(["pictograph", "bar_chart"])
         if "number" in topic_lower and grade_num <= 2:
             return random.choice(["ten_frame", "number_line", "object_group"])
         if "multipl" in topic_lower and grade_num <= 3:
             return "array_visual"
-        if "data" in topic_lower or "pictograph" in topic_lower:
-            return "pictograph"
         # Default maths visuals
         if grade_num <= 2:
             return random.choice(["object_group", "ten_frame", "number_line"])

@@ -18,6 +18,12 @@ const VISUAL_SIZE: Record<string, string> = {
   ten_frame: "w-full max-w-[350px]",
   pictograph: "w-full max-w-[400px]",
   array_visual: "w-full max-w-[350px]",
+  fraction_bar: "w-full max-w-[400px]",
+  scenario_picture: "w-full max-w-[400px]",
+  sequence_pictures: "w-full max-w-[450px]",
+  bar_chart: "w-full max-w-[400px]",
+  food_plate: "w-full max-w-[300px]",
+  percentage_bar: "w-full max-w-[400px]",
 }
 
 function VisualContainer({ type, children }: { type: string; children: React.ReactNode }) {
@@ -47,7 +53,7 @@ export default memo(function VisualProblem({ visualType, visualData, colorMode =
     case 'shapes':
       return <VisualContainer type="shapes"><ShapeIdentifyVisual shapes={(visualData.shapes as {name: string; sides: number; color: string}[]) || []} targetIndex={Number(visualData.target_index ?? -1)} /></VisualContainer>
     case 'number_line':
-      return <VisualContainer type="number_line"><NumberLineVisual start={Number(visualData.start) || 0} end={Number(visualData.end) || 20} step={Number(visualData.step) || 2} highlight={visualData.highlight != null ? Number(visualData.highlight) : undefined} useColor={useColor} /></VisualContainer>
+      return <VisualContainer type="number_line"><NumberLineVisual start={Number(visualData.start) || 0} end={Number(visualData.end) || 20} step={Number(visualData.step) || 2} highlight={visualData.highlight != null ? Number(visualData.highlight) : undefined} useColor={useColor} hopsFrom={Number(visualData.hops_from ?? -1)} hopsCount={Number(visualData.hops_count ?? 0)} hopsDirection={String(visualData.hops_direction || 'forward')} highlightStart={Number(visualData.highlight_start ?? -1)} /></VisualContainer>
     case 'base_ten_regrouping':
       return <VisualContainer type="base_ten_regrouping"><BaseTenBlocksVisual numbers={(visualData.numbers as number[]) || []} operation={String(visualData.operation || 'show')} /></VisualContainer>
     case 'pie_fraction':
@@ -55,7 +61,7 @@ export default memo(function VisualProblem({ visualType, visualData, colorMode =
     case 'grid_symmetry':
       return <VisualContainer type="grid_symmetry"><GridSymmetryVisual gridSize={Number(visualData.grid_size) || 6} filledCells={(visualData.filled_cells as number[][]) || []} foldAxis={(visualData.fold_axis as 'vertical' | 'horizontal') || 'vertical'} /></VisualContainer>
     case 'money_coins':
-      return <VisualContainer type="money_coins"><MoneyCoinsVisual coins={(visualData.coins as { value: number; count: number }[]) || []} /></VisualContainer>
+      return <VisualContainer type="money_coins"><MoneyCoinsVisual items={(visualData.items as {value: number; type: string; label: string; color: string}[]) || []} total={Number(visualData.total) || 0} /></VisualContainer>
     case 'pattern_tiles':
       return <VisualContainer type="pattern_tiles"><PatternCompletionVisual tiles={(visualData.tiles as string[]) || []} blankPosition={visualData.blank_position != null ? Number(visualData.blank_position) : -1} /></VisualContainer>
     case 'abacus':
@@ -72,6 +78,18 @@ export default memo(function VisualProblem({ visualType, visualData, colorMode =
       return <VisualContainer type="pictograph"><PictographVisual rows={(visualData.rows as {label: string; emoji: string; count: number}[]) || []} title={String(visualData.title || 'Picture Graph')} /></VisualContainer>
     case 'array_visual':
       return <VisualContainer type="array_visual"><ArrayVisual rows={Number(visualData.rows) || 3} cols={Number(visualData.cols) || 4} emoji={String(visualData.emoji || '⭐')} /></VisualContainer>
+    case 'fraction_bar':
+      return <VisualContainer type="fraction_bar"><FractionBarVisual numerator={Number(visualData.numerator) || 1} denominator={Number(visualData.denominator) || 4} color={String(visualData.color || '#6366F1')} second={visualData.second as {numerator: number; denominator: number} | null} /></VisualContainer>
+    case 'scenario_picture':
+      return <VisualContainer type="scenario_picture"><ScenarioPictureVisual scene={String(visualData.scene_emoji || '')} description={String(visualData.description || '')} /></VisualContainer>
+    case 'sequence_pictures':
+      return <VisualContainer type="sequence_pictures"><SequencePicturesVisual steps={(visualData.steps as string[]) || []} labels={(visualData.labels as string[]) || []} blankIndex={Number(visualData.blank_index ?? -1)} /></VisualContainer>
+    case 'bar_chart':
+      return <VisualContainer type="bar_chart"><BarChartVisual bars={(visualData.bars as {label: string; value: number; color: string}[]) || []} title={String(visualData.title || '')} /></VisualContainer>
+    case 'food_plate':
+      return <VisualContainer type="food_plate"><FoodPlateVisual groups={(visualData.groups as {name: string; emoji: string; color: string}[]) || []} blankIndex={Number(visualData.blank_index ?? -1)} /></VisualContainer>
+    case 'percentage_bar':
+      return <VisualContainer type="percentage_bar"><PercentageBarVisual percent={Number(visualData.percent) || 25} color={String(visualData.color || '#6366F1')} /></VisualContainer>
     default:
       return null
   }
@@ -400,10 +418,11 @@ function BaseTenBlocksVisual({ numbers }: { numbers: number[]; operation: string
 
 /* ── Number Line ── */
 
-function NumberLineVisual({ start, end, step, highlight, useColor }: { start: number; end: number; step: number; highlight?: number; useColor?: boolean }) {
+function NumberLineVisual({ start, end, step, highlight, useColor, hopsFrom = -1, hopsCount = 0, hopsDirection = 'forward', highlightStart = -1 }: { start: number; end: number; step: number; highlight?: number; useColor?: boolean; hopsFrom?: number; hopsCount?: number; hopsDirection?: string; highlightStart?: number }) {
   if (step <= 0 || end <= start) return null
-  const w = 280, h = 40, pad = 20
-  const lineY = 20
+  const hasHops = hopsCount > 0 && hopsFrom >= 0
+  const w = 280, h = hasHops ? 55 : 40, pad = 20
+  const lineY = hasHops ? 35 : 20
   const range = end - start
   const toX = (val: number) => pad + ((val - start) / range) * (w - 2 * pad)
   const ticks: number[] = []
@@ -419,6 +438,24 @@ function NumberLineVisual({ start, end, step, highlight, useColor }: { start: nu
           <text x={toX(v)} y={lineY + 15} textAnchor="middle" fontSize="7" fill="currentColor">{v}</text>
         </g>
       ))}
+      {/* Hop arcs */}
+      {hasHops && Array.from({ length: hopsCount }).map((_, i) => {
+        const fromN = hopsDirection === 'forward' ? hopsFrom + i : hopsFrom - i
+        const toN = hopsDirection === 'forward' ? hopsFrom + i + 1 : hopsFrom - i - 1
+        if (fromN < start || fromN > end || toN < start || toN > end) return null
+        const x1 = toX(fromN)
+        const x2 = toX(toN)
+        const midX = (x1 + x2) / 2
+        return (
+          <path key={`hop-${i}`} d={`M ${x1} ${lineY - 3} Q ${midX} ${lineY - 18 - i * 1.5} ${x2} ${lineY - 3}`}
+                fill="none" stroke="#F97316" strokeWidth="2" strokeDasharray="4 2" />
+        )
+      })}
+      {/* Start marker */}
+      {highlightStart >= 0 && highlightStart >= start && highlightStart <= end && (
+        <circle cx={toX(highlightStart)} cy={lineY} r="5" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
+      )}
+      {/* End marker */}
       {highlight != null && highlight >= start && highlight <= end && (
         <circle cx={toX(highlight)} cy={lineY} r="4" fill={useColor ? '#88a0b8' : 'none'} className={useColor ? 'token-cf' : undefined} stroke="currentColor" strokeWidth="2" />
       )}
@@ -552,50 +589,33 @@ function GridSymmetryVisual({ gridSize, filledCells, foldAxis }: { gridSize: num
 
 /* ── Money Coins ── */
 
-function MoneyCoinsVisual({ coins }: { coins: { value: number; count: number }[] }) {
-  if (!coins.length) return null
-
-  const itemW = 52
-  const h = 80
-  const totalW = Math.max(250, coins.length * itemW + 20)
+function MoneyCoinsVisual({ items }: { items: {value: number; type: string; label: string; color: string}[]; total: number }) {
+  if (!items.length) return null
 
   return (
-    <svg
-      viewBox={`0 0 ${totalW} ${h}`}
-      className="w-full h-full text-foreground print:text-black"
-      role="img"
-      aria-label={coins.map(c => `${c.count} x ₹${c.value}`).join(', ')}
-    >
-      {coins.map((coin, i) => {
-        const cx = 26 + i * itemW
-        const isCoin = coin.value <= 10
-        return (
-          <g key={i}>
-            {isCoin ? (
-              /* Coin: circle */
-              <>
-                <circle cx={cx} cy={30} r={18} fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <circle cx={cx} cy={30} r={14} fill="none" stroke="currentColor" strokeWidth="0.6" />
-                <text x={cx} y={28} textAnchor="middle" fontSize="7" fill="currentColor">&#8377;</text>
-                <text x={cx} y={38} textAnchor="middle" fontSize="9" fill="currentColor" fontWeight="600">{coin.value}</text>
-              </>
-            ) : (
-              /* Note: rectangle */
-              <>
-                <rect x={cx - 18} y={14} width={36} height={22} rx="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <rect x={cx - 14} y={17} width={28} height={16} rx="2" fill="none" stroke="currentColor" strokeWidth="0.6" />
-                <text x={cx} y={26} textAnchor="middle" fontSize="7" fill="currentColor">&#8377;</text>
-                <text x={cx} y={34} textAnchor="middle" fontSize="7" fill="currentColor" fontWeight="600">{coin.value}</text>
-              </>
-            )}
-            {/* Count label */}
-            <text x={cx} y={62} textAnchor="middle" fontSize="8" fill="currentColor" opacity="0.7">
-              x{coin.count}
-            </text>
-          </g>
-        )
-      })}
-    </svg>
+    <div className="py-4 px-4 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-2xl border border-yellow-200/60 w-full">
+      <div className="flex items-center justify-center gap-2 flex-wrap">
+        {items.map((item, i) => (
+          item.type === 'coin' ? (
+            <div key={i} className="w-11 h-11 rounded-full border-2 flex items-center justify-center shadow-md"
+                 style={{ borderColor: item.color, background: `linear-gradient(135deg, ${item.color}30, ${item.color}60)` }}>
+              <span className="text-xs font-bold" style={{ color: item.color }}>{item.label}</span>
+            </div>
+          ) : (
+            <div key={i} className="px-3 py-1.5 rounded-lg border-2 flex items-center justify-center shadow-md"
+                 style={{ borderColor: item.color, background: `linear-gradient(135deg, ${item.color}15, ${item.color}30)` }}>
+              <span className="text-sm font-bold" style={{ color: item.color }}>{item.label}</span>
+            </div>
+          )
+        ))}
+        <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center">
+          <span className="text-white text-sm font-bold">=</span>
+        </div>
+        <div className="px-3 py-2 rounded-xl border-2 border-dashed border-amber-400 bg-white">
+          <span className="text-lg font-bold text-amber-600">₹?</span>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -715,6 +735,174 @@ function ArrayVisual({ rows, cols, emoji }: { rows: number; cols: number; emoji:
       <p className="text-center text-xs text-amber-600/70 mt-2 font-medium">
         {rows} rows × {cols} columns = ?
       </p>
+    </div>
+  )
+}
+
+/* ── Fraction Bar ── */
+
+function FractionBarVisual({ numerator, denominator, color, second }: { numerator: number; denominator: number; color: string; second: {numerator: number; denominator: number} | null }) {
+  const totalParts = 12
+
+  const renderBar = (num: number, den: number, barColor: string) => {
+    const filled = Math.round((num / den) * totalParts)
+    return (
+      <div className="flex items-center gap-3">
+        <div className="flex-1 flex rounded-lg overflow-hidden border border-slate-200 h-8">
+          {Array.from({ length: totalParts }).map((_, i) => (
+            <div key={i} className="flex-1 border-r border-white/50 last:border-r-0"
+                 style={{ backgroundColor: i < filled ? barColor : '#F1F5F9' }} />
+          ))}
+        </div>
+        <span className="text-sm font-bold min-w-[40px]" style={{ color: barColor }}>
+          {num}/{den}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-200/60 w-full space-y-2">
+      {renderBar(numerator, denominator, color)}
+      {second && renderBar(second.numerator, second.denominator, '#EF4444')}
+      {second && (
+        <p className="text-center text-xs text-indigo-600/70 font-medium">
+          Which fraction is bigger?
+        </p>
+      )}
+    </div>
+  )
+}
+
+/* ── Scenario Picture ── */
+
+function ScenarioPictureVisual({ scene, description }: { scene: string; description: string }) {
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-rose-50 to-pink-50 rounded-2xl border border-rose-200/60 w-full">
+      <div className="text-center">
+        <div className="text-4xl md:text-5xl leading-relaxed tracking-wider mb-2 select-none">
+          {scene}
+        </div>
+        <p className="text-sm text-rose-700/80 font-medium">{description}</p>
+      </div>
+    </div>
+  )
+}
+
+/* ── Sequence Pictures ── */
+
+function SequencePicturesVisual({ steps, labels, blankIndex }: { steps: string[]; labels: string[]; blankIndex: number }) {
+  if (!steps.length) return null
+
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-sky-50 to-cyan-50 rounded-2xl border border-sky-200/60 w-full">
+      <div className="flex items-center justify-center gap-1 flex-wrap">
+        {steps.map((step, i) => (
+          <React.Fragment key={i}>
+            <div className="flex flex-col items-center">
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 ${
+                i === blankIndex ? 'border-dashed border-orange-400 bg-orange-50' : 'border-sky-200 bg-white'
+              }`}>
+                {i === blankIndex ? (
+                  <span className="text-xl font-bold text-orange-400">?</span>
+                ) : (
+                  <span className="text-2xl select-none">{step}</span>
+                )}
+              </div>
+              <span className="text-[9px] text-slate-500 mt-1 text-center max-w-[60px] leading-tight">
+                {i === blankIndex ? '???' : labels[i]}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <span className="text-lg text-sky-300 mx-0.5">→</span>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Bar Chart ── */
+
+function BarChartVisual({ bars, title }: { bars: {label: string; value: number; color: string}[]; title: string }) {
+  if (!bars.length) return null
+  const maxVal = Math.max(...bars.map(b => b.value), 1)
+
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-slate-50 to-gray-50 rounded-2xl border border-slate-200/60 w-full">
+      {title && <p className="text-xs font-bold text-slate-600 text-center mb-3">{title}</p>}
+      <div className="flex items-end justify-center gap-3 h-32">
+        {bars.map((bar, i) => (
+          <div key={i} className="flex flex-col items-center gap-1">
+            <span className="text-xs font-bold" style={{ color: bar.color }}>{bar.value}</span>
+            <div className="w-10 rounded-t-lg shadow-sm transition-all"
+                 style={{
+                   height: `${(bar.value / maxVal) * 100}px`,
+                   backgroundColor: bar.color,
+                   minHeight: '8px',
+                 }} />
+            <span className="text-[9px] text-slate-500 font-medium text-center max-w-[48px] leading-tight">{bar.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Food Plate ── */
+
+function FoodPlateVisual({ groups, blankIndex }: { groups: {name: string; emoji: string; color: string}[]; blankIndex: number }) {
+  if (!groups.length) return null
+
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-lime-50 to-emerald-50 rounded-2xl border border-lime-200/60 w-full">
+      <div className="relative w-48 h-48 mx-auto rounded-full border-4 border-lime-300 bg-white overflow-hidden">
+        {groups.map((group, i) => {
+          const angle = (i / groups.length) * 360
+          const isBlank = i === blankIndex
+          return (
+            <div key={i} className="absolute text-center"
+                 style={{
+                   top: `${50 + 30 * Math.sin((angle - 90) * Math.PI / 180)}%`,
+                   left: `${50 + 30 * Math.cos((angle - 90) * Math.PI / 180)}%`,
+                   transform: 'translate(-50%, -50%)',
+                 }}>
+              {isBlank ? (
+                <div className="text-lg font-bold text-orange-400">❓</div>
+              ) : (
+                <>
+                  <div className="text-xl leading-none">{group.emoji.slice(0, 2)}</div>
+                  <div className="text-[8px] font-bold mt-0.5" style={{ color: group.color }}>{group.name}</div>
+                </>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <p className="text-center text-xs text-lime-600/70 mt-2 font-medium">Balanced Diet Plate</p>
+    </div>
+  )
+}
+
+/* ── Percentage Bar ── */
+
+function PercentageBarVisual({ percent, color }: { percent: number; color: string }) {
+  return (
+    <div className="py-4 px-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200/60 w-full">
+      <div className="relative w-full h-10 rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+        <div className="absolute inset-y-0 left-0 rounded-xl transition-all flex items-center justify-center"
+             style={{ width: `${percent}%`, backgroundColor: color }}>
+          {percent >= 20 && <span className="text-white text-sm font-bold">{percent}%</span>}
+        </div>
+        {[25, 50, 75].map(mark => (
+          <div key={mark} className="absolute inset-y-0 border-l border-dashed border-slate-300"
+               style={{ left: `${mark}%` }} />
+        ))}
+      </div>
+      <div className="flex justify-between mt-1 text-[9px] text-slate-400 font-medium px-1">
+        <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+      </div>
     </div>
   )
 }
