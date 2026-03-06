@@ -336,30 +336,20 @@ async def export_worksheet_pdf(
     try:
         worksheet_dict = body.worksheet.model_dump()
 
-        # Quality score gate — block export if below threshold
+        # Quality score — log warning if below threshold but don't block export.
+        # Users should always be able to download worksheets the system generated.
         try:
             from app.services.quality_scorer import score_worksheet as _score_ws
 
             _qs = _score_ws(worksheet_dict)
             if not _qs.export_allowed:
-                top_failures = sorted(_qs.failures, key=lambda f: f.points_deducted, reverse=True)[:5]
-                raise HTTPException(
-                    status_code=422,
-                    detail={
-                        "error": "quality_below_threshold",
-                        "total_score": _qs.total_score,
-                        "threshold": _qs.export_threshold,
-                        "dimensions": {
-                            name: {"weighted_score": dim.weighted_score, "weight": dim.weight}
-                            for name, dim in _qs.dimensions.items()
-                        },
-                        "top_failures": [
-                            {"check_id": f.check_id, "severity": f.severity, "message": f.message} for f in top_failures
-                        ],
-                    },
+                top_failures = sorted(_qs.failures, key=lambda f: f.points_deducted, reverse=True)[:3]
+                logger.warning(
+                    "quality_below_threshold_on_export",
+                    score=_qs.total_score,
+                    threshold=_qs.export_threshold,
+                    failures=[f.check_id for f in top_failures],
                 )
-        except HTTPException:
-            raise  # re-raise the 422
         except Exception as _qs_exc:
             logger.warning("quality_score_skipped", error=str(_qs_exc))
 
