@@ -806,46 +806,46 @@ def _get_image_keywords_for_subject(subject: str) -> list[str]:
 
 # ── Topic → Image mapping for illustrated worksheets ──
 TOPIC_IMAGE_MAP = {
-    # Maths
+    # Maths — these topics use SVG visual_types (shapes, money_coins, etc.)
+    # so clipart images are skipped by _get_topic_images() for maths subjects.
     "addition": ["apple", "mango", "banana", "flower", "butterfly", "pencil_box"],
-    "subtraction": ["apple", "mango", "bird_flock", "flower", "balloon"],
-    "shapes": ["triangle_shape", "circle_shape", "rectangle_shape", "square_shape"],
-    "money": ["coin_1", "coin_2", "coin_5", "note_10", "note_50"],
+    "subtraction": ["apple", "mango", "parrot", "flower", "butterfly"],
+    # shapes → removed (uses visual_type), money → removed (uses visual_type=money_coins)
     "time": ["clock", "sun", "moon"],
-    "measurement": ["ruler", "scale", "thermometer"],
-    "numbers": ["apple", "mango", "star", "pencil_box", "book_open"],
+    "measurement": ["ruler", "thermometer"],
+    "numbers": ["apple", "mango", "sun", "pencil_box", "book_open"],
     "multiplication": ["apple", "mango", "flower", "egg"],
-    "division": ["apple", "mango", "roti", "laddoo"],
+    "division": ["apple", "mango", "roti", "egg"],
     "fractions": [],  # uses visual_type=pie_fraction instead
     "data handling": [],
     "spatial": [],
     # English
-    "alphabet": ["apple", "ball", "cat", "dog", "elephant"],
+    "alphabet": ["apple", "cricket", "cat", "dog", "elephant"],
     "nouns": ["dog", "cat", "book_open", "school_bag", "tree"],
     "verbs": ["cricket", "football", "bicycle", "bus"],
     "pronouns": ["family_group", "mother", "father", "baby"],
     "adjectives": ["sun", "flower", "elephant", "ant"],
     "sentences": ["school_bag", "book_open", "pencil_box"],
     "vocabulary": ["cow", "dog", "cat", "mango", "apple", "banana"],
-    "phonics": ["apple", "ball", "cat", "dog", "egg", "fish"],
-    "rhyming": ["cat", "bat", "star", "car"],
+    "phonics": ["apple", "cricket", "cat", "dog", "egg", "fish"],
+    "rhyming": ["cat", "parrot", "sun", "car"],
     "greetings": ["family_group", "school_bag"],
     "seasons": ["sunny", "rainy", "snowy", "windy", "cloudy"],
     "family": ["family_group", "grandparents", "mother", "father", "baby"],
     # EVS
     "animals": ["cow", "lion", "tiger", "elephant", "monkey", "parrot", "fish", "butterfly", "rabbit"],
     "plants": ["tree", "flower", "rose", "sunflower", "tulsi", "lotus"],
-    "food": ["mango", "apple", "banana", "rice", "roti", "laddoo", "milk"],
+    "food": ["mango", "apple", "banana", "rice", "roti", "egg", "milk"],
     "body": ["human_body", "eye", "ear", "nose", "tongue", "hand"],
-    "water": ["water_drop", "rain", "pond", "ocean", "tap"],
-    "shelter": ["house", "nest", "kennel", "stable"],
+    "water": ["water_drop", "rainy", "pond", "ocean", "water_tap"],
+    "shelter": ["family_group", "nest", "dog", "horse"],
     "senses": ["eye", "ear", "nose", "tongue", "hand"],
     "weather": ["sunny", "rainy", "cloudy", "snowy", "windy"],
     "habitats": ["forest", "pond", "desert", "ocean", "farm"],
     "nutrition": ["mango", "apple", "banana", "rice", "roti", "milk", "egg"],
     # Hindi
     "varnamala": ["apple", "mango", "elephant", "flower"],
-    "two letter": ["apple", "mango", "book_open", "ball"],
+    "two letter": ["apple", "mango", "book_open", "cricket"],
     "three letter": ["banana", "mango", "apple", "flower"],
     "vachan": ["cow", "cat", "dog", "book_open", "flower"],
     "ling": ["cow", "cat", "dog", "book_open", "flower"],
@@ -853,28 +853,51 @@ TOPIC_IMAGE_MAP = {
     "shabd": ["book_open", "pencil_box", "school_bag", "apple"],
     "vilom": ["sun", "moon", "sunny", "rainy"],
     "family words": ["family_group", "grandparents", "mother", "father"],
-    "nature": ["tree", "flower", "sun", "moon", "cloud"],
+    "nature": ["tree", "flower", "sun", "moon", "cloudy"],
     "rhymes": ["butterfly", "flower", "sun", "moon"],
     "kahani": ["book_open", "family_group", "tree", "sun"],
     # Science
     "human body": ["human_body", "eye", "ear", "nose", "hand"],
     "digestion": ["apple", "roti", "rice", "human_body"],
-    "air": ["balloon", "windy", "fan"],
-    "light": ["sun", "torch", "candle"],
+    "air": ["windy", "wind_turbine"],
+    "light": ["sun", "light_bulb", "lamp"],
     "magnet": [],
     "force": ["car", "bicycle", "cricket"],
-    "energy": ["sun", "torch", "candle"],
+    "energy": ["sun", "light_bulb", "solar_panel"],
     "matter": ["water_drop"],
     # Computer
     "parts of computer": ["desktop_computer", "laptop", "keyboard", "mouse", "monitor"],
     "mouse": ["mouse", "desktop_computer"],
     "keyboard": ["keyboard", "desktop_computer"],
     "typing": ["keyboard", "laptop"],
+    "internet": ["laptop", "tablet"],
+    "storage": ["usb_drive", "laptop"],
+    "output devices": ["monitor", "printer", "speaker", "headphones"],
+    "input devices": ["keyboard", "mouse"],
     # Health
     "hygiene": ["toothbrush", "soap", "handwash", "comb", "towel"],
     "exercise": ["cricket", "football", "yoga_pose"],
     "posture": ["yoga_pose"],
     "eating": ["mango", "apple", "roti", "milk"],
+    "safety": ["first_aid_kit", "bandage", "water_bottle"],
+    "dental": ["toothbrush", "teeth"],
+    "sleep": ["sleeping", "moon"],
+    # GK
+    "india": ["taj_mahal", "red_fort", "india_gate", "indian_flag", "ashoka_chakra"],
+    "monuments": ["taj_mahal", "red_fort", "qutub_minar", "gateway_of_india", "india_gate"],
+    "national symbols": [
+        "indian_flag",
+        "ashoka_chakra",
+        "national_emblem",
+        "lotus_national",
+        "tiger_national",
+        "peacock_national",
+    ],
+    "solar system": ["sun", "moon", "earth", "mars", "jupiter", "saturn", "solar_system"],
+    "continents": ["globe", "world_map", "continent_asia", "continent_africa", "continent_europe"],
+    "festivals": ["diwali", "holi", "eid", "christmas", "republic_day", "independence_day"],
+    "musical instruments": ["tabla", "sitar", "flute", "harmonium", "drum"],
+    "sports": ["cricket", "football", "badminton", "hockey", "kabaddi"],
 }
 
 
@@ -2109,6 +2132,15 @@ def build_slots(
         # Boost for Science/EVS — these subjects benefit from visuals at every grade
         if subject.lower() in ("science", "evs"):
             auto_image_rate = max(auto_image_rate, 0.4)
+
+        # Boost for other text-heavy subjects with good image coverage
+        subject_lower = subject.lower()
+        if subject_lower in ("english", "hindi", "health"):
+            auto_image_rate = max(auto_image_rate, 0.4)
+        elif subject_lower in ("computer",):
+            auto_image_rate = max(auto_image_rate, 0.5)
+        elif subject_lower in ("gk", "general knowledge"):
+            auto_image_rate = max(auto_image_rate, 0.6)
 
         # Override with problem_style if explicitly set
         if problem_style == "visual":
