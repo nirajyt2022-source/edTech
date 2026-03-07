@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { PageHeader } from '@/components/ui/page-header'
 import { api } from '@/lib/api'
-// formatSkillTag removed — now handled by Jinja2 template
+import { formatSkillTag } from '@/lib/utils'
 import { useChildren } from '@/lib/children'
 import { useClasses } from '@/lib/classes'
 import { useProfile } from '@/lib/profile'
@@ -17,13 +17,14 @@ import SkillSelector from '@/components/SkillSelector'
 import CBSESyllabusViewer from '@/components/CBSESyllabusViewer'
 import { Skeleton } from '@/components/ui/skeleton'
 import TemplateSelector, { type WorksheetTemplate } from '@/components/TemplateSelector'
-// VisualProblem removed — visuals now rendered in Jinja2 template
+import VisualProblem from '@/components/VisualProblem'
 import { useEngagement } from '@/lib/engagement'
 import { notify } from '@/lib/toast'
 import RevisionPreview, { type RevisionNotes } from '@/components/RevisionPreview'
 import FlashcardPreview, { type FlashcardSetData } from '@/components/FlashcardPreview'
 import TextbookUpload from '@/components/TextbookUpload'
-import { GRADES } from '@/lib/constants'
+
+const GRADES = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5']
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard']
 const LANGUAGES_BY_REGION: Record<string, string[]> = {
   India: ['English', 'Hindi'],
@@ -32,15 +33,14 @@ const LANGUAGES_BY_REGION: Record<string, string[]> = {
 // Arabic is "Coming Soon" for UAE — shown separately as disabled
 const QUESTION_COUNTS = ['5', '10', '15', '20']
 const PROBLEM_STYLES = [
-  { value: 'standard', label: 'Standard (word only)' },
-  { value: 'visual', label: 'Visual (pictures)' },
-  { value: 'mixed', label: 'Mixed (words + pictures)' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'visual', label: 'Visual' },
+  { value: 'mixed', label: 'Mixed' },
 ]
-
-/** Strip redundant "(Class X)" suffix from topic display labels */
-function displayTopicName(topic: string): string {
-  return topic.replace(/\s*\(Class\s*\d+\)\s*$/i, '').trim()
-}
+const VISUAL_THEMES = [
+  { value: 'mono', label: 'Print-safe (Monochrome)' },
+  { value: 'color', label: 'Color on screen' },
+]
 
 // ─── Localization labels ─────────────────────────────────────────────────────
 const LABELS_EN = {
@@ -103,9 +103,33 @@ const LABELS_HINDI = {
   hideAnswerKey: 'उत्तर कुंजी छुपाएं',
   difficultyBreakdown: 'कठिनाई विवरण',
 }
-// FORMAT_LABELS removed — now handled by Jinja2 template
+const FORMAT_LABELS_EN: Record<string, string> = {
+  mcq: 'MCQ', fill_blank: 'Fill in the Blank', true_false: 'True/False',
+  short_answer: 'Short Answer', word_problem: 'Word Problem',
+  error_spot: 'Error Spot', sequence_question: 'Sequence',
+  column_setup: 'Column Sum', missing_number: 'Missing Number',
+  place_value: 'Place Value', estimation: 'Estimation',
+  growing_pattern: 'Pattern', multi_step: 'Multi-Step',
+  thinking: 'Thinking', match_columns: 'Match Columns',
+  rewrite: 'Rewrite', sentence_completion: 'Sentence Completion',
+  label_diagram: 'Label Diagram', classify: 'Classify',
+}
+const FORMAT_LABELS_HINDI: Record<string, string> = {
+  mcq: 'बहुविकल्पी', fill_blank: 'रिक्त स्थान भरें', true_false: 'सही/गलत',
+  short_answer: 'लघु उत्तर', word_problem: 'शब्द समस्या',
+  error_spot: 'त्रुटि खोजें', sequence_question: 'क्रम',
+  column_setup: 'स्तंभ जोड़', missing_number: 'लुप्त संख्या',
+  place_value: 'स्थान मान', estimation: 'अनुमान',
+  growing_pattern: 'पैटर्न', multi_step: 'बहु-चरण',
+  thinking: 'चिंतन', match_columns: 'सुमेलित करें',
+  rewrite: 'पुनर्लेखन', sentence_completion: 'वाक्य पूर्ति',
+  label_diagram: 'चित्र लेबल', classify: 'वर्गीकरण',
+}
 function getLabels(subject?: string) {
   return subject?.toLowerCase() === 'hindi' ? LABELS_HINDI : LABELS_EN
+}
+function getFormatLabels(subject?: string) {
+  return subject?.toLowerCase() === 'hindi' ? FORMAT_LABELS_HINDI : FORMAT_LABELS_EN
 }
 
 // Fallback topics for when curriculum API is unavailable
@@ -244,7 +268,8 @@ const HINDI_TOPICS_BY_GRADE: Record<number, string[]> = {
   5: ['Muhavare (Class 5)', 'Paryayvachi Shabd (Class 5)', 'Vilom Shabd (Class 5)', 'Samas (Class 5)', 'Samvad Lekhan (Class 5)'],
 }
 
-// hasDevanagari removed — now handled by Jinja2 template
+/** Returns true when the string contains at least one Devanagari character. */
+const hasDevanagari = (text: string) => /[\u0900-\u097F]/.test(text)
 
 interface Question {
   id: string
@@ -284,7 +309,6 @@ interface Worksheet {
     avg_streak: number
     total_attempts: number
   } | null
-  rendered_html?: string
 }
 
 interface SyllabusTopic {
@@ -330,7 +354,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [questionCount, setQuestionCount] = useState('10')
   const [language, setLanguage] = useState('English')
   const [problemStyle, setProblemStyle] = useState('standard')
-  // visualTheme removed — visuals now rendered in Jinja2 template
+  const [visualTheme, setVisualTheme] = useState<'mono' | 'color'>('mono')
   const [customInstructions, setCustomInstructions] = useState('')
 
   const [loading, setLoading] = useState(false)
@@ -342,15 +366,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [activeIdx, setActiveIdx] = useState(0)
   const [error, setError] = useState('')
   // generationWarnings removed from UI — internal quality signals logged to console only
-  const [, setQualityTier] = useState<string>('high')
+  const [qualityTier, setQualityTier] = useState<string>('high')
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [savedWorksheetId, setSavedWorksheetId] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
   const [showAnswers, setShowAnswers] = useState(false)
-  // revealedHints removed — hints now rendered in Jinja2 template
+  const [revealedHints, setRevealedHints] = useState<Set<string>>(new Set())
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
-  // viewMode removed — unified Jinja2 template is the only view now
   const [showCustomise, setShowCustomise] = useState(false)
   const [mode, setMode] = useState<'worksheet' | 'revision' | 'flashcards' | 'textbook'>('worksheet')
   const [revisionNotes, setRevisionNotes] = useState<RevisionNotes | null>(null)
@@ -371,7 +394,11 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   // CBSE syllabus state
   const [cbseSyllabus, setCbseSyllabus] = useState<SyllabusChapter[]>([])
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
-  // studentAnswers + handleStudentAnswer removed — interactive inputs now in Jinja2 template
+  const [studentAnswers, setStudentAnswers] = useState<Record<string, string>>({})
+
+  const handleStudentAnswer = useCallback((questionId: string, value: string) => {
+    setStudentAnswers(prev => ({ ...prev, [questionId]: value }))
+  }, [])
   const [loadingSyllabus, setLoadingSyllabus] = useState(false)
 
   // Pre-fill form from URL search params (e.g. from Progress dashboard links)
@@ -421,7 +448,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const autoGeneratePendingRef = useRef(false)
   useEffect(() => {
     selectionVersionRef.current += 1
-  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, problemStyle, customInstructions])
+  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, problemStyle, visualTheme, customInstructions])
 
   // Reset subject, topic, and language when region changes
   useEffect(() => {
@@ -677,7 +704,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     }
 
     // Determine which topic(s) to use
-    const useAdvancedSelection = isTeacher && !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
+    const useAdvancedSelection = !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
     const topicsToUse = useAdvancedSelection ? selectedTopics : [topic]
 
     if (!board || !grade || !difficulty) {
@@ -689,15 +716,15 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       return
     }
     // Validate skill/topic selection
-    if (isTeacher && useCurriculumFlow && selectedSkills.length === 0) {
+    if (useCurriculumFlow && selectedSkills.length === 0) {
       setError('Please select at least one skill')
       return
     }
-    if (isTeacher && !useCurriculumFlow && useAdvancedSelection && selectedTopics.length === 0) {
+    if (!useCurriculumFlow && useAdvancedSelection && selectedTopics.length === 0) {
       setError('Please select at least one topic')
       return
     }
-    if ((!isTeacher || (!useCurriculumFlow && !useAdvancedSelection)) && !topic) {
+    if (!useCurriculumFlow && !useAdvancedSelection && !topic) {
       setError('Please select a topic')
       return
     }
@@ -708,14 +735,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     setWorksheets(null)
     setActiveIdx(0)
     setShowAnswers(false)
-    // revealedHints reset removed — hints now in Jinja2 template
+    setRevealedHints(new Set())
 
     const requestVersion = selectionVersionRef.current
 
     // Use chapter name as context if from syllabus, or combine selected topics/skills
     const topicWithContext = syllabus && chapter
       ? `${chapter} - ${topic}`
-      : isTeacher && useCurriculumFlow
+      : useCurriculumFlow
         ? selectedSkills.slice(0, 5).join(', ')
         : useAdvancedSelection
           ? topicsToUse.slice(0, 5).join(', ')
@@ -732,8 +759,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
         language,
         problem_style: problemStyle,
         custom_instructions: customInstructions || undefined,
-        skills: isTeacher && useCurriculumFlow ? selectedSkills : undefined,
-        logic_tags: isTeacher && useCurriculumFlow ? selectedLogicTags : undefined,
+        skills: useCurriculumFlow ? selectedSkills : undefined,
+        logic_tags: useCurriculumFlow ? selectedLogicTags : undefined,
         region,
       })
       // Discard stale result if selections changed during request
@@ -775,7 +802,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   // Reset answer-reveal state whenever the active worksheet changes identity
   useEffect(() => {
     setShowAnswers(false)
-    // revealedHints reset removed — hints now in Jinja2 template
+    setRevealedHints(new Set())
   }, [worksheet?.title, worksheet?.topic, worksheet?.grade])
 
   // Auto-trigger generation once all required fields are ready (QuickPracticeButton flow)
@@ -783,7 +810,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     if (!autoGeneratePendingRef.current) return
     if (!grade || !subject || !board || !difficulty) return
     // Mirror the same guard logic used in handleGenerate
-    const isAdvancedPath = isTeacher && !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
+    const isAdvancedPath = !syllabus && !useCurriculumFlow && cbseSyllabus.length > 0
     if (useCurriculumFlow && selectedSkills.length === 0) return
     if (!useCurriculumFlow && isAdvancedPath && selectedTopics.length === 0) return
     if (!useCurriculumFlow && !isAdvancedPath && !topic) return
@@ -806,35 +833,23 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     setDownloadingPdf(true)
     setDownloadingPdfType(pdfType)
     try {
-      // Use rendered HTML directly — opens browser print dialog (Save as PDF)
-      const htmlContent = worksheet.rendered_html
-      if (htmlContent) {
-        const w = window.open('', '_blank')
-        if (w) {
-          w.document.write(htmlContent)
-          w.document.close()
-          w.print()
-        }
-      } else {
-        // Fallback to backend API if no rendered_html
-        const response = await api.post('/api/worksheets/export-pdf', {
-          worksheet,
-          pdf_type: pdfType,
-        }, {
-          responseType: 'blob',
-        })
+      const response = await api.post('/api/worksheets/export-pdf', {
+        worksheet,
+        pdf_type: pdfType,
+      }, {
+        responseType: 'blob',
+      })
 
-        const typeSuffix = pdfType !== 'full' ? `_${pdfType}` : ''
-        const blob = new Blob([response.data], { type: 'application/pdf' })
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `${worksheet.title.replace(/\s+/g, '_')}${typeSuffix}.pdf`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
-      }
+      const typeSuffix = pdfType !== 'full' ? `_${pdfType}` : ''
+      const blob = new Blob([response.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${worksheet.title.replace(/\s+/g, '_')}${typeSuffix}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
 
       // Record completion for engagement tracking (fire-and-forget — don't block PDF download)
       if (activeChildId) {
@@ -1333,7 +1348,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     </div>
                   )}
 
-                  {(mode === 'revision' || mode === 'flashcards' || syllabus || (!isTeacher) || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
+                  {(mode === 'revision' || mode === 'flashcards' || syllabus || (!useCurriculumFlow && cbseSyllabus.length === 0) || (useCurriculumFlow && needsTopic)) && (
                     <div className="space-y-2">
                       <Label htmlFor="topic" className="text-sm font-semibold">Topic *</Label>
                       <Select
@@ -1350,7 +1365,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                         </SelectTrigger>
                         <SelectContent>
                           {availableTopics.map((t) => (
-                            <SelectItem key={t} value={t}>{displayTopicName(t)}</SelectItem>
+                            <SelectItem key={t} value={t}>{t}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -1358,8 +1373,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   )}
                 </div>
 
-                {/* Skill Selector (curriculum-based flow) — worksheet mode, teachers only */}
-                {mode === 'worksheet' && isTeacher && useCurriculumFlow && curriculumSkills.length > 0 && !syllabus && (
+                {/* Skill Selector (curriculum-based flow) — worksheet mode only */}
+                {mode === 'worksheet' && useCurriculumFlow && curriculumSkills.length > 0 && !syllabus && (
                   <div className="pt-2">
                     <SkillSelector
                       skills={curriculumSkills}
@@ -1369,8 +1384,8 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   </div>
                 )}
 
-                {/* Advanced Topic Selector (fallback for CBSE syllabus DB) — worksheet mode, teachers only */}
-                {mode === 'worksheet' && isTeacher && !useCurriculumFlow && !syllabus && cbseSyllabus.length > 0 && (
+                {/* Advanced Topic Selector (fallback for CBSE syllabus DB) — worksheet mode only */}
+                {mode === 'worksheet' && !useCurriculumFlow && !syllabus && cbseSyllabus.length > 0 && (
                   <div className="pt-2">
                     {loadingSyllabus ? (
                       <div className="space-y-4 p-4 rounded-xl border border-border/50 bg-secondary/20">
@@ -1398,26 +1413,26 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
               </div>
             </div>
 
-            {/* Advanced options — worksheet mode only */}
+            {/* Customise accordion toggle + Practice Settings — worksheet mode only */}
             {mode === 'worksheet' && (<>
-
-            {/* Advanced options toggle */}
             <button
-              type="button"
               onClick={() => setShowCustomise(!showCustomise)}
-              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700 mt-3 mb-1 cursor-pointer bg-transparent border-none p-0"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full py-2"
+              type="button"
             >
-              <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${showCustomise ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              <svg className={`w-4 h-4 transition-transform ${showCustomise ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
-              {showCustomise ? 'Hide advanced options' : 'Advanced options'}
+              Customise worksheet
               {!showCustomise && (difficulty !== 'Medium' || questionCount !== '10' || language !== 'English') && (
-                <span className="text-xs text-primary ml-2">{difficulty} · {questionCount}Q · {language}</span>
+                <span className="text-xs text-primary ml-auto">{difficulty} · {questionCount}Q · {language}</span>
               )}
             </button>
 
-            {showCustomise && (
-              <div className="space-y-5 pt-2 border-t border-slate-100 mt-1">
+            {/* Practice Settings — in Customise accordion */}
+            {showCustomise && (<div>
+              <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-wide mb-3">Practice Settings</p>
+              <div className="space-y-5">
                 <TemplateSelector
                   selectedTemplate={selectedTemplate}
                   onSelect={handleTemplateSelect}
@@ -1484,6 +1499,20 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="visualTheme" className="text-sm font-semibold">Visual Theme</Label>
+                    <Select value={visualTheme} onValueChange={(v) => setVisualTheme(v as 'mono' | 'color')}>
+                      <SelectTrigger id="visualTheme" className="bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VISUAL_THEMES.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -1497,7 +1526,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   />
                 </div>
               </div>
-            )}
+            </div>)}
             </>)}
 
             {/* Language selector — visible in revision and flashcards mode too */}
@@ -1524,18 +1553,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                 <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span className="flex-1">{error}</span>
-                <button
-                  onClick={() => {
-                    setError('')
-                    if (mode === 'revision') handleGenerateRevision()
-                    else if (mode === 'flashcards') handleGenerateFlashcards()
-                    else handleGenerate()
-                  }}
-                  className="flex-shrink-0 px-3 py-1.5 text-xs font-semibold rounded-lg bg-destructive/10 hover:bg-destructive/20 transition-colors"
-                >
-                  Try Again
-                </button>
+                {error}
               </div>
             )}
 
@@ -1742,9 +1760,28 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                 {/* Subtle Academic Header Accent */}
                 <div className="absolute top-0 left-0 right-0 h-px bg-primary/15 print:hidden" />
 
-                <CardHeader className="print:pb-4 print:px-0 print:pt-0 pt-6 px-10">
-                  <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                    <div className="space-y-3">
+                <CardHeader className="print:pb-4 print:px-0 print:pt-0 pt-12 px-10">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                    <div className="space-y-4">
+                      <CardTitle className="text-lg md:text-xl font-semibold text-foreground leading-snug">
+                        {worksheet.title}
+                      </CardTitle>
+                      <div className="flex flex-wrap gap-2 print:mt-4">
+                        {[worksheet.grade, worksheet.subject, worksheet.topic, worksheet.difficulty].map((tag, i) => (
+                          <span key={i} className="inline-flex items-center px-3 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold bg-secondary text-secondary-foreground border border-border/50">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Parent Tip (Trust P0) */}
+                      {worksheet.parent_tip && (
+                        <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900 print:bg-amber-50">
+                          <span className="font-semibold">{getLabels(worksheet.subject).forParents}</span>
+                          {worksheet.parent_tip}
+                        </div>
+                      )}
+
                       {/* Multi-skill tabs */}
                       {worksheets && worksheets.length > 1 && (
                         <div className="flex flex-wrap gap-1.5 print:hidden">
@@ -1796,14 +1833,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                       </Button>
 
                       <Button
-                        onClick={() => {
-                          const next = !showAnswers
-                          setShowAnswers(next)
-                          const iframe = document.querySelector('iframe[title="Worksheet view"]') as HTMLIFrameElement
-                          if (iframe?.contentWindow) {
-                            iframe.contentWindow.postMessage({ type: 'toggleAnswerKey', show: next }, '*')
-                          }
-                        }}
+                        onClick={() => setShowAnswers(!showAnswers)}
                         variant={showAnswers ? "default" : "outline"}
                         size="sm"
                         className={showAnswers ? "bg-primary/90 text-primary-foreground" : ""}
@@ -1934,33 +1964,556 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   </div>
                 </CardHeader>
 
-                {/* Unified Jinja2 Template View */}
-                {worksheet.rendered_html ? (
-                  <CardContent className="px-0 pb-0">
-                    <iframe
-                      srcDoc={worksheet.rendered_html}
-                      className="w-full border-0 rounded-b-xl"
-                      style={{ minHeight: '800px', height: '100vh', maxHeight: '2000px' }}
-                      title="Worksheet view"
-                      sandbox="allow-same-origin allow-scripts"
-                    />
-                  </CardContent>
-                ) : (
                 <CardContent className="px-10 pb-14 print:px-0 print:pb-0">
-                  {/* Fallback when rendered_html is not available */}
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-4">
-                      <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                      </svg>
-                    </div>
-                    <p className="text-lg font-semibold text-muted-foreground mb-2">Worksheet generated</p>
-                    <p className="text-sm text-muted-foreground/70 max-w-sm">
-                      This worksheet was generated without the visual template. Download the PDF to view the full worksheet.
-                    </p>
+                  {/* Print-only: Name / Date / Score header */}
+                  <div className="hidden print:flex print:justify-between print:items-end print:mb-6 print:pb-3 print:border-b print:border-black/20">
+                    <span className="text-sm">{getLabels(worksheet.subject).name} ______________________________</span>
+                    <span className="text-sm">{getLabels(worksheet.subject).date} ______________</span>
+                    <span className="text-sm">{getLabels(worksheet.subject).score} _____ / {worksheet.questions.length}</span>
                   </div>
+
+                  {/* NCERT Chapter Badge (Trust P2) */}
+                  {worksheet.chapter_ref && (
+                    <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200/60 text-sm text-emerald-800 print:bg-gray-50 print:border-gray-300 print:text-gray-700">
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                      </svg>
+                      <span className="italic">Aligned to NCERT — {worksheet.chapter_ref}</span>
+                    </div>
+                  )}
+
+                  {/* Learning Objectives (Gold-G5) */}
+                  {worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && (
+                    <div className="mb-8 p-5 border border-primary/20 rounded-xl bg-primary/[0.03] print:border-primary/30 print:rounded-none print:p-4">
+                      <p className="font-bold text-primary text-sm mb-2 tracking-tight">{getLabels(worksheet.subject).learningGoal}</p>
+                      <ul className="space-y-1">
+                        {worksheet.learning_objectives.map((obj, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
+                            <span className="text-primary mt-0.5 text-xs">&#10003;</span>
+                            <span>{obj}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Mastery Badge (Gold-G2) — screen only */}
+                  {worksheet.mastery_snapshot && (
+                    <div className="mb-6 flex items-center gap-3 text-sm print:hidden">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        worksheet.mastery_snapshot.mastery_level === 'mastered' ? 'bg-green-100 text-green-800' :
+                        worksheet.mastery_snapshot.mastery_level === 'improving' ? 'bg-blue-100 text-blue-800' :
+                        worksheet.mastery_snapshot.mastery_level === 'learning' ? 'bg-amber-100 text-amber-800' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {worksheet.mastery_snapshot.mastery_level === 'mastered' ? 'Mastered' :
+                         worksheet.mastery_snapshot.mastery_level === 'improving' ? 'Improving' :
+                         worksheet.mastery_snapshot.mastery_level === 'learning' ? 'Learning' : 'New Topic'}
+                      </span>
+                      <span className="text-muted-foreground">
+                        Personalised based on {worksheet.mastery_snapshot.total_attempts} previous attempts
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="mb-10 p-5 bg-secondary/30 border border-border/30 rounded-xl print:border-border print:bg-gray-100 print:rounded-none print:p-4">
+                    <p className="font-semibold text-foreground/80 flex items-center gap-2 mb-1 text-xs">
+                      {getLabels(worksheet.subject).instructionsTitle}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{getLabels(worksheet.subject).instructionsBody}</p>
+                  </div>
+
+                  {/* Format Diversity (Trust P4) */}
+                  {(() => {
+                    const fmtLabels = getFormatLabels(worksheet.subject)
+                    const L = getLabels(worksheet.subject)
+                    const counts = new Map<string, number>()
+                    for (const q of worksheet.questions) {
+                      const t = q.type || 'short_answer'
+                      counts.set(t, (counts.get(t) || 0) + 1)
+                    }
+                    if (counts.size <= 1) return null
+                    return (
+                      <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground/60 uppercase tracking-wider text-[10px]">{L.formats}</span>
+                        {[...counts.entries()].map(([fmt, count]) => (
+                          <span key={fmt} className="px-2 py-0.5 rounded bg-secondary/60 border border-border/40">
+                            {fmtLabels[fmt] || fmt.replace(/_/g, ' ')} <b>{count}</b>
+                          </span>
+                        ))}
+                      </div>
+                    )
+                  })()}
+
+                  {/* Difficulty Breakdown (Trust P3) */}
+                  {(() => {
+                    const normal = worksheet.questions.filter(q => !q.is_bonus)
+                    const fCount = normal.filter(q => q.role === 'recognition' || q.role === 'representation').length
+                    const aCount = normal.filter(q => q.role === 'application').length
+                    const sCount = normal.filter(q => q.role === 'error_detection' || q.role === 'thinking').length
+                    const hasRoleData = fCount + aCount + sCount > 0
+                    if (!hasRoleData) return null
+                    return (
+                      <div className="mb-8 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground/60 uppercase tracking-wider text-[10px]">{getLabels(worksheet.subject).difficulty}</span>
+                        {fCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733; {getLabels(worksheet.subject).foundation} <b>{fCount}</b></span>}
+                        {aCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733;&#9733; {getLabels(worksheet.subject).application} <b>{aCount}</b></span>}
+                        {sCount > 0 && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700 print:bg-gray-100 print:border-gray-300 print:text-gray-700">&#9733;&#9733;&#9733; {getLabels(worksheet.subject).stretch} <b>{sCount}</b></span>}
+                      </div>
+                    )
+                  })()}
+
+                  {/* Tiered question rendering */}
+                  {(() => {
+                    const normalQuestions = worksheet.questions.filter(q => !q.is_bonus)
+                    const bonusQuestions = worksheet.questions.filter(q => q.is_bonus)
+
+                    const foundationRoles = new Set(['recognition', 'representation'])
+                    const applicationRoles = new Set(['application'])
+                    const stretchRoles = new Set(['error_detection', 'thinking'])
+                    const tiers: { key: string; label: string; desc: string; stars: string; questions: Question[] }[] = []
+
+                    const foundationQs = normalQuestions.filter(q => foundationRoles.has(q.role || ''))
+                    const applicationQs = normalQuestions.filter(q => applicationRoles.has(q.role || ''))
+                    const stretchQs = normalQuestions.filter(q => stretchRoles.has(q.role || ''))
+
+                    const _L = getLabels(worksheet.subject)
+                    if (foundationQs.length) tiers.push({ key: 'foundation', label: _L.foundation, desc: _L.foundationDesc, stars: '\u2605', questions: foundationQs })
+                    if (applicationQs.length) tiers.push({ key: 'application', label: _L.application, desc: _L.applicationDesc, stars: '\u2605\u2605', questions: applicationQs })
+                    if (stretchQs.length) tiers.push({ key: 'stretch', label: _L.stretch, desc: _L.stretchDesc, stars: '\u2605\u2605\u2605', questions: stretchQs })
+
+                    // Fallback: if no role data, render flat
+                    const hasRoles = tiers.length > 0
+                    const allQuestions = hasRoles
+                      ? tiers.flatMap(t => t.questions)
+                      : normalQuestions
+
+                    let qNum = 0
+                    return (
+                      <div className="space-y-6 mt-10">
+                        {hasRoles ? tiers.map(tier => (
+                          <div key={tier.key}>
+                            <div className="flex items-baseline gap-3 mb-1 mt-6 print:mt-4">
+                              <span className="text-primary font-semibold text-sm">{tier.stars}</span>
+                              <h4 className="font-serif text-lg font-bold text-primary tracking-tight">{tier.label}</h4>
+                              <span className="text-xs text-muted-foreground italic ml-1">{tier.desc}</span>
+                            </div>
+                            <div className="border-b border-primary/20 mb-6 print:border-black/15" />
+
+                            <div className="space-y-10">
+                              {tier.questions.map((question) => {
+                                qNum++
+                                const idx = qNum
+                                const starCount = tier.key === 'foundation' ? 1 : tier.key === 'application' ? 2 : 3
+                                return (
+                                  <div key={question.id} className="relative group stagger-item question-card-container" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                                    <div className="flex gap-5">
+                                      <div className="flex-shrink-0 flex flex-col items-center gap-0.5 mt-0.5">
+                                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-primary/20 text-primary/70 text-xs font-bold print:border-black/30 print:text-black/60">
+                                          {idx}
+                                        </span>
+                                        <span className="text-[9px] text-amber-500 leading-none print:text-black/40" title={`${tier.label} (${starCount} star${starCount > 1 ? 's' : ''})`}>
+                                          {'\u2605'.repeat(starCount)}
+                                        </span>
+                                        {question.skill_tag && (
+                                          <span className="text-[8px] text-muted-foreground/70 leading-none max-w-[60px] text-center truncate" title={formatSkillTag(question.skill_tag)}>
+                                            {formatSkillTag(question.skill_tag)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex-grow space-y-4">
+                                        <p className={`text-lg font-medium text-foreground leading-snug${hasDevanagari(question.text ?? '') ? ' devanagari' : ''}`}>{question.text}</p>
+                                        {question.visual_type && question.visual_data && (
+                                          <div className="mt-3">
+                                            <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
+                                          </div>
+                                        )}
+                                        {!question.visual_type && question.images && question.images.length > 0 && (
+                                          <div className="flex gap-3 mt-3 flex-wrap">
+                                            {question.images.map((img, i) => (
+                                              <img
+                                                key={i}
+                                                src={img.path}
+                                                alt={img.alt}
+                                                className="w-24 h-24 object-contain rounded-lg border border-border/30 print:border-black/20"
+                                                loading="lazy"
+                                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                              />
+                                            ))}
+                                          </div>
+                                        )}
+                                        {question.options && (
+                                          <div className="options-grid mt-4">
+                                            {question.options.map((option, optIndex) => (
+                                              <div key={optIndex} className="flex items-center gap-3 p-3.5 rounded-lg border border-border/40 bg-white/50 print:bg-transparent print:border-black/20 print:rounded-none print:p-2.5">
+                                                <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">{String.fromCharCode(65 + optIndex)}</span>
+                                                <span className="text-sm text-foreground">{option}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                        {question.type === 'fill_blank' && (
+                                          <div className="mt-4 pt-4"><div className="border-b-2 border-dotted border-border w-2/3 h-6"></div></div>
+                                        )}
+                                        {(question.type === 'short_answer' || question.type === 'word_problem') && (
+                                          <div className="mt-4 space-y-4">
+                                            <div className="border-b border-border/40 h-8"></div>
+                                            <div className="border-b border-border/40 h-8"></div>
+                                            <div className="border-b border-border/40 h-8"></div>
+                                          </div>
+                                        )}
+                                        {/* Hint — shown on all questions that have one */}
+                                        {(question.hint || question.explanation) && (
+                                          <div className="mt-3 print:mt-2">
+                                            {revealedHints.has(question.id) ? (
+                                              <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-lg text-sm text-amber-900 italic print:bg-gray-50 print:border-gray-300 print:text-gray-600">
+                                                <span className="font-semibold not-italic text-amber-700 print:text-gray-700">{getLabels(worksheet.subject).hint} </span>
+                                                {question.hint || question.explanation}
+                                              </div>
+                                            ) : (
+                                              <button
+                                                onClick={() => setRevealedHints(prev => new Set(prev).add(question.id))}
+                                                className="inline-flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700 font-medium transition-colors print:hidden"
+                                              >
+                                                <span>&#128161;</span> Show Hint
+                                              </button>
+                                            )}
+                                          </div>
+                                        )}
+                                        {/* Inline answer when Show Answers is ON */}
+                                        {showAnswers && (question.correct_answer || question.explanation) && (
+                                          <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
+                                            <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">{getLabels(worksheet.subject).answerLabel}</span>
+                                            <span className="text-sm font-bold text-emerald-900 print:text-gray-900">
+                                              {question.correct_answer || question.explanation}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )) : (
+                          <div className="space-y-12">
+                            {allQuestions.map((question, index) => (
+                              <div key={question.id} className="relative group stagger-item question-card-container" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                                <div className="flex gap-5">
+                                  <div className="flex-shrink-0 flex flex-col items-center gap-0.5 mt-0.5">
+                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-foreground/15 text-foreground/50 text-xs font-semibold print:border-black/30 print:text-black/60">{index + 1}</span>
+                                    {question.skill_tag && (
+                                      <span className="text-[8px] text-muted-foreground/70 leading-none max-w-[60px] text-center truncate" title={formatSkillTag(question.skill_tag)}>
+                                        {formatSkillTag(question.skill_tag)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex-grow space-y-4">
+                                    <p className={`text-lg font-medium text-foreground leading-snug${hasDevanagari(question.text ?? '') ? ' devanagari' : ''}`}>{question.text}</p>
+                                    {question.visual_type && question.visual_data && (
+                                      <div className="mt-3">
+                                        <VisualProblem visualType={question.visual_type} visualData={question.visual_data} colorMode={visualTheme} studentAnswer={studentAnswers[question.id]} onStudentAnswerChange={(val) => handleStudentAnswer(question.id, val)} />
+                                      </div>
+                                    )}
+                                    {question.options && (
+                                      <div className="options-grid mt-4">
+                                        {question.options.map((option, optIndex) => (
+                                          <div key={optIndex} className="flex items-center gap-3 p-3.5 rounded-lg border border-border/40 bg-white/50 print:bg-transparent print:border-black/20 print:rounded-none print:p-2.5">
+                                            <span className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground flex-shrink-0">{String.fromCharCode(65 + optIndex)}</span>
+                                            <span className="text-sm text-foreground">{option}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {question.type === 'fill_blank' && (
+                                      <div className="mt-4 pt-4"><div className="border-b-2 border-dotted border-border w-2/3 h-6"></div></div>
+                                    )}
+                                    {(question.type === 'short_answer' || question.type === 'word_problem') && (
+                                      <div className="mt-4 space-y-4">
+                                        <div className="border-b border-border/40 h-8"></div>
+                                        <div className="border-b border-border/40 h-8"></div>
+                                        <div className="border-b border-border/40 h-8"></div>
+                                      </div>
+                                    )}
+                                    {/* Hint — shown on all questions that have one */}
+                                    {(question.hint || question.explanation) && (
+                                      <div className="mt-3 print:mt-2">
+                                        {revealedHints.has(question.id) ? (
+                                          <div className="p-3 bg-amber-50 border border-amber-200/60 rounded-lg text-sm text-amber-900 italic print:bg-gray-50 print:border-gray-300 print:text-gray-600">
+                                            <span className="font-semibold not-italic text-amber-700 print:text-gray-700">{getLabels(worksheet.subject).hint} </span>
+                                            {question.hint || question.explanation}
+                                          </div>
+                                        ) : (
+                                          <button
+                                            onClick={() => setRevealedHints(prev => new Set(prev).add(question.id))}
+                                            className="inline-flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700 font-medium transition-colors print:hidden"
+                                          >
+                                            <span>&#128161;</span> Show Hint
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                    {/* Inline answer when Show Answers is ON */}
+                                    {showAnswers && (question.correct_answer || question.explanation) && (
+                                      <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
+                                        <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">{getLabels(worksheet.subject).answerLabel}</span>
+                                        <span className="text-sm font-bold text-emerald-900 print:text-gray-900">
+                                          {question.correct_answer || question.explanation}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Bonus Challenge Questions */}
+                        {bonusQuestions.length > 0 && (
+                          <div className="mt-10">
+                            <div className="flex items-baseline gap-3 mb-1 mt-6 print:mt-4">
+                              <span className="text-amber-500 font-semibold text-sm">&#9733;</span>
+                              <h4 className="font-serif text-lg font-bold text-amber-600 tracking-tight print:text-black">{getLabels(worksheet.subject).bonusChallenge}</h4>
+                              <span className="text-xs text-muted-foreground italic ml-1">{getLabels(worksheet.subject).bonusDesc}</span>
+                            </div>
+                            <div className="border-b border-amber-300/40 mb-6 print:border-black/15" />
+                            <div className="space-y-10">
+                              {bonusQuestions.map((question) => (
+                                <div key={question.id} className="relative group border-2 border-dashed border-amber-300/60 rounded-xl p-5 bg-amber-50/30 print:border-black/30 print:bg-transparent" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                                  <div className="flex gap-5">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-2 border-amber-400/50 text-amber-500 text-sm font-bold print:border-black/30 print:text-black/60">
+                                        &#9733;
+                                      </span>
+                                    </div>
+                                    <div className="flex-grow space-y-4">
+                                      <p className={`text-lg font-medium text-foreground leading-snug${hasDevanagari(question.text ?? '') ? ' devanagari' : ''}`}>{question.text}</p>
+                                      <div className="mt-4 space-y-3">
+                                        <div className="border-b border-border/40 h-8"></div>
+                                        <div className="border-b border-border/40 h-8"></div>
+                                        <div className="border-b border-border/40 h-8"></div>
+                                      </div>
+                                      {showAnswers && question.correct_answer && (
+                                        <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg print:bg-gray-100 print:border-gray-300">
+                                          <span className="text-xs font-semibold text-emerald-700 print:text-gray-700">{getLabels(worksheet.subject).answerLabel}</span>
+                                          <span className="text-sm font-bold text-emerald-900 print:text-gray-900">{question.correct_answer}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+
+                  {/* Second Show/Hide Answer Key button — below last question */}
+                  <div className="mt-10 flex justify-center print:hidden">
+                    <Button
+                      onClick={() => setShowAnswers(!showAnswers)}
+                      variant={showAnswers ? "default" : "outline"}
+                      size="sm"
+                      className={showAnswers ? "bg-primary/90 text-primary-foreground" : ""}
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                      </svg>
+                      {showAnswers ? getLabels(worksheet.subject).hideAnswerKey : getLabels(worksheet.subject).showAnswerKey}
+                    </Button>
+                  </div>
+
+                  {/* Answer Key Section — visible when showAnswers is true */}
+                  {showAnswers && (
+                    <div className="mt-16 pt-10 border-t border-border/30 print:break-before-page print:mt-0 print:pt-0 print:border-none">
+                      <h3 className="font-serif text-2xl mb-6 flex items-center gap-2 text-foreground/80">
+                        <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                        </svg>
+                        {getLabels(worksheet.subject).answerKeyRef}
+                      </h3>
+                      {/* Curriculum summary (Trust P2) */}
+                      {(worksheet.chapter_ref || (worksheet.learning_objectives && worksheet.learning_objectives.length > 0)) && (
+                        <p className="text-xs text-muted-foreground mb-4 -mt-3">
+                          {worksheet.chapter_ref && <span className="italic">{worksheet.chapter_ref}</span>}
+                          {worksheet.chapter_ref && worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && ' — '}
+                          {worksheet.learning_objectives && worksheet.learning_objectives.length > 0 && (
+                            <span>Covers: {worksheet.learning_objectives.join(', ')}</span>
+                          )}
+                        </p>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {worksheet.questions.map((question, index) => (
+                          <div key={question.id} className="p-3 bg-secondary/20 rounded-lg text-sm border border-border/50 print:bg-gray-100 print:border-black/15 print:rounded-none">
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-primary flex items-center gap-1">
+                                Q{index + 1}
+                                {question.verified !== false ? (
+                                  <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                                ) : (
+                                  <svg className="w-3 h-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                                )}
+                              </span>
+                              <span className="text-foreground font-medium">
+                                {question.correct_answer
+                                  ? question.correct_answer
+                                  : question.explanation || question.sample_answer
+                                    ? <span className="italic text-xs text-muted-foreground">{question.explanation || question.sample_answer}</span>
+                                    : <span className="text-muted-foreground/40">&mdash;</span>
+                                }
+                              </span>
+                              {question.skill_tag && (
+                                <span className="ml-auto text-[9px] text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                                  {formatSkillTag(question.skill_tag)}
+                                </span>
+                              )}
+                            </div>
+                            {question.explanation && question.correct_answer && (
+                              <p className="mt-2 text-xs text-muted-foreground italic pl-8">
+                                {question.explanation}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {/* Common Mistake (Trust P0) */}
+                      {worksheet.common_mistake && (
+                        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+                          <span className="font-semibold">Watch For: </span>
+                          {worksheet.common_mistake}
+                        </div>
+                      )}
+
+                      {/* Skills Tested (Trust P0) */}
+                      {worksheet.skill_coverage && Object.keys(worksheet.skill_coverage).length > 0 && (
+                        <div className="mt-6 pt-4 border-t border-border/30">
+                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{getLabels(worksheet.subject).skillsTested}</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(worksheet.skill_coverage).map(([skill, count]) => {
+                              return (
+                                <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-secondary text-secondary-foreground border border-border/50">
+                                  {formatSkillTag(skill)} <span className="text-muted-foreground">({count})</span>
+                                </span>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Difficulty Breakdown in Answer Key (Trust P3) */}
+                      {(() => {
+                        const normal = worksheet.questions.filter(q => !q.is_bonus)
+                        const fCount = normal.filter(q => q.role === 'recognition' || q.role === 'representation').length
+                        const aCount = normal.filter(q => q.role === 'application').length
+                        const sCount = normal.filter(q => q.role === 'error_detection' || q.role === 'thinking').length
+                        if (fCount + aCount + sCount === 0) return null
+                        return (
+                          <div className="mt-6 pt-4 border-t border-border/30">
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{getLabels(worksheet.subject).difficultyBreakdown}</h4>
+                            <div className="flex flex-wrap gap-2 text-xs">
+                              {fCount > 0 && <span className="px-2 py-1 rounded-md bg-emerald-50 border border-emerald-200/50 text-emerald-700">&#9733; {getLabels(worksheet.subject).foundation}: {fCount}</span>}
+                              {aCount > 0 && <span className="px-2 py-1 rounded-md bg-blue-50 border border-blue-200/50 text-blue-700">&#9733;&#9733; {getLabels(worksheet.subject).application}: {aCount}</span>}
+                              {sCount > 0 && <span className="px-2 py-1 rounded-md bg-purple-50 border border-purple-200/50 text-purple-700">&#9733;&#9733;&#9733; {getLabels(worksheet.subject).stretch}: {sCount}</span>}
+                            </div>
+                          </div>
+                        )
+                      })()}
+
+                      {/* Format Diversity in Answer Key (Trust P4) */}
+                      {(() => {
+                        const fmtLabels = getFormatLabels(worksheet.subject)
+                        const counts = new Map<string, number>()
+                        for (const q of worksheet.questions) {
+                          const t = q.type || 'short_answer'
+                          counts.set(t, (counts.get(t) || 0) + 1)
+                        }
+                        if (counts.size <= 1) return null
+                        return (
+                          <div className="mt-6 pt-4 border-t border-border/30">
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{getLabels(worksheet.subject).formats}</h4>
+                            <div className="flex flex-wrap gap-2 text-xs">
+                              {[...counts.entries()].map(([fmt, count]) => (
+                                <span key={fmt} className="px-2 py-1 rounded-md bg-secondary/60 border border-border/40">
+                                  {fmtLabels[fmt] || fmt.replace(/_/g, ' ')} ({count})
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })()}
+
+                      {/* Quality badge (Trust P0 + P5) */}
+                      {(() => {
+                        const verifiedCount = worksheet.questions.filter(q => q.verified !== false).length
+                        const total = worksheet.questions.length
+                        return (
+                          <p className="mt-4 text-[10px] text-muted-foreground italic flex items-center gap-1">
+                            {verifiedCount === total ? (
+                              <><span className="text-emerald-600">✓</span> {verifiedCount}/{total} answers verified | Quality: {qualityTier === 'high' ? 'High' : qualityTier === 'medium' ? 'Standard' : 'Best effort'}</>
+                            ) : (
+                              <><span className="text-amber-600">!</span> {verifiedCount}/{total} answers verified | Quality: {qualityTier === 'high' ? 'High' : qualityTier === 'medium' ? 'Standard' : 'Best effort'}</>
+                            )}
+                          </p>
+                        )
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Parent Insight Footer (Gold-G7) — screen only */}
+                  {worksheet.mastery_snapshot && (
+                    <div className="mt-10 p-5 border border-primary/15 rounded-xl bg-primary/[0.02] print:hidden">
+                      <p className="font-bold text-primary text-sm mb-3">{getLabels(worksheet.subject).forParentsNext}</p>
+                      {worksheet.mastery_snapshot.last_error_type && (
+                        <div className="mb-3">
+                          <p className="text-xs font-semibold text-foreground/60 mb-1">Watch For</p>
+                          <p className="text-sm text-foreground/80">
+                            {worksheet.mastery_snapshot.last_error_type === 'carry_tens' && 'Your child may be forgetting to carry when the tens column adds up to more than 9.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'carry_ones' && 'Your child may be forgetting to carry from the ones column.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'borrow_tens' && 'Your child may struggle with borrowing from the tens column.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'borrow_ones' && 'Your child may be confusing when borrowing is needed.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'place_value_confusion' && 'Your child may be mixing up the value of digits in different places.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'multiplication_facts' && 'Your child needs more practice with multiplication tables.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'wrong_operation' && 'Your child may be confusing which operation to use.'}
+                            {worksheet.mastery_snapshot.last_error_type === 'calculation_error' && 'Your child understands the concept but makes calculation errors.'}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs font-semibold text-foreground/60 mb-1">Next Step</p>
+                        <p className="text-sm text-foreground/80">
+                          {worksheet.mastery_snapshot.mastery_level === 'mastered' && 'Excellent work! Try a harder difficulty level or move to the next topic.'}
+                          {worksheet.mastery_snapshot.mastery_level === 'improving' && 'Good progress! Keep practising at this level. Consistency is key.'}
+                          {worksheet.mastery_snapshot.mastery_level === 'learning' && 'Keep going! Try reducing to 5 questions and focus on getting them right.'}
+                          {worksheet.mastery_snapshot.mastery_level === 'unknown' && 'This is a new topic. Start with easy difficulty and build confidence.'}
+                        </p>
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              worksheet.mastery_snapshot.mastery_level === 'mastered' ? 'bg-green-500 w-full' :
+                              worksheet.mastery_snapshot.mastery_level === 'improving' ? 'bg-blue-500 w-2/3' :
+                              worksheet.mastery_snapshot.mastery_level === 'learning' ? 'bg-amber-500 w-1/3' :
+                              'bg-gray-400 w-[10%]'
+                            }`}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          Streak: {worksheet.mastery_snapshot.avg_streak.toFixed(0)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Watermark */}
+                  <p className="mt-14 text-center text-[10px] text-foreground/[0.04] select-none print:text-black/[0.05]">
+                    Generated using Skolar
+                  </p>
                 </CardContent>
-                )}
               </Card>
             ) : mode === 'worksheet' ? (
               <div className="border border-dashed border-border/40 rounded-2xl p-16 flex flex-col items-center justify-center text-center min-h-[400px] bg-secondary/10">

@@ -219,21 +219,10 @@ def generate_worksheet_v3(
         logger.info("[v3] quality gate: %s (%d issues)", gate_result.severity, len(gate_result.issues))
 
     if not gate_result.passed:
-        # Log quality issues but don't retry (advisory mode — avoids extra Gemini call latency)
+        # Advisory only — log but don't block or retry
         logger.warning(
-            "[v3] quality gate flagged %d issues (advisory, not retrying): %s",
+            "[v3] quality gate flagged %d issues (advisory): %s",
             len(gate_result.issues),
-            gate_result.issues[:3],
-        )
-
-    from app.core.config import get_settings
-
-    strict_p1 = get_settings().trust_strict_p1
-    if not gate_result.passed or (strict_p1 and gate_result.severity == "warning"):
-        # Log but don't block — quality gate is advisory to avoid 502s in production
-        logger.warning(
-            "[v3] quality gate would reject: severity=%s, issues=%s",
-            gate_result.severity,
             gate_result.issues[:3],
         )
 
@@ -243,23 +232,20 @@ def generate_worksheet_v3(
         "issues_count": len(gate_result.issues),
     }
 
-    # Step 6: Render beautiful HTML template (display-only, does NOT change question content)
+    # Step 6: Render HTML template (display-only, does NOT change question content)
     t_render = time.perf_counter()
     try:
         from .visual_strategy import enrich_visuals
         from .worksheet_template import render_worksheet_html
 
-        # Add metadata needed by template
         worksheet["grade"] = grade_level
         worksheet["subject"] = subject
         worksheet["topic"] = topic
         worksheet["difficulty"] = difficulty
         worksheet["board"] = board
 
-        # Enrich with visual display data (does NOT change questions)
         worksheet = enrich_visuals(worksheet)
 
-        # Render HTML
         rendered_html = render_worksheet_html(worksheet)
         if rendered_html:
             worksheet["rendered_html"] = rendered_html
@@ -267,7 +253,6 @@ def generate_worksheet_v3(
             logger.info("[v3] Template rendering took %dms", render_ms)
     except Exception as render_err:
         logger.warning("[v3] Template rendering failed (non-blocking): %s", render_err)
-        # Fall back to old html_renderer if template fails
         try:
             from .html_renderer import render_worksheet_html as old_render
 
