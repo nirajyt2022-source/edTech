@@ -132,6 +132,7 @@ class Worksheet(BaseModel):
     chapter_ref: str | None = None  # NCERT chapter reference for PDF badge
     skill_coverage: dict[str, int] | None = None
     mastery_snapshot: dict | None = None  # Gold-G2: child's mastery state at generation time
+    rendered_html: str | None = None  # AI-generated beautiful HTML rendering
 
 
 class WorksheetGenerationResponse(BaseModel):

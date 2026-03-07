@@ -192,6 +192,7 @@ async def generate_worksheet_v2(
         learning_objectives=data.get("learning_objectives", []),
         chapter_ref=data.get("chapter_ref"),
         skill_coverage=skill_coverage or None,
+        rendered_html=data.get("rendered_html"),
     )
 
     if engine == "v3":

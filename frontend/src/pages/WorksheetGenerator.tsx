@@ -309,6 +309,7 @@ interface Worksheet {
     avg_streak: number
     total_attempts: number
   } | null
+  rendered_html?: string
 }
 
 interface SyllabusTopic {
@@ -374,6 +375,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [showAnswers, setShowAnswers] = useState(false)
   const [revealedHints, setRevealedHints] = useState<Set<string>>(new Set())
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
+  const [viewMode, setViewMode] = useState<'classic' | 'rendered'>('classic')
   const [showCustomise, setShowCustomise] = useState(false)
   const [mode, setMode] = useState<'worksheet' | 'revision' | 'flashcards' | 'textbook'>('worksheet')
   const [revisionNotes, setRevisionNotes] = useState<RevisionNotes | null>(null)
@@ -769,6 +771,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
       setWorksheets(wsList)
       setActiveIdx(0)
       setWorksheet(wsList[0])
+      setViewMode(wsList[0]?.rendered_html ? 'rendered' : 'classic')
       setMobileView('preview')
 
       // Internal quality warnings — log for admin, don't show to users
@@ -1784,7 +1787,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                           {worksheets.map((ws, i) => (
                             <button
                               key={i}
-                              onClick={() => { setActiveIdx(i); setWorksheet(ws) }}
+                              onClick={() => { setActiveIdx(i); setWorksheet(ws); setViewMode(ws?.rendered_html ? 'rendered' : 'classic') }}
                               className={`px-3 py-1 rounded-md text-xs font-medium border transition-colors ${
                                 i === activeIdx
                                   ? 'bg-primary text-primary-foreground border-primary'
@@ -1960,6 +1963,64 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   </div>
                 </CardHeader>
 
+                {/* View Mode Toggle — only show when rendered_html is available */}
+                {worksheet.rendered_html && (
+                  <div className="px-10 pb-4 flex items-center gap-2 print:hidden">
+                    <div className="inline-flex rounded-lg border border-border/50 bg-secondary/30 p-0.5">
+                      <button
+                        onClick={() => setViewMode('rendered')}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                          viewMode === 'rendered'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        Beautiful View
+                      </button>
+                      <button
+                        onClick={() => setViewMode('classic')}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                          viewMode === 'classic'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        Classic View
+                      </button>
+                    </div>
+                    {viewMode === 'rendered' && (
+                      <button
+                        onClick={() => {
+                          const w = window.open('', '_blank')
+                          if (w && worksheet.rendered_html) {
+                            w.document.write(worksheet.rendered_html)
+                            w.document.close()
+                            w.print()
+                          }
+                        }}
+                        className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-primary hover:bg-primary/5 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.618 0-1.103-.508-1.12-1.227L6.34 18m11.318-8.22L16.5 3a.75.75 0 00-.75-.75h-7.5a.75.75 0 00-.75.75l-1.15 6.756" />
+                        </svg>
+                        Print Beautiful View
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Rendered HTML View */}
+                {viewMode === 'rendered' && worksheet.rendered_html ? (
+                  <CardContent className="px-0 pb-0">
+                    <iframe
+                      srcDoc={worksheet.rendered_html}
+                      className="w-full border-0 rounded-b-xl"
+                      style={{ minHeight: '800px', height: '100vh', maxHeight: '2000px' }}
+                      title="Beautiful worksheet view"
+                      sandbox="allow-same-origin"
+                    />
+                  </CardContent>
+                ) : (
                 <CardContent className="px-10 pb-14 print:px-0 print:pb-0">
                   {/* Print-only: Name / Date / Score header */}
                   <div className="hidden print:flex print:justify-between print:items-end print:mb-6 print:pb-3 print:border-b print:border-black/20">
@@ -2510,6 +2571,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                     Generated using Skolar
                   </p>
                 </CardContent>
+                )}
               </Card>
             ) : mode === 'worksheet' ? (
               <div className="border border-dashed border-border/40 rounded-2xl p-16 flex flex-col items-center justify-center text-center min-h-[400px] bg-secondary/10">

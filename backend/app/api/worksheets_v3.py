@@ -150,6 +150,7 @@ async def generate_worksheet_v3_endpoint(
         parent_tip=data.get("parent_tip", ""),
         learning_objectives=data.get("learning_objectives", []),
         skill_coverage=skill_coverage or None,
+        rendered_html=data.get("rendered_html"),
     )
 
     has_warnings = bool(warnings)

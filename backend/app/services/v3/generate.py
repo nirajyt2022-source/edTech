@@ -273,6 +273,21 @@ def generate_worksheet_v3(
         "issues_count": len(gate_result.issues),
     }
 
+    # Step 6: Render beautiful HTML (optional — skipped if rendering fails)
+    t_render = time.perf_counter()
+    try:
+        from .html_renderer import render_worksheet_html
+
+        rendered_html = render_worksheet_html(client, worksheet)
+        if rendered_html:
+            worksheet["rendered_html"] = rendered_html
+            render_ms = int((time.perf_counter() - t_render) * 1000)
+            logger.info("[v3] HTML rendering took %dms", render_ms)
+            warnings.append(f"[v3] HTML rendered in {render_ms}ms")
+    except Exception as render_err:
+        logger.warning("[v3] HTML rendering failed (non-blocking): %s", render_err)
+        # Non-blocking: worksheet still works without rendered_html
+
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
     logger.info("[v3] Total generation: %dms, %d warnings", elapsed_ms, len(warnings))
 
