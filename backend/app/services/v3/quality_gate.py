@@ -116,6 +116,13 @@ def check_worksheet(
                 if q.get("type") == "true_false":
                     continue
                 if actual != expected:
+                    # The assembler should have set this — log for debugging
+                    logger.warning(
+                        "[quality_gate] %s: slot.numbers.answer=%s, assembled=%s (assembler override may have failed)",
+                        q.get("id", "?"),
+                        expected,
+                        actual,
+                    )
                     issues.append(f"[CRITICAL] {q.get('id', '?')}: expected answer {expected}, got {actual}")
                     critical = True
 
@@ -140,21 +147,7 @@ def check_worksheet(
         if long_questions > 3:
             issues.append(f"[WARNING] {long_questions} questions exceed 25 words for Class {grade_num}")
 
-    # === CHECK 12: Maths answers are exact (catches percentage rounding) ===
-    if is_maths and slots:
-        for q, s in zip(questions, slots):
-            nums = getattr(s, "numbers", None)
-            if nums and nums.get("answer") is not None:
-                expected = nums["answer"]
-                actual = q.get("correct_answer", "")
-                if q.get("type") == "true_false":
-                    continue
-                try:
-                    if float(actual) != float(expected):
-                        issues.append(f"[CRITICAL] {q.get('id', '?')}: answer {actual} != expected {expected}")
-                        critical = True
-                except (ValueError, TypeError):
-                    pass
+    # CHECK 12 removed — redundant with CHECK 8 (was double-flagging maths answer mismatches)
 
     # === CHECK 13: Common mistake doesn't contradict topic ===
     common_mistake = worksheet.get("common_mistake", "")

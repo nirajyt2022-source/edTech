@@ -297,6 +297,12 @@ def review_worksheet(client, worksheet: dict) -> dict:
         # Parse corrections
         corrections = _parse_response(result_text)
         if corrections:
+            # Build set of maths slots (Python-computed answers — NEVER override)
+            maths_slots = set()
+            for q in worksheet["questions"]:
+                if q.get("visual_data") or q.get("visual_type"):
+                    maths_slots.add(q["id"])
+
             corrections_by_slot = {c.get("slot", 0): c for c in corrections}
             fixed_count = 0
             for q in worksheet["questions"]:
@@ -306,16 +312,17 @@ def review_worksheet(client, worksheet: dict) -> dict:
                     if fix.get("text") and fix["text"] != q.get("text"):
                         q["text"] = fix["text"]
                         fixed_count += 1
-                    if fix.get("correct_answer"):
+                    # NEVER override Python-computed maths answers
+                    if fix.get("correct_answer") and q["id"] not in maths_slots:
                         q["correct_answer"] = fix["correct_answer"]
-                    if fix.get("options"):
+                    if fix.get("options") and q["id"] not in maths_slots:
                         q["options"] = fix["options"]
                     if fix.get("emoji"):
                         q["emoji"] = fix["emoji"]
                     if fix.get("hint"):
                         q["hint"] = fix["hint"]
 
-            logger.info("[review] Fixed %d questions", fixed_count)
+            logger.info("[review] Fixed %d questions (skipped %d maths slots)", fixed_count, len(maths_slots))
 
     except Exception as e:
         logger.warning("[review] Review call failed (non-blocking): %s", e)

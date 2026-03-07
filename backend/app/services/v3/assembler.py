@@ -6,9 +6,12 @@ Key rule: maths answers come from Python (slot.numbers), NEVER from Gemini.
 
 from __future__ import annotations
 
+import logging
 import random
 
 from .slot_builder import SlotBuilderOutput
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -105,6 +108,14 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
                     correct_answer = "True"
         elif slot.numbers and slot.numbers.get("answer") is not None:
             correct_answer = str(slot.numbers["answer"])
+            gemini_answer = fill.get("correct_answer", "")
+            if gemini_answer and gemini_answer != correct_answer:
+                logger.info(
+                    "Q%d: Python answer=%s, Gemini answer=%s (using Python)",
+                    slot.slot_number,
+                    correct_answer,
+                    gemini_answer,
+                )
         else:
             correct_answer = fill.get("correct_answer", "")
             if not correct_answer and fill.get("options"):
