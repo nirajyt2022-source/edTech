@@ -1,8 +1,9 @@
 """Gemini text filler — calls LLM to write question text for pre-built slots.
 
-The system prompt is ~20 lines instead of the current 846-line behemoth.
-Gemini writes ONLY question text, hint, explanation, and options (non-maths MCQ).
-All structure, numbers, visuals, and answers come from slot_builder.
+Uses Bloom's taxonomy + topic anchoring + few-shot examples for high-quality
+question generation. Gemini writes question text, hint, explanation, options,
+and per-question emoji. All structure, numbers, visuals, and answers come
+from slot_builder.
 """
 
 from __future__ import annotations
@@ -16,55 +17,77 @@ from .slot_builder import Slot
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# System prompt (simple — no structural rules)
+# System prompt — Bloom's taxonomy + topic lock + per-question emoji
 # ---------------------------------------------------------------------------
-SYSTEM_PROMPT = """You are writing worksheet questions for Indian primary school students.
-For each SLOT, write ONLY what is asked. Everything structural is already decided.
+SYSTEM_PROMPT = """You are an expert CBSE curriculum designer creating a worksheet for Indian primary school students.
 
-RULES:
-1. Write natural, creative, age-appropriate question text.
-2. Use Indian context (₹, Indian cities, festivals).
-3. NEVER start two questions with the same word.
-4. NEVER reference other questions.
-5. For fill_blank: include exactly one "______" in the text.
-6. For MCQ (non-maths): provide 4 options in "options" array.
-7. For word problems: tell a mini-story, don't just state bare numbers.
-8. Keep language simple for the given age.
-9. Every question must be UNIQUE — different scenario, different objects, different angle.
-   BAD: Q3 "Count 7 kites and 3 kites" + Q5 "Count 4 kites and 6 kites" (both about kites)
-   GOOD: Q3 "Count 7 kites" + Q5 "Count 4 ladoos" (different objects)
-10. NEVER ask the same concept twice. If Q1 asks "What does a dog do?", Q5 cannot ask "Dogs bark. True or False?"
+YOUR ROLE: Create high-quality, curriculum-aligned questions that test specific skills at the right cognitive level for the student's age.
 
-Respond with ONLY a JSON array (no markdown, no extra text):
+BLOOM'S TAXONOMY — Your questions must match these cognitive levels:
+- REMEMBER (Foundation/Easy): Recall facts. "What is...?", "Name the...", "True or False: ..."
+  Example: "The sun rises in the east. True or False?"
+- UNDERSTAND (Foundation/Easy): Explain in own words. "Why...?", "Describe...", "What does ___ mean?"
+  Example: "Why do we water plants?"
+- APPLY (Application/Medium): Use knowledge in new situations. "If... then what?", word problems, fill-blanks
+  Example: "Rohan has 8 marbles. Priya gives him 5 more. How many does he have now?"
+- ANALYZE (Application/Medium): Compare, contrast, classify. "How is ___ different from ___?", "Which does NOT belong?"
+  Example: "Which of these is NOT a season? Summer, Rainy, Football, Winter"
+- EVALUATE (Stretch/Hard): Judge, defend, critique. "Is this correct? Explain why.", "Do you agree? Why?"
+  Example: "Rani says 5+8=12. Is she right? Explain your answer."
+- CREATE (Stretch/Hard): Produce something new. "Write a sentence using...", "Draw...", "Make up a problem about..."
+  Example: "Write two sentences about your favourite season."
+
+QUALITY RULES:
+1. TOPIC LOCK: Every question MUST test the specific topic given. Do NOT drift to other topics.
+2. UNIQUE ANGLES: Each question must test a DIFFERENT aspect. Never ask the same concept twice.
+   BAD: Q1 "What letter does Apple start with?" + Q3 "What letter does Ant start with?" (both test letter A)
+   GOOD: Q1 "letter A recognition" + Q3 "alphabetical order" + Q5 "capital vs small letter"
+3. CORRECT ANSWERS: Double-check every answer. For MCQ, the correct answer MUST be in the options.
+4. AGE-APPROPRIATE: Use vocabulary and sentence length suitable for the grade.
+5. INDIAN CONTEXT: Use Indian names (Aarav, Meera, Rohan, Priya), Indian settings (mela, Diwali, school, market), ₹ for money.
+6. NATURAL LANGUAGE: Questions should sound like a kind teacher talking to the child, not a textbook.
+7. NO REPETITION: Different objects, scenarios, and question angles for every question.
+8. For fill_blank: include exactly one "______" in the text.
+9. For word problems: tell a mini-story, don't just state bare numbers.
+
+VISUAL/EMOJI RULES:
+For each question, include an "emoji" field:
+- Pick 1-2 emoji that DIRECTLY illustrate THIS specific question's content
+- Question about a cow → "emoji": "🐄"
+- Question about adding apples → "emoji": "🍎"
+- Question about the letter B → "emoji": "⚽" (Ball)
+- Question about summer → "emoji": "☀️"
+- Question about a leaf → "emoji": "🍃"
+- If the question is abstract with no concrete object → "emoji": null
+- NEVER use the same emoji for all questions. Each question gets its own matching emoji.
+
+For MATHS questions with visual_data provided in the slot:
+- The visual (number line, object group, clock, etc.) is pre-computed. Just write the question text to match it.
+- Reference the visual naturally: "Look at the number line", "Count the apples shown"
+
+RESPONSE FORMAT — JSON array, no markdown:
 [
   {
     "slot": 1,
-    "text": "question text",
-    "correct_answer": "the correct answer",
-    "hint": "helpful hint that does NOT reveal the answer",
-    "explanation": "brief explanation of how to solve",
+    "text": "question text here",
+    "correct_answer": "exact correct answer",
+    "hint": "helpful hint that does NOT give away the answer",
+    "explanation": "1-2 sentence explanation of why this is the answer",
     "options": ["A", "B", "C", "D"] or null,
-    "emoji": "🐄",
-    "common_mistake": "one common mistake for this topic",
-    "parent_tip": "one tip for parents"
+    "emoji": "🍎" or null,
+    "common_mistake": "one common mistake (SLOT 1 ONLY, null for others)",
+    "parent_tip": "tip for parents (SLOT 1 ONLY, null for others)"
   }
 ]
 
-IMPORTANT:
-- "correct_answer" is MANDATORY for every slot. It must be the exact correct answer.
-- For MCQ: correct_answer must be one of the options.
-- For true_false: correct_answer must be "True" or "False".
-- For fill_blank: correct_answer must be the word(s) that fill the blank.
-- Only include "common_mistake" and "parent_tip" for slot 1. Set them to null for other slots.
-- "options" MUST be a 4-element array for ALL MCQ questions. Include the correct_answer as one of the 4 options. Set to null only for non-MCQ question types (fill_blank, short_answer, word_problem).
-- "emoji" is MANDATORY. Pick 1-2 emoji that DIRECTLY illustrate the question content:
-  - Question about a cow → 🐄
-  - Question about adding apples → 🍎
-  - Question about the letter B → 🅱️ or the object (🏀 for Ball)
-  - Question about summer → ☀️
-  - Question about honesty → 🤝
-  - If genuinely no emoji fits → null
-  - NEVER use generic emoji like ✏️📖🔠 for all questions in a topic
+MANDATORY:
+- "correct_answer" is REQUIRED for every slot
+- For MCQ: correct_answer must EXACTLY match one of the 4 options
+- For true_false: correct_answer must be exactly "True" or "False"
+- For fill_blank: correct_answer is the word(s) that fill the blank
+- "emoji" is REQUIRED — pick matching emoji or null if abstract
+- "options" must be exactly 4 items for MCQ, null for other types
+- Only include "common_mistake" and "parent_tip" for slot 1
 """
 
 
@@ -72,15 +95,36 @@ IMPORTANT:
 # Build user prompt from slots
 # ---------------------------------------------------------------------------
 def _build_user_prompt(slots: list[Slot], language: str, curriculum_context: str | None = None) -> str:
-    """Build user prompt listing all slots with their instructions."""
-    parts = [f"Language: {language}", f"Total slots: {len(slots)}", ""]
+    """Build a rich, contextual prompt that gives Gemini full worksheet awareness."""
+
+    parts = []
+
+    # ── WORKSHEET CONTEXT (the most important part) ──
+    parts.append("=" * 60)
+    parts.append("WORKSHEET CONTEXT")
+    parts.append("=" * 60)
+    parts.append(f"Total questions: {len(slots)}")
+    parts.append(f"Language: {language}")
 
     if curriculum_context:
-        parts.append(curriculum_context)
-        parts.append("")
+        parts.append(f"\nCURRICULUM REFERENCE:\n{curriculum_context}")
+
+    parts.append("")
+    parts.append("Think step by step about each question:")
+    parts.append("1. What specific skill is being tested?")
+    parts.append("2. What cognitive level (Bloom's) does this slot require?")
+    parts.append("3. What would be a creative, age-appropriate way to test this?")
+    parts.append("4. What emoji best illustrates this specific question?")
+    parts.append("5. Is the answer definitely correct?")
+    parts.append("")
+
+    # ── INDIVIDUAL SLOTS ──
+    parts.append("=" * 60)
+    parts.append("QUESTIONS TO GENERATE")
+    parts.append("=" * 60)
 
     for slot in slots:
-        parts.append(f"SLOT {slot.slot_number}:")
+        parts.append(f"\n--- SLOT {slot.slot_number} ---")
         parts.append(slot.llm_instruction)
         parts.append("")
 
@@ -176,3 +220,104 @@ def fill_slots(client, slots: list[Slot], language: str, curriculum_context: str
         filled = _single_call(client, batch, language, curriculum_context)
         results.extend(filled)
     return results
+
+
+# ---------------------------------------------------------------------------
+# AI Review — optional second Gemini call for QA
+# ---------------------------------------------------------------------------
+REVIEW_PROMPT = """You are a CBSE curriculum quality reviewer. Review these {num_questions} questions for a {grade} {subject} worksheet on "{topic}".
+
+CHECK EACH QUESTION:
+1. Is it actually about {topic}? (NOT about some other topic)
+2. Is the correct_answer actually correct?
+3. For MCQ: is correct_answer one of the 4 options?
+4. For true_false: is correct_answer "True" or "False"?
+5. Is the language age-appropriate for {grade}?
+6. Is this question different from all other questions? (no concept repetition)
+7. Does the emoji match the question content?
+
+QUESTIONS TO REVIEW:
+{questions_json}
+
+If ALL questions pass, respond with exactly: {{"status": "pass"}}
+
+If ANY question has issues, respond with the CORRECTED full JSON array (same format as input).
+Only fix what's broken — don't rewrite questions that are fine.
+"""
+
+
+def review_worksheet(client, worksheet: dict) -> dict:
+    """Optional second Gemini call to QA the generated questions."""
+    questions = worksheet.get("questions", [])
+    if not questions:
+        return worksheet
+
+    # Build review payload
+    review_items = []
+    for q in questions:
+        review_items.append(
+            {
+                "slot": int(q["id"].replace("q", "")),
+                "text": q.get("text", ""),
+                "correct_answer": q.get("correct_answer", ""),
+                "options": q.get("options"),
+                "type": q.get("type", ""),
+                "hint": q.get("hint", ""),
+                "emoji": q.get("emoji"),
+            }
+        )
+
+    grade = worksheet.get("grade", "Class 1")
+    subject = worksheet.get("subject", "")
+    topic = worksheet.get("topic", "")
+
+    prompt = REVIEW_PROMPT.format(
+        num_questions=len(questions),
+        grade=grade,
+        subject=subject,
+        topic=topic,
+        questions_json=json.dumps(review_items, indent=2, ensure_ascii=False),
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gemini-2.5-flash",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2,
+            max_tokens=6000,
+        )
+
+        result_text = response.choices[0].message.content.strip()
+
+        # If passes review, return unchanged
+        if '"status"' in result_text and '"pass"' in result_text:
+            logger.info("[review] All questions passed review")
+            return worksheet
+
+        # Parse corrections
+        corrections = _parse_response(result_text)
+        if corrections:
+            corrections_by_slot = {c.get("slot", 0): c for c in corrections}
+            fixed_count = 0
+            for q in worksheet["questions"]:
+                slot_num = int(q["id"].replace("q", ""))
+                if slot_num in corrections_by_slot:
+                    fix = corrections_by_slot[slot_num]
+                    if fix.get("text") and fix["text"] != q.get("text"):
+                        q["text"] = fix["text"]
+                        fixed_count += 1
+                    if fix.get("correct_answer"):
+                        q["correct_answer"] = fix["correct_answer"]
+                    if fix.get("options"):
+                        q["options"] = fix["options"]
+                    if fix.get("emoji"):
+                        q["emoji"] = fix["emoji"]
+                    if fix.get("hint"):
+                        q["hint"] = fix["hint"]
+
+            logger.info("[review] Fixed %d questions", fixed_count)
+
+    except Exception as e:
+        logger.warning("[review] Review call failed (non-blocking): %s", e)
+
+    return worksheet

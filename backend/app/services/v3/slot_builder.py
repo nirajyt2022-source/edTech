@@ -1826,21 +1826,27 @@ def _build_llm_instruction(
     parts = []
 
     # ═══════════════════════════════════════════════════════════
-    # TOPIC ANCHOR — Every question MUST be about this specific topic.
+    # TOPIC + BLOOM'S ANCHOR — Always first, always present
     # ═══════════════════════════════════════════════════════════
-    parts.append(f"TOPIC: {topic}")
-    parts.append(f"SUBJECT: {subject}")
-    parts.append(f"GRADE: Class {grade_num} (age {grade_num + 5}-{grade_num + 6})")
+    bloom_level = {
+        "recognition": "REMEMBER — Recall a fact about",
+        "representation": "UNDERSTAND — Explain or describe something about",
+        "application": "APPLY — Use knowledge of",
+        "error_detection": "EVALUATE — Find a mistake or judge a statement about",
+        "thinking": "CREATE/EVALUATE — Reason, explain why, or create something about",
+    }.get(slot.role, "APPLY —")
 
-    if slot.skill_tag:
-        parts.append(f"SKILL BEING TESTED: {slot.skill_tag}")
+    parts.append(f"TOPIC: {topic} | SUBJECT: {subject} | CLASS: {grade_num} (age {grade_num + 5}-{grade_num + 6})")
+    parts.append(f"BLOOM'S LEVEL: {bloom_level} {topic}")
+    parts.append(f"SKILL TAG: {slot.skill_tag}")
+    parts.append(f"DIFFICULTY: {slot.difficulty}")
+    parts.append(f"QUESTION TYPE: {slot.question_type}")
 
     skill_desc = _get_skill_description(slot.skill_tag, topic, subject)
     if skill_desc:
         parts.append(f"WHAT TO ASK: {skill_desc}")
 
-    parts.append(f"IMPORTANT: This question MUST be about {topic}. Do NOT drift to other topics.")
-    parts.append(f"The student is practising {topic} in {subject}. Every question must test this specific skill.")
+    parts.append(f"⚠️ This question MUST be about {topic}. Do NOT write about any other topic.")
 
     # Age-appropriate language constraints
     if grade_num <= 1:
