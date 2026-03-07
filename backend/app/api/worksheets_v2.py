@@ -86,7 +86,30 @@ async def generate_worksheet_v2(
     engine = os.environ.get("WORKSHEET_ENGINE", "v3")
 
     try:
-        if engine == "v3":
+        if engine == "v4":
+            from app.services.ai_client import get_ai_client
+            from app.services.v4_engine import generate_worksheet_v4
+
+            ai_client = get_ai_client()
+            data, elapsed_ms, warnings = await asyncio.wait_for(
+                asyncio.to_thread(
+                    generate_worksheet_v4,
+                    client=ai_client,
+                    board=body.board,
+                    grade_level=body.grade_level,
+                    subject=body.subject,
+                    topic=body.topic,
+                    difficulty=body.difficulty,
+                    num_questions=body.num_questions,
+                    language=body.language,
+                    problem_style=body.problem_style,
+                    custom_instructions=body.custom_instructions,
+                    child_id=body.child_id,
+                ),
+                timeout=90.0,
+            )
+            logger.info("[v4] Generation complete: %dms, %d warnings", elapsed_ms, len(warnings))
+        elif engine == "v3":
             from app.services.v3 import generate_worksheet_v3
 
             data, elapsed_ms, warnings = await asyncio.wait_for(
@@ -195,8 +218,8 @@ async def generate_worksheet_v2(
         rendered_html=data.get("rendered_html"),
     )
 
-    if engine == "v3":
-        # V3 quality gate compatibility path
+    if engine in ("v3", "v4"):
+        # V3/V4 quality gate compatibility path
         qg = data.get("_quality_gate", {}) or {}
         qg_passed = bool(qg.get("passed", True))
         qg_severity = str(qg.get("severity", "ok"))
