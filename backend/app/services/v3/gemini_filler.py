@@ -30,6 +30,10 @@ RULES:
 6. For MCQ (non-maths): provide 4 options in "options" array.
 7. For word problems: tell a mini-story, don't just state bare numbers.
 8. Keep language simple for the given age.
+9. Every question must be UNIQUE — different scenario, different objects, different angle.
+   BAD: Q3 "Count 7 kites and 3 kites" + Q5 "Count 4 kites and 6 kites" (both about kites)
+   GOOD: Q3 "Count 7 kites" + Q5 "Count 4 ladoos" (different objects)
+10. NEVER ask the same concept twice. If Q1 asks "What does a dog do?", Q5 cannot ask "Dogs bark. True or False?"
 
 Respond with ONLY a JSON array (no markdown, no extra text):
 [
@@ -40,6 +44,7 @@ Respond with ONLY a JSON array (no markdown, no extra text):
     "hint": "helpful hint that does NOT reveal the answer",
     "explanation": "brief explanation of how to solve",
     "options": ["A", "B", "C", "D"] or null,
+    "emoji": "🐄",
     "common_mistake": "one common mistake for this topic",
     "parent_tip": "one tip for parents"
   }
@@ -52,6 +57,14 @@ IMPORTANT:
 - For fill_blank: correct_answer must be the word(s) that fill the blank.
 - Only include "common_mistake" and "parent_tip" for slot 1. Set them to null for other slots.
 - "options" MUST be a 4-element array for ALL MCQ questions. Include the correct_answer as one of the 4 options. Set to null only for non-MCQ question types (fill_blank, short_answer, word_problem).
+- "emoji" is MANDATORY. Pick 1-2 emoji that DIRECTLY illustrate the question content:
+  - Question about a cow → 🐄
+  - Question about adding apples → 🍎
+  - Question about the letter B → 🅱️ or the object (🏀 for Ball)
+  - Question about summer → ☀️
+  - Question about honesty → 🤝
+  - If genuinely no emoji fits → null
+  - NEVER use generic emoji like ✏️📖🔠 for all questions in a topic
 """
 
 

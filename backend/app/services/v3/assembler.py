@@ -200,6 +200,7 @@ def assemble_worksheet(slot_output: SlotBuilderOutput, filled: list[dict]) -> di
             "visual_data": visual_data,
             "format": _infer_render_format(final_type, options),
             "images": images,
+            "emoji": fill.get("emoji"),
             "verified": True,
         }
         # Fix visual-label answers: "Option B" → actual fraction value

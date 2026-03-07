@@ -322,8 +322,12 @@ def enrich_visuals(worksheet: dict) -> dict:
             q["visual_type"] = None
             q["visual_data"] = None
 
-        # 4. Emoji visual
-        if is_maths:
+        # 4. Emoji visual — Priority: Gemini per-question > visual_data > topic pool > none
+        if q.get("emoji") and q["emoji"] != "null":
+            # Priority 1: Gemini chose a per-question emoji
+            q["emoji_visual"] = q["emoji"]
+            q["emoji_label"] = None
+        elif is_maths:
             emoji_vis = _generate_emoji_visual_for_maths(q, emoji_pool, i)
             if emoji_vis:
                 q["emoji_visual"] = emoji_vis
@@ -334,19 +338,18 @@ def enrich_visuals(worksheet: dict) -> dict:
                 q["emoji_visual"] = emoji_pool[i % len(emoji_pool)]
                 q["emoji_label"] = None
         else:
-            # Non-maths: assign topic-relevant emoji
+            # Non-maths fallback: assign topic-relevant emoji
             if not q.get("emoji_visual"):
                 q["emoji_visual"] = emoji_pool[i % len(emoji_pool)]
                 q["emoji_label"] = None
 
-            # Hindi Varnamala: enhance tracing style
-            if is_hindi and q.get("question_style") == "tracing":
-                # Extract Devanagari letter from text if possible
-                text = q.get("text", "")
-                devanagari_chars = re.findall(r"[\u0900-\u097F]", text)
-                if devanagari_chars:
-                    q["emoji_visual"] = devanagari_chars[0]
-                    q["emoji_label"] = f"({text[:30]})" if len(text) > 2 else None
+        # Hindi Varnamala: enhance tracing style (overrides emoji for tracing)
+        if is_hindi and q.get("question_style") == "tracing":
+            text = q.get("text", "")
+            devanagari_chars = re.findall(r"[\u0900-\u097F]", text)
+            if devanagari_chars:
+                q["emoji_visual"] = devanagari_chars[0]
+                q["emoji_label"] = f"({text[:30]})" if len(text) > 2 else None
 
     logger.info(
         "[visual_strategy] Enriched %d questions for %s / %s",
