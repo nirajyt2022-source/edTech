@@ -30,6 +30,7 @@ RULES:
 6. For MCQ (non-maths): provide 4 options in "options" array.
 7. For word problems: tell a mini-story, don't just state bare numbers.
 8. Keep language simple for the given age.
+9. Each slot has a unique "Variation" code. Use it as creative inspiration — vary scenarios, examples, objects, and phrasing. NEVER repeat the same question across generations.
 
 Respond with ONLY a JSON array (no markdown, no extra text):
 [
@@ -115,8 +116,9 @@ def _single_call(client, slots: list[Slot], language: str, curriculum_context: s
     user_prompt = _build_user_prompt(slots, language, curriculum_context)
 
     # Determine temperature and tokens
+    # Higher temp for conceptual topics (no pre-computed numbers) to ensure variety
     has_maths = any(s.numbers for s in slots)
-    temp = 0.5 if has_maths else 0.8
+    temp = 0.5 if has_maths else 1.0
     max_tokens = min(8192, 4096 + (len(slots) - 10) * 400) if len(slots) > 10 else 4096
 
     # Thinking budget for maths

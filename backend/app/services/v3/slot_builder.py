@@ -10,6 +10,7 @@ import json
 import math
 import random
 import re
+import string
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -1316,6 +1317,11 @@ def _build_llm_instruction(
         return " | ".join(parts)
 
     # ── Generic instruction (non-word-bank topics) ──
+    # Variation seed — ensures Gemini sees a unique prompt each generation,
+    # preventing identical outputs for the same topic/grade/difficulty.
+    variation_seed = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    parts.append(f"Variation: {variation_seed}")
+
     # Type and topic
     parts.append(f"Question type: {slot.question_type}")
     parts.append(f"Topic: {topic}")
@@ -2082,8 +2088,8 @@ def build_slots(
         mandatory_visual = required_types[0]
         mandatory_visual_min = int(profile_mandatory.get("min_count", 1))
 
-    # Pick contexts and objects
-    contexts = pick_contexts(subject, num_questions)
+    # Pick contexts and objects — use random offset so each generation picks different contexts
+    contexts = pick_contexts(subject, num_questions, generation_offset=random.randint(0, 999))
     from .context_pools import pick_subject_objects
 
     objects = pick_subject_objects(subject, topic, num_questions, grade_num)
