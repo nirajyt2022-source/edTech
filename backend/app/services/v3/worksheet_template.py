@@ -9,9 +9,8 @@ from jinja2 import Environment, FileSystemLoader
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates")
 
-# nosemgrep: python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2
 # Not Flask — standalone Jinja2 with autoescape=True; XSS-safe.
-_env = Environment(
+_env = Environment(  # nosemgrep: python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2
     loader=FileSystemLoader(TEMPLATE_DIR),
     autoescape=True,
 )
