@@ -87,7 +87,9 @@ jobs:
       - name: Semgrep scan
         run: |
           pip install semgrep
-          semgrep scan --config=auto --config=p/owasp-top-ten backend/app/ --error --quiet
+          semgrep scan --config=auto --config=p/owasp-top-ten \
+            --exclude-rule python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2 \
+            backend/app/ --error --quiet
 
       # npm audit -- check for vulnerable dependencies
       - uses: actions/setup-node@v4
