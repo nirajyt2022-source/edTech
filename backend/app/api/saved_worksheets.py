@@ -367,14 +367,30 @@ async def export_worksheet_pdf(
         if body.pdf_type == "answer_key":
             _encrypt = user_id[:8]
 
-        # Generate PDF
-        worksheet_dict["visual_theme"] = body.visual_theme or "color"
-        pdf_bytes = pdf_service.generate_worksheet_pdf(
-            worksheet_dict,
-            pdf_type=body.pdf_type,
-            watermark=_watermark,
-            encrypt_password=_encrypt,
-        )
+        # Generate PDF — try new WeasyPrint renderer first, fall back to ReportLab
+        USE_NEW_PDF = True
+        if USE_NEW_PDF:
+            try:
+                from app.services.v3.pdf_renderer import generate_pdf as weasy_generate_pdf
+
+                pdf_bytes = weasy_generate_pdf(worksheet_dict, pdf_type=body.pdf_type)
+            except Exception as weasy_exc:
+                logger.warning("weasyprint_failed_fallback_to_reportlab", error=str(weasy_exc))
+                worksheet_dict["visual_theme"] = body.visual_theme or "color"
+                pdf_bytes = pdf_service.generate_worksheet_pdf(
+                    worksheet_dict,
+                    pdf_type=body.pdf_type,
+                    watermark=_watermark,
+                    encrypt_password=_encrypt,
+                )
+        else:
+            worksheet_dict["visual_theme"] = body.visual_theme or "color"
+            pdf_bytes = pdf_service.generate_worksheet_pdf(
+                worksheet_dict,
+                pdf_type=body.pdf_type,
+                watermark=_watermark,
+                encrypt_password=_encrypt,
+            )
 
         # Create safe filename
         type_suffix = f"_{body.pdf_type}" if body.pdf_type != "full" else ""

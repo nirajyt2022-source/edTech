@@ -1,0 +1,195 @@
+{# SVG Visual Macros for Maths worksheets #}
+{# All SVGs use viewBox for consistent scaling in browser + WeasyPrint #}
+
+{% macro clock(hour, minute) %}
+{% set h = hour | default(12) | int %}
+{% set m = minute | default(0) | int %}
+{% set hour_angle = ((h % 12) * 30 + m * 0.5) %}
+{% set minute_angle = m * 6 %}
+<svg viewBox="0 0 200 200" width="180" height="180" style="display:block;margin:0 auto;">
+  {# Clock face #}
+  <circle cx="100" cy="100" r="92" fill="#F0F9FF" stroke="#1E1B4B" stroke-width="4"/>
+  <circle cx="100" cy="100" r="85" fill="white" stroke="#CBD5E1" stroke-width="1"/>
+  {# Hour numbers #}
+  {% for n in range(1, 13) %}
+  {% set a = (n * 30 - 90) * 3.14159 / 180 %}
+  <text x="{{ 100 + 72 * (a | float).__cos__() if false else 100 }}" y="{{ 100 + 72 * 0 }}"
+        font-size="14" font-weight="bold" fill="#1E1B4B" text-anchor="middle" dominant-baseline="central"
+        transform="rotate({{ n * 30 }}, 100, 100) translate(0, -72)"
+        style="font-family: Nunito, sans-serif;">{{ n }}</text>
+  {% endfor %}
+  {# Tick marks #}
+  {% for t in range(60) %}
+  {% if t % 5 == 0 %}
+  <line x1="100" y1="12" x2="100" y2="22" stroke="#1E1B4B" stroke-width="2"
+        transform="rotate({{ t * 6 }}, 100, 100)"/>
+  {% else %}
+  <line x1="100" y1="15" x2="100" y2="20" stroke="#94A3B8" stroke-width="1"
+        transform="rotate({{ t * 6 }}, 100, 100)"/>
+  {% endif %}
+  {% endfor %}
+  {# Hour hand #}
+  <line x1="100" y1="100" x2="100" y2="45" stroke="#1E1B4B" stroke-width="5" stroke-linecap="round"
+        transform="rotate({{ hour_angle }}, 100, 100)"/>
+  {# Minute hand #}
+  <line x1="100" y1="100" x2="100" y2="28" stroke="#6366F1" stroke-width="3" stroke-linecap="round"
+        transform="rotate({{ minute_angle }}, 100, 100)"/>
+  {# Center dot #}
+  <circle cx="100" cy="100" r="5" fill="#F97316"/>
+</svg>
+{% endmacro %}
+
+
+{% macro number_line(start, end, step, highlight, hops_from, hops_count) %}
+{% set s = start | default(0) | int %}
+{% set e = end | default(20) | int %}
+{% set st = step | default(1) | int %}
+{% set total_ticks = ((e - s) // st) + 1 %}
+{% set w = 500 %}
+{% set margin = 40 %}
+{% set usable = w - 2 * margin %}
+<svg viewBox="0 0 {{ w }} 80" width="100%" height="80" style="display:block;margin:0 auto;">
+  {# Main line #}
+  <line x1="{{ margin }}" y1="40" x2="{{ w - margin }}" y2="40" stroke="#1E293B" stroke-width="2"/>
+  {# Arrow #}
+  <polygon points="{{ w - margin }},40 {{ w - margin - 8 }},35 {{ w - margin - 8 }},45" fill="#1E293B"/>
+  {# Ticks and numbers #}
+  {% for i in range(total_ticks) %}
+  {% set val = s + i * st %}
+  {% set x = margin + (i * usable / (total_ticks - 1)) if total_ticks > 1 else margin %}
+  <line x1="{{ x }}" y1="32" x2="{{ x }}" y2="48" stroke="#1E293B" stroke-width="2"/>
+  <text x="{{ x }}" y="62" font-size="11" fill="#1E293B" text-anchor="middle"
+        style="font-family: Nunito, sans-serif;">{{ val }}</text>
+  {% if highlight is not none and val == highlight | int %}
+  <circle cx="{{ x }}" cy="40" r="10" fill="#6366F1" opacity="0.3"/>
+  <circle cx="{{ x }}" cy="40" r="6" fill="#6366F1"/>
+  {% endif %}
+  {% endfor %}
+  {# Hop arcs #}
+  {% if hops_from is not none and hops_count is not none and hops_count | int > 0 %}
+  {% set hf = hops_from | int %}
+  {% set hc = hops_count | int %}
+  {% for hop in range(hc) %}
+  {% set from_val = hf + hop * st %}
+  {% set to_val = from_val + st %}
+  {% set from_idx = (from_val - s) // st %}
+  {% set to_idx = from_idx + 1 %}
+  {% if to_idx < total_ticks %}
+  {% set x1 = margin + (from_idx * usable / (total_ticks - 1)) if total_ticks > 1 else margin %}
+  {% set x2 = margin + (to_idx * usable / (total_ticks - 1)) if total_ticks > 1 else margin %}
+  {% set mid_x = (x1 + x2) / 2 %}
+  <path d="M {{ x1 }} 35 Q {{ mid_x }} 10 {{ x2 }} 35"
+        fill="none" stroke="#F97316" stroke-width="2" stroke-dasharray="4,2"/>
+  <polygon points="{{ x2 }},35 {{ x2 - 4 }},28 {{ x2 + 4 }},28" fill="#F97316"/>
+  {% endif %}
+  {% endfor %}
+  {% endif %}
+</svg>
+{% endmacro %}
+
+
+{% macro pie_fraction(numerator, denominator) %}
+{% set n = numerator | default(1) | int %}
+{% set d = denominator | default(4) | int %}
+{% set cx = 80 %}
+{% set cy = 80 %}
+{% set r = 65 %}
+<svg viewBox="0 0 200 180" width="180" height="170" style="display:block;margin:0 auto;">
+  {# Background circle #}
+  <circle cx="{{ cx }}" cy="{{ cy }}" r="{{ r }}" fill="white" stroke="#CBD5E1" stroke-width="2"/>
+  {# Filled sectors #}
+  {% for i in range(d) %}
+  {% set start_angle = (i * 360 / d) - 90 %}
+  {% set end_angle = ((i + 1) * 360 / d) - 90 %}
+  {% set start_rad = start_angle * 3.14159265 / 180 %}
+  {% set end_rad = end_angle * 3.14159265 / 180 %}
+  {% set large_arc = 1 if (360 / d) > 180 else 0 %}
+  {% if i < n %}
+  <path d="M {{ cx }} {{ cy }} L {{ cx + r * (start_rad).__cos__() if false else cx }} {{ cy + r * 0 }} A {{ r }} {{ r }} 0 {{ large_arc }} 1 {{ cx + r * 0 }} {{ cy + r * 0 }} Z"
+        fill="#818CF8" stroke="white" stroke-width="2"
+        transform="rotate({{ start_angle + 90 }}, {{ cx }}, {{ cy }})">
+  </path>
+  {% endif %}
+  {# Sector divider lines #}
+  <line x1="{{ cx }}" y1="{{ cy }}" x2="{{ cx }}" y2="{{ cy - r }}"
+        stroke="white" stroke-width="2"
+        transform="rotate({{ start_angle + 90 }}, {{ cx }}, {{ cy }})"/>
+  {% endfor %}
+  {# Outline #}
+  <circle cx="{{ cx }}" cy="{{ cy }}" r="{{ r }}" fill="none" stroke="#4F46E5" stroke-width="2"/>
+  {# Label #}
+  <text x="{{ cx + 85 }}" y="{{ cy + 5 }}" font-size="22" font-weight="bold" fill="#1E1B4B"
+        text-anchor="middle" style="font-family: Nunito, sans-serif;">
+    {{ n }}/{{ d }}
+  </text>
+</svg>
+{% endmacro %}
+
+
+{% macro shapes_visual(shape_list, target) %}
+{% set colors = ['#EF4444', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'] %}
+{% set letters = ['A', 'B', 'C', 'D', 'E', 'F'] %}
+<svg viewBox="0 0 400 120" width="100%" height="110" style="display:block;margin:0 auto;">
+  {% for shape in shape_list[:4] %}
+  {% set x_offset = 50 + loop.index0 * 95 %}
+  {% set color = colors[loop.index0 % 6] %}
+  {% set name = shape.name | default(shape) if shape is mapping else shape %}
+  {% set is_target = (name | lower == target | lower) if target else false %}
+
+  {# Highlight target #}
+  {% if is_target %}
+  <rect x="{{ x_offset - 30 }}" y="5" width="65" height="110" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4,2"/>
+  {% endif %}
+
+  {# Shape #}
+  {% if 'circle' in name | lower %}
+  <circle cx="{{ x_offset }}" cy="50" r="25" fill="{{ color }}20" stroke="{{ color }}" stroke-width="2.5"/>
+  {% elif 'triangle' in name | lower %}
+  <polygon points="{{ x_offset }},25 {{ x_offset - 25 }},75 {{ x_offset + 25 }},75" fill="{{ color }}20" stroke="{{ color }}" stroke-width="2.5"/>
+  {% elif 'square' in name | lower %}
+  <rect x="{{ x_offset - 22 }}" y="28" width="44" height="44" fill="{{ color }}20" stroke="{{ color }}" stroke-width="2.5"/>
+  {% elif 'rectangle' in name | lower %}
+  <rect x="{{ x_offset - 28 }}" y="33" width="56" height="35" fill="{{ color }}20" stroke="{{ color }}" stroke-width="2.5"/>
+  {% elif 'pentagon' in name | lower %}
+  <polygon points="{{ x_offset }},25 {{ x_offset + 24 }},40 {{ x_offset + 15 }},70 {{ x_offset - 15 }},70 {{ x_offset - 24 }},40" fill="{{ color }}20" stroke="{{ color }}" stroke-width="2.5"/>
+  {% elif 'hexagon' in name | lower %}
+  <polygon points="{{ x_offset + 25 }},50 {{ x_offset + 12 }},28 {{ x_offset - 12 }},28 {{ x_offset - 25 }},50 {{ x_offset - 12 }},72 {{ x_offset + 12 }},72" fill="{{ color }}20" stroke="{{ color }}" stroke-width="2.5"/>
+  {% else %}
+  <circle cx="{{ x_offset }}" cy="50" r="25" fill="{{ color }}20" stroke="{{ color }}" stroke-width="2.5"/>
+  {% endif %}
+
+  {# Label #}
+  <text x="{{ x_offset }}" y="100" font-size="13" font-weight="bold" fill="#1E293B" text-anchor="middle"
+        style="font-family: Nunito, sans-serif;">{{ letters[loop.index0] }}</text>
+  {% endfor %}
+</svg>
+{% endmacro %}
+
+
+{% macro base_ten(numbers, operation) %}
+{% set cols = ['H', 'T', 'O'] %}
+<div style="display:inline-block;border:2px solid #CBD5E1;border-radius:8px;padding:8px 16px;background:#F8FAFC;">
+  <table style="border-collapse:collapse;font-family:Nunito,sans-serif;font-size:16px;">
+    <thead>
+      <tr>
+        <th style="padding:4px 12px;border-bottom:2px solid #1E293B;color:#6366F1;">H</th>
+        <th style="padding:4px 12px;border-bottom:2px solid #1E293B;color:#6366F1;">T</th>
+        <th style="padding:4px 12px;border-bottom:2px solid #1E293B;color:#6366F1;">O</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for num in numbers %}
+      <tr>
+        {% set s = '%03d' | format(num | int) %}
+        <td style="padding:4px 12px;text-align:center;font-weight:bold;">{{ s[0] }}</td>
+        <td style="padding:4px 12px;text-align:center;font-weight:bold;">{{ s[1] }}</td>
+        <td style="padding:4px 12px;text-align:center;font-weight:bold;">{{ s[2] }}</td>
+      </tr>
+      {% if loop.index == 1 and numbers | length > 1 %}
+      <tr><td colspan="3" style="border-top:2px solid #1E293B;text-align:left;font-weight:bold;padding:2px 4px;">{{ operation | default('+') }}</td></tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
