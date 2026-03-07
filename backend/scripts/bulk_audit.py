@@ -153,6 +153,7 @@ def audit_topic(topic_name: str, profile: dict) -> list[AuditIssue]:
             "fraction", "decimal", "money", "measurement", "time",
             "perimeter", "area", "volume", "percentage", "hcf", "lcm",
             "speed", "number", "large number", "place value",
+            "factor", "multiple",
         ]
 
         is_non_arithmetic = any(kw in topic_lower for kw in NON_ARITHMETIC_KEYWORDS)
