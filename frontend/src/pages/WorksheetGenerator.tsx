@@ -806,23 +806,35 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
     setDownloadingPdf(true)
     setDownloadingPdfType(pdfType)
     try {
-      const response = await api.post('/api/worksheets/export-pdf', {
-        worksheet,
-        pdf_type: pdfType,
-      }, {
-        responseType: 'blob',
-      })
+      // Use rendered HTML directly — opens browser print dialog (Save as PDF)
+      const htmlContent = worksheet.rendered_html
+      if (htmlContent) {
+        const w = window.open('', '_blank')
+        if (w) {
+          w.document.write(htmlContent)
+          w.document.close()
+          w.print()
+        }
+      } else {
+        // Fallback to backend API if no rendered_html
+        const response = await api.post('/api/worksheets/export-pdf', {
+          worksheet,
+          pdf_type: pdfType,
+        }, {
+          responseType: 'blob',
+        })
 
-      const typeSuffix = pdfType !== 'full' ? `_${pdfType}` : ''
-      const blob = new Blob([response.data], { type: 'application/pdf' })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${worksheet.title.replace(/\s+/g, '_')}${typeSuffix}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+        const typeSuffix = pdfType !== 'full' ? `_${pdfType}` : ''
+        const blob = new Blob([response.data], { type: 'application/pdf' })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${worksheet.title.replace(/\s+/g, '_')}${typeSuffix}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      }
 
       // Record completion for engagement tracking (fire-and-forget — don't block PDF download)
       if (activeChildId) {
@@ -1783,7 +1795,14 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                       </Button>
 
                       <Button
-                        onClick={() => setShowAnswers(!showAnswers)}
+                        onClick={() => {
+                          const next = !showAnswers
+                          setShowAnswers(next)
+                          const iframe = document.querySelector('iframe[title="Worksheet view"]') as HTMLIFrameElement
+                          if (iframe?.contentWindow) {
+                            iframe.contentWindow.postMessage({ type: 'toggleAnswerKey', show: next }, '*')
+                          }
+                        }}
                         variant={showAnswers ? "default" : "outline"}
                         size="sm"
                         className={showAnswers ? "bg-primary/90 text-primary-foreground" : ""}
@@ -1914,28 +1933,6 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                   </div>
                 </CardHeader>
 
-                {/* Print button for rendered view */}
-                {worksheet.rendered_html && (
-                  <div className="px-10 pb-4 flex items-center gap-2 print:hidden">
-                    <button
-                      onClick={() => {
-                        const w = window.open('', '_blank')
-                        if (w && worksheet.rendered_html) {
-                          w.document.write(worksheet.rendered_html)
-                          w.document.close()
-                          w.print()
-                        }
-                      }}
-                      className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-primary hover:bg-primary/5 transition-colors"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.618 0-1.103-.508-1.12-1.227L6.34 18m11.318-8.22L16.5 3a.75.75 0 00-.75-.75h-7.5a.75.75 0 00-.75.75l-1.15 6.756" />
-                      </svg>
-                      Print
-                    </button>
-                  </div>
-                )}
-
                 {/* Unified Jinja2 Template View */}
                 {worksheet.rendered_html ? (
                   <CardContent className="px-0 pb-0">
@@ -1944,7 +1941,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                       className="w-full border-0 rounded-b-xl"
                       style={{ minHeight: '800px', height: '100vh', maxHeight: '2000px' }}
                       title="Worksheet view"
-                      sandbox="allow-same-origin"
+                      sandbox="allow-same-origin allow-scripts"
                     />
                   </CardContent>
                 ) : (

@@ -449,6 +449,32 @@ body {
   color: #92400E;
 }
 .hint-icon { margin-right: 4px; }
+.hint-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  font-size: 12px;
+  color: #92400E;
+  cursor: pointer;
+  font-family: inherit;
+}
+.hint-toggle:hover { background: #FDE68A; }
+
+/* ── Screen: hide hints by default, show on click ── */
+@media screen {
+  .hint-box { display: none; }
+  .hint-box.revealed { display: block; }
+}
+/* ── Print/PDF: always show hints, hide toggle buttons ── */
+@media print {
+  .hint-box { display: block !important; }
+  .hint-toggle { display: none !important; }
+}
 
 /* ── Show Work ── */
 .show-work {
@@ -489,6 +515,15 @@ body {
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
   page-break-before: always;
+}
+/* Screen: hide answer key by default, show via postMessage */
+@media screen {
+  .answer-key { display: none; }
+  .answer-key.visible { display: block; }
+}
+/* Print: answer key visibility controlled by template flag */
+@media print {
+  .answer-key.print-hide { display: none !important; }
 }
 .answer-key .ak-title {
   font-weight: 700;
@@ -768,6 +803,9 @@ body {
 
     {# ── HINT ── #}
     {% if q.hint %}
+    <button class="hint-toggle" onclick="this.nextElementSibling.classList.add('revealed');this.style.display='none'">
+      💡 Show Hint
+    </button>
     <div class="hint-box">
       <span class="hint-icon">💡</span> {{ L.hint }} {{ q.hint }}
     </div>
@@ -833,7 +871,7 @@ body {
 
   {# ── ANSWER KEY ── #}
   {% if not worksheet.get('_hide_answers', false) %}
-  <div class="answer-key">
+  <div class="answer-key{% if worksheet.get('_hide_answers', false) %} print-hide{% endif %}">
     <div class="ak-title">{{ L.answer_key }}</div>
     <div class="answer-grid">
       {% for q in worksheet.questions | default([]) %}
@@ -852,5 +890,19 @@ body {
   {% endif %}
 
 </div>
+<script>
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'toggleAnswerKey') {
+      var ak = document.querySelector('.answer-key');
+      if (ak) {
+        if (e.data.show) {
+          ak.classList.add('visible');
+        } else {
+          ak.classList.remove('visible');
+        }
+      }
+    }
+  });
+</script>
 </body>
 </html>
