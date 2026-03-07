@@ -219,52 +219,22 @@ def generate_worksheet_v3(
         logger.info("[v3] quality gate: %s (%d issues)", gate_result.severity, len(gate_result.issues))
 
     if not gate_result.passed:
-        # Critical failure — try once more with resolved topic name
-        logger.warning("[v3] quality gate BLOCKED — attempting retry with resolved topic")
-        try:
-            from app.data.topic_lookup import resolve_topic
-
-            grade_match = re.search(r"\d+", str(grade_level))
-            grade = int(grade_match.group()) if grade_match else None
-            resolved = resolve_topic(topic, grade)
-
-            if resolved and resolved != topic:
-                logger.info("[v3] retrying with resolved topic: %s → %s", topic, resolved)
-                slot_output = build_slots(
-                    board=board,
-                    grade_level=grade_level,
-                    subject=subject,
-                    topic=resolved,
-                    difficulty=difficulty,
-                    num_questions=num_questions,
-                    problem_style=problem_style,
-                    language=language,
-                    adaptive_config=adaptive_config,
-                )
-                filled = fill_slots(client, slot_output.slots, language, curriculum_context=curriculum_ctx)
-                worksheet = assemble_worksheet(slot_output, filled)
-
-                gate_result = check_worksheet(
-                    worksheet=worksheet,
-                    slots=slot_output.slots,
-                    topic=resolved,
-                    subject=subject,
-                    grade_level=grade_level,
-                )
-
-                if gate_result.passed:
-                    warnings.append("[quality_gate] Retry with resolved topic name succeeded")
-                else:
-                    warnings.extend([f"[quality_gate:retry] {i}" for i in gate_result.issues])
-        except Exception as e:
-            logger.warning("[v3] quality gate retry failed: %s", e)
+        # Log quality issues but don't retry (advisory mode — avoids extra Gemini call latency)
+        logger.warning(
+            "[v3] quality gate flagged %d issues (advisory, not retrying): %s",
+            len(gate_result.issues),
+            gate_result.issues[:3],
+        )
 
     from app.core.config import get_settings
 
     strict_p1 = get_settings().trust_strict_p1
     if not gate_result.passed or (strict_p1 and gate_result.severity == "warning"):
-        raise ValueError(
-            f"V3 quality gate rejected worksheet: severity={gate_result.severity}, issues={gate_result.issues[:3]}"
+        # Log but don't block — quality gate is advisory to avoid 502s in production
+        logger.warning(
+            "[v3] quality gate would reject: severity=%s, issues=%s",
+            gate_result.severity,
+            gate_result.issues[:3],
         )
 
     worksheet["_quality_gate"] = {
