@@ -1762,59 +1762,6 @@ TOPIC_INSTRUCTION_TEMPLATES: dict[str, dict[str, str]] = {
 # ---------------------------------------------------------------------------
 # LLM instruction builder
 # ---------------------------------------------------------------------------
-def _get_skill_description(skill_tag: str, topic: str, subject: str) -> str:
-    """Return a human-readable description of what this skill tests."""
-    SKILL_DESCRIPTIONS: dict[str, str] = {
-        # English - Alphabet
-        "eng_c1_alpha_identify": "Recognise and name capital and small letters. Ask about a SPECIFIC letter — what word starts with it, or which letter a word starts with.",
-        "eng_c1_alpha_match": "Match capital letters to small letters, or match a word to its starting letter.",
-        "eng_c1_alpha_fill": "Complete a word or sentence where the missing part tests letter knowledge.",
-        "eng_c1_alpha_error": "Find the mistake in a letter/word pairing. Example: 'Is B the first letter of Cat? Why not?'",
-        "eng_c1_alpha_think": "Explain reasoning about letters. Example: 'Why does Ball start with B and not D?'",
-        # English - Simple Sentences
-        "eng_c1_simple_identify": "Read a simple 3-4 word sentence and identify if it's correct. Test sentence structure — subject + verb + object.",
-        "eng_c1_simple_fill": "Complete a simple sentence by filling in the missing word. Test grammar, not vocabulary.",
-        "eng_c1_simple_rewrite": "Rearrange jumbled words to form a correct sentence. Test word ORDER.",
-        "eng_c1_simple_error": "Find the grammar mistake in a simple sentence. Example: 'him go school' — what's wrong?",
-        "eng_c1_simple_think": "Explain why a sentence is correct or incorrect. Test understanding of sentence structure.",
-        # EVS - Seasons
-        "sci_c1_seasons_identify": "Identify the three main Indian seasons: Summer, Rainy/Monsoon, Winter. Ask which season has which weather.",
-        "sci_c1_seasons_represent": "Describe what we see, wear, or do in a specific season. Connect seasons to daily life in India.",
-        "sci_c1_seasons_apply": "Apply seasonal knowledge: what clothes for which season, what foods, what activities. Indian context.",
-        "sci_c1_seasons_error": "Find the mistake in a seasonal statement. Example: 'We wear sweaters in summer' — what's wrong?",
-        "sci_c1_seasons_thinking": "Explain WHY seasons change, or give an opinion about a favourite season with reasoning.",
-        # Moral Science - Honesty
-        "moral_c1_honesty_identify": "Identify honest vs dishonest actions in a simple story. Use age-appropriate situations (school, home, playground).",
-        "moral_c1_honesty_represent": "Describe what honesty means using child-friendly examples.",
-        "moral_c1_honesty_apply": "Apply honesty to a real situation: what should you do if you break something, find money, see someone cheating?",
-        "moral_c1_honesty_error": "Identify the dishonest action in a scenario. Why is it wrong?",
-        "moral_c1_honesty_thinking": "Explain WHY honesty is important. What happens when people are dishonest?",
-    }
-
-    # Try exact match
-    if skill_tag in SKILL_DESCRIPTIONS:
-        return SKILL_DESCRIPTIONS[skill_tag]
-
-    # Try partial match on topic keywords
-    topic_lower = topic.lower()
-    for key, desc in SKILL_DESCRIPTIONS.items():
-        topic_words = set(topic_lower.replace("(", "").replace(")", "").split()) - {
-            "class",
-            "the",
-            "and",
-            "of",
-            "in",
-            "a",
-            "an",
-        }
-        key_words = set(key.split("_"))
-        if len(topic_words & key_words) >= 2:
-            return desc
-
-    # Generic fallback
-    return f"Ask a question that directly tests the student's knowledge of {topic} in {subject}. The question must be ONLY about {topic} — do not ask about other subjects or topics."
-
-
 def _build_llm_instruction(
     slot: Slot,
     topic: str,
@@ -1824,45 +1771,6 @@ def _build_llm_instruction(
 ) -> str:
     """Build a specific instruction string for Gemini to fill this slot."""
     parts = []
-
-    # ═══════════════════════════════════════════════════════════
-    # TOPIC + BLOOM'S ANCHOR — Always first, always present
-    # ═══════════════════════════════════════════════════════════
-    bloom_level = {
-        "recognition": "REMEMBER — Recall a fact about",
-        "representation": "UNDERSTAND — Explain or describe something about",
-        "application": "APPLY — Use knowledge of",
-        "error_detection": "EVALUATE — Find a mistake or judge a statement about",
-        "thinking": "CREATE/EVALUATE — Reason, explain why, or create something about",
-    }.get(slot.role, "APPLY —")
-
-    parts.append(f"TOPIC: {topic} | SUBJECT: {subject} | CLASS: {grade_num} (age {grade_num + 5}-{grade_num + 6})")
-    parts.append(f"BLOOM'S LEVEL: {bloom_level} {topic}")
-    parts.append(f"SKILL TAG: {slot.skill_tag}")
-    parts.append(f"DIFFICULTY: {slot.difficulty}")
-    parts.append(f"QUESTION TYPE: {slot.question_type}")
-
-    skill_desc = _get_skill_description(slot.skill_tag, topic, subject)
-    if skill_desc:
-        parts.append(f"WHAT TO ASK: {skill_desc}")
-
-    parts.append(f"⚠️ This question MUST be about {topic}. Do NOT write about any other topic.")
-
-    # Age-appropriate language constraints
-    if grade_num <= 1:
-        parts.append(
-            "LANGUAGE LEVEL: Use only 3-5 word sentences. Words must be from a Class 1 vocabulary (common objects, animals, family, school). No abstract concepts."
-        )
-    elif grade_num <= 2:
-        parts.append("LANGUAGE LEVEL: Use 4-6 word sentences. Simple vocabulary. One concept per question.")
-    elif grade_num <= 3:
-        parts.append(
-            "LANGUAGE LEVEL: Use 5-8 word sentences. Can introduce slightly complex vocabulary but keep explanations simple."
-        )
-    elif grade_num <= 4:
-        parts.append("LANGUAGE LEVEL: Use 6-10 word sentences. Can use subject-specific terminology with context.")
-    else:
-        parts.append("LANGUAGE LEVEL: Use 8-12 word sentences. Can use academic vocabulary and multi-step reasoning.")
 
     # Check for topic-specific instruction template
     for topic_key, templates in TOPIC_INSTRUCTION_TEMPLATES.items():

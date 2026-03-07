@@ -177,19 +177,6 @@ def generate_worksheet_v3(
     worksheet["difficulty"] = difficulty
     worksheet["board"] = board
 
-    # Step 3.5: AI Review — DISABLED temporarily (causes 502 timeout on Railway)
-    # TODO: Re-enable once generation is stable, or move to async background job
-    # try:
-    #     from .gemini_filler import review_worksheet
-    #
-    #     t_review = time.perf_counter()
-    #     worksheet = review_worksheet(client, worksheet)
-    #     review_ms = int((time.perf_counter() - t_review) * 1000)
-    #     warnings.append(f"[v3] AI review completed in {review_ms}ms")
-    #     logger.info("[v3] AI review took %dms", review_ms)
-    # except Exception as review_err:
-    #     logger.warning("[v3] AI review failed (non-blocking): %s", review_err)
-
     # Step 4: Light validation
     passed, issues, failed_slots = validate_worksheet(worksheet, slot_output.slots)
     warnings.extend(issues)

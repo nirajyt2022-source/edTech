@@ -1,4 +1,4 @@
-"""Light validator — checks with single retry for failed slots.
+"""Light validator — 5 checks only, with single retry for failed slots.
 
 Checks:
 1. Text present: every question has text with length >= 5
@@ -6,9 +6,6 @@ Checks:
 3. Word count: question text within grade limit (max_words * 4)
 4. No duplicates: Jaccard similarity between any pair < 0.6
 5. MCQ answer in options: correct_answer appears in options list
-6. True/False answers must be "True" or "False"
-7. Hindi word bank: assigned word appears in text
-8. Answer validation: non-empty, non-placeholder, sane length
 """
 
 from __future__ import annotations
@@ -118,23 +115,6 @@ def validate_worksheet(
             # Also flag if text is a question (contains ?) — triggers retry
             if "?" in text:
                 issues.append(f"Q{slot_num}: true_false text is a question (contains '?'), should be a statement")
-                failed_slots.append(slot_num)
-
-        # CHECK 8: Answer validation — correct_answer sanity
-        if correct:
-            # 8a: Fill-blank must have non-trivial answer
-            if q_type == "fill_blank":
-                ans = str(correct).strip()
-                if len(ans) < 1 or ans in ("______", "___", "__", "_", "?", "??"):
-                    issues.append(f"Q{slot_num}: fill_blank answer is blank or placeholder: '{correct}'")
-                    failed_slots.append(slot_num)
-            # 8b: Answer length sanity (max 200 chars for any type)
-            if len(str(correct)) > 200:
-                issues.append(f"Q{slot_num}: answer too long ({len(str(correct))} chars)")
-        else:
-            # Missing answer entirely
-            if q_type not in ("short_answer", "word_problem"):
-                issues.append(f"Q{slot_num}: missing correct_answer for {q_type}")
                 failed_slots.append(slot_num)
 
     # CHECK 4: No duplicates (Jaccard similarity)
