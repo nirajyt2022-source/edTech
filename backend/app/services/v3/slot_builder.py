@@ -351,6 +351,32 @@ def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
     if any(kw in combined for kw in ("percent", "percentage")):
         return "percentage"
     if any(kw in combined for kw in ("geometry", "angle", "line segment")):
+        # Conceptual geometry topics should NOT get pre-computed numbers.
+        # Only angle-specific topics get arithmetic number pairs.
+        conceptual_keywords = (
+            "circle",
+            "symmetry",
+            "shape",
+            "perimeter",
+            "area",
+            "pattern",
+            "3d",
+            "3-d",
+            "solid",
+            "cube",
+            "cuboid",
+            "sphere",
+            "cylinder",
+            "cone",
+            "triangle",
+            "rectangle",
+            "square",
+            "polygon",
+            "parallel",
+            "perpendicular",
+        )
+        if any(ck in combined for ck in conceptual_keywords):
+            return None  # No numbers — Gemini generates conceptual questions
         return "geometry"
     return None
 
@@ -1055,6 +1081,51 @@ TOPIC_INSTRUCTION_TEMPLATES: dict[str, dict[str, str]] = {
     "Active and Passive Voice": {
         "mcq": "Give a sentence. Ask: 'Is this in active or passive voice?' Options: Active Voice, Passive Voice, + 2 wrong.",
         "short_answer": "Give an active voice sentence. Ask: 'Change to passive voice.'",
+    },
+    # ── Maths conceptual topics (NO arithmetic word problems) ──
+    "Geometry": {
+        "mcq": "Ask about geometric properties: shapes, sides, vertices, lines of symmetry, radius vs diameter, 2D vs 3D shapes, parallel/perpendicular lines. Example: 'How many lines of symmetry does a square have?' Options: 4 numbers. IMPORTANT: Do NOT ask addition or subtraction questions. Ask ONLY about geometry concepts.",
+        "fill_blank": "Write a geometry fact with a blank: 'A circle has ______ corners.' (Answer: 0) or 'The diameter is ______ times the radius.' (Answer: 2). Do NOT use addition/subtraction.",
+        "true_false": "Write a geometry fact: 'A rectangle has 4 lines of symmetry.' (Answer: False — it has 2). Do NOT write arithmetic statements.",
+        "short_answer": "Ask about geometric properties: 'Name a shape with exactly 3 sides.' or 'What is the line from center to edge of a circle called?' Do NOT ask arithmetic.",
+        "error_detection": "Show a wrong geometry claim: 'Rahul said a triangle has 4 vertices. Find the mistake.' Do NOT use arithmetic errors.",
+        "word_problem": "Ask a geometry question in context: 'A clock face is circular. If you draw a line from the center to the number 12, what is that line called?' Do NOT ask addition/subtraction word problems.",
+    },
+    "Shapes": {
+        "mcq": "Ask about 2D/3D shapes: 'How many faces does a cube have?' or 'Which shape has no corners?' No arithmetic.",
+        "fill_blank": "A ______ has 4 equal sides and 4 right angles. (Answer: Square). No arithmetic.",
+        "true_false": "'A cone has 2 flat faces.' (Answer: False). Focus on shape properties only.",
+        "short_answer": "'How many edges does a cuboid have?' or 'Name a 3D shape that can roll.' No arithmetic.",
+    },
+    "Perimeter": {
+        "mcq": "'What is the perimeter of a rectangle with length 5 cm and width 3 cm?' Use perimeter formula, not random addition.",
+        "fill_blank": "'The perimeter of a square with side ______ cm is 20 cm.' (Answer: 5). Use perimeter formula.",
+        "short_answer": "'Find the perimeter of a triangle with sides 3 cm, 4 cm, and 5 cm.'",
+    },
+    "Area": {
+        "mcq": "'What is the area of a rectangle with length 6 cm and width 4 cm?' Use area formula (length x width).",
+        "fill_blank": "'The area of a square with side 5 cm is ______ sq cm.' (Answer: 25).",
+        "short_answer": "'Find the area of a rectangle with length 8 cm and width 3 cm.'",
+    },
+    "Data": {
+        "mcq": "Show a small data table or tally marks. Ask: 'How many students chose mango?' or 'Which fruit is most popular?' No random arithmetic.",
+        "true_false": "Show a data statement: 'In a bar graph, the tallest bar shows the most popular item.' (Answer: True).",
+        "short_answer": "Give a small data set and ask to read or interpret it. No random addition.",
+    },
+    "Time": {
+        "mcq": "'What time will it be 2 hours after 3:00 PM?' or 'How many minutes are in 1 hour?' Focus on time concepts.",
+        "fill_blank": "'There are ______ hours in a day.' (Answer: 24) or '1 hour = ______ minutes.' (Answer: 60).",
+        "short_answer": "'If school starts at 8:00 AM and ends at 2:00 PM, how long is the school day?'",
+    },
+    "Money": {
+        "mcq": "'Which combination of coins makes Rs 50?' or 'How much change from Rs 100 for a Rs 65 item?' Focus on money concepts.",
+        "fill_blank": "'A Rs 5 coin and a Rs 2 coin together make Rs ______.' (Answer: 7).",
+        "short_answer": "'List 3 different ways to make Rs 10 using coins.'",
+    },
+    "Measurement": {
+        "mcq": "'Which unit would you use to measure the length of a pencil?' Options: cm, km, kg, litres. Focus on measurement concepts.",
+        "fill_blank": "'1 metre = ______ centimetres.' (Answer: 100) or '1 kg = ______ grams.' (Answer: 1000).",
+        "short_answer": "'Would you measure milk in litres or kilograms? Why?'",
     },
 }
 
