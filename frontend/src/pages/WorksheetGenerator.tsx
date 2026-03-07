@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
@@ -1729,28 +1729,9 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                 {/* Subtle Academic Header Accent */}
                 <div className="absolute top-0 left-0 right-0 h-px bg-primary/15 print:hidden" />
 
-                <CardHeader className="print:pb-4 print:px-0 print:pt-0 pt-12 px-10">
-                  <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                    <div className="space-y-4">
-                      <CardTitle className="text-lg md:text-xl font-semibold text-foreground leading-snug">
-                        {worksheet.title}
-                      </CardTitle>
-                      <div className="flex flex-wrap gap-2 print:mt-4">
-                        {[worksheet.grade, worksheet.subject, worksheet.topic, worksheet.difficulty].map((tag, i) => (
-                          <span key={i} className="inline-flex items-center px-3 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold bg-secondary text-secondary-foreground border border-border/50">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Parent Tip (Trust P0) */}
-                      {worksheet.parent_tip && (
-                        <div className="p-4 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900 print:bg-amber-50">
-                          <span className="font-semibold">{getLabels(worksheet.subject).forParents}</span>
-                          {worksheet.parent_tip}
-                        </div>
-                      )}
-
+                <CardHeader className="print:pb-4 print:px-0 print:pt-0 pt-6 px-10">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                    <div className="space-y-3">
                       {/* Multi-skill tabs */}
                       {worksheets && worksheets.length > 1 && (
                         <div className="flex flex-wrap gap-1.5 print:hidden">
