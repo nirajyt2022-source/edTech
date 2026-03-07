@@ -9,6 +9,8 @@ from jinja2 import Environment, FileSystemLoader
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "templates")
 
+# nosemgrep: python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2
+# Not Flask — standalone Jinja2 with autoescape=True; XSS-safe.
 _env = Environment(
     loader=FileSystemLoader(TEMPLATE_DIR),
     autoescape=True,
@@ -35,4 +37,6 @@ def render_worksheet_html(worksheet: dict) -> str:
         Complete HTML string ready for iframe display or WeasyPrint PDF.
     """
     template = _env.get_template("worksheet.html.j2")
-    return template.render(worksheet=worksheet)
+    return template.render(
+        worksheet=worksheet
+    )  # nosemgrep: python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2
