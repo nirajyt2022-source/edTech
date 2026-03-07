@@ -351,6 +351,12 @@ def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
     if any(kw in combined for kw in ("percent", "percentage")):
         return "percentage"
     if any(kw in combined for kw in ("geometry", "angle", "line segment")):
+        # Conceptual geometry topics (shapes, symmetry, circles) should NOT get
+        # pre-computed numbers — they need Gemini to generate conceptual questions.
+        # Only angle-specific topics get arithmetic number pairs.
+        conceptual_geo = ("circle", "symmetry", "shape", "perimeter", "area", "pattern", "3d", "3-d", "solid")
+        if any(cg in combined for cg in conceptual_geo):
+            return None  # No numbers — purely conceptual
         return "geometry"
     return None
 
@@ -1060,6 +1066,36 @@ TOPIC_INSTRUCTION_TEMPLATES: dict[str, dict[str, str]] = {
     "Active and Passive Voice": {
         "mcq": "Give a sentence. Ask: 'Is this in active or passive voice?' Options: Active Voice, Passive Voice, + 2 wrong.",
         "short_answer": "Give an active voice sentence. Ask: 'Change to passive voice.'",
+    },
+    # Geometry topics
+    "Geometry": {
+        "mcq": "Ask about geometric properties: shapes, sides, vertices, symmetry lines, radius vs diameter, 2D vs 3D, parallel/perpendicular lines. Example: 'How many lines of symmetry does a square have?' Options: 4 numbers. Do NOT ask arithmetic addition/subtraction questions.",
+        "fill_blank": "Write a geometry statement with a blank: 'A circle has ______ corners.' or 'The diameter is ______ times the radius.' Do NOT use addition/subtraction.",
+        "true_false": "Write a geometry fact statement: 'A rectangle has 4 lines of symmetry.' (False — it has 2). Do NOT write arithmetic statements.",
+        "short_answer": "Ask about geometric properties: 'Name a shape with exactly 3 sides.' or 'What is the line from the center of a circle to its edge called?' Do NOT ask arithmetic.",
+        "error_detection": "Show a wrong geometry statement: 'Rahul said a triangle has 4 vertices. What is wrong?' Do NOT use arithmetic errors.",
+    },
+    "Shapes": {
+        "mcq": "Ask about 2D/3D shapes: 'How many faces does a cube have?' or 'Which shape has no corners?' Options: shape names or numbers. No arithmetic.",
+        "fill_blank": "A ______ has 4 equal sides and 4 right angles. (Answer: Square). No arithmetic.",
+        "true_false": "Write: 'A cone has 2 flat faces.' (False). Focus on shape properties, not arithmetic.",
+        "short_answer": "Ask: 'Name a 3D shape that can roll.' or 'How many edges does a cuboid have?' No arithmetic.",
+    },
+    "Symmetry": {
+        "mcq": "Ask: 'How many lines of symmetry does this shape have?' or 'Which letter has a vertical line of symmetry?' Options: numbers or letters. No arithmetic.",
+        "fill_blank": "The letter ______ has both horizontal and vertical symmetry. (Answer: H or O). No arithmetic.",
+        "true_false": "Write: 'The letter B has a horizontal line of symmetry.' (True). Focus on symmetry, not arithmetic.",
+        "short_answer": "Ask: 'Draw all lines of symmetry for a rectangle.' or 'Which of these shapes has rotational symmetry?' No arithmetic.",
+    },
+    "Perimeter": {
+        "mcq": "Ask about perimeter of simple shapes: 'What is the perimeter of a rectangle with length 5 cm and width 3 cm?' Use geometry formulas, not random addition.",
+        "fill_blank": "The perimeter of a square with side ______ cm is 20 cm. (Answer: 5). Use perimeter formula.",
+        "short_answer": "Ask: 'Find the perimeter of a triangle with sides 3 cm, 4 cm, and 5 cm.' Use perimeter concepts.",
+    },
+    "Area": {
+        "mcq": "Ask about area: 'What is the area of a rectangle with length 6 cm and width 4 cm?' Use area formulas (length × width), not random arithmetic.",
+        "fill_blank": "The area of a square with side 5 cm is ______ sq cm. (Answer: 25). Use area formula.",
+        "short_answer": "Ask: 'Find the area of a rectangle with length 8 cm and width 3 cm.' Use area concepts.",
     },
 }
 
