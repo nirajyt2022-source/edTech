@@ -324,15 +324,67 @@ def _add_extras(result: list[dict], default_recipe: list[dict], deficit: int):
 def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
     """Detect the maths operation from topic/skill_tag."""
     combined = f"{topic} {skill_tag}".lower()
+
+    # --- Exclude non-maths subjects that contain maths keywords by accident ---
+    # "Summary Writing" contains "sum", "Reproduction" contains "multi", etc.
+    non_maths_topics = (
+        "summary writing",
+        "comprehension",
+        "vocabulary",
+        "grammar",
+        "reproduction",
+        "respir",
+        "nervous",
+        "circulat",
+        "photosynthesis",
+        "ecosystem",
+        "adaptation",
+        "hygiene",
+        "posture",
+        "yoga",
+        "fitness",
+        "leadership",
+        "citizenship",
+        "ethics",
+        "honesty",
+        "kindness",
+        "teamwork",
+        "empathy",
+        "letter writing",
+        "speech",
+        "creative writing",
+        "synonyms",
+        "antonyms",
+        "clauses",
+        "conjunctions",
+        "prepositions",
+        "adverbs",
+        "prefixes",
+        "suffixes",
+        "punctuation",
+        "phonics",
+        "alphabet",
+        "rhyming",
+        "reading comprehension",
+    )
+    topic_lower = topic.lower()
+    if any(nmt in topic_lower for nmt in non_maths_topics):
+        return None
+
     # Fraction topics often contain words like "add/subtract". Detect fraction first
     # so "Fractions (add and subtract)" doesn't get misclassified as whole-number addition.
-    if any(
-        kw in combined for kw in ("fraction", "fractions", "halves", "quarters", "half", "quarter", "thirds", "third")
-    ):
+    if any(kw in combined for kw in ("fraction", "fractions", "halves", "quarters", "thirds", "third")):
         return "fraction"
-    if any(kw in combined for kw in ("add", "addition", "sum", "plus")):
+    # "half" alone matches "half-hour" in Time topics — only match if not a time topic
+    if "half" in combined or "quarter" in combined:
+        if "time" not in combined and "hour" not in combined and "clock" not in combined:
+            return "fraction"
+    if any(kw in combined for kw in ("add", "addition", "plus")):
         if "carry" in combined or "carries" in combined:
             return "addition_with_carry"
+        return "addition"
+    # "sum" as standalone word only (not "summary")
+    if " sum " in f" {combined} ":
         return "addition"
     if any(kw in combined for kw in ("subtract", "subtraction", "minus", "difference", "borrow")):
         if "borrow" in combined:
@@ -340,8 +392,14 @@ def _detect_maths_operation(topic: str, skill_tag: str) -> str | None:
                 return "subtraction_no_borrow"
             return "subtraction_with_borrow"
         return "subtraction"
-    if any(kw in combined for kw in ("multipl", "times", "product", "table")):
+    if any(kw in combined for kw in ("multiplication", "multiply")):
         return "multiplication"
+    # "tables 2-5" etc. but not "table" alone (could be data table)
+    if "tables" in combined or "times table" in combined:
+        return "multiplication"
+    # "factors and multiples" is conceptual, not basic multiplication
+    if "factor" in combined or "multiple" in combined or "hcf" in combined or "lcm" in combined:
+        return None
     if any(kw in combined for kw in ("divid", "division", "quotient", "share")):
         return "division"
     if any(kw in combined for kw in ("decimal",)):
