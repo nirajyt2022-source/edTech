@@ -175,234 +175,6 @@ MANDATORY_VISUAL_TOPICS = {
     "symmetry": "grid_symmetry",
     "patterns": "pattern_tiles",
     "pattern": "pattern_tiles",
-    "data handling": "pictograph",
-    "pictograph": "pictograph",
-    "tally": "pictograph",
-    "percentage": "percentage_bar",
-    "percent": "percentage_bar",
-    "bar graph": "bar_chart",
-    "bar chart": "bar_chart",
-    "pie chart": "bar_chart",
-}
-
-
-# ---------------------------------------------------------------------------
-# Object Emoji Registry — colorful emoji objects for picture addition/subtraction
-# ---------------------------------------------------------------------------
-OBJECT_EMOJI_REGISTRY = {
-    "fruits": [
-        {"emoji": "🍎", "name": "apple", "name_hi": "सेब"},
-        {"emoji": "🥭", "name": "mango", "name_hi": "आम"},
-        {"emoji": "🍌", "name": "banana", "name_hi": "केला"},
-        {"emoji": "🍊", "name": "orange", "name_hi": "संतरा"},
-        {"emoji": "🍇", "name": "grapes", "name_hi": "अंगूर"},
-    ],
-    "nature": [
-        {"emoji": "🌸", "name": "flower", "name_hi": "फूल"},
-        {"emoji": "⭐", "name": "star", "name_hi": "तारा"},
-        {"emoji": "🦋", "name": "butterfly", "name_hi": "तितली"},
-        {"emoji": "🐦", "name": "bird", "name_hi": "चिड़िया"},
-    ],
-    "indian": [
-        {"emoji": "🪁", "name": "kite", "name_hi": "पतंग"},
-        {"emoji": "🪔", "name": "diya", "name_hi": "दीया"},
-        {"emoji": "🏏", "name": "cricket bat", "name_hi": "बल्ला"},
-    ],
-    "school": [
-        {"emoji": "✏️", "name": "pencil", "name_hi": "पेंसिल"},
-        {"emoji": "📕", "name": "book", "name_hi": "किताब"},
-        {"emoji": "🎒", "name": "school bag", "name_hi": "बस्ता"},
-    ],
-}
-
-
-# ---------------------------------------------------------------------------
-# Word-Picture Bank — for picture_word_match visual type
-# ---------------------------------------------------------------------------
-WORD_PICTURE_BANK = {
-    "english": [
-        {"emoji": "🐄", "word": "cow", "wrong": ["cat", "cup", "car"]},
-        {"emoji": "🐕", "word": "dog", "wrong": ["doll", "duck", "door"]},
-        {"emoji": "🏠", "word": "house", "wrong": ["horse", "hat", "hen"]},
-        {"emoji": "🌳", "word": "tree", "wrong": ["train", "truck", "table"]},
-        {"emoji": "☀️", "word": "sun", "wrong": ["son", "sit", "six"]},
-        {"emoji": "🐟", "word": "fish", "wrong": ["fire", "five", "fan"]},
-        {"emoji": "🍎", "word": "apple", "wrong": ["ant", "arm", "axe"]},
-        {"emoji": "📕", "word": "book", "wrong": ["ball", "bat", "bed"]},
-    ],
-    "hindi": [
-        {"emoji": "🐄", "word": "गाय", "wrong": ["बकरी", "भैंस", "घोड़ा"]},
-        {"emoji": "🏠", "word": "घर", "wrong": ["गाँव", "गमला", "गुड़िया"]},
-        {"emoji": "☀️", "word": "सूरज", "wrong": ["चाँद", "तारा", "बादल"]},
-        {"emoji": "🍎", "word": "सेब", "wrong": ["आम", "केला", "अंगूर"]},
-        {"emoji": "📕", "word": "किताब", "wrong": ["कलम", "कुर्सी", "कमरा"]},
-        {"emoji": "🐦", "word": "चिड़िया", "wrong": ["तितली", "मछली", "बिल्ली"]},
-    ],
-}
-
-# ---------------------------------------------------------------------------
-# Topic-specific picture-word banks for picture_word_match visuals
-# ---------------------------------------------------------------------------
-PICTURE_WORD_BANKS: dict[str, list[dict]] = {
-    "alphabet": [
-        {"letter": "A", "word": "Apple", "emoji": "🍎", "word_hi": "सेब"},
-        {"letter": "B", "word": "Ball", "emoji": "⚽", "word_hi": "गेंद"},
-        {"letter": "C", "word": "Cat", "emoji": "🐱", "word_hi": "बिल्ली"},
-        {"letter": "D", "word": "Dog", "emoji": "🐕", "word_hi": "कुत्ता"},
-        {"letter": "E", "word": "Elephant", "emoji": "🐘", "word_hi": "हाथी"},
-        {"letter": "F", "word": "Fish", "emoji": "🐟", "word_hi": "मछली"},
-        {"letter": "G", "word": "Grapes", "emoji": "🍇", "word_hi": "अंगूर"},
-        {"letter": "H", "word": "House", "emoji": "🏠", "word_hi": "घर"},
-        {"letter": "I", "word": "Ice cream", "emoji": "🍦", "word_hi": "आइसक्रीम"},
-        {"letter": "J", "word": "Jug", "emoji": "🫗", "word_hi": "जग"},
-        {"letter": "K", "word": "Kite", "emoji": "🪁", "word_hi": "पतंग"},
-        {"letter": "L", "word": "Lion", "emoji": "🦁", "word_hi": "शेर"},
-        {"letter": "M", "word": "Mango", "emoji": "🥭", "word_hi": "आम"},
-        {"letter": "N", "word": "Nest", "emoji": "🪺", "word_hi": "घोंसला"},
-        {"letter": "O", "word": "Orange", "emoji": "🍊", "word_hi": "संतरा"},
-        {"letter": "P", "word": "Parrot", "emoji": "🦜", "word_hi": "तोता"},
-        {"letter": "Q", "word": "Queen", "emoji": "👑", "word_hi": "रानी"},
-        {"letter": "R", "word": "Rabbit", "emoji": "🐰", "word_hi": "खरगोश"},
-        {"letter": "S", "word": "Sun", "emoji": "☀️", "word_hi": "सूरज"},
-        {"letter": "T", "word": "Tree", "emoji": "🌳", "word_hi": "पेड़"},
-        {"letter": "U", "word": "Umbrella", "emoji": "☂️", "word_hi": "छाता"},
-        {"letter": "V", "word": "Van", "emoji": "🚐", "word_hi": "गाड़ी"},
-        {"letter": "W", "word": "Watch", "emoji": "⌚", "word_hi": "घड़ी"},
-        {"letter": "X", "word": "Xylophone", "emoji": "🎵", "word_hi": "ज़ाइलोफोन"},
-        {"letter": "Y", "word": "Yak", "emoji": "🐃", "word_hi": "याक"},
-        {"letter": "Z", "word": "Zebra", "emoji": "🦓", "word_hi": "ज़ेबरा"},
-    ],
-    "phonics": [
-        {"letter": "A", "word": "Apple", "emoji": "🍎", "sound": "/æ/"},
-        {"letter": "B", "word": "Ball", "emoji": "⚽", "sound": "/b/"},
-        {"letter": "C", "word": "Cat", "emoji": "🐱", "sound": "/k/"},
-        {"letter": "M", "word": "Mango", "emoji": "🥭", "sound": "/m/"},
-        {"letter": "S", "word": "Sun", "emoji": "☀️", "sound": "/s/"},
-        {"letter": "T", "word": "Tree", "emoji": "🌳", "sound": "/t/"},
-        {"letter": "D", "word": "Dog", "emoji": "🐕", "sound": "/d/"},
-        {"letter": "F", "word": "Fish", "emoji": "🐟", "sound": "/f/"},
-        {"letter": "G", "word": "Grapes", "emoji": "🍇", "sound": "/g/"},
-        {"letter": "H", "word": "House", "emoji": "🏠", "sound": "/h/"},
-    ],
-    "animals": [
-        {"word": "Cow", "emoji": "🐄", "fact": "gives milk", "word_hi": "गाय"},
-        {"word": "Dog", "emoji": "🐕", "fact": "guards the house", "word_hi": "कुत्ता"},
-        {"word": "Cat", "emoji": "🐱", "fact": "catches mice", "word_hi": "बिल्ली"},
-        {"word": "Elephant", "emoji": "🐘", "fact": "has a trunk", "word_hi": "हाथी"},
-        {"word": "Lion", "emoji": "🦁", "fact": "is king of jungle", "word_hi": "शेर"},
-        {"word": "Parrot", "emoji": "🦜", "fact": "can talk", "word_hi": "तोता"},
-        {"word": "Fish", "emoji": "🐟", "fact": "lives in water", "word_hi": "मछली"},
-        {"word": "Butterfly", "emoji": "🦋", "fact": "has colorful wings", "word_hi": "तितली"},
-        {"word": "Rabbit", "emoji": "🐰", "fact": "loves carrots", "word_hi": "खरगोश"},
-        {"word": "Horse", "emoji": "🐴", "fact": "can run fast", "word_hi": "घोड़ा"},
-    ],
-    "fruits": [
-        {"word": "Apple", "emoji": "🍎", "color": "red", "word_hi": "सेब"},
-        {"word": "Mango", "emoji": "🥭", "color": "yellow", "word_hi": "आम"},
-        {"word": "Banana", "emoji": "🍌", "color": "yellow", "word_hi": "केला"},
-        {"word": "Orange", "emoji": "🍊", "color": "orange", "word_hi": "संतरा"},
-        {"word": "Grapes", "emoji": "🍇", "color": "purple", "word_hi": "अंगूर"},
-        {"word": "Watermelon", "emoji": "🍉", "color": "green", "word_hi": "तरबूज"},
-    ],
-    "hindi_two_letter": [
-        {"word": "घर", "emoji": "🏠", "english": "house"},
-        {"word": "कप", "emoji": "☕", "english": "cup"},
-        {"word": "बस", "emoji": "🚌", "english": "bus"},
-        {"word": "जल", "emoji": "💧", "english": "water"},
-        {"word": "फल", "emoji": "🍎", "english": "fruit"},
-        {"word": "वन", "emoji": "🌳", "english": "forest"},
-        {"word": "रथ", "emoji": "🛞", "english": "chariot"},
-        {"word": "मन", "emoji": "❤️", "english": "heart"},
-    ],
-    "hindi_three_letter": [
-        {"word": "केला", "emoji": "🍌", "english": "banana"},
-        {"word": "किताब", "emoji": "📕", "english": "book"},
-        {"word": "कमल", "emoji": "🪷", "english": "lotus"},
-        {"word": "नदी", "emoji": "🏞️", "english": "river"},
-        {"word": "पतंग", "emoji": "🪁", "english": "kite"},
-        {"word": "बादल", "emoji": "☁️", "english": "cloud"},
-    ],
-    "nouns": [
-        {"word": "Book", "emoji": "📕", "type": "common noun", "word_hi": "किताब"},
-        {"word": "Dog", "emoji": "🐕", "type": "common noun", "word_hi": "कुत्ता"},
-        {"word": "School", "emoji": "🏫", "type": "common noun", "word_hi": "स्कूल"},
-        {"word": "Sun", "emoji": "☀️", "type": "common noun", "word_hi": "सूरज"},
-        {"word": "Chair", "emoji": "🪑", "type": "common noun", "word_hi": "कुर्सी"},
-        {"word": "Flower", "emoji": "🌸", "type": "common noun", "word_hi": "फूल"},
-    ],
-    "seasons": [
-        {"word": "Summer", "emoji": "☀️", "description": "hot, sunny", "word_hi": "गर्मी"},
-        {"word": "Winter", "emoji": "❄️", "description": "cold, foggy", "word_hi": "सर्दी"},
-        {"word": "Rainy", "emoji": "🌧️", "description": "wet, cloudy", "word_hi": "बारिश"},
-        {"word": "Spring", "emoji": "🌸", "description": "flowers bloom", "word_hi": "बसंत"},
-    ],
-    "body_parts": [
-        {"word": "Eye", "emoji": "👁️", "function": "see", "word_hi": "आँख"},
-        {"word": "Ear", "emoji": "👂", "function": "hear", "word_hi": "कान"},
-        {"word": "Nose", "emoji": "👃", "function": "smell", "word_hi": "नाक"},
-        {"word": "Hand", "emoji": "✋", "function": "hold things", "word_hi": "हाथ"},
-        {"word": "Foot", "emoji": "🦶", "function": "walk", "word_hi": "पैर"},
-    ],
-    "food": [
-        {"word": "Rice", "emoji": "🍚", "group": "grain", "word_hi": "चावल"},
-        {"word": "Roti", "emoji": "🫓", "group": "grain", "word_hi": "रोटी"},
-        {"word": "Milk", "emoji": "🥛", "group": "dairy", "word_hi": "दूध"},
-        {"word": "Carrot", "emoji": "🥕", "group": "vegetable", "word_hi": "गाजर"},
-        {"word": "Egg", "emoji": "🥚", "group": "protein", "word_hi": "अंडा"},
-    ],
-    "family": [
-        {"word": "माँ", "emoji": "👩", "english": "Mother"},
-        {"word": "पापा", "emoji": "👨", "english": "Father"},
-        {"word": "दादी", "emoji": "👵", "english": "Grandmother"},
-        {"word": "दादा", "emoji": "👴", "english": "Grandfather"},
-        {"word": "भाई", "emoji": "👦", "english": "Brother"},
-        {"word": "बहन", "emoji": "👧", "english": "Sister"},
-    ],
-}
-
-
-# ---------------------------------------------------------------------------
-# Diagram Bank — for labeled_diagram visual type
-# ---------------------------------------------------------------------------
-DIAGRAM_BANK = {
-    "plant_parts": {
-        "title": "Parts of a Plant",
-        "labels": ["flower", "leaf", "stem", "root"],
-        "labels_hi": ["फूल", "पत्ती", "तना", "जड़"],
-        "diagram_type": "vertical_labeled",
-    },
-    "body_parts": {
-        "title": "Parts of the Body",
-        "labels": ["head", "arm", "leg", "foot"],
-        "labels_hi": ["सिर", "बाज़ू", "टांग", "पैर"],
-        "diagram_type": "body_outline",
-    },
-    "computer_parts": {
-        "title": "Parts of a Computer",
-        "labels": ["monitor", "keyboard", "mouse", "CPU"],
-        "labels_hi": ["मॉनिटर", "कीबोर्ड", "माउस", "सीपीयू"],
-        "diagram_type": "horizontal_labeled",
-    },
-}
-
-
-# ---------------------------------------------------------------------------
-# Match Bank — for match_columns visual type
-# ---------------------------------------------------------------------------
-MATCH_BANK = {
-    "animal_habitat": [
-        {"left": "🐟", "left_label": "Fish", "right": "🌊", "right_label": "Water"},
-        {"left": "🐦", "left_label": "Bird", "right": "🌳", "right_label": "Tree/Nest"},
-        {"left": "🐫", "left_label": "Camel", "right": "🏜️", "right_label": "Desert"},
-        {"left": "🐒", "left_label": "Monkey", "right": "🌳", "right_label": "Forest"},
-        {"left": "🐄", "left_label": "Cow", "right": "🏡", "right_label": "Farm"},
-    ],
-    "animal_food": [
-        {"left": "🐄", "left_label": "Cow", "right": "🌾", "right_label": "Grass"},
-        {"left": "🐱", "left_label": "Cat", "right": "🐟", "right_label": "Fish"},
-        {"left": "🐒", "left_label": "Monkey", "right": "🍌", "right_label": "Banana"},
-        {"left": "🐰", "left_label": "Rabbit", "right": "🥕", "right_label": "Carrot"},
-    ],
 }
 
 
@@ -941,14 +713,7 @@ def _generate_wrong_answer(correct: int | str, operation: str | None) -> int | s
 # ---------------------------------------------------------------------------
 # Visual data computation
 # ---------------------------------------------------------------------------
-def _compute_visual_data(
-    visual_type: str,
-    numbers: dict | None,
-    grade_num: int,
-    slot_number: int = 0,
-    topic: str = "",
-    language: str = "English",
-) -> dict | None:
+def _compute_visual_data(visual_type: str, numbers: dict | None, grade_num: int) -> dict | None:
     """Compute visual_data for a given visual type."""
     if visual_type == "pie_fraction":
         if numbers:
@@ -968,35 +733,11 @@ def _compute_visual_data(
         return {"hour": h, "minute": m}
 
     if visual_type == "money_coins":
-        DENOMINATIONS = [
-            {"value": 1, "type": "coin", "label": "₹1", "color": "#B8860B"},
-            {"value": 2, "type": "coin", "label": "₹2", "color": "#C0C0C0"},
-            {"value": 5, "type": "coin", "label": "₹5", "color": "#C0C0C0"},
-            {"value": 10, "type": "coin", "label": "₹10", "color": "#DAA520"},
-            {"value": 10, "type": "note", "label": "₹10", "color": "#F97316"},
-            {"value": 20, "type": "note", "label": "₹20", "color": "#16A34A"},
-            {"value": 50, "type": "note", "label": "₹50", "color": "#2563EB"},
-            {"value": 100, "type": "note", "label": "₹100", "color": "#7C3AED"},
-        ]
-        if numbers and numbers.get("answer"):
-            target = numbers["answer"]
-        else:
-            target = random.choice([5, 10, 15, 20, 25, 50])
-        items = []
-        remaining = target
-        for denom in sorted(DENOMINATIONS, key=lambda x: -x["value"]):
-            while remaining >= denom["value"] and len(items) < 8:
-                items.append(denom)
-                remaining -= denom["value"]
-            if remaining == 0:
-                break
-        return {
-            "items": [
-                {"value": d["value"], "type": d["type"], "label": d["label"], "color": d["color"]} for d in items
-            ],
-            "total": target,
-            "currency": "INR",
-        }
+        coin_values = [1, 2, 5, 10]
+        coins = []
+        for val in random.sample(coin_values, min(3, len(coin_values))):
+            coins.append({"value": val, "count": random.randint(1, 5)})
+        return {"coins": coins}
 
     if visual_type == "abacus":
         if numbers and "a" in numbers:
@@ -1005,24 +746,9 @@ def _compute_visual_data(
         return {"hundreds": random.randint(1, 9), "tens": random.randint(0, 9), "ones": random.randint(0, 9)}
 
     if visual_type == "shapes":
-        SHAPE_LIBRARY = [
-            {"name": "circle", "sides": 0, "color": "#EF4444"},
-            {"name": "triangle", "sides": 3, "color": "#F59E0B"},
-            {"name": "square", "sides": 4, "color": "#3B82F6"},
-            {"name": "rectangle", "sides": 4, "color": "#10B981"},
-            {"name": "pentagon", "sides": 5, "color": "#8B5CF6"},
-            {"name": "hexagon", "sides": 6, "color": "#EC4899"},
-        ]
-        target = SHAPE_LIBRARY[(slot_number or 0) % len(SHAPE_LIBRARY)]
-        others = [s for s in SHAPE_LIBRARY if s["name"] != target["name"]]
-        random.shuffle(others)
-        display_shapes = [target] + others[:3]
-        random.shuffle(display_shapes)
-        return {
-            "shapes": [{"name": s["name"], "sides": s["sides"], "color": s["color"]} for s in display_shapes],
-            "target": target["name"],
-            "target_index": display_shapes.index(target),
-        }
+        shape = random.choice(["triangle", "rectangle", "square", "circle"])
+        sides = {"triangle": [3, 4, 5], "rectangle": [4, 6], "square": [5, 5], "circle": []}
+        return {"shape": shape, "sides": sides.get(shape, [])}
 
     if visual_type == "grid_symmetry":
         size = 4
@@ -1031,246 +757,29 @@ def _compute_visual_data(
 
     if visual_type == "number_line":
         if numbers and "a" in numbers:
-            a = numbers["a"]
-            b = numbers.get("b", 3)
-            operation = numbers.get("operation", "addition")
-            if "subtract" in str(operation):
-                end_val = a - b
-                direction = "backward"
-            else:
-                end_val = a + b
-                direction = "forward"
-            line_end = max(end_val + 3, 20)
-            return {
-                "start": 0,
-                "end": min(line_end, 25),
-                "step": 1,
-                "hops_from": a,
-                "hops_count": b,
-                "hops_direction": direction,
-                "highlight": end_val,
-                "highlight_start": a,
-            }
+            start = max(0, numbers["a"] - 5)
+            end = numbers["a"] + 10
+            step = 1 if grade_num <= 2 else 5
+            return {"start": start, "end": end, "step": step, "highlight": numbers["a"]}
         return {"start": 0, "end": 20, "step": 2, "highlight": None}
 
     if visual_type == "object_group":
-        # Pick a different emoji category per slot for variety
-        categories = list(OBJECT_EMOJI_REGISTRY.keys())
-        cat_idx = (slot_number or 0) % len(categories)
-        category = categories[cat_idx]
-        objects = OBJECT_EMOJI_REGISTRY[category]
-        obj_idx = ((slot_number or 0) * 3) % len(objects)
-        obj = objects[obj_idx]
-
         if numbers and "a" in numbers:
-            a = numbers["a"]
-            b = numbers.get("b", 0)
             ans_val = numbers.get("answer", 0)
             ans_num = ans_val if isinstance(ans_val, (int, float)) else 0
-            op = "+" if ans_num > max(a, b) else "-"
+            op = "+" if ans_num > max(numbers["a"], numbers.get("b", 0)) else "-"
             return {
                 "groups": [
-                    {"count": a, "type": "emoji", "emoji": obj["emoji"], "label": obj["name"]},
-                    {"count": b, "type": "emoji", "emoji": obj["emoji"], "label": obj["name"]},
+                    {"count": numbers["a"], "label": "objects"},
+                    {"count": numbers.get("b", 0), "label": "objects"},
                 ],
                 "operation": op,
-                "object_name": obj["name"],
-                "object_name_hi": obj["name_hi"],
-                "object_emoji": obj["emoji"],
             }
-        count = random.randint(3, 10)
-        return {
-            "groups": [{"count": count, "type": "emoji", "emoji": obj["emoji"], "label": obj["name"]}],
-            "operation": "count",
-            "object_name": obj["name"],
-            "object_emoji": obj["emoji"],
-        }
-
-    if visual_type == "picture_word_match":
-        # Select topic-specific bank for richer, context-aware visuals
-        topic_lower = topic.lower()
-        bank_key = "animals"  # default
-        if "alphabet" in topic_lower or "varnamala" in topic_lower:
-            bank_key = "alphabet"
-        elif "phonics" in topic_lower:
-            bank_key = "phonics"
-        elif "vowel" in topic_lower or "swar" in topic_lower:
-            bank_key = "alphabet"
-        elif "consonant" in topic_lower or "vyanjan" in topic_lower:
-            bank_key = "alphabet"
-        elif "animal" in topic_lower:
-            bank_key = "animals"
-        elif "food" in topic_lower or "nutrition" in topic_lower or "diet" in topic_lower:
-            bank_key = "food"
-        elif "noun" in topic_lower:
-            bank_key = "nouns"
-        elif "season" in topic_lower:
-            bank_key = "seasons"
-        elif "body" in topic_lower:
-            bank_key = "body_parts"
-        elif "family" in topic_lower or "parivar" in topic_lower:
-            bank_key = "family"
-        elif "fruit" in topic_lower or "vocabulary" in topic_lower:
-            bank_key = "fruits"
-        elif "two letter" in topic_lower or "do akshar" in topic_lower:
-            bank_key = "hindi_two_letter"
-        elif "three letter" in topic_lower or "teen akshar" in topic_lower:
-            bank_key = "hindi_three_letter"
-        elif language.lower() == "hindi":
-            bank_key = "hindi_two_letter"
-
-        if bank_key in PICTURE_WORD_BANKS:
-            bank = PICTURE_WORD_BANKS[bank_key]
-            idx = (slot_number or 0) % len(bank)
-            item = bank[idx]
-            return {
-                "emoji": item["emoji"],
-                "word": item.get("word", ""),
-                "letter": item.get("letter", ""),
-                "correct_word": item.get("word", ""),
-                "bank_key": bank_key,
-                # Pass through all extra fields for LLM context
-                **{k: v for k, v in item.items() if k not in ("emoji",)},
-            }
-
-        # Fallback to legacy flat bank
-        lang_key = "hindi" if language == "Hindi" else "english"
-        bank = WORD_PICTURE_BANK.get(lang_key, WORD_PICTURE_BANK["english"])
-        idx = (slot_number or 0) % len(bank)
-        item = bank[idx]
-        return {
-            "emoji": item["emoji"],
-            "correct_word": item["word"],
-            "word": item["word"],
-            "wrong_words": item["wrong"],
-            "bank_key": "legacy",
-        }
-
-    if visual_type == "labeled_diagram":
-        topic_lower = topic.lower()
-        diagram_key = None
-        if "plant" in topic_lower:
-            diagram_key = "plant_parts"
-        elif "body" in topic_lower:
-            diagram_key = "body_parts"
-        elif "computer" in topic_lower:
-            diagram_key = "computer_parts"
-
-        if diagram_key:
-            diagram = DIAGRAM_BANK[diagram_key]
-            blank_idx = (slot_number or 0) % len(diagram["labels"])
-            return {
-                "diagram_type": diagram["diagram_type"],
-                "title": diagram["title"],
-                "labels": diagram["labels"],
-                "labels_hi": diagram["labels_hi"],
-                "blank_index": blank_idx,
-            }
-        return None
-
-    if visual_type == "match_columns":
-        bank_key = "animal_habitat"
-        if "food" in topic.lower():
-            bank_key = "animal_food"
-
-        items = MATCH_BANK.get(bank_key, MATCH_BANK["animal_habitat"])
-        selected = items[:4]
-        shuffled_right = selected.copy()
-        random.shuffle(shuffled_right)
-
-        return {
-            "left": [{"emoji": x["left"], "label": x["left_label"]} for x in selected],
-            "right": [{"emoji": x["right"], "label": x["right_label"]} for x in shuffled_right],
-            "correct_matches": [selected.index(x) for x in shuffled_right],
-        }
+        return {"groups": [{"count": 3, "label": "apples"}, {"count": 4, "label": "apples"}], "operation": "+"}
 
     if visual_type == "pattern_tiles":
-        PATTERN_SETS = [
-            ["🔴", "🔵", "🔴", "🔵", "🔴", "🔵"],
-            ["⭐", "❤️", "⭐", "❤️", "⭐", "❤️"],
-            ["🌸", "🍃", "🌸", "🍃", "🌸", "🍃"],
-            ["🟡", "🟢", "🟡", "🟢", "🟡", "🟢"],
-            ["☀️", "🌙", "☀️", "🌙", "☀️", "🌙"],
-            ["🍎", "🍌", "🍎", "🍌", "🍎", "🍌"],
-            ["🔴", "🔵", "🟢", "🔴", "🔵", "🟢"],
-            ["⭐", "⭐", "❤️", "⭐", "⭐", "❤️"],
-        ]
-        pattern_idx = (slot_number or 0) % len(PATTERN_SETS)
-        pattern = PATTERN_SETS[pattern_idx]
-        blank_pos = len(pattern) - 1
-        return {
-            "tiles": pattern,
-            "blank_position": blank_pos,
-            "answer": pattern[blank_pos],
-        }
-
-    if visual_type == "ten_frame":
-        if numbers and numbers.get("answer"):
-            filled = min(numbers["answer"], 20)
-        else:
-            filled = random.randint(3, 10)
-        ten_colors = ["#6366F1", "#EF4444", "#10B981", "#F59E0B", "#EC4899"]
-        color = ten_colors[(slot_number or 0) % len(ten_colors)]
-        return {
-            "filled": filled,
-            "total": 10 if filled <= 10 else 20,
-            "color": color,
-        }
-
-    if visual_type == "pictograph":
-        DATA_SETS = [
-            {
-                "title": "Favourite Fruits",
-                "rows": [
-                    {"label": "Apple", "emoji": "🍎", "count": random.randint(2, 6)},
-                    {"label": "Mango", "emoji": "🥭", "count": random.randint(2, 6)},
-                    {"label": "Banana", "emoji": "🍌", "count": random.randint(2, 6)},
-                    {"label": "Orange", "emoji": "🍊", "count": random.randint(2, 6)},
-                ],
-            },
-            {
-                "title": "Animals in the Zoo",
-                "rows": [
-                    {"label": "Lion", "emoji": "🦁", "count": random.randint(1, 5)},
-                    {"label": "Elephant", "emoji": "🐘", "count": random.randint(1, 5)},
-                    {"label": "Monkey", "emoji": "🐒", "count": random.randint(1, 5)},
-                    {"label": "Bird", "emoji": "🐦", "count": random.randint(1, 5)},
-                ],
-            },
-            {
-                "title": "Flowers in the Garden",
-                "rows": [
-                    {"label": "Rose", "emoji": "🌹", "count": random.randint(2, 7)},
-                    {"label": "Sunflower", "emoji": "🌻", "count": random.randint(2, 7)},
-                    {"label": "Lotus", "emoji": "🪷", "count": random.randint(2, 7)},
-                ],
-            },
-        ]
-        dataset = DATA_SETS[(slot_number or 0) % len(DATA_SETS)]
-        return {
-            "title": dataset["title"],
-            "rows": dataset["rows"],
-            "scale": 1,
-        }
-
-    if visual_type == "array_visual":
-        if numbers:
-            a = min(numbers.get("a", 3), 6)
-            b = min(numbers.get("b", 4), 8)
-        else:
-            a = random.randint(2, 5)
-            b = random.randint(2, 5)
-        categories = list(OBJECT_EMOJI_REGISTRY.keys())
-        cat = categories[(slot_number or 0) % len(categories)]
-        objects = OBJECT_EMOJI_REGISTRY[cat]
-        obj = objects[((slot_number or 0) * 7) % len(objects)]
-        return {
-            "rows": a,
-            "cols": b,
-            "emoji": obj["emoji"],
-            "object_name": obj["name"],
-            "answer": a * b,
-        }
+        tiles = ["A", "B", "A", "B", "A", "?"]
+        return {"tiles": tiles, "blank_position": 5}
 
     if visual_type == "base_ten_regrouping":
         if numbers and "a" in numbers:
@@ -1279,187 +788,6 @@ def _compute_visual_data(
             op = "addition" if ans_num > numbers["a"] else "subtraction"
             return {"numbers": [numbers["a"], numbers.get("b", 0)], "operation": op}
         return {"numbers": [234, 178], "operation": "addition"}
-
-    if visual_type == "fraction_bar":
-        if numbers:
-            n = numbers.get("numerator", numbers.get("a", 1))
-            d = numbers.get("denominator", numbers.get("b", 4))
-            if d == 0:
-                d = 4
-        else:
-            d = random.choice([2, 3, 4, 5, 6])
-            n = random.randint(1, d - 1)
-        show_comparison = "compar" in topic.lower() or "equivalent" in topic.lower()
-        second = None
-        if show_comparison:
-            d2 = random.choice([2, 3, 4, 5, 6])
-            n2 = random.randint(1, d2 - 1)
-            second = {"numerator": n2, "denominator": d2}
-        colors = ["#6366F1", "#EF4444", "#10B981", "#F59E0B", "#EC4899"]
-        color = colors[(slot_number or 0) % len(colors)]
-        return {"numerator": n, "denominator": d, "color": color, "second": second, "total_parts": 12}
-
-    if visual_type == "scenario_picture":
-        SCENARIO_BANK = {
-            "sharing": [
-                {
-                    "scene": "👧🍎🍎🍎 👦😢",
-                    "description": "Priya has 3 apples. Rohan has none and looks sad.",
-                    "question": "What should Priya do?",
-                },
-                {
-                    "scene": "👦🖍️🖍️🖍️🖍️ 👧🖍️",
-                    "description": "Aarav has 4 crayons. Meera has only 1.",
-                    "question": "Is Aarav being kind?",
-                },
-            ],
-            "honesty": [
-                {
-                    "scene": "👦⚽💔🪟",
-                    "description": "Rohan's ball broke the window.",
-                    "question": "Should Rohan tell the truth?",
-                },
-                {
-                    "scene": "👧📝✅❌",
-                    "description": "Ananya copied her friend's answer in the test.",
-                    "question": "Was this the right thing to do?",
-                },
-            ],
-            "kindness": [
-                {
-                    "scene": "👴🚌👦💺",
-                    "description": "An old man is standing on the bus. Aarav has a seat.",
-                    "question": "What should Aarav do?",
-                },
-                {
-                    "scene": "👧😢📚 👦😊",
-                    "description": "Meera dropped her books. Rohan is walking past.",
-                    "question": "How can Rohan be kind?",
-                },
-            ],
-            "hygiene": [
-                {"scene": "👦🍽️🤲💧", "description": "Before eating food.", "question": "What should you do first?"},
-                {
-                    "scene": "👧🤧🤲🧼",
-                    "description": "After sneezing.",
-                    "question": "What should you do with your hands?",
-                },
-            ],
-            "healthy_eating": [
-                {
-                    "scene": "🍎🥕🍌 vs 🍕🍬🍫",
-                    "description": "Choose what to eat.",
-                    "question": "Which group is healthier?",
-                },
-            ],
-        }
-        topic_lower = topic.lower()
-        bank_key = "sharing"
-        for key in SCENARIO_BANK:
-            if key.replace("_", " ") in topic_lower or key in topic_lower:
-                bank_key = key
-                break
-        scenarios = SCENARIO_BANK.get(bank_key, SCENARIO_BANK["sharing"])
-        idx = (slot_number or 0) % len(scenarios)
-        scenario = scenarios[idx]
-        return {
-            "scene_emoji": scenario["scene"],
-            "description": scenario["description"],
-            "question": scenario["question"],
-        }
-
-    if visual_type == "sequence_pictures":
-        SEQUENCE_BANK = {
-            "handwashing": {
-                "title": "Handwashing Steps",
-                "steps": ["🚰", "🧼", "🤲💧", "🧴", "🤲✨"],
-                "labels": ["Turn on tap", "Take soap", "Rub hands", "Rinse", "Hands clean!"],
-            },
-            "plant_growth": {
-                "title": "How a Plant Grows",
-                "steps": ["🌱", "🌿", "🌻", "🌻🌻"],
-                "labels": ["Seed sprouts", "Leaves grow", "Flower blooms", "More flowers!"],
-            },
-            "morning_routine": {
-                "title": "Morning Routine",
-                "steps": ["⏰", "🪥", "🚿", "👕", "🍳"],
-                "labels": ["Wake up", "Brush teeth", "Bath", "Get dressed", "Eat breakfast"],
-            },
-            "tense_sequence": {
-                "title": "Yesterday → Today → Tomorrow",
-                "steps": ["🌅⬅️", "☀️", "🌅➡️"],
-                "labels": ["Yesterday (past)", "Today (present)", "Tomorrow (future)"],
-            },
-        }
-        topic_lower = topic.lower()
-        bank_key = "morning_routine"
-        if "hygiene" in topic_lower or "wash" in topic_lower:
-            bank_key = "handwashing"
-        elif "plant" in topic_lower or "grow" in topic_lower:
-            bank_key = "plant_growth"
-        elif "tense" in topic_lower or "yesterday" in topic_lower:
-            bank_key = "tense_sequence"
-        elif "routine" in topic_lower or "morning" in topic_lower:
-            bank_key = "morning_routine"
-        seq = SEQUENCE_BANK.get(bank_key, SEQUENCE_BANK["morning_routine"])
-        blank_idx = (slot_number or 0) % len(seq["steps"])
-        return {"title": seq["title"], "steps": seq["steps"], "labels": seq["labels"], "blank_index": blank_idx}
-
-    if visual_type == "bar_chart":
-        CHART_DATA_SETS = [
-            {
-                "title": "Students' Favourite Sport",
-                "bars": [
-                    {"label": "Cricket", "value": random.randint(5, 15), "color": "#3B82F6"},
-                    {"label": "Football", "value": random.randint(3, 12), "color": "#10B981"},
-                    {"label": "Badminton", "value": random.randint(2, 10), "color": "#F59E0B"},
-                    {"label": "Kabaddi", "value": random.randint(2, 8), "color": "#EF4444"},
-                ],
-                "y_label": "Number of Students",
-            },
-            {
-                "title": "Books Read This Month",
-                "bars": [
-                    {"label": "Aarav", "value": random.randint(2, 8), "color": "#6366F1"},
-                    {"label": "Priya", "value": random.randint(3, 10), "color": "#EC4899"},
-                    {"label": "Rohan", "value": random.randint(1, 7), "color": "#F97316"},
-                    {"label": "Meera", "value": random.randint(4, 9), "color": "#14B8A6"},
-                ],
-                "y_label": "Books",
-            },
-        ]
-        dataset = CHART_DATA_SETS[(slot_number or 0) % len(CHART_DATA_SETS)]
-        return dataset
-
-    if visual_type == "food_plate":
-        FOOD_GROUPS = [
-            {"name": "Grains", "emoji": "🍚🫓🍞", "color": "#F59E0B", "name_hi": "अनाज"},
-            {"name": "Vegetables", "emoji": "🥕🥦🍅", "color": "#16A34A", "name_hi": "सब्ज़ी"},
-            {"name": "Fruits", "emoji": "🍎🍌🥭", "color": "#EF4444", "name_hi": "फल"},
-            {"name": "Protein", "emoji": "🥚🫘🍗", "color": "#92400E", "name_hi": "प्रोटीन"},
-            {"name": "Dairy", "emoji": "🥛🧀", "color": "#3B82F6", "name_hi": "दूध"},
-        ]
-        blank_idx = (slot_number or 0) % len(FOOD_GROUPS)
-        return {
-            "groups": [
-                {"name": g["name"], "emoji": g["emoji"], "color": g["color"], "name_hi": g["name_hi"]}
-                for g in FOOD_GROUPS
-            ],
-            "blank_index": blank_idx,
-        }
-
-    if visual_type == "percentage_bar":
-        if numbers:
-            percent = numbers.get("b", 25)
-            base = numbers.get("a", 100)
-        else:
-            percent = random.choice([10, 20, 25, 50, 75])
-            base = 100
-        return {
-            "percent": percent,
-            "base": base,
-            "color": ["#6366F1", "#EF4444", "#10B981", "#F59E0B"][(slot_number or 0) % 4],
-        }
 
     return None
 
@@ -1478,46 +806,46 @@ def _get_image_keywords_for_subject(subject: str) -> list[str]:
 
 # ── Topic → Image mapping for illustrated worksheets ──
 TOPIC_IMAGE_MAP = {
-    # Maths — these topics use SVG visual_types (shapes, money_coins, etc.)
-    # so clipart images are skipped by _get_topic_images() for maths subjects.
+    # Maths
     "addition": ["apple", "mango", "banana", "flower", "butterfly", "pencil_box"],
-    "subtraction": ["apple", "mango", "parrot", "flower", "butterfly"],
-    # shapes → removed (uses visual_type), money → removed (uses visual_type=money_coins)
+    "subtraction": ["apple", "mango", "bird_flock", "flower", "balloon"],
+    "shapes": ["triangle_shape", "circle_shape", "rectangle_shape", "square_shape"],
+    "money": ["coin_1", "coin_2", "coin_5", "note_10", "note_50"],
     "time": ["clock", "sun", "moon"],
-    "measurement": ["ruler", "thermometer"],
-    "numbers": ["apple", "mango", "sun", "pencil_box", "book_open"],
+    "measurement": ["ruler", "scale", "thermometer"],
+    "numbers": ["apple", "mango", "star", "pencil_box", "book_open"],
     "multiplication": ["apple", "mango", "flower", "egg"],
-    "division": ["apple", "mango", "roti", "egg"],
+    "division": ["apple", "mango", "roti", "laddoo"],
     "fractions": [],  # uses visual_type=pie_fraction instead
     "data handling": [],
     "spatial": [],
     # English
-    "alphabet": ["apple", "cricket", "cat", "dog", "elephant"],
+    "alphabet": ["apple", "ball", "cat", "dog", "elephant"],
     "nouns": ["dog", "cat", "book_open", "school_bag", "tree"],
     "verbs": ["cricket", "football", "bicycle", "bus"],
     "pronouns": ["family_group", "mother", "father", "baby"],
     "adjectives": ["sun", "flower", "elephant", "ant"],
     "sentences": ["school_bag", "book_open", "pencil_box"],
     "vocabulary": ["cow", "dog", "cat", "mango", "apple", "banana"],
-    "phonics": ["apple", "cricket", "cat", "dog", "egg", "fish"],
-    "rhyming": ["cat", "parrot", "sun", "car"],
+    "phonics": ["apple", "ball", "cat", "dog", "egg", "fish"],
+    "rhyming": ["cat", "bat", "star", "car"],
     "greetings": ["family_group", "school_bag"],
     "seasons": ["sunny", "rainy", "snowy", "windy", "cloudy"],
     "family": ["family_group", "grandparents", "mother", "father", "baby"],
     # EVS
     "animals": ["cow", "lion", "tiger", "elephant", "monkey", "parrot", "fish", "butterfly", "rabbit"],
     "plants": ["tree", "flower", "rose", "sunflower", "tulsi", "lotus"],
-    "food": ["mango", "apple", "banana", "rice", "roti", "egg", "milk"],
+    "food": ["mango", "apple", "banana", "rice", "roti", "laddoo", "milk"],
     "body": ["human_body", "eye", "ear", "nose", "tongue", "hand"],
-    "water": ["water_drop", "rainy", "pond", "ocean", "water_tap"],
-    "shelter": ["family_group", "nest", "dog", "horse"],
+    "water": ["water_drop", "rain", "pond", "ocean", "tap"],
+    "shelter": ["house", "nest", "kennel", "stable"],
     "senses": ["eye", "ear", "nose", "tongue", "hand"],
     "weather": ["sunny", "rainy", "cloudy", "snowy", "windy"],
     "habitats": ["forest", "pond", "desert", "ocean", "farm"],
     "nutrition": ["mango", "apple", "banana", "rice", "roti", "milk", "egg"],
     # Hindi
     "varnamala": ["apple", "mango", "elephant", "flower"],
-    "two letter": ["apple", "mango", "book_open", "cricket"],
+    "two letter": ["apple", "mango", "book_open", "ball"],
     "three letter": ["banana", "mango", "apple", "flower"],
     "vachan": ["cow", "cat", "dog", "book_open", "flower"],
     "ling": ["cow", "cat", "dog", "book_open", "flower"],
@@ -1525,51 +853,28 @@ TOPIC_IMAGE_MAP = {
     "shabd": ["book_open", "pencil_box", "school_bag", "apple"],
     "vilom": ["sun", "moon", "sunny", "rainy"],
     "family words": ["family_group", "grandparents", "mother", "father"],
-    "nature": ["tree", "flower", "sun", "moon", "cloudy"],
+    "nature": ["tree", "flower", "sun", "moon", "cloud"],
     "rhymes": ["butterfly", "flower", "sun", "moon"],
     "kahani": ["book_open", "family_group", "tree", "sun"],
     # Science
     "human body": ["human_body", "eye", "ear", "nose", "hand"],
     "digestion": ["apple", "roti", "rice", "human_body"],
-    "air": ["windy", "wind_turbine"],
-    "light": ["sun", "light_bulb", "lamp"],
+    "air": ["balloon", "windy", "fan"],
+    "light": ["sun", "torch", "candle"],
     "magnet": [],
     "force": ["car", "bicycle", "cricket"],
-    "energy": ["sun", "light_bulb", "solar_panel"],
+    "energy": ["sun", "torch", "candle"],
     "matter": ["water_drop"],
     # Computer
     "parts of computer": ["desktop_computer", "laptop", "keyboard", "mouse", "monitor"],
     "mouse": ["mouse", "desktop_computer"],
     "keyboard": ["keyboard", "desktop_computer"],
     "typing": ["keyboard", "laptop"],
-    "internet": ["laptop", "tablet"],
-    "storage": ["usb_drive", "laptop"],
-    "output devices": ["monitor", "printer", "speaker", "headphones"],
-    "input devices": ["keyboard", "mouse"],
     # Health
     "hygiene": ["toothbrush", "soap", "handwash", "comb", "towel"],
     "exercise": ["cricket", "football", "yoga_pose"],
     "posture": ["yoga_pose"],
     "eating": ["mango", "apple", "roti", "milk"],
-    "safety": ["first_aid_kit", "bandage", "water_bottle"],
-    "dental": ["toothbrush", "teeth"],
-    "sleep": ["sleeping", "moon"],
-    # GK
-    "india": ["taj_mahal", "red_fort", "india_gate", "indian_flag", "ashoka_chakra"],
-    "monuments": ["taj_mahal", "red_fort", "qutub_minar", "gateway_of_india", "india_gate"],
-    "national symbols": [
-        "indian_flag",
-        "ashoka_chakra",
-        "national_emblem",
-        "lotus_national",
-        "tiger_national",
-        "peacock_national",
-    ],
-    "solar system": ["sun", "moon", "earth", "mars", "jupiter", "saturn", "solar_system"],
-    "continents": ["globe", "world_map", "continent_asia", "continent_africa", "continent_europe"],
-    "festivals": ["diwali", "holi", "eid", "christmas", "republic_day", "independence_day"],
-    "musical instruments": ["tabla", "sitar", "flute", "harmonium", "drum"],
-    "sports": ["cricket", "football", "badminton", "hockey", "kabaddi"],
 }
 
 
@@ -2063,190 +1368,9 @@ def _build_llm_instruction(
             parts.append(f"THINKING QUESTION: {random.choice(thinking_non_maths)}")
         parts.append("This must be a REASONING question, not just a harder calculation.")
 
-    # Visual — inject specific context so LLM question matches the shown visual
+    # Visual
     if slot.visual_type:
         parts.append(f"A {slot.visual_type} visual will be shown. Don't describe it in the question.")
-        vd = slot.visual_data or {}
-
-        if slot.visual_type == "object_group" and vd:
-            obj_name = vd.get("object_name", "")
-            if obj_name:
-                parts.append(
-                    f"The visual shows {obj_name}s. Use '{obj_name}s' (not generic 'items') in the question text."
-                )
-
-        elif slot.visual_type == "picture_word_match" and vd:
-            word = vd.get("word", "")
-            letter = vd.get("letter", "")
-            emoji = vd.get("emoji", "")
-            bank_key = vd.get("bank_key", "")
-            if bank_key in ("alphabet", "phonics"):
-                parts.append(f"VISUAL CONTEXT: A picture of '{word}' ({emoji}) is shown.")
-                if letter:
-                    parts.append(f"This word starts with letter '{letter}'.")
-                parts.append(
-                    f"Your question MUST be about '{word}' or the letter '{letter}'. Do NOT ask about any other word or letter."
-                )
-            elif bank_key in ("animals", "fruits", "food", "body_parts", "seasons"):
-                fact = vd.get("fact", vd.get("description", vd.get("function", vd.get("group", ""))))
-                parts.append(f"VISUAL CONTEXT: A picture of '{word}' ({emoji}) is shown.")
-                if fact:
-                    parts.append(f"Fact about {word}: {fact}.")
-                parts.append(f"Your question MUST be about '{word}'. Do NOT ask about any other object.")
-            elif bank_key == "nouns":
-                parts.append(f"VISUAL CONTEXT: A picture of '{word}' ({emoji}) is shown.")
-                parts.append(f"'{word}' is a {vd.get('type', 'noun')}.")
-                parts.append(f"Your question MUST use '{word}' as the example. Do NOT use any other word.")
-            elif bank_key in ("hindi_two_letter", "hindi_three_letter", "family"):
-                english = vd.get("english", "")
-                parts.append(f"VISUAL CONTEXT: A picture of '{english}' ({emoji}) is shown.")
-                parts.append(f"The Hindi word is '{word}'.")
-                parts.append(f"Your question MUST be about the word '{word}'. Do NOT ask about any other word.")
-            elif word:
-                parts.append(f"VISUAL CONTEXT: A picture ({emoji}) of '{word}' is shown.")
-                parts.append(f"Your question MUST reference '{word}'. Do NOT ask about anything else.")
-
-        elif slot.visual_type == "labeled_diagram" and vd:
-            labels = vd.get("labels", [])
-            blank_idx = vd.get("blank_index", -1)
-            title = vd.get("title", "")
-            parts.append(f"VISUAL CONTEXT: A '{title}' diagram is shown with labels: {', '.join(labels)}.")
-            if 0 <= blank_idx < len(labels):
-                parts.append(f"The label '{labels[blank_idx]}' is hidden. Ask the student to identify it.")
-
-        elif slot.visual_type == "match_columns" and vd:
-            left = vd.get("left", [])
-            right = vd.get("right", [])
-            left_items = [f"{x.get('emoji', '')} {x.get('label', '')}" for x in left]
-            right_items = [f"{x.get('emoji', '')} {x.get('label', '')}" for x in right]
-            parts.append("VISUAL CONTEXT: A matching exercise is shown.")
-            parts.append(f"Left column: {', '.join(left_items)}")
-            parts.append(f"Right column: {', '.join(right_items)}")
-            parts.append("Ask the student to match them correctly.")
-
-        elif slot.visual_type == "scenario_picture" and vd:
-            scene = vd.get("scene_emoji", "")
-            desc = vd.get("description", "")
-            question = vd.get("question", "")
-            parts.append(f"VISUAL CONTEXT: A scene is shown: {scene}")
-            parts.append(f"Description: {desc}")
-            parts.append(f"Ask: {question}")
-
-        elif slot.visual_type == "sequence_pictures" and vd:
-            labels = vd.get("labels", [])
-            blank_idx = vd.get("blank_index", -1)
-            parts.append(f"VISUAL CONTEXT: A sequence is shown: {' → '.join(labels)}")
-            if 0 <= blank_idx < len(labels):
-                parts.append(f"Step '{labels[blank_idx]}' is hidden. Ask what step is missing.")
-
-        elif slot.visual_type == "food_plate" and vd:
-            groups = vd.get("groups", [])
-            blank_idx = vd.get("blank_index", -1)
-            group_names = [g.get("name", "") for g in groups]
-            parts.append(f"VISUAL CONTEXT: A balanced diet plate is shown with food groups: {', '.join(group_names)}")
-            if 0 <= blank_idx < len(groups):
-                parts.append(f"The '{group_names[blank_idx]}' group is hidden. Ask the student to identify it.")
-
-        elif slot.visual_type == "bar_chart" and vd:
-            bars = vd.get("bars", [])
-            title = vd.get("title", "")
-            bar_desc = [f"{b.get('label')}: {b.get('value')}" for b in bars]
-            parts.append(f"VISUAL CONTEXT: A bar chart titled '{title}' is shown with data: {', '.join(bar_desc)}")
-            parts.append("Ask a question that requires reading the chart data.")
-
-        elif slot.visual_type == "pictograph" and vd:
-            rows = vd.get("rows", [])
-            title = vd.get("title", "")
-            row_desc = [f"{r.get('label')}: {r.get('count')} {r.get('emoji', '')}" for r in rows]
-            parts.append(f"VISUAL CONTEXT: A pictograph titled '{title}' is shown: {', '.join(row_desc)}")
-            parts.append("Ask a question about this specific data (which has most, how many total, etc.)")
-
-        elif slot.visual_type == "percentage_bar" and vd:
-            percent = vd.get("percent", 25)
-            parts.append(f"VISUAL CONTEXT: A percentage bar showing {percent}% is shaded.")
-            parts.append(f"Use {percent}% in your question.")
-
-        elif slot.visual_type == "fraction_bar" and vd:
-            n = vd.get("numerator", 1)
-            d = vd.get("denominator", 4)
-            parts.append(f"VISUAL CONTEXT: A fraction bar showing {n}/{d} is shaded.")
-            parts.append(f"Your question MUST reference the fraction {n}/{d}.")
-            second = vd.get("second")
-            if second:
-                parts.append(f"A second bar shows {second['numerator']}/{second['denominator']}. Ask to compare them.")
-
-        elif slot.visual_type == "ten_frame" and vd:
-            filled = vd.get("filled", 5)
-            parts.append(f"VISUAL CONTEXT: A ten frame with {filled} filled dots is shown. Ask about this count.")
-
-        elif slot.visual_type == "shapes" and vd:
-            shapes = vd.get("shapes", [])
-            target = vd.get("target", "")
-            shape_names = [s.get("name", "") for s in shapes]
-            parts.append(
-                f"VISUAL CONTEXT: These shapes are shown: {', '.join(shape_names)}. The target shape is '{target}'."
-            )
-            parts.append(f"Ask about '{target}' specifically.")
-
-        elif slot.visual_type == "array_visual" and vd:
-            rows_n = vd.get("rows", 3)
-            cols_n = vd.get("cols", 4)
-            parts.append(f"VISUAL CONTEXT: An array of {rows_n} rows × {cols_n} columns is shown.")
-            parts.append(f"Ask about {rows_n} × {cols_n} = {rows_n * cols_n}.")
-
-        elif slot.visual_type == "pie_fraction" and vd:
-            n = vd.get("numerator", 1)
-            d = vd.get("denominator", 4)
-            parts.append(f"VISUAL CONTEXT: A pie chart showing {n}/{d} shaded is shown.")
-            parts.append(f"Your question MUST reference the fraction {n}/{d}.")
-
-        elif slot.visual_type == "clock" and vd:
-            h = vd.get("hour", 3)
-            m = vd.get("minute", 0)
-            time_str = f"{h}:{m:02d}"
-            parts.append(f"VISUAL CONTEXT: A clock showing {time_str} is displayed.")
-            parts.append(f"Your question MUST ask about the time {time_str}.")
-
-        elif slot.visual_type == "money_coins" and vd:
-            total = vd.get("total", 0)
-            items = vd.get("items", [])
-            item_desc = [i.get("label", "") for i in items]
-            parts.append(f"VISUAL CONTEXT: Coins/notes shown: {', '.join(item_desc)}. Total = ₹{total}.")
-            parts.append(f"Your question MUST be about these coins/notes totalling ₹{total}.")
-
-        elif slot.visual_type == "number_line" and vd:
-            hf = vd.get("hops_from")
-            hc = vd.get("hops_count")
-            hl = vd.get("highlight")
-            if hf is not None and hc is not None:
-                parts.append(f"VISUAL CONTEXT: A number line with hops from {hf}, {hc} jumps, landing at {hl}.")
-            else:
-                parts.append(
-                    f"VISUAL CONTEXT: A number line from {vd.get('start', 0)} to {vd.get('end', 20)} is shown."
-                )
-
-        elif slot.visual_type == "pattern_tiles" and vd:
-            tiles = vd.get("tiles", [])
-            blank_pos = vd.get("blank_position", -1)
-            parts.append(f"VISUAL CONTEXT: A pattern is shown: {' '.join(tiles[:blank_pos])} ?")
-            parts.append(f"Ask what comes next. Answer: {vd.get('answer', '')}.")
-
-        elif slot.visual_type == "base_ten_regrouping" and vd:
-            nums = vd.get("numbers", [])
-            op = vd.get("operation", "addition")
-            if len(nums) >= 2:
-                parts.append(f"VISUAL CONTEXT: Base-ten blocks for {nums[0]} and {nums[1]} ({op}) are shown.")
-
-        elif slot.visual_type == "abacus" and vd:
-            h = vd.get("hundreds", 0)
-            t = vd.get("tens", 0)
-            o = vd.get("ones", 0)
-            val = h * 100 + t * 10 + o
-            parts.append(f"VISUAL CONTEXT: An abacus shows {h} hundreds, {t} tens, {o} ones = {val}.")
-            parts.append(f"Your question MUST ask about the number {val}.")
-
-        elif slot.visual_type == "grid_symmetry" and vd:
-            parts.append("VISUAL CONTEXT: A grid with some cells filled is shown. Ask about symmetry.")
 
     # Language
     if language.lower() == "hindi":
@@ -2528,590 +1652,6 @@ TOPIC_GUIDANCE = {
     "diet": {
         "common_mistake": "Children want to eat only their favourite food every day.",
         "parent_tip": "Use a plate model: half vegetables, quarter grain, quarter protein.",
-    },
-    # ── EVS / Science (specific) ──
-    "our senses": {
-        "common_mistake": "Children confuse which sense organ does what — thinking ears help us see or tongue helps us hear.",
-        "parent_tip": "Play a senses game: blindfold your child and have them guess objects by touch, smell, or sound.",
-    },
-    "my body": {
-        "common_mistake": "Children mix up internal and external body parts — they think the heart is in the head.",
-        "parent_tip": "Trace your child's body on a big paper and label body parts together.",
-    },
-    "my family": {
-        "common_mistake": "Children confuse maternal and paternal relations (nani vs dadi, mama vs chacha).",
-        "parent_tip": "Draw a family tree together and label each member with their relation name.",
-    },
-    "food we eat": {
-        "common_mistake": "Children think all cooked food is healthy and all raw food is unhealthy.",
-        "parent_tip": "During meals, ask: 'Is this giving us energy, strength, or protection?' for each food item.",
-    },
-    "seasons and weather": {
-        "common_mistake": "Children confuse seasons with weather — they think rainy season means it rains every day.",
-        "parent_tip": "Keep a weekly weather chart — draw sun, clouds, or rain each day and compare at month end.",
-    },
-    "plants around us": {
-        "common_mistake": "Children think only big trees are plants — they forget grass, herbs, and shrubs are plants too.",
-        "parent_tip": "Go for a walk and count different types of plants — big trees, small bushes, climbers, grass.",
-    },
-    "animals around us": {
-        "common_mistake": "Children forget that insects, fish, and birds are also animals.",
-        "parent_tip": "List 10 animals you saw today — include ants, butterflies, sparrows, not just dogs and cats.",
-    },
-    "shelter": {
-        "common_mistake": "Children think all animals live in the same type of home.",
-        "parent_tip": "Ask: 'Where does a bird sleep? Where does a fish sleep? Where does a dog sleep?' — compare homes.",
-    },
-    "animals and habitats": {
-        "common_mistake": "Children think desert animals need water like we do — they don't know camels store fat, not water.",
-        "parent_tip": "Watch a short nature video together and ask: 'Why does this animal live HERE and not there?'",
-    },
-    "our body": {
-        "common_mistake": "Children confuse voluntary and involuntary actions — they think breathing is voluntary.",
-        "parent_tip": "Ask your child to hold their breath — 'See? Your body breathes on its own!'",
-    },
-    "air": {
-        "common_mistake": "Children think air is nothing because they can't see it.",
-        "parent_tip": "Blow up a balloon together — 'See, air takes up space! It's real even though invisible.'",
-    },
-    "food and nutrition": {
-        "common_mistake": "Children think vitamins come only from tablets, not from food.",
-        "parent_tip": "While eating, name the vitamin: 'Carrots have Vitamin A for eyes, oranges have Vitamin C for health.'",
-    },
-    "human body": {
-        "common_mistake": "Children memorise organ names but can't explain what each organ does.",
-        "parent_tip": "After a meal, trace the food journey: mouth → food pipe → stomach → small intestine → blood.",
-    },
-    "photosynthesis": {
-        "common_mistake": "Children think plants get food from soil, not from sunlight.",
-        "parent_tip": "Keep one plant in sunlight and one in a dark cupboard for a week — observe the difference.",
-    },
-    "force and motion": {
-        "common_mistake": "Children think heavier objects always fall faster than lighter ones.",
-        "parent_tip": "Drop a ball and a crumpled paper from the same height — 'See? They land at almost the same time!'",
-    },
-    "states of matter": {
-        "common_mistake": "Children think ice is a different substance from water, not just a different state.",
-        "parent_tip": "Melt ice, boil water, catch steam — show the same water in 3 forms in your kitchen.",
-    },
-    "animal adaptation": {
-        "common_mistake": "Children think animals choose their features — 'The camel chose to have a hump.'",
-        "parent_tip": "Ask: 'Why does a polar bear have thick fur but a fish doesn't?' — connect body features to habitat.",
-    },
-    "simple machines": {
-        "common_mistake": "Children think machines are only electronic devices — they forget scissors, ramps, and seesaws.",
-        "parent_tip": "Find 5 simple machines at home: scissors (lever), door handle (wheel), ramp, bottle opener.",
-    },
-    "living things": {
-        "common_mistake": "Children think fire is alive because it moves and grows.",
-        "parent_tip": "Use MRS GREN: Movement, Respiration, Sensitivity, Growth, Reproduction, Excretion, Nutrition.",
-    },
-    "ecosystem": {
-        "common_mistake": "Children think food chains are simple and linear — they don't understand food webs.",
-        "parent_tip": "Draw a food chain from your garden: grass → grasshopper → frog → snake → eagle.",
-    },
-    "physical and chemical": {
-        "common_mistake": "Children think all changes can be reversed — they don't distinguish physical from chemical.",
-        "parent_tip": "Show: ice melts back to water (physical), but a burnt paper can't become paper again (chemical).",
-    },
-    "forms of energy": {
-        "common_mistake": "Children think energy is created when we switch on a light — they don't know it's transformed.",
-        "parent_tip": "Trace energy: sun → plant → food → your body → running. Energy changes form, never created!",
-    },
-    "solar system": {
-        "common_mistake": "Children think the sun moves around the earth because they see it 'rise' and 'set'.",
-        "parent_tip": "Use a torch and ball: torch = sun, ball = earth. Spin the ball — see day and night!",
-    },
-    "circulatory": {
-        "common_mistake": "Children think blood is only red — they don't know about oxygen-rich vs oxygen-poor blood.",
-        "parent_tip": "Feel your pulse after running — 'Your heart beats faster to send more blood to muscles!'",
-    },
-    "respiratory": {
-        "common_mistake": "Children think we breathe in only oxygen and breathe out only CO2.",
-        "parent_tip": "Breathe on a mirror — 'See the fog? That's water vapor your lungs added to the air!'",
-    },
-    "reproduction": {
-        "common_mistake": "Children think all plants grow from seeds — they forget roots, stems, and leaves can grow new plants.",
-        "parent_tip": "Plant a potato eye or onion top in soil — watch a new plant grow without seeds!",
-    },
-    # ── English ──
-    "alphabet": {
-        "common_mistake": "Children confuse visually similar letters: b/d, p/q, m/w. Also mix lowercase and uppercase.",
-        "parent_tip": "Practice one letter per day. Trace it, say its sound, name 3 objects starting with it.",
-    },
-    "phonics": {
-        "common_mistake": "Children confuse letter names with letter sounds ('aitch' vs /h/, 'double-you' vs /w/).",
-        "parent_tip": "Say the SOUND, not the name: 'b says /b/ as in ball', not 'b says bee'.",
-    },
-    "self and family": {
-        "common_mistake": "Children struggle with possessives — 'me book' instead of 'my book'.",
-        "parent_tip": "Practice: 'This is MY bag. This is YOUR pencil. This is HER doll.'",
-    },
-    "greetings": {
-        "common_mistake": "Children use informal greetings in formal situations — 'Hey' to a teacher.",
-        "parent_tip": "Role-play: 'How do you greet your teacher? Your friend? Your grandparent?'",
-    },
-    "simple sentences": {
-        "common_mistake": "Children write sentence fragments or forget capital letters and full stops.",
-        "parent_tip": "Every sentence needs: Capital letter + subject + verb + full stop. Practice 3 sentences daily.",
-    },
-    "seasons": {
-        "common_mistake": "Children confuse the number of seasons in India (6 ritus vs 3-4 commonly discussed).",
-        "parent_tip": "Ask: 'What clothes do we wear in summer? In winter? In rainy season?' — connect seasons to life.",
-    },
-    "animals and food vocabulary": {
-        "common_mistake": "Children use generic words ('thing', 'stuff') instead of specific vocabulary.",
-        "parent_tip": "During meals, name ingredients: 'This is dal, made from lentils. This is paneer, made from milk.'",
-    },
-    "nature vocabulary": {
-        "common_mistake": "Children know nature words in Hindi but struggle with English equivalents.",
-        "parent_tip": "Take a nature walk — name everything: cloud, leaf, puddle, stone, ant, flower.",
-    },
-    "sentences": {
-        "common_mistake": "Children write run-on sentences without punctuation.",
-        "parent_tip": "Read aloud together — pause at every full stop. This teaches sentence boundaries naturally.",
-    },
-    "rhyming": {
-        "common_mistake": "Children think words that start the same rhyme (bat/ball) instead of words that end the same (bat/cat).",
-        "parent_tip": "Play rhyme chains: 'cat → bat → hat → mat → sat' — who can think of the most?",
-    },
-    "punctuation": {
-        "common_mistake": "Children forget question marks for questions and use full stops everywhere.",
-        "parent_tip": "Read a paragraph together. Child points to every full stop, comma, and question mark.",
-    },
-    "reading comprehension": {
-        "common_mistake": "Children answer from memory or guess instead of finding answers in the passage.",
-        "parent_tip": "Teach: 'The answer is IN the passage. Underline the sentence that answers the question.'",
-    },
-    "vocabulary": {
-        "common_mistake": "Children memorise word meanings but can't use them in sentences.",
-        "parent_tip": "For every new word, make a sentence using it. One new word per day = 365 words per year!",
-    },
-    "prefixes": {
-        "common_mistake": "Children add prefixes randomly — 'unhappy' is correct but 'unsad' is not.",
-        "parent_tip": "Practice common prefixes: un- (undo), re- (redo), dis- (disagree), pre- (prepay).",
-    },
-    "prepositions": {
-        "common_mistake": "Children confuse in/on/at — 'I am on the bus' vs 'I am in the bus' (both used in Indian English).",
-        "parent_tip": "Use toys: 'Put the ball ON the table, IN the box, UNDER the chair, BESIDE the book.'",
-    },
-    "conjunctions": {
-        "common_mistake": "Children overuse 'and' to join all sentences instead of using but, because, so, or.",
-        "parent_tip": "Give two sentences, child joins with the right conjunction: 'I was hungry ___ I ate lunch.'",
-    },
-    "sentence types": {
-        "common_mistake": "Children can't distinguish statements from questions when there's no question mark.",
-        "parent_tip": "Sort sentences into types: 'The sky is blue' (statement), 'Is the sky blue?' (question).",
-    },
-    "formal letter": {
-        "common_mistake": "Children use informal language in formal letters — 'Hey Sir' instead of 'Respected Sir'.",
-        "parent_tip": "Practice the format: sender address, date, receiver, subject, body, closing. Stick it on the wall.",
-    },
-    "active and passive": {
-        "common_mistake": "Children confuse subject and object when converting — 'The cat caught the mouse' becomes 'The mouse caught the cat'.",
-        "parent_tip": "Use the trick: move the object to the start, add 'was/were', move subject to the end with 'by'.",
-    },
-    "direct and indirect": {
-        "common_mistake": "Children forget to change pronouns and tenses when converting direct to indirect speech.",
-        "parent_tip": "Practice the 3 changes: remove quotes, change pronoun (I→he/she), change tense (is→was).",
-    },
-    "clauses": {
-        "common_mistake": "Children can't identify the main clause vs the subordinate clause.",
-        "parent_tip": "Ask: 'Which part can stand alone as a sentence?' — that's the main clause.",
-    },
-    "complex sentences": {
-        "common_mistake": "Children write compound sentences (and, but) thinking they're complex.",
-        "parent_tip": "Complex = main clause + subordinate clause with words like because, although, when, if.",
-    },
-    "synonyms": {
-        "common_mistake": "Children think synonyms mean exactly the same — they don't understand shades of meaning.",
-        "parent_tip": "happy/glad/joyful/ecstatic — arrange by intensity. This builds vocabulary depth.",
-    },
-    "summary writing": {
-        "common_mistake": "Children copy sentences from the passage instead of writing in their own words.",
-        "parent_tip": "Read a paragraph, close the book, tell the main idea in 2 sentences. That's a summary!",
-    },
-    "creative writing": {
-        "common_mistake": "Children start stories with 'Once upon a time' every time and struggle with endings.",
-        "parent_tip": "Give a funny prompt: 'What if your school bag could talk?' Let imagination flow — don't correct grammar first.",
-    },
-    "comprehension": {
-        "common_mistake": "Children answer factual questions but struggle with inference and opinion questions.",
-        "parent_tip": "After reading, ask: 'How do you think the character feels? Why?' — practice reading between the lines.",
-    },
-    # ── Hindi ──
-    "varnamala swar": {
-        "common_mistake": "बच्चे अ-आ और इ-ई में अंतर भूल जाते हैं। छोटी-बड़ी मात्रा में भ्रम होता है।",
-        "parent_tip": "हर दिन एक स्वर का अभ्यास करें। उस स्वर से शुरू होने वाली 5 चीज़ें ढूँढें।",
-    },
-    "varnamala vyanjan": {
-        "common_mistake": "बच्चे क-ख, ग-घ, च-छ जैसे मिलते-जुलते व्यंजनों में भ्रम करते हैं।",
-        "parent_tip": "हर दिन 5 व्यंजन लिखवाएँ और उनसे एक-एक शब्द बनवाएँ।",
-    },
-    "family words": {
-        "common_mistake": "बच्चे माँ-पापा लिख लेते हैं पर दादा-दादी, नाना-नानी में गलती करते हैं।",
-        "parent_tip": "परिवार का पेड़ बनाएँ और हर सदस्य का नाम हिंदी में लिखें।",
-    },
-    "simple sentences in hindi": {
-        "common_mistake": "बच्चे वाक्य में क्रिया (verb) भूल जाते हैं — 'मैं स्कूल' लिखते हैं 'मैं स्कूल जाता हूँ' की जगह।",
-        "parent_tip": "हर वाक्य में पूछें: कौन? क्या करता है? कहाँ? — इन तीनों का उत्तर होना चाहिए।",
-    },
-    "two letter words": {
-        "common_mistake": "बच्चे दो अक्षर के शब्दों में मात्रा लगा देते हैं जहाँ ज़रूरत नहीं है।",
-        "parent_tip": "घर की चीज़ों के दो अक्षर वाले नाम ढूँढें: कप, जग, बस, रथ, फल।",
-    },
-    "three letter words": {
-        "common_mistake": "बच्चे तीन अक्षर के शब्दों में बीच का अक्षर भूल जाते हैं।",
-        "parent_tip": "तीन अक्षर के शब्दों से चित्र बनवाएँ: कमल, नदी, पतंग।",
-    },
-    "matras introduction": {
-        "common_mistake": "बच्चे आ की मात्रा (ा) और इ की मात्रा (ि) में भ्रम करते हैं।",
-        "parent_tip": "एक मात्रा प्रतिदिन — उस मात्रा वाले 10 शब्द ढूँढें और लिखें।",
-    },
-    "matras": {
-        "common_mistake": "बच्चे ए-ऐ और ओ-औ की मात्राओं में गलती करते हैं।",
-        "parent_tip": "मात्रा चार्ट दीवार पर लगाएँ। रोज़ एक मात्रा के 5 शब्द लिखवाएँ।",
-    },
-    "rhymes and poems": {
-        "common_mistake": "बच्चे कविता रट लेते हैं पर अर्थ नहीं समझते।",
-        "parent_tip": "कविता पढ़ने के बाद पूछें: 'इसमें क्या बताया गया है?' — अर्थ समझना ज़रूरी है।",
-    },
-    "varnamala": {
-        "common_mistake": "बच्चे अनुस्वार (ं) और विसर्ग (ः) भूल जाते हैं।",
-        "parent_tip": "वर्णमाला की पूरी सूची गाकर याद करें — संगीत से याद रहता है!",
-    },
-    "shabd rachna": {
-        "common_mistake": "बच्चे उपसर्ग और प्रत्यय में भ्रम करते हैं।",
-        "parent_tip": "एक मूल शब्द दें, बच्चा उपसर्ग-प्रत्यय लगाकर नए शब्द बनाए: सुख → दुःख, सुखी, सुखद।",
-    },
-    "vakya rachna": {
-        "common_mistake": "बच्चे वाक्य में शब्दों का क्रम गलत रखते हैं।",
-        "parent_tip": "शब्दों के कार्ड बनाएँ, बच्चा सही क्रम में जमाकर वाक्य बनाए।",
-    },
-    "kahani lekhan": {
-        "common_mistake": "बच्चे कहानी का अंत नहीं लिख पाते या बीच में रुक जाते हैं।",
-        "parent_tip": "कहानी के 3 भाग सिखाएँ: शुरुआत, बीच (समस्या), अंत (समाधान)।",
-    },
-    "kaal": {
-        "common_mistake": "बच्चे भूतकाल और भविष्यकाल में क्रिया रूप गलत लिखते हैं।",
-        "parent_tip": "तीन वाक्य बनवाएँ: 'कल मैंने ___ (भूत), आज मैं ___ (वर्तमान), कल मैं ___ (भविष्य)'।",
-    },
-    "patra lekhan": {
-        "common_mistake": "बच्चे पत्र का प्रारूप (format) भूल जाते हैं — दिनांक, संबोधन, विषय।",
-        "parent_tip": "पत्र का नमूना दीवार पर लगाएँ। हर हफ़्ते दादा-दादी को एक पत्र लिखवाएँ।",
-    },
-    "vachan and ling": {
-        "common_mistake": "बच्चे अनियमित बहुवचन में गलती करते हैं (आदमी → आदमीयाँ लिखना, सही: आदमी)।",
-        "parent_tip": "घर की चीज़ों को एकवचन-बहुवचन में बदलवाएँ: एक कुर्सी → दो कुर्सियाँ।",
-    },
-    "anusvaar": {
-        "common_mistake": "बच्चे अनुस्वार (ं) और चंद्रबिंदु (ँ) में अंतर नहीं कर पाते।",
-        "parent_tip": "अंतर समझाएँ: अनुस्वार नाक से बोलो (हंस), चंद्रबिंदु नाक + मुँह से (हँसना)।",
-    },
-    "comprehension hindi": {
-        "common_mistake": "बच्चे गद्यांश पढ़ते हैं पर उत्तर पूरे वाक्य में नहीं लिखते।",
-        "parent_tip": "सिखाएँ: उत्तर हमेशा पूरे वाक्य में लिखो, सिर्फ़ एक शब्द में नहीं।",
-    },
-    "vilom shabd": {
-        "common_mistake": "बच्चे कुछ विलोम शब्दों को उलटा याद करते हैं।",
-        "parent_tip": "विलोम शब्दों का खेल खेलें — एक शब्द बोलें, बच्चा उलटा बोले।",
-    },
-    "muhavare": {
-        "common_mistake": "बच्चे मुहावरे का शाब्दिक अर्थ समझते हैं, लाक्षणिक नहीं।",
-        "parent_tip": "'आँखों का तारा' का मतलब 'आँख में तारा' नहीं बल्कि 'बहुत प्यारा' — ऐसे समझाएँ।",
-    },
-    "paryayvachi": {
-        "common_mistake": "बच्चे पर्यायवाची और विलोम में भ्रम करते हैं।",
-        "parent_tip": "पर्यायवाची = समान अर्थ (जल, पानी, नीर)। विलोम = उल्टा अर्थ (दिन/रात)।",
-    },
-    "samas": {
-        "common_mistake": "बच्चे समास के प्रकार (तत्पुरुष, द्वंद्व, बहुव्रीहि) में भ्रम करते हैं।",
-        "parent_tip": "रोज़मर्रा के शब्दों से समास पहचानें: रसोईघर = रसोई का घर (तत्पुरुष)।",
-    },
-    "samvad lekhan": {
-        "common_mistake": "बच्चे संवाद में बोलने वाले का नाम लिखना भूल जाते हैं।",
-        "parent_tip": "दो पात्रों का संवाद लिखवाएँ: 'माँ: ___ बच्चा: ___' — रोज़ एक संवाद।",
-    },
-    # ── Computer ──
-    "parts of computer": {
-        "common_mistake": "Children confuse input devices (keyboard, mouse) with output devices (monitor, printer).",
-        "parent_tip": "Point to each part: 'Keyboard = you TYPE (input). Monitor = you SEE (output).'",
-    },
-    "mouse and keyboard": {
-        "common_mistake": "Children confuse left-click (select) with right-click (menu) and double-click (open).",
-        "parent_tip": "Practice: left-click to select, double-click to open, right-click to see options.",
-    },
-    "special keys": {
-        "common_mistake": "Children don't know the difference between Backspace (delete left) and Delete (delete right).",
-        "parent_tip": "Let your child type their name and practice using Enter, Space, Backspace, and Caps Lock.",
-    },
-    "desktop": {
-        "common_mistake": "Children confuse desktop icons with files — they think deleting an icon deletes the program.",
-        "parent_tip": "Show: 'This icon is a shortcut, like a door. The program is inside — the door just helps you reach it.'",
-    },
-    "typing": {
-        "common_mistake": "Children type with two fingers (hunt and peck) instead of using home row keys.",
-        "parent_tip": "Show the home row: ASDF for left hand, JKL; for right hand. Practice 5 minutes daily.",
-    },
-    "files and folders": {
-        "common_mistake": "Children save everything on the desktop instead of organizing into folders.",
-        "parent_tip": "Create folders together: 'Homework', 'Games', 'Photos' — practice saving files in the right folder.",
-    },
-    "keyboard shortcuts": {
-        "common_mistake": "Children forget common shortcuts and use menus for everything.",
-        "parent_tip": "Start with 3: Ctrl+C (copy), Ctrl+V (paste), Ctrl+Z (undo). Practice daily.",
-    },
-    "ms paint": {
-        "common_mistake": "Children use only the pencil tool and don't explore shapes, fill, or text tools.",
-        "parent_tip": "Draw a house together using shapes (rectangle for walls, triangle for roof, circle for sun).",
-    },
-    "ms word": {
-        "common_mistake": "Children type without pressing Enter for new paragraphs — one long block of text.",
-        "parent_tip": "Type a short story together: practice bold for title, Enter for paragraphs, spell-check.",
-    },
-    "scratch": {
-        "common_mistake": "Children place too many blocks without testing — then can't find the bug.",
-        "parent_tip": "Teach: 'Add 2-3 blocks, then click the green flag to test. Fix before adding more.'",
-    },
-    "internet safety": {
-        "common_mistake": "Children share personal information (name, school, address) in online games and chats.",
-        "parent_tip": "Rule: NEVER share your real name, school name, photo, or address with strangers online.",
-    },
-    "internet basics": {
-        "common_mistake": "Children think the internet and the web browser are the same thing.",
-        "parent_tip": "Explain: 'Internet is the road. Browser (Chrome) is the car. Website is the destination.'",
-    },
-    "powerpoint": {
-        "common_mistake": "Children put too much text on one slide — they copy paragraphs instead of bullet points.",
-        "parent_tip": "Rule: Maximum 5 bullet points per slide, maximum 5 words per point. Pictures > text.",
-    },
-    "scratch programming": {
-        "common_mistake": "Children don't use loops — they repeat the same blocks 10 times instead of using 'repeat'.",
-        "parent_tip": "Challenge: 'Can you make the cat walk in a square using only 4 blocks inside a repeat?'",
-    },
-    "digital citizenship": {
-        "common_mistake": "Children think anything they find online can be copied freely — no concept of copyright.",
-        "parent_tip": "Teach: 'Would you take someone's toy without asking? Online content belongs to someone too.'",
-    },
-    "digital ethics": {
-        "common_mistake": "Children think online actions have no consequences — cyberbullying seems like 'just joking'.",
-        "parent_tip": "Ask: 'Would you say this to their face? If not, don't type it.' — the grandma test.",
-    },
-    # ── GK ──
-    "national symbols": {
-        "common_mistake": "Children confuse the national bird (peacock) with the national animal (tiger).",
-        "parent_tip": "Make a chart: Flag, Emblem, Bird (peacock), Animal (tiger), Flower (lotus), Fruit (mango).",
-    },
-    "famous landmarks": {
-        "common_mistake": "Children know Taj Mahal but can't name the city or builder.",
-        "parent_tip": "Pick one landmark per week: name, city, who built it, one fun fact.",
-    },
-    "solar system basics": {
-        "common_mistake": "Children mix up planet order — they forget 'My Very Educated Mother Just Served Us Nachos'.",
-        "parent_tip": "Learn the mnemonic: Mercury Venus Earth Mars Jupiter Saturn Uranus Neptune.",
-    },
-    "current awareness": {
-        "common_mistake": "Children memorise facts without understanding context.",
-        "parent_tip": "Discuss one news story per week at dinner — 'What happened? Where? Why does it matter?'",
-    },
-    "continents": {
-        "common_mistake": "Children confuse continents with countries — they think India is a continent.",
-        "parent_tip": "Use a globe or map: '7 continents, India is in Asia. Can you find the others?'",
-    },
-    "famous scientists": {
-        "common_mistake": "Children memorise names but forget the discovery: 'Newton — something about apples.'",
-        "parent_tip": "One scientist per week: name, discovery, fun story. APJ Abdul Kalam is a great start!",
-    },
-    "festivals": {
-        "common_mistake": "Children know festival names but not why they're celebrated.",
-        "parent_tip": "Before each festival, tell the story: 'Diwali celebrates Ram's return. Holi celebrates Holika.'",
-    },
-    "indian constitution": {
-        "common_mistake": "Children think the Constitution is just a book of laws, not a living document.",
-        "parent_tip": "Discuss rights: 'You have the right to education. Your friend has the right to equality.'",
-    },
-    "world heritage": {
-        "common_mistake": "Children confuse world heritage sites with tourist spots — they don't understand 'heritage'.",
-        "parent_tip": "Heritage means 'precious things from the past.' Ask: 'Why should we protect the Taj Mahal?'",
-    },
-    "space missions": {
-        "common_mistake": "Children think only NASA sends rockets — they don't know about ISRO's achievements.",
-        "parent_tip": "Learn about Chandrayaan and Mangalyaan — India sent a Mars mission cheaper than a Hollywood movie!",
-    },
-    "environmental awareness": {
-        "common_mistake": "Children think pollution is only factory smoke — they forget plastic, water pollution, noise.",
-        "parent_tip": "Do a home audit: 'How much plastic did we use today? Can we reduce it tomorrow?'",
-    },
-    "global citizenship": {
-        "common_mistake": "Children think global problems are too big for them to help with.",
-        "parent_tip": "Start small: save water, plant a tree, donate old books. Small actions matter!",
-    },
-    # ── Moral Science ──
-    "sharing": {
-        "common_mistake": "Children think sharing means giving away their things permanently.",
-        "parent_tip": "Practice: 'Can you share your crayons with your friend? They'll return them after drawing.'",
-    },
-    "honesty": {
-        "common_mistake": "Children tell small lies to avoid trouble and think it's okay because 'it's a small lie'.",
-        "parent_tip": "Praise honesty: 'Thank you for telling the truth. I'm proud of you even though you made a mistake.'",
-    },
-    "kindness": {
-        "common_mistake": "Children are kind to friends but not to strangers or younger kids.",
-        "parent_tip": "Practice daily kindness: 'Did you do one kind thing today? Help someone carry their bag?'",
-    },
-    "respecting elders": {
-        "common_mistake": "Children confuse respect with obedience — they think respect means never disagreeing.",
-        "parent_tip": "Teach: 'Respect means listening politely, using kind words, and being helpful — not blind obedience.'",
-    },
-    "empathy": {
-        "common_mistake": "Children confuse empathy (feeling what others feel) with sympathy (feeling sorry).",
-        "parent_tip": "Ask: 'How would YOU feel if someone took your toy? That's empathy — understanding someone else's feelings.'",
-    },
-    "teamwork": {
-        "common_mistake": "Children want to do everything themselves and struggle to delegate or accept others' ideas.",
-        "parent_tip": "Play team games: building blocks together, cooking together. Ask: 'What was YOUR role?'",
-    },
-    "environmental care": {
-        "common_mistake": "Children think environmental care is only about not littering.",
-        "parent_tip": "Three Rs: Reduce (use less), Reuse (use again), Recycle (make new things from old).",
-    },
-    "leadership": {
-        "common_mistake": "Children think a leader is the one who gives orders, not the one who helps the team.",
-        "parent_tip": "Ask: 'What makes a good captain? Someone who shouts or someone who encourages the team?'",
-    },
-    # ── Health & PE ──
-    "personal hygiene": {
-        "common_mistake": "Children skip steps — they wash hands but forget to use soap, or brush but forget tongue.",
-        "parent_tip": "Make a hygiene checklist on the bathroom wall: brush teeth, wash hands, comb hair, clean nails.",
-    },
-    "good posture": {
-        "common_mistake": "Children slouch while studying and don't realize it affects their back and concentration.",
-        "parent_tip": "The wall test: stand with back against the wall — head, shoulders, hips should touch.",
-    },
-    "basic physical": {
-        "common_mistake": "Children think exercise has to be intense — they don't count walking and stretching.",
-        "parent_tip": "Start with 10 minutes: 5 stretches, 10 jumping jacks, walk around the park. Every day!",
-    },
-    "healthy eating": {
-        "common_mistake": "Children think 'healthy' means only salads and boring food.",
-        "parent_tip": "Make healthy food fun: fruit chat with chaat masala, smoothies, veggie sandwiches with cheese.",
-    },
-    "outdoor play": {
-        "common_mistake": "Children prefer screen time over outdoor play and don't know traditional games.",
-        "parent_tip": "Teach one traditional game: kho-kho, pitthu, lagori, hopscotch. Play together on weekends.",
-    },
-    "basic stretching": {
-        "common_mistake": "Children bounce during stretches instead of holding still — this can cause injury.",
-        "parent_tip": "Hold each stretch for 10 seconds, no bouncing. Practice touching toes, arm stretches.",
-    },
-    "balanced diet": {
-        "common_mistake": "Children think skipping meals helps them stay healthy.",
-        "parent_tip": "Three meals + two snacks. Show the plate: half veggies, quarter grain, quarter protein.",
-    },
-    "safety at play": {
-        "common_mistake": "Children ignore safety rules during excitement — no helmet while cycling, pushing on slides.",
-        "parent_tip": "Before play: 'What are the 3 safety rules today?' Let them set the rules themselves.",
-    },
-    "team sports": {
-        "common_mistake": "Children focus only on winning and get upset when they lose.",
-        "parent_tip": "After every game: 'What did you learn? Did you play fair? Did you encourage your team?'",
-    },
-    "sports and games": {
-        "common_mistake": "Children know cricket but can't name rules of other sports like kho-kho or basketball.",
-        "parent_tip": "Learn one new sport per month: rules, famous players, try playing it even in a small way.",
-    },
-    "first aid": {
-        "common_mistake": "Children panic during minor injuries instead of following basic first aid steps.",
-        "parent_tip": "Teach: cuts → wash with water, press with clean cloth. Burns → run cold water. Nosebleed → pinch and lean forward.",
-    },
-    "yoga": {
-        "common_mistake": "Children rush through yoga poses without holding them or focusing on breathing.",
-        "parent_tip": "Start with 3 poses: tree pose (balance), cobra (back), butterfly (flexibility). Hold for 10 breaths.",
-    },
-    "importance of sleep": {
-        "common_mistake": "Children think sleeping less means more time to play — they don't understand sleep helps the brain.",
-        "parent_tip": "Set a bedtime: Class 1-3 need 10 hours, Class 4-5 need 9 hours. No screens 30 minutes before bed.",
-    },
-    "fitness": {
-        "common_mistake": "Children think fitness is only for athletes or adults.",
-        "parent_tip": "Track weekly activity: 'Did you play outside 5 times this week?' — make it a fun challenge.",
-    },
-    "nutrition labels": {
-        "common_mistake": "Children don't know how to read food labels — they judge food by the brand or taste.",
-        "parent_tip": "Pick a packet from your kitchen — read together: calories, sugar, fat. Compare two brands.",
-    },
-    "mental health": {
-        "common_mistake": "Children think feeling sad or angry is wrong — they don't know these are normal emotions.",
-        "parent_tip": "Teach: 'All feelings are okay. Feeling angry is normal — what matters is how we handle it.'",
-    },
-    # ── Maths (specific) ──
-    "basic shapes": {
-        "common_mistake": "Children identify shapes only in standard orientation — a rotated triangle doesn't look like a triangle to them.",
-        "parent_tip": "Show shapes in different orientations and sizes — 'Is this still a triangle? Yes! Count the sides.'",
-    },
-    "spatial sense": {
-        "common_mistake": "Children confuse left-right and above-below in written directions.",
-        "parent_tip": "Play direction games: 'Put the ball ABOVE the table, BEHIND the chair, BELOW the bed.'",
-    },
-    "numbers 1 to 50": {
-        "common_mistake": "Children reverse digits when writing teens: 12 becomes 21, 15 becomes 51.",
-        "parent_tip": "Practice: say 'thirteen' → 1 then 3. The 'teen' tells you 1 comes first.",
-    },
-    "numbers 51 to 100": {
-        "common_mistake": "Children struggle with counting across decades: ...48, 49, 50, 41? They restart instead of continuing.",
-        "parent_tip": "Use a number chart (1-100). Point and read together — especially the decade transitions.",
-    },
-    "numbers up to 1000": {
-        "common_mistake": "Children confuse place values — in 432, they think 4 means four, not four hundred.",
-        "parent_tip": "Use bundles: 100 = 1 bundle, 10 = 1 stick, 1 = 1 bead. Build numbers physically.",
-    },
-    "numbers up to 10 lakh": {
-        "common_mistake": "Children confuse Indian place values (lakhs/crores) with international system (millions).",
-        "parent_tip": "Practice comma placement: Indian system has commas after 3, 5, 7 digits from right: 10,00,000.",
-    },
-    "multiplication (tables 2-5)": {
-        "common_mistake": "Children skip-count but lose track: 4, 8, 12, 14 (wrong — should be 16).",
-        "parent_tip": "Tables song: 'Two ones are two, two twos are four...' — rhythmic chanting works best.",
-    },
-    "area and volume": {
-        "common_mistake": "Children forget to use square units (cm²) for area and cubic units (cm³) for volume.",
-        "parent_tip": "Area = floor tiles (flat, cm²). Volume = how much water fits (3D, cm³ or mL).",
-    },
-    "speed distance": {
-        "common_mistake": "Children mix up the formula — they divide when they should multiply and vice versa.",
-        "parent_tip": "Use the triangle: S on top, D and T below. Cover what you want: D = S × T, S = D ÷ T.",
-    },
-    "factors and multiples": {
-        "common_mistake": "Children confuse factors (divide into) with multiples (multiply to get).",
-        "parent_tip": "Factors = what fits inside: factors of 12 = 1, 2, 3, 4, 6, 12. Multiples = keep adding: 3, 6, 9, 12...",
-    },
-    "hcf and lcm": {
-        "common_mistake": "Children confuse HCF (biggest shared factor) with LCM (smallest shared multiple).",
-        "parent_tip": "HCF = highest common FACTOR (goes INTO both). LCM = lowest common MULTIPLE (both go into IT).",
-    },
-    "data handling (pictographs)": {
-        "common_mistake": "Children miscount symbols when each symbol represents more than 1 unit.",
-        "parent_tip": "Always read the key first: 'Each 🍎 = 2 students. So 3 apples = 6 students, not 3!'",
-    },
-    "data handling (pie charts)": {
-        "common_mistake": "Children judge pie chart sections by appearance, not by reading the percentage labels.",
-        "parent_tip": "Always add up all sections — they must equal 100%. If not, something is wrong.",
-    },
-    "fractions (halves": {
-        "common_mistake": "Children think fractions are always less than 1 — they struggle with ½ of 8 = 4.",
-        "parent_tip": "Cut a roti in half — each piece is ½. Now cut 4 rotis — half of 4 rotis = 2 rotis.",
-    },
-    "fractions (add": {
-        "common_mistake": "Children add numerators AND denominators: ½ + ⅓ = ⅖ (wrong — it's ⅚).",
-        "parent_tip": "Rule: denominators MUST be same before adding. Find common denominator first, then add tops only.",
-    },
-    "decimals (all": {
-        "common_mistake": "Children line up decimal numbers from the right like whole numbers — 2.5 + 0.35 = 2.85 (wrong alignment).",
-        "parent_tip": "Golden rule: line up the decimal POINTS, then add column by column. Add zeros if needed: 2.50 + 0.35.",
-    },
-    "geometry (circles": {
-        "common_mistake": "Children confuse radius (center to edge) with diameter (edge to edge through center).",
-        "parent_tip": "Remember: diameter = 2 × radius. The diameter is the longest line through the circle.",
     },
 }
 
@@ -3408,20 +1948,13 @@ def build_slots(
     mandatory_visual = None
     mandatory_visual_min = 0
     topic_lower = topic.lower()
-    # Special case: fraction comparison/equivalent → fraction_bar, not pie
-    _special_case_visual = False
-    if "fraction" in topic_lower and any(kw in topic_lower for kw in ("compar", "equivalent", "adding", "subtracting")):
-        mandatory_visual = "fraction_bar"
-        _special_case_visual = True
-    else:
-        for key, vis_type in MANDATORY_VISUAL_TOPICS.items():
-            if key in topic_lower:
-                mandatory_visual = vis_type
-                break
-    # Profile can override, but NOT when we already picked a special-case visual
+    for key, vis_type in MANDATORY_VISUAL_TOPICS.items():
+        if key in topic_lower:
+            mandatory_visual = vis_type
+            break
     profile_mandatory = profile.get("mandatory_visuals", {}) if profile else {}
     required_types = profile_mandatory.get("required_types") or []
-    if required_types and not _special_case_visual:
+    if required_types:
         mandatory_visual = required_types[0]
         mandatory_visual_min = int(profile_mandatory.get("min_count", 1))
 
@@ -3538,16 +2071,11 @@ def build_slots(
             min_required = max(mandatory_visual_min, math.ceil(num_questions * 0.5))
             if i < min_required:
                 visual_type = mandatory_visual
-        if not visual_type:
-            # Determine visual rate based on grade, subject, and problem_style
-            visual_rate = 0.0
-            _sl = subject.lower()
-
-            if problem_style == "visual":
-                visual_rate = {1: 1.0, 2: 0.9, 3: 0.7, 4: 0.5, 5: 0.3}.get(grade_num, 0.3)
-            elif problem_style == "mixed":
-                visual_rate = {1: 0.8, 2: 0.7, 3: 0.5, 4: 0.3, 5: 0.2}.get(grade_num, 0.2)
-            elif is_maths and operation in (
+        elif (
+            is_maths
+            and grade_num <= 2
+            and operation
+            in (
                 "addition",
                 "addition_with_carry",
                 "subtraction",
@@ -3555,29 +2083,20 @@ def build_slots(
                 "subtraction_with_borrow",
                 "multiplication",
                 "division",
-            ):
-                visual_rate = {1: 0.7, 2: 0.6, 3: 0.4, 4: 0.15, 5: 0.1}.get(grade_num, 0.1)
-            elif is_maths:
-                visual_rate = {1: 0.6, 2: 0.5, 3: 0.35, 4: 0.15, 5: 0.1}.get(grade_num, 0.1)
-            elif _sl in ("health", "moral science"):
-                visual_rate = {1: 0.7, 2: 0.6, 3: 0.4, 4: 0.3, 5: 0.2}.get(grade_num, 0.2)
-            elif _sl in ("science", "evs"):
-                visual_rate = {1: 0.7, 2: 0.5, 3: 0.35, 4: 0.2, 5: 0.1}.get(grade_num, 0.1)
-            elif _sl in ("computer", "gk"):
-                visual_rate = {1: 0.5, 2: 0.4, 3: 0.25, 4: 0.2, 5: 0.15}.get(grade_num, 0.15)
-            else:
-                visual_rate = {1: 0.5, 2: 0.4, 3: 0.25, 4: 0.1, 5: 0.05}.get(grade_num, 0.05)
-
-            if random.random() < visual_rate:
-                visual_type = _pick_visual_type(topic, is_maths, subject=subject, grade_num=grade_num, slot_number=i)
-                # For early-grade arithmetic, always fall back to object_group
-                if not visual_type and is_maths and grade_num <= 2:
-                    visual_type = "object_group"
+            )
+        ):
+            # Early-grade maths should be visual-heavy.
+            if i < math.ceil(num_questions * 0.6):
+                visual_type = "object_group"
+        elif problem_style == "visual":
+            if random.random() < 0.8:
+                visual_type = _pick_visual_type(topic, is_maths)
+        elif problem_style == "mixed":
+            if random.random() < 0.5:
+                visual_type = _pick_visual_type(topic, is_maths)
 
         if visual_type:
-            visual_data = _compute_visual_data(
-                visual_type, numbers, grade_num, slot_number=i, topic=topic, language=language
-            )
+            visual_data = _compute_visual_data(visual_type, numbers, grade_num)
 
         # Image keywords — auto-assign for Class 1-2, optional for Class 3
         image_kw = None
@@ -3590,15 +2109,6 @@ def build_slots(
         # Boost for Science/EVS — these subjects benefit from visuals at every grade
         if subject.lower() in ("science", "evs"):
             auto_image_rate = max(auto_image_rate, 0.4)
-
-        # Boost for other text-heavy subjects with good image coverage
-        subject_lower = subject.lower()
-        if subject_lower in ("english", "hindi", "health"):
-            auto_image_rate = max(auto_image_rate, 0.4)
-        elif subject_lower in ("computer",):
-            auto_image_rate = max(auto_image_rate, 0.5)
-        elif subject_lower in ("gk", "general knowledge"):
-            auto_image_rate = max(auto_image_rate, 0.6)
 
         # Override with problem_style if explicitly set
         if problem_style == "visual":
@@ -3680,16 +2190,7 @@ def build_slots(
                         new_key = (new_nums.get("a"), new_nums.get("b"))
                         if new_key not in seen_pairs:
                             slot.numbers = new_nums
-                            # Sync visual_data groups with new numbers
-                            if slot.visual_type and slot.visual_data:
-                                slot.visual_data = _compute_visual_data(
-                                    slot.visual_type,
-                                    new_nums,
-                                    grade_num,
-                                    slot_number=slot.slot_number - 1,
-                                    topic=topic,
-                                    language=language,
-                                )
+                            # Rebuild instruction with new numbers
                             slot.llm_instruction = _build_llm_instruction(slot, topic, subject, language, grade_num)
                             pair_key = new_key
                             break
@@ -3717,16 +2218,6 @@ def build_slots(
                             }
                             if new_nums["answer"] not in existing_answers or attempt > 20:
                                 slots[regen_idx].numbers = new_nums
-                                # Sync visual_data groups with new numbers
-                                if slots[regen_idx].visual_type and slots[regen_idx].visual_data:
-                                    slots[regen_idx].visual_data = _compute_visual_data(
-                                        slots[regen_idx].visual_type,
-                                        new_nums,
-                                        grade_num,
-                                        slot_number=regen_idx,
-                                        topic=topic,
-                                        language=language,
-                                    )
                                 slots[regen_idx].llm_instruction = _build_llm_instruction(
                                     slots[regen_idx], topic, subject, language, grade_num
                                 )
@@ -3760,99 +2251,17 @@ def build_slots(
     return SlotBuilderOutput(slots=slots, worksheet_meta=worksheet_meta)
 
 
-def _pick_visual_type(
-    topic: str,
-    is_maths: bool,
-    subject: str = "",
-    grade_num: int = 3,
-    slot_number: int = 0,
-) -> str | None:
+def _pick_visual_type(topic: str, is_maths: bool) -> str | None:
     """Pick a suitable visual type for a slot."""
     topic_lower = topic.lower()
-    subject_lower = subject.lower()
-
     # Check mandatory topics first
     for key, vis_type in MANDATORY_VISUAL_TOPICS.items():
         if key in topic_lower:
             return vis_type
 
-    # Subject-specific visual types
-    if subject_lower in ("english",) and grade_num <= 2:
-        return "picture_word_match"
-
-    if subject_lower in ("hindi",) and grade_num <= 2:
-        return "picture_word_match"
-
-    if subject_lower in ("evs",) and grade_num <= 2:
-        if "animal" in topic_lower and "habitat" in topic_lower:
-            return "match_columns"
-        if "plant" in topic_lower or "body" in topic_lower:
-            return "labeled_diagram"
-        return "picture_word_match"
-
-    if subject_lower in ("science", "evs"):
-        if "food" in topic_lower or "nutrition" in topic_lower or "diet" in topic_lower:
-            return "food_plate"
-        if "body" in topic_lower or "human" in topic_lower or "digest" in topic_lower or "plant" in topic_lower:
-            return "labeled_diagram"
-        if "animal" in topic_lower:
-            return random.choice(["match_columns", "picture_word_match"])
-        if "water" in topic_lower or "air" in topic_lower:
-            return "labeled_diagram"
-        if "force" in topic_lower or "energy" in topic_lower or "matter" in topic_lower:
-            return "sequence_pictures"
-        return "picture_word_match"
-
-    if subject_lower in ("computer",):
-        return "labeled_diagram"
-
-    if subject_lower in ("gk",):
-        return "picture_word_match"
-
-    # Health
-    if subject_lower in ("health",):
-        if "hygiene" in topic_lower or "wash" in topic_lower:
-            return "sequence_pictures"
-        if "diet" in topic_lower or "food" in topic_lower or "eating" in topic_lower or "nutrition" in topic_lower:
-            return "food_plate"
-        return "scenario_picture"
-
-    # Moral Science
-    if subject_lower in ("moral science",):
-        return "scenario_picture"
-
     if is_maths:
-        # Fraction comparison/equivalence → fraction_bar (not pie)
-        if "fraction" in topic_lower and (
-            "compar" in topic_lower or "equivalent" in topic_lower or "add" in topic_lower or "subtract" in topic_lower
-        ):
-            return "fraction_bar"
-        if "percent" in topic_lower:
-            return "percentage_bar"
-        if "data" in topic_lower or "graph" in topic_lower or "chart" in topic_lower:
-            return random.choice(["pictograph", "bar_chart"])
-        if "number" in topic_lower and grade_num <= 2:
-            return random.choice(["ten_frame", "number_line", "object_group"])
-        if "multipl" in topic_lower and grade_num <= 3:
-            return "array_visual"
-        # Maths Class 4-5 topics without mandatory visuals
-        if grade_num >= 4:
-            if "decimal" in topic_lower:
-                return "number_line"
-            if "area" in topic_lower or "volume" in topic_lower or "perimeter" in topic_lower:
-                return "shapes"
-            if "speed" in topic_lower or "distance" in topic_lower:
-                return "number_line"
-            return "number_line"
-        # Default maths visuals
-        if grade_num <= 2:
-            # For addition/subtraction topics, prefer object_group (shows two groups)
-            # ten_frame is for counting single numbers, not binary operations
-            if any(kw in topic_lower for kw in ("addition", "add ", "subtraction", "subtract")):
-                return random.choice(["object_group", "object_group", "number_line"])
-            return random.choice(["object_group", "ten_frame", "number_line"])
-        return random.choice(["object_group", "number_line"])
-
+        maths_visuals = ["object_group", "number_line", "base_ten_regrouping"]
+        return random.choice(maths_visuals)
     return None
 
 

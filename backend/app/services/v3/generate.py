@@ -170,13 +170,6 @@ def generate_worksheet_v3(
     # Step 3: Assemble
     worksheet = assemble_worksheet(slot_output, filled)
 
-    # Ensure metadata is present for template rendering
-    worksheet["grade"] = grade_level
-    worksheet["subject"] = subject
-    worksheet["topic"] = topic
-    worksheet["difficulty"] = difficulty
-    worksheet["board"] = board
-
     # Step 4: Light validation
     passed, issues, failed_slots = validate_worksheet(worksheet, slot_output.slots)
     warnings.extend(issues)
@@ -280,22 +273,39 @@ def generate_worksheet_v3(
         "issues_count": len(gate_result.issues),
     }
 
-    # Step 6: Enrich visuals + render HTML template (no Gemini call — deterministic)
+    # Step 6: Render beautiful HTML template (display-only, does NOT change question content)
     t_render = time.perf_counter()
     try:
         from .visual_strategy import enrich_visuals
         from .worksheet_template import render_worksheet_html
 
+        # Add metadata needed by template
+        worksheet["grade"] = grade_level
+        worksheet["subject"] = subject
+        worksheet["topic"] = topic
+        worksheet["difficulty"] = difficulty
+        worksheet["board"] = board
+
+        # Enrich with visual display data (does NOT change questions)
         worksheet = enrich_visuals(worksheet)
+
+        # Render HTML
         rendered_html = render_worksheet_html(worksheet)
         if rendered_html:
             worksheet["rendered_html"] = rendered_html
             render_ms = int((time.perf_counter() - t_render) * 1000)
             logger.info("[v3] Template rendering took %dms", render_ms)
-            warnings.append(f"[v3] HTML rendered in {render_ms}ms")
     except Exception as render_err:
         logger.warning("[v3] Template rendering failed (non-blocking): %s", render_err)
-        # Non-blocking: worksheet still works without rendered_html
+        # Fall back to old html_renderer if template fails
+        try:
+            from .html_renderer import render_worksheet_html as old_render
+
+            rendered_html = old_render(client, worksheet)
+            if rendered_html:
+                worksheet["rendered_html"] = rendered_html
+        except Exception as fallback_err:
+            logger.debug("[v3] html_renderer fallback also failed: %s", fallback_err)
 
     elapsed_ms = int((time.perf_counter() - t0) * 1000)
     logger.info("[v3] Total generation: %dms, %d warnings", elapsed_ms, len(warnings))

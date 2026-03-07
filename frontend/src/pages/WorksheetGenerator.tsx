@@ -31,7 +31,11 @@ const LANGUAGES_BY_REGION: Record<string, string[]> = {
 }
 // Arabic is "Coming Soon" for UAE — shown separately as disabled
 const QUESTION_COUNTS = ['5', '10', '15', '20']
-// Problem style is now always 'standard' — visual_strategy.py auto-decides visuals
+const PROBLEM_STYLES = [
+  { value: 'standard', label: 'Standard (word only)' },
+  { value: 'visual', label: 'Visual (pictures)' },
+  { value: 'mixed', label: 'Mixed (words + pictures)' },
+]
 
 /** Strip redundant "(Class X)" suffix from topic display labels */
 function displayTopicName(topic: string): string {
@@ -325,7 +329,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const [difficulty, setDifficulty] = useState('Medium')
   const [questionCount, setQuestionCount] = useState('10')
   const [language, setLanguage] = useState('English')
-  const problemStyle = 'standard'  // visual_strategy.py auto-decides
+  const [problemStyle, setProblemStyle] = useState('standard')
   // visualTheme removed — visuals now rendered in Jinja2 template
   const [customInstructions, setCustomInstructions] = useState('')
 
@@ -417,7 +421,7 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
   const autoGeneratePendingRef = useRef(false)
   useEffect(() => {
     selectionVersionRef.current += 1
-  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, customInstructions])
+  }, [region, board, grade, subject, topic, selectedSkills, selectedLogicTags, selectedTopics, selectedTemplate, difficulty, questionCount, language, problemStyle, customInstructions])
 
   // Reset subject, topic, and language when region changes
   useEffect(() => {
@@ -1463,6 +1467,20 @@ export default function WorksheetGenerator({ syllabus, onClearSyllabus, preFill,
                             Arabic (Coming Soon)
                           </SelectItem>
                         )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="problemStyle" className="text-sm font-semibold">Problem Style</Label>
+                    <Select value={problemStyle} onValueChange={setProblemStyle}>
+                      <SelectTrigger id="problemStyle" className="bg-background">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROBLEM_STYLES.map((s) => (
+                          <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
